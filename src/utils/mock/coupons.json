@@ -1,0 +1,55 @@
+[
+  {
+    "id": "coupon-1",
+    "code": "WELCOME2024",
+    "type": "premium_trial",
+    "description": "7-day Premium Trial",
+    "value": 7,
+    "valueType": "days",
+    "isActive": true,
+    "expiresAt": "2024-12-31T23:59:59Z",
+    "maxUses": 1000,
+    "currentUses": 342,
+    "createdAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "coupon-2",
+    "code": "STUDENT50",
+    "type": "discount",
+    "description": "50% off Premium (Students)",
+    "value": 50,
+    "valueType": "percent",
+    "isActive": true,
+    "expiresAt": "2024-06-30T23:59:59Z",
+    "maxUses": 500,
+    "currentUses": 127,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "requiresVerification": true
+  },
+  {
+    "id": "coupon-3",
+    "code": "NEWYEAR2024",
+    "type": "premium_trial",
+    "description": "14-day Premium Trial",
+    "value": 14,
+    "valueType": "days",
+    "isActive": false,
+    "expiresAt": "2024-01-31T23:59:59Z",
+    "maxUses": 10000,
+    "currentUses": 8943,
+    "createdAt": "2023-12-15T00:00:00Z"
+  },
+  {
+    "id": "coupon-4",
+    "code": "FRIEND30",
+    "type": "discount",
+    "description": "30% off Premium (Referral)",
+    "value": 30,
+    "valueType": "percent",
+    "isActive": true,
+    "expiresAt": "2024-12-31T23:59:59Z",
+    "maxUses": null,
+    "currentUses": 1523,
+    "createdAt": "2024-01-01T00:00:00Z"
+  }
+]

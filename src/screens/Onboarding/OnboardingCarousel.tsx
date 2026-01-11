@@ -1,0 +1,112 @@
+import AnimatedPressable from '@/components/AnimatedPressable';
+import { useUserState } from '@/contexts/UserStateContext';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ChevronRight } from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
+import { onboardingSlides } from './onboardingSlides';
+
+interface Props {}
+
+export const OnboardingCarousel: React.FC<Props> = ({}) => {
+  const router = useRouter();
+  const { completeOnboarding } = useUserState();
+  const [index, setIndex] = useState(0);
+  const slide = onboardingSlides[index];
+  const Icon = slide.icon;
+
+  const finish = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await completeOnboarding();
+    router.replace('/login');
+  };
+
+  const next = useCallback(() => {
+    Haptics.selectionAsync();
+    if (index < onboardingSlides.length - 1) {
+      setIndex((i) => i + 1);
+    } else {
+      finish();
+    }
+  }, [index]);
+
+  const panGesture = Gesture.Pan()
+    .runOnJS(true) // <--- Add this! This makes the code below run on the JS thread.
+    .onEnd((e) => {
+      if (e.translationX < -50 && index < onboardingSlides.length - 1) {
+        // Now you can call these directly without any wrappers
+        Haptics.selectionAsync();
+        setIndex(index + 1);
+      }
+
+      if (e.translationX > 50 && index > 0) {
+        Haptics.selectionAsync();
+        setIndex(index - 1);
+      }
+    });
+
+  return (
+    <View className="flex-1 bg-bg py-6">
+      {/* Skip */}
+      <View className="items-end p-6">
+        <AnimatedPressable onPress={finish}>
+          <Text className="text-slate-600">Skip</Text>
+        </AnimatedPressable>
+      </View>
+
+      {/* Swipeable content */}
+      <GestureDetector gesture={panGesture}>
+        <View className="flex-1 items-center justify-center px-8">
+          <Animated.View
+            key={index}
+            entering={FadeInRight.duration(300)}
+            exiting={FadeOutLeft.duration(300)}
+            className="items-center">
+            <LinearGradient
+              colors={slide.colors}
+              style={{
+                borderRadius: 64,
+              }}
+              className="mb-8 h-32 w-32 items-center justify-center shadow-lg">
+              <Icon size={64} color="white" strokeWidth={1.5} />
+            </LinearGradient>
+
+            <Text className="mb-4 px-4 text-center text-xl font-semibold text-text">
+              {slide.title}
+            </Text>
+
+            <Text className="text-center leading-relaxed text-text-muted">{slide.description}</Text>
+          </Animated.View>
+        </View>
+      </GestureDetector>
+
+      {/* Footer */}
+      <View className="flex-col gap-3 p-8">
+        {/* Dots */}
+        <View className="flex-row justify-center gap-2">
+          {onboardingSlides.map((_, i) => (
+            <Pressable
+              key={i}
+              onPress={() => setIndex(i)}
+              className={`h-2 rounded-full ${i === index ? 'w-8 bg-teal-600' : 'w-2 bg-gray-300'}`}
+            />
+          ))}
+        </View>
+
+        {/* Next */}
+        <AnimatedPressable
+          onPress={next}
+          className="flex-row items-center justify-center gap-2 rounded-xl bg-teal-600 py-4">
+          <Text className="font-semibold text-white">
+            {index === onboardingSlides.length - 1 ? 'Get Started' : 'Next'}
+          </Text>
+          <ChevronRight size={20} color="white" />
+        </AnimatedPressable>
+      </View>
+    </View>
+  );
+};

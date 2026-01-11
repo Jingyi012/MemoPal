@@ -1,0 +1,442 @@
+{
+  "lessons": [
+    {
+      "id": "lesson-1",
+      "palaceId": "beginner",
+      "title": "Common Animals",
+      "description": "Learn the most common animals in English.",
+      "wordCount": 10,
+      "isCustom": false,
+      "locked": false,
+      "completed": false,
+      "isPremium": false,
+      "progress": {
+        "lessonId": "lesson-1",
+        "firstCompletedDate": "2026-01-01T00:00:00Z",
+        "totalReviews": 1,
+        "masteryLevel": "learning",
+        "xpEarned": 150,
+        "lastReviewDate": "2026-01-01T00:00:00Z",
+        "reviewSchedule": {
+          "review1": {
+            "dueDate": "2026-01-02T00:00:00Z",
+            "completed": true,
+            "completedDate": "2026-01-01T00:00:00Z"
+          },
+          "review2": { "dueDate": "2026-01-03T00:00:00Z", "completed": false },
+          "review3": { "dueDate": "2026-01-05T00:00:00Z", "completed": false },
+          "review4": { "dueDate": "2026-01-10T00:00:00Z", "completed": false }
+        }
+      },
+      "words": [
+        {
+          "id": "w1",
+          "text": "Elephant",
+          "translation": "Large mammal with trunk",
+          "locationId": "loc-1"
+        },
+        { "id": "w2", "text": "Tiger", "translation": "Striped big cat", "locationId": "loc-2" },
+        {
+          "id": "w3",
+          "text": "Dolphin",
+          "translation": "Intelligent marine mammal",
+          "locationId": "loc-3"
+        },
+        { "id": "w4", "text": "Eagle", "translation": "Large bird of prey", "locationId": "loc-4" },
+        { "id": "w5", "text": "Penguin", "translation": "Flightless bird", "locationId": "loc-5" },
+        {
+          "id": "w6",
+          "text": "Giraffe",
+          "translation": "Long-necked mammal",
+          "locationId": "loc-6"
+        },
+        {
+          "id": "w7",
+          "text": "Octopus",
+          "translation": "Eight-armed sea creature",
+          "locationId": "loc-7"
+        },
+        {
+          "id": "w8",
+          "text": "Kangaroo",
+          "translation": "Hopping marsupial",
+          "locationId": "loc-8"
+        },
+        {
+          "id": "w9",
+          "text": "Butterfly",
+          "translation": "Colorful flying insect",
+          "locationId": "loc-9"
+        },
+        { "id": "w10", "text": "Lion", "translation": "King of the jungle", "locationId": "loc-10" }
+      ]
+    },
+    {
+      "id": "lesson-2",
+      "palaceId": "beginner",
+      "title": "Basic Colors",
+      "description": "Learn the basic colors in English.",
+      "wordCount": 10,
+      "isCustom": false,
+      "locked": false,
+      "completed": false,
+      "isPremium": false,
+      "progress": {
+        "lessonId": "lesson-2",
+        "firstCompletedDate": "2025-12-26T00:00:00Z",
+        "totalReviews": 0,
+        "masteryLevel": "new",
+        "xpEarned": 0,
+        "reviewSchedule": {
+          "review1": { "dueDate": "2025-12-27T00:00:00Z", "completed": false },
+          "review2": { "dueDate": "2026-01-03T00:00:00Z", "completed": false },
+          "review3": { "dueDate": "2026-01-05T00:00:00Z", "completed": false },
+          "review4": { "dueDate": "2026-01-10T00:00:00Z", "completed": false }
+        }
+      },
+      "words": [
+        { "id": "w11", "text": "Red", "translation": "The color of blood", "locationId": "loc-1" },
+        {
+          "id": "w12",
+          "text": "Blue",
+          "translation": "The color of the sky",
+          "locationId": "loc-2"
+        },
+        {
+          "id": "w13",
+          "text": "Green",
+          "translation": "The color of grass",
+          "locationId": "loc-3"
+        },
+        {
+          "id": "w14",
+          "text": "Yellow",
+          "translation": "The color of the sun",
+          "locationId": "loc-4"
+        },
+        { "id": "w15", "text": "Black", "translation": "The color of coal", "locationId": "loc-5" },
+        { "id": "w16", "text": "White", "translation": "The color of snow", "locationId": "loc-6" },
+        {
+          "id": "w17",
+          "text": "Purple",
+          "translation": "A mix of blue and red",
+          "locationId": "loc-7"
+        },
+        {
+          "id": "w18",
+          "text": "Orange",
+          "translation": "The color of the fruit",
+          "locationId": "loc-8"
+        },
+        { "id": "w19", "text": "Pink", "translation": "A pale red color", "locationId": "loc-9" },
+        {
+          "id": "w20",
+          "text": "Brown",
+          "translation": "The color of earth",
+          "locationId": "loc-10"
+        }
+      ]
+    },
+    {
+      "id": "lesson-3",
+      "palaceId": "beginner",
+      "title": "Food & Drinks",
+      "description": "Learn common food and drink words in English.",
+      "wordCount": 10,
+      "isCustom": true,
+      "locked": false,
+      "completed": true,
+      "isPremium": false,
+      "progress": {
+        "lessonId": "lesson-3",
+        "firstCompletedDate": "2026-01-01T00:00:00Z",
+        "totalReviews": 4,
+        "masteryLevel": "mastered",
+        "xpEarned": 450,
+        "lastReviewDate": "2026-01-04T00:00:00Z",
+        "reviewSchedule": {
+          "review1": {
+            "dueDate": "2026-01-02T00:00:00Z",
+            "completed": true,
+            "completedDate": "2026-01-02T00:00:00Z"
+          },
+          "review2": {
+            "dueDate": "2026-01-03T00:00:00Z",
+            "completed": true,
+            "completedDate": "2026-01-03T00:00:00Z"
+          },
+          "review3": {
+            "dueDate": "2026-01-05T00:00:00Z",
+            "completed": true,
+            "completedDate": "2026-01-05T00:00:00Z"
+          },
+          "review4": {
+            "dueDate": "2026-01-10T00:00:00Z",
+            "completed": true,
+            "completedDate": "2026-01-10T00:00:00Z"
+          }
+        }
+      },
+      "words": [
+        { "id": "w21", "text": "Apple", "translation": "Red fruit", "locationId": "loc-1" },
+        { "id": "w22", "text": "Bread", "translation": "Baked staple", "locationId": "loc-2" },
+        { "id": "w23", "text": "Cheese", "translation": "Dairy product", "locationId": "loc-3" },
+        { "id": "w24", "text": "Coffee", "translation": "Hot beverage", "locationId": "loc-4" },
+        { "id": "w25", "text": "Rice", "translation": "Grain staple", "locationId": "loc-5" },
+        { "id": "w26", "text": "Chicken", "translation": "Poultry meat", "locationId": "loc-6" },
+        { "id": "w27", "text": "Water", "translation": "Clear liquid", "locationId": "loc-7" },
+        { "id": "w28", "text": "Orange", "translation": "Citrus fruit", "locationId": "loc-8" },
+        { "id": "w29", "text": "Milk", "translation": "White drink", "locationId": "loc-9" },
+        { "id": "w30", "text": "Salad", "translation": "Mixed vegetables", "locationId": "loc-10" }
+      ]
+    },
+    {
+      "id": "lesson-4",
+      "palaceId": "beginner",
+      "title": "Body Parts",
+      "description": "Learn 10 parts of the body",
+      "category": "Vocabulary",
+      "wordCount": 10,
+      "isCustom": false,
+      "locked": false,
+      "completed": false,
+      "isPremium": false,
+      "words": [
+        {
+          "id": "w31",
+          "text": "Head",
+          "translation": "Top part of the body",
+          "locationId": "loc-1"
+        },
+        {
+          "id": "w32",
+          "text": "Eye",
+          "translation": "Organ used for seeing",
+          "locationId": "loc-2"
+        },
+        {
+          "id": "w33",
+          "text": "Ear",
+          "translation": "Organ used for hearing",
+          "locationId": "loc-3"
+        },
+        {
+          "id": "w34",
+          "text": "Nose",
+          "translation": "Organ used for smelling",
+          "locationId": "loc-4"
+        },
+        {
+          "id": "w35",
+          "text": "Mouth",
+          "translation": "Used for eating and speaking",
+          "locationId": "loc-5"
+        },
+        { "id": "w36", "text": "Arm", "translation": "Upper limb", "locationId": "loc-6" },
+        { "id": "w37", "text": "Hand", "translation": "End of the arm", "locationId": "loc-7" },
+        {
+          "id": "w38",
+          "text": "Leg",
+          "translation": "Lower limb used for walking",
+          "locationId": "loc-8"
+        },
+        { "id": "w39", "text": "Foot", "translation": "End of the leg", "locationId": "loc-9" },
+        {
+          "id": "w40",
+          "text": "Heart",
+          "translation": "Organ that pumps blood",
+          "locationId": "loc-10"
+        }
+      ],
+      "progress": null,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": "lesson-5",
+      "palaceId": "beginner",
+      "title": "Body Parts",
+      "description": "Learn 10 parts of the body",
+      "category": "Vocabulary",
+      "wordCount": 10,
+      "isCustom": false,
+      "locked": false,
+      "completed": false,
+      "isPremium": false,
+      "words": [
+        {
+          "id": "w31",
+          "text": "Head",
+          "translation": "Top part of the body",
+          "locationId": "loc-1"
+        },
+        {
+          "id": "w32",
+          "text": "Eye",
+          "translation": "Organ used for seeing",
+          "locationId": "loc-2"
+        },
+        {
+          "id": "w33",
+          "text": "Ear",
+          "translation": "Organ used for hearing",
+          "locationId": "loc-3"
+        },
+        {
+          "id": "w34",
+          "text": "Nose",
+          "translation": "Organ used for smelling",
+          "locationId": "loc-4"
+        },
+        {
+          "id": "w35",
+          "text": "Mouth",
+          "translation": "Used for eating and speaking",
+          "locationId": "loc-5"
+        },
+        { "id": "w36", "text": "Arm", "translation": "Upper limb", "locationId": "loc-6" },
+        { "id": "w37", "text": "Hand", "translation": "End of the arm", "locationId": "loc-7" },
+        {
+          "id": "w38",
+          "text": "Leg",
+          "translation": "Lower limb used for walking",
+          "locationId": "loc-8"
+        },
+        { "id": "w39", "text": "Foot", "translation": "End of the leg", "locationId": "loc-9" },
+        {
+          "id": "w40",
+          "text": "Heart",
+          "translation": "Organ that pumps blood",
+          "locationId": "loc-10"
+        }
+      ],
+      "progress": null,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": "lesson-6",
+      "palaceId": "beginner",
+      "title": "Body Parts",
+      "description": "Learn 10 parts of the body",
+      "category": "Vocabulary",
+      "wordCount": 10,
+      "isCustom": true,
+      "locked": false,
+      "completed": false,
+      "isPremium": false,
+      "words": [
+        {
+          "id": "w31",
+          "text": "Head",
+          "translation": "Top part of the body",
+          "locationId": "loc-1"
+        },
+        {
+          "id": "w32",
+          "text": "Eye",
+          "translation": "Organ used for seeing",
+          "locationId": "loc-2"
+        },
+        {
+          "id": "w33",
+          "text": "Ear",
+          "translation": "Organ used for hearing",
+          "locationId": "loc-3"
+        },
+        {
+          "id": "w34",
+          "text": "Nose",
+          "translation": "Organ used for smelling",
+          "locationId": "loc-4"
+        },
+        {
+          "id": "w35",
+          "text": "Mouth",
+          "translation": "Used for eating and speaking",
+          "locationId": "loc-5"
+        },
+        { "id": "w36", "text": "Arm", "translation": "Upper limb", "locationId": "loc-6" },
+        { "id": "w37", "text": "Hand", "translation": "End of the arm", "locationId": "loc-7" },
+        {
+          "id": "w38",
+          "text": "Leg",
+          "translation": "Lower limb used for walking",
+          "locationId": "loc-8"
+        },
+        { "id": "w39", "text": "Foot", "translation": "End of the leg", "locationId": "loc-9" },
+        {
+          "id": "w40",
+          "text": "Heart",
+          "translation": "Organ that pumps blood",
+          "locationId": "loc-10"
+        }
+      ],
+      "progress": null,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": "lesson-7",
+      "palaceId": "beginner",
+      "title": "Body Parts",
+      "description": "Learn 10 parts of the body",
+      "category": "Vocabulary",
+      "wordCount": 10,
+      "isCustom": false,
+      "locked": false,
+      "completed": false,
+      "isPremium": false,
+      "words": [
+        {
+          "id": "w31",
+          "text": "Head",
+          "translation": "Top part of the body",
+          "locationId": "loc-1"
+        },
+        {
+          "id": "w32",
+          "text": "Eye",
+          "translation": "Organ used for seeing",
+          "locationId": "loc-2"
+        },
+        {
+          "id": "w33",
+          "text": "Ear",
+          "translation": "Organ used for hearing",
+          "locationId": "loc-3"
+        },
+        {
+          "id": "w34",
+          "text": "Nose",
+          "translation": "Organ used for smelling",
+          "locationId": "loc-4"
+        },
+        {
+          "id": "w35",
+          "text": "Mouth",
+          "translation": "Used for eating and speaking",
+          "locationId": "loc-5"
+        },
+        { "id": "w36", "text": "Arm", "translation": "Upper limb", "locationId": "loc-6" },
+        { "id": "w37", "text": "Hand", "translation": "End of the arm", "locationId": "loc-7" },
+        {
+          "id": "w38",
+          "text": "Leg",
+          "translation": "Lower limb used for walking",
+          "locationId": "loc-8"
+        },
+        { "id": "w39", "text": "Foot", "translation": "End of the leg", "locationId": "loc-9" },
+        {
+          "id": "w40",
+          "text": "Heart",
+          "translation": "Organ that pumps blood",
+          "locationId": "loc-10"
+        }
+      ],
+      "progress": null,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    }
+  ]
+}

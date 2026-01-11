@@ -1,0 +1,200 @@
+[
+  {
+    "id": "lesson-1",
+    "title": "Spanish Basics - Verbs",
+    "description": "Essential Spanish verbs for daily conversation",
+    "words": [
+      { "word": "hablar", "translation": "to speak" },
+      { "word": "comer", "translation": "to eat" },
+      { "word": "vivir", "translation": "to live" },
+      { "word": "trabajar", "translation": "to work" },
+      { "word": "estudiar", "translation": "to study" },
+      { "word": "dormir", "translation": "to sleep" },
+      { "word": "beber", "translation": "to drink" },
+      { "word": "escribir", "translation": "to write" },
+      { "word": "leer", "translation": "to read" },
+      { "word": "caminar", "translation": "to walk" }
+    ],
+    "category": "language-learning",
+    "tags": ["spanish", "verbs", "beginner"],
+    "creator": {
+      "id": "user-1",
+      "name": "Maria Garcia",
+      "isVerified": true
+    },
+    "stats": {
+      "usageCount": 1247,
+      "rating": 4.8,
+      "reviewCount": 89,
+      "createdAt": "2024-01-15T00:00:00+08:00",
+      "updatedAt": "2024-01-15T00:00:00+08:00"
+    },
+    "shareCode": "SPAN-VRB-001",
+    "isPublic": true
+  },
+  {
+    "id": "community-2",
+    "title": "Medical Terminology - Anatomy",
+    "description": "Common anatomical terms for medical students",
+    "words": [
+      { "word": "cranium", "translation": "skull" },
+      { "word": "thorax", "translation": "chest" },
+      { "word": "abdomen", "translation": "belly" },
+      { "word": "femur", "translation": "thigh bone" },
+      { "word": "humerus", "translation": "upper arm bone" },
+      { "word": "vertebra", "translation": "spine bone" },
+      { "word": "scapula", "translation": "shoulder blade" },
+      { "word": "sternum", "translation": "breastbone" },
+      { "word": "patella", "translation": "kneecap" },
+      { "word": "clavicle", "translation": "collarbone" }
+    ],
+    "category": "medical",
+    "tags": ["medical", "anatomy", "terminology"],
+    "creator": {
+      "id": "user-2",
+      "name": "Dr. James Wilson",
+      "isVerified": true
+    },
+    "stats": {
+      "usageCount": 892,
+      "rating": 4.9,
+      "reviewCount": 67,
+      "createdAt": "2024-01-10T00:00:00+08:00",
+      "updatedAt": "2024-01-10T00:00:00+08:00"
+    },
+    "shareCode": "MED-ANAT-001",
+    "isPublic": true
+  },
+  {
+    "id": "community-3",
+    "title": "SAT Vocabulary - Advanced",
+    "description": "High-frequency SAT vocabulary words",
+    "words": [
+      { "word": "ephemeral", "translation": "lasting for a short time" },
+      { "word": "ubiquitous", "translation": "present everywhere" },
+      { "word": "enigmatic", "translation": "mysterious and puzzling" },
+      { "word": "benevolent", "translation": "kind and generous" },
+      { "word": "meticulous", "translation": "very careful and precise" },
+      { "word": "resilient", "translation": "able to recover quickly" },
+      { "word": "pragmatic", "translation": "practical and realistic" },
+      { "word": "verbose", "translation": "using more words than needed" },
+      { "word": "tenacious", "translation": "persistent and determined" },
+      { "word": "ambiguous", "translation": "unclear or having multiple meanings" }
+    ],
+    "category": "test-prep",
+    "tags": ["SAT", "vocabulary", "test-prep"],
+    "creator": {
+      "id": "user-3",
+      "name": "Sarah Johnson",
+      "isVerified": false
+    },
+    "stats": {
+      "usageCount": 2103,
+      "rating": 4.7,
+      "reviewCount": 156,
+      "createdAt": "2024-01-05T00:00:00+08:00",
+      "updatedAt": "2024-01-20T00:00:00+08:00"
+    },
+    "shareCode": "SAT-VOC-ADV",
+    "isPublic": true
+  },
+  {
+    "id": "community-4",
+    "title": "French Greetings & Phrases",
+    "description": "Essential French phrases for travelers",
+    "words": [
+      { "word": "Bonjour", "translation": "Hello/Good morning" },
+      { "word": "Merci", "translation": "Thank you" },
+      { "word": "S'il vous plaît", "translation": "Please" },
+      { "word": "Excusez-moi", "translation": "Excuse me" },
+      { "word": "Au revoir", "translation": "Goodbye" },
+      { "word": "Pardon", "translation": "Sorry" },
+      { "word": "Oui", "translation": "Yes" },
+      { "word": "Non", "translation": "No" },
+      { "word": "Comment allez-vous?", "translation": "How are you?" },
+      { "word": "Je ne comprends pas", "translation": "I don't understand" }
+    ],
+    "category": "language-learning",
+    "tags": ["french", "phrases", "beginner", "travel"],
+    "creator": {
+      "id": "user-4",
+      "name": "Pierre Dubois",
+      "isVerified": true
+    },
+    "stats": {
+      "usageCount": 1756,
+      "rating": 4.9,
+      "reviewCount": 124,
+      "createdAt": "2024-01-12T00:00:00+08:00",
+      "updatedAt": "2024-01-12T00:00:00+08:00"
+    },
+    "shareCode": "FRE-GREET-01",
+    "isPublic": true
+  },
+  {
+    "id": "community-5",
+    "title": "Programming Terms - JavaScript",
+    "description": "Common JavaScript programming terminology",
+    "words": [
+      { "word": "Variable", "translation": "A container for storing data" },
+      { "word": "Function", "translation": "A block of reusable code" },
+      { "word": "Array", "translation": "An ordered list of values" },
+      { "word": "Object", "translation": "A collection of key-value pairs" },
+      { "word": "Loop", "translation": "Repeating a block of code" },
+      { "word": "Callback", "translation": "A function passed as an argument" },
+      { "word": "Promise", "translation": "An object representing async operation" },
+      { "word": "Closure", "translation": "Function with access to outer scope" },
+      { "word": "Method", "translation": "A function that belongs to an object" },
+      { "word": "Parameter", "translation": "Variable in function definition" }
+    ],
+    "category": "science",
+    "tags": ["programming", "javascript", "coding"],
+    "creator": {
+      "id": "user-5",
+      "name": "Alex Chen",
+      "isVerified": false
+    },
+    "stats": {
+      "usageCount": 678,
+      "rating": 4.6,
+      "reviewCount": 43,
+      "createdAt": "2024-01-18T00:00:00+08:00",
+      "updatedAt": "2024-01-18T00:00:00+08:00"
+    },
+    "shareCode": "JS-TERM-001",
+    "isPublic": true
+  },
+  {
+    "id": "community-6",
+    "title": "Business English - Meetings",
+    "description": "Professional vocabulary for business meetings",
+    "words": [
+      { "word": "Agenda", "translation": "List of topics to discuss" },
+      { "word": "Minutes", "translation": "Written record of meeting" },
+      { "word": "Action item", "translation": "Task to be completed" },
+      { "word": "Stakeholder", "translation": "Person with interest in outcome" },
+      { "word": "Deliverable", "translation": "A product or result to deliver" },
+      { "word": "Timeline", "translation": "Schedule of events" },
+      { "word": "Milestone", "translation": "Significant point in project" },
+      { "word": "Follow-up", "translation": "Subsequent action or meeting" },
+      { "word": "Brainstorm", "translation": "Generate ideas collectively" },
+      { "word": "Consensus", "translation": "General agreement" }
+    ],
+    "category": "business",
+    "tags": ["business", "english", "professional", "meetings"],
+    "creator": {
+      "id": "user-6",
+      "name": "Emily Roberts",
+      "isVerified": true
+    },
+    "stats": {
+      "usageCount": 934,
+      "rating": 4.8,
+      "reviewCount": 71,
+      "createdAt": "2024-01-08T00:00:00+08:00",
+      "updatedAt": "2024-01-08T00:00:00+08:00"
+    },
+    "shareCode": "BIZ-ENG-MTG",
+    "isPublic": true
+  }
+]
