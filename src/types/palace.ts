@@ -1,9 +1,12 @@
-export interface Location {
+import { Auditable, SoftDeletable, Syncable } from './general';
+
+export interface Location extends Auditable, Syncable, SoftDeletable {
   id: string;
+  palaceId: string;
+  position: number;
   name: string;
   description: string;
-  image: string;
-  order?: number;
+  imageUrl: string;
 }
 
 export interface CustomPalaceData {
@@ -11,4 +14,27 @@ export interface CustomPalaceData {
   description: string;
   thumbnail: string;
   locations: Location[];
+}
+
+export interface Palace extends Auditable, Syncable, SoftDeletable {
+  id: string;
+  name: string;
+  description: string;
+  locationsCount: number;
+  thumbnail: string;
+  isLocked: boolean;
+  requiredXp: number;
+  isPremium: boolean;
+  isCustom: boolean;
+}
+
+export interface PalaceDetails extends Palace {
+  locations: Location[];
+}
+
+export interface UserPalaces {
+  id: string;
+  userId: string;
+  palaceId: string;
+  unlockedAt: string;
 }

@@ -1,12 +1,16 @@
 import { Colors } from '@/constants/colors';
-import { UserLevel } from '@/types/levelAndbadge';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Trophy } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
 interface Props {
-  level: UserLevel;
+  level: {
+    currentLevel: number;
+    xp: number;
+    xpToNextLevel: number;
+    title: string;
+  };
 }
 
 export const LevelProgressHeader: React.FC<Props> = ({ level }) => {

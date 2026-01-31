@@ -1,12 +1,6 @@
+import { Word } from '@/types/lesson';
 import React from 'react';
 import { Text, View } from 'react-native';
-
-interface Word {
-  id: string;
-  text: string;
-  translation: string;
-  locationId: string;
-}
 
 interface PalacePathProps {
   words: Word[];
@@ -37,7 +31,7 @@ export const PalaceWordList: React.FC<PalacePathProps> = ({ words }) => {
               <Text className="text-base font-bold leading-5 text-slate-900">{word.text}</Text>
             </View>
             <Text className="text-sm italic text-slate-500" numberOfLines={1}>
-              {word.translation}
+              {word.meaning}
             </Text>
           </View>
         ))}

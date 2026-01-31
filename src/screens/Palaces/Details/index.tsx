@@ -1,10 +1,10 @@
 import { CommonHeader } from '@/components/CommonHeader';
+import LoadingView from '@/components/LoadingView';
 import TutorialPromptCard from '@/components/PromptCard/TutorialPromptCard';
-import { Lesson } from '@/types/lesson';
-import data from '@/utils/mock/lessonsList.json';
-import palaceData from '@/utils/mock/palaces.json';
+import { useLessonsManager } from '@/hooks/useLessonsManager';
+import { usePalace } from '@/hooks/usePalace';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, Text } from 'react-native';
 import { CustomLessonList } from './CustomLessonsList';
 import { ReviewPalaceButton } from './ReviewPalaceButton';
@@ -17,21 +17,24 @@ interface PalaceViewProps {
 const PalaceDetailScreen: React.FC<PalaceViewProps> = ({ palaceId }) => {
   const router = useRouter();
   const [showTutorialPrompt, setShowTutorialPrompt] = useState(true);
-  const lessons = data.lessons;
 
-  const customLessons = lessons.filter((x) => x.isCustom === true);
-  const wordLessons = lessons.filter((x) => x.isCustom === false);
+  const { data: palaceData, isLoading: palaceLoading } = usePalace(palaceId);
+  const { lessons, isLoading: lessonsLoading, refresh } = useLessonsManager(palaceId);
 
-  const palaces = palaceData.palaces;
-  const palace = palaces.find((x) => x.id === palaceId)!;
+  if (palaceLoading || lessonsLoading || !palaceData) {
+    return <LoadingView />;
+  }
+
+  const customLessons = useMemo(() => lessons.filter((l) => l.isCustom), [lessons]);
+  const wordLessons = useMemo(() => lessons.filter((l) => !l.isCustom), [lessons]);
 
   return (
     <>
       <CommonHeader
-        title={palace.name}
+        title={palaceData.name}
         description={
           <Text className="text-sm text-teal-100">
-            {palace?.locations} locations • {1} lessons completed
+            {palaceData.locationsCount} locations • {lessons.length} lessons completed
           </Text>
         }
         backAction={() => router.replace(`/(tabs)/palaces`)}
@@ -42,12 +45,11 @@ const PalaceDetailScreen: React.FC<PalaceViewProps> = ({ palaceId }) => {
           <TutorialPromptCard dismissTutorialPrompt={() => setShowTutorialPrompt(false)} />
         )}
         <ReviewPalaceButton
+          locationCount={palaceData.locationsCount}
           onStartPalaceTraining={() => router.push(`/palaces/${palaceId}/training`)}
         />
-
-        <CustomLessonList palaceId={palaceId} lessons={customLessons as Lesson[]} />
-
-        <WordLessonList lessons={wordLessons as Lesson[]} />
+        <CustomLessonList palaceId={palaceId} lessons={customLessons} />
+        <WordLessonList lessons={wordLessons} />
       </ScrollView>
     </>
   );

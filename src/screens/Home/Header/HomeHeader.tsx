@@ -1,7 +1,8 @@
+import { AppImage } from '@/components/AppImage';
 import { User } from '@/types/users';
 import { greetingByTime } from '@/utils/greeting';
 import { User2 } from 'lucide-react-native';
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { CommonHeader } from '../../../components/CommonHeader';
 import { NotificationBell } from '../../../components/NotificationBell';
 import { LevelProgress } from './LevelProgress';
@@ -44,7 +45,7 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
       // Back button slot replaced with avatar
       leftComponent={
         avatar ? (
-          <Image
+          <AppImage
             source={{ uri: avatar }}
             className="h-10 w-10 rounded-full border-2 border-white"
           />

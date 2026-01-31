@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { Colors } from '@/constants/colors';
+import { LessonCategory } from '@/enums/lessonCategory';
 import { LessonForm } from '@/types/lesson';
 import { Globe, Lock } from 'lucide-react-native';
 import React, { useRef, useState } from 'react';
@@ -29,7 +30,15 @@ export function LessonInfoStep({ value, onChange, onNext }: Props) {
   const [tempTitle, setTempTitle] = useState(value.title);
   const [tempDescription, setTempDescription] = useState(value.description);
   const [tempCategory, setTempCategory] = useState(value.category);
-  const [tempTag, setTempTag] = useState(value.tag);
+  const [tempTags, setTempTags] = useState<string[]>(value.tag ?? []);
+
+  const tagsToText = (tags: string[]) => tags.join(', ');
+
+  const textToTags = (text: string) =>
+    text
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
 
   const descRef = useRef<TextInput>(null);
 
@@ -123,6 +132,24 @@ export function LessonInfoStep({ value, onChange, onNext }: Props) {
                 <Text className="mb-2 px-1 text-xs font-black uppercase tracking-widest text-slate-400">
                   Category
                 </Text>
+                <View className="flex-row gap-2">
+                  {(Object.values(LessonCategory) as LessonCategory[]).map((c) => (
+                    <AnimatedPressable
+                      key={c}
+                      onPress={() => {
+                        setTempCategory(c);
+                        updateLocal({ category: c });
+                      }}
+                      className={`rounded-xl px-4 py-2 ${
+                        tempCategory === c ? 'bg-teal-500' : 'bg-slate-200'
+                      }`}>
+                      <Text className={tempCategory === c ? 'text-white' : 'text-slate-700'}>
+                        {c}
+                      </Text>
+                    </AnimatedPressable>
+                  ))}
+                </View>
+                {/* 
                 <TextInput
                   value={tempCategory}
                   placeholder="Science"
@@ -132,7 +159,7 @@ export function LessonInfoStep({ value, onChange, onNext }: Props) {
                   onBlur={() => updateLocal({ category: tempCategory })}
                   className="rounded-2xl border border-slate-100 bg-white px-4 py-4 text-sm text-slate-700"
                   style={focusedField === 'category' ? styles.inputFocused : undefined}
-                />
+                /> */}
               </View>
 
               <View className="flex-1">
@@ -140,12 +167,15 @@ export function LessonInfoStep({ value, onChange, onNext }: Props) {
                   Tags
                 </Text>
                 <TextInput
-                  value={tempTag}
+                  value={tagsToText(tempTags)}
                   placeholder="Exam"
                   placeholderTextColor="#94a3b8"
-                  onChangeText={setTempTag}
+                  onChangeText={(text) => setTempTags(textToTags(text))}
                   onFocus={() => setFocusedField('tags')}
-                  onBlur={() => updateLocal({ tag: tempTag })}
+                  onBlur={() => {
+                    setFocusedField(null);
+                    updateLocal({ tag: tempTags });
+                  }}
                   className="rounded-2xl border border-slate-100 bg-white px-4 py-4 text-sm text-slate-700"
                   style={focusedField === 'tags' ? styles.inputFocused : undefined}
                 />

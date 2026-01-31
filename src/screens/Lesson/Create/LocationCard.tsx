@@ -1,7 +1,8 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppImage } from '@/components/AppImage';
 import { LessonWordForm } from '@/types/lesson';
 import { Location } from '@/types/palace';
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 interface Props {
@@ -16,7 +17,7 @@ export function LocationCard({ location, word, onPress }: Props) {
       onPress={onPress}
       className="relative w-[48%] overflow-hidden rounded-2xl shadow-sm">
       {/* Background Image */}
-      <Image source={{ uri: location.image }} className="h-36 w-full" resizeMode="cover" />
+      <AppImage source={{ uri: location.imageUrl }} className="h-36 w-full" />
 
       {/* Overlay */}
       <View className="absolute inset-0 rounded-2xl bg-black/20" />
@@ -32,7 +33,7 @@ export function LocationCard({ location, word, onPress }: Props) {
           entering={FadeIn}
           className="absolute bottom-3 left-3 right-3 rounded-xl bg-black/60 p-2">
           <Text className="text-base font-bold text-white">{word.text}</Text>
-          {word.translation && <Text className="text-xs text-white/80">{word.translation}</Text>}
+          {word.meaning && <Text className="text-xs text-white/80">{word.meaning}</Text>}
         </Animated.View>
       )}
     </AnimatedPressable>

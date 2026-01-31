@@ -37,18 +37,17 @@ export const LessonCard: React.FC<Props> = ({
   containerStyle,
 }) => {
   const [isDeleteSheetVisible, setDeleteSheetVisible] = useState(false);
-  const canStart = palaceTrainingCompleted && !lesson.locked;
+  const canStart = palaceTrainingCompleted && !lesson.isLocked;
 
   // Review logic
-  const nextReviewKey = progress ? getNextReview(progress.reviewSchedule) : null;
-  const nextReviewData = nextReviewKey ? progress?.reviewSchedule[nextReviewKey] : null;
+  const nextReviewData = progress ? getNextReview(progress.reviewSchedule) : null;
   const isOverdue = nextReviewData ? isReviewOverdue(nextReviewData.dueDate) : false;
   const isDueSoon = nextReviewData ? isReviewDueSoon(nextReviewData.dueDate) : false;
   const masteryLevel = progress ? getMasteryLevel(progress.reviewSchedule) : 'new';
 
   // Colors
   const getBgColor = () => {
-    if (lesson.locked) return Colors.gray100;
+    if (lesson.isLocked) return Colors.gray100;
     if (isOverdue) return Colors.red100;
     if (isDueSoon) return Colors.orange100;
     if (lesson.completed) return Colors.green100;
@@ -58,7 +57,7 @@ export const LessonCard: React.FC<Props> = ({
   };
 
   const getIconColor = () => {
-    if (lesson.locked) return lesson.isPremium ? Colors.yellow500 : Colors.gray400;
+    if (lesson.isLocked) return lesson.isPremium ? Colors.yellow500 : Colors.gray400;
     if (isOverdue) return Colors.red600;
     if (isDueSoon) return Colors.orange600;
     if (lesson.completed) return Colors.green600;
@@ -82,7 +81,7 @@ export const LessonCard: React.FC<Props> = ({
     const color = getIconColor();
     const size = 24;
 
-    if (lesson.locked) {
+    if (lesson.isLocked) {
       return lesson.isPremium ? (
         <Crown size={size} color={color} />
       ) : (
@@ -151,7 +150,7 @@ export const LessonCard: React.FC<Props> = ({
             </View>
 
             {/* Progress Bar */}
-            {!lesson.locked && <ProgressBar progress={progressValue} color={progressColor} />}
+            {!lesson.isLocked && <ProgressBar progress={progressValue} color={progressColor} />}
           </View>
 
           {/* Actions */}

@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { Colors } from '@/constants/colors';
+import { useLessonsManager } from '@/hooks/useLessonsManager';
 import { Lesson } from '@/types/lesson';
 import { useRouter } from 'expo-router';
 import { Edit2, Plus } from 'lucide-react-native';
@@ -13,6 +14,9 @@ interface Props {
 
 export const CustomLessonList: React.FC<Props> = ({ palaceId, lessons }) => {
   const router = useRouter();
+
+  const { removeLesson } = useLessonsManager(palaceId);
+
   const handleViewLesson = (id: string) => {
     router.push(`/lessons/${id}`);
   };
@@ -20,7 +24,9 @@ export const CustomLessonList: React.FC<Props> = ({ palaceId, lessons }) => {
   const handleCreateLesson = () => {
     router.push(`/palaces/${palaceId}/lessons/create`);
   };
-  const handleDeleteLesson = () => {};
+  const handleDeleteLesson = (lesson: Lesson) => {
+    removeLesson.mutateAsync(lesson.id);
+  };
 
   return (
     <View className="mt-6">

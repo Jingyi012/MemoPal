@@ -1,12 +1,4 @@
-export type LessonCategory =
-  | 'language-learning'
-  | 'vocabulary'
-  | 'medical'
-  | 'science'
-  | 'history'
-  | 'business'
-  | 'test-prep'
-  | 'general';
+import { LessonCategory } from './lesson';
 
 export interface Creator {
   id: string;
@@ -27,7 +19,7 @@ export interface CommunityLesson {
   id: string;
   title: string;
   description: string;
-  words: { word: string; translation: string }[];
+  words: { word: string; meaning: string }[];
   category: LessonCategory;
   tags: string[];
   creator: Creator;

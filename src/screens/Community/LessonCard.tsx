@@ -1,9 +1,10 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppImage } from '@/components/AppImage';
 import { Colors } from '@/constants/colors';
 import { CommunityLesson } from '@/types/community';
 import { BookOpen, Check, Crown, Download, Star } from 'lucide-react-native';
 import React from 'react';
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 interface Props {
   lesson: CommunityLesson;
@@ -42,7 +43,7 @@ export const LessonCard = ({ lesson, isImported, onImport, onPreview }: Props) =
 
     <View className="flex-row items-center">
       {lesson.creator.avatarUrl ? (
-        <Image
+        <AppImage
           source={{ uri: lesson.creator.avatarUrl }}
           className="h-10 w-10"
           style={{ borderRadius: 30 }}

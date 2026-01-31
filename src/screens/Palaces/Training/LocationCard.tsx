@@ -1,7 +1,8 @@
+import { AppImage } from '@/components/AppImage';
 import { Location } from '@/types/palace';
 import { MapPin } from 'lucide-react-native';
 import React from 'react';
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { JourneyDots } from './JourneyDots';
 
 interface LocationCardProps {
@@ -18,7 +19,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({
   return (
     <View className="overflow-hidden rounded-3xl bg-white shadow-lg">
       <View className="relative h-64">
-        <Image source={{ uri: location.image }} className="h-full w-full" resizeMode="cover" />
+        <AppImage source={{ uri: location.imageUrl }} className="h-full w-full" />
         <View className="absolute left-4 top-4 flex-row items-center gap-2 rounded-full bg-teal-600 px-3 py-1.5 shadow-lg">
           <MapPin size={16} color="white" />
           <Text className="text-sm text-white">Location {currentStep + 1}</Text>

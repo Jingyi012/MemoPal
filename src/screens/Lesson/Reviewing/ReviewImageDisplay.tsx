@@ -1,6 +1,7 @@
+import { AppImage } from '@/components/AppImage';
 import { Check, HelpCircle } from 'lucide-react-native';
 import React from 'react';
-import { Image, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 interface Props {
@@ -11,7 +12,11 @@ interface Props {
 
 export const ReviewImageDisplay: React.FC<Props> = ({ imageUrl, isRevealed, feedback }) => (
   <View className="aspect-square w-full overflow-hidden rounded-[40px] border-4 border-white bg-slate-200 shadow-xl">
-    <Image source={{ uri: imageUrl }} className="h-full w-full" blurRadius={isRevealed ? 0 : 20} />
+    <AppImage
+      source={{ uri: imageUrl }}
+      className="h-full w-full"
+      blurRadius={isRevealed ? 0 : 20}
+    />
     {!isRevealed && (
       <View className="absolute inset-0 items-center justify-center bg-black/10">
         <Animated.View entering={FadeIn.delay(300)}>

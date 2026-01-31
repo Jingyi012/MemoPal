@@ -1,17 +1,16 @@
-export type NotificationType =
-  | 'review'
-  | 'achievement'
-  | 'streak'
-  | 'level'
-  | 'complete'
-  | 'premium';
+import { Auditable } from './general';
 
-export interface Notification {
+export type NotificationType = 'xp' | 'level_up' | 'milestone' | 'badge' | 'lesson' | 'system';
+
+export interface Notification extends Auditable {
   id: string;
+  userId: string;
   type: NotificationType;
   title: string;
-  message: string;
-  read: boolean;
-  actionUrl?: string;
-  createdAt: string;
+  body: string;
+  referenceType?: string;
+  referenceId?: string;
+  isRead: boolean;
+  isDismissed: boolean;
+  readAt?: string;
 }

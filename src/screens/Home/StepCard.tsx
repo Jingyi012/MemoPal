@@ -8,7 +8,7 @@ interface StepCardProps {
 }
 
 export const StepCard: React.FC<StepCardProps> = ({ step }) => {
-  const isLocked = step.locked ?? false;
+  const isLocked = step.isLocked ?? false;
   const progressPercent = step.progress ? (step.progress.current / step.progress.total) * 100 : 0;
 
   return (

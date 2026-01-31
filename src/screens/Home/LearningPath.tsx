@@ -16,13 +16,13 @@ const LearningPath: React.FC = () => {
       id: 2,
       title: 'Learn Your First Words',
       description: 'Apply the Memory Palace technique to remember 10 words',
-      locked: true,
+      isLocked: true,
     },
     {
       id: 3,
       title: 'Build Your Streak',
       description: 'Review daily and earn your first achievement badge',
-      locked: true,
+      isLocked: true,
     },
   ];
 

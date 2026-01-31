@@ -5,9 +5,13 @@ import { Text, View } from 'react-native';
 
 interface Props {
   onStartPalaceTraining: () => void;
+  locationCount?: number;
 }
 
-export const ReviewPalaceButton: React.FC<Props> = ({ onStartPalaceTraining }) => {
+export const ReviewPalaceButton: React.FC<Props> = ({
+  onStartPalaceTraining,
+  locationCount = 0,
+}) => {
   return (
     <View className="mt-3">
       <AnimatedPressable onPress={onStartPalaceTraining} className="w-full rounded-xl bg-white p-3">
@@ -20,7 +24,9 @@ export const ReviewPalaceButton: React.FC<Props> = ({ onStartPalaceTraining }) =
           {/* Text */}
           <View className="flex-1">
             <Text className="text-base text-text">Review Palace Locations</Text>
-            <Text className="text-sm text-text-muted">Refresh your memory of 10 locations</Text>
+            <Text className="text-sm text-text-muted">
+              Refresh your memory of {locationCount} locations
+            </Text>
           </View>
 
           {/* Trailing icon */}

@@ -1,15 +1,15 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { Colors } from '@/constants/colors';
-import { LessonCategory } from '@/types/community';
+import { LessonCategory } from '@/types/lesson';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-const CATEGORIES: { id: LessonCategory | 'all'; label: string; icon: string }[] = [
-  { id: 'all', label: 'All', icon: '✨' },
-  { id: 'language-learning', label: 'Language', icon: '🌍' },
-  { id: 'vocabulary', label: 'Vocabulary', icon: '📚' },
-  { id: 'medical', label: 'Medical', icon: '⚕️' },
-  { id: 'business', label: 'Business', icon: '💼' },
+const CATEGORIES: { category: LessonCategory | 'all'; label: string; icon: string }[] = [
+  { category: 'all', label: 'All', icon: '✨' },
+  { category: 'language-learning', label: 'Language', icon: '🌍' },
+  { category: 'vocabulary', label: 'Vocabulary', icon: '📚' },
+  { category: 'medical', label: 'Medical', icon: '⚕️' },
+  { category: 'business', label: 'Business', icon: '💼' },
 ];
 
 interface Props {
@@ -24,12 +24,12 @@ export const CategoryFilter: React.FC<Props> = ({ selected, onSelect }) => (
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}>
       {CATEGORIES.map((cat) => {
-        const isSelected = selected === cat.id;
+        const isSelected = selected === cat.category;
 
         return (
           <AnimatedPressable
-            key={cat.id}
-            onPress={() => onSelect(cat.id)}
+            key={cat.category}
+            onPress={() => onSelect(cat.category)}
             style={[styles.chip, isSelected ? styles.chipActive : styles.chipInactive]}>
             <Text style={styles.icon}>{cat.icon}</Text>
             <Text style={[styles.label, isSelected && styles.labelActive]}>{cat.label}</Text>

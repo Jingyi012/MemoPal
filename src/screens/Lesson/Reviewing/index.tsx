@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, LogOut } from 'lucide-react-native';
 import React, { useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
@@ -20,23 +20,35 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 
+import { ActionSheet } from '@/components/ActionSheet';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { ConfirmModal } from '@/components/ConfirmModal';
-import lessons from '@/utils/mock/lessons.json';
-import data from '@/utils/mock/palaces.json';
+import LoadingView from '@/components/LoadingView';
+import { Colors } from '@/constants/colors';
+import { useAuth } from '@/contexts/AuthProvider';
+import { useLessonsManager } from '@/hooks/useLessonsManager';
+import { useLocation } from '@/hooks/useLocation';
+import { useReviewCompletion } from '@/hooks/useReviewCompletion';
 import { ReviewHeader } from './ReviewHeader';
 import { ReviewImageDisplay } from './ReviewImageDisplay';
 import { ReviewInputSection } from './ReviewInputSection';
 import { ReviewSummary } from './ReviewSummary';
 
-export function ReviewTest({ lessonId }: { lessonId: string }) {
-  const router = useRouter();
-  const inputRef = useRef<TextInput>(null);
+interface ReviewTestProps {
+  lessonId: string;
+}
 
-  const lesson = lessons.lessons.find((l) => l.id === lessonId);
+export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId }) => {
+  const router = useRouter();
+  const { user } = useAuth();
+  const inputRef = useRef<TextInput>(null);
+  const userId = user?.id || '';
+
+  // Fetch lesson with words
+  const { lesson, isLoading: lessonLoading } = useLessonsManager('', lessonId);
   const steps = useMemo(() => lesson?.words || [], [lesson?.words]);
   const totalSteps = steps.length;
 
+  // Track current step
   const [currentStep, setCurrentStep] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
@@ -46,8 +58,13 @@ export function ReviewTest({ lessonId }: { lessonId: string }) {
   const [showSummary, setShowSummary] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
 
+  // Review submission
+  const { submitReviewAsync, isLoading: isSubmitting } = useReviewCompletion();
+
   const step = steps[currentStep];
-  const location = data.locations.find((x) => x.id === step?.locationId);
+
+  // Fetch location for current word
+  const { location, isLoading: locationLoading } = useLocation(step?.locationId || '');
 
   // Animations
   const shakeX = useSharedValue(0);
@@ -77,7 +94,7 @@ export function ReviewTest({ lessonId }: { lessonId: string }) {
     setResults((prev) => [...prev, { wordId: step.id, isCorrect, entered: inputValue }]);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < totalSteps - 1) {
       setIsRevealed(false);
       setFeedback(null);
@@ -86,16 +103,42 @@ export function ReviewTest({ lessonId }: { lessonId: string }) {
       // Short delay to ensure input is ready to receive focus after state change
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
-      setShowSummary(true);
+      // Submit review and show summary
+      try {
+        const correctCount = results.filter((r) => r.isCorrect).length;
+        await submitReviewAsync({
+          userId,
+          lessonId,
+          correctCount,
+          totalCount: totalSteps,
+        });
+        setShowSummary(true);
+      } catch (error) {
+        console.error('Error submitting review:', error);
+        // Still show summary but log error
+        setShowSummary(true);
+      }
     }
   };
+
+  if (lessonLoading || locationLoading) {
+    return <LoadingView />;
+  }
+
+  if (!lesson) {
+    return (
+      <View className="flex-1 items-center justify-center bg-slate-50">
+        <Text>Lesson not found</Text>
+      </View>
+    );
+  }
 
   if (showSummary) {
     return (
       <ReviewSummary
         correctCount={results.filter((r) => r.isCorrect).length}
         totalSteps={totalSteps}
-        onFinish={() => router.push(`/palaces/${lesson?.palaceId}`)}
+        onFinish={() => router.push(`/lessons/${lessonId}`)}
       />
     );
   }
@@ -127,7 +170,7 @@ export function ReviewTest({ lessonId }: { lessonId: string }) {
               </Text>
 
               <ReviewImageDisplay
-                imageUrl={location?.image}
+                imageUrl={location?.imageUrl}
                 isRevealed={isRevealed}
                 feedback={feedback}
               />
@@ -156,14 +199,19 @@ export function ReviewTest({ lessonId }: { lessonId: string }) {
             ) : (
               <AnimatedPressable
                 onPress={handleNext}
+                disabled={isSubmitting}
                 className="w-full overflow-hidden rounded-2xl shadow-lg">
                 <LinearGradient
-                  colors={['#0d9488', '#4f46e5']}
+                  colors={[Colors.teal600, Colors.indigo600]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   className="flex-row items-center justify-center py-5">
                   <Text className="mr-2 text-lg font-black text-white">
-                    {currentStep === totalSteps - 1 ? 'VIEW RESULTS' : 'NEXT LOCATION'}
+                    {currentStep === totalSteps - 1
+                      ? isSubmitting
+                        ? 'SAVING...'
+                        : 'VIEW RESULTS'
+                      : 'NEXT LOCATION'}
                   </Text>
                   <ChevronRight size={20} color="white" strokeWidth={3} />
                 </LinearGradient>
@@ -171,21 +219,21 @@ export function ReviewTest({ lessonId }: { lessonId: string }) {
             )}
           </View>
 
-          <ConfirmModal
-            visible={showExitModal}
-            title="Exit lesson?"
-            description="Are you sure you want to exit? Your progress will not be saved."
-            confirmText="Exit"
-            cancelText="Stay"
-            destructive
-            onCancel={() => setShowExitModal(false)}
-            onConfirm={() => {
+          <ActionSheet
+            isVisible={showExitModal}
+            onClose={() => setShowExitModal(false)}
+            onAction={() => () => {
               setShowExitModal(false);
               router.replace(`/lessons/${lessonId}`);
             }}
+            title="Exit Lesson?"
+            description={`Are you sure you want to exit? Your progress will not be saved.`}
+            actionLabel="Exit"
+            variant="destructive"
+            Icon={LogOut}
           />
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
-}
+};

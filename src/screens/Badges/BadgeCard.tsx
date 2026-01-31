@@ -7,9 +7,13 @@ import { Lock, Star } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
-export const BadgeCard: React.FC<{ badge: Badge }> = ({ badge }) => {
-  const Icon = iconMap[badge.icon] ?? iconMap.default;
-  const rarityConfig = BADGE_RARITY_CONFIG[badge.rarity] ?? BADGE_RARITY_CONFIG.common;
+interface BadgeCardProps {
+  badge: Badge & { isEarned: boolean };
+}
+
+export const BadgeCard: React.FC<BadgeCardProps> = ({ badge }) => {
+  const Icon = iconMap[badge.icon ?? 'brain'];
+  const rarityConfig = BADGE_RARITY_CONFIG[badge.rarity ?? 'common'];
   const isLocked = !badge.isEarned;
   const gradientColors = isLocked ? LOCKED_BADGE_GRADIENT : rarityConfig.gradient;
 

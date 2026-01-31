@@ -12,43 +12,43 @@
         {
           "id": "w1",
           "text": "Elephant",
-          "translation": "Large mammal with trunk",
+          "meaning": "Large mammal with trunk",
           "locationId": "loc-1"
         },
-        { "id": "w2", "text": "Tiger", "translation": "Striped big cat", "locationId": "loc-2" },
+        { "id": "w2", "text": "Tiger", "meaning": "Striped big cat", "locationId": "loc-2" },
         {
           "id": "w3",
           "text": "Dolphin",
-          "translation": "Intelligent marine mammal",
+          "meaning": "Intelligent marine mammal",
           "locationId": "loc-3"
         },
-        { "id": "w4", "text": "Eagle", "translation": "Large bird of prey", "locationId": "loc-4" },
-        { "id": "w5", "text": "Penguin", "translation": "Flightless bird", "locationId": "loc-5" },
+        { "id": "w4", "text": "Eagle", "meaning": "Large bird of prey", "locationId": "loc-4" },
+        { "id": "w5", "text": "Penguin", "meaning": "Flightless bird", "locationId": "loc-5" },
         {
           "id": "w6",
           "text": "Giraffe",
-          "translation": "Long-necked mammal",
+          "meaning": "Long-necked mammal",
           "locationId": "loc-6"
         },
         {
           "id": "w7",
           "text": "Octopus",
-          "translation": "Eight-armed sea creature",
+          "meaning": "Eight-armed sea creature",
           "locationId": "loc-7"
         },
         {
           "id": "w8",
           "text": "Kangaroo",
-          "translation": "Hopping marsupial",
+          "meaning": "Hopping marsupial",
           "locationId": "loc-8"
         },
         {
           "id": "w9",
           "text": "Butterfly",
-          "translation": "Colorful flying insect",
+          "meaning": "Colorful flying insect",
           "locationId": "loc-9"
         },
-        { "id": "w10", "text": "Lion", "translation": "King of the jungle", "locationId": "loc-10" }
+        { "id": "w10", "text": "Lion", "meaning": "King of the jungle", "locationId": "loc-10" }
       ],
       "createdAt": "2026-01-01T00:00:00Z",
       "updatedAt": "2026-01-01T00:00:00Z"
@@ -62,44 +62,44 @@
       "difficulty": "beginner",
       "isCustom": false,
       "words": [
-        { "id": "w11", "text": "Red", "translation": "The color of blood", "locationId": "loc-1" },
+        { "id": "w11", "text": "Red", "meaning": "The color of blood", "locationId": "loc-1" },
         {
           "id": "w12",
           "text": "Blue",
-          "translation": "The color of the sky",
+          "meaning": "The color of the sky",
           "locationId": "loc-2"
         },
         {
           "id": "w13",
           "text": "Green",
-          "translation": "The color of grass",
+          "meaning": "The color of grass",
           "locationId": "loc-3"
         },
         {
           "id": "w14",
           "text": "Yellow",
-          "translation": "The color of the sun",
+          "meaning": "The color of the sun",
           "locationId": "loc-4"
         },
-        { "id": "w15", "text": "Black", "translation": "The color of coal", "locationId": "loc-5" },
-        { "id": "w16", "text": "White", "translation": "The color of snow", "locationId": "loc-6" },
+        { "id": "w15", "text": "Black", "meaning": "The color of coal", "locationId": "loc-5" },
+        { "id": "w16", "text": "White", "meaning": "The color of snow", "locationId": "loc-6" },
         {
           "id": "w17",
           "text": "Purple",
-          "translation": "A mix of blue and red",
+          "meaning": "A mix of blue and red",
           "locationId": "loc-7"
         },
         {
           "id": "w18",
           "text": "Orange",
-          "translation": "The color of the fruit",
+          "meaning": "The color of the fruit",
           "locationId": "loc-8"
         },
-        { "id": "w19", "text": "Pink", "translation": "A pale red color", "locationId": "loc-9" },
+        { "id": "w19", "text": "Pink", "meaning": "A pale red color", "locationId": "loc-9" },
         {
           "id": "w20",
           "text": "Brown",
-          "translation": "The color of earth",
+          "meaning": "The color of earth",
           "locationId": "loc-10"
         }
       ],
@@ -115,16 +115,16 @@
       "difficulty": "beginner",
       "isCustom": false,
       "words": [
-        { "id": "w21", "text": "Apple", "translation": "Red fruit", "locationId": "loc-1" },
-        { "id": "w22", "text": "Bread", "translation": "Baked staple", "locationId": "loc-2" },
-        { "id": "w23", "text": "Cheese", "translation": "Dairy product", "locationId": "loc-3" },
-        { "id": "w24", "text": "Coffee", "translation": "Hot beverage", "locationId": "loc-4" },
-        { "id": "w25", "text": "Rice", "translation": "Grain staple", "locationId": "loc-5" },
-        { "id": "w26", "text": "Chicken", "translation": "Poultry meat", "locationId": "loc-6" },
-        { "id": "w27", "text": "Water", "translation": "Clear liquid", "locationId": "loc-7" },
-        { "id": "w28", "text": "Orange", "translation": "Citrus fruit", "locationId": "loc-8" },
-        { "id": "w29", "text": "Milk", "translation": "White drink", "locationId": "loc-9" },
-        { "id": "w30", "text": "Salad", "translation": "Mixed vegetables", "locationId": "loc-10" }
+        { "id": "w21", "text": "Apple", "meaning": "Red fruit", "locationId": "loc-1" },
+        { "id": "w22", "text": "Bread", "meaning": "Baked staple", "locationId": "loc-2" },
+        { "id": "w23", "text": "Cheese", "meaning": "Dairy product", "locationId": "loc-3" },
+        { "id": "w24", "text": "Coffee", "meaning": "Hot beverage", "locationId": "loc-4" },
+        { "id": "w25", "text": "Rice", "meaning": "Grain staple", "locationId": "loc-5" },
+        { "id": "w26", "text": "Chicken", "meaning": "Poultry meat", "locationId": "loc-6" },
+        { "id": "w27", "text": "Water", "meaning": "Clear liquid", "locationId": "loc-7" },
+        { "id": "w28", "text": "Orange", "meaning": "Citrus fruit", "locationId": "loc-8" },
+        { "id": "w29", "text": "Milk", "meaning": "White drink", "locationId": "loc-9" },
+        { "id": "w30", "text": "Salad", "meaning": "Mixed vegetables", "locationId": "loc-10" }
       ],
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
@@ -141,46 +141,46 @@
         {
           "id": "w31",
           "text": "Head",
-          "translation": "Top part of the body",
+          "meaning": "Top part of the body",
           "locationId": "loc-1"
         },
         {
           "id": "w32",
           "text": "Eye",
-          "translation": "Organ used for seeing",
+          "meaning": "Organ used for seeing",
           "locationId": "loc-2"
         },
         {
           "id": "w33",
           "text": "Ear",
-          "translation": "Organ used for hearing",
+          "meaning": "Organ used for hearing",
           "locationId": "loc-3"
         },
         {
           "id": "w34",
           "text": "Nose",
-          "translation": "Organ used for smelling",
+          "meaning": "Organ used for smelling",
           "locationId": "loc-4"
         },
         {
           "id": "w35",
           "text": "Mouth",
-          "translation": "Used for eating and speaking",
+          "meaning": "Used for eating and speaking",
           "locationId": "loc-5"
         },
-        { "id": "w36", "text": "Arm", "translation": "Upper limb", "locationId": "loc-6" },
-        { "id": "w37", "text": "Hand", "translation": "End of the arm", "locationId": "loc-7" },
+        { "id": "w36", "text": "Arm", "meaning": "Upper limb", "locationId": "loc-6" },
+        { "id": "w37", "text": "Hand", "meaning": "End of the arm", "locationId": "loc-7" },
         {
           "id": "w38",
           "text": "Leg",
-          "translation": "Lower limb used for walking",
+          "meaning": "Lower limb used for walking",
           "locationId": "loc-8"
         },
-        { "id": "w39", "text": "Foot", "translation": "End of the leg", "locationId": "loc-9" },
+        { "id": "w39", "text": "Foot", "meaning": "End of the leg", "locationId": "loc-9" },
         {
           "id": "w40",
           "text": "Heart",
-          "translation": "Organ that pumps blood",
+          "meaning": "Organ that pumps blood",
           "locationId": "loc-10"
         }
       ],
@@ -196,19 +196,19 @@
       "difficulty": "intermediate",
       "isCustom": false,
       "words": [
-        { "id": "w41", "text": "Wake up", "translation": "Stop sleeping", "locationId": "loc-1" },
-        { "id": "w42", "text": "Brush", "translation": "Clean with a tool", "locationId": "loc-2" },
-        { "id": "w43", "text": "Wash", "translation": "Clean with water", "locationId": "loc-3" },
-        { "id": "w44", "text": "Dress", "translation": "Put on clothes", "locationId": "loc-4" },
-        { "id": "w45", "text": "Cook", "translation": "Prepare food", "locationId": "loc-5" },
-        { "id": "w46", "text": "Work", "translation": "Perform a task", "locationId": "loc-6" },
-        { "id": "w47", "text": "Drive", "translation": "Operate a vehicle", "locationId": "loc-7" },
-        { "id": "w48", "text": "Buy", "translation": "Purchase something", "locationId": "loc-8" },
-        { "id": "w49", "text": "Clean", "translation": "Remove dirt", "locationId": "loc-9" },
+        { "id": "w41", "text": "Wake up", "meaning": "Stop sleeping", "locationId": "loc-1" },
+        { "id": "w42", "text": "Brush", "meaning": "Clean with a tool", "locationId": "loc-2" },
+        { "id": "w43", "text": "Wash", "meaning": "Clean with water", "locationId": "loc-3" },
+        { "id": "w44", "text": "Dress", "meaning": "Put on clothes", "locationId": "loc-4" },
+        { "id": "w45", "text": "Cook", "meaning": "Prepare food", "locationId": "loc-5" },
+        { "id": "w46", "text": "Work", "meaning": "Perform a task", "locationId": "loc-6" },
+        { "id": "w47", "text": "Drive", "meaning": "Operate a vehicle", "locationId": "loc-7" },
+        { "id": "w48", "text": "Buy", "meaning": "Purchase something", "locationId": "loc-8" },
+        { "id": "w49", "text": "Clean", "meaning": "Remove dirt", "locationId": "loc-9" },
         {
           "id": "w50",
           "text": "Relax",
-          "translation": "Rest and de-stress",
+          "meaning": "Rest and de-stress",
           "locationId": "loc-10"
         }
       ],

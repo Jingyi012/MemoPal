@@ -1,11 +1,12 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppImage } from '@/components/AppImage';
 import { Colors } from '@/constants/colors';
 import lessons from '@/utils/mock/lessons.json';
 import data from '@/utils/mock/palaces.json';
 import { useRouter } from 'expo-router';
 import { ChevronRight, Sparkles } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Dimensions, Image, ScrollView, Text, View } from 'react-native';
+import { Dimensions, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { LearningCompletion } from './LearningCompletion';
 
@@ -80,21 +81,20 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
           </View>
 
           {/* Image */}
-          <Image
+          <AppImage
             source={{
               uri:
-                locations.find((x) => x.id === step.locationId)?.image ??
+                locations.find((x) => x.id === step.locationId)?.imageUrl ??
                 'https://picsum.photos/800/600',
             }}
             className="mb-6 h-56 w-full rounded-2xl"
-            resizeMode="cover"
           />
 
           {/* Word card */}
           <View className="mb-6 items-center rounded-2xl bg-teal-600 p-6">
             <Text className="mb-1 text-sm text-teal-100">Word to Remember</Text>
             <Text className="text-3xl font-extrabold text-white">{step.text}</Text>
-            <Text className="mt-2 text-teal-50">{step.translation}</Text>
+            <Text className="mt-2 text-teal-50">{step.meaning}</Text>
           </View>
 
           {/* Tip */}

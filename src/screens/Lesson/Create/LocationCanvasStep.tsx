@@ -21,10 +21,10 @@ export function LocationCanvasStep({ palaceId, words, onChangeWords, onPrevious,
 
   const progress = (words.length / locations.length) * 100;
 
-  const handleConfirm = (locationId: string, text: string, translation?: string) => {
+  const handleConfirm = (locationId: string, text: string, meaning?: string) => {
     onChangeWords((prev) => {
       const filtered = prev.filter((w) => w.locationId !== locationId);
-      return [...filtered, { locationId, text, translation }];
+      return [...filtered, { locationId, text, meaning }];
     });
   };
 

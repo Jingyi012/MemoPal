@@ -1,9 +1,10 @@
+import { AppImage } from '@/components/AppImage';
 import { Colors } from '@/constants/colors';
 import { User } from '@/types/users';
 import { LinearGradient } from 'expo-linear-gradient';
 import { User2 } from 'lucide-react-native';
 import React from 'react';
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 interface Props {
   user: User | null;
@@ -13,7 +14,7 @@ const ProfileCard: React.FC<Props> = ({ user }) => {
   return (
     <View className="flex-row items-center gap-4 p-2">
       {user?.avatar ? (
-        <Image
+        <AppImage
           source={{ uri: user.avatar }}
           className="h-16 w-16 rounded-full border-2 border-gray-200"
         />

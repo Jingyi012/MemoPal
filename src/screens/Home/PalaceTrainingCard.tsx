@@ -1,9 +1,11 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppImage } from '@/components/AppImage';
+import { Colors } from '@/constants/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Play, Sparkles } from 'lucide-react-native';
 import React from 'react';
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 interface PalaceTrainingCardProps {}
 
@@ -13,18 +15,14 @@ export const PalaceTrainingCard: React.FC<PalaceTrainingCardProps> = ({}) => {
     <View className="overflow-hidden rounded-3xl bg-white shadow-lg">
       <View className="relative h-60">
         {/* Background Gradient */}
-        <LinearGradient
-          colors={['#14b8a6', '#4f46e5']} // teal-600 → indigo-600
-          className="absolute inset-0"
-        />
+        <LinearGradient colors={[Colors.teal600, Colors.indigo600]} className="absolute inset-0" />
 
         {/* Overlay Image */}
-        <Image
+        <AppImage
           source={{
             uri: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80',
           }}
           className="absolute inset-0 h-full w-full opacity-30"
-          resizeMode="cover"
         />
 
         {/* Content */}

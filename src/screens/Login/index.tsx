@@ -1,11 +1,13 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppImage } from '@/components/AppImage';
+import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useUserState } from '@/contexts/UserStateContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Brain, Mail } from 'lucide-react-native';
 import { useEffect } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 interface LoginProps {}
 
@@ -38,7 +40,7 @@ export const LoginScreen: React.FC<LoginProps> = ({}) => {
       <View className="flex-1 items-center justify-center px-8">
         {/* Logo */}
         <LinearGradient
-          colors={['#14b8a6', '#4f46e5']} // teal → indigo
+          colors={[Colors.teal600, Colors.indigo600]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -58,11 +60,7 @@ export const LoginScreen: React.FC<LoginProps> = ({}) => {
         <AnimatedPressable
           onPress={handleGoogleLogin}
           className="mb-4 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-xl border-2 border-gray-300 bg-white px-6 py-4 shadow-sm active:bg-gray-50">
-          <Image
-            source={require('@assets/images/google-icon.png')}
-            className="h-5 w-5"
-            resizeMode="contain"
-          />
+          <AppImage source={require('@assets/images/google-icon.png')} className="h-5 w-5" />
 
           <Text className="font-medium text-gray-700">Continue with Google</Text>
         </AnimatedPressable>

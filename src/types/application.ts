@@ -3,5 +3,5 @@ export interface Step {
   title: string;
   description: string;
   progress?: { current: number; total: number };
-  locked?: boolean;
+  isLocked?: boolean;
 }

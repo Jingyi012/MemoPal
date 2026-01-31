@@ -1,6 +1,7 @@
 import { CommonHeader } from '@/components/CommonHeader';
 import { Colors } from '@/constants/colors';
-import { CommunityLesson, LessonCategory } from '@/types/community';
+import { CommunityLesson } from '@/types/community';
+import { LessonCategory } from '@/types/lesson';
 import MOCK_DATA from '@/utils/mock/community-lessons.json';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Search, Users } from 'lucide-react-native';

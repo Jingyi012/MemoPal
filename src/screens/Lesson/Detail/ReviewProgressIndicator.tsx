@@ -9,7 +9,7 @@ import { dateFormatter } from '@/utils/formatter';
 import { isReviewDueSoon, isReviewOverdue } from '@/utils/review';
 
 interface ReviewProgressIndicatorProps {
-  schedule: ReviewSchedule;
+  schedule: ReviewSchedule[];
   compact?: boolean;
   className?: string;
 }
@@ -19,12 +19,11 @@ export function ReviewProgressIndicator({
   compact = false,
   className,
 }: ReviewProgressIndicatorProps) {
-  const reviews = [
-    { key: 'review1', label: '24h', data: schedule.review1 },
-    { key: 'review2', label: '3d', data: schedule.review2 },
-    { key: 'review3', label: '7d', data: schedule.review3 },
-    { key: 'review4', label: '30d', data: schedule.review4 },
-  ];
+  const reviews = schedule.map((item, idx) => ({
+    key: `review-${item.id}`,
+    label: getReviewLabel(item.reviewRound),
+    data: item,
+  }));
 
   const allCompleted = reviews.every((r) => r.data.completed);
 
@@ -51,9 +50,6 @@ export function ReviewProgressIndicator({
     );
   }
 
-  /* ------------------------------------------------------------------ */
-  /* FULL MODE */
-  /* ------------------------------------------------------------------ */
   return (
     <View className={cn('rounded-2xl bg-white p-4', className)}>
       <Text className="mb-3">Review Timeline</Text>
@@ -128,4 +124,17 @@ export function ReviewProgressIndicator({
       </View>
     </View>
   );
+}
+
+/**
+ * Helper function to get human-readable label for review round
+ */
+function getReviewLabel(reviewRound: number): string {
+  const labels: { [key: number]: string } = {
+    1: '24h',
+    2: '3d',
+    3: '7d',
+    4: '30d',
+  };
+  return labels[reviewRound] || `${reviewRound}`;
 }

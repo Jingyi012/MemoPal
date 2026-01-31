@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppImage } from '@/components/AppImage';
 import { Colors } from '@/constants/colors';
 import { LessonWordForm } from '@/types/lesson';
 import { Location } from '@/types/palace';
@@ -17,7 +18,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Image, Keyboard, Text, View } from 'react-native';
+import { Keyboard, Text, View } from 'react-native';
 
 export interface WordEditorSheetRef {
   open: (payload: { location: Location; existingWord?: LessonWordForm }) => void;
@@ -25,14 +26,14 @@ export interface WordEditorSheetRef {
 }
 
 interface Props {
-  onConfirm: (locationId: string, text: string, translation?: string) => void;
+  onConfirm: (locationId: string, text: string, meaning?: string) => void;
 }
 
 export const WordEditorSheet = forwardRef<WordEditorSheetRef, Props>(({ onConfirm }, ref) => {
   const modalRef = useRef<BottomSheetModal>(null);
   const [location, setLocation] = useState<Location | null>(null);
   const [text, setText] = useState('');
-  const [translation, setTranslation] = useState('');
+  const [meaning, setTranslation] = useState('');
 
   React.useEffect(() => {
     const sub = Keyboard.addListener('keyboardDidHide', () => {
@@ -48,7 +49,7 @@ export const WordEditorSheet = forwardRef<WordEditorSheetRef, Props>(({ onConfir
     open: ({ location, existingWord }) => {
       setLocation(location);
       setText(existingWord?.text ?? '');
-      setTranslation(existingWord?.translation ?? '');
+      setTranslation(existingWord?.meaning ?? '');
       modalRef.current?.present();
     },
     close: () => modalRef.current?.dismiss(),
@@ -58,7 +59,7 @@ export const WordEditorSheet = forwardRef<WordEditorSheetRef, Props>(({ onConfir
 
   const handleConfirm = () => {
     if (!canConfirm || !location) return;
-    onConfirm(location.id, text.trim(), translation.trim());
+    onConfirm(location.id, text.trim(), meaning.trim());
     modalRef.current?.dismiss();
   };
 
@@ -103,11 +104,7 @@ export const WordEditorSheet = forwardRef<WordEditorSheetRef, Props>(({ onConfir
 
             {/* Image Preview */}
             <View className="relative mb-6 h-40 w-full overflow-hidden rounded-3xl bg-slate-200">
-              <Image
-                source={{ uri: location.image }}
-                className="h-full w-full"
-                resizeMode="cover"
-              />
+              <AppImage source={{ uri: location.imageUrl }} className="h-full w-full" />
             </View>
 
             {/* Inputs */}
@@ -128,10 +125,10 @@ export const WordEditorSheet = forwardRef<WordEditorSheetRef, Props>(({ onConfir
 
               <View className="mt-3">
                 <Text className="mb-2 ml-1 text-xs font-black uppercase tracking-widest text-slate-400">
-                  Translation (Optional)
+                  Meaning (Optional)
                 </Text>
                 <BottomSheetTextInput
-                  defaultValue={translation}
+                  defaultValue={meaning}
                   onChangeText={setTranslation}
                   placeholder="Meaning in your language..."
                   className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-slate-900 focus:border-teal-500"

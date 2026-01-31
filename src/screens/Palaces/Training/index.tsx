@@ -1,10 +1,11 @@
+import LoadingView from '@/components/LoadingView';
 import { StepNavigationFooter } from '@/components/StepNavigationFooter';
 import { useUserState } from '@/contexts/UserStateContext';
+import { usePalace } from '@/hooks/usePalace';
 import { CustomPalaceData } from '@/types/palace';
-import data from '@/utils/mock/palaces.json';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
 import { LocationCard } from './LocationCard';
 import { PalaceTraningHeader } from './PalaceTraningHeader';
 
@@ -22,15 +23,20 @@ export const PalaceTrainingScreen: React.FC<PalaceTrainingProps> = ({
   const { completeOnboarding } = useUserState();
   const router = useRouter();
 
-  const palaceLocations = data.locations.filter((x) => x.palaceId === palaceId);
+  const { data, isLoading } = usePalace(palaceId);
 
   const displayName = customPalace?.name || palaceName || 'Memory Palace';
 
+  const palaceLocations = useMemo(() => {
+    return data?.locations ?? [];
+  }, [data]);
+
   const [currentStep, setCurrentStep] = useState(0);
+
   const isLastStep = currentStep === palaceLocations.length - 1;
 
   const onComplete = () => {
-    // award xp,
+    // award xp, analytics, etc
   };
 
   const handleNext = () => {
@@ -44,8 +50,22 @@ export const PalaceTrainingScreen: React.FC<PalaceTrainingProps> = ({
   };
 
   const handlePrevious = () => {
-    if (currentStep > 0) setCurrentStep((prev) => prev - 1);
+    if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1);
+    }
   };
+
+  if (isLoading && palaceLocations.length === 0) {
+    return <LoadingView description="loading palace..."></LoadingView>;
+  }
+
+  if (palaceLocations.length === 0) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text>No locations found for this palace.</Text>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-gray-50">

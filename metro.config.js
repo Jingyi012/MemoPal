@@ -16,5 +16,7 @@ config.resolver.extraNodeModules = {
 // watch the root folder
 config.watchFolders = [projectRoot];
 
+config.resolver.sourceExts.push('sql');
+
 // wrap with NativeWind
 module.exports = withNativeWind(config, { input: './global.css' });

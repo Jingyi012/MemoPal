@@ -8,12 +8,13 @@ import { StepNavigationFooter } from '../../../components/StepNavigationFooter';
 
 interface Props {
   form: LessonForm;
+  isSaving: boolean;
   onEditInfo: () => void;
   onEditWords: () => void;
   onSave: (lesson: LessonForm) => void;
 }
 
-export function ReviewSummaryStep({ form, onEditInfo, onEditWords, onSave }: Props) {
+export function ReviewSummaryStep({ form, isSaving, onEditInfo, onEditWords, onSave }: Props) {
   // Metadata for the Privacy Badge
   const privacyMeta = {
     private: { icon: Lock, color: '#64748b', bg: '#f1f5f9' },
@@ -128,10 +129,8 @@ export function ReviewSummaryStep({ form, onEditInfo, onEditWords, onSave }: Pro
                 {/* Word details */}
                 <View className="flex-1">
                   <Text className="text-lg font-extrabold text-slate-900">{w.text}</Text>
-                  {w.translation && (
-                    <Text className="mt-1 text-sm italic text-slate-500">
-                      Translation: {w.translation}
-                    </Text>
+                  {w.meaning && (
+                    <Text className="mt-1 text-sm italic text-slate-500">Meaning: {w.meaning}</Text>
                   )}
                 </View>
               </View>
@@ -140,7 +139,7 @@ export function ReviewSummaryStep({ form, onEditInfo, onEditWords, onSave }: Pro
         </View>
       </ScrollView>
 
-      <StepNavigationFooter nextLabel="Save" onNext={() => onSave(form)} />
+      <StepNavigationFooter nextLabel="Save" onNext={() => onSave(form)} disableNext={isSaving} />
     </View>
   );
 }

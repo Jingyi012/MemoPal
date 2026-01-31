@@ -1,16 +1,10 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { Colors } from '@/constants/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, Award, Target, Trophy, Zap } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
-
-// Mock colors since I don't have your config,
-// but using the variable names you provided
-const Colors = {
-  teal600: '#0d9488',
-  indigo600: '#4f46e5',
-};
 
 interface Props {
   correctCount: number;

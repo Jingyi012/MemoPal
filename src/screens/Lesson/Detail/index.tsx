@@ -1,13 +1,16 @@
 import { CommonHeader } from '@/components/CommonHeader';
 import CustomBottomSheet from '@/components/CustomBottomSheet';
 import { ForgettingCurveCard } from '@/components/information/ForgettingCurve';
+import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
-import data from '@/utils/mock/lessonsList.json';
+import { useLessonProgress } from '@/hooks/useLessonProgress';
+import { useLessonsManager } from '@/hooks/useLessonsManager';
+import { dateFormatter } from '@/utils/formatter';
 import { getNextReview, getRetentionRate, isReviewDueSoon, isReviewOverdue } from '@/utils/review';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import { BookOpen, Calendar, Map, TrendingUp, Trophy, Zap } from 'lucide-react-native';
-import React, { useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { LessonReviewStatCard } from './LessonReviewStatCard';
 import { MasteredCard } from './MateredCard';
@@ -23,23 +26,37 @@ interface Props {
 
 const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
   const router = useRouter();
-  const lessons = data.lessons;
-  const lesson = lessons.find((x) => x.id === lessonId);
-  if (!lesson) return null;
+  const { progress, isLoading: progressLoading } = useLessonProgress(lessonId);
 
-  const progress = lesson.progress;
-  const hasStartedLearning = !!progress;
-  const hasMastered = progress?.masteryLevel === 'mastered';
-  const hasCompletedLearning = !!progress?.firstCompletedDate;
+  const { isLoading: detailLoading, lesson } = useLessonsManager('', lessonId);
+  const isLoading = progressLoading || detailLoading;
 
-  // Review info
-  const nextReview = progress ? getNextReview(progress.reviewSchedule) : null;
-  const nextReviewData = nextReview ? progress?.reviewSchedule[nextReview] : null;
-  const isOverdue = nextReviewData ? isReviewOverdue(nextReviewData.dueDate) : false;
-  const isDueSoon = nextReviewData ? isReviewDueSoon(nextReviewData.dueDate) : false;
-  const retentionRate = progress ? getRetentionRate(progress.reviewSchedule) : 0;
+  const { hasStartedLearning, hasMastered, hasCompletedLearning } = useMemo(() => {
+    return {
+      hasStartedLearning: !!progress,
+      hasMastered: progress?.masteryLevel === 'mastered',
+      hasCompletedLearning: !!progress?.firstCompletedDate,
+    };
+  }, [progress]);
 
-  const getTimeUntilReview = () => {
+  // Memoized review info calculations
+  const { nextReviewData, isOverdue, isDueSoon, retentionRate } = useMemo(() => {
+    if (!progress || !progress.reviewSchedule) {
+      return { nextReviewData: null, isOverdue: false, isDueSoon: false, retentionRate: 0 };
+    }
+
+    const nextReview = getNextReview(progress.reviewSchedule);
+
+    return {
+      nextReviewData: nextReview,
+      isOverdue: nextReview ? isReviewOverdue(nextReview.dueDate) : false,
+      isDueSoon: nextReview ? isReviewDueSoon(nextReview.dueDate) : false,
+      retentionRate: getRetentionRate(progress.reviewSchedule),
+    };
+  }, [progress]);
+
+  // Memoized time until review calculation
+  const getTimeUntilReview = useCallback(() => {
     if (!nextReviewData) return null;
     const now = new Date().getTime();
     const due = new Date(nextReviewData.dueDate).getTime();
@@ -52,13 +69,27 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
     if (hours < 24) return `${hours}h`;
     const days = Math.floor(hours / 24);
     return `${days}d`;
-  };
+  }, [nextReviewData]);
 
-  const handleStartLearning = () => router.replace(`/lessons/${lessonId}/learn`);
-  const handleStartReview = () => router.replace(`/lessons/${lessonId}/review`);
+  // Memoized callback for navigation handlers
+  const handleStartLearning = useCallback(() => {
+    router.replace(`/lessons/${lessonId}/learn`);
+  }, [lessonId, router]);
+
+  const handleStartReview = useCallback(() => {
+    router.replace(`/lessons/${lessonId}/review`);
+  }, [lessonId, router]);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const handleBottomSheetOpen = () => bottomSheetRef.current?.snapToIndex(2);
+  const handleBottomSheetOpen = useCallback(() => {
+    bottomSheetRef.current?.snapToIndex(2);
+  }, []);
+
+  if (isLoading) {
+    return <LoadingView />;
+  }
+
+  if (!lesson) return null;
 
   return (
     <>
@@ -110,12 +141,12 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
         {/* WORD LIST SECTION */}
         {!hasStartedLearning && <PalaceWordList words={lesson.words} />}
 
-        {hasStartedLearning && (
+        {hasStartedLearning && progress && (
           <>
             <View className="mt-3 flex-row flex-wrap gap-4">
               <LessonReviewStatCard
                 label="First Learned"
-                value={new Date(progress.firstCompletedDate).toLocaleDateString()}
+                value={dateFormatter(progress.firstCompletedDate)}
                 Icon={Calendar}
                 iconColor={Colors.teal600}
               />

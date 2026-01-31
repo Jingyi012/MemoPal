@@ -1,0 +1,26 @@
+export interface Auditable {
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Syncable {
+  lastSyncedAt?: string | null;
+}
+
+export interface SoftDeletable {
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+}
+
+export interface GeneralResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  [key: string]: any;
+}
+
+export interface PagedResponse<T> extends GeneralResponse<T> {
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+}

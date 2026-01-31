@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppImage } from '@/components/AppImage';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { Colors } from '@/constants/colors';
 import { CommunityLesson } from '@/types/community';
@@ -6,7 +7,7 @@ import { dateFormatter } from '@/utils/formatter';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { BadgeCheck, BookOpen, Calendar, Copy, Crown, Download, Star } from 'lucide-react-native';
 import React, { forwardRef } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 interface Props {
   selectedLesson: CommunityLesson | null;
@@ -52,7 +53,7 @@ const PreviewBottomSheet = forwardRef<Ref, Props>(
                   {/* Creator Info */}
                   <View className="mt-4 flex-row items-center rounded-2xl border border-slate-100 bg-slate-50 p-3">
                     {selectedLesson.creator.avatarUrl ? (
-                      <Image
+                      <AppImage
                         source={{ uri: selectedLesson.creator.avatarUrl }}
                         className="h-10 w-10"
                         style={{ borderRadius: 30 }}
@@ -178,12 +179,12 @@ const PreviewBottomSheet = forwardRef<Ref, Props>(
                           <View className="mx-4 h-8 w-[1px] bg-slate-200" />
                           <View className="flex-1">
                             <Text className="mb-1 text-right text-xs font-bold uppercase text-slate-400">
-                              Translation
+                              Meaning
                             </Text>
                             <Text
                               adjustsFontSizeToFit
                               className="text-right text-sm font-medium text-teal-700">
-                              {w.translation}
+                              {w.meaning}
                             </Text>
                           </View>
                         </View>
