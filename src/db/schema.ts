@@ -34,6 +34,7 @@ export const palaces = sqliteTable('palaces', {
   requiredXp: integer('required_xp').default(0).notNull(),
   isPremium: integer('is_premium', { mode: 'boolean' }).default(false).notNull(),
   isCustom: integer('is_custom', { mode: 'boolean' }).default(false).notNull(),
+  createdBy: text('created_by').references(() => users.id, { onDelete: 'cascade' }), // for custom palace
   ...commonColumns,
 });
 
@@ -88,6 +89,7 @@ export const lessons = sqliteTable('lessons', {
   isCustom: integer('is_custom', { mode: 'boolean' }).default(false),
   isLocked: integer('is_locked', { mode: 'boolean' }).default(false),
   isPremium: integer('is_premium', { mode: 'boolean' }).default(false),
+  createdBy: text('created_by').references(() => users.id, { onDelete: 'cascade' }), // for custom lesson
   ...commonColumns,
 });
 
@@ -118,8 +120,8 @@ export const reviewSchedules = sqliteTable('review_schedules', {
   userId: text('user_id')
     .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
-  lessonId: text('lesson_id')
-    .references(() => lessons.id, { onDelete: 'cascade' })
+  lessonProgressId: text('lesson_progress_id')
+    .references(() => lessonProgress.id, { onDelete: 'cascade' })
     .notNull(),
   reviewRound: integer('review_round').notNull(),
   dueDate: text('due_date').notNull(),
@@ -163,11 +165,18 @@ export const xpConfigs = sqliteTable('xp_configs', {
   id: text('id').primaryKey(),
   sourceType: text('source_type')
     .$type<
-      'lesson_complete' | 'review_complete' | 'word_mastered' | 'streak_bonus' | 'manual_adjustment'
+      | 'lesson_complete'
+      | 'review_complete'
+      | 'word_mastered'
+      | 'streak_bonus'
+      | 'manual_adjustment'
+      | 'daily_login'
     >()
     .notNull(),
 
-  xpAmount: integer('xp_amount').notNull(),
+  baseXp: integer('base_xp').notNull(),
+  variableXp: integer('variable_xp').default(0).notNull(),
+
   isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
   ...commonColumns,
 });
@@ -281,10 +290,14 @@ export const syncQueue = sqliteTable('sync_queue', {
 // Relations
 // ============================
 
-export const palacesRelations = relations(palaces, ({ many }) => ({
+export const palacesRelations = relations(palaces, ({ one, many }) => ({
   locations: many(locations),
   lessons: many(lessons),
   userPalaces: many(userPalaces),
+  creator: one(users, {
+    fields: [palaces.createdBy],
+    references: [users.id],
+  }),
 }));
 
 export const locationsRelations = relations(locations, ({ one }) => ({
@@ -295,7 +308,10 @@ export const lessonsRelations = relations(lessons, ({ one, many }) => ({
   palace: one(palaces, { fields: [lessons.palaceId], references: [palaces.id] }),
   words: many(words),
   progress: many(lessonProgress),
-  reviewSchedules: many(reviewSchedules),
+  creator: one(users, {
+    fields: [lessons.createdBy],
+    references: [users.id],
+  }),
 }));
 
 export const lessonProgressRelations = relations(lessonProgress, ({ one, many }) => ({
@@ -305,7 +321,10 @@ export const lessonProgressRelations = relations(lessonProgress, ({ one, many })
 }));
 
 export const reviewSchedulesRelations = relations(reviewSchedules, ({ one }) => ({
-  lesson: one(lessons, { fields: [reviewSchedules.lessonId], references: [lessons.id] }),
+  progress: one(lessonProgress, {
+    fields: [reviewSchedules.lessonProgressId],
+    references: [lessonProgress.id],
+  }),
   user: one(users, { fields: [reviewSchedules.userId], references: [users.id] }),
 }));
 

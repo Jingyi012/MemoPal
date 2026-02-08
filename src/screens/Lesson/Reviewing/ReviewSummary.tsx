@@ -7,12 +7,22 @@ import { Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 
 interface Props {
+  isLearning: boolean;
   correctCount: number;
   totalSteps: number;
+  xpEarned: number;
+  streak: number;
   onFinish: () => void;
 }
 
-export const ReviewSummary: React.FC<Props> = ({ correctCount, totalSteps, onFinish }) => {
+export const ReviewSummary: React.FC<Props> = ({
+  isLearning,
+  correctCount,
+  totalSteps,
+  xpEarned,
+  streak,
+  onFinish,
+}) => {
   const percentage = Math.round((correctCount / totalSteps) * 100);
 
   const getRank = () => {
@@ -66,24 +76,32 @@ export const ReviewSummary: React.FC<Props> = ({ correctCount, totalSteps, onFin
             label="Recalled"
             value={`${correctCount}/${totalSteps}`}
           />
-          <StatItem
-            delay={700}
-            icon={<Zap size={20} color="#f59e0b" />}
-            label="Points"
-            value={(correctCount * 150).toLocaleString()}
-          />
-          <StatItem
-            delay={800}
-            icon={<Trophy size={20} color="#10b981" />}
-            label="Bonus"
-            value={percentage === 100 ? '+500' : '0'}
-          />
-          <StatItem
-            delay={900}
-            icon={<Award size={20} color="#ec4899" />}
-            label="Streak"
-            value="MAX"
-          />
+          {!isLearning && (
+            <StatItem
+              delay={700}
+              icon={<Zap size={20} color="#f59e0b" />}
+              label="XP Earned"
+              value={`+${xpEarned.toLocaleString()}`}
+            />
+          )}
+
+          {!isLearning && (
+            <StatItem
+              delay={800}
+              icon={<Award size={20} color="#ec4899" />}
+              label="Streak"
+              value={`${streak}`}
+            />
+          )}
+
+          {isLearning && (
+            <StatItem
+              delay={700}
+              icon={<Trophy size={20} color="#10b981" />}
+              label="Mode"
+              value="Practice"
+            />
+          )}
         </View>
 
         {/* Action Button */}

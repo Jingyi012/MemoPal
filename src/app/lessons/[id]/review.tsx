@@ -3,8 +3,10 @@ import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
 const ReviewScreen = () => {
-  const { id } = useLocalSearchParams();
-  return <ReviewTest lessonId={id as string} />;
+  const { id, isLearningMode } = useLocalSearchParams();
+  return (
+    <ReviewTest lessonId={id as string} isLearningMode={isLearningMode as unknown as boolean} />
+  );
 };
 
 export default ReviewScreen;

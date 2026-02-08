@@ -64,13 +64,13 @@ function AppLayout() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <Toast config={toastConfig} topOffset={60} />
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <UserStateProvider>
             <AppLayout />
           </UserStateProvider>
         </AuthProvider>
+        <Toast config={toastConfig} topOffset={60} />
       </QueryClientProvider>
     </SafeAreaProvider>
   );

@@ -1,140 +1,116 @@
-import { AlertCircle, CheckCircle2, Clock, Trophy } from 'lucide-react-native';
-import React from 'react';
-import { Text, View } from 'react-native';
-
 import { Colors } from '@/constants/colors';
 import { ReviewSchedule } from '@/types/lesson';
 import { cn } from '@/utils/cn';
-import { dateFormatter } from '@/utils/formatter';
-import { isReviewDueSoon, isReviewOverdue } from '@/utils/review';
+import { Check, Lock } from 'lucide-react-native';
+import React from 'react';
+import { Text, View } from 'react-native';
 
-interface ReviewProgressIndicatorProps {
-  schedule: ReviewSchedule[];
-  compact?: boolean;
+interface Props {
+  schedule: ReviewSchedule[]; // Only includes completed + current active
   className?: string;
 }
 
-export function ReviewProgressIndicator({
-  schedule,
-  compact = false,
-  className,
-}: ReviewProgressIndicatorProps) {
-  const reviews = schedule.map((item, idx) => ({
-    key: `review-${item.id}`,
-    label: getReviewLabel(item.reviewRound),
-    data: item,
-  }));
+// Define your SRS strategy labels upfront
+const SRS_STAGES = [
+  { label: '24h', round: 1 },
+  { label: '3d', round: 2 },
+  { label: '7d', round: 3 },
+  { label: '30d', round: 4 },
+];
 
-  const allCompleted = reviews.every((r) => r.data.completed);
+export function ReviewProgressIndicator({ schedule, className }: Props) {
+  // Find the highest round number reached so far
+  const completedRounds = schedule.filter((s) => s.completed).length;
+  const currentActiveReview = schedule.find((s) => !s.completed);
 
-  /* ------------------------------------------------------------------ */
-  /* COMPACT MODE (DOT INDICATOR) */
-  /* ------------------------------------------------------------------ */
-  if (compact) {
-    return (
-      <View className="flex-row items-center">
-        {reviews.map((review) => {
-          const bgColor = review.data.completed
-            ? 'bg-green-500'
-            : isReviewOverdue(review.data.dueDate)
-              ? 'bg-red-400'
-              : isReviewDueSoon(review.data.dueDate)
-                ? 'bg-orange-400'
-                : 'bg-gray-300';
-
-          return <View key={review.key} className={`mr-1.5 h-1.5 w-1.5 rounded-full ${bgColor}`} />;
-        })}
-
-        {allCompleted && <Trophy size={12} className="ml-1 text-yellow-500" />}
-      </View>
-    );
-  }
+  // The user is currently "at" this index in the SRS_STAGES array
+  const currentStageIndex = currentActiveReview
+    ? currentActiveReview.reviewRound - 1
+    : completedRounds;
 
   return (
-    <View className={cn('rounded-2xl bg-white p-4', className)}>
-      <Text className="mb-3">Review Timeline</Text>
-      <View className="space-y-2">
-        {reviews.map((review, idx) => {
-          const isOverdue = !review.data.completed && isReviewOverdue(review.data.dueDate);
+    <>
+      <View className={cn('rounded-3xl border border-slate-100 bg-white p-6 shadow-sm', className)}>
+        <View className="mb-6 flex-row items-center justify-between">
+          <View>
+            <Text className="text-lg font-bold text-slate-900">Mastery Path</Text>
+            <Text className="text-xs font-medium text-slate-500">
+              {completedRounds} of {SRS_STAGES.length} stages cleared
+            </Text>
+          </View>
+          <View className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1">
+            <Text className="text-[10px] font-bold uppercase text-blue-600">
+              Stage {completedRounds + 1}
+            </Text>
+          </View>
+        </View>
 
-          const isDueSoon = !review.data.completed && isReviewDueSoon(review.data.dueDate);
+        <View className="flex-row items-start justify-between">
+          {SRS_STAGES.map((stage, index) => {
+            const isCompleted = index < currentStageIndex;
+            const isActive = index === currentStageIndex;
+            const isLocked = index > currentStageIndex;
 
-          const statusBg = review.data.completed
-            ? 'bg-green-100'
-            : isOverdue
-              ? 'bg-red-100'
-              : isDueSoon
-                ? 'bg-orange-100'
-                : 'bg-gray-100';
-
-          return (
-            <View key={review.key} className="mb-2 flex-row items-center">
-              {/* Status Icon */}
-              <View className={`mr-3 h-6 w-6 items-center justify-center rounded-full ${statusBg}`}>
-                {review.data.completed ? (
-                  <CheckCircle2 size={16} color={Colors.green600} />
-                ) : isOverdue ? (
-                  <AlertCircle size={16} color={Colors.red600} />
-                ) : (
-                  <Clock size={16} color={isDueSoon ? Colors.orange400 : Colors.gray400} />
+            return (
+              <View key={stage.label} className="flex-1 items-center">
+                {/* Connecting Line */}
+                {index !== 0 && (
+                  <View
+                    className={cn(
+                      'absolute -left-1/2 right-1/2 top-4 -z-10 h-[2px]',
+                      isCompleted ? 'bg-green-400' : 'bg-slate-100'
+                    )}
+                  />
                 )}
-              </View>
 
-              {/* Label & Dates */}
-              <View className="flex-1">
+                {/* Step Circle */}
+                <View
+                  className={cn(
+                    'h-9 w-9 items-center justify-center rounded-full border-2 shadow-sm',
+                    isCompleted
+                      ? 'border-green-500 bg-green-500'
+                      : isActive
+                        ? 'border-blue-500 bg-white shadow-blue-200'
+                        : 'border-slate-200 bg-slate-50'
+                  )}>
+                  {isCompleted ? (
+                    <Check size={18} color="white" strokeWidth={3} />
+                  ) : isLocked ? (
+                    <Lock size={14} color={Colors.slate400} />
+                  ) : (
+                    <View className="h-2.5 w-2.5 animate-pulse rounded-full bg-blue-500" />
+                  )}
+                </View>
+
+                {/* Label */}
                 <Text
-                  className={`text-xs ${
-                    review.data.completed
-                      ? 'text-green-600'
-                      : isOverdue
-                        ? 'text-red-600'
-                        : 'text-slate-600'
-                  }`}>
-                  Review {idx + 1} ({review.label})
+                  className={cn(
+                    'mt-3 text-[10px] font-bold uppercase tracking-tighter',
+                    isCompleted ? 'text-green-600' : isActive ? 'text-blue-600' : 'text-slate-400'
+                  )}>
+                  {stage.label}
                 </Text>
 
-                {review.data.completed && review.data.completedDate ? (
-                  <Text className="text-xs text-slate-400">
-                    {dateFormatter(review.data.completedDate)}
-                  </Text>
-                ) : (
-                  <Text className="text-xs text-slate-400">
-                    Due: {dateFormatter(review.data.dueDate)}
-                  </Text>
-                )}
+                {/* Status Dot for Active */}
+                {isActive && <View className="mt-1 h-1 w-1 rounded-full bg-blue-500" />}
               </View>
+            );
+          })}
+        </View>
 
-              {/* Progress Bar */}
-              <View
-                className={`h-1 w-8 rounded-full ${
-                  review.data.completed ? 'bg-green-500' : 'bg-gray-200'
-                }`}
-              />
-            </View>
-          );
-        })}
-
-        {/* Mastery Badge */}
-        {allCompleted && (
-          <View className="mt-3 flex-row items-center border-t border-gray-200 pt-3">
-            <Trophy size={16} className="mr-2" color={Colors.yellow600} />
-            <Text className="text-xs font-medium text-yellow-600">Mastered!</Text>
+        {/* Motivational Footer */}
+        <View className="mt-6 flex-row items-center rounded-2xl bg-slate-50 p-3">
+          <View className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
+            <View
+              className="h-full bg-green-500"
+              style={{ width: `${(completedRounds / SRS_STAGES.length) * 100}%` }}
+            />
           </View>
-        )}
+          <Text className="ml-3 text-[10px] font-bold text-slate-500">
+            {Math.round((completedRounds / SRS_STAGES.length) * 100)}% Mastered
+          </Text>
+        </View>
       </View>
-    </View>
+    </>
   );
-}
-
-/**
- * Helper function to get human-readable label for review round
- */
-function getReviewLabel(reviewRound: number): string {
-  const labels: { [key: number]: string } = {
-    1: '24h',
-    2: '3d',
-    3: '7d',
-    4: '30d',
-  };
-  return labels[reviewRound] || `${reviewRound}`;
 }

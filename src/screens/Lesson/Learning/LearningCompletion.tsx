@@ -12,11 +12,16 @@ interface Props {
   palaceId: string;
   lessonId: string;
   stepsCount: number;
+  earnedXp: number;
 }
 
-export const LearningCompletion: React.FC<Props> = ({ palaceId, lessonId, stepsCount }) => {
+export const LearningCompletion: React.FC<Props> = ({
+  palaceId,
+  lessonId,
+  stepsCount,
+  earnedXp,
+}) => {
   const router = useRouter();
-  const earnedXP = stepsCount * 10;
 
   return (
     <LinearGradient
@@ -46,40 +51,44 @@ export const LearningCompletion: React.FC<Props> = ({ palaceId, lessonId, stepsC
             Memory Secured!
           </Text>
           <Text className="mt-2 text-center font-medium text-slate-500">
-            You've successfully mapped {stepsCount} new locations in your mind palace.
+            You've successfully mapped {stepsCount} new words in your mind palace.
           </Text>
         </View>
 
         {/* Stats Grid */}
-        <View className="my-8 w-full flex-row justify-between">
-          <StatBox
-            delay={500}
-            icon={<Sparkles size={20} color="#f59e0b" />}
-            label="XP Gained"
-            value={`+${earnedXP}`}
-          />
-          <StatBox
-            delay={600}
-            icon={<BookOpen size={20} color="#6366f1" />}
-            label="Words"
-            value={stepsCount.toString()}
-          />
-        </View>
+        {earnedXp > 0 ? (
+          <View className="my-8 w-full flex-row justify-between">
+            <StatBox
+              delay={500}
+              icon={<Sparkles size={20} color="#f59e0b" />}
+              label="XP Gained"
+              value={`+${earnedXp}`}
+            />
+            <StatBox
+              delay={600}
+              icon={<BookOpen size={20} color="#6366f1" />}
+              label="Words"
+              value={stepsCount.toString()}
+            />
+          </View>
+        ) : (
+          <View className="my-3 w-full flex-row justify-between"></View>
+        )}
 
         {/* Action Buttons */}
         <Animated.View entering={FadeInDown.delay(800)} className="w-full space-y-3">
           <AnimatedPressable
-            onPress={() => router.replace(`/lessons/${lessonId}/review`)}
+            onPress={() => router.replace(`/lessons/${lessonId}/review?isLearningMode=true`)}
             className="flex-row items-center justify-center rounded-2xl bg-slate-900 py-5 shadow-lg">
             <Text className="mr-2 text-lg font-black text-white">START REVIEW</Text>
             <ChevronRight size={20} color="white" strokeWidth={3} />
           </AnimatedPressable>
 
           <AnimatedPressable
-            onPress={() => router.replace(`/palaces/${palaceId}`)}
+            onPress={() => router.replace(`/lessons/${lessonId}`)}
             className="flex-row items-center justify-center rounded-2xl bg-slate-100 py-4">
             <Home size={18} color="#64748b" className="mr-2" />
-            <Text className="text-base font-bold text-slate-500">Back to Palace</Text>
+            <Text className="ml-3 text-base font-bold text-slate-500">Back</Text>
           </AnimatedPressable>
         </Animated.View>
       </Animated.View>

@@ -1,4 +1,5 @@
 import { useUserStatsRepository } from '@/repositories/userStats.repo';
+import { UserStatsService } from '@/services/userStats.service';
 import { useQuery } from '@tanstack/react-query';
 
 export const USER_STATS_KEYS = {
@@ -13,6 +14,13 @@ export function useUserStats(userId: string) {
     queryKey: USER_STATS_KEYS.detail(userId),
     enabled: !!userId,
     queryFn: async () => {
+      const stats = await UserStatsService.getUserStats(userId);
+
+      if (stats) {
+        const repo = useUserStatsRepository();
+        await repo.upsertMany([stats]);
+      }
+
       return await repo.getByUserId(userId);
     },
     staleTime: 1000 * 60 * 5,

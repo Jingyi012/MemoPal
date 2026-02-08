@@ -1,17 +1,18 @@
+import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import CustomBottomSheet from '@/components/CustomBottomSheet';
 import { ForgettingCurveCard } from '@/components/information/ForgettingCurve';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
 import { useLessonProgress } from '@/hooks/useLessonProgress';
-import { useLessonsManager } from '@/hooks/useLessonsManager';
+import { useLessonDetail } from '@/hooks/useLessonsManager';
 import { dateFormatter } from '@/utils/formatter';
 import { getNextReview, getRetentionRate, isReviewDueSoon, isReviewOverdue } from '@/utils/review';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import { BookOpen, Calendar, Map, TrendingUp, Trophy, Zap } from 'lucide-react-native';
 import React, { useCallback, useMemo, useRef } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { LessonReviewStatCard } from './LessonReviewStatCard';
 import { MasteredCard } from './MateredCard';
 import MemoryRetentionCard from './MemoryRetentionCard';
@@ -26,50 +27,76 @@ interface Props {
 
 const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
   const router = useRouter();
-  const { progress, isLoading: progressLoading } = useLessonProgress(lessonId);
+  const {
+    progress,
+    isLoading: progressLoading,
+    isRefreshing: isProgressRefreshing,
+    refresh: progressRefresh,
+  } = useLessonProgress(lessonId);
 
-  const { isLoading: detailLoading, lesson } = useLessonsManager('', lessonId);
+  const {
+    isLoading: detailLoading,
+    data: lesson,
+    isRefetching: isLessonDetailRefreshing,
+    refetch: lessonRefresh,
+  } = useLessonDetail(lessonId);
+
   const isLoading = progressLoading || detailLoading;
+  const isRefreshing = isProgressRefreshing || isLessonDetailRefreshing;
+
+  const onRefresh = async () => {
+    await progressRefresh();
+    lessonRefresh();
+  };
 
   const { hasStartedLearning, hasMastered, hasCompletedLearning } = useMemo(() => {
     return {
-      hasStartedLearning: !!progress,
+      hasStartedLearning: progress?.masteryLevel === 'learning',
       hasMastered: progress?.masteryLevel === 'mastered',
       hasCompletedLearning: !!progress?.firstCompletedDate,
     };
   }, [progress]);
 
   // Memoized review info calculations
-  const { nextReviewData, isOverdue, isDueSoon, retentionRate } = useMemo(() => {
-    if (!progress || !progress.reviewSchedule) {
-      return { nextReviewData: null, isOverdue: false, isDueSoon: false, retentionRate: 0 };
+  const { isDue, nextReviewData, isOverdue, isDueSoon, retentionRate } = useMemo(() => {
+    if (!progress?.reviewSchedules) {
+      return {
+        isDue: false,
+        nextReviewData: null,
+        isOverdue: false,
+        isDueSoon: false,
+        retentionRate: 0,
+      };
     }
 
-    const nextReview = getNextReview(progress.reviewSchedule);
+    const nextReview = getNextReview(progress.reviewSchedules);
+    const overdue = nextReview ? isReviewOverdue(nextReview.dueDate) : false;
+    // A review is "Due" if it's overdue OR if it's due right now
+    const due = nextReview ? new Date(nextReview.dueDate) <= new Date() : false;
 
     return {
       nextReviewData: nextReview,
-      isOverdue: nextReview ? isReviewOverdue(nextReview.dueDate) : false,
+      isDue: due,
+      isOverdue: overdue,
       isDueSoon: nextReview ? isReviewDueSoon(nextReview.dueDate) : false,
-      retentionRate: getRetentionRate(progress.reviewSchedule),
+      retentionRate: getRetentionRate(progress.reviewSchedules),
     };
   }, [progress]);
 
-  // Memoized time until review calculation
+  // Enhanced time formatting
   const getTimeUntilReview = useCallback(() => {
     if (!nextReviewData) return null;
+    if (isDue) return 'Ready to review';
+
     const now = new Date().getTime();
     const due = new Date(nextReviewData.dueDate).getTime();
     const diff = due - now;
-    if (diff < 0) {
-      const hoursPast = Math.floor(Math.abs(diff) / (1000 * 60 * 60));
-      return `${hoursPast}h overdue`;
-    }
+
     const hours = Math.floor(diff / (1000 * 60 * 60));
-    if (hours < 24) return `${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `${days}d`;
-  }, [nextReviewData]);
+    if (hours < 1) return 'Starting soon';
+    if (hours < 24) return `Due in ${hours}h`;
+    return `Due in ${Math.floor(hours / 24)}d`;
+  }, [nextReviewData, isDue]);
 
   // Memoized callback for navigation handlers
   const handleStartLearning = useCallback(() => {
@@ -98,9 +125,8 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
         description={lesson.description}
         backAction={() => router.replace(`/palaces/${lesson.palaceId}`)}
         additionalContent={
-          hasStartedLearning && !hasMastered ? (
-            <MemoryRetentionCard retentionRate={retentionRate} />
-          ) : null
+          hasStartedLearning &&
+          !hasMastered && <MemoryRetentionCard retentionRate={retentionRate} />
         }
         actions={
           hasStartedLearning ? [{ icon: BookOpen, onPress: () => handleBottomSheetOpen() }] : []
@@ -108,7 +134,10 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
         showNotification={hasStartedLearning ? false : true}
       />
 
-      <ScrollView className="p-4" contentContainerStyle={{ paddingBottom: 60 }}>
+      <ScrollView
+        className="p-4"
+        contentContainerStyle={{ paddingBottom: 60 }}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}>
         <View className="">
           {!hasStartedLearning ? (
             // User hasn't started learning
@@ -121,6 +150,7 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
             <View>
               {nextReviewData && (
                 <NextReviewCard
+                  isDue={isDue}
                   isOverdue={isOverdue}
                   isDueSoon={isDueSoon}
                   nextReviewText={getTimeUntilReview()!}
@@ -128,25 +158,25 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
                 />
               )}
 
-              <TouchableOpacity
+              <AnimatedPressable
                 onPress={handleStartLearning}
-                className="mt-3 flex-row items-center justify-center rounded-xl border border-slate-200 bg-slate-50 py-3">
-                <Map size={18} color={Colors.slate600} />
-                <Text className="ml-2 font-semibold text-slate-600">Learning</Text>
-              </TouchableOpacity>
+                className="mt-3 flex-row items-center justify-center rounded-2xl border border-slate-100 bg-white py-4 shadow-sm">
+                <Map size={20} color={Colors.slate600} />
+                <View className="ml-3">
+                  <Text className="font-bold text-slate-800">Explore Palace</Text>
+                  <Text className="text-xs text-slate-500">Walk through your memory path</Text>
+                </View>
+              </AnimatedPressable>
             </View>
           )}
         </View>
-
-        {/* WORD LIST SECTION */}
-        {!hasStartedLearning && <PalaceWordList words={lesson.words} />}
 
         {hasStartedLearning && progress && (
           <>
             <View className="mt-3 flex-row flex-wrap gap-4">
               <LessonReviewStatCard
                 label="First Learned"
-                value={dateFormatter(progress.firstCompletedDate)}
+                value={dateFormatter(progress.firstCompletedDate) ?? '-'}
                 Icon={Calendar}
                 iconColor={Colors.teal600}
               />
@@ -170,10 +200,16 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
               />
             </View>
 
-            <ReviewProgressIndicator schedule={progress.reviewSchedule} className="mt-3" />
+            {progress.reviewSchedules && progress.reviewSchedules.length > 0 && (
+              <ReviewProgressIndicator schedule={progress.reviewSchedules} className="mt-3" />
+            )}
+
             <ForgettingCurveCard className="mt-3" />
           </>
         )}
+
+        {/* WORD LIST SECTION */}
+        {!hasStartedLearning && <PalaceWordList words={lesson.words} />}
       </ScrollView>
 
       <CustomBottomSheet ref={bottomSheetRef}>

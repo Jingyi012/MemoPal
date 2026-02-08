@@ -4,13 +4,10 @@ import api from './api';
 
 export class MilestoneService {
   /**
-   * Get all available milestones with pagination
+   * Get all available milestones
    */
-  static async getPagedMilestones(params: {
-    pageNumber: number;
-    pageSize: number;
-  }): Promise<PagedResponse<Milestone[]>> {
-    const response = await api.get<PagedResponse<Milestone[]>>('/milestones', {
+  static async getMilestones(params: {}): Promise<GeneralResponse<Milestone[]>> {
+    const response = await api.get<GeneralResponse<Milestone[]>>('/milestones', {
       params,
     });
     if (!response.data.success) throw new Error(response.data.message);

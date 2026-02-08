@@ -1,14 +1,12 @@
-import { GeneralResponse, PagedResponse } from '@/types/general';
+import { GeneralResponse } from '@/types/general';
 import { Lesson, LessonDetails } from '@/types/lesson';
 import api from './api';
 
 export class LessonService {
-  static async getPagedLessonsByPalace(params: {
-    pageNumber: number;
-    pageSize: number;
+  static async getLessonsByPalace(params: {
     palaceId: string;
-  }): Promise<PagedResponse<Lesson[]>> {
-    const response = await api.get<PagedResponse<Lesson[]>>('/lessons', {
+  }): Promise<GeneralResponse<Lesson[]>> {
+    const response = await api.get<GeneralResponse<Lesson[]>>('/lessons', {
       params,
     });
     if (!response.data.success) throw new Error(response.data.message);

@@ -4,13 +4,10 @@ import api from './api';
 
 export class BadgeService {
   /**
-   * Get all available badges with pagination
+   * Get all available badges
    */
-  static async getPagedBadges(params: {
-    pageNumber: number;
-    pageSize: number;
-  }): Promise<PagedResponse<Badge[]>> {
-    const response = await api.get<PagedResponse<Badge[]>>('/badges', {
+  static async getBadges(params: {}): Promise<GeneralResponse<Badge[]>> {
+    const response = await api.get<GeneralResponse<Badge[]>>('/badges', {
       params,
     });
     if (!response.data.success) throw new Error(response.data.message);

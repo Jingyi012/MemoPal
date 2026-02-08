@@ -1,7 +1,7 @@
 import { ActionSheet } from '@/components/ActionSheet';
 import { CommonHeader } from '@/components/CommonHeader';
 import { SegmentedProgressBar } from '@/components/SegmentedProgressBar';
-import { useLessonsManager } from '@/hooks/useLessonsManager';
+import { useLessonMutations } from '@/hooks/useLessonsManager';
 import { LessonForm, LessonWordForm } from '@/types/lesson';
 import { useRouter } from 'expo-router';
 import { LogOut, X } from 'lucide-react-native';
@@ -27,7 +27,7 @@ const STEPS: { key: CreateLessonStep; label: string }[] = [
 export const CreateLessonScreen: React.FC<Props> = ({ palaceId }) => {
   const router = useRouter();
 
-  const { saveLesson } = useLessonsManager(palaceId);
+  const { saveLesson } = useLessonMutations(palaceId);
 
   const [step, setStep] = useState<CreateLessonStep>('info');
   const [isSaving, setIsSaving] = useState(false);

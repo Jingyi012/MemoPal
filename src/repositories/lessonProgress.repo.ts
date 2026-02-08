@@ -3,138 +3,110 @@ import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { LessonProgress } from '@/types/lesson';
-import { calculateNextDueDate, REVIEW_INTERVALS } from '@/utils/review';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
+import { useReviewRepository } from './review.repo';
 
 export function useLessonProgressRepository(userId: string) {
   /**
    * Fetch progress and all related review rounds
    */
   const getLessonProgress = async (lessonId: string): Promise<LessonProgress | null> => {
-    const result = await db.query.lessonProgress.findFirst({
-      where: eq(schema.lessonProgress.lessonId, lessonId),
-      with: {
-        reviewSchedules: {
-          orderBy: (entries, { asc }) => [asc(entries.reviewRound)],
+    try {
+      const result = await db.query.lessonProgress.findFirst({
+        where: eq(schema.lessonProgress.lessonId, lessonId),
+        with: {
+          reviewSchedules: {
+            orderBy: (entries, { asc }) => [asc(entries.reviewRound)],
+          },
         },
-      },
-    });
+      });
 
-    if (!result) return null;
+      if (!result) {
+        console.log('No lesson progress found for this lessonId');
+        return null;
+      }
 
-    // Map DB schema (reviewSchedules) back to the Interface (reviewSchedule)
-    return {
-      ...result,
-      reviewSchedule: result.reviewSchedules,
-    } as unknown as LessonProgress;
+      return {
+        ...result,
+      } as LessonProgress;
+    } catch (err) {
+      console.error('Error fetching lesson progress:', err);
+      return null;
+    }
   };
 
   /**
-   * Save progress, update rounds, and conditionally generate the next round
+   * Initialize lesson progress
    */
+  const initLessonProgress = async (lessonId: string): Promise<LessonProgress> => {
+    const now = new Date().toISOString();
+    const progress: LessonProgress = {
+      id: Crypto.randomUUID(),
+      userId,
+      lessonId,
+      firstCompletedDate: '',
+      masteryLevel: 'new',
+      totalReviews: 0,
+      xpEarned: 0,
+      createdAt: now,
+      updatedAt: now,
+      reviewSchedules: [],
+    };
+
+    await db.insert(schema.lessonProgress).values(progress).onConflictDoNothing();
+
+    return progress;
+  };
+
+  const ensureLearningInitialized = async (progress: LessonProgress): Promise<void> => {
+    if (progress.masteryLevel !== 'learning') return;
+
+    const hasSchedule = progress.reviewSchedules && progress.reviewSchedules.length > 0;
+    if (hasSchedule) return;
+
+    await db.transaction(async (tx) => {
+      const repo = useReviewRepository();
+      repo.scheduleNextRound(tx, {
+        userId,
+        progressId: progress.id,
+        currentRound: 0,
+        completedDate: new Date(),
+      });
+    });
+  };
+
   const saveProgress = async (progress: LessonProgress) => {
     const now = new Date().toISOString();
 
     await db.transaction(async (tx) => {
       // 1. Upsert Lesson Progress
+      var progressId = progress.id ?? Crypto.randomUUID();
       await tx
         .insert(schema.lessonProgress)
         .values({
-          id: progress.id ?? Crypto.randomUUID(),
+          ...progress,
+          id: progressId,
           userId,
-          lessonId: progress.lessonId,
-          firstCompletedDate: progress.firstCompletedDate,
-          masteryLevel: progress.masteryLevel,
-          lastReviewDate: progress.lastReviewDate,
-          xpEarned: progress.xpEarned,
-          totalReviews: progress.totalReviews,
-          createdAt: progress.createdAt || now,
           updatedAt: now,
-          lastSyncedAt: progress.lastSyncedAt,
         })
         .onConflictDoUpdate({
-          target: schema.lessonProgress.lessonId,
+          target: schema.lessonProgress.id,
           set: {
             masteryLevel: progress.masteryLevel,
+            firstCompletedDate: progress.firstCompletedDate,
             lastReviewDate: progress.lastReviewDate,
             totalReviews: progress.totalReviews,
+            xpEarned: progress.xpEarned,
             updatedAt: now,
-            lastSyncedAt: progress.lastSyncedAt,
           },
         });
 
-      // 2. Upsert Review Schedules
-      for (const review of progress.reviewSchedule) {
-        const reviewId = review.id || Crypto.randomUUID();
-
-        await tx
-          .insert(schema.reviewSchedules)
-          .values({
-            id: reviewId,
-            userId,
-            lessonId: progress.lessonId,
-            reviewRound: review.reviewRound,
-            dueDate: review.dueDate,
-            completed: review.completed,
-            completedDate: review.completedDate,
-
-            createdAt: review.createdAt || now,
-            updatedAt: now,
-            lastSyncedAt: review.lastSyncedAt,
-          })
-          .onConflictDoUpdate({
-            target: schema.reviewSchedules.id,
-            set: {
-              completed: review.completed,
-              completedDate: review.completedDate,
-              dueDate: review.dueDate,
-              updatedAt: now,
-            },
-          });
-
-        // 3. Logic: Generate NEXT round if this one was just completed
-        if (review.completed && review.completedDate) {
-          const nextRoundNumber = review.reviewRound + 1;
-          const intervalConfig = REVIEW_INTERVALS[review.reviewRound];
-
-          if (intervalConfig) {
-            // Check if next round already exists
-            const nextExists = await tx.query.reviewSchedules.findFirst({
-              where: and(
-                eq(schema.reviewSchedules.lessonId, progress.lessonId),
-                eq(schema.reviewSchedules.reviewRound, nextRoundNumber)
-              ),
-            });
-
-            if (!nextExists) {
-              const nextDueDate = calculateNextDueDate(review.completedDate, intervalConfig);
-
-              await tx.insert(schema.reviewSchedules).values({
-                id: Crypto.randomUUID(),
-                userId,
-                lessonId: progress.lessonId,
-                reviewRound: nextRoundNumber,
-                dueDate: nextDueDate.toISOString(),
-                completed: false,
-                createdAt: now,
-                updatedAt: now,
-              });
-            }
-          }
-        }
-      }
-
-      // 4. Queue for Sync
-      // Note: SyncBase needs to be adapted to accept Drizzle Transaction 'tx'
       await SyncBase.addToQueue(tx as any, {
         entityType: EntityType.LESSON_PROGRESS,
         entityId: progress.lessonId,
         action: 'update',
-        payload: {
-          ...progress,
-          updatedAt: now,
-        },
+        payload: { ...progress, updatedAt: now },
       });
     });
   };
@@ -145,7 +117,7 @@ export function useLessonProgressRepository(userId: string) {
   const remove = async (lessonId: string) => {
     await db.transaction(async (tx) => {
       const record = await tx.query.lessonProgress.findFirst({
-        columns: { lastSyncedAt: true },
+        columns: { id: true, lastSyncedAt: true },
         where: eq(schema.lessonProgress.lessonId, lessonId),
       });
 
@@ -164,7 +136,9 @@ export function useLessonProgressRepository(userId: string) {
 
       // Deleting the progress will cascade to reviewSchedules if FK is set to cascade
       // Otherwise, delete both manually:
-      await tx.delete(schema.reviewSchedules).where(eq(schema.reviewSchedules.lessonId, lessonId));
+      await tx
+        .delete(schema.reviewSchedules)
+        .where(eq(schema.reviewSchedules.lessonProgressId, record.id));
       await tx.delete(schema.lessonProgress).where(eq(schema.lessonProgress.lessonId, lessonId));
     });
   };
@@ -172,7 +146,7 @@ export function useLessonProgressRepository(userId: string) {
   /**
    * Upsert lesson progress from server
    */
-  const upsertMany = async (progressList: Partial<LessonProgress>[]) => {
+  const upsertMany = async (progressList: Partial<LessonProgress>[], isRemote: boolean = false) => {
     if (progressList.length === 0) return;
 
     const now = new Date().toISOString();
@@ -180,10 +154,11 @@ export function useLessonProgressRepository(userId: string) {
     for (const progress of progressList) {
       await db.transaction(async (tx) => {
         // Upsert lesson progress
+        var progressId = progress.id ?? Crypto.randomUUID();
         await tx
           .insert(schema.lessonProgress)
           .values({
-            id: progress.id ?? Crypto.randomUUID(),
+            id: progressId,
             userId,
             lessonId: progress.lessonId!,
             firstCompletedDate: progress.firstCompletedDate,
@@ -193,7 +168,7 @@ export function useLessonProgressRepository(userId: string) {
             totalReviews: progress.totalReviews ?? 0,
             createdAt: progress.createdAt || now,
             updatedAt: now,
-            lastSyncedAt: progress.lastSyncedAt || now,
+            lastSyncedAt: !isRemote ? progress.lastSyncedAt : now,
             isDeleted: Boolean(progress.isDeleted),
           })
           .onConflictDoUpdate({
@@ -204,13 +179,13 @@ export function useLessonProgressRepository(userId: string) {
               totalReviews: progress.totalReviews,
               xpEarned: progress.xpEarned,
               updatedAt: now,
-              lastSyncedAt: progress.lastSyncedAt || now,
+              lastSyncedAt: !isRemote ? progress.lastSyncedAt : now,
             },
           });
 
         // Upsert review schedules if they exist
-        if (progress.reviewSchedule && progress.reviewSchedule.length > 0) {
-          for (const review of progress.reviewSchedule) {
+        if (progress.reviewSchedules && progress.reviewSchedules.length > 0) {
+          for (const review of progress.reviewSchedules) {
             const reviewId = review.id || Crypto.randomUUID();
 
             await tx
@@ -218,14 +193,14 @@ export function useLessonProgressRepository(userId: string) {
               .values({
                 id: reviewId,
                 userId,
-                lessonId: progress.lessonId!,
+                lessonProgressId: progressId,
                 reviewRound: review.reviewRound,
                 dueDate: review.dueDate,
                 completed: review.completed,
                 completedDate: review.completedDate,
                 createdAt: review.createdAt || now,
                 updatedAt: now,
-                lastSyncedAt: review.lastSyncedAt || now,
+                lastSyncedAt: !isRemote ? review.lastSyncedAt : now,
               })
               .onConflictDoUpdate({
                 target: schema.reviewSchedules.id,
@@ -234,7 +209,7 @@ export function useLessonProgressRepository(userId: string) {
                   completedDate: review.completedDate,
                   dueDate: review.dueDate,
                   updatedAt: now,
-                  lastSyncedAt: review.lastSyncedAt || now,
+                  lastSyncedAt: !isRemote ? review.lastSyncedAt : now,
                 },
               });
           }
@@ -243,5 +218,12 @@ export function useLessonProgressRepository(userId: string) {
     }
   };
 
-  return { getLessonProgress, saveProgress, remove, upsertMany };
+  return {
+    getLessonProgress,
+    initLessonProgress,
+    ensureLearningInitialized,
+    saveProgress,
+    remove,
+    upsertMany,
+  };
 }

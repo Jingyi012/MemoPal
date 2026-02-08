@@ -24,6 +24,7 @@ export interface Lesson extends Auditable, Syncable, SoftDeletable {
   isPremium?: boolean;
   privacy: 'private' | 'public';
   progress?: LessonProgress;
+  createdBy?: string;
 }
 
 export interface LessonDetails extends Lesson {
@@ -35,7 +36,7 @@ export interface LessonProgress extends Auditable, Syncable, SoftDeletable {
   userId: string;
   lessonId: string;
   firstCompletedDate: string;
-  reviewSchedule: ReviewSchedule[];
+  reviewSchedules: ReviewSchedule[];
   totalReviews: number;
   masteryLevel: 'new' | 'learning' | 'reviewing' | 'mastered';
   lastReviewDate?: string;
@@ -52,11 +53,12 @@ export interface Word extends Auditable, Syncable, SoftDeletable {
 
 export interface ReviewSchedule extends Auditable, Syncable {
   id: string;
-  lessonId: string;
+  lessonProgressId: string;
   reviewRound: number;
   dueDate: string;
   completed: boolean;
   completedDate?: string;
+  userId: string;
 }
 
 export interface LessonForm {

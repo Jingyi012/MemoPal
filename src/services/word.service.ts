@@ -1,14 +1,10 @@
-import { GeneralResponse, PagedResponse } from '@/types/general';
+import { GeneralResponse } from '@/types/general';
 import { Word } from '@/types/lesson';
 import api from './api';
 
 export class WordService {
-  static async getWordsPagedByLesson(params: {
-    lessonId: string;
-    pageNumber: number;
-    pageSize: number;
-  }): Promise<PagedResponse<Word[]>> {
-    const response = await api.get<PagedResponse<Word[]>>('/words', { params });
+  static async getWordsByLesson(params: { lessonId: string }): Promise<GeneralResponse<Word[]>> {
+    const response = await api.get<GeneralResponse<Word[]>>('/words', { params });
     if (!response.data.success) throw new Error(response.data.message);
     return response.data;
   }

@@ -18,10 +18,8 @@ export function useLessonWords(lessonId: string) {
     queryFn: async () => {
       try {
         // 1. BACKGROUND SYNC
-        const response = await WordService.getWordsPagedByLesson({
+        const response = await WordService.getWordsByLesson({
           lessonId,
-          pageNumber: 1,
-          pageSize: 200,
         });
 
         if (response.data?.length > 0) {

@@ -56,41 +56,40 @@ export function ReviewSummaryStep({ form, isSaving, onEditInfo, onEditWords, onS
             <Text className="mt-2 leading-5 text-slate-500">{form.description}</Text>
           ) : null}
 
-          <View className="mt-4 flex-row flex-wrap gap-2">
+          <View className="mt-5 flex-row flex-wrap gap-2">
             {/* Privacy Badge */}
             <View
               style={{ backgroundColor: privacyMeta.bg }}
-              className="flex-row items-center gap-1.5 rounded-full px-3 py-1">
-              <PrivacyIcon size={12} color={privacyMeta.color} />
+              className="flex-row items-center gap-1.5 rounded-full px-3 py-2">
+              <PrivacyIcon size={14} color={privacyMeta.color} />
               <Text
                 style={{ color: privacyMeta.color }}
-                className="text-[10px] font-black uppercase">
+                className="text-[11px] font-bold uppercase tracking-wide">
                 {form.privacy}
               </Text>
             </View>
 
             {form.category && (
-              <View className="rounded-full bg-slate-200 px-3 py-1">
-                <Text className="text-[10px] font-black uppercase text-slate-600">
+              <View className="rounded-full border border-teal-200 bg-teal-50 px-3 py-2">
+                <Text className="text-[11px] font-bold uppercase tracking-wide text-teal-700">
                   {form.category}
                 </Text>
               </View>
             )}
 
-            {form.tag && (
-              <View className="rounded-full bg-slate-200 px-3 py-1">
-                <Text className="text-[10px] font-black uppercase text-slate-600">{form.tag}</Text>
-              </View>
-            )}
+            {form.tag &&
+              Array.isArray(form.tag) &&
+              form.tag.length > 0 &&
+              form.tag.map((tag, idx) => (
+                <View key={idx} className="rounded-full bg-amber-100 px-3 py-2">
+                  <Text className="text-[11px] font-bold uppercase tracking-wide text-amber-700">
+                    {tag}
+                  </Text>
+                </View>
+              ))}
 
-            <View className="rounded-full bg-slate-100 px-3 py-1">
-              <Text className="text-[10px] font-black uppercase text-slate-600">
-                {form.isCustom ? 'Custom Lesson' : 'Preset Lesson'}
-              </Text>
-            </View>
-
-            <View className="rounded-full bg-slate-100 px-3 py-1">
-              <Text className="text-[10px] font-black uppercase text-slate-600">
+            <View className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2">
+              <Text className="text-[11px] font-bold uppercase tracking-wide text-slate-600">
                 {form.words.length} Word{form.words.length !== 1 ? 's' : ''}
               </Text>
             </View>

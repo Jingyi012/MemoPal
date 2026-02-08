@@ -26,6 +26,7 @@ export interface Palace extends Auditable, Syncable, SoftDeletable {
   requiredXp: number;
   isPremium: boolean;
   isCustom: boolean;
+  createdBy?: string;
 }
 
 export interface PalaceDetails extends Palace {

@@ -1,15 +1,6 @@
 import { GeneralResponse } from '@/types/general';
+import { XpConfig } from '@/types/xpConfigs';
 import api from './api';
-
-export interface XpConfig {
-  id: string;
-  sourceType: string;
-  baseXp: number;
-  multiplier: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export class XpConfigService {
   /**

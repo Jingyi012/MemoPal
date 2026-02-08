@@ -17,9 +17,12 @@ export class ReviewService {
   /**
    * Get review schedule for a lesson
    */
-  static async getReviewSchedule(userId: string, lessonId: string): Promise<ReviewSchedule[]> {
+  static async getReviewSchedule(
+    userId: string,
+    lessonProgressId: string
+  ): Promise<ReviewSchedule[]> {
     const response = await api.get<GeneralResponse<ReviewSchedule[]>>(
-      `/users/${userId}/lessons/${lessonId}/reviews`
+      `/users/${userId}/lesson-progress/${lessonProgressId}/reviews`
     );
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;

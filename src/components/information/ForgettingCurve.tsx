@@ -8,7 +8,7 @@ interface Props {
 
 export const ForgettingCurveCard: React.FC<Props> = ({ className }) => {
   return (
-    <View className={cn('rounded-2xl bg-teal-50 p-5', className)}>
+    <View className={cn('rounded-2xl border-teal-200 bg-teal-50 p-5 shadow-sm', className)}>
       {/* Title */}
       <Text className="mb-3 text-lg text-teal-900">📚 The Forgetting Curve</Text>
 

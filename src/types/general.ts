@@ -24,3 +24,8 @@ export interface PagedResponse<T> extends GeneralResponse<T> {
   pageSize: number;
   totalCount: number;
 }
+
+export interface PaginationFilterParams {
+  pageNumber: number;
+  pageSize: number;
+}

@@ -1,6 +1,7 @@
 import { db } from '@/db/client';
 import * as schema from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { XpConfig } from '@/types/xpConfigs';
+import { eq, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 
 export function useXpConfigRepository() {
@@ -23,9 +24,38 @@ export function useXpConfigRepository() {
     });
   };
 
+  /**
+   * Upsert XP configs from server
+   */
+  const upsertMany = async (configs: Array<XpConfig>) => {
+    if (configs.length === 0) return;
+
+    for (const cfg of configs) {
+      await db
+        .insert(schema.xpConfigs)
+        .values({
+          id: cfg.id,
+          sourceType: cfg.sourceType as any,
+          baseXp: cfg.baseXp,
+          variableXp: cfg.variableXp,
+          isActive: cfg.isActive ?? true,
+        })
+        .onConflictDoUpdate({
+          target: schema.xpConfigs.id,
+          set: {
+            baseXp: cfg.baseXp,
+            variableXp: cfg.variableXp,
+            isActive: cfg.isActive ?? true,
+          },
+          where: sql`${schema.xpConfigs.updatedAt} < ${cfg.updatedAt}`,
+        });
+    }
+  };
+
   return {
     getBySourceType,
     getAll,
+    upsertMany,
   };
 }
 

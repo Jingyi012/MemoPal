@@ -1,27 +1,32 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
-import { Colors } from '@/constants/colors';
-import lessons from '@/utils/mock/lessons.json';
-import data from '@/utils/mock/palaces.json';
-import { useRouter } from 'expo-router';
-import { ChevronRight, Sparkles } from 'lucide-react-native';
+import LoadingView from '@/components/LoadingView';
+import { StepNavigationFooter } from '@/components/StepNavigationFooter';
+import { SourceType } from '@/enums/sourceType';
+import { useLessonProgress, useSaveLessonProgress } from '@/hooks/useLessonProgress';
+import { useLessonDetail } from '@/hooks/useLessonsManager';
+import { usePalace } from '@/hooks/usePalace';
+import { useXpConfigBySource } from '@/hooks/useXpConfig';
+import { Sparkles } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Dimensions, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { LearningCompletion } from './LearningCompletion';
-
-const { width } = Dimensions.get('window');
 
 interface LearningFlowProps {
   lessonId: string;
 }
 
 export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
-  const router = useRouter();
-  const lesson = lessons.lessons.find((l) => l.id === lessonId);
-  const locations = data.locations;
+  const { isLoading: detailLoading, data: lesson } = useLessonDetail(lessonId);
+  const { isLoading: progressLoading, progress: lessonProgress } = useLessonProgress(lessonId);
+  const { data: palaceDetails } = usePalace(lesson?.palaceId!);
+  const locations = palaceDetails?.locations;
 
-  if (!lesson) {
+  if (detailLoading || progressLoading) {
+    return <LoadingView />;
+  }
+
+  if (!lesson || !locations) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-slate-600">Lesson not found</Text>
@@ -32,29 +37,44 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  const steps = useMemo(() => lesson.words, [lesson.words]);
+  const words = useMemo(() => lesson.words, [lesson.words]);
 
-  const progress = ((currentStep + 1) / steps.length) * 100;
-  const step = steps[currentStep];
+  const progress = ((currentStep + 1) / words.length) * 100;
+  const currentWord = words[currentStep];
+  const isLastStep = currentStep === words.length - 1;
 
   const handleNext = () => {
-    if (currentStep < steps.length - 1) {
+    if (currentStep < words.length - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
       setIsCompleted(true);
     }
   };
 
-  /* ================= COMPLETION ================= */
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1);
+    }
+  };
 
+  /* ================= COMPLETION ================= */
+  const { data: xpConfig } = useXpConfigBySource(SourceType.LessonInitialCompletion);
+  const { saveProgressAsync } = useSaveLessonProgress();
   if (isCompleted) {
-    const earnedXP = steps.length * 10;
+    var earnedXp = 0;
+    if (lessonProgress?.masteryLevel === 'new') {
+      //earnedXp = xpConfig?.baseXp ?? DEFAULT_XP;
+      lessonProgress.masteryLevel = 'learning';
+      lessonProgress.firstCompletedDate = new Date().toISOString();
+      saveProgressAsync(lessonProgress);
+    }
 
     return (
       <LearningCompletion
-        stepsCount={steps.length}
+        stepsCount={words.length}
         lessonId={lessonId}
         palaceId={lesson.palaceId}
+        earnedXp={earnedXp}
       />
     );
   }
@@ -69,32 +89,36 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
       </View>
 
       <ScrollView className="flex-1 px-4">
-        <Animated.View key={step.id} entering={FadeInRight}>
+        <Animated.View key={currentWord.id} entering={FadeInRight}>
           {/* Header */}
           <View className="my-6 items-center">
             <Text className="mb-1 text-slate-600">
-              Word {currentStep + 1} of {steps.length}
+              Word {currentStep + 1} of {words.length}
             </Text>
             <Text className="text-2xl font-bold text-slate-800">
-              {locations.find((x) => x.id === step.locationId)?.name ?? 'Memory Palace'}
+              {locations.find((x) => x.id === currentWord.locationId)?.name ?? 'Memory Palace'}
             </Text>
           </View>
 
           {/* Image */}
-          <AppImage
-            source={{
-              uri:
-                locations.find((x) => x.id === step.locationId)?.imageUrl ??
-                'https://picsum.photos/800/600',
-            }}
-            className="mb-6 h-56 w-full rounded-2xl"
-          />
+          <View className="mb-6 h-56 w-full rounded-2xl">
+            <AppImage
+              source={{
+                uri:
+                  locations.find((x) => x.id === currentWord.locationId)?.imageUrl ??
+                  'https://picsum.photos/800/600',
+              }}
+              style={{
+                borderRadius: 16,
+              }}
+            />
+          </View>
 
           {/* Word card */}
           <View className="mb-6 items-center rounded-2xl bg-teal-600 p-6">
             <Text className="mb-1 text-sm text-teal-100">Word to Remember</Text>
-            <Text className="text-3xl font-extrabold text-white">{step.text}</Text>
-            <Text className="mt-2 text-teal-50">{step.meaning}</Text>
+            <Text className="text-3xl font-extrabold text-white">{currentWord.text}</Text>
+            <Text className="mt-2 text-teal-50">{currentWord.meaning}</Text>
           </View>
 
           {/* Tip */}
@@ -114,7 +138,7 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
 
             {[
               'Visualize the location clearly',
-              `Place "${step.text}" in the scene`,
+              `Place "${currentWord.text}" in the scene`,
               'Use sound, color, and movement',
               'Replay the image multiple times',
             ].map((text, index) => (
@@ -126,17 +150,11 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
         </Animated.View>
       </ScrollView>
 
-      {/* Footer */}
-      <View className="border-t border-gray-100 p-4">
-        <AnimatedPressable
-          onPress={handleNext}
-          className="flex-row items-center justify-center rounded-xl bg-teal-600 py-4">
-          <Text className="mr-2 text-lg font-bold text-white">
-            {currentStep === steps.length - 1 ? 'Finish' : 'Next'}
-          </Text>
-          <ChevronRight size={20} color={Colors.white} />
-        </AnimatedPressable>
-      </View>
+      <StepNavigationFooter
+        onPrevious={currentStep === 0 ? undefined : handlePrevious}
+        onNext={handleNext}
+        nextLabel={isLastStep ? 'Completed' : 'Next'}
+      />
     </View>
   );
 }

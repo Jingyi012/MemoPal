@@ -5,9 +5,12 @@ export type SourceType =
   | 'streak_bonus'
   | 'manual_adjustment';
 
-export interface XpConfigs {
+export interface XpConfig {
   id: string;
   sourceType: SourceType;
-  xpAmount: number;
+  baseXp: number;
+  variableXp: number;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -17,7 +17,7 @@ export function LocationCard({ location, word, onPress }: Props) {
       onPress={onPress}
       className="relative w-[48%] overflow-hidden rounded-2xl shadow-sm">
       {/* Background Image */}
-      <AppImage source={{ uri: location.imageUrl }} className="h-36 w-full" />
+      <AppImage source={{ uri: location.imageUrl }} className="w-full" style={{ height: 144 }} />
 
       {/* Overlay */}
       <View className="absolute inset-0 rounded-2xl bg-black/20" />

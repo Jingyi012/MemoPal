@@ -31,14 +31,43 @@ export function LessonInfoStep({ value, onChange, onNext }: Props) {
   const [tempDescription, setTempDescription] = useState(value.description);
   const [tempCategory, setTempCategory] = useState(value.category);
   const [tempTags, setTempTags] = useState<string[]>(value.tag ?? []);
-
-  const tagsToText = (tags: string[]) => tags.join(', ');
+  const [tagInput, setTagInput] = useState('');
 
   const textToTags = (text: string) =>
     text
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean);
+
+  const addTag = (text: string) => {
+    const cleaned = text.trim();
+    if (cleaned && !tempTags.includes(cleaned)) {
+      const newTags = [...tempTags, cleaned];
+      setTempTags(newTags);
+      updateLocal({ tag: newTags });
+    }
+    setTagInput('');
+  };
+
+  const handleTagInputChange = (text: string) => {
+    // If user pastes or types comma, split and add all tags at once
+    if (text.includes(',')) {
+      const tagsToAdd = textToTags(text);
+      const newTags = [...tempTags];
+
+      tagsToAdd.forEach((tag) => {
+        if (tag && !newTags.includes(tag)) {
+          newTags.push(tag);
+        }
+      });
+
+      setTempTags(newTags);
+      updateLocal({ tag: newTags });
+      setTagInput('');
+    } else {
+      setTagInput(text);
+    }
+  };
 
   const descRef = useRef<TextInput>(null);
 
@@ -126,57 +155,72 @@ export function LessonInfoStep({ value, onChange, onNext }: Props) {
               />
             </View>
 
-            {/* Category & Tags */}
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <Text className="mb-2 px-1 text-xs font-black uppercase tracking-widest text-slate-400">
-                  Category
-                </Text>
-                <View className="flex-row gap-2">
-                  {(Object.values(LessonCategory) as LessonCategory[]).map((c) => (
-                    <AnimatedPressable
-                      key={c}
-                      onPress={() => {
-                        setTempCategory(c);
-                        updateLocal({ category: c });
-                      }}
-                      className={`rounded-xl px-4 py-2 ${
-                        tempCategory === c ? 'bg-teal-500' : 'bg-slate-200'
-                      }`}>
-                      <Text className={tempCategory === c ? 'text-white' : 'text-slate-700'}>
-                        {c}
-                      </Text>
-                    </AnimatedPressable>
-                  ))}
-                </View>
-                {/* 
-                <TextInput
-                  value={tempCategory}
-                  placeholder="Science"
-                  placeholderTextColor="#94a3b8"
-                  onChangeText={setTempCategory}
-                  onFocus={() => setFocusedField('category')}
-                  onBlur={() => updateLocal({ category: tempCategory })}
-                  className="rounded-2xl border border-slate-100 bg-white px-4 py-4 text-sm text-slate-700"
-                  style={focusedField === 'category' ? styles.inputFocused : undefined}
-                /> */}
+            {/* Category */}
+            <View className="mb-5">
+              <Text className="mb-3 px-1 text-xs font-black uppercase tracking-widest text-slate-400">
+                Category
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {(Object.values(LessonCategory) as LessonCategory[]).map((c) => (
+                  <AnimatedPressable
+                    key={c}
+                    onPress={() => {
+                      setTempCategory(c);
+                      updateLocal({ category: c });
+                    }}
+                    className={`rounded-xl px-5 py-3 ${
+                      tempCategory === c ? 'bg-teal-500' : 'bg-slate-200'
+                    }`}>
+                    <Text
+                      className={`text-sm font-semibold ${tempCategory === c ? 'text-white' : 'text-slate-700'}`}>
+                      {c}
+                    </Text>
+                  </AnimatedPressable>
+                ))}
               </View>
+            </View>
 
-              <View className="flex-1">
-                <Text className="mb-2 px-1 text-xs font-black uppercase tracking-widest text-slate-400">
-                  Tags
-                </Text>
+            {/* Tags */}
+            <View>
+              <Text className="mb-3 px-1 text-xs font-black uppercase tracking-widest text-slate-400">
+                Tags
+              </Text>
+              <View className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
+                {tempTags.length > 0 && (
+                  <View className="mb-2 flex-row flex-wrap gap-2">
+                    {tempTags.map((tag, idx) => (
+                      <View
+                        key={idx}
+                        className="flex-row items-center gap-2 rounded-full bg-teal-100 px-3 py-1.5">
+                        <Text className="text-xs font-semibold text-teal-700">{tag}</Text>
+                        <AnimatedPressable
+                          onPress={() => {
+                            const newTags = tempTags.filter((_, i) => i !== idx);
+                            setTempTags(newTags);
+                            updateLocal({ tag: newTags });
+                          }}>
+                          <Text className="text-lg font-bold text-teal-700">x</Text>
+                        </AnimatedPressable>
+                      </View>
+                    ))}
+                  </View>
+                )}
                 <TextInput
-                  value={tagsToText(tempTags)}
-                  placeholder="Exam"
+                  value={tagInput}
+                  placeholder={
+                    tempTags.length === 0 ? 'Add tags (press Enter or comma)' : 'Add more tags...'
+                  }
                   placeholderTextColor="#94a3b8"
-                  onChangeText={(text) => setTempTags(textToTags(text))}
+                  onChangeText={handleTagInputChange}
+                  onSubmitEditing={() => addTag(tagInput)}
                   onFocus={() => setFocusedField('tags')}
                   onBlur={() => {
                     setFocusedField(null);
-                    updateLocal({ tag: tempTags });
+                    if (tagInput.trim()) {
+                      addTag(tagInput);
+                    }
                   }}
-                  className="rounded-2xl border border-slate-100 bg-white px-4 py-4 text-sm text-slate-700"
+                  className="text-sm text-slate-700"
                   style={focusedField === 'tags' ? styles.inputFocused : undefined}
                 />
               </View>

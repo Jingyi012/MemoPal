@@ -40,10 +40,10 @@ export const LessonCard: React.FC<Props> = ({
   const canStart = palaceTrainingCompleted && !lesson.isLocked;
 
   // Review logic
-  const nextReviewData = progress ? getNextReview(progress.reviewSchedule) : null;
+  const nextReviewData = progress ? getNextReview(progress.reviewSchedules) : null;
   const isOverdue = nextReviewData ? isReviewOverdue(nextReviewData.dueDate) : false;
   const isDueSoon = nextReviewData ? isReviewDueSoon(nextReviewData.dueDate) : false;
-  const masteryLevel = progress ? getMasteryLevel(progress.reviewSchedule) : 'new';
+  const masteryLevel = progress ? getMasteryLevel(progress.reviewSchedules) : 'new';
 
   // Colors
   const getBgColor = () => {
@@ -66,7 +66,6 @@ export const LessonCard: React.FC<Props> = ({
     return Colors.teal600;
   };
 
-  const isNewLesson = !progress;
   const progressValue = progress ? masteryProgressMap[masteryLevel] : 0;
 
   const progressColor = isOverdue
@@ -123,7 +122,7 @@ export const LessonCard: React.FC<Props> = ({
             {/* <Text className="text-sm text-slate-600">{lesson.description}</Text> */}
             <Text className="text-sm text-slate-600">
               {lesson.description ||
-                (isNewLesson
+                (lesson.progress?.masteryLevel == 'new'
                   ? 'Start this lesson to begin training'
                   : 'Continue improving your memory')}
             </Text>
@@ -134,11 +133,11 @@ export const LessonCard: React.FC<Props> = ({
                 {lesson.wordCount} words
               </Text>
 
-              {isNewLesson && (
-                <View className="rounded-full bg-teal-100 px-2 py-0.5">
-                  <Text className="text-xs font-medium text-teal-700">New</Text>
-                </View>
-              )}
+              <View className="rounded-full bg-teal-100 px-2 py-0.5">
+                <Text className="text-xs font-medium text-teal-700">
+                  {lesson.progress?.masteryLevel ?? 'New'}
+                </Text>
+              </View>
 
               {lesson.isPremium && (
                 <View className="rounded-full bg-yellow-100 px-2 py-0.5">

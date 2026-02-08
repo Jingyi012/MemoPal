@@ -35,7 +35,7 @@ export const SyncBase = {
   async addManyToQueue(
     tx: any,
     items: {
-      entityType: EntityType;
+      entityType: string;
       entityId: string;
       action: 'create' | 'update' | 'delete';
       payload?: any;

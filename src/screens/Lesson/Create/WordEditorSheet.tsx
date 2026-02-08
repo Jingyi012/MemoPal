@@ -114,7 +114,7 @@ export const WordEditorSheet = forwardRef<WordEditorSheetRef, Props>(({ onConfir
                   Word
                 </Text>
                 <BottomSheetTextInput
-                  defaultValue={text}
+                  value={text}
                   onChangeText={setText}
                   autoFocus
                   placeholder="What are you placing here?"
@@ -128,7 +128,7 @@ export const WordEditorSheet = forwardRef<WordEditorSheetRef, Props>(({ onConfir
                   Meaning (Optional)
                 </Text>
                 <BottomSheetTextInput
-                  defaultValue={meaning}
+                  value={meaning}
                   onChangeText={setTranslation}
                   placeholder="Meaning in your language..."
                   className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-slate-900 focus:border-teal-500"

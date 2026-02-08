@@ -25,7 +25,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthProvider';
-import { useLessonsManager } from '@/hooks/useLessonsManager';
+import { useLessonDetail } from '@/hooks/useLessonsManager';
 import { useLocation } from '@/hooks/useLocation';
 import { useReviewCompletion } from '@/hooks/useReviewCompletion';
 import { ReviewHeader } from './ReviewHeader';
@@ -35,16 +35,17 @@ import { ReviewSummary } from './ReviewSummary';
 
 interface ReviewTestProps {
   lessonId: string;
+  isLearningMode: boolean;
 }
 
-export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId }) => {
+export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode = false }) => {
   const router = useRouter();
   const { user } = useAuth();
   const inputRef = useRef<TextInput>(null);
   const userId = user?.id || '';
 
   // Fetch lesson with words
-  const { lesson, isLoading: lessonLoading } = useLessonsManager('', lessonId);
+  const { data: lesson, isLoading: lessonLoading } = useLessonDetail(lessonId);
   const steps = useMemo(() => lesson?.words || [], [lesson?.words]);
   const totalSteps = steps.length;
 
@@ -54,6 +55,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId }) => {
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [xpEarned, setXpEarned] = useState(0);
   const [results, setResults] = useState<any[]>([]);
   const [showSummary, setShowSummary] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -106,12 +108,14 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId }) => {
       // Submit review and show summary
       try {
         const correctCount = results.filter((r) => r.isCorrect).length;
-        await submitReviewAsync({
+        var { xpEarned } = await submitReviewAsync({
           userId,
           lessonId,
           correctCount,
           totalCount: totalSteps,
+          isLearningMode,
         });
+        setXpEarned(xpEarned);
         setShowSummary(true);
       } catch (error) {
         console.error('Error submitting review:', error);
@@ -136,8 +140,11 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId }) => {
   if (showSummary) {
     return (
       <ReviewSummary
+        isLearning={isLearningMode}
         correctCount={results.filter((r) => r.isCorrect).length}
         totalSteps={totalSteps}
+        xpEarned={xpEarned}
+        streak={streak}
         onFinish={() => router.push(`/lessons/${lessonId}`)}
       />
     );
@@ -222,7 +229,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId }) => {
           <ActionSheet
             isVisible={showExitModal}
             onClose={() => setShowExitModal(false)}
-            onAction={() => () => {
+            onAction={() => {
               setShowExitModal(false);
               router.replace(`/lessons/${lessonId}`);
             }}

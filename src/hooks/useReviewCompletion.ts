@@ -1,3 +1,4 @@
+import { SourceType } from '@/enums/sourceType';
 import { useReviewRepository } from '@/repositories/review.repo';
 import { recordXpEvent, useXpConfigRepository } from '@/repositories/xpConfig.repo';
 import { useMutation } from '@tanstack/react-query';
@@ -12,22 +13,32 @@ export function useReviewCompletion() {
       lessonId,
       correctCount,
       totalCount,
+      isLearningMode = false,
     }: {
       userId: string;
       lessonId: string;
       correctCount: number;
       totalCount: number;
+      isLearningMode: boolean;
     }) => {
+      if (isLearningMode) {
+        return {
+          xpEarned: 0,
+          success: true,
+        };
+      }
+
       // Get XP config for review completion
-      const xpConfig = await xpConfigRepo.getBySourceType('review_complete');
-      const baseXp = xpConfig?.xpAmount ?? 10;
+      const xpConfig = await xpConfigRepo.getBySourceType(SourceType.ReviewComplete);
+      const baseXp = xpConfig?.baseXp ?? 10;
+      const variableCp = xpConfig?.variableXp ?? 1;
 
       // Calculate XP based on accuracy
       const accuracy = correctCount / totalCount;
-      const xpEarned = Math.floor(baseXp * accuracy);
+      const xpEarned = Math.floor(baseXp + variableCp * accuracy);
 
       // Record XP event
-      await recordXpEvent(userId, 'review_complete', xpEarned, lessonId);
+      await recordXpEvent(userId, SourceType.ReviewComplete, xpEarned, lessonId);
 
       // Update lesson progress
       await reviewRepo.updateLessonProgressAfterReview(

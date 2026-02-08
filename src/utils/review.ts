@@ -37,10 +37,12 @@ export const LATE_THRESHOLD = 24 * 60 * 60 * 1000; // 24 hours grace period
 /**
  * Returns the next uncompleted review, or null if all completed
  */
-export function getNextReview(schedule: ReviewSchedule[]): ReviewSchedule | null {
+export function getNextReview(schedule?: ReviewSchedule[]): ReviewSchedule | null {
+  if (!schedule || schedule.length === 0) {
+    return null;
+  }
   return schedule.find((r) => !r.completed) ?? null;
 }
-
 /**
  * Checks if a review is overdue
  */
@@ -61,7 +63,11 @@ export function isReviewDueSoon(dueDate: string, hoursThreshold: number = 24): b
 /**
  * Calculates the mastery level based on completed reviews
  */
-export function getMasteryLevel(schedule: ReviewSchedule[]): LessonProgress['masteryLevel'] {
+export function getMasteryLevel(schedule?: ReviewSchedule[]): LessonProgress['masteryLevel'] {
+  if (!schedule || schedule.length === 0) {
+    return 'new'; // default when no schedule exists
+  }
+
   const total = schedule.length;
   const completed = schedule.filter((r) => r.completed).length;
 

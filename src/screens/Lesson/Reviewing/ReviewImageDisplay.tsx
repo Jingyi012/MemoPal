@@ -1,5 +1,5 @@
 import { AppImage } from '@/components/AppImage';
-import { Check, HelpCircle } from 'lucide-react-native';
+import { Check } from 'lucide-react-native';
 import React from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -15,15 +15,15 @@ export const ReviewImageDisplay: React.FC<Props> = ({ imageUrl, isRevealed, feed
     <AppImage
       source={{ uri: imageUrl }}
       className="h-full w-full"
-      blurRadius={isRevealed ? 0 : 20}
+      //blurRadius={isRevealed ? 0 : 20}
     />
-    {!isRevealed && (
+    {/* {!isRevealed && (
       <View className="absolute inset-0 items-center justify-center bg-black/10">
         <Animated.View entering={FadeIn.delay(300)}>
           <HelpCircle size={80} color="white" opacity={0.5} />
         </Animated.View>
       </View>
-    )}
+    )} */}
     {isRevealed && feedback === 'correct' && (
       <Animated.View
         entering={FadeIn}

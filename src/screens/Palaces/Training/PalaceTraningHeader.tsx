@@ -1,4 +1,5 @@
 import { CommonHeader } from '@/components/CommonHeader';
+import { Colors } from '@/constants/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React from 'react';
@@ -34,7 +35,7 @@ export const PalaceTraningHeader: React.FC<HeaderProps> = ({
           </View>
           <View className="h-2.5 overflow-hidden rounded-full bg-white/20">
             <LinearGradient
-              colors={['#34d399', '#10b981']} // green-400 to emerald-500
+              colors={[Colors.green400, Colors.emerald500]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={{

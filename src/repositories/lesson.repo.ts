@@ -10,8 +10,11 @@ export function useLessonRepository() {
   const getAllByPalace = async (palaceId: string): Promise<Lesson[]> => {
     return (await db.query.lessons.findMany({
       where: and(eq(schema.lessons.palaceId, palaceId), eq(schema.lessons.isDeleted, false)),
+      with: {
+        progress: true,
+      },
       orderBy: [asc(schema.lessons.createdAt)],
-    })) as Lesson[];
+    })) as unknown as Lesson[];
   };
 
   const getDetails = async (lessonId: string): Promise<LessonDetails | null> => {
@@ -19,6 +22,7 @@ export function useLessonRepository() {
     const result = await db.query.lessons.findFirst({
       where: eq(schema.lessons.id, lessonId),
       with: {
+        progress: true,
         words: true,
       },
     });

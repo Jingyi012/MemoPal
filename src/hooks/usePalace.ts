@@ -21,10 +21,7 @@ export function usePalaceList() {
     queryKey: PALACE_KEYS.list(),
     queryFn: async () => {
       try {
-        const response = await PalaceService.getPagedPalaces({
-          pageNumber: 1,
-          pageSize: 200,
-        });
+        const response = await PalaceService.getPalaces({});
 
         if (response.data?.length > 0) {
           await repo.upsertMany(response.data);

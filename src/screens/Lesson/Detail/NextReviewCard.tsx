@@ -1,10 +1,11 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { Colors } from '@/constants/colors';
-import { Clock } from 'lucide-react-native';
+import { AlertCircle, Clock, Zap } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
 interface Props {
+  isDue: boolean;
   isOverdue: boolean;
   isDueSoon: boolean;
   nextReviewText: string;
@@ -12,49 +13,101 @@ interface Props {
 }
 
 export const NextReviewCard: React.FC<Props> = ({
+  isDue,
   isOverdue,
   isDueSoon,
   nextReviewText,
   onStartReview,
 }) => {
-  const containerStyle = isOverdue
-    ? 'bg-red-50 border-red-200'
-    : isDueSoon
-      ? 'bg-orange-50 border-orange-200'
-      : 'bg-blue-50 border-blue-200';
+  // 1. URGENT STATE (Overdue or Due Now)
+  if (isDue || isOverdue) {
+    const theme = isOverdue
+      ? {
+          container: 'bg-red-50 border-red-100',
+          iconBg: 'bg-red-500',
+          button: 'bg-red-600',
+          text: 'text-red-900',
+          subText: 'text-red-600/80',
+          icon: <AlertCircle color="white" size={24} strokeWidth={2.5} />,
+          label: 'Overdue',
+        }
+      : {
+          container: 'bg-indigo-50 border-indigo-100',
+          iconBg: 'bg-indigo-500',
+          button: 'bg-indigo-600',
+          text: 'text-indigo-900',
+          subText: 'text-indigo-600/80',
+          icon: <Zap color="white" size={24} fill="white" />,
+          label: 'Ready to Review',
+        };
 
-  const iconBg = isOverdue ? 'bg-red-100' : isDueSoon ? 'bg-orange-100' : 'bg-blue-100';
+    return (
+      <>
+        <View className={`rounded-3xl border-2 p-5 shadow-sm ${theme.container}`}>
+          <View className="mb-5 flex-row items-center gap-4">
+            <View
+              className={`h-14 w-14 items-center justify-center rounded-2xl shadow-blue-200 ${theme.iconBg}`}>
+              {theme.icon}
+            </View>
 
-  const textColor = isOverdue ? 'text-red-900' : isDueSoon ? 'text-orange-900' : 'text-blue-900';
+            <View className="flex-1">
+              <View className="flex-row items-center gap-2">
+                <Text className={`text-lg font-bold ${theme.text}`}>{theme.label}</Text>
+              </View>
+              <Text className={`text-sm font-medium ${theme.subText}`}>
+                {isOverdue ? `Missed by ${nextReviewText}` : 'Boost your memory retention now'}
+              </Text>
+            </View>
+          </View>
 
-  const subTextColor = isOverdue ? 'text-red-700' : isDueSoon ? 'text-orange-700' : 'text-blue-700';
+          <AnimatedPressable
+            onPress={onStartReview}
+            className={`flex-row items-center justify-center rounded-2xl py-4 shadow-lg ${theme.button}`}>
+            <Text className="mr-2 text-center text-lg font-bold text-white">Start Session</Text>
+            <Zap size={18} color="white" fill="white" />
+          </AnimatedPressable>
+        </View>
+      </>
+    );
+  }
 
-  const buttonBg = isOverdue ? 'bg-red-600' : isDueSoon ? 'bg-orange-600' : 'bg-blue-600';
-
-  const iconColor = isOverdue
-    ? Colors.red700 // red-700
-    : isDueSoon
-      ? Colors.orange700 // orange-700
-      : Colors.blue700; // blue-700
-
+  // 2. WAITING STATE (Due Soon or Future)
   return (
-    <View className={`rounded-2xl border-2 p-5 ${containerStyle}`}>
-      <View className="mb-4 flex-row items-start gap-4">
-        <View className={`h-12 w-12 items-center justify-center rounded-full ${iconBg}`}>
-          <Clock color={iconColor} size={24} />
+    <>
+      <View className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-4">
+            <View
+              className={`h-12 w-12 items-center justify-center rounded-2xl ${isDueSoon ? 'bg-orange-100' : 'bg-slate-100'}`}>
+              <Clock color={isDueSoon ? Colors.orange600 : Colors.slate500} size={22} />
+            </View>
+
+            <View>
+              <Text className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Next Review
+              </Text>
+              <Text
+                className={`text-lg font-bold ${isDueSoon ? 'text-orange-900' : 'text-slate-900'}`}>
+                {nextReviewText}
+              </Text>
+            </View>
+          </View>
+
+          {isDueSoon && (
+            <View className="rounded-full bg-orange-500 px-3 py-1">
+              <Text className="text-xs font-bold uppercase text-white">Soon</Text>
+            </View>
+          )}
         </View>
 
-        <View className="flex-1">
-          <Text className={`mb-1 font-semibold ${textColor}`}>
-            {isOverdue ? 'Review Overdue!' : isDueSoon ? 'Review Due Soon' : 'Next Review'}
-          </Text>
-          <Text className={`text-sm ${subTextColor}`}>{nextReviewText}</Text>
-        </View>
+        {!isDueSoon && (
+          <View className="mt-4 border-t border-slate-50 pt-4">
+            <Text className="text-xs italic text-slate-400">
+              Your memory is currently strong. Check back later!
+            </Text>
+          </View>
+        )}
       </View>
-
-      <AnimatedPressable onPress={onStartReview} className={`rounded-xl py-3 ${buttonBg}`}>
-        <Text className="text-center font-semibold text-white">Start Review Now</Text>
-      </AnimatedPressable>
-    </View>
+    </>
   );
 };

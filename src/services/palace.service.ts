@@ -3,11 +3,8 @@ import { Palace, PalaceDetails } from '@/types/palace';
 import api from './api';
 
 export class PalaceService {
-  static async getPagedPalaces(params: {
-    pageNumber: number;
-    pageSize: number;
-  }): Promise<PagedResponse<Palace[]>> {
-    const response = await api.get<PagedResponse<Palace[]>>('/palaces', {
+  static async getPalaces(params: {}): Promise<GeneralResponse<Palace[]>> {
+    const response = await api.get<GeneralResponse<Palace[]>>('/palaces', {
       params,
     });
     if (!response.data.success) {

@@ -1,7 +1,8 @@
 import { useAuth } from '@/contexts/AuthProvider';
 import { useLessonProgressRepository } from '@/repositories/lessonProgress.repo';
 import { LessonProgressService } from '@/services/lessonProgress.service';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { LessonProgress } from '@/types/lesson';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const PROGRESS_KEYS = {
   all: ['lessonProgress'] as const,
@@ -21,18 +22,20 @@ export function useLessonProgress(lessonId: string) {
         const remoteData = await LessonProgressService.getProgress(lessonId);
 
         if (remoteData) {
-          await repo.saveProgress(remoteData);
+          await repo.upsertMany([remoteData]);
         }
       } catch (error) {
         console.warn('Progress sync failed, using local master');
       }
 
-      const localData = await repo.getLessonProgress(lessonId);
+      let localData = await repo.getLessonProgress(lessonId);
 
+      if (!localData) {
+        localData = await repo.initLessonProgress(lessonId);
+      }
+      await repo.ensureLearningInitialized(localData);
       return localData;
     },
-
-    staleTime: 1000 * 60 * 5,
   });
 
   const invalidate = () => {
@@ -45,5 +48,26 @@ export function useLessonProgress(lessonId: string) {
     isRefreshing: query.isFetching,
     refresh: query.refetch,
     invalidate,
+  };
+}
+
+export function useSaveLessonProgress() {
+  const { user } = useAuth();
+  const repo = useLessonProgressRepository(user?.id!);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (progress: LessonProgress) => {
+      await repo.saveProgress(progress);
+      // Keep queries fresh
+      queryClient.invalidateQueries({ queryKey: PROGRESS_KEYS.detail(progress.lessonId) });
+    },
+  });
+
+  return {
+    saveProgress: mutation.mutate,
+    saveProgressAsync: mutation.mutateAsync,
+    isLoading: mutation.isPending,
+    isError: mutation.isError,
   };
 }
