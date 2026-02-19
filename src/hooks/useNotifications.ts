@@ -1,96 +1,71 @@
-import { useNotificationRepository } from '@/repositories/notification.repo';
+import * as notificationService from '@/services/notification.service';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useNotifications = (userId: string) => {
-  const notificationRepo = useNotificationRepository();
+export const NOTIFICATION_KEYS = {
+  all: ['notifications'] as const,
+  lists: () => [...NOTIFICATION_KEYS.all, 'list'] as const,
+  unread: () => [...NOTIFICATION_KEYS.all, 'unread'] as const,
+};
 
-  const {
-    data: notifications,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ['notifications', userId],
-    queryFn: () => notificationRepo.getByUserId(userId),
-    enabled: !!userId,
+export const useNotifications = () => {
+  const query = useQuery({
+    queryKey: NOTIFICATION_KEYS.lists(),
+    queryFn: () => notificationService.getNotifications(),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
   });
 
   return {
-    notifications: notifications || [],
-    isLoading,
-    isError,
-    error,
+    notifications: query.data ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
   };
 };
 
 export const useUnreadNotifications = (userId: string) => {
-  const notificationRepo = useNotificationRepository();
-
-  const {
-    data: notifications,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ['notifications', 'unread', userId],
-    queryFn: () => notificationRepo.getUnreadByUserId(userId),
+  const query = useQuery({
+    queryKey: NOTIFICATION_KEYS.unread(),
+    queryFn: () => notificationService.getUnreadNotifications(),
     enabled: !!userId,
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 15,
   });
 
   return {
-    notifications: notifications || [],
-    isLoading,
-    isError,
-    error,
-    unreadCount: notifications?.length || 0,
+    notifications: query.data ?? [],
+    unreadCount: query.data?.length ?? 0,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
   };
 };
 
-export const useMarkNotificationAsRead = () => {
+export const useNotificationMutations = () => {
   const queryClient = useQueryClient();
-  const notificationRepo = useNotificationRepository();
 
-  const { mutate: markAsRead, isPending } = useMutation({
-    mutationFn: (notificationId: string) => notificationRepo.markAsRead(notificationId),
-    onSuccess: (_, notificationId) => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
-    },
-  });
-
-  return { markAsRead, isPending };
-};
-
-export const useDismissNotification = () => {
-  const queryClient = useQueryClient();
-  const notificationRepo = useNotificationRepository();
-
-  const { mutate: dismiss, isPending } = useMutation({
-    mutationFn: (notificationId: string) => notificationRepo.dismiss(notificationId),
+  const markAsRead = useMutation({
+    mutationFn: (notificationId: string) => notificationService.markAsRead(notificationId),
     onSuccess: () => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.unread() });
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
     },
   });
 
-  return { dismiss, isPending };
-};
-
-export const useCreateNotification = () => {
-  const queryClient = useQueryClient();
-  const notificationRepo = useNotificationRepository();
-
-  const { mutateAsync: createNotification, isPending } = useMutation({
-    mutationFn: (data: Parameters<typeof notificationRepo.create>[0]) =>
-      notificationRepo.create(data),
+  const dismiss = useMutation({
+    mutationFn: (notificationId: string) => notificationService.dismissNotification(notificationId),
     onSuccess: () => {
-      // Invalidate all notification queries
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.unread() });
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
     },
   });
 
-  return { createNotification, isPending };
+  const createNotification = useMutation({
+    mutationFn: (notification: any) => notificationService.createNotification(notification),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
+    },
+  });
+
+  return { markAsRead, dismiss, createNotification };
 };

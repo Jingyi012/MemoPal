@@ -1,20 +1,19 @@
-import { useXpEventsRepository } from '@/repositories/xpEvents.repo';
+import { createXpEventsRepository } from '@/repositories/xpEvents.repo';
 import { useQuery } from '@tanstack/react-query';
 
 export const XP_KEYS = {
   all: ['xpEvents'] as const,
-  userTotal: (userId: string) => [...XP_KEYS.all, 'total', userId] as const,
-  userEvents: (userId: string) => [...XP_KEYS.all, 'events', userId] as const,
+  total: () => [...XP_KEYS.all, 'total'] as const,
+  events: () => [...XP_KEYS.all, 'events'] as const,
 };
 
-export function useUserTotalXp(userId: string) {
-  const repo = useXpEventsRepository();
+export function useTotalXp() {
+  const repo = createXpEventsRepository();
 
   const query = useQuery({
-    queryKey: XP_KEYS.userTotal(userId),
-    enabled: !!userId,
+    queryKey: XP_KEYS.total(),
     queryFn: async () => {
-      return await repo.getTotalXpByUserId(userId);
+      return await repo.getTotalXp();
     },
     staleTime: 1000 * 60 * 5,
   });
@@ -27,14 +26,13 @@ export function useUserTotalXp(userId: string) {
   };
 }
 
-export function useUserXpEvents(userId: string) {
-  const repo = useXpEventsRepository();
+export function useXpEvents() {
+  const repo = createXpEventsRepository();
 
   const query = useQuery({
-    queryKey: XP_KEYS.userEvents(userId),
-    enabled: !!userId,
+    queryKey: XP_KEYS.events(),
     queryFn: async () => {
-      return await repo.getByUserId(userId);
+      return await repo.getAll();
     },
     staleTime: 1000 * 60 * 5,
   });

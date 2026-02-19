@@ -1,50 +1,32 @@
-import { GeneralResponse } from '@/types/general';
+import { xpConfigApi } from '@/api/xpConfig';
+import { SourceType } from '@/enums/sourceType';
+import { createXpConfigRepository } from '@/repositories/xpConfig.repo';
 import { XpConfig } from '@/types/xpConfigs';
-import api from './api';
 
-export class XpConfigService {
-  /**
-   * Get all XP configurations
-   */
-  static async getXpConfigs(): Promise<XpConfig[]> {
-    const response = await api.get<GeneralResponse<XpConfig[]>>('/xp-configs');
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
+const repo = createXpConfigRepository();
+
+export async function getXpConfigs(): Promise<XpConfig[]> {
+  try {
+    const remote = await xpConfigApi.getAll();
+    if (remote && remote.length > 0) {
+      await repo.upsertMany(remote);
+    }
+  } catch (error) {
+    console.warn('Failed to sync XP configs from backend, using local data:', error);
   }
 
-  /**
-   * Get XP config for a specific source type
-   */
-  static async getXpConfigBySourceType(sourceType: string): Promise<XpConfig> {
-    const response = await api.get<GeneralResponse<XpConfig>>(`/xp-configs/${sourceType}`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
+  return await repo.getAll();
+}
+
+export async function getXpConfigBySourceType(sourceType: string) {
+  try {
+    const remote = await xpConfigApi.getBySourceType(sourceType);
+    if (remote) {
+      await repo.upsertMany([remote]);
+    }
+  } catch (error) {
+    console.warn('Failed to sync XP config, using local data:', error);
   }
 
-  /**
-   * Create XP configuration
-   */
-  static async createXpConfig(config: Partial<XpConfig>): Promise<XpConfig> {
-    const response = await api.post<GeneralResponse<XpConfig>>('/xp-configs', config);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  }
-
-  /**
-   * Update XP configuration
-   */
-  static async updateXpConfig(id: string, config: Partial<XpConfig>): Promise<XpConfig> {
-    const response = await api.patch<GeneralResponse<XpConfig>>(`/xp-configs/${id}`, config);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  }
-
-  /**
-   * Delete XP configuration
-   */
-  static async deleteXpConfig(id: string): Promise<boolean> {
-    const response = await api.delete<GeneralResponse<null>>(`/xp-configs/${id}`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.success;
-  }
+  return await repo.getBySourceType(sourceType as SourceType);
 }

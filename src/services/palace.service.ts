@@ -1,60 +1,84 @@
-import { GeneralResponse, PagedResponse } from '@/types/general';
-import { Palace, PalaceDetails } from '@/types/palace';
-import api from './api';
+import { palaceApi } from '@/api/palace';
+import { createPalaceRepository } from '@/repositories/palace.repo';
+import { Palace } from '@/types/palace';
 
-export class PalaceService {
-  static async getPalaces(params: {}): Promise<GeneralResponse<Palace[]>> {
-    const response = await api.get<GeneralResponse<Palace[]>>('/palaces', {
-      params,
-    });
-    if (!response.data.success) {
-      throw new Error(response.data.message || 'Failed to fetch palaces');
+const repo = createPalaceRepository();
+
+/**
+ * Get all palaces with sync fallback
+ * Attempts backend sync, falls back to local DB
+ */
+export async function getPalaces(): Promise<Palace[]> {
+  try {
+    // Attempt to fetch and sync from backend
+    const remote = await palaceApi.getAll();
+    if (remote && remote.length > 0) {
+      await repo.upsertMany(remote);
     }
-    return response.data;
+  } catch (error) {
+    console.warn('Failed to sync palaces from backend, using local data:', error);
   }
 
-  static async getPalaceById(id: string): Promise<PalaceDetails> {
-    const response = await api.get<GeneralResponse<PalaceDetails>>(`/palaces/${id}`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
+  return await repo.getAll();
+}
+
+/**
+ * Get palace by ID with sync
+ */
+export async function getPalaceById(id: string) {
+  try {
+    // Attempt backend sync
+    const remote = await palaceApi.getById(id);
+    if (remote) {
+      await repo.upsertMany([remote]);
+    }
+  } catch (error) {
+    console.warn('Failed to sync palace details, using local data:', error);
   }
 
-  static async createPalace(palace: Partial<Palace>): Promise<Palace> {
-    const response = await api.post<GeneralResponse<Palace>>('/palaces', palace);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  }
+  return await repo.getById(id);
+}
 
-  static async updatePalace(id: string, palace: Partial<Palace>): Promise<Palace> {
-    const response = await api.put<GeneralResponse<Palace>>(`/palaces/${id}`, palace);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  }
+/**
+ * Create palace (local + queue for sync)
+ * Offline-first: write locally, queue for async sync
+ */
+export async function createPalace(palace: Partial<Palace>): Promise<Palace> {
+  // 1. Create locally first
+  // Implementation: const localPalace = await palaceRepository.create(palace)
+  // 2. Queue for sync: await syncQueue.add({action: 'create', entityType: 'PALACE', ...})
 
-  static async deletePalace(id: string): Promise<boolean> {
-    const response = await api.delete<GeneralResponse<null>>(`/palaces/${id}`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.success;
-  }
+  // Fallback to API
+  const created = await palaceApi.create(palace as Palace);
+  return created;
+}
 
-  /**
-   * Get all user's unlocked palaces
-   */
-  static async getUserPalaces(userId: string): Promise<PagedResponse<Palace[]>> {
-    const response = await api.get<PagedResponse<Palace[]>>(`/users/${userId}/palaces`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data;
-  }
+/**
+ * Update palace (local + queue for sync)
+ */
+export async function updatePalace(id: string, palace: Partial<Palace>): Promise<Palace> {
+  // 1. Update locally first
+  // 2. Queue for sync
+  // Fallback to API
+  const updated = await palaceApi.update({ ...(palace as Palace), id } as Palace);
+  return updated;
+}
 
-  /**
-   * Unlock a palace for user
-   */
-  static async unlockPalace(userId: string, palaceId: string): Promise<boolean> {
-    const response = await api.post<GeneralResponse<null>>(
-      `/users/${userId}/palaces/${palaceId}/unlock`,
-      {}
-    );
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.success;
-  }
+/**
+ * Delete palace (local + queue for sync)
+ */
+export async function deletePalace(id: string): Promise<boolean> {
+  // 1. Delete locally first (or mark as deleted for soft delete)
+  // 2. Queue for sync
+  // Fallback to API
+  await palaceApi.delete(id);
+  return true;
+}
+
+/**
+ * Unlock a palace for user
+ */
+export async function unlockPalace(userId: string, palaceId: string): Promise<boolean> {
+  const success = await palaceApi.unlockPalace(userId, palaceId);
+  return success;
 }

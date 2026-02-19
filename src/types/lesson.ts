@@ -33,9 +33,8 @@ export interface LessonDetails extends Lesson {
 
 export interface LessonProgress extends Auditable, Syncable, SoftDeletable {
   id: string;
-  userId: string;
   lessonId: string;
-  firstCompletedDate: string;
+  firstCompletedDate?: string | null;
   reviewSchedules: ReviewSchedule[];
   totalReviews: number;
   masteryLevel: 'new' | 'learning' | 'reviewing' | 'mastered';
@@ -51,14 +50,13 @@ export interface Word extends Auditable, Syncable, SoftDeletable {
   locationId: string;
 }
 
-export interface ReviewSchedule extends Auditable, Syncable {
+export interface ReviewSchedule extends Auditable, Syncable, SoftDeletable {
   id: string;
   lessonProgressId: string;
   reviewRound: number;
   dueDate: string;
   completed: boolean;
-  completedDate?: string;
-  userId: string;
+  completedDate?: string | null;
 }
 
 export interface LessonForm {

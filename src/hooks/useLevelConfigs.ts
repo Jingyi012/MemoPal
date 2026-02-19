@@ -1,4 +1,4 @@
-import { useLevelConfigRepository } from '@/repositories/levelConfig.repo';
+import * as levelConfigService from '@/services/levelConfig.service';
 import { useQuery } from '@tanstack/react-query';
 
 export const LEVEL_CONFIG_KEYS = {
@@ -8,12 +8,10 @@ export const LEVEL_CONFIG_KEYS = {
 };
 
 export function useLevelConfigs() {
-  const repo = useLevelConfigRepository();
-
   const query = useQuery({
     queryKey: LEVEL_CONFIG_KEYS.list(),
     queryFn: async () => {
-      return await repo.getAll();
+      return await levelConfigService.getLevelConfigs();
     },
     staleTime: Infinity, // Level configs don't change often
   });
@@ -27,14 +25,12 @@ export function useLevelConfigs() {
 }
 
 export function useLevelByXp(totalXp: number) {
-  const repo = useLevelConfigRepository();
-
   const query = useQuery({
     queryKey: LEVEL_CONFIG_KEYS.byXp(totalXp),
     queryFn: async () => {
-      const currentLevel = await repo.getLevelByXp(totalXp);
-      const currentLevelConfig = await repo.getByLevel(currentLevel);
-      const nextLevelConfig = await repo.getNextLevel(currentLevel);
+      const currentLevel = await levelConfigService.getLevelByXp(totalXp);
+      const currentLevelConfig = await levelConfigService.getByLevel(currentLevel);
+      const nextLevelConfig = await levelConfigService.getNextLevel(currentLevel);
 
       const currentLevelXp = currentLevelConfig?.requiredXp ?? 0;
       const nextLevelXp = nextLevelConfig?.requiredXp ?? currentLevelXp + 1000;

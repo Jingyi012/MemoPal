@@ -1,5 +1,6 @@
+import { SourceType } from '@/enums/sourceType';
 import { relations, sql } from 'drizzle-orm';
-import { integer, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 // --- Helpers for common columns ---
 const commonColumns = {
@@ -31,29 +32,13 @@ export const palaces = sqliteTable('palaces', {
   locationsCount: integer('locations_count').default(0).notNull(),
   thumbnail: text('thumbnail').notNull(),
   isLocked: integer('is_locked', { mode: 'boolean' }).default(false).notNull(),
+  unlockedAt: text('unlocked_at').default(sql`CURRENT_TIMESTAMP`),
   requiredXp: integer('required_xp').default(0).notNull(),
   isPremium: integer('is_premium', { mode: 'boolean' }).default(false).notNull(),
   isCustom: integer('is_custom', { mode: 'boolean' }).default(false).notNull(),
   createdBy: text('created_by').references(() => users.id, { onDelete: 'cascade' }), // for custom palace
   ...commonColumns,
 });
-
-export const userPalaces = sqliteTable(
-  'user_palaces',
-  {
-    id: text('id').primaryKey(),
-    userId: text('user_id')
-      .references(() => users.id, { onDelete: 'cascade' })
-      .notNull(),
-    palaceId: text('palace_id')
-      .references(() => palaces.id, { onDelete: 'cascade' })
-      .notNull(),
-    unlockedAt: text('unlocked_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-  },
-  (table) => [unique().on(table.userId, table.palaceId)]
-);
 
 export const locations = sqliteTable('locations', {
   id: text('id').primaryKey(),
@@ -93,33 +78,23 @@ export const lessons = sqliteTable('lessons', {
   ...commonColumns,
 });
 
-export const lessonProgress = sqliteTable(
-  'lesson_progress',
-  {
-    id: text('id').primaryKey(),
-    userId: text('user_id')
-      .references(() => users.id, { onDelete: 'cascade' })
-      .notNull(),
-    lessonId: text('lesson_id')
-      .references(() => lessons.id, { onDelete: 'cascade' })
-      .notNull(),
-    firstCompletedDate: text('first_completed_date'),
-    totalReviews: integer('total_reviews').default(0).notNull(),
-    masteryLevel: text('mastery_level')
-      .$type<'new' | 'learning' | 'reviewing' | 'mastered'>()
-      .default('new'),
-    lastReviewDate: text('last_review_date'),
-    xpEarned: integer('xp_earned').default(0).notNull(),
-    ...commonColumns,
-  },
-  (table) => [unique().on(table.userId, table.lessonId)]
-);
+export const lessonProgress = sqliteTable('lesson_progress', {
+  id: text('id').primaryKey(),
+  lessonId: text('lesson_id')
+    .references(() => lessons.id, { onDelete: 'cascade' })
+    .notNull(),
+  firstCompletedDate: text('first_completed_date'),
+  totalReviews: integer('total_reviews').default(0).notNull(),
+  masteryLevel: text('mastery_level')
+    .$type<'new' | 'learning' | 'reviewing' | 'mastered'>()
+    .default('new'),
+  lastReviewDate: text('last_review_date'),
+  xpEarned: integer('xp_earned').default(0).notNull(),
+  ...commonColumns,
+});
 
 export const reviewSchedules = sqliteTable('review_schedules', {
   id: text('id').primaryKey(),
-  userId: text('user_id')
-    .references(() => users.id, { onDelete: 'cascade' })
-    .notNull(),
   lessonProgressId: text('lesson_progress_id')
     .references(() => lessonProgress.id, { onDelete: 'cascade' })
     .notNull(),
@@ -145,35 +120,16 @@ export const words = sqliteTable('words', {
 
 export const xpEvents = sqliteTable('xp_events', {
   id: text('id').primaryKey(),
-  userId: text('user_id')
-    .references(() => users.id, { onDelete: 'cascade' })
-    .notNull(),
-  sourceType: text('source_type')
-    .$type<
-      'lesson_complete' | 'review_complete' | 'word_mastered' | 'streak_bonus' | 'manual_adjustment'
-    >()
-    .notNull(),
+  sourceType: text('source_type').$type<SourceType>().notNull(),
   sourceId: text('source_id'),
   xpAmount: integer('xp_amount').notNull(),
   clientEventId: text('client_event_id').notNull().unique(),
-  createdAt: text('created_at')
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
+  ...commonColumns,
 });
 
 export const xpConfigs = sqliteTable('xp_configs', {
   id: text('id').primaryKey(),
-  sourceType: text('source_type')
-    .$type<
-      | 'lesson_complete'
-      | 'review_complete'
-      | 'word_mastered'
-      | 'streak_bonus'
-      | 'manual_adjustment'
-      | 'daily_login'
-    >()
-    .notNull(),
-
+  sourceType: text('source_type').$type<SourceType>().notNull(),
   baseXp: integer('base_xp').notNull(),
   variableXp: integer('variable_xp').default(0).notNull(),
 
@@ -197,20 +153,7 @@ export const milestones = sqliteTable('milestones', {
     .$type<'total_xp' | 'level' | 'lessons_completed' | 'words_learned' | 'streak_days'>()
     .notNull(),
   conditionValue: integer('condition_value').notNull(),
-  ...commonColumns,
-});
-
-export const userMilestones = sqliteTable('user_milestones', {
-  id: text('id').primaryKey(),
-  userId: text('user_id')
-    .references(() => users.id, { onDelete: 'cascade' })
-    .notNull(),
-  milestoneId: text('milestone_id')
-    .references(() => milestones.id)
-    .notNull(),
-  achievedAt: text('achieved_at')
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
+  achievedAt: text('achieved_at').default(sql`CURRENT_TIMESTAMP`),
   ...commonColumns,
 });
 
@@ -222,20 +165,7 @@ export const badges = sqliteTable('badges', {
   iconUrl: text('icon_url'),
   icon: text('icon_url'),
   rarity: text('rarity').$type<'common' | 'rare' | 'epic' | 'legendary'>(),
-  ...commonColumns,
-});
-
-export const userBadges = sqliteTable('user_badges', {
-  id: text('id').primaryKey(),
-  userId: text('user_id')
-    .references(() => users.id, { onDelete: 'cascade' })
-    .notNull(),
-  badgeId: text('badge_id')
-    .references(() => badges.id)
-    .notNull(),
-  earnedAt: text('earned_at')
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
+  earnedAt: text('earned_at').default(sql`CURRENT_TIMESTAMP`),
   ...commonColumns,
 });
 
@@ -253,10 +183,6 @@ export const userStats = sqliteTable('user_stats', {
 
 export const notifications = sqliteTable('notifications', {
   id: text('id').primaryKey(),
-
-  userId: text('user_id')
-    .references(() => users.id, { onDelete: 'cascade' })
-    .notNull(),
 
   type: text('type')
     .$type<'xp' | 'level_up' | 'milestone' | 'badge' | 'lesson' | 'system'>()
@@ -293,7 +219,6 @@ export const syncQueue = sqliteTable('sync_queue', {
 export const palacesRelations = relations(palaces, ({ one, many }) => ({
   locations: many(locations),
   lessons: many(lessons),
-  userPalaces: many(userPalaces),
   creator: one(users, {
     fields: [palaces.createdBy],
     references: [users.id],
@@ -316,7 +241,6 @@ export const lessonsRelations = relations(lessons, ({ one, many }) => ({
 
 export const lessonProgressRelations = relations(lessonProgress, ({ one, many }) => ({
   lesson: one(lessons, { fields: [lessonProgress.lessonId], references: [lessons.id] }),
-  user: one(users, { fields: [lessonProgress.userId], references: [users.id] }),
   reviewSchedules: many(reviewSchedules),
 }));
 
@@ -325,7 +249,6 @@ export const reviewSchedulesRelations = relations(reviewSchedules, ({ one }) => 
     fields: [reviewSchedules.lessonProgressId],
     references: [lessonProgress.id],
   }),
-  user: one(users, { fields: [reviewSchedules.userId], references: [users.id] }),
 }));
 
 export const wordsRelations = relations(words, ({ one }) => ({
@@ -333,32 +256,6 @@ export const wordsRelations = relations(words, ({ one }) => ({
   location: one(locations, { fields: [words.locationId], references: [locations.id] }),
 }));
 
-export const xpEventsRelations = relations(xpEvents, ({ one }) => ({
-  user: one(users, { fields: [xpEvents.userId], references: [users.id] }),
-}));
-
-export const userPalacesRelations = relations(userPalaces, ({ one }) => ({
-  user: one(users, { fields: [userPalaces.userId], references: [users.id] }),
-  palace: one(palaces, { fields: [userPalaces.palaceId], references: [palaces.id] }),
-}));
-
-export const userMilestonesRelations = relations(userMilestones, ({ one }) => ({
-  user: one(users, { fields: [userMilestones.userId], references: [users.id] }),
-  milestone: one(milestones, { fields: [userMilestones.milestoneId], references: [milestones.id] }),
-}));
-
-export const userBadgesRelations = relations(userBadges, ({ one }) => ({
-  user: one(users, { fields: [userBadges.userId], references: [users.id] }),
-  badge: one(badges, { fields: [userBadges.badgeId], references: [badges.id] }),
-}));
-
 export const userStatsRelations = relations(userStats, ({ one }) => ({
   user: one(users, { fields: [userStats.userId], references: [users.id] }),
-}));
-
-export const notificationRelations = relations(notifications, ({ one }) => ({
-  user: one(users, {
-    fields: [notifications.userId],
-    references: [users.id],
-  }),
 }));

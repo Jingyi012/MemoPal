@@ -5,67 +5,93 @@ import { EntityType } from '@/enums/entityType';
 import { SourceType } from '@/enums/sourceType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { ReviewSchedule } from '@/types/lesson';
+import { ReviewStats } from '@/types/review';
 import { calculateNextDueDate, REVIEW_INTERVALS } from '@/utils/review';
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 
-export function useReviewRepository() {
-  /**
-   * Get review schedule for a lesson
-   */
-  const getReviewSchedule = async (userId: string, lessonProgressId: string) => {
-    return await db.query.reviewSchedules.findMany({
-      where: and(
-        eq(schema.reviewSchedules.userId, userId),
-        eq(schema.reviewSchedules.lessonProgressId, lessonProgressId)
-      ),
-    });
-  };
-
-  /**
-   * Create a review schedule
-   */
-  const scheduleNextRound = async (
+export interface ReviewRepository {
+  getReviewSchedule(lessonProgressId: string): Promise<ReviewSchedule[]>;
+  getDueReviews(): Promise<ReviewSchedule[]>;
+  scheduleNextRound(
     tx: any,
-    {
-      userId,
-      progressId,
-      currentRound,
-      completedDate,
-    }: { userId: string; progressId: string; currentRound: number; completedDate: Date }
-  ) => {
-    const nextRound = currentRound + 1;
-    const intervalConfig = REVIEW_INTERVALS[nextRound];
+    options: {
+      progressId: string;
+      currentRound: number;
+      completedDate: Date;
+    }
+  ): Promise<void>;
+  handleRoundCompletion(
+    tx: any,
+    options: {
+      progressId: string;
+      reviewId: string;
+      roundNumber: number;
+      completedDate: string;
+    }
+  ): Promise<void>;
+  updateLessonProgressAfterReview(
+    lessonId: string,
+    xpEarned: number,
+    correctCount: number,
+    totalCount: number
+  ): Promise<void>;
+  delete(reviewScheduleId: string): Promise<void>;
+  upsertMany(reviewSchedules: ReviewSchedule[]): Promise<void>;
+  getReviewStats(): Promise<ReviewStats>;
+}
 
-    if (nextRound <= MAX_REVIEW_ROUND && intervalConfig) {
-      // Check if next round already exists to prevent duplicates
-      const nextExists = await tx.query.reviewSchedules.findFirst({
+export function createReviewRepository(): ReviewRepository {
+  return {
+    async getReviewSchedule(lessonProgressId: string): Promise<ReviewSchedule[]> {
+      return await db.query.reviewSchedules.findMany({
         where: and(
-          eq(schema.reviewSchedules.lessonProgressId, progressId),
-          eq(schema.reviewSchedules.reviewRound, nextRound)
+          eq(schema.reviewSchedules.lessonProgressId, lessonProgressId),
+          eq(schema.reviewSchedules.isDeleted, false)
         ),
       });
+    },
 
-      if (!nextExists) {
+    async getDueReviews(): Promise<ReviewSchedule[]> {
+      const now = new Date().toISOString();
+      return await db.query.reviewSchedules.findMany({
+        where: and(
+          eq(schema.reviewSchedules.completed, false),
+          eq(schema.reviewSchedules.isDeleted, false),
+          sql`${schema.reviewSchedules.dueDate} <= ${now}`
+        ),
+        orderBy: asc(schema.reviewSchedules.dueDate),
+      });
+    },
+
+    async scheduleNextRound(tx: any, { progressId, currentRound, completedDate }): Promise<void> {
+      const nextRound = currentRound + 1;
+      const intervalConfig = REVIEW_INTERVALS[nextRound];
+
+      if (nextRound <= MAX_REVIEW_ROUND && intervalConfig) {
         const nextDueDate = calculateNextDueDate(completedDate, intervalConfig);
         const scheduleId = Crypto.randomUUID();
-        await tx.insert(schema.reviewSchedules).values({
-          id: scheduleId,
-          userId,
-          lessonProgressId: progressId,
-          reviewRound: nextRound,
-          dueDate: nextDueDate.toISOString(),
-          completed: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
+        const now = new Date().toISOString();
 
-        await SyncBase.addToQueue(tx as any, {
+        await tx
+          .insert(schema.reviewSchedules)
+          .values({
+            id: scheduleId,
+            lessonProgressId: progressId,
+            reviewRound: nextRound,
+            dueDate: nextDueDate.toISOString(),
+            completed: false,
+            createdAt: now,
+            updatedAt: now,
+            lastSyncedAt: null,
+          })
+          .onConflictDoNothing();
+
+        await SyncBase.addToQueue(tx, {
           entityType: EntityType.REVIEW_SCHEDULE,
           entityId: scheduleId,
           action: 'create',
           payload: {
-            userId,
             lessonProgressId: progressId,
             reviewRound: nextRound,
             dueDate: nextDueDate.toISOString(),
@@ -73,113 +99,67 @@ export function useReviewRepository() {
           },
         });
       }
-    }
-  };
+    },
 
-  const handleRoundCompletion = async (
-    tx: any,
-    {
-      userId,
-      progressId,
-      reviewId,
-      roundNumber,
-      completedDate,
-    }: {
-      userId: string;
-      progressId: string;
-      reviewId: string;
-      roundNumber: number;
-      completedDate: string;
-    }
-  ) => {
-    await tx
-      .update(schema.reviewSchedules)
-      .set({
-        completed: true,
-        completedDate: completedDate,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(schema.reviewSchedules.id, reviewId));
+    async handleRoundCompletion(
+      tx: any,
+      { progressId, reviewId, roundNumber, completedDate }
+    ): Promise<void> {
+      const now = new Date().toISOString();
 
-    await scheduleNextRound(tx, {
-      userId,
-      progressId,
-      currentRound: roundNumber,
-      completedDate: new Date(completedDate),
-    });
-  };
-
-  /**
-   * Mark a review as completed
-   */
-  const completeReview = async (reviewScheduleId: string) => {
-    const now = new Date().toISOString();
-    await db.transaction(async (tx) => {
       await tx
         .update(schema.reviewSchedules)
         .set({
           completed: true,
-          completedDate: now,
+          completedDate,
           updatedAt: now,
         })
-        .where(eq(schema.reviewSchedules.id, reviewScheduleId));
+        .where(eq(schema.reviewSchedules.id, reviewId));
 
       await SyncBase.addToQueue(tx as any, {
         entityType: EntityType.REVIEW_SCHEDULE,
-        entityId: reviewScheduleId,
+        entityId: reviewId,
         action: 'update',
         payload: { completed: true, completedDate: now },
       });
-    });
-  };
 
-  /**
-   * Update lesson progress after review
-   */
-  const updateLessonProgressAfterReview = async (
-    userId: string,
-    lessonId: string,
-    xpEarned: number,
-    correctCount: number,
-    totalCount: number
-  ) => {
-    const nowIso = new Date().toISOString();
-    const isPassed = correctCount / totalCount >= 0.8;
-
-    await db.transaction(async (tx) => {
-      const currentProgress = await tx.query.lessonProgress.findFirst({
-        where: eq(schema.lessonProgress.lessonId, lessonId),
-        with: {
-          reviewSchedules: {
-            where: eq(schema.reviewSchedules.completed, false),
-            orderBy: asc(schema.reviewSchedules.dueDate),
-            limit: 1,
-          },
-        },
+      await this.scheduleNextRound(tx, {
+        progressId,
+        currentRound: roundNumber,
+        completedDate: new Date(completedDate),
       });
+    },
 
-      const progressId = currentProgress?.id ?? Crypto.randomUUID();
-      const currentReview = currentProgress?.reviewSchedules[0];
-      const currentRound = currentReview?.reviewRound ?? 0;
+    async updateLessonProgressAfterReview(
+      lessonId: string,
+      xpEarned: number,
+      correctCount: number,
+      totalCount: number
+    ): Promise<void> {
+      const nowIso = new Date().toISOString();
+      const isPassed = correctCount / totalCount >= 0.8;
 
-      await tx
-        .insert(schema.lessonProgress)
-        .values({
-          id: progressId,
-          userId,
-          lessonId,
-          firstCompletedDate: nowIso,
-          totalReviews: isPassed ? 1 : 0,
-          masteryLevel: 'learning',
-          lastReviewDate: nowIso,
-          xpEarned,
-          createdAt: nowIso,
-          updatedAt: nowIso,
-          isDeleted: false,
-        })
-        .onConflictDoUpdate({
-          target: schema.lessonProgress.id,
-          set: {
+      await db.transaction(async (tx) => {
+        const currentProgress = await tx.query.lessonProgress.findFirst({
+          where: eq(schema.lessonProgress.lessonId, lessonId),
+          with: {
+            reviewSchedules: {
+              where: eq(schema.reviewSchedules.completed, false),
+              orderBy: asc(schema.reviewSchedules.dueDate),
+              limit: 1,
+            },
+          },
+        });
+
+        if (!currentProgress) return;
+
+        const currentReview = currentProgress.reviewSchedules[0];
+        const currentRound = currentReview?.reviewRound ?? 0;
+
+        // 1. Update Lesson Progress
+        await tx
+          .update(schema.lessonProgress)
+          .set({
             totalReviews: isPassed
               ? sql`${schema.lessonProgress.totalReviews} + 1`
               : schema.lessonProgress.totalReviews,
@@ -187,131 +167,176 @@ export function useReviewRepository() {
             lastReviewDate: nowIso,
             xpEarned: sql`${schema.lessonProgress.xpEarned} + ${xpEarned}`,
             updatedAt: nowIso,
-          },
-        });
+          })
+          .where(eq(schema.lessonProgress.id, currentProgress.id));
 
-      if (isPassed && currentReview) {
-        // Mark current round as completed
-        await handleRoundCompletion(tx, {
-          userId,
-          progressId,
-          reviewId: currentReview.id,
-          roundNumber: currentRound,
-          completedDate: nowIso,
-        });
-      }
+        // 2. Handle Schedule update
+        if (isPassed && currentReview) {
+          await this.handleRoundCompletion(tx, {
+            progressId: currentProgress.id,
+            reviewId: currentReview.id,
+            roundNumber: currentRound,
+            completedDate: nowIso,
+          });
+        }
 
-      await tx
-        .update(schema.users)
-        .set({
+        // 3. Update User XP & Stats (Targeting the only user in the table)
+        await tx.update(schema.users).set({
           totalXp: sql`${schema.users.totalXp} + ${xpEarned}`,
           updatedAt: nowIso,
-        })
-        .where(eq(schema.users.id, userId));
+        });
 
-      // 5. Update User Stats (Streaks & Total Count)
-      await tx
-        .insert(schema.userStats)
-        .values({
-          userId,
-          lessonsCompleted: isPassed ? 1 : 0,
+        await tx.update(schema.userStats).set({
+          lessonsCompleted: isPassed
+            ? sql`${schema.userStats.lessonsCompleted} + 1`
+            : schema.userStats.lessonsCompleted,
           lastActiveDate: nowIso,
-          createdAt: nowIso,
           updatedAt: nowIso,
-        })
-        .onConflictDoUpdate({
-          target: schema.userStats.userId,
-          set: {
-            lessonsCompleted: isPassed
-              ? sql`${schema.userStats.lessonsCompleted} + 1`
-              : schema.userStats.lessonsCompleted,
-            lastActiveDate: nowIso,
-            updatedAt: nowIso,
-            // Note: Streak logic usually requires comparing lastActiveDate
-            // with 'yesterday' to increment or reset.
-          },
         });
 
-      // 6. Sync Queue Logging
-      if (xpEarned > 0) {
-        const xpEventId = Crypto.randomUUID();
-        await tx.insert(schema.xpEvents).values({
-          id: xpEventId,
-          userId,
-          xpAmount: xpEarned,
-          sourceType: SourceType.ReviewComplete,
-          sourceId: lessonId,
-          clientEventId: xpEventId,
-          createdAt: nowIso,
-        });
-
-        await SyncBase.addToQueue(tx as any, {
-          entityType: EntityType.XP_EVENT,
-          entityId: xpEventId,
-          action: 'create',
-          payload: {
+        // 4. Log XP event
+        if (xpEarned > 0) {
+          const xpEventId = Crypto.randomUUID();
+          await tx.insert(schema.xpEvents).values({
             id: xpEventId,
-            userId,
             xpAmount: xpEarned,
             sourceType: SourceType.ReviewComplete,
             sourceId: lessonId,
             clientEventId: xpEventId,
             createdAt: nowIso,
-          },
-        });
-      }
+            updatedAt: nowIso,
+          });
 
-      await SyncBase.addToQueue(tx as any, {
-        entityType: 'lesson_progress',
-        entityId: progressId,
-        action: 'update',
-        payload: {},
+          await SyncBase.addToQueue(tx as any, {
+            entityType: EntityType.XP_EVENT,
+            entityId: xpEventId,
+            action: 'create',
+            payload: {
+              xpAmount: xpEarned,
+              sourceType: SourceType.ReviewComplete,
+              sourceId: lessonId,
+            },
+          });
+        }
+
+        // 5. Queue lesson progress for sync
+        await SyncBase.addToQueue(tx as any, {
+          entityType: EntityType.LESSON_PROGRESS,
+          entityId: currentProgress.id,
+          action: 'update',
+          payload: { id: currentProgress.id, updatedAt: nowIso },
+        });
       });
-    });
-  };
+    },
 
-  /**
-   * Upsert review schedules from server
-   */
-  const upsertMany = async (reviewSchedules: Array<ReviewSchedule>) => {
-    if (reviewSchedules.length === 0) return;
-
-    const now = new Date().toISOString();
-
-    for (const review of reviewSchedules) {
-      await db
-        .insert(schema.reviewSchedules)
-        .values({
-          id: review.id,
-          userId: review.userId,
-          lessonProgressId: review.lessonProgressId,
-          reviewRound: review.reviewRound,
-          dueDate: review.dueDate,
-          completed: review.completed,
-          completedDate: review.completedDate,
-          createdAt: review.createdAt,
-          updatedAt: review.updatedAt || now,
-          lastSyncedAt: review.lastSyncedAt || now,
-        })
-        .onConflictDoUpdate({
-          target: schema.reviewSchedules.id,
-          set: {
-            completed: review.completed,
-            completedDate: review.completedDate,
-            dueDate: review.dueDate,
-            updatedAt: now,
-            lastSyncedAt: review.lastSyncedAt || now,
-          },
-          where: sql`${schema.reviewSchedules.updatedAt} < ${review.updatedAt}`,
+    async delete(reviewScheduleId: string): Promise<void> {
+      await db.transaction(async (tx) => {
+        const record = await tx.query.reviewSchedules.findFirst({
+          columns: { lastSyncedAt: true },
+          where: eq(schema.reviewSchedules.id, reviewScheduleId),
         });
-    }
-  };
 
-  return {
-    scheduleNextRound,
-    getReviewSchedule,
-    completeReview,
-    updateLessonProgressAfterReview,
-    upsertMany,
+        if (!record) return;
+        const now = new Date().toISOString();
+
+        if (record.lastSyncedAt) {
+          await SyncBase.addToQueue(tx as any, {
+            entityType: EntityType.REVIEW_SCHEDULE,
+            entityId: reviewScheduleId,
+            action: 'delete',
+          });
+        } else {
+          await SyncBase.removePendingSyncs(tx as any, reviewScheduleId);
+        }
+
+        await tx
+          .update(schema.reviewSchedules)
+          .set({ isDeleted: true, deletedAt: now, updatedAt: now })
+          .where(eq(schema.reviewSchedules.id, reviewScheduleId));
+      });
+    },
+
+    async upsertMany(reviewSchedules: ReviewSchedule[]): Promise<void> {
+      if (reviewSchedules.length === 0) return;
+      const now = new Date().toISOString();
+      const ids = reviewSchedules.map((r) => r.id);
+
+      await db.transaction(async (tx) => {
+        const localRecords = await tx.query.reviewSchedules.findMany({
+          where: inArray(schema.reviewSchedules.id, ids),
+        });
+        const localMap = new Map(localRecords.map((r) => [r.id, r]));
+        const dirtyIds = await SyncBase.getEntityDirtyIds(
+          tx as any,
+          ids,
+          EntityType.REVIEW_SCHEDULE
+        );
+
+        for (const review of reviewSchedules) {
+          if (dirtyIds.has(review.id)) continue;
+
+          const localReview = localMap.get(review.id);
+          const serverDate = new Date(review.updatedAt || now).getTime();
+          const localDate = localReview ? new Date(localReview.updatedAt).getTime() : 0;
+
+          if (!localReview || serverDate > localDate) {
+            await tx
+              .insert(schema.reviewSchedules)
+              .values({ ...review, lastSyncedAt: now, isDeleted: Boolean(review.isDeleted) })
+              .onConflictDoUpdate({
+                target: schema.reviewSchedules.id,
+                set: {
+                  completed: review.completed,
+                  completedDate: review.completedDate,
+                  dueDate: review.dueDate,
+                  isDeleted: Boolean(review.isDeleted),
+                  deletedAt: review.deletedAt,
+                  updatedAt: review.updatedAt || now,
+                  lastSyncedAt: now,
+                },
+              });
+          }
+        }
+      });
+    },
+
+    async getReviewStats(): Promise<ReviewStats> {
+      const now = new Date().toISOString();
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      const endOfDayIso = endOfDay.toISOString();
+
+      // 1. Get Due counts (Today vs Future)
+      const schedules = await db
+        .select({
+          dueDate: schema.reviewSchedules.dueDate,
+        })
+        .from(schema.reviewSchedules)
+        .where(
+          and(
+            eq(schema.reviewSchedules.completed, false),
+            eq(schema.reviewSchedules.isDeleted, false)
+          )
+        );
+
+      const dueTodayCount = schedules.filter((s) => s.dueDate <= endOfDayIso).length;
+      const upcomingReviewsCount = schedules.filter((s) => s.dueDate > endOfDayIso).length;
+
+      // 2. Aggregate Mastery and Totals from Lesson Progress
+      const progressStats = await db
+        .select({
+          masteredCount: sql<number>`count(case when ${schema.lessonProgress.masteryLevel} = 'mastered' then 1 end)`,
+          totalReviews: sql<number>`sum(${schema.lessonProgress.totalReviews})`,
+          // Assuming accuracy is handled by a different metric or average XP if needed
+        })
+        .from(schema.lessonProgress);
+
+      return {
+        totalLessonsMastered: Number(progressStats[0]?.masteredCount ?? 0),
+        totalReviewsCompleted: Number(progressStats[0]?.totalReviews ?? 0),
+        dueTodayCount,
+        upcomingReviewsCount,
+      };
+    },
   };
 }

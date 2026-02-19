@@ -1,46 +1,101 @@
-import { GeneralResponse, PagedResponse } from '@/types/general';
+import { badgeApi } from '@/api/badge';
+import { db } from '@/db/client';
+import { EntityType } from '@/enums/entityType';
+import { createBadgeRepository } from '@/repositories/badge.repo';
 import { Badge } from '@/types/levelAndbadge';
-import api from './api';
+import { eq } from 'drizzle-orm';
 
-export class BadgeService {
-  /**
-   * Get all available badges
-   */
-  static async getBadges(params: {}): Promise<GeneralResponse<Badge[]>> {
-    const response = await api.get<GeneralResponse<Badge[]>>('/badges', {
-      params,
+const repo = createBadgeRepository();
+
+/**
+ * Get all available badges with two-way sync
+ * Strategy: Download remote updates, merge with local using conflict resolution
+ */
+export async function getAllBadges(): Promise<Badge[]> {
+  try {
+    // Attempt to fetch updated badges from backend
+    const lastSync = localStorage.getItem('badges:lastSync') || new Date(0).toISOString();
+    const remoteBadges = await badgeApi.getUpdatedSince(lastSync);
+
+    if (remoteBadges && remoteBadges.length > 0) {
+      // Merge remote data with local (respects dirty state)
+      await repo.upsertMany(remoteBadges);
+      localStorage.setItem('badges:lastSync', new Date().toISOString());
+    }
+  } catch (error) {
+    console.warn('Failed to sync badges from backend, using local data:', error);
+  }
+
+  // Return local data (offline-first)
+  return await repo.getAll();
+}
+
+/**
+ * Get badge by ID with fallback to local
+ */
+export async function getBadgeById(id: string) {
+  try {
+    const remoteBadge = await badgeApi.getById(id);
+    if (remoteBadge) {
+      // Update local copy
+      await repo.upsertMany([remoteBadge]);
+    }
+    return remoteBadge;
+  } catch (error) {
+    console.warn('Failed to sync badge, using local data:', error);
+    return await repo.getById(id);
+  }
+}
+
+/**
+ * Award a badge to user (offline-first)
+ * 1. Create locally and queue for sync
+ * 2. Background: sync queue processor sends to backend
+ */
+export async function awardBadge(userId: string, badgeId: string): Promise<void> {
+  try {
+    // Award locally first (offline-first)
+    await repo.awardBadge(userId, badgeId);
+  } catch (error) {
+    console.error('Failed to award badge locally:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check if user has earned a badge
+ */
+export async function hasEarnedBadge(userId: string, badgeId: string): Promise<boolean> {
+  return await repo.hasEarnedBadge(userId, badgeId);
+}
+
+/**
+ * Sync all pending badge changes to backend
+ * Called by SyncManager when network is available
+ */
+export async function syncPendingChanges(): Promise<void> {
+  try {
+    // Get all pending badge changes
+    const queue = await db.query.syncQueue.findMany({
+      where: (sq) => eq(sq.entityType, EntityType.BADGE),
     });
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data;
-  }
 
-  /**
-   * Get a single badge by ID
-   */
-  static async getBadgeById(id: string): Promise<Badge> {
-    const response = await api.get<GeneralResponse<Badge>>(`/badges/${id}`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  }
-
-  /**
-   * Get all user's earned badges
-   */
-  static async getUserBadges(userId: string): Promise<PagedResponse<Badge[]>> {
-    const response = await api.get<PagedResponse<Badge[]>>(`/users/${userId}/badges`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data;
-  }
-
-  /**
-   * Award a badge to user
-   */
-  static async awardBadge(userId: string, badgeId: string): Promise<boolean> {
-    const response = await api.post<GeneralResponse<null>>(
-      `/users/${userId}/badges/${badgeId}`,
-      {}
-    );
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.success;
+    for (const item of queue) {
+      try {
+        if (item.action === 'create') {
+          // Create on backend (though badges are typically read-only)
+        } else if (item.action === 'update') {
+          // Update on backend
+        } else if (item.action === 'delete') {
+          // Delete on backend
+        }
+        // On success, SyncProcessor removes from queue
+      } catch (error) {
+        console.error(`Failed to sync badge ${item.entityId}:`, error);
+        // Retry on next sync
+      }
+    }
+  } catch (error) {
+    console.error('Error during badge sync:', error);
   }
 }

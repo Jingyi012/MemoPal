@@ -23,6 +23,7 @@ export interface Palace extends Auditable, Syncable, SoftDeletable {
   locationsCount: number;
   thumbnail: string;
   isLocked: boolean;
+  unlockedAt?: string | null;
   requiredXp: number;
   isPremium: boolean;
   isCustom: boolean;
@@ -31,11 +32,4 @@ export interface Palace extends Auditable, Syncable, SoftDeletable {
 
 export interface PalaceDetails extends Palace {
   locations: Location[];
-}
-
-export interface UserPalaces {
-  id: string;
-  userId: string;
-  palaceId: string;
-  unlockedAt: string;
 }

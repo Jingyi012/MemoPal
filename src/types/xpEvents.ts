@@ -1,8 +1,7 @@
-import { SourceType } from './xpConfigs';
+import { SourceType } from '@/enums/sourceType';
 
 export interface XpEvents {
   id: string;
-  userId: string;
   sourceType: SourceType;
   sourceId?: string;
   xpAmount: number;

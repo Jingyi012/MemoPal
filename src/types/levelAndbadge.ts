@@ -10,6 +10,7 @@ export interface Badge extends Auditable, Syncable, SoftDeletable {
   icon: string | null;
   iconUrl?: string | null;
   rarity: BadgeRarity | null;
+  earnedAt?: string | null;
 }
 
 export interface Milestone extends Auditable, Syncable, SoftDeletable {
@@ -19,28 +20,14 @@ export interface Milestone extends Auditable, Syncable, SoftDeletable {
   description?: string | null;
   conditionType: 'total_xp' | 'level' | 'lessons_completed' | 'words_learned' | 'streak_days';
   conditionValue: number;
+  achievedAt?: string | null;
 }
 
 export interface UserStats {
-  userId: string;
   lessonsCompleted: number;
   wordsLearned: number;
   currentStreak: number;
   longestStreak: number;
   lastActiveDate: string;
   updatedAt: string;
-}
-
-export interface UserBadges {
-  id: string;
-  userId: string;
-  badgeId: string;
-  earnedAt: string;
-}
-
-export interface UserMilestones {
-  id: string;
-  userId: string;
-  milestoneId: string;
-  achievedAt: string;
 }

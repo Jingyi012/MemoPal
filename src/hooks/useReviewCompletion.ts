@@ -1,65 +1,29 @@
-import { SourceType } from '@/enums/sourceType';
-import { useReviewRepository } from '@/repositories/review.repo';
-import { recordXpEvent, useXpConfigRepository } from '@/repositories/xpConfig.repo';
-import { useMutation } from '@tanstack/react-query';
+import * as reviewService from '@/services/review.service';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function useReviewCompletion() {
-  const reviewRepo = useReviewRepository();
-  const xpConfigRepo = useXpConfigRepository();
+  const queryClient = useQueryClient();
 
-  const submitReview = useMutation({
-    mutationFn: async ({
-      userId,
+  const mutation = useMutation({
+    mutationFn: ({
       lessonId,
       correctCount,
       totalCount,
-      isLearningMode = false,
+      isLearningMode,
     }: {
-      userId: string;
       lessonId: string;
       correctCount: number;
       totalCount: number;
-      isLearningMode: boolean;
+      isLearningMode?: boolean;
     }) => {
-      if (isLearningMode) {
-        return {
-          xpEarned: 0,
-          success: true,
-        };
-      }
-
-      // Get XP config for review completion
-      const xpConfig = await xpConfigRepo.getBySourceType(SourceType.ReviewComplete);
-      const baseXp = xpConfig?.baseXp ?? 10;
-      const variableCp = xpConfig?.variableXp ?? 1;
-
-      // Calculate XP based on accuracy
-      const accuracy = correctCount / totalCount;
-      const xpEarned = Math.floor(baseXp + variableCp * accuracy);
-
-      // Record XP event
-      await recordXpEvent(userId, SourceType.ReviewComplete, xpEarned, lessonId);
-
-      // Update lesson progress
-      await reviewRepo.updateLessonProgressAfterReview(
-        userId,
-        lessonId,
-        xpEarned,
-        correctCount,
-        totalCount
-      );
-
-      return {
-        xpEarned,
-        success: true,
-      };
+      return reviewService.completeReview(lessonId, correctCount, totalCount, isLearningMode);
+    },
+    onSuccess: () => {
+      // Invalidate queries so the UI reflects new XP and schedule immediately
+      queryClient.invalidateQueries({ queryKey: ['review-schedule'] });
+      queryClient.invalidateQueries({ queryKey: ['user-stats'] });
     },
   });
 
-  return {
-    submitReview: submitReview.mutate,
-    submitReviewAsync: submitReview.mutateAsync,
-    isLoading: submitReview.isPending,
-    isError: submitReview.isError,
-  };
+  return mutation;
 }

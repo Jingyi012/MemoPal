@@ -1,75 +1,82 @@
 import { db } from '@/db/client';
 import * as schema from '@/db/schema';
-import { asc, eq, gte } from 'drizzle-orm';
+import { asc, eq, gt, gte } from 'drizzle-orm';
 
-export function useLevelConfigRepository() {
-  /**
-   * Get all level configurations
-   */
-  const getAll = async () => {
-    return await db.query.levelConfigs.findMany({
-      orderBy: [asc(schema.levelConfigs.level)],
-    });
-  };
+interface LevelConfigRepository {
+  getAll(): Promise<any[]>;
+  getByLevel(level: number): Promise<any | null>;
+  getLevelByXp(totalXp: number): Promise<number>;
+  getNextLevel(currentLevel: number): Promise<any | null>;
+  getXpRequiredForLevel(level: number): Promise<number>;
+  upsertMany(configs: any[]): Promise<void>;
+}
 
-  /**
-   * Get level config by level number
-   */
-  const getByLevel = async (level: number) => {
-    return await db.query.levelConfigs.findFirst({
-      where: eq(schema.levelConfigs.level, level),
-    });
-  };
-
-  /**
-   * Get the level for a given XP amount
-   * Returns the highest level that the XP can achieve
-   */
-  const getLevelByXp = async (totalXp: number) => {
-    const configs = await db.query.levelConfigs.findMany({
-      where: gte(schema.levelConfigs.requiredXp, 0),
-      orderBy: [asc(schema.levelConfigs.level)],
-    });
-
-    // Find the highest level where requiredXp <= totalXp
-    let currentLevel = 1;
-    for (const config of configs) {
-      if (config.requiredXp <= totalXp) {
-        currentLevel = config.level;
-      } else {
-        break;
-      }
-    }
-
-    return currentLevel;
-  };
-
-  /**
-   * Get the next level config after current level
-   */
-  const getNextLevel = async (currentLevel: number) => {
-    return await db.query.levelConfigs.findFirst({
-      where: (t) => {
-        const { gt } = require('drizzle-orm');
-        return gt(schema.levelConfigs.level, currentLevel);
-      },
-      orderBy: [asc(schema.levelConfigs.level)],
-    });
-  };
-
-  /**
-   * Get XP required for a specific level
-   */
-  const getXpRequiredForLevel = async (level: number) => {
-    const config = await getByLevel(level);
-    return config?.requiredXp ?? 0;
-  };
-
+export function createLevelConfigRepository(): LevelConfigRepository {
   return {
-    getAll,
-    getByLevel,
-    getLevelByXp,
-    getNextLevel,
-    getXpRequiredForLevel,
+    async getAll(): Promise<any[]> {
+      return await db.query.levelConfigs.findMany({
+        orderBy: [asc(schema.levelConfigs.level)],
+      });
+    },
+
+    async getByLevel(level: number): Promise<any | null> {
+      return await db.query.levelConfigs.findFirst({
+        where: eq(schema.levelConfigs.level, level),
+      });
+    },
+
+    async getLevelByXp(totalXp: number): Promise<number> {
+      const configs = await db.query.levelConfigs.findMany({
+        where: gte(schema.levelConfigs.requiredXp, 0),
+        orderBy: [asc(schema.levelConfigs.level)],
+      });
+
+      let currentLevel = 1;
+      for (const config of configs) {
+        if (config.requiredXp <= totalXp) {
+          currentLevel = config.level;
+        } else {
+          break;
+        }
+      }
+
+      return currentLevel;
+    },
+
+    async getNextLevel(currentLevel: number): Promise<any | null> {
+      return await db.query.levelConfigs.findFirst({
+        where: gt(schema.levelConfigs.level, currentLevel),
+        orderBy: [asc(schema.levelConfigs.level)],
+      });
+    },
+
+    async getXpRequiredForLevel(level: number): Promise<number> {
+      const config = await this.getByLevel(level);
+      return config?.requiredXp ?? 0;
+    },
+
+    async upsertMany(configs: any[]): Promise<void> {
+      if (configs.length === 0) return;
+      const now = new Date().toISOString();
+
+      for (const cfg of configs) {
+        await db
+          .insert(schema.levelConfigs)
+          .values({
+            ...cfg,
+            updatedAt: now,
+            lastSyncedAt: now,
+          })
+          .onConflictDoUpdate({
+            target: schema.levelConfigs.level,
+            set: {
+              requiredXp: cfg.requiredXp,
+              title: cfg.title,
+              updatedAt: now,
+              lastSyncedAt: now,
+            },
+          });
+      }
+    },
   };
 }

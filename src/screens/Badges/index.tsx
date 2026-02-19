@@ -6,11 +6,11 @@ import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthProvider';
-import { useBadges, useUserBadges } from '@/hooks/useBadges';
+import { useAllBadges, useUserBadges } from '@/hooks/useBadges';
+import { useLevelByXp } from '@/hooks/useLevelConfigs';
 import { useMilestones, useUserMilestones } from '@/hooks/useMilestones';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useUserTotalXp } from '@/hooks/useXpEvents';
-import { useLevelByXp } from '@/hooks/useLevelConfigs';
 import { BadgeCard } from './BadgeCard';
 import { LevelProgressHeader } from './LevelProgressHeader';
 import { MilestoneItem } from './MilestoneItem';
@@ -21,7 +21,7 @@ const BadgesScreen: React.FC = () => {
   const userId = user?.id || '';
 
   // Fetch all data
-  const { badges, isLoading: badgesLoading } = useBadges();
+  const { badges, isLoading: badgesLoading } = useAllBadges();
   const { userBadges, isLoading: userBadgesLoading } = useUserBadges(userId);
   const { milestones, isLoading: milestonesLoading } = useMilestones();
   const { userMilestones, isLoading: userMilestonesLoading } = useUserMilestones(userId);

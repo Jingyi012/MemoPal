@@ -1,121 +1,110 @@
 import { db } from '@/db/client';
 import * as schema from '@/db/schema';
+import { EntityType } from '@/enums/entityType';
+import { SyncBase } from '@/services/sync/sync.base';
 import { Milestone } from '@/types/levelAndbadge';
-import { and, eq } from 'drizzle-orm';
+import { eq, isNotNull } from 'drizzle-orm';
 
-export function useMilestoneRepository() {
-  /**
-   * Get all milestones
-   */
-  const getAll = async () => {
-    return await db.query.milestones.findMany();
-  };
+interface MilestoneRepository {
+  getAll(): Promise<Milestone[]>;
+  getById(id: string): Promise<Milestone | null | undefined>;
+  getAchieved(): Promise<Milestone[]>;
+  hasAchieved(milestoneId: string): Promise<boolean>;
+  awardMilestone(milestoneId: string): Promise<void>;
+  upsertMany(milestones: Milestone[]): Promise<void>;
+}
 
-  /**
-   * Get user's achieved milestones
-   */
-  const getUserMilestones = async (userId: string) => {
-    return await db.query.userMilestones.findMany({
-      where: eq(schema.userMilestones.userId, userId),
-      with: {
-        milestone: true,
-      },
-    });
-  };
-
-  /**
-   * Check if user has achieved a milestone
-   */
-  const hasAchieved = async (userId: string, milestoneId: string): Promise<boolean> => {
-    const result = await db.query.userMilestones.findFirst({
-      where: and(
-        eq(schema.userMilestones.userId, userId),
-        eq(schema.userMilestones.milestoneId, milestoneId)
-      ),
-    });
-    return !!result;
-  };
-
-  /**
-   * Award a milestone to user
-   */
-  const awardMilestone = async (userId: string, milestoneId: string) => {
-    const now = new Date().toISOString();
-    await db.insert(schema.userMilestones).values({
-      id: `${userId}-${milestoneId}`,
-      userId,
-      milestoneId,
-      achievedAt: now,
-    });
-  };
-
-  /**
-   * Get milestone by ID
-   */
-  const getById = async (id: string) => {
-    return await db.query.milestones.findFirst({
-      where: eq(schema.milestones.id, id),
-    });
-  };
-
-  /**
-   * Upsert milestones from server
-   */
-  const upsertMany = async (milestones: Milestone[]) => {
-    if (milestones.length === 0) return;
-
-    const now = new Date().toISOString();
-
-    for (const milestone of milestones) {
-      await db
-        .insert(schema.milestones)
-        .values({
-          ...milestone,
-          updatedAt: now,
-        })
-        .onConflictDoUpdate({
-          target: schema.milestones.id,
-          set: {
-            key: milestone.key,
-            title: milestone.title,
-            description: milestone.description,
-            conditionType: milestone.conditionType,
-            conditionValue: milestone.conditionValue,
-            updatedAt: now,
-          },
-        });
-    }
-  };
-
-  /**
-   * Upsert user milestones from server
-   */
-  const upsertUserMilestones = async (
-    userId: string,
-    userMilestones: Array<{ milestoneId: string; achievedAt: string }>
-  ) => {
-    if (userMilestones.length === 0) return;
-
-    for (const um of userMilestones) {
-      await db
-        .insert(schema.userMilestones)
-        .values({
-          id: `${userId}-${um.milestoneId}`,
-          userId,
-          milestoneId: um.milestoneId,
-          achievedAt: um.achievedAt,
-        })
-        .onConflictDoNothing();
-    }
-  };
-
+export function createMilestoneRepository(): MilestoneRepository {
   return {
-    getAll,
-    getUserMilestones,
-    hasAchieved,
-    awardMilestone,
-    getById,
-    upsertMany,
-    upsertUserMilestones,
+    /**
+     * Get all possible milestones (locked and unlocked)
+     */
+    async getAll(): Promise<Milestone[]> {
+      return await db.query.milestones.findMany();
+    },
+
+    async getById(id: string): Promise<Milestone | null | undefined> {
+      return await db.query.milestones.findFirst({
+        where: eq(schema.milestones.id, id),
+      });
+    },
+
+    /**
+     * Get only the milestones the current user has achieved
+     */
+    async getAchieved(): Promise<Milestone[]> {
+      return await db.query.milestones.findMany({
+        where: isNotNull(schema.milestones.achievedAt),
+      });
+    },
+
+    async hasAchieved(milestoneId: string): Promise<boolean> {
+      const result = await db.query.milestones.findFirst({
+        where: eq(schema.milestones.id, milestoneId),
+        columns: { achievedAt: true },
+      });
+      return !!result?.achievedAt;
+    },
+
+    /**
+     * Marks a milestone as achieved locally and queues for sync
+     */
+    async awardMilestone(milestoneId: string): Promise<void> {
+      const now = new Date().toISOString();
+
+      await db.transaction(async (tx) => {
+        // Update the milestone record directly
+        await tx
+          .update(schema.milestones)
+          .set({
+            achievedAt: now,
+            updatedAt: now,
+          })
+          .where(eq(schema.milestones.id, milestoneId));
+
+        // Queue for backend sync
+        await SyncBase.addToQueue(tx as any, {
+          entityType: EntityType.MILESTONE,
+          entityId: milestoneId,
+          action: 'update',
+          payload: { id: milestoneId, achievedAt: now, updatedAt: now },
+        });
+      });
+    },
+
+    /**
+     * Syncs milestones from server.
+     * If the server says it's achieved, we update our local record.
+     */
+    async upsertMany(milestones: Milestone[]): Promise<void> {
+      if (milestones.length === 0) return;
+      const now = new Date().toISOString();
+
+      await db.transaction(async (tx) => {
+        for (const milestone of milestones) {
+          await tx
+            .insert(schema.milestones)
+            .values({
+              ...milestone,
+              updatedAt: now,
+              lastSyncedAt: now,
+            })
+            .onConflictDoUpdate({
+              target: schema.milestones.id,
+              set: {
+                key: milestone.key,
+                title: milestone.title,
+                description: milestone.description,
+                conditionType: milestone.conditionType,
+                conditionValue: milestone.conditionValue,
+                // Only overwrite achievedAt if the server has a value
+                achievedAt: milestone.achievedAt,
+                updatedAt: now,
+                lastSyncedAt: now,
+              },
+            });
+        }
+      });
+    },
   };
 }

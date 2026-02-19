@@ -1,6 +1,5 @@
 import { useAuth } from '@/contexts/AuthProvider';
-import { useLessonProgressRepository } from '@/repositories/lessonProgress.repo';
-import { LessonProgressService } from '@/services/lessonProgress.service';
+import * as lessonProgressService from '@/services/lessonProgress.service';
 import type { LessonProgress } from '@/types/lesson';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -9,32 +8,30 @@ export const PROGRESS_KEYS = {
   detail: (lessonId: string) => [...PROGRESS_KEYS.all, lessonId] as const,
 };
 
+/**
+ * Hook: Fetch lesson progress with automatic sync
+ * Uses service layer for all business logic
+ */
 export function useLessonProgress(lessonId: string) {
   const { user } = useAuth();
-  const repo = useLessonProgressRepository(user?.id!);
   const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: PROGRESS_KEYS.detail(lessonId),
     enabled: !!lessonId,
     queryFn: async () => {
-      try {
-        const remoteData = await LessonProgressService.getProgress(lessonId);
+      // Service handles sync and returns local data
+      let progress = await lessonProgressService.getProgress(lessonId);
 
-        if (remoteData) {
-          await repo.upsertMany([remoteData]);
-        }
-      } catch (error) {
-        console.warn('Progress sync failed, using local master');
+      // Initialize if doesn't exist
+      if (!progress) {
+        progress = await lessonProgressService.initLessonProgress(user?.id!, lessonId);
       }
 
-      let localData = await repo.getLessonProgress(lessonId);
+      // Ensure learning mode is properly initialized
+      await lessonProgressService.ensureLearningInitialized(user?.id!, progress);
 
-      if (!localData) {
-        localData = await repo.initLessonProgress(lessonId);
-      }
-      await repo.ensureLearningInitialized(localData);
-      return localData;
+      return progress;
     },
   });
 
@@ -51,14 +48,19 @@ export function useLessonProgress(lessonId: string) {
   };
 }
 
+/**
+ * Hook: Save lesson progress
+ * Delegates to service layer for offline-first storage and sync queueing
+ */
 export function useSaveLessonProgress() {
-  const { user } = useAuth();
-  const repo = useLessonProgressRepository(user?.id!);
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: async (progress: LessonProgress) => {
-      await repo.saveProgress(progress);
+      // Service handles local save and sync queueing
+      await lessonProgressService.saveProgress(progress);
+    },
+    onSuccess: (_, progress) => {
       // Keep queries fresh
       queryClient.invalidateQueries({ queryKey: PROGRESS_KEYS.detail(progress.lessonId) });
     },

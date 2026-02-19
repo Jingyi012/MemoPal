@@ -1,11 +1,11 @@
 import { db as defaultDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
-import { LessonService } from '@/services/lesson.service';
-import { LessonProgressService } from '@/services/lessonProgress.service';
-import { PalaceService } from '@/services/palace.service';
+import * as lessonService from '@/services/lesson.service';
+import * as lessonProgressService from '@/services/lessonProgress.service';
+import * as palaceService from '@/services/palace.service';
 import { SyncBase } from '@/services/sync/sync.base';
-import { WordService } from '@/services/word.service';
+import * as wordService from '@/services/word.service';
 import NetInfo from '@react-native-community/netinfo';
 import { eq } from 'drizzle-orm';
 
@@ -48,19 +48,19 @@ export async function processQueue(db = defaultDb) {
           const payloads = createItems.map((item) =>
             item.payload ? JSON.parse(item.payload) : null
           );
-          await WordService.createWordsBatch(payloads);
+          await wordService.createWordsBatch(payloads);
         }
 
         if (updateItems.length > 0) {
           const payloads = updateItems.map((item) =>
             item.payload ? JSON.parse(item.payload) : null
           );
-          await WordService.updateWordsBatch(payloads);
+          await wordService.updateWordsBatch(payloads);
         }
 
         if (deleteItems.length > 0) {
           const ids = deleteItems.map((item) => item.entityId);
-          await WordService.deleteWordsBatch(ids);
+          await wordService.deleteWordsBatch(ids);
         }
         // Post-process Words: apply the "dirty" check for each item in the batch
         for (const item of wordItems) {
@@ -90,30 +90,30 @@ export async function processQueue(db = defaultDb) {
         // 2. Process API Calls
         switch (item.entityType) {
           case EntityType.PALACE:
-            if (item.action === 'create') await PalaceService.createPalace(payload);
+            if (item.action === 'create') await palaceService.createPalace(payload);
             else if (item.action === 'update')
-              await PalaceService.updatePalace(item.entityId, payload);
-            else if (item.action === 'delete') await PalaceService.deletePalace(item.entityId);
+              await palaceService.updatePalace(item.entityId, payload);
+            else if (item.action === 'delete') await palaceService.deletePalace(item.entityId);
             isSuccess = true;
             break;
 
           case EntityType.LESSON:
-            if (item.action === 'create') await LessonService.createLesson(payload);
+            if (item.action === 'create') await lessonService.createLesson(payload);
             else if (item.action === 'update')
-              await LessonService.updateLesson(item.entityId, payload);
-            else if (item.action === 'delete') await LessonService.deleteLesson(item.entityId);
+              await lessonService.updateLesson(item.entityId, payload);
+            else if (item.action === 'delete') await lessonService.deleteLesson(item.entityId);
             isSuccess = true;
             break;
 
           // case EntityType.WORD:
-          //   if (item.action === 'create') await WordService.createWord(payload);
-          //   else if (item.action === 'update') await WordService.updateWord(item.entityId, payload);
-          //   else if (item.action === 'delete') await WordService.deleteWord(item.entityId);
+          //   if (item.action === 'create') await wordService.createWord(payload);
+          //   else if (item.action === 'update') await wordService.updateWord(item.entityId, payload);
+          //   else if (item.action === 'delete') await wordService.deleteWord(item.entityId);
           //   isSuccess = true;
           //   break;
 
           case EntityType.LESSON_PROGRESS:
-            await LessonProgressService.updateProgress(payload);
+            await lessonProgressService.saveProgress(payload);
             isSuccess = true;
             break;
 

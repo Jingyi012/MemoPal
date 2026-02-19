@@ -17,11 +17,7 @@ import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthProvider';
-import {
-  useDismissNotification,
-  useMarkNotificationAsRead,
-  useNotifications,
-} from '@/hooks/useNotifications';
+import { useNotificationMutations, useNotifications } from '@/hooks/useNotifications';
 import { Notification } from '@/types/notification';
 
 // Map icons and colors to notification types
@@ -39,13 +35,12 @@ const NotificationScreen = () => {
   const userId = user?.id || '';
 
   const { notifications, isLoading } = useNotifications(userId);
-  const { markAsRead } = useMarkNotificationAsRead();
-  const { dismiss } = useDismissNotification();
+  const { markAsRead, dismiss } = useNotificationMutations(userId);
 
   const handleNotificationPress = (notification: Notification) => {
     // Mark as read when tapped
     if (!notification.isRead) {
-      markAsRead(notification.id);
+      markAsRead.mutateAsync(notification.id);
     }
 
     if (notification.referenceType && notification.referenceId) {

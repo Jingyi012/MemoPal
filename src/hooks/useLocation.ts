@@ -1,52 +1,67 @@
-import { useLocationRepository } from '@/repositories/location.repo';
-import { useQuery } from '@tanstack/react-query';
+import * as locationService from '@/services/location.service';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+export const LOCATION_KEYS = {
+  all: ['locations'] as const,
+  byPalace: (palaceId: string) => [...LOCATION_KEYS.all, 'palace', palaceId] as const,
+  detail: (id: string) => [...LOCATION_KEYS.all, 'detail', id] as const,
+};
 
 export const useLocation = (locationId: string) => {
-  const locationRepo = useLocationRepository();
-
-  const {
-    data: location,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ['location', locationId],
-    queryFn: async () => {
-      if (!locationId) return null;
-      return await locationRepo.getById(locationId);
-    },
+  const query = useQuery({
+    queryKey: LOCATION_KEYS.detail(locationId),
+    queryFn: () => locationService.getLocation(locationId),
     enabled: !!locationId,
+    staleTime: 1000 * 60 * 5,
   });
 
   return {
-    location,
-    isLoading,
-    isError,
-    error,
+    location: query.data ?? null,
+    isLoading: query.isLoading,
+    isError: query.isError,
   };
 };
 
 export const useLocationsByPalace = (palaceId: string) => {
-  const locationRepo = useLocationRepository();
-
-  const {
-    data: locations,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ['locations', 'palace', palaceId],
-    queryFn: async () => {
-      if (!palaceId) return [];
-      return await locationRepo.getByPalace(palaceId);
-    },
+  const query = useQuery({
+    queryKey: LOCATION_KEYS.byPalace(palaceId),
+    queryFn: () => locationService.getLocationsByPalace(palaceId),
     enabled: !!palaceId,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
   });
 
   return {
-    locations,
-    isLoading,
-    isError,
-    error,
+    locations: query.data ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
   };
+};
+
+export const useLocationMutations = (palaceId: string) => {
+  const queryClient = useQueryClient();
+
+  const createLocation = useMutation({
+    mutationFn: (location: any) => locationService.createLocation(location),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: LOCATION_KEYS.byPalace(palaceId) });
+    },
+  });
+
+  const updateLocation = useMutation({
+    mutationFn: ({ id, ...location }: any) => locationService.updateLocation(id, location),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: LOCATION_KEYS.byPalace(palaceId) });
+    },
+  });
+
+  const deleteLocation = useMutation({
+    mutationFn: (id: string) => locationService.deleteLocation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: LOCATION_KEYS.byPalace(palaceId) });
+    },
+  });
+
+  return { createLocation, updateLocation, deleteLocation };
 };

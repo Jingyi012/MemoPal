@@ -1,46 +1,49 @@
-import { GeneralResponse, PagedResponse } from '@/types/general';
+import { milestoneApi } from '@/api/milestone';
+import { createMilestoneRepository } from '@/repositories/milestone.repo';
 import { Milestone } from '@/types/levelAndbadge';
-import api from './api';
 
-export class MilestoneService {
-  /**
-   * Get all available milestones
-   */
-  static async getMilestones(params: {}): Promise<GeneralResponse<Milestone[]>> {
-    const response = await api.get<GeneralResponse<Milestone[]>>('/milestones', {
-      params,
-    });
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data;
+const repo = createMilestoneRepository();
+
+export async function getMilestones(params: {} = {}): Promise<Milestone[]> {
+  try {
+    const remote = await milestoneApi.getAll(params);
+    if (remote && remote.length > 0) {
+      await repo.upsertMany(remote);
+    }
+  } catch (error) {
+    console.warn('Failed to sync milestones from backend, using local data:', error);
   }
 
-  /**
-   * Get a single milestone by ID
-   */
-  static async getMilestoneById(id: string): Promise<Milestone> {
-    const response = await api.get<GeneralResponse<Milestone>>(`/milestones/${id}`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
+  return await repo.getAll();
+}
+
+export async function getMilestoneById(id: string) {
+  try {
+    const remote = await milestoneApi.getById(id);
+    if (remote) {
+      await repo.upsertMany([remote]);
+    }
+  } catch (error) {
+    console.warn('Failed to sync milestone details, using local data:', error);
   }
 
-  /**
-   * Get all user's achieved milestones
-   */
-  static async getUserMilestones(userId: string): Promise<PagedResponse<Milestone[]>> {
-    const response = await api.get<PagedResponse<Milestone[]>>(`/users/${userId}/milestones`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data;
-  }
+  return await repo.getById(id);
+}
 
-  /**
-   * Award a milestone to user
-   */
-  static async awardMilestone(userId: string, milestoneId: string): Promise<boolean> {
-    const response = await api.post<GeneralResponse<null>>(
-      `/users/${userId}/milestones/${milestoneId}`,
-      {}
-    );
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.success;
+export async function awardMilestone(milestoneId: string): Promise<void> {
+  await repo.awardMilestone(milestoneId);
+}
+
+export async function hasAchieved(milestoneId: string): Promise<boolean> {
+  return await repo.hasAchieved(milestoneId);
+}
+
+export async function syncPendingChanges(): Promise<void> {
+  try {
+    // Milestones are typically read-only from backend
+    // Only user milestone awards need syncing, which is handled via sync queue
+    console.log('Milestone sync queue handled by SyncBase');
+  } catch (error) {
+    console.error('Milestone sync error:', error);
   }
 }

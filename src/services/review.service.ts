@@ -1,82 +1,78 @@
-import { GeneralResponse } from '@/types/general';
-import api from './api';
+import { reviewApi } from '@/api/review';
+import { SourceType } from '@/enums/sourceType';
+import { createReviewRepository } from '@/repositories/review.repo';
+import * as xpConfigService from '@/services/xpConfig.service';
+import { ReviewSchedule } from '@/types/lesson';
+const reviewRepository = createReviewRepository();
 
-export interface ReviewSchedule {
-  id: string;
-  userId: string;
-  lessonId: string;
-  reviewRound: number;
-  dueDate: string;
-  completed: boolean;
-  completedDate?: string;
-  createdAt: string;
-  updatedAt?: string;
+/**
+ * Get review schedule for a lesson with sync
+ */
+export async function getReviewSchedule(lessonProgressId: string): Promise<ReviewSchedule[]> {
+  try {
+    const remote = await reviewApi.getByProgressId(lessonProgressId);
+    if (remote?.length) {
+      await reviewRepository.upsertMany(remote);
+    }
+  } catch (error) {
+    console.warn('Failed to sync reviews from backend:', error);
+  }
+
+  return reviewRepository.getReviewSchedule(lessonProgressId);
 }
 
-export class ReviewService {
-  /**
-   * Get review schedule for a lesson
-   */
-  static async getReviewSchedule(
-    userId: string,
-    lessonProgressId: string
-  ): Promise<ReviewSchedule[]> {
-    const response = await api.get<GeneralResponse<ReviewSchedule[]>>(
-      `/users/${userId}/lesson-progress/${lessonProgressId}/reviews`
-    );
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
+/**
+ * Get all due reviews for user with sync
+ */
+export async function getDueReviews(): Promise<ReviewSchedule[]> {
+  try {
+    const remote = await reviewApi.getDueReviews();
+    if (remote?.length) {
+      await reviewRepository.upsertMany(remote);
+    }
+  } catch (error) {
+    console.warn('Failed to sync due reviews:', error);
   }
 
-  /**
-   * Get all due reviews for user
-   */
-  static async getDueReviews(userId: string): Promise<ReviewSchedule[]> {
-    const response = await api.get<GeneralResponse<ReviewSchedule[]>>(
-      `/users/${userId}/reviews/due`
-    );
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  }
+  return reviewRepository.getDueReviews();
+}
 
-  /**
-   * Complete a review
-   */
-  static async completeReview(
-    userId: string,
-    reviewScheduleId: string,
-    correctCount: number,
-    totalCount: number
-  ): Promise<GeneralResponse<null>> {
-    const response = await api.post<GeneralResponse<null>>(
-      `/users/${userId}/reviews/${reviewScheduleId}/complete`,
-      {
-        correctCount,
-        totalCount,
-      }
-    );
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data;
-  }
+/**
+ * Complete a review (local + queue for sync)
+ * Offline-first: mark locally, queue for async sync
+ */
+export async function completeReview(
+  lessonId: string,
+  correctCount: number,
+  totalCount: number,
+  isLearningMode: boolean = false
+): Promise<{ xpEarned: number }> {
+  if (isLearningMode) return { xpEarned: 0 };
 
-  /**
-   * Get review statistics
-   */
-  static async getReviewStats(userId: string): Promise<{
-    totalReviews: number;
-    completedReviews: number;
-    pendingReviews: number;
-    dueReviews: number;
-  }> {
-    const response = await api.get<
-      GeneralResponse<{
-        totalReviews: number;
-        completedReviews: number;
-        pendingReviews: number;
-        dueReviews: number;
-      }>
-    >(`/users/${userId}/reviews/stats`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
+  // 1. Calculate XP (Logic stays in service or moved to a utility)
+  const xpConfig = await xpConfigService.getXpConfigBySourceType(SourceType.ReviewComplete);
+  const accuracy = totalCount > 0 ? correctCount / totalCount : 0;
+  const xpEarned = Math.floor((xpConfig?.baseXp ?? 10) + (xpConfig?.variableXp ?? 1) * accuracy);
+
+  // 2. Perform local update
+  await reviewRepository.updateLessonProgressAfterReview(
+    lessonId,
+    xpEarned,
+    correctCount,
+    totalCount
+  );
+
+  return { xpEarned };
+}
+
+/**
+ * Get review statistics with sync
+ */
+export async function getReviewStats() {
+  try {
+    return await reviewApi.getStats();
+  } catch (error) {
+    console.warn('Using local stats fallback.');
+    return reviewRepository.getReviewStats();
   }
 }

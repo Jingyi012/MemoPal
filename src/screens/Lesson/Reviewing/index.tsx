@@ -61,7 +61,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const [showExitModal, setShowExitModal] = useState(false);
 
   // Review submission
-  const { submitReviewAsync, isLoading: isSubmitting } = useReviewCompletion();
+  const reviewCompletionMutation = useReviewCompletion();
 
   const step = steps[currentStep];
 
@@ -108,8 +108,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
       // Submit review and show summary
       try {
         const correctCount = results.filter((r) => r.isCorrect).length;
-        var { xpEarned } = await submitReviewAsync({
-          userId,
+        var { xpEarned } = await reviewCompletionMutation.mutateAsync({
           lessonId,
           correctCount,
           totalCount: totalSteps,
@@ -206,7 +205,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
             ) : (
               <AnimatedPressable
                 onPress={handleNext}
-                disabled={isSubmitting}
+                disabled={reviewCompletionMutation.isPending}
                 className="w-full overflow-hidden rounded-2xl shadow-lg">
                 <LinearGradient
                   colors={[Colors.teal600, Colors.indigo600]}
@@ -215,7 +214,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
                   className="flex-row items-center justify-center py-5">
                   <Text className="mr-2 text-lg font-black text-white">
                     {currentStep === totalSteps - 1
-                      ? isSubmitting
+                      ? reviewCompletionMutation.isPending
                         ? 'SAVING...'
                         : 'VIEW RESULTS'
                       : 'NEXT LOCATION'}

@@ -1,5 +1,5 @@
 import * as schema from '@/db/schema';
-import { EntityType } from '@/types/entityType';
+import { EntityType } from '@/enums/entityType';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { SyncObserver } from './sync.observer';
 

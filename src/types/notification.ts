@@ -1,10 +1,9 @@
-import { Auditable } from './general';
+import { Auditable, SoftDeletable, Syncable } from './general';
 
 export type NotificationType = 'xp' | 'level_up' | 'milestone' | 'badge' | 'lesson' | 'system';
 
-export interface Notification extends Auditable {
+export interface Notification extends Auditable, SoftDeletable, Syncable {
   id: string;
-  userId: string;
   type: NotificationType;
   title: string;
   body: string;

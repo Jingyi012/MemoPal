@@ -1,29 +1,20 @@
-import { useMilestoneRepository } from '@/repositories/milestone.repo';
-import { MilestoneService } from '@/services/milestone.service';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import * as milestoneService from '@/services/milestone.service';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const MILESTONE_KEYS = {
   all: ['milestones'] as const,
-  list: () => [...MILESTONE_KEYS.all, 'list'] as const,
-  userMilestones: (userId: string) => [...MILESTONE_KEYS.all, 'user', userId] as const,
+  lists: () => [...MILESTONE_KEYS.all, 'list'] as const,
+  list: () => [...MILESTONE_KEYS.lists()] as const,
+  details: () => [...MILESTONE_KEYS.all, 'detail'] as const,
+  detail: (id: string) => [...MILESTONE_KEYS.details(), id] as const,
 };
 
 export function useMilestones() {
-  const repo = useMilestoneRepository();
-
   const query = useQuery({
     queryKey: MILESTONE_KEYS.list(),
-    queryFn: async () => {
-      const response = await MilestoneService.getMilestones({});
-
-      if (response.data && response.data.length > 0) {
-        const repo = useMilestoneRepository();
-        await repo.upsertMany(response.data);
-      }
-
-      return await repo.getAll();
-    },
+    queryFn: () => milestoneService.getMilestones({}),
     staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
   });
 
   return {
@@ -34,43 +25,31 @@ export function useMilestones() {
   };
 }
 
-export function useUserMilestones(userId: string) {
-  const repo = useMilestoneRepository();
-  const queryClient = useQueryClient();
-
+export function useMilestoneDetail(id: string) {
   const query = useQuery({
-    queryKey: MILESTONE_KEYS.userMilestones(userId),
-    enabled: !!userId,
-    queryFn: async () => {
-      const response = await MilestoneService.getUserMilestones(userId);
-
-      if (response.data && response.data.length > 0) {
-        const repo = useMilestoneRepository();
-        await repo.upsertUserMilestones(
-          userId,
-          response.data.map((milestone: any) => ({
-            milestoneId: milestone.id,
-            achievedAt: milestone.achievedAt || new Date().toISOString(),
-          }))
-        );
-      }
-
-      const userMilestones = await repo.getUserMilestones(userId);
-      return userMilestones;
-    },
+    queryKey: MILESTONE_KEYS.detail(id),
+    queryFn: () => milestoneService.getMilestoneById(id),
+    enabled: !!id,
     staleTime: 1000 * 60 * 5,
   });
 
-  const awardMilestone = async (milestoneId: string) => {
-    await repo.awardMilestone(userId, milestoneId);
-    queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.userMilestones(userId) });
-  };
-
   return {
-    userMilestones: query.data ?? [],
+    milestone: query.data ?? null,
     isLoading: query.isLoading,
     isError: query.isError,
-    refetch: query.refetch,
-    awardMilestone,
   };
+}
+
+export function useMilestoneMutations() {
+  const queryClient = useQueryClient();
+
+  const awardMilestone = useMutation({
+    mutationFn: ({ milestoneId }: { milestoneId: string }) =>
+      milestoneService.awardMilestone(milestoneId),
+    onSuccess: (_, {}) => {
+      queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.all });
+    },
+  });
+
+  return { awardMilestone };
 }

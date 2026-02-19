@@ -1,5 +1,5 @@
+import api from '@/api/api';
 import { GeneralResponse } from '@/types/general';
-import api from './api';
 
 export interface UserStats {
   userId: string;
@@ -11,33 +11,47 @@ export interface UserStats {
   updatedAt?: string;
 }
 
-export class UserStatsService {
+/**
+ * API calls for user stats - organized by entity
+ */
+export const userStatsApi = {
   /**
    * Get user statistics
    */
-  static async getUserStats(userId: string): Promise<UserStats> {
+  async getStats(userId: string): Promise<UserStats> {
     const response = await api.get<GeneralResponse<UserStats>>(`/users/${userId}/stats`);
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
-  }
+  },
 
   /**
    * Update user statistics
    */
-  static async updateUserStats(userId: string, stats: Partial<UserStats>): Promise<UserStats> {
+  async updateStats(userId: string, stats: Partial<UserStats>): Promise<UserStats> {
     const response = await api.patch<GeneralResponse<UserStats>>(`/users/${userId}/stats`, stats);
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
-  }
+  },
 
   /**
-   * Get user's current XP and level
+   * Get user's current level and XP
    */
-  static async getUserLevel(userId: string): Promise<{ level: number; xp: number }> {
+  async getLevel(userId: string): Promise<{ level: number; xp: number }> {
     const response = await api.get<GeneralResponse<{ level: number; xp: number }>>(
       `/users/${userId}/level`
     );
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
-  }
-}
+  },
+
+  /**
+   * Get stats updated since last sync
+   */
+  async getUpdatedSince(lastSyncedAt: string): Promise<UserStats[]> {
+    const response = await api.get<GeneralResponse<UserStats[]>>('/stats/updated', {
+      params: { since: lastSyncedAt },
+    });
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
+};
