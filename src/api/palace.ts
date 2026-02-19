@@ -25,25 +25,6 @@ export const palaceApi = {
   },
 
   /**
-   * Fetch all user palaces with progress
-   */
-  async getUserPalaces(): Promise<Palace[]> {
-    const response = await api.get<GeneralResponse<Palace[]>>('/user/palaces');
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
-
-  /**
-   * Fetch user palaces by userId (optional)
-   */
-  async getUserPalacesByUser(userId?: string): Promise<Palace[]> {
-    const path = userId ? `/users/${userId}/palaces` : '/user/palaces';
-    const response = await api.get<GeneralResponse<Palace[]>>(path);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
-
-  /**
    * Update palace
    */
   async update(palace: Palace): Promise<Palace> {
@@ -72,11 +53,8 @@ export const palaceApi = {
   /**
    * Unlock a palace for a user
    */
-  async unlockPalace(userId: string, palaceId: string): Promise<boolean> {
-    const response = await api.post<GeneralResponse<null>>(
-      `/users/${userId}/palaces/${palaceId}/unlock`,
-      {}
-    );
+  async unlockPalace(palaceId: string): Promise<boolean> {
+    const response = await api.post<GeneralResponse<null>>(`/palaces/${palaceId}/unlock`, {});
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.success;
   },

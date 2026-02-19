@@ -17,3 +17,8 @@ export interface AuthActions {
 }
 
 export type UseAuthReturn = AuthState & AuthActions;
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}

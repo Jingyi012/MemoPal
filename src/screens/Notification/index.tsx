@@ -16,7 +16,6 @@ import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
-import { useAuth } from '@/contexts/AuthProvider';
 import { useNotificationMutations, useNotifications } from '@/hooks/useNotifications';
 import { Notification } from '@/types/notification';
 
@@ -31,11 +30,8 @@ const TYPE_CONFIG = {
 };
 
 const NotificationScreen = () => {
-  const { user } = useAuth();
-  const userId = user?.id || '';
-
-  const { notifications, isLoading } = useNotifications(userId);
-  const { markAsRead, dismiss } = useNotificationMutations(userId);
+  const { notifications, isLoading } = useNotifications();
+  const { markAsRead, dismiss } = useNotificationMutations();
 
   const handleNotificationPress = (notification: Notification) => {
     // Mark as read when tapped

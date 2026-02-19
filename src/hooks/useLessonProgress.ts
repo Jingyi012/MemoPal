@@ -1,4 +1,3 @@
-import { useAuth } from '@/contexts/AuthProvider';
 import * as lessonProgressService from '@/services/lessonProgress.service';
 import type { LessonProgress } from '@/types/lesson';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,7 +12,6 @@ export const PROGRESS_KEYS = {
  * Uses service layer for all business logic
  */
 export function useLessonProgress(lessonId: string) {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -25,11 +23,11 @@ export function useLessonProgress(lessonId: string) {
 
       // Initialize if doesn't exist
       if (!progress) {
-        progress = await lessonProgressService.initLessonProgress(user?.id!, lessonId);
+        progress = await lessonProgressService.initLessonProgress(lessonId);
       }
 
       // Ensure learning mode is properly initialized
-      await lessonProgressService.ensureLearningInitialized(user?.id!, progress);
+      await lessonProgressService.ensureLearningInitialized(progress);
 
       return progress;
     },

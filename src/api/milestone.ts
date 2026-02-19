@@ -1,6 +1,6 @@
 import api from '@/api/api';
-import { GeneralResponse, PagedResponse } from '@/types/general';
-import { Milestone, UserMilestone } from '@/types/levelAndbadge';
+import { GeneralResponse } from '@/types/general';
+import { Milestone } from '@/types/levelAndbadge';
 
 /**
  * API calls for milestones - organized by entity
@@ -25,22 +25,10 @@ export const milestoneApi = {
   },
 
   /**
-   * Get user's achieved milestones
-   */
-  async getUserMilestones(userId: string) {
-    const response = await api.get<PagedResponse<UserMilestone[]>>(`/users/${userId}/milestones`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
-
-  /**
    * Award milestone to user
    */
-  async awardMilestone(userId: string, milestoneId: string): Promise<boolean> {
-    const response = await api.post<GeneralResponse<null>>(
-      `/users/${userId}/milestones/${milestoneId}`,
-      {}
-    );
+  async awardMilestone(milestoneId: string): Promise<boolean> {
+    const response = await api.post<GeneralResponse<null>>(`/milestones/${milestoneId}/award`, {});
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.success;
   },

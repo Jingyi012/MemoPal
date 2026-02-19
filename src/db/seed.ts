@@ -69,9 +69,9 @@ export async function seedInitialData() {
       .insert(schema.users)
       .values({
         id: MOCK_USER.id,
-        displayName: MOCK_USER.name,
-        avatarUrl: MOCK_USER.avatar ?? null,
-        totalXp: MOCK_USER.xp ?? 0,
+        displayName: MOCK_USER.displayName,
+        avatarUrl: MOCK_USER.avatarUrl ?? null,
+        totalXp: MOCK_USER.totalXp ?? 0,
         level: MOCK_USER.level ?? 1,
         createdAt: now,
         updatedAt: now,

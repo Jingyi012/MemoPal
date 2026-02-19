@@ -23,11 +23,10 @@ export const useNotifications = () => {
   };
 };
 
-export const useUnreadNotifications = (userId: string) => {
+export const useUnreadNotifications = () => {
   const query = useQuery({
     queryKey: NOTIFICATION_KEYS.unread(),
     queryFn: () => notificationService.getUnreadNotifications(),
-    enabled: !!userId,
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 15,
   });

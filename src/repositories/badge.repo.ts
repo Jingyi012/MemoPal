@@ -13,8 +13,8 @@ import { and, eq, inArray, isNotNull } from 'drizzle-orm';
 interface BadgeRepository {
   getAll(): Promise<Badge[]>;
   getById(id: string): Promise<Badge | null | undefined>;
-  hasEarnedBadge(userId: string, badgeId: string): Promise<boolean>;
-  awardBadge(userId: string, badgeId: string): Promise<void>;
+  hasEarnedBadge(badgeId: string): Promise<boolean>;
+  awardBadge(badgeId: string): Promise<void>;
   upsertMany(badges: Badge[]): Promise<void>;
   delete(badgeId: string): Promise<void>;
 }

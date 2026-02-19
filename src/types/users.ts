@@ -1,10 +1,18 @@
 export interface User {
   id: string;
-  avatar?: string;
-  name: string;
+  displayName: string;
+  avatarUrl?: string;
   email: string;
-  isPremium: boolean;
+  totalXp: number;
   level: number;
-  xp: number;
-  streak: number;
+  isPremium: boolean;
+  stats?: UserStats;
+}
+
+export interface UserStats {
+  lessonsCompleted: number;
+  wordsLearned: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate?: string | null;
 }

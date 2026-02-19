@@ -46,8 +46,8 @@ export async function completeReview(
   correctCount: number,
   totalCount: number,
   isLearningMode: boolean = false
-): Promise<{ xpEarned: number }> {
-  if (isLearningMode) return { xpEarned: 0 };
+): Promise<{ xpEarned: number; lessonId: string }> {
+  if (isLearningMode) return { xpEarned: 0, lessonId };
 
   // 1. Calculate XP (Logic stays in service or moved to a utility)
   const xpConfig = await xpConfigService.getXpConfigBySourceType(SourceType.ReviewComplete);
@@ -62,7 +62,7 @@ export async function completeReview(
     totalCount
   );
 
-  return { xpEarned };
+  return { xpEarned, lessonId };
 }
 
 /**

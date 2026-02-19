@@ -10,7 +10,6 @@ import { createReviewRepository } from './review.repo';
 /**
  * LessonProgressRepository - Local database operations only
  * Handles CRUD operations for lesson progress with offline-first support
- * Note: userId is often known from context, included where needed
  * No business logic or direct API calls
  */
 export interface LessonProgressRepository {
@@ -22,12 +21,12 @@ export interface LessonProgressRepository {
   /**
    * Initialize new lesson progress
    */
-  initLessonProgress(userId: string, lessonId: string): Promise<LessonProgress>;
+  initLessonProgress(lessonId: string): Promise<LessonProgress>;
 
   /**
    * Ensure learning mode is initialized with first review schedule
    */
-  ensureLearningInitialized(userId: string, progress: LessonProgress): Promise<void>;
+  ensureLearningInitialized(progress: LessonProgress): Promise<void>;
 
   /**
    * Save progress (offline-first, queues for sync)
@@ -131,7 +130,7 @@ export function createLessonProgressRepository(): LessonProgressRepository {
       return progress;
     },
 
-    async ensureLearningInitialized(userId: string, progress: LessonProgress): Promise<void> {
+    async ensureLearningInitialized(progress: LessonProgress): Promise<void> {
       if (progress.masteryLevel !== 'learning') return;
 
       const hasSchedule = progress.reviewSchedules && progress.reviewSchedules.length > 0;

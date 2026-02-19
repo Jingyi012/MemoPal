@@ -52,10 +52,10 @@ export async function getBadgeById(id: string) {
  * 1. Create locally and queue for sync
  * 2. Background: sync queue processor sends to backend
  */
-export async function awardBadge(userId: string, badgeId: string): Promise<void> {
+export async function awardBadge(badgeId: string): Promise<void> {
   try {
     // Award locally first (offline-first)
-    await repo.awardBadge(userId, badgeId);
+    await repo.awardBadge(badgeId);
   } catch (error) {
     console.error('Failed to award badge locally:', error);
     throw error;
@@ -65,8 +65,8 @@ export async function awardBadge(userId: string, badgeId: string): Promise<void>
 /**
  * Check if user has earned a badge
  */
-export async function hasEarnedBadge(userId: string, badgeId: string): Promise<boolean> {
-  return await repo.hasEarnedBadge(userId, badgeId);
+export async function hasEarnedBadge(badgeId: string): Promise<boolean> {
+  return await repo.hasEarnedBadge(badgeId);
 }
 
 /**

@@ -7,13 +7,18 @@ const AUTH_STORAGE_KEY = '@memopal_auth_user';
 
 export const MOCK_USER: User = {
   id: 'user-1',
-  name: 'Jing Yi',
+  displayName: 'Jing Yi',
   email: 'jingyi@test.com',
   isPremium: false,
-  avatar: undefined,
+  avatarUrl: undefined,
   level: 1,
-  xp: 10,
-  streak: 1,
+  totalXp: 10,
+  stats: {
+    currentStreak: 5,
+    longestStreak: 6,
+    lessonsCompleted: 10,
+    wordsLearned: 50,
+  },
 };
 
 export type AuthContextType = {

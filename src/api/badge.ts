@@ -1,6 +1,6 @@
 import api from '@/api/api';
 import { GeneralResponse } from '@/types/general';
-import { Badge, UserBadge } from '@/types/levelAndbadge';
+import { Badge } from '@/types/levelAndbadge';
 
 /**
  * API calls for badges - organized by entity
@@ -25,22 +25,10 @@ export const badgeApi = {
   },
 
   /**
-   * Get user's earned badges
-   */
-  async getUserBadges(userId: string): Promise<UserBadge[]> {
-    const response = await api.get<GeneralResponse<UserBadge[]>>(`/users/${userId}/badges`);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
-
-  /**
    * Award badge to user
    */
-  async awardBadge(userId: string, badgeId: string): Promise<boolean> {
-    const response = await api.post<GeneralResponse<null>>(
-      `/users/${userId}/badges/${badgeId}`,
-      {}
-    );
+  async awardBadge(badgeId: string): Promise<boolean> {
+    const response = await api.post<GeneralResponse<null>>(`/badges/${badgeId}/award`, {});
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.success;
   },

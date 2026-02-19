@@ -19,7 +19,7 @@ export const QuickState: React.FC = () => {
 
       <StatCard
         label="XP"
-        value={user?.xp}
+        value={user?.totalXp}
         bgClass="bg-orange-100"
         navigate={() => router.push('/badges')}
         icon={<Award size={16} color="#ea580c" />}
@@ -27,7 +27,7 @@ export const QuickState: React.FC = () => {
 
       <StatCard
         label="Streak"
-        value={user?.streak}
+        value={user?.stats?.currentStreak}
         bgClass="bg-red-100"
         icon={<Text className="text-lg">🔥</Text>}
       />

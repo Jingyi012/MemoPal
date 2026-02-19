@@ -42,7 +42,6 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const router = useRouter();
   const { user } = useAuth();
   const inputRef = useRef<TextInput>(null);
-  const userId = user?.id || '';
 
   // Fetch lesson with words
   const { data: lesson, isLoading: lessonLoading } = useLessonDetail(lessonId);

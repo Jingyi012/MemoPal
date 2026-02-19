@@ -5,7 +5,6 @@ import * as Crypto from 'expo-crypto';
 const repo = createXpEventsRepository();
 
 export async function recordXpEvent(
-  userId: string,
   sourceType: SourceType,
   xpAmount: number,
   sourceId?: string
@@ -20,6 +19,6 @@ export async function recordXpEvent(
   });
 }
 
-export async function getBySourceType(userId: string, sourceType: string): Promise<any[]> {
+export async function getBySourceType(sourceType: string): Promise<any[]> {
   return await repo.getBySourceType(sourceType);
 }

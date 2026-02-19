@@ -78,7 +78,7 @@ export async function deletePalace(id: string): Promise<boolean> {
 /**
  * Unlock a palace for user
  */
-export async function unlockPalace(userId: string, palaceId: string): Promise<boolean> {
-  const success = await palaceApi.unlockPalace(userId, palaceId);
+export async function unlockPalace(palaceId: string): Promise<boolean> {
+  const success = await palaceApi.unlockPalace(palaceId);
   return success;
 }

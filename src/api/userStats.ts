@@ -2,7 +2,6 @@ import api from '@/api/api';
 import { GeneralResponse } from '@/types/general';
 
 export interface UserStats {
-  userId: string;
   lessonsCompleted: number;
   wordsLearned: number;
   currentStreak: number;
@@ -18,8 +17,8 @@ export const userStatsApi = {
   /**
    * Get user statistics
    */
-  async getStats(userId: string): Promise<UserStats> {
-    const response = await api.get<GeneralResponse<UserStats>>(`/users/${userId}/stats`);
+  async getStats(): Promise<UserStats> {
+    const response = await api.get<GeneralResponse<UserStats>>(`/users/stats`);
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },
@@ -27,8 +26,8 @@ export const userStatsApi = {
   /**
    * Update user statistics
    */
-  async updateStats(userId: string, stats: Partial<UserStats>): Promise<UserStats> {
-    const response = await api.patch<GeneralResponse<UserStats>>(`/users/${userId}/stats`, stats);
+  async updateStats(stats: Partial<UserStats>): Promise<UserStats> {
+    const response = await api.patch<GeneralResponse<UserStats>>(`/users/stats`, stats);
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },
@@ -36,10 +35,8 @@ export const userStatsApi = {
   /**
    * Get user's current level and XP
    */
-  async getLevel(userId: string): Promise<{ level: number; xp: number }> {
-    const response = await api.get<GeneralResponse<{ level: number; xp: number }>>(
-      `/users/${userId}/level`
-    );
+  async getLevel(): Promise<{ level: number; xp: number }> {
+    const response = await api.get<GeneralResponse<{ level: number; xp: number }>>(`/users/level`);
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },

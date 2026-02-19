@@ -13,9 +13,9 @@ interface Props {
 const ProfileCard: React.FC<Props> = ({ user }) => {
   return (
     <View className="flex-row items-center gap-4 p-2">
-      {user?.avatar ? (
+      {user?.avatarUrl ? (
         <AppImage
-          source={{ uri: user.avatar }}
+          source={{ uri: user.avatarUrl }}
           className="h-16 w-16 rounded-full border-2 border-gray-200"
         />
       ) : (
@@ -30,7 +30,7 @@ const ProfileCard: React.FC<Props> = ({ user }) => {
       )}
 
       <View className="flex-1">
-        <Text className="text-base font-semibold text-gray-900">{user?.name}</Text>
+        <Text className="text-base font-semibold text-gray-900">{user?.displayName}</Text>
         <Text className="text-sm text-gray-500">{user?.email ?? 'Guest Account'}</Text>
       </View>
     </View>

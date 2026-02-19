@@ -11,7 +11,6 @@ export const BADGE_KEYS = {
   list: () => [...BADGE_KEYS.lists()] as const,
   allBadges: () => [...BADGE_KEYS.all, 'all'] as const,
   detail: (id: string) => [...BADGE_KEYS.all, 'detail', id] as const,
-  userBadges: (userId: string) => [...BADGE_KEYS.all, 'user', userId] as const,
 };
 
 /**
@@ -63,48 +62,17 @@ export function useBadgeById(badgeId: string) {
 }
 
 /**
- * Hook: Fetch user's earned badges
- * Uses TanStack Query for caching and reactive updates
- * Automatically syncs with backend
- */
-export function useUserBadges(userId: string) {
-  const queryClient = useQueryClient();
-
-  const query = useQuery({
-    queryKey: BADGE_KEYS.userBadges(userId),
-    queryFn: async () => {
-      return await badgeService.getUserBadges(userId);
-    },
-    enabled: !!userId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 15, // 15 minutes
-  });
-
-  return {
-    userBadges: query.data ?? [],
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
-    refetch: query.refetch,
-  };
-}
-
-/**
  * Hook: Award a badge to user
  * Mutation that handles optimistic updates and cache invalidation
  */
-export function useAwardBadge(userId: string) {
+export function useAwardBadge() {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: async (badgeId: string) => {
-      await badgeService.awardBadge(userId, badgeId);
+      await badgeService.awardBadge(badgeId);
     },
     onSuccess: () => {
-      // Invalidate user badges query to trigger refetch
-      queryClient.invalidateQueries({
-        queryKey: BADGE_KEYS.userBadges(userId),
-      });
       // Also invalidate all badges list if needed
       queryClient.invalidateQueries({
         queryKey: BADGE_KEYS.allBadges(),

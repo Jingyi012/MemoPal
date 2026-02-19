@@ -4,7 +4,7 @@
       "id": "user-1",
       "name": "Sarah Johnson",
       "email": "sarah.johnson@example.com",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
+      "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
       "skillLevel": "intermediate",
       "xp": 2450,
       "level": 8,

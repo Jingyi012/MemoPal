@@ -10,5 +10,4 @@ export enum EntityType {
   XP_EVENT = 'xp_events',
   BADGE = 'badges',
   MILESTONE = 'milestones',
-  USER_STATS = 'user_stats',
 }

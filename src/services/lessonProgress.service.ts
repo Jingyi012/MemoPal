@@ -29,23 +29,17 @@ export async function getProgress(lessonId: string): Promise<LessonProgress | nu
 /**
  * Initialize lesson progress for a user
  */
-export async function initLessonProgress(
-  userId: string,
-  lessonId: string
-): Promise<LessonProgress> {
+export async function initLessonProgress(lessonId: string): Promise<LessonProgress> {
   const repo = createLessonProgressRepository();
-  return await repo.initLessonProgress(userId, lessonId);
+  return await repo.initLessonProgress(lessonId);
 }
 
 /**
  * Ensure learning mode is properly initialized with review schedules
  */
-export async function ensureLearningInitialized(
-  userId: string,
-  progress: LessonProgress
-): Promise<void> {
+export async function ensureLearningInitialized(progress: LessonProgress): Promise<void> {
   const repo = createLessonProgressRepository();
-  return await repo.ensureLearningInitialized(userId, progress);
+  return await repo.ensureLearningInitialized(progress);
 }
 
 /**

@@ -6,63 +6,46 @@ import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthProvider';
-import { useAllBadges, useUserBadges } from '@/hooks/useBadges';
+import { useAllBadges } from '@/hooks/useBadges';
 import { useLevelByXp } from '@/hooks/useLevelConfigs';
-import { useMilestones, useUserMilestones } from '@/hooks/useMilestones';
-import { useUserStats } from '@/hooks/useUserStats';
-import { useUserTotalXp } from '@/hooks/useXpEvents';
+import { useMilestones } from '@/hooks/useMilestones';
+import { useTotalXp } from '@/hooks/useXpEvents';
 import { BadgeCard } from './BadgeCard';
 import { LevelProgressHeader } from './LevelProgressHeader';
 import { MilestoneItem } from './MilestoneItem';
 import { StatCard } from './StatCard';
 
 const BadgesScreen: React.FC = () => {
-  const { user } = useAuth();
-  const userId = user?.id || '';
+  const { user, isLoading: userLoading } = useAuth();
 
-  // Fetch all data
+  // Fetch consolidated data
   const { badges, isLoading: badgesLoading } = useAllBadges();
-  const { userBadges, isLoading: userBadgesLoading } = useUserBadges(userId);
   const { milestones, isLoading: milestonesLoading } = useMilestones();
-  const { userMilestones, isLoading: userMilestonesLoading } = useUserMilestones(userId);
-  const { stats, isLoading: statsLoading } = useUserStats(userId);
-  const { totalXp, isLoading: xpLoading } = useUserTotalXp(userId);
+  const { totalXp, isLoading: xpLoading } = useTotalXp();
   const { levelInfo, isLoading: levelInfoLoading } = useLevelByXp(totalXp);
 
   const isLoading =
-    badgesLoading ||
-    userBadgesLoading ||
-    milestonesLoading ||
-    userMilestonesLoading ||
-    statsLoading ||
-    xpLoading ||
-    levelInfoLoading;
+    badgesLoading || milestonesLoading || userLoading || xpLoading || levelInfoLoading;
 
-  // Create a map of earned badge IDs for quick lookup
-  const earnedBadgeIds = useMemo(() => {
-    return new Set(userBadges.map((ub) => ub.badgeId));
-  }, [userBadges]);
-
-  // Create a map of achieved milestone IDs for quick lookup
-  const achievedMilestoneIds = useMemo(() => {
-    return new Set(userMilestones.map((um) => um.milestoneId));
-  }, [userMilestones]);
-
-  // Enrich badges with earned status
+  // Map badges to include isEarned based on the presence of earnedAt
   const enrichedBadges = useMemo(() => {
     return badges.map((badge) => ({
       ...badge,
-      isEarned: earnedBadgeIds.has(badge.id),
+      isEarned: !!badge.earnedAt,
     }));
-  }, [badges, earnedBadgeIds]);
+  }, [badges]);
 
-  // Enrich milestones with achieved status
+  // Map milestones to include isLocked based on achievedAt
   const enrichedMilestones = useMemo(() => {
     return milestones.map((milestone) => ({
       ...milestone,
-      isLocked: !achievedMilestoneIds.has(milestone.id),
+      isLocked: !milestone.achievedAt,
     }));
-  }, [milestones, achievedMilestoneIds]);
+  }, [milestones]);
+
+  const totalBadgeEarned = useMemo(() => {
+    return badges.filter((b) => !!b.earnedAt).length;
+  }, [badges]);
 
   // Transform level info for display
   const displayLevelInfo = useMemo(() => {
@@ -87,13 +70,11 @@ const BadgesScreen: React.FC = () => {
     return <LoadingView />;
   }
 
-  const totalBadgeEarned = earnedBadgeIds.size;
-
   return (
     <>
       <CommonHeader
         title="Level & Achievement"
-        description="View your achievement"
+        description="View your progress"
         hideBackButton
         showNotification
         additionalContent={<LevelProgressHeader level={displayLevelInfo} />}
@@ -108,13 +89,13 @@ const BadgesScreen: React.FC = () => {
           <StatCard label="Badges" value={totalBadgeEarned} icon={Award} color={Colors.yellow400} />
           <StatCard
             label="Streak"
-            value={stats?.currentStreak ?? 0}
+            value={user?.stats?.currentStreak ?? 0}
             icon={Flame}
             color={Colors.orange400}
           />
           <StatCard
             label="Words"
-            value={stats?.wordsLearned ?? 0}
+            value={user?.stats?.wordsLearned ?? 0}
             icon={Target}
             color={Colors.teal400}
           />
@@ -130,9 +111,11 @@ const BadgesScreen: React.FC = () => {
 
         {/* Milestones Section */}
         <Text className="mb-3 font-medium">Level Milestones</Text>
-        {enrichedMilestones.map((m) => (
-          <MilestoneItem key={m.id} milestone={m} />
-        ))}
+        <View className="gap-3">
+          {enrichedMilestones.map((m) => (
+            <MilestoneItem key={m.id} milestone={m} />
+          ))}
+        </View>
       </ScrollView>
     </>
   );

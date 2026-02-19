@@ -20,8 +20,10 @@ export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   displayName: text('display_name').notNull(),
   avatarUrl: text('avatar_url'),
+  email: text('email'),
   totalXp: integer('total_xp').default(0).notNull(),
   level: integer('level').default(1).notNull(),
+  isPremium: integer('is_premium', { mode: 'boolean' }).default(false).notNull(),
   ...commonColumns,
 });
 
