@@ -139,7 +139,7 @@ export function createLessonProgressRepository(): LessonProgressRepository {
       await db.transaction(async (tx) => {
         const reviewRepo = createReviewRepository();
         await reviewRepo.scheduleNextRound(tx as any, {
-          progressId: progress.id,
+          progress: progress,
           currentRound: 0,
           completedDate: new Date(),
         });

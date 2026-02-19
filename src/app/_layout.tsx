@@ -2,6 +2,7 @@ import { Colors } from '@/constants/colors';
 import { AuthProvider } from '@/contexts/AuthProvider';
 import { UserStateProvider } from '@/contexts/UserStateContext';
 import { db } from '@/db/client';
+import { useNotificationObserver } from '@/hooks/useNotificationObserver';
 import { queryClient } from '@/utils/queryClient';
 import { toastConfig } from '@/utils/toastConfig';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -33,7 +34,7 @@ function AppLayout() {
 
   if (!success) return null; // Or a splash screen
 
-  // useNotificationObserver();
+  useNotificationObserver();
   // useSyncManager();
 
   return (

@@ -14,17 +14,17 @@ export interface Lesson extends Auditable, Syncable, SoftDeletable {
   id: string;
   palaceId: string;
   title: string;
-  description?: string;
+  description?: string | null;
   wordCount: number;
-  category?: LessonCategory;
+  category?: LessonCategory | null;
   tag?: string[];
-  isCustom?: boolean;
-  isLocked?: boolean;
-  completed?: boolean;
-  isPremium?: boolean;
+  isCustom?: boolean | null;
+  isLocked?: boolean | null;
+  completed?: boolean | null;
+  isPremium?: boolean | null;
   privacy: 'private' | 'public';
-  progress?: LessonProgress;
-  createdBy?: string;
+  progress?: LessonProgress | null;
+  createdBy?: string | null;
 }
 
 export interface LessonDetails extends Lesson {
@@ -38,7 +38,7 @@ export interface LessonProgress extends Auditable, Syncable, SoftDeletable {
   reviewSchedules: ReviewSchedule[];
   totalReviews: number;
   masteryLevel: 'new' | 'learning' | 'reviewing' | 'mastered';
-  lastReviewDate?: string;
+  lastReviewDate?: string | null;
   xpEarned: number;
 }
 

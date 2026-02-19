@@ -3,8 +3,10 @@ import { db } from '@/db/client';
 import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SourceType } from '@/enums/sourceType';
+import { InAppNotificationSync } from '@/services/notification/inAppNotificationSync';
+import { PushNotificationService } from '@/services/notification/pushNotificationService';
 import { SyncBase } from '@/services/sync/sync.base';
-import { ReviewSchedule } from '@/types/lesson';
+import { LessonProgress, ReviewSchedule } from '@/types/lesson';
 import { ReviewStats } from '@/types/review';
 import { calculateNextDueDate, REVIEW_INTERVALS } from '@/utils/review';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
@@ -16,7 +18,7 @@ export interface ReviewRepository {
   scheduleNextRound(
     tx: any,
     options: {
-      progressId: string;
+      progress: LessonProgress;
       currentRound: number;
       completedDate: Date;
     }
@@ -24,7 +26,7 @@ export interface ReviewRepository {
   handleRoundCompletion(
     tx: any,
     options: {
-      progressId: string;
+      progress: LessonProgress;
       reviewId: string;
       roundNumber: number;
       completedDate: string;
@@ -64,20 +66,26 @@ export function createReviewRepository(): ReviewRepository {
       });
     },
 
-    async scheduleNextRound(tx: any, { progressId, currentRound, completedDate }): Promise<void> {
+    async scheduleNextRound(tx: any, { progress, currentRound, completedDate }): Promise<void> {
       const nextRound = currentRound + 1;
       const intervalConfig = REVIEW_INTERVALS[nextRound];
 
       if (nextRound <= MAX_REVIEW_ROUND && intervalConfig) {
         const nextDueDate = calculateNextDueDate(completedDate, intervalConfig);
-        const scheduleId = Crypto.randomUUID();
+        const reviewId = Crypto.randomUUID();
         const now = new Date().toISOString();
+
+        const lesson = await tx.query.lesson.findFirst({
+          where: eq(schema.lessons.id, progress.lessonId),
+        });
+        const lessonId = lesson?.id || '';
+        const lessonName = lesson?.title || 'Lesson';
 
         await tx
           .insert(schema.reviewSchedules)
           .values({
-            id: scheduleId,
-            lessonProgressId: progressId,
+            id: reviewId,
+            lessonProgressId: progress.id,
             reviewRound: nextRound,
             dueDate: nextDueDate.toISOString(),
             completed: false,
@@ -87,12 +95,19 @@ export function createReviewRepository(): ReviewRepository {
           })
           .onConflictDoNothing();
 
+        await PushNotificationService.scheduleReview({
+          reviewId: reviewId,
+          lessonId: lessonId,
+          lessonName: lessonName,
+          dueDate: nextDueDate.toISOString(),
+        });
+
         await SyncBase.addToQueue(tx, {
           entityType: EntityType.REVIEW_SCHEDULE,
-          entityId: scheduleId,
+          entityId: reviewId,
           action: 'create',
           payload: {
-            lessonProgressId: progressId,
+            lessonProgressId: progress.id,
             reviewRound: nextRound,
             dueDate: nextDueDate.toISOString(),
             completed: false,
@@ -103,7 +118,7 @@ export function createReviewRepository(): ReviewRepository {
 
     async handleRoundCompletion(
       tx: any,
-      { progressId, reviewId, roundNumber, completedDate }
+      { progress, reviewId, roundNumber, completedDate }
     ): Promise<void> {
       const now = new Date().toISOString();
 
@@ -123,8 +138,10 @@ export function createReviewRepository(): ReviewRepository {
         payload: { completed: true, completedDate: now },
       });
 
+      await PushNotificationService.cancelReview(reviewId);
+
       await this.scheduleNextRound(tx, {
-        progressId,
+        progress: progress,
         currentRound: roundNumber,
         completedDate: new Date(completedDate),
       });
@@ -173,7 +190,7 @@ export function createReviewRepository(): ReviewRepository {
         // 2. Handle Schedule update
         if (isPassed && currentReview) {
           await this.handleRoundCompletion(tx, {
-            progressId: currentProgress.id,
+            progress: currentProgress,
             reviewId: currentReview.id,
             roundNumber: currentRound,
             completedDate: nowIso,
@@ -297,6 +314,8 @@ export function createReviewRepository(): ReviewRepository {
               });
           }
         }
+
+        await InAppNotificationSync.syncAllUpcoming();
       });
     },
 

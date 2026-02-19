@@ -30,7 +30,7 @@ const TYPE_CONFIG = {
 };
 
 const NotificationScreen = () => {
-  const { notifications, isLoading } = useNotifications();
+  const { data: notifications = [], isLoading } = useNotifications();
   const { markAsRead, dismiss } = useNotificationMutations();
 
   const handleNotificationPress = (notification: Notification) => {
@@ -112,7 +112,7 @@ const NotificationScreen = () => {
     <View className="flex-1 bg-white">
       <CommonHeader
         title="Notifications"
-        description={`${notifications.filter((n) => !n.isRead).length} unread messages`}
+        description={`${notifications.filter((n: { isRead: boolean }) => !n.isRead).length} unread messages`}
         backAction={() => router.back()}
       />
 

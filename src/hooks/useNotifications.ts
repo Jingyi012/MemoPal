@@ -1,4 +1,4 @@
-import * as notificationService from '@/services/notification.service';
+import { InAppNotificationService } from '@/services/notification.service';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const NOTIFICATION_KEYS = {
@@ -10,41 +10,30 @@ export const NOTIFICATION_KEYS = {
 export const useNotifications = () => {
   const query = useQuery({
     queryKey: NOTIFICATION_KEYS.lists(),
-    queryFn: () => notificationService.getNotifications(),
+    queryFn: () => InAppNotificationService.getNotifications(),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 15,
   });
 
-  return {
-    notifications: query.data ?? [],
-    isLoading: query.isLoading,
-    isError: query.isError,
-    refetch: query.refetch,
-  };
+  return query;
 };
 
 export const useUnreadNotifications = () => {
   const query = useQuery({
     queryKey: NOTIFICATION_KEYS.unread(),
-    queryFn: () => notificationService.getUnreadNotifications(),
+    queryFn: () => InAppNotificationService.getUnreadCount(),
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 15,
   });
 
-  return {
-    notifications: query.data ?? [],
-    unreadCount: query.data?.length ?? 0,
-    isLoading: query.isLoading,
-    isError: query.isError,
-    refetch: query.refetch,
-  };
+  return query;
 };
 
 export const useNotificationMutations = () => {
   const queryClient = useQueryClient();
 
   const markAsRead = useMutation({
-    mutationFn: (notificationId: string) => notificationService.markAsRead(notificationId),
+    mutationFn: (notificationId: string) => InAppNotificationService.markAsRead(notificationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.unread() });
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
@@ -52,7 +41,7 @@ export const useNotificationMutations = () => {
   });
 
   const dismiss = useMutation({
-    mutationFn: (notificationId: string) => notificationService.dismissNotification(notificationId),
+    mutationFn: (notificationId: string) => InAppNotificationService.dismiss(notificationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.unread() });
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
@@ -60,7 +49,8 @@ export const useNotificationMutations = () => {
   });
 
   const createNotification = useMutation({
-    mutationFn: (notification: any) => notificationService.createNotification(notification),
+    mutationFn: (notification: any) =>
+      InAppNotificationService.createInAppNotification(notification),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
     },

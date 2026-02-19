@@ -72,7 +72,7 @@ export const lessons = sqliteTable('lessons', {
     | 'test-prep'
     | 'general'
   >(),
-  privacy: text('privacy').$type<'private' | 'public'>().default('private'),
+  privacy: text('privacy').$type<'private' | 'public'>().default('private').notNull(),
   isCustom: integer('is_custom', { mode: 'boolean' }).default(false),
   isLocked: integer('is_locked', { mode: 'boolean' }).default(false),
   isPremium: integer('is_premium', { mode: 'boolean' }).default(false),
@@ -89,7 +89,8 @@ export const lessonProgress = sqliteTable('lesson_progress', {
   totalReviews: integer('total_reviews').default(0).notNull(),
   masteryLevel: text('mastery_level')
     .$type<'new' | 'learning' | 'reviewing' | 'mastered'>()
-    .default('new'),
+    .default('new')
+    .notNull(),
   lastReviewDate: text('last_review_date'),
   xpEarned: integer('xp_earned').default(0).notNull(),
   ...commonColumns,

@@ -1,58 +1,69 @@
 import { notificationApi } from '@/api/notification';
 import { createNotificationRepository } from '@/repositories/notification.repo';
-import { Notification } from '@/types/notification';
+import { Notification, NotificationType } from '@/types/notification';
+import * as Crypto from 'expo-crypto';
 
 const repo = createNotificationRepository();
 
-export async function getNotifications(): Promise<Notification[]> {
-  try {
-    const remote = await notificationApi.getAll();
-    if (remote && remote.length > 0) {
-      await repo.upsertMany(remote);
+export const InAppNotificationService = {
+  /**
+   * Syncs with server and returns all notifications
+   */
+  async getNotifications(): Promise<Notification[]> {
+    try {
+      const remote = await notificationApi.getAll();
+      if (remote?.length > 0) {
+        await repo.upsertMany(remote);
+      }
+    } catch (error) {
+      console.warn('[NotificationService] Fetch failed, using local:', error);
     }
-  } catch (error) {
-    console.warn('Failed to sync notifications from backend, using local data:', error);
-  }
+    return await repo.getAll();
+  },
 
-  return await repo.getAll();
-}
+  /**
+   * Specialized fetch for unread items
+   */
+  async getUnreadCount(): Promise<number> {
+    const unread = await repo.getAllUnread();
+    return unread.length;
+  },
 
-export async function getUnreadNotifications(): Promise<Notification[]> {
-  try {
-    const remote = await notificationApi.getAllUnread();
-    if (remote && remote.length > 0) {
-      await repo.upsertMany(remote);
-    }
-  } catch (error) {
-    console.warn('Failed to sync unread notifications, using local data:', error);
-  }
+  /**
+   * Local actions that trigger the Sync Queue
+   */
+  async markAsRead(id: string): Promise<void> {
+    await repo.markAsRead(id);
+  },
 
-  return await repo.getAllUnread();
-}
+  async dismiss(id: string): Promise<void> {
+    await repo.dismiss(id);
+  },
 
-export async function markAsRead(notificationId: string): Promise<void> {
-  await repo.markAsRead(notificationId);
-}
+  /**
+   * Create a notification record (e.g., when a review is due)
+   */
+  async createInAppNotification(params: {
+    type: NotificationType;
+    title: string;
+    body: string;
+    referenceId?: string;
+    referenceType?: string;
+  }): Promise<Notification> {
+    const now = new Date().toISOString();
+    const newNotification: Notification = {
+      id: Crypto.randomUUID(),
+      ...params,
+      isRead: false,
+      isDismissed: false,
+      createdAt: now,
+      updatedAt: now,
+    };
 
-export async function dismissNotification(notificationId: string): Promise<void> {
-  await repo.dismiss(notificationId);
-}
+    return await repo.create(newNotification);
+  },
 
-export async function createNotification(
-  notification: Omit<Notification, 'id' | 'createdAt'>
-): Promise<Notification> {
-  return await repo.create(notification);
-}
-
-export async function cleanupOldDismissed(daysOld: number = 30): Promise<void> {
-  await repo.deleteOldDismissed(daysOld);
-}
-
-export async function syncPendingChanges(): Promise<void> {
-  try {
-    // Notification sync handled by SyncBase queue
-    console.log('Notification sync queue handled by SyncBase');
-  } catch (error) {
-    console.error('Notification sync error:', error);
-  }
-}
+  async cleanup(): Promise<void> {
+    await repo.deleteOldDismissed(30);
+  },
+};
