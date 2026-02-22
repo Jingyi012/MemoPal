@@ -1,6 +1,5 @@
+import { NotificationType } from '@/enums/notificationType';
 import { Auditable, SoftDeletable, Syncable } from './general';
-
-export type NotificationType = 'xp' | 'level_up' | 'milestone' | 'badge' | 'lesson' | 'system';
 
 export interface Notification extends Auditable, SoftDeletable, Syncable {
   id: string;

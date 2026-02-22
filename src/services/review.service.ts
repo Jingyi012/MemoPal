@@ -1,9 +1,31 @@
 import { reviewApi } from '@/api/review';
+import { REVIEW_PASS_THRESHOLD } from '@/constants/config';
 import { SourceType } from '@/enums/sourceType';
 import { createReviewRepository } from '@/repositories/review.repo';
 import * as xpConfigService from '@/services/xpConfig.service';
 import { ReviewSchedule } from '@/types/lesson';
+
 const reviewRepository = createReviewRepository();
+
+export interface ReviewResult {
+  correctCount: number;
+  accuracy: number;
+  isPassed: boolean;
+}
+
+/**
+ * Calculate review results from answers
+ * Pure function - can be used in components for real-time feedback or summary
+ */
+export function calculateReviewResults(results: any[], totalSteps: number): ReviewResult {
+  const correctCount = results.filter((r) => r.isCorrect).length;
+  const accuracy = totalSteps > 0 ? correctCount / totalSteps : 0;
+  return {
+    correctCount,
+    accuracy,
+    isPassed: accuracy >= REVIEW_PASS_THRESHOLD,
+  };
+}
 
 /**
  * Get review schedule for a lesson with sync

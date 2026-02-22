@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/AuthProvider';
 import { useLessonDetail } from '@/hooks/useLessonsManager';
 import { useLocation } from '@/hooks/useLocation';
 import { useReviewCompletion } from '@/hooks/useReviewCompletion';
+import { calculateReviewResults } from '@/services/review.service';
 import { ReviewHeader } from './ReviewHeader';
 import { ReviewImageDisplay } from './ReviewImageDisplay';
 import { ReviewInputSection } from './ReviewInputSection';
@@ -58,6 +59,12 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const [results, setResults] = useState<any[]>([]);
   const [showSummary, setShowSummary] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+
+  // Memoize review results calculation
+  const reviewResults = useMemo(
+    () => calculateReviewResults(results, totalSteps),
+    [results, totalSteps]
+  );
 
   // Review submission
   const reviewCompletionMutation = useReviewCompletion();
@@ -95,30 +102,39 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
     setResults((prev) => [...prev, { wordId: step.id, isCorrect, entered: inputValue }]);
   };
 
+  const resetReview = () => {
+    setCurrentStep(0);
+    setInputValue('');
+    setFeedback(null);
+    setIsRevealed(false);
+    setStreak(0);
+    setXpEarned(0);
+    setResults([]);
+    setShowSummary(false);
+  };
+
   const handleNext = async () => {
     if (currentStep < totalSteps - 1) {
+      // Move to next step
       setIsRevealed(false);
       setFeedback(null);
       setInputValue('');
       setCurrentStep((s) => s + 1);
-      // Short delay to ensure input is ready to receive focus after state change
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
-      // Submit review and show summary
+      // Submit review
       try {
-        const correctCount = results.filter((r) => r.isCorrect).length;
-        var { xpEarned } = await reviewCompletionMutation.mutateAsync({
+        const { xpEarned: earnedXp } = await reviewCompletionMutation.mutateAsync({
           lessonId,
-          correctCount,
+          correctCount: reviewResults.correctCount,
           totalCount: totalSteps,
           isLearningMode,
         });
-        setXpEarned(xpEarned);
+        setXpEarned(earnedXp);
         setShowSummary(true);
       } catch (error) {
         console.error('Error submitting review:', error);
-        // Still show summary but log error
-        setShowSummary(true);
+        setShowSummary(true); // Show summary even on error to allow retry/exit
       }
     }
   };
@@ -139,11 +155,12 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
     return (
       <ReviewSummary
         isLearning={isLearningMode}
-        correctCount={results.filter((r) => r.isCorrect).length}
+        correctCount={reviewResults.correctCount}
         totalSteps={totalSteps}
         xpEarned={xpEarned}
         streak={streak}
         onFinish={() => router.push(`/lessons/${lessonId}`)}
+        onTryAgain={!reviewResults.isPassed ? resetReview : undefined}
       />
     );
   }

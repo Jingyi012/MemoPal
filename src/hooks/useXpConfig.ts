@@ -32,9 +32,5 @@ export function useXpConfigBySource(sourceType: string) {
     staleTime: 1000 * 60 * 5,
   });
 
-  return {
-    config: query.data,
-    isLoading: query.isLoading,
-    isError: query.isError,
-  };
+  return query;
 }

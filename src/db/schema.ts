@@ -1,3 +1,4 @@
+import { NotificationType } from '@/enums/notificationType';
 import { SourceType } from '@/enums/sourceType';
 import { relations, sql } from 'drizzle-orm';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
@@ -187,9 +188,7 @@ export const userStats = sqliteTable('user_stats', {
 export const notifications = sqliteTable('notifications', {
   id: text('id').primaryKey(),
 
-  type: text('type')
-    .$type<'xp' | 'level_up' | 'milestone' | 'badge' | 'lesson' | 'system'>()
-    .notNull(),
+  type: text('type').$type<NotificationType>().notNull(),
 
   title: text('title').notNull(),
   body: text('body').notNull(),
@@ -235,7 +234,10 @@ export const locationsRelations = relations(locations, ({ one }) => ({
 export const lessonsRelations = relations(lessons, ({ one, many }) => ({
   palace: one(palaces, { fields: [lessons.palaceId], references: [palaces.id] }),
   words: many(words),
-  progress: many(lessonProgress),
+  progress: one(lessonProgress, {
+    fields: [lessons.id],
+    references: [lessonProgress.lessonId],
+  }),
   creator: one(users, {
     fields: [lessons.createdBy],
     references: [users.id],

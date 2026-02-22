@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { Colors } from '@/constants/colors';
+import { REVIEW_PASS_THRESHOLD } from '@/constants/config';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, Award, Target, Trophy, Zap } from 'lucide-react-native';
 import React from 'react';
@@ -13,6 +14,7 @@ interface Props {
   xpEarned: number;
   streak: number;
   onFinish: () => void;
+  onTryAgain?: () => void;
 }
 
 export const ReviewSummary: React.FC<Props> = ({
@@ -22,8 +24,11 @@ export const ReviewSummary: React.FC<Props> = ({
   xpEarned,
   streak,
   onFinish,
+  onTryAgain,
 }) => {
-  const percentage = Math.round((correctCount / totalSteps) * 100);
+  const accuracy = correctCount / totalSteps;
+  const percentage = Math.round(accuracy * 100);
+  const isPassed = accuracy >= REVIEW_PASS_THRESHOLD;
 
   const getRank = () => {
     if (percentage === 100) return { label: 'S', color: '#fbbf24', title: 'Palace Master' };
@@ -69,7 +74,7 @@ export const ReviewSummary: React.FC<Props> = ({
         </View>
 
         {/* Stats Grid */}
-        <View className="mb-8 w-full flex-row flex-wrap justify-between">
+        <View className="w-full flex-row flex-wrap justify-between">
           <StatItem
             delay={600}
             icon={<Target size={20} color="#6366f1" />}
@@ -104,14 +109,41 @@ export const ReviewSummary: React.FC<Props> = ({
           )}
         </View>
 
-        {/* Action Button */}
+        {/* Failure Notice */}
+        {!isPassed && (
+          <Animated.View
+            entering={FadeInDown.delay(900)}
+            className="mb-6 w-full rounded-xl bg-orange-50 p-4">
+            <Text className="text-center text-sm font-semibold text-orange-700">
+              This review was not counted. Try again to improve your score!
+            </Text>
+          </Animated.View>
+        )}
+
+        {/* Action Buttons */}
         <Animated.View entering={FadeInDown.delay(1000)} className="w-full">
-          <AnimatedPressable
-            onPress={onFinish}
-            className="w-full flex-row items-center justify-center rounded-2xl bg-slate-900 py-5 shadow-xl">
-            <Text className="mr-2 text-lg font-black text-white">CONTINUE</Text>
-            <ArrowRight size={20} color="white" strokeWidth={3} />
-          </AnimatedPressable>
+          {!isPassed && onTryAgain ? (
+            <View className="flex-col gap-3">
+              <AnimatedPressable
+                onPress={onTryAgain}
+                className="w-full flex-row items-center justify-center rounded-2xl bg-slate-900 py-5 shadow-xl">
+                <Text className="mr-2 text-lg font-black text-white">TRY AGAIN</Text>
+                <ArrowRight size={20} color="white" strokeWidth={3} />
+              </AnimatedPressable>
+              <AnimatedPressable
+                onPress={onFinish}
+                className="w-full flex-row items-center justify-center rounded-2xl border-2 border-slate-300 bg-white py-5">
+                <Text className="text-lg font-black text-slate-700">SKIP FOR NOW</Text>
+              </AnimatedPressable>
+            </View>
+          ) : (
+            <AnimatedPressable
+              onPress={onFinish}
+              className="w-full flex-row items-center justify-center rounded-2xl bg-slate-900 py-5 shadow-xl">
+              <Text className="mr-2 text-lg font-black text-white">CONTINUE</Text>
+              <ArrowRight size={20} color="white" strokeWidth={3} />
+            </AnimatedPressable>
+          )}
         </Animated.View>
       </Animated.View>
 

@@ -3,13 +3,14 @@ import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { Notification } from '@/types/notification';
-import { and, desc, eq, lt } from 'drizzle-orm';
+import { and, desc, eq, lt, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 
 interface NotificationRepository {
   getAll(): Promise<Notification[]>;
   getAllUnread(): Promise<Notification[]>;
   markAsRead(notificationId: string): Promise<void>;
+  markAllAsRead(): Promise<void>;
   dismiss(notificationId: string): Promise<void>;
   delete(notificationId: string): Promise<void>;
   create(notification: Omit<Notification, 'id' | 'createdAt'>): Promise<Notification>;
@@ -57,6 +58,50 @@ export function createNotificationRepository(): NotificationRepository {
           payload: { isRead: true, readAt: now },
         });
       });
+    },
+
+    async markAllAsRead(): Promise<void> {
+      const now = new Date().toISOString();
+
+      const unreadCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(schema.notifications)
+        .where(
+          and(eq(schema.notifications.isRead, false), eq(schema.notifications.isDeleted, false))
+        )
+        .then((res) => res[0]?.count ?? 0);
+
+      if (unreadCount === 0) return;
+      try {
+        await db.transaction(async (tx) => {
+          await tx
+            .update(schema.notifications)
+            .set({
+              isRead: true,
+              readAt: now,
+              updatedAt: now,
+            })
+            .where(
+              and(eq(schema.notifications.isRead, false), eq(schema.notifications.isDeleted, false))
+            );
+
+          await SyncBase.addToQueue(tx as any, {
+            entityType: EntityType.NOTIFICATION,
+            entityId: '0000-0000-0000-0000',
+            action: 'update',
+            payload: {
+              isRead: true,
+              readAt: now,
+              scope: 'all', // Hint for backend to process all unread
+            },
+          });
+        });
+      } catch (err) {
+        console.error('Failed to mark all as read:', err);
+        // On mobile, sometimes a failed transaction leaves the DB in a bad state.
+        // Throwing allows your UI to handle the error.
+        throw err;
+      }
     },
 
     async dismiss(notificationId: string): Promise<void> {

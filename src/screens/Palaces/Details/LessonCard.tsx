@@ -1,182 +1,241 @@
-import { ActionSheet } from '@/components/ActionSheet';
-import AnimatedPressable from '@/components/AnimatedPressable';
-import { ProgressBar } from '@/components/ProgressBar';
-import { Colors } from '@/constants/colors';
-import { masteryProgressMap } from '@/constants/masteryProgressMap';
-import { Lesson, LessonProgress } from '@/types/lesson';
-import { getMasteryLevel, getNextReview, isReviewDueSoon, isReviewOverdue } from '@/utils/review';
+import { formatDistanceToNow } from 'date-fns';
 import {
   AlertCircle,
   BookOpen,
   CheckCircle2,
+  ChevronRight,
   Clock,
   Crown,
   Lock,
-  Play,
   Trash2,
+  Zap,
 } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { StyleProp, Text, View, ViewStyle } from 'react-native';
 
-interface Props {
+import { ActionSheet } from '@/components/ActionSheet';
+import AnimatedPressable from '@/components/AnimatedPressable';
+import { ProgressBar } from '@/components/ProgressBar';
+import { Colors } from '@/constants/colors';
+import { cn } from '@/utils/cn';
+import { getNextReview, isReviewDueSoon, isReviewOverdue } from '@/utils/review';
+
+// --- Types ---
+import { Lesson, LessonProgress } from '@/types/lesson';
+import { calculateDetailedProgress } from '@/utils/progressBarCalculation';
+
+interface LessonCardProps {
   lesson: Lesson;
   progress?: LessonProgress;
   palaceTrainingCompleted?: boolean;
-  onViewLessonDetail?: (lessonId: string) => void;
-  onEditLesson?: (lessonId: string) => void;
+  onViewLessonDetail: (lessonId: string) => void;
   onDeleteLesson?: (lesson: Lesson) => void;
   containerStyle?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
-export const LessonCard: React.FC<Props> = ({
+interface StatusConfig {
+  color: string;
+  bgSecondary: string;
+  label: string;
+  Icon: React.ElementType;
+  isUrgent: boolean;
+  overdue: boolean;
+}
+
+// --- Component ---
+export const LessonCard = ({
   lesson,
   progress,
   palaceTrainingCompleted = true,
   onViewLessonDetail,
   onDeleteLesson,
-  containerStyle,
-}) => {
-  const [isDeleteSheetVisible, setDeleteSheetVisible] = useState(false);
+  className,
+}: LessonCardProps) => {
+  const [isDeleteSheetVisible, setDeleteSheetVisible] = React.useState(false);
   const canStart = palaceTrainingCompleted && !lesson.isLocked;
 
-  // Review logic
-  const nextReviewData = progress ? getNextReview(progress.reviewSchedules) : null;
-  const isOverdue = nextReviewData ? isReviewOverdue(nextReviewData.dueDate) : false;
-  const isDueSoon = nextReviewData ? isReviewDueSoon(nextReviewData.dueDate) : false;
-  const masteryLevel = progress ? getMasteryLevel(progress.reviewSchedules) : 'new';
-
-  // Colors
-  const getBgColor = () => {
-    if (lesson.isLocked) return Colors.gray100;
-    if (isOverdue) return Colors.red100;
-    if (isDueSoon) return Colors.orange100;
-    if (lesson.completed) return Colors.green100;
-    if (masteryLevel === 'mastered') return Colors.blue100;
-    if (lesson.isCustom) return Colors.purple100;
-    return Colors.teal100;
-  };
-
-  const getIconColor = () => {
-    if (lesson.isLocked) return lesson.isPremium ? Colors.yellow500 : Colors.gray400;
-    if (isOverdue) return Colors.red600;
-    if (isDueSoon) return Colors.orange600;
-    if (lesson.completed) return Colors.green600;
-    if (masteryLevel === 'mastered') return Colors.blue500;
-    if (lesson.isCustom) return Colors.purple600;
-    return Colors.teal600;
-  };
-
-  const progressValue = progress ? masteryProgressMap[masteryLevel] : 0;
-
-  const progressColor = isOverdue
-    ? Colors.red600
-    : isDueSoon
-      ? Colors.orange600
-      : masteryLevel === 'mastered'
-        ? Colors.blue500
-        : Colors.teal500;
-
-  const getStatusIcon = () => {
-    const color = getIconColor();
-    const size = 24;
+  // 1. Calculate Status Logic
+  const status = useMemo((): StatusConfig => {
+    const nextReviewData = progress ? getNextReview(progress.reviewSchedules) : null;
+    const isOverdue = nextReviewData ? isReviewOverdue(nextReviewData.dueDate) : false;
+    const isDueSoon = nextReviewData ? isReviewDueSoon(nextReviewData.dueDate) : false;
+    const level = progress?.masteryLevel ?? 'new';
 
     if (lesson.isLocked) {
-      return lesson.isPremium ? (
-        <Crown size={size} color={color} />
-      ) : (
-        <Lock size={size} color={color} />
-      );
+      return {
+        color: Colors.slate400,
+        bgSecondary: 'bg-slate-100',
+        label: 'Locked',
+        Icon: lesson.isPremium ? Crown : Lock,
+        isUrgent: false,
+        overdue: false,
+      };
     }
-    if (isOverdue) return <AlertCircle size={size} color={color} />;
-    if (isDueSoon) return <Clock size={size} color={color} />;
-    if (lesson.completed) return <CheckCircle2 size={size} color={color} />;
-    return <BookOpen size={size} color={color} />;
-  };
+    if (isOverdue) {
+      return {
+        color: Colors.red500,
+        bgSecondary: 'bg-red-50',
+        label: 'Overdue',
+        Icon: AlertCircle,
+        isUrgent: true,
+        overdue: true,
+      };
+    }
+    if (isDueSoon) {
+      return {
+        color: Colors.orange500,
+        bgSecondary: 'bg-orange-50',
+        label: 'Due Soon',
+        Icon: Clock,
+        isUrgent: true,
+        overdue: false,
+      };
+    }
+    if (level === 'mastered') {
+      return {
+        color: Colors.blue500,
+        bgSecondary: 'bg-blue-50',
+        label: 'Mastered',
+        Icon: CheckCircle2,
+        isUrgent: false,
+        overdue: false,
+      };
+    }
+    return {
+      color: Colors.teal500,
+      bgSecondary: 'bg-teal-50',
+      label: 'Learning',
+      Icon: BookOpen,
+      isUrgent: false,
+      overdue: false,
+    };
+  }, [progress, lesson.isLocked, lesson.isPremium]);
 
-  // Handle long press menu
-  const handleLongPress = () => {
-    if (onDeleteLesson) {
-      setDeleteSheetVisible(true);
-    }
-  };
+  const { progressPercentage, completedReviews } = useMemo(() => {
+    if (!progress) return { progressPercentage: 0, completedReviews: 0 };
+
+    const totalReviews = progress.totalReviews ?? 0;
+    const level = progress.masteryLevel;
+
+    // Calculate the weighted percentage
+    const percentage = calculateDetailedProgress(level, totalReviews);
+
+    return {
+      progressPercentage: percentage,
+      completedReviews: totalReviews,
+    };
+  }, [progress]);
+  const nextReviewDate = progress ? getNextReview(progress.reviewSchedules)?.dueDate : null;
 
   return (
     <>
       <AnimatedPressable
         disabled={!canStart}
-        onPress={() => canStart && onViewLessonDetail!(lesson.id)}
-        onLongPress={handleLongPress}
-        className={`${canStart ? 'bg-white' : 'opacity-60'} w-full rounded-2xl p-4 shadow-sm`}
-        style={containerStyle}>
-        <View className="flex-row items-center gap-4">
-          {/* Status Icon */}
-          <View
-            style={{ backgroundColor: getBgColor() }}
-            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
-            {getStatusIcon()}
-          </View>
+        onPress={() => onViewLessonDetail(lesson.id)}
+        onLongPress={() => onDeleteLesson && setDeleteSheetVisible(true)}
+        className={cn(
+          'mb-4 overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm',
+          !canStart && 'opacity-60',
+          className
+        )}>
+        <View className="absolute -right-6 -top-6 opacity-[0.04]">
+          <status.Icon size={140} color={status.color} strokeWidth={1} />
+        </View>
 
-          {/* Lesson Info */}
-          <View className="flex-1">
-            <Text className="font-semibold text-slate-800">{lesson.title}</Text>
-            {/* <Text className="text-sm text-slate-600">{lesson.description}</Text> */}
-            <Text className="text-sm text-slate-600">
-              {lesson.description ||
-                (lesson.progress?.masteryLevel == 'new'
-                  ? 'Start this lesson to begin training'
-                  : 'Continue improving your memory')}
-            </Text>
-            <View className="mt-1 flex-row items-center gap-2">
-              <Text
-                style={{ color: lesson.completed ? Colors.green600 : Colors.gray600 }}
-                className="text-xs">
-                {lesson.wordCount} words
-              </Text>
-
-              <View className="rounded-full bg-teal-100 px-2 py-0.5">
-                <Text className="text-xs font-medium text-teal-700">
-                  {lesson.progress?.masteryLevel ?? 'New'}
+        <View className="p-5">
+          {/* Header Row */}
+          <View className="flex-row items-start justify-between">
+            <View className="flex-1 pr-4">
+              <View className="mb-1.5 flex-row items-center space-x-2">
+                <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-slate-400">
+                  {lesson.category || 'General'}
                 </Text>
+                {lesson.isCustom && (
+                  <View className="rounded-md bg-purple-100 px-1.5 py-0.5">
+                    <Text className="text-[8px] font-black uppercase text-purple-700">Custom</Text>
+                  </View>
+                )}
               </View>
-
-              {lesson.isPremium && (
-                <View className="rounded-full bg-yellow-100 px-2 py-0.5">
-                  <Text style={{ color: Colors.yellow700 }} className="text-xs">
-                    Premium
-                  </Text>
-                </View>
-              )}
+              <Text className="text-lg font-bold leading-tight text-slate-900">{lesson.title}</Text>
             </View>
 
-            {/* Progress Bar */}
-            {!lesson.isLocked && <ProgressBar progress={progressValue} color={progressColor} />}
+            {/* Icon Badge */}
+            <View
+              className={cn(
+                'h-11 w-11 items-center justify-center rounded-2xl',
+                status.bgSecondary
+              )}>
+              <status.Icon size={22} color={status.color} strokeWidth={2.5} />
+            </View>
           </View>
 
-          {/* Actions */}
-          <View className="flex-row items-center gap-2">
-            {canStart && (
-              <Play
-                size={20}
-                color={
-                  isOverdue
-                    ? Colors.red600
-                    : isDueSoon
-                      ? Colors.orange600
-                      : lesson.completed
-                        ? Colors.green600
-                        : Colors.teal600
-                }
-              />
-            )}
+          {/* Description */}
+          <Text numberOfLines={1} className="mt-2 text-[13px] leading-4 text-slate-500">
+            {lesson.description || 'Master these words in your memory palace.'}
+          </Text>
+
+          {/* Progress Section */}
+          <View className="mt-5">
+            <View className="mb-2 flex-row items-end justify-between">
+              <View className="flex-row items-center">
+                <Zap size={12} color={status.color} />
+                <Text className="ml-1 text-xs font-bold uppercase tracking-wide text-slate-700">
+                  {progress?.masteryLevel ?? 'New'}
+                </Text>
+                <Text className="mx-2 text-slate-300">|</Text>
+                <Text className="text-xs font-medium text-slate-400">{lesson.wordCount} words</Text>
+              </View>
+              <Text className="text-xs font-black text-slate-900">
+                {Math.round(progressPercentage * 100)}%
+              </Text>
+            </View>
+
+            <ProgressBar progress={progressPercentage} color={status.color} height={8} />
           </View>
+
+          {/* Smart Footer */}
+          {!lesson.isLocked && (
+            <View className="mt-4 flex-row items-center justify-between border-t border-slate-50 pt-4">
+              <View className="flex-row items-center">
+                {nextReviewDate ? (
+                  <View className="flex-row items-center">
+                    <Text className="text-[11px] font-semibold text-slate-400">Next Review: </Text>
+                    <Text
+                      className="text-[11px] font-bold"
+                      style={{ color: status.isUrgent ? status.color : Colors.slate600 }}>
+                      {status.overdue
+                        ? 'Now'
+                        : formatDistanceToNow(new Date(nextReviewDate), { addSuffix: true })}
+                    </Text>
+                  </View>
+                ) : (
+                  <View className="rounded-full bg-emerald-50 px-2 py-0.5">
+                    <Text className="text-[10px] font-bold uppercase text-emerald-600">
+                      Ready to Start
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              <View className="flex-row items-center rounded-full bg-slate-900 py-1.5 pl-3 pr-2">
+                <Text className="mr-1 text-[11px] font-bold text-white">
+                  {status.overdue ? 'Review' : 'Start'}
+                </Text>
+                <ChevronRight size={14} color="white" strokeWidth={3} />
+              </View>
+            </View>
+          )}
         </View>
       </AnimatedPressable>
+
+      {/* Delete Confirmation */}
       <ActionSheet
         isVisible={isDeleteSheetVisible}
         onClose={() => setDeleteSheetVisible(false)}
         onAction={() => onDeleteLesson?.(lesson)}
         title="Remove Lesson?"
-        description={`Are you sure you want to remove "${lesson.title}"? You will lose all your progress data for this lesson.`}
+        description={`This will permanently delete your progress for "${lesson.title}".`}
         actionLabel="Remove Lesson"
         variant="destructive"
         Icon={Trash2}

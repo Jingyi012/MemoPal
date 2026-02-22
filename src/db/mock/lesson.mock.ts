@@ -1,3 +1,5 @@
+import { LessonCategory } from '@/types/lesson';
+
 export const mockLessons = [
   {
     id: 'lesson-1',
@@ -5,7 +7,7 @@ export const mockLessons = [
     title: 'Common Animals',
     description: 'Learn the most common animals in English.',
     wordCount: 10,
-    category: 'vocabulary',
+    category: 'vocabulary' as LessonCategory,
     isCustom: false,
     isLocked: false,
     isPremium: false,
@@ -16,7 +18,7 @@ export const mockLessons = [
     title: 'Basic Colors',
     description: 'Learn the basic colors in English.',
     wordCount: 10,
-    category: 'vocabulary',
+    category: 'vocabulary' as LessonCategory,
     isCustom: false,
     isLocked: false,
     isPremium: false,
@@ -27,7 +29,7 @@ export const mockLessons = [
     title: 'Food & Drinks',
     description: 'Learn common food and drink words in English.',
     wordCount: 10,
-    category: 'vocabulary',
+    category: 'vocabulary' as LessonCategory,
     isCustom: true,
     isLocked: false,
     isPremium: false,
@@ -38,7 +40,7 @@ export const mockLessons = [
     title: 'Body Parts',
     description: 'Learn 10 parts of the body',
     wordCount: 10,
-    category: 'vocabulary',
+    category: 'vocabulary' as LessonCategory,
     isCustom: false,
     isLocked: false,
     isPremium: false,

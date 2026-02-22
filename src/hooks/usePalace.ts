@@ -19,13 +19,7 @@ export function usePalaceList() {
     staleTime: 1000 * 60 * 5,
   });
 
-  return {
-    palaces: query.data ?? [],
-    isLoading: query.isLoading,
-    isRefreshing: query.isRefetching,
-    refresh: query.refetch,
-    totalCount: query.data?.length ?? 0,
-  };
+  return query;
 }
 
 /**

@@ -39,7 +39,7 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
       // Actions (right side icons)
       actions={[
         {
-          component: <NotificationBell unreadCount={3} />,
+          component: <NotificationBell />,
         },
       ]}
       // Back button slot replaced with avatar

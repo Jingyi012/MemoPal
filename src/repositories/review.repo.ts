@@ -1,4 +1,4 @@
-import { MAX_REVIEW_ROUND } from '@/constants/config';
+import { MAX_REVIEW_ROUND, REVIEW_PASS_THRESHOLD } from '@/constants/config';
 import { db } from '@/db/client';
 import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
@@ -75,9 +75,12 @@ export function createReviewRepository(): ReviewRepository {
         const reviewId = Crypto.randomUUID();
         const now = new Date().toISOString();
 
-        const lesson = await tx.query.lesson.findFirst({
-          where: eq(schema.lessons.id, progress.lessonId),
-        });
+        const lesson = await tx
+          .select()
+          .from(schema.lessons)
+          .where(eq(schema.lessons.id, progress.lessonId))
+          .limit(1);
+
         const lessonId = lesson?.id || '';
         const lessonName = lesson?.title || 'Lesson';
 
@@ -154,7 +157,7 @@ export function createReviewRepository(): ReviewRepository {
       totalCount: number
     ): Promise<void> {
       const nowIso = new Date().toISOString();
-      const isPassed = correctCount / totalCount >= 0.8;
+      const isPassed = correctCount / totalCount >= REVIEW_PASS_THRESHOLD;
 
       await db.transaction(async (tx) => {
         const currentProgress = await tx.query.lessonProgress.findFirst({

@@ -1,6 +1,7 @@
 import * as reviewService from '@/services/review.service';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PROGRESS_KEYS } from './useLessonProgress';
+import { PALACE_KEYS } from './usePalace';
 
 export function useReviewCompletion() {
   const queryClient = useQueryClient();
@@ -22,6 +23,7 @@ export function useReviewCompletion() {
     onSuccess: ({ lessonId }) => {
       // Invalidate queries so the UI reflects new XP and schedule immediately
       queryClient.invalidateQueries({ queryKey: PROGRESS_KEYS.detail(lessonId) });
+      queryClient.invalidateQueries({ queryKey: PALACE_KEYS.all });
     },
   });
 

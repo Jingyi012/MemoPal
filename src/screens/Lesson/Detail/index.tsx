@@ -51,7 +51,7 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
 
   const { hasStartedLearning, hasMastered, hasCompletedLearning } = useMemo(() => {
     return {
-      hasStartedLearning: progress?.masteryLevel === 'learning',
+      hasStartedLearning: progress?.masteryLevel != 'new',
       hasMastered: progress?.masteryLevel === 'mastered',
       hasCompletedLearning: !!progress?.firstCompletedDate,
     };

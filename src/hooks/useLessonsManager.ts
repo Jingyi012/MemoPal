@@ -32,13 +32,7 @@ export function useLessonList(palaceId: string) {
     gcTime: 1000 * 60 * 15, // 15 minutes (formerly cacheTime)
   });
 
-  return {
-    lessons: query.data ?? [],
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
-    refetch: query.refetch,
-  };
+  return query;
 }
 
 /**

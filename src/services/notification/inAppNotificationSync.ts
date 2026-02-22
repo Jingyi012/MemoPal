@@ -1,6 +1,7 @@
 import { db } from '@/db/client';
 import * as schema from '@/db/schema';
 import { lessonProgress, lessons, reviewSchedules } from '@/db/schema';
+import { NotificationType } from '@/enums/notificationType';
 import { and, eq, gt, sql } from 'drizzle-orm';
 import { InAppNotificationService } from '../notification.service';
 import { PushNotificationService } from './pushNotificationService';
@@ -48,10 +49,12 @@ export const InAppNotificationSync = {
   async refreshInAppInbox() {
     const now = new Date().toISOString();
 
-    // 1. Find reviews that are DUE NOW but don't have an inbox record yet
-    // We check this by looking for 'lesson' type notifications with the same referenceId
-    const dueReviews = await db
-      .select()
+    // 1. Find lessons that have an active, overdue review round
+    const overdueLessons = await db
+      .select({
+        lessonId: schema.lessons.id,
+        lessonTitle: schema.lessons.title,
+      })
       .from(schema.reviewSchedules)
       .innerJoin(
         schema.lessonProgress,
@@ -61,24 +64,42 @@ export const InAppNotificationSync = {
       .where(
         and(
           eq(schema.reviewSchedules.completed, false),
-          sql`${schema.reviewSchedules.dueDate} <= ${now}`,
-          // Logic: Only create if we haven't already created an inbox notification for this specific schedule
-          sql`NOT EXISTS (
-            SELECT 1 FROM ${schema.notifications} 
-            WHERE ${schema.notifications.referenceId} = ${schema.reviewSchedules.id}
-          )`
+          sql`${schema.reviewSchedules.dueDate} <= ${now}`
         )
       );
 
-    // 2. Create the Inbox records for them
-    for (const item of dueReviews) {
-      await InAppNotificationService.createInAppNotification({
-        type: 'lesson',
-        title: 'Review Ready',
-        body: `It's time to review ${item.lessons.title}`,
-        referenceId: item.review_schedules.id, // Link to the specific schedule
-        referenceType: 'lesson_review',
-      });
-    }
+    if (overdueLessons.length === 0) return;
+
+    await db.transaction(async (tx) => {
+      for (const item of overdueLessons) {
+        // 2. Check for an existing unread notification for this LESSON
+        const existing = await tx.query.notifications.findFirst({
+          where: and(
+            eq(schema.notifications.referenceId, item.lessonId),
+            eq(schema.notifications.type, NotificationType.LESSON_REVIEW),
+            eq(schema.notifications.isRead, false),
+            eq(schema.notifications.isDismissed, false)
+          ),
+        });
+
+        if (existing) {
+          await tx
+            .update(schema.notifications)
+            .set({
+              createdAt: now,
+              updatedAt: now,
+            })
+            .where(eq(schema.notifications.id, existing.id));
+        } else {
+          await InAppNotificationService.createInAppNotification({
+            type: NotificationType.LESSON_REVIEW,
+            title: 'Review Ready',
+            body: `Time to review: ${item.lessonTitle}`,
+            referenceId: item.lessonId, // Lesson ID is the anchor
+            referenceType: NotificationType.LESSON,
+          });
+        }
+      }
+    });
   },
 };

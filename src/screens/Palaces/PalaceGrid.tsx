@@ -8,7 +8,7 @@ import { PalaceCard } from './PalaceCard';
 
 export const PalaceGrid: React.FC = () => {
   const router = useRouter();
-  const { palaces, isLoading, isRefreshing, refresh } = usePalaceList();
+  const { data: palaces = [], isLoading, isRefetching, refetch } = usePalaceList();
 
   const handlePalacePress = (palace: Palace) => {
     if (!palace) return;
@@ -31,8 +31,8 @@ export const PalaceGrid: React.FC = () => {
     <FlatList
       data={palaces}
       keyExtractor={(item) => item.id}
-      onRefresh={refresh}
-      refreshing={isRefreshing}
+      onRefresh={refetch}
+      refreshing={isRefetching}
       contentContainerStyle={{ padding: 16 }}
       renderItem={({ item }) => (
         <PalaceCard

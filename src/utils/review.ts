@@ -1,3 +1,4 @@
+import { MAX_REVIEW_ROUND } from '@/constants/config';
 import { LessonProgress, ReviewSchedule } from '@/types/lesson';
 
 export type IntervalUnit = 'minutes' | 'hours' | 'days';
@@ -81,7 +82,7 @@ export function getMasteryLevel(schedule?: ReviewSchedule[]): LessonProgress['ma
  * Calculates a simple retention rate
  */
 export function getRetentionRate(schedule: ReviewSchedule[]): number {
-  const total = schedule.length;
+  const total: number = MAX_REVIEW_ROUND;
   const completed = schedule.filter((r) => r.completed).length;
 
   // Base retention 10%, scale to 100% based on completed reviews

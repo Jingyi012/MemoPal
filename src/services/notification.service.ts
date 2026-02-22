@@ -1,6 +1,7 @@
 import { notificationApi } from '@/api/notification';
+import { NotificationType } from '@/enums/notificationType';
 import { createNotificationRepository } from '@/repositories/notification.repo';
-import { Notification, NotificationType } from '@/types/notification';
+import { Notification } from '@/types/notification';
 import * as Crypto from 'expo-crypto';
 
 const repo = createNotificationRepository();
@@ -34,6 +35,10 @@ export const InAppNotificationService = {
    */
   async markAsRead(id: string): Promise<void> {
     await repo.markAsRead(id);
+  },
+
+  async markAllAsRead(): Promise<void> {
+    await repo.markAllAsRead();
   },
 
   async dismiss(id: string): Promise<void> {

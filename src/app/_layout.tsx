@@ -2,6 +2,7 @@ import { Colors } from '@/constants/colors';
 import { AuthProvider } from '@/contexts/AuthProvider';
 import { UserStateProvider } from '@/contexts/UserStateContext';
 import { db } from '@/db/client';
+import { seedInitialData } from '@/db/seed';
 import { useNotificationObserver } from '@/hooks/useNotificationObserver';
 import { queryClient } from '@/utils/queryClient';
 import { toastConfig } from '@/utils/toastConfig';
@@ -10,7 +11,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -20,21 +21,36 @@ import migrations from '../drizzle/migrations';
 
 function AppLayout() {
   const { colorScheme } = useColorScheme();
-  const { success, error } = useMigrations(db, migrations);
+  const { success: migrationsSuccess, error: migrationError } = useMigrations(db, migrations);
+  const [isSeedFinished, setIsSeedFinished] = useState(false);
 
-  // inside AppLayout, after migrations check — call effect before early return so hooks order doesn't change
   useEffect(() => {
-    if (!success) return;
-    import('@/db/seed').then(({ seedInitialData }) => seedInitialData()).catch(console.error);
-  }, [success]);
+    async function runSeed() {
+      if (migrationsSuccess) {
+        try {
+          await seedInitialData();
+        } catch (e) {
+          console.error('Seeding failed:', e);
+        } finally {
+          setIsSeedFinished(true);
+        }
+      }
+    }
+    runSeed();
+  }, [migrationsSuccess]);
 
-  if (error) {
-    console.error('Migration failed: ', error);
+  // 4. Notification hook (called unconditionally)
+  useNotificationObserver();
+
+  if (migrationError) {
+    console.error('Migration failed: ', migrationError);
   }
 
-  if (!success) return null; // Or a splash screen
+  // 5. Wait for BOTH migrations and seeding
+  if (!migrationsSuccess || !isSeedFinished) {
+    return null;
+  }
 
-  useNotificationObserver();
   // useSyncManager();
 
   return (

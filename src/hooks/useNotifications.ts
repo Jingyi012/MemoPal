@@ -40,6 +40,14 @@ export const useNotificationMutations = () => {
     },
   });
 
+  const markAllAsRead = useMutation({
+    mutationFn: () => InAppNotificationService.markAllAsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.unread() });
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
+    },
+  });
+
   const dismiss = useMutation({
     mutationFn: (notificationId: string) => InAppNotificationService.dismiss(notificationId),
     onSuccess: () => {
@@ -56,5 +64,5 @@ export const useNotificationMutations = () => {
     },
   });
 
-  return { markAsRead, dismiss, createNotification };
+  return { markAsRead, markAllAsRead, dismiss, createNotification };
 };
