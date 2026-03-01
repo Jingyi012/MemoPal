@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Auth.DTOs;
+using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,7 +52,7 @@ public sealed class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginC
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        var token = _tokenGenerator.GenerateToken(user.Id, user.Email);
+        var token = _tokenGenerator.GenerateToken(user.Id, user.Email, user.Role);
         return new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>());
     }
 
@@ -83,6 +84,7 @@ public sealed class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginC
             DisplayName = string.IsNullOrWhiteSpace(profile.DisplayName) ? "Facebook User" : profile.DisplayName,
             AvatarUrl = profile.AvatarUrl,
             PasswordHash = _passwordHasher.Hash(Guid.NewGuid().ToString("N")),
+            Role = UserRoles.User,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

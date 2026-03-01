@@ -16,7 +16,7 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
         _options = options.Value;
     }
 
-    public string GenerateToken(string userId, string email)
+    public string GenerateToken(string userId, string email, string role)
     {
         var secret = string.IsNullOrWhiteSpace(_options.Secret)
             ? "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_KEY_AT_LEAST_32_CHARS"
@@ -31,6 +31,7 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
             new(ClaimTypes.NameIdentifier, userId),
             new(JwtRegisteredClaimNames.Email, email),
             new(ClaimTypes.Email, email),
+            new(ClaimTypes.Role, role),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
         };
 

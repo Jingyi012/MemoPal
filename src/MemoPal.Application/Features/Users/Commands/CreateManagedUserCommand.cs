@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Users.DTOs;
+using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,6 +45,7 @@ public sealed class CreateManagedUserCommandHandler : IRequestHandler<CreateMana
             Email = email,
             PasswordHash = _passwordHasher.Hash(request.Request.Password),
             AvatarUrl = request.Request.AvatarUrl,
+            Role = NormalizeRole(request.Request.Role),
             TotalXp = request.Request.TotalXp ?? 0,
             Level = request.Request.Level ?? 1,
             IsPremium = request.Request.IsPremium ?? false,
@@ -65,5 +67,13 @@ public sealed class CreateManagedUserCommandHandler : IRequestHandler<CreateMana
         await _db.SaveChangesAsync(cancellationToken);
 
         return user.Adapt<ManagedUserDto>();
+    }
+
+    private static string NormalizeRole(string? role)
+    {
+        if (string.Equals(role, UserRoles.Admin, StringComparison.OrdinalIgnoreCase))
+            return UserRoles.Admin;
+
+        return UserRoles.User;
     }
 }

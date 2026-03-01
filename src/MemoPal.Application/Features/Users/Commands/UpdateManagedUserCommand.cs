@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Users.DTOs;
+using MemoPal.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Users.Commands;
@@ -43,6 +44,9 @@ public sealed class UpdateManagedUserCommandHandler : IRequestHandler<UpdateMana
         if (request.Request.AvatarUrl is not null)
             user.AvatarUrl = request.Request.AvatarUrl;
 
+        if (request.Request.Role is not null)
+            user.Role = NormalizeRole(request.Request.Role);
+
         if (request.Request.TotalXp.HasValue)
             user.TotalXp = request.Request.TotalXp.Value;
 
@@ -62,5 +66,13 @@ public sealed class UpdateManagedUserCommandHandler : IRequestHandler<UpdateMana
         await _db.SaveChangesAsync(cancellationToken);
 
         return user.Adapt<ManagedUserDto>();
+    }
+
+    private static string NormalizeRole(string? role)
+    {
+        if (string.Equals(role, UserRoles.Admin, StringComparison.OrdinalIgnoreCase))
+            return UserRoles.Admin;
+
+        return UserRoles.User;
     }
 }

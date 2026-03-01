@@ -3,12 +3,13 @@ using MemoPal.Application.Common;
 using MemoPal.Application.Features.Users.Commands;
 using MemoPal.Application.Features.Users.DTOs;
 using MemoPal.Application.Features.Users.Queries;
+using MemoPal.Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MemoPal.Api.Controllers;
 
-[Authorize]
+[Authorize(Roles = UserRoles.Admin)]
 [Route("admin/users")]
 public sealed class AdminUsersController : ApiControllerBase
 {

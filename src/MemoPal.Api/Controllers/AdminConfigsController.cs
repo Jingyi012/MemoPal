@@ -9,12 +9,13 @@ using MemoPal.Application.Features.Configs.Queries;
 using MemoPal.Application.Features.Milestones.Commands;
 using MemoPal.Application.Features.Milestones.DTOs;
 using MemoPal.Application.Features.Milestones.Queries;
+using MemoPal.Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MemoPal.Api.Controllers;
 
-[Authorize]
+[Authorize(Roles = UserRoles.Admin)]
 [Route("admin")]
 public sealed class AdminConfigsController : ApiControllerBase
 {

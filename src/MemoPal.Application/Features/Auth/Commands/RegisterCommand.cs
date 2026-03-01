@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Auth.DTOs;
+using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,6 +46,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
             DisplayName = request.DisplayName.Trim(),
             Email = email,
             PasswordHash = _passwordHasher.Hash(request.Password),
+            Role = UserRoles.User,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -61,7 +63,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
         await _db.UserStats.AddAsync(stats, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        var token = _tokenGenerator.GenerateToken(user.Id, user.Email);
+        var token = _tokenGenerator.GenerateToken(user.Id, user.Email, user.Role);
         return new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>());
     }
 }

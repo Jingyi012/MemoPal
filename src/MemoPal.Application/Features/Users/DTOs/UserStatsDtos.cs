@@ -24,6 +24,7 @@ public sealed record ManagedUserDto(
     string Id,
     string DisplayName,
     string Email,
+    string Role,
     string? AvatarUrl,
     int TotalXp,
     int Level,
@@ -43,6 +44,7 @@ public sealed class ManagedUserUpsertRequest
     public string? Email { get; set; }
     public string? Password { get; set; }
     public string? AvatarUrl { get; set; }
+    public string? Role { get; set; }
     public int? TotalXp { get; set; }
     public int? Level { get; set; }
     public bool? IsPremium { get; set; }

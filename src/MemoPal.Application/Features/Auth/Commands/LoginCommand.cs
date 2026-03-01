@@ -37,7 +37,7 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResp
         }
 
         var stats = await _db.UserStats.FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
-        var token = _tokenGenerator.GenerateToken(user.Id, user.Email);
+        var token = _tokenGenerator.GenerateToken(user.Id, user.Email, user.Role);
         return new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>());
     }
 }

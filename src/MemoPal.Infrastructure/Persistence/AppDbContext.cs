@@ -41,6 +41,7 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasIndex(x => x.Email).IsUnique();
             b.Property(x => x.Email).HasMaxLength(320);
             b.Property(x => x.DisplayName).HasMaxLength(200);
+            b.Property(x => x.Role).HasMaxLength(32).HasDefaultValue(UserRoles.User);
             b.HasOne(x => x.Stats)
                 .WithOne(x => x.User)
                 .HasForeignKey<UserStats>(x => x.UserId)
