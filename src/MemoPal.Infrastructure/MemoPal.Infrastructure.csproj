@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild"
+                    Version="4.14.0"
+                    PrivateAssets="all"
+                    ExcludeAssets="contentFiles" />
+</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MemoPal.Application\MemoPal.Application.csproj" />
     <ProjectReference Include="..\MemoPal.Domain\MemoPal.Domain.csproj" />
