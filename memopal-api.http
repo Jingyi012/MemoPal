@@ -1,0 +1,235 @@
+@host = http://localhost:5000/api
+@contentType = application/json
+@token = 
+
+###
+# Auth - Register
+POST {{host}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "user@example.com",
+  "password": "SecurePassword123",
+  "displayName": "John Doe"
+}
+
+###
+# Auth - Login
+POST {{host}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "user@example.com",
+  "password": "SecurePassword123"
+}
+
+###
+# Auth - Get Current User
+GET {{host}}/auth/me
+Authorization: Bearer {{token}}
+
+###
+# Auth - Update Profile
+PATCH {{host}}/auth/profile
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "displayName": "Jane Doe",
+  "avatarUrl": "https://example.com/avatar.png"
+}
+
+###
+# Palaces - List All
+GET {{host}}/palaces
+Authorization: Bearer {{token}}
+
+###
+# Palaces - List Filtered
+GET {{host}}/palaces?isPremium=false&isCustom=true
+Authorization: Bearer {{token}}
+
+###
+# Palaces - Get By ID
+GET {{host}}/palaces/{palaceId}
+Authorization: Bearer {{token}}
+
+###
+# Palaces - Create
+POST {{host}}/palaces
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Ancient Rome",
+  "description": "A virtual tour of Ancient Rome's major landmarks",
+  "thumbnail": "https://example.com/rome.jpg",
+  "requiredXp": 0,
+  "isPremium": false
+}
+
+###
+# Palaces - Unlock
+POST {{host}}/palaces/{palaceId}/unlock
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{}
+
+###
+# Locations - Get By Palace
+GET {{host}}/palaces/{palaceId}/locations
+Authorization: Bearer {{token}}
+
+###
+# Locations - Get By ID
+GET {{host}}/locations/{locationId}
+Authorization: Bearer {{token}}
+
+###
+# Locations - Create
+POST {{host}}/palaces/{palaceId}/locations
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "position": 1,
+  "name": "Roman Forum",
+  "description": "The social, political and commercial center of Rome",
+  "imageUrl": "https://example.com/forum.jpg"
+}
+
+###
+# Lessons - Get By ID (with words)
+GET {{host}}/lessons/{lessonId}
+Authorization: Bearer {{token}}
+
+###
+# Lessons - Get By Palace
+GET {{host}}/lessons?palaceId={palaceId}
+Authorization: Bearer {{token}}
+
+###
+# Lessons - Create
+POST {{host}}/lessons
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "palaceId": "{palaceId}",
+  "title": "Latin Verbs",
+  "description": "Common Latin verbs used in Roman society",
+  "category": "language-learning",
+  "isPremium": false
+}
+
+###
+# Words - Get By ID
+GET {{host}}/words/{wordId}
+Authorization: Bearer {{token}}
+
+###
+# Words - Get By Lesson
+GET {{host}}/words?lessonId={lessonId}
+Authorization: Bearer {{token}}
+
+###
+# Words - Create Single
+POST {{host}}/words
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "lessonId": "{lessonId}",
+  "locationId": "{locationId}",
+  "text": "amō",
+  "meaning": "I love/like"
+}
+
+###
+# Words - Create Batch
+POST {{host}}/words/batch
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "lessonId": "{lessonId}",
+  "words": [
+    {
+      "locationId": "{locationId1}",
+      "text": "amō",
+      "meaning": "I love/like"
+    },
+    {
+      "locationId": "{locationId2}",
+      "text": "bibō",
+      "meaning": "I drink"
+    },
+    {
+      "locationId": "{locationId3}",
+      "text": "cēnō",
+      "meaning": "I dine"
+    }
+  ]
+}
+
+###
+# Reviews - Get Pending
+GET {{host}}/reviews/pending
+Authorization: Bearer {{token}}
+
+###
+# Reviews - Get Lesson Progress
+GET {{host}}/lessons/{lessonId}/progress
+Authorization: Bearer {{token}}
+
+###
+# Reviews - Initiate Lesson
+POST {{host}}/lessons/{lessonId}/initiate
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{}
+
+###
+# Reviews - Complete Review
+POST {{host}}/reviews/{reviewScheduleId}/complete
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "correctCount": 3,
+  "totalCount": 3
+}
+
+###
+# Notifications - Get All
+GET {{host}}/notifications
+Authorization: Bearer {{token}}
+
+###
+# Badges - Get All
+GET {{host}}/badges
+Authorization: Bearer {{token}}
+
+###
+# Milestones - Get All
+GET {{host}}/milestones
+Authorization: Bearer {{token}}
+
+###
+# Users - Get Stats
+GET {{host}}/users/stats
+Authorization: Bearer {{token}}
+
+###
+# Configs - Get Level Configs
+GET {{host}}/configs/level-configs
+
+###
+# Configs - Get XP Configs
+GET {{host}}/configs/xp-configs
+
+###
+# Health Check
+GET http://localhost:5000/health

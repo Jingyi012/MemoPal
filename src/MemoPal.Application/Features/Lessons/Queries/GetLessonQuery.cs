@@ -1,0 +1,58 @@
+using Mapster;
+using MediatR;
+using MemoPal.Application.Common.Exceptions;
+using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Features.LessonProgress.DTOs;
+using MemoPal.Application.Features.Lessons.DTOs;
+using MemoPal.Application.Features.Reviews.DTOs;
+using MemoPal.Application.Features.Words.DTOs;
+using Microsoft.EntityFrameworkCore;
+
+namespace MemoPal.Application.Features.Lessons.Queries;
+
+public sealed record GetLessonQuery(string UserId, string LessonId) : IRequest<LessonDto>;
+
+public sealed class GetLessonQueryHandler : IRequestHandler<GetLessonQuery, LessonDto>
+{
+    private readonly IAppDbContext _db;
+
+    public GetLessonQueryHandler(IAppDbContext db)
+    {
+        _db = db;
+    }
+
+    public async Task<LessonDto> Handle(GetLessonQuery request, CancellationToken cancellationToken)
+    {
+        var lesson = await _db.Lessons.FirstOrDefaultAsync(
+                x => x.Id == request.LessonId &&
+                     !x.IsDeleted &&
+                     (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
+                cancellationToken)
+            ?? throw new NotFoundAppException("Lesson not found.");
+
+        var progress = await _db.LessonProgresses.FirstOrDefaultAsync(
+            x => x.UserId == request.UserId && x.LessonId == lesson.Id && !x.IsDeleted,
+            cancellationToken);
+
+        LessonProgressDto? progressDto = null;
+        if (progress is not null)
+        {
+            var schedules = await _db.ReviewSchedules
+                .Where(x => x.UserId == request.UserId && x.LessonProgressId == progress.Id && !x.IsDeleted)
+                .OrderBy(x => x.ReviewRound)
+                .ToListAsync(cancellationToken);
+
+            var reviewDtos = schedules.Select(x => x.Adapt<ReviewScheduleDto>()).ToList();
+            progressDto = (progress, (IReadOnlyList<ReviewScheduleDto>)reviewDtos).Adapt<LessonProgressDto>();
+        }
+
+        var words = await _db.Words
+            .Where(x => x.LessonId == lesson.Id && !x.IsDeleted)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+        var wordDtos = words.Select(x => x.Adapt<WordDto>()).ToList();
+
+        return (lesson, progressDto, (IReadOnlyList<WordDto>)wordDtos).Adapt<LessonDto>();
+    }
+}
+
