@@ -32,6 +32,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<XpConfig> XpConfigs => Set<XpConfig>();
     public DbSet<LevelConfig> LevelConfigs => Set<LevelConfig>();
     public DbSet<XpEvent> XpEvents => Set<XpEvent>();
+    public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -166,6 +167,16 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasKey(x => x.Id);
             b.HasIndex(x => x.ClientEventId).IsUnique();
             b.HasIndex(x => new { x.UserId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<UserSubscription>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.UserId, x.Status });
+            b.HasIndex(x => new { x.Provider, x.ProviderReference }).IsUnique();
+            b.Property(x => x.Provider).HasMaxLength(64);
+            b.Property(x => x.PlanId).HasMaxLength(128);
+            b.Property(x => x.Status).HasMaxLength(32);
         });
     }
 

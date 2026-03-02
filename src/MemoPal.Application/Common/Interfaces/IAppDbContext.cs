@@ -21,6 +21,7 @@ public interface IAppDbContext
     DbSet<XpConfig> XpConfigs { get; }
     DbSet<LevelConfig> LevelConfigs { get; }
     DbSet<XpEvent> XpEvents { get; }
+    DbSet<UserSubscription> UserSubscriptions { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
