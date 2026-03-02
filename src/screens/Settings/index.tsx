@@ -1,10 +1,9 @@
 import { useAuth } from '@/contexts/AuthProvider';
-import { db } from '@/db/client';
 import { resetSeedData, seedInitialData } from '@/db/seed';
-import * as schema from '@/db/schema';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useXpIntegrityCheck } from '@/hooks/useDiagnostics';
 import { useQueryClient } from '@tanstack/react-query';
-import { eq, sql } from 'drizzle-orm';
+import { createUserRepository } from '@/repositories/user.repo';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
@@ -33,6 +32,8 @@ export default function SettingsScreen() {
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
   const { userState, updateState, updatePreferences } = useUserState();
+  const xpIntegrityCheck = useXpIntegrityCheck();
+  const userRepo = createUserRepository();
   const [showLogout, setShowLogout] = useState<boolean>(false);
   const { logout } = useAuth();
   const [dailyLearningEnabled, setDailyLearningEnabled] = useState<boolean>(
@@ -70,24 +71,17 @@ export default function SettingsScreen() {
   };
 
   const checkXpIntegrity = async () => {
-    const current = await db.query.users.findFirst();
-    const summed = await db
-      .select({ total: sql<number>`sum(${schema.xpEvents.xpAmount})` })
-      .from(schema.xpEvents)
-      .where(eq(schema.xpEvents.isDeleted, false));
+    const result = await xpIntegrityCheck.mutateAsync();
 
-    const sumXp = summed[0]?.total ?? 0;
-    const userXp = current?.totalXp ?? 0;
-
-    if (sumXp === userXp) {
-      Toast.show({ type: 'success', text1: 'XP integrity OK', text2: `users.totalXp = ${userXp}` });
+    if (result.ok) {
+      Toast.show({ type: 'success', text1: 'XP integrity OK', text2: `users.totalXp = ${result.userXp}` });
       return;
     }
 
     Toast.show({
       type: 'error',
       text1: 'XP mismatch detected',
-      text2: `users.totalXp=${userXp}, xp_events_sum=${sumXp}`,
+      text2: `users.totalXp=${result.userXp}, xp_events_sum=${result.xpEventsTotal}`,
     });
   };
 
@@ -98,10 +92,7 @@ export default function SettingsScreen() {
     const nextExpiry = new Date(now);
     nextExpiry.setMonth(nextExpiry.getMonth() + 1);
 
-    await db
-      .update(schema.users)
-      .set({ isPremium: nextPremium, updatedAt: now.toISOString() })
-      .where(eq(schema.users.id, user.id));
+    await userRepo.setPremium(user.id, nextPremium);
 
     await updateState({
       subscription: {
