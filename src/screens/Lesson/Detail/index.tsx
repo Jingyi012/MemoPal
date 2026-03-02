@@ -17,7 +17,7 @@ import { LessonReviewStatCard } from './LessonReviewStatCard';
 import { MasteredCard } from './MateredCard';
 import MemoryRetentionCard from './MemoryRetentionCard';
 import { NextReviewCard } from './NextReviewCard';
-import { PalaceWordList } from './PalaceWordList';
+import { LessonWordList } from './PalaceWordList';
 import { ReviewProgressIndicator } from './ReviewProgressIndicator';
 import { StartLearningCard } from './StartLearningCard';
 
@@ -209,12 +209,12 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
         )}
 
         {/* WORD LIST SECTION */}
-        {!hasStartedLearning && <PalaceWordList words={lesson.words} />}
+        {!hasStartedLearning && <LessonWordList words={lesson.words} />}
       </ScrollView>
 
       <CustomBottomSheet ref={bottomSheetRef}>
         <View className="p-4">
-          <PalaceWordList words={lesson.words} />
+          <LessonWordList words={lesson.words} />
         </View>
       </CustomBottomSheet>
     </>

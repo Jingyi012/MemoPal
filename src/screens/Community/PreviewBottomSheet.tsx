@@ -167,26 +167,14 @@ const PreviewBottomSheet = forwardRef<Ref, Props>(
                       {selectedLesson.words.map((w, index) => (
                         <View
                           key={index}
-                          className="mb-2 flex-row items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4">
-                          <View className="flex-1">
-                            <Text
-                              adjustsFontSizeToFit
-                              className="mb-1 text-xs font-bold uppercase text-slate-400">
-                              Word
-                            </Text>
-                            <Text className="text-base font-bold text-slate-900">{w.word}</Text>
-                          </View>
-                          <View className="mx-4 h-8 w-[1px] bg-slate-200" />
-                          <View className="flex-1">
-                            <Text className="mb-1 text-right text-xs font-bold uppercase text-slate-400">
-                              Meaning
-                            </Text>
-                            <Text
-                              adjustsFontSizeToFit
-                              className="text-right text-sm font-medium text-teal-700">
-                              {w.meaning}
-                            </Text>
-                          </View>
+                          className="mb-2 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4">
+                          <Text className="mb-1 text-xs font-bold uppercase text-slate-400">Word</Text>
+                          <Text className="text-base font-bold text-slate-900">{w.word}</Text>
+
+                          <View className="my-3 h-[1px] bg-slate-200" />
+
+                          <Text className="mb-1 text-xs font-bold uppercase text-slate-400">Meaning</Text>
+                          <Text className="text-sm leading-5 font-medium text-teal-700">{w.meaning}</Text>
                         </View>
                       ))}
                     </View>

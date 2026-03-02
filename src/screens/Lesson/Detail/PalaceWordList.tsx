@@ -6,7 +6,7 @@ interface PalacePathProps {
   words: Word[];
 }
 
-export const PalaceWordList: React.FC<PalacePathProps> = ({ words }) => {
+export const LessonWordList: React.FC<PalacePathProps> = ({ words }) => {
   return (
     <View className="mt-3">
       <View className="mb-3 flex-row items-end justify-between px-1">
@@ -18,18 +18,18 @@ export const PalaceWordList: React.FC<PalacePathProps> = ({ words }) => {
         {words.map((word, index) => (
           <View
             key={word.id}
-            className={`flex-row items-center p-4 ${
-              index !== words.length - 1 ? 'border-b border-gray-50' : ''
-            }`}>
-            <View className="h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
-              <Text className="text-xs font-bold text-slate-600">{index + 1}</Text>
+            className={`p-4 ${index !== words.length - 1 ? 'border-b border-gray-50' : ''}`}>
+            <View className="flex-row items-start">
+              <View className="mr-3 h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
+                <Text className="text-xs font-bold text-slate-600">{index + 1}</Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-base font-bold leading-5 text-slate-900">{word.text}</Text>
+                {!!word.meaning && (
+                  <Text className="mt-1 text-sm leading-5 text-slate-500">{word.meaning}</Text>
+                )}
+              </View>
             </View>
-            <Text className="ml-4 flex-1 text-base font-bold leading-5 text-slate-900">
-              {word.text}
-            </Text>
-            <Text className="text-sm italic text-slate-500" numberOfLines={1}>
-              {word.meaning}
-            </Text>
           </View>
         ))}
       </View>
