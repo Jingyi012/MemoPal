@@ -94,10 +94,15 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
       const elapsed = Math.floor((Date.now() - currentWordStartedAtRef.current) / 1000);
       const left = Math.max(0, REVIEW_TARGET_SECONDS_PER_WORD - elapsed);
       setCountdownSeconds(left);
+
+      if (left <= 0 && !isRevealed) {
+        clearInterval(timer);
+        revealAnswer(false, inputValue || '[timeout]');
+      }
     }, 250);
 
     return () => clearInterval(timer);
-  }, [currentStep, isRevealed]);
+  }, [currentStep, isRevealed, inputValue]);
 
   // Fetch location for current word
   const { location, isLoading: locationLoading } = useLocation(step?.locationId || '');
@@ -108,10 +113,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shakeX.value }] }));
   const streakStyle = useAnimatedStyle(() => ({ transform: [{ scale: scoreScale.value }] }));
 
-  const handleVerify = () => {
-    if (isRevealed || !inputValue.trim()) return;
-    const isCorrect = inputValue.trim().toLowerCase() === step.text.toLowerCase();
-
+  const revealAnswer = (isCorrect: boolean, entered: string) => {
     const wordElapsed = Math.max(1, Math.round((Date.now() - currentWordStartedAtRef.current) / 1000));
     setPerWordSeconds((prev) => [...prev, wordElapsed]);
 
@@ -130,7 +132,14 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
       );
       setTimeout(() => setIsRevealed(true), 500);
     }
-    setResults((prev) => [...prev, { wordId: step.id, isCorrect, entered: inputValue }]);
+
+    setResults((prev) => [...prev, { wordId: step.id, isCorrect, entered }]);
+  };
+
+  const handleVerify = () => {
+    if (isRevealed || !inputValue.trim()) return;
+    const isCorrect = inputValue.trim().toLowerCase() === step.text.toLowerCase();
+    revealAnswer(isCorrect, inputValue);
   };
 
   const resetReview = () => {
