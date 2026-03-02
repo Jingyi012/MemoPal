@@ -59,6 +59,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const [sessionScore, setSessionScore] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [results, setResults] = useState<any[]>([]);
+  const [perWordSeconds, setPerWordSeconds] = useState<number[]>([]);
   const [showSummary, setShowSummary] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const { showRewards } = useGamificationRewards();
@@ -74,10 +75,12 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
 
   const step = steps[currentStep];
   const startedAtRef = useRef<number>(Date.now());
+  const currentWordStartedAtRef = useRef<number>(Date.now());
 
   useEffect(() => {
     if (totalSteps > 0) {
       startedAtRef.current = Date.now();
+      currentWordStartedAtRef.current = Date.now();
     }
   }, [lessonId, totalSteps]);
 
@@ -93,6 +96,9 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const handleVerify = () => {
     if (isRevealed || !inputValue.trim()) return;
     const isCorrect = inputValue.trim().toLowerCase() === step.text.toLowerCase();
+
+    const wordElapsed = Math.max(1, Math.round((Date.now() - currentWordStartedAtRef.current) / 1000));
+    setPerWordSeconds((prev) => [...prev, wordElapsed]);
 
     if (isCorrect) {
       setFeedback('correct');
@@ -123,8 +129,10 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
     setSessionScore(0);
     setElapsedSeconds(0);
     setResults([]);
+    setPerWordSeconds([]);
     setShowSummary(false);
     startedAtRef.current = Date.now();
+    currentWordStartedAtRef.current = Date.now();
   };
 
   const handleNext = async () => {
@@ -134,6 +142,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
       setFeedback(null);
       setInputValue('');
       setCurrentStep((s) => s + 1);
+      currentWordStartedAtRef.current = Date.now();
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
       // Submit review
@@ -145,6 +154,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
           totalCount: totalSteps,
           isLearningMode,
           elapsedSeconds: spentSeconds,
+          perWordSeconds,
         });
         setElapsedSeconds(spentSeconds);
         setXpEarned(earnedXp);

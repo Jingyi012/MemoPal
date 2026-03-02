@@ -17,14 +17,16 @@ export function useReviewCompletion() {
       totalCount,
       isLearningMode,
       elapsedSeconds,
+      perWordSeconds,
     }: {
       lessonId: string;
       correctCount: number;
       totalCount: number;
       isLearningMode?: boolean;
       elapsedSeconds?: number;
+      perWordSeconds?: number[];
     }) => {
-      return reviewService.completeReview(lessonId, correctCount, totalCount, isLearningMode, elapsedSeconds);
+      return reviewService.completeReview(lessonId, correctCount, totalCount, isLearningMode, elapsedSeconds, perWordSeconds);
     },
     onSuccess: ({ lessonId }) => {
       queryClient.invalidateQueries({ queryKey: PROGRESS_KEYS.detail(lessonId) });

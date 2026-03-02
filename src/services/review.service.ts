@@ -73,7 +73,8 @@ export async function completeReview(
   correctCount: number,
   totalCount: number,
   isLearningMode: boolean = false,
-  elapsedSeconds: number = 0
+  elapsedSeconds: number = 0,
+  perWordSeconds: number[] = []
 ): Promise<{ xpEarned: number; lessonId: string; levelUpTo?: number; achievedMilestones: string[]; earnedBadges: string[]; score: number; speedBonusXp: number; elapsedSeconds: number }> {
   if (isLearningMode)
     return { xpEarned: 0, lessonId, achievedMilestones: [], earnedBadges: [], score: 0, speedBonusXp: 0, elapsedSeconds };
@@ -84,7 +85,12 @@ export async function completeReview(
 
   const minExpectedSeconds = Math.max(totalCount * REVIEW_MIN_SECONDS_PER_WORD, 1);
   const targetSeconds = Math.max(totalCount * REVIEW_TARGET_SECONDS_PER_WORD, minExpectedSeconds);
-  const safeElapsedSeconds = Math.max(elapsedSeconds, minExpectedSeconds);
+  const avgPerWordSeconds =
+    perWordSeconds.length > 0
+      ? perWordSeconds.reduce((acc, sec) => acc + sec, 0) / perWordSeconds.length
+      : elapsedSeconds / Math.max(totalCount, 1);
+  const normalizedElapsedSeconds = Math.max(avgPerWordSeconds * totalCount, minExpectedSeconds);
+  const safeElapsedSeconds = Math.max(elapsedSeconds, normalizedElapsedSeconds);
   const speedRatio = Math.max(0, Math.min(1, (targetSeconds - safeElapsedSeconds) / (targetSeconds - minExpectedSeconds || 1)));
 
   const baseXp = Math.floor((xpConfig?.baseXp ?? 10) + (xpConfig?.variableXp ?? 1) * accuracy);
