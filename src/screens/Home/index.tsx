@@ -160,26 +160,22 @@ const HomeScreen = () => {
           </View>
 
           {nextMilestone ? (
-            <View className="mb-4 overflow-hidden rounded-2xl bg-slate-900 p-4">
-              <View className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-teal-400/20" />
-              <View className="absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-indigo-400/20" />
-
-              <Text className="text-xs font-bold uppercase tracking-widest text-teal-300">
-                Next Milestone
-              </Text>
-              <Text className="mt-1 text-lg font-black text-white">{nextMilestone.title}</Text>
-              <Text className="mt-1 text-sm text-slate-300">
+            <View className="mb-4 rounded-2xl bg-white p-4">
+              <Text className="text-base font-bold text-slate-900">Next Milestone</Text>
+              <Text className="mt-1 text-sm font-semibold text-slate-700">{nextMilestone.title}</Text>
+              {!!nextMilestone.description && (
+                <Text className="mt-1 text-sm text-slate-500">{nextMilestone.description}</Text>
+              )}
+              <Text className="mt-1 text-xs text-slate-500">
                 {nextMilestone.current}/{nextMilestone.target} • {nextMilestone.remaining} to go
               </Text>
-
-              <View className="mt-3 h-2 overflow-hidden rounded-full bg-white/20">
+              <View className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
                 <View
-                  className="h-full rounded-full bg-teal-400"
+                  className="h-full bg-teal-500"
                   style={{ width: `${nextMilestone.progress}%` }}
                 />
               </View>
-
-              <Text className="mt-2 text-right text-xs font-semibold text-teal-300">
+              <Text className="mt-2 text-right text-xs font-semibold text-slate-500">
                 {nextMilestone.progress}% complete
               </Text>
             </View>

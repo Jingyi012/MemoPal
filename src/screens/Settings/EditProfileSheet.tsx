@@ -1,7 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
-import { uploadAvatar } from '@/services/avatar.service';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import * as ImagePicker from 'expo-image-picker';
 import React, { forwardRef, useState } from 'react';
@@ -69,13 +68,7 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
 
               if (result.canceled || !result.assets?.length) return;
 
-              setSaving(true);
-              try {
-                const uploadedUrl = await uploadAvatar(result.assets[0].uri);
-                setAvatarUrl(uploadedUrl);
-              } finally {
-                setSaving(false);
-              }
+              setAvatarUrl(result.assets[0].uri);
             }}
             className="mt-2 overflow-hidden rounded-xl border border-slate-200">
             <View className="h-24 w-24 self-center rounded-full border border-slate-200">
@@ -85,7 +78,7 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
                 contentFit="cover"
               />
             </View>
-            <Text className="p-3 text-center text-sm text-teal-700">Tap to upload avatar</Text>
+            <Text className="p-3 text-center text-sm text-teal-700">Tap to choose avatar (offline supported)</Text>
           </AnimatedPressable>
 
           <View className="mt-5 flex-row gap-3">

@@ -163,18 +163,22 @@ const PreviewBottomSheet = forwardRef<Ref, Props>(
                       </Text>
                     </View>
 
-                    <View className="space-y-3">
+                    <View className="overflow-hidden rounded-3xl border border-slate-100 bg-white">
                       {selectedLesson.words.map((w, index) => (
                         <View
                           key={index}
-                          className="mb-2 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4">
-                          <Text className="mb-1 text-xs font-bold uppercase text-slate-400">Word</Text>
-                          <Text className="text-base font-bold text-slate-900">{w.word}</Text>
-
-                          <View className="my-3 h-[1px] bg-slate-200" />
-
-                          <Text className="mb-1 text-xs font-bold uppercase text-slate-400">Meaning</Text>
-                          <Text className="text-sm leading-5 font-medium text-teal-700">{w.meaning}</Text>
+                          className={`p-4 ${index !== selectedLesson.words.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                          <View className="flex-row items-start">
+                            <View className="mr-3 h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
+                              <Text className="text-xs font-bold text-slate-600">{index + 1}</Text>
+                            </View>
+                            <View className="flex-1">
+                              <Text className="text-base font-bold leading-5 text-slate-900">{w.word}</Text>
+                              {!!w.meaning && (
+                                <Text className="mt-1 text-sm leading-5 text-slate-500">{w.meaning}</Text>
+                              )}
+                            </View>
+                          </View>
                         </View>
                       ))}
                     </View>

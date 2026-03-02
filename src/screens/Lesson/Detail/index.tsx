@@ -17,7 +17,7 @@ import { LessonReviewStatCard } from './LessonReviewStatCard';
 import { MasteredCard } from './MateredCard';
 import MemoryRetentionCard from './MemoryRetentionCard';
 import { NextReviewCard } from './NextReviewCard';
-import { LessonWordList } from './PalaceWordList';
+import { LessonWordList } from './LessonWordList';
 import { ReviewProgressIndicator } from './ReviewProgressIndicator';
 import { StartLearningCard } from './StartLearningCard';
 
