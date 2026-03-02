@@ -14,12 +14,12 @@ interface HomeHeaderProps {
 
 export function HomeHeader({ userData }: HomeHeaderProps) {
   const name = userData?.displayName ?? 'Welcome';
-  const level = userData?.level;
+  const level = userData?.level ?? 1;
   const isPremium = userData?.isPremium ?? false;
   const avatar = userData?.avatarUrl;
 
-  const xpToNextLevel = (userData.level + 1) * 100;
-  const xpProgress = ((userData.totalXp % 100) / xpToNextLevel) * 100;
+  const xpToNextLevel = Math.max((level + 1) * 100, 100);
+  const xpProgress = Math.min(100, Math.max(0, (userData.totalXp / xpToNextLevel) * 100));
 
   return (
     <CommonHeader
@@ -63,7 +63,7 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
             xpToNextLevel={xpToNextLevel}
             xpProgress={xpProgress}
           />
-          <StreakBadge streak={userData.stats?.currentStreak ?? 1} />
+          <StreakBadge streak={userData.stats?.currentStreak ?? 0} />
         </>
       }
     />

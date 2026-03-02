@@ -33,9 +33,9 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
       <CustomBottomSheetModal ref={ref} snapPoints={['90%']} enableDynamicSizing={false}>
         {/* Header */}
         <View className="z-10 bg-white px-6 pb-2 pt-3">
-          <Text className="text-xl font-bold text-slate-900">Review Schedule</Text>
+          <Text className="text-xl font-bold text-slate-900">Daily Learning Time</Text>
           <Text className="text-sm text-slate-500">
-            Select a preferred hour for daily reminders
+            Select the hour for your daily learning reminder
           </Text>
         </View>
 

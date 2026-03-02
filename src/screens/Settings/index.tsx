@@ -34,22 +34,9 @@ export default function SettingsScreen() {
   const { userState, updateState, updatePreferences } = useUserState();
   const [showLogout, setShowLogout] = useState<boolean>(false);
   const { logout } = useAuth();
-  const [reviewRemindersEnabled, setReviewRemindersEnabled] = useState<boolean>(
-    userState.notifications.reviewReminders
-  );
   const [dailyLearningEnabled, setDailyLearningEnabled] = useState<boolean>(
     userState.notifications.dailyLearningReminder
   );
-
-  const saveReviewReminder = async (enabled: boolean) => {
-    setReviewRemindersEnabled(enabled);
-    await updateState({
-      notifications: {
-        ...userState.notifications,
-        reviewReminders: enabled,
-      },
-    });
-  };
 
   const saveDailyLearningReminder = async (enabled: boolean) => {
     setDailyLearningEnabled(enabled);
@@ -70,6 +57,7 @@ export default function SettingsScreen() {
       notifications: {
         ...userState.notifications,
         dailyLearningReminder: enabled,
+        reviewReminders: enabled,
       },
     });
   };
@@ -133,22 +121,20 @@ export default function SettingsScreen() {
           />
         </SettingsSection>
 
-        <SettingsSection title="Notifications">
-          <SettingsRow
-            icon={<Bell size={20} color="#475569" />}
-            title="Review Reminders"
-            subtitle="Get notified when reviews are due"
-            right="switch"
-            switchValue={reviewRemindersEnabled}
-            onSwitchChange={saveReviewReminder}
-          />
+        <SettingsSection title="Notifications & Learning Time">
           <SettingsRow
             icon={<Bell size={20} color="#475569" />}
             title="Daily Learning Reminder"
-            subtitle="Daily reminder to come back and train"
+            subtitle={`At ${userState.preferences.reviewTime}`}
             right="switch"
             switchValue={dailyLearningEnabled}
             onSwitchChange={saveDailyLearningReminder}
+          />
+          <SettingsRow
+            title="Daily Learning Time"
+            subtitle={`Reminder time: ${userState.preferences.reviewTime}`}
+            onPress={() => reviewScheduleRef.current?.present()}
+            icon={<Bell size={20} color="#475569" />}
           />
         </SettingsSection>
 
@@ -158,12 +144,6 @@ export default function SettingsScreen() {
             title="Theme"
             subtitle="Light / Dark / Auto"
             onPress={() => themeRef.current?.present()}
-          />
-          <SettingsRow
-            title="Review Schedule"
-            subtitle={`Daily at ${userState.preferences.reviewTime}`}
-            onPress={() => reviewScheduleRef.current?.present()}
-            icon={<Bell size={20} color="#475569" />}
           />
         </SettingsSection>
 
