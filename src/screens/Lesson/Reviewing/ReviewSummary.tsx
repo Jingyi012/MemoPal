@@ -12,6 +12,9 @@ interface Props {
   correctCount: number;
   totalSteps: number;
   xpEarned: number;
+  speedBonusXp?: number;
+  sessionScore?: number;
+  elapsedSeconds?: number;
   streak: number;
   onFinish: () => void;
   onTryAgain?: () => void;
@@ -22,6 +25,9 @@ export const ReviewSummary: React.FC<Props> = ({
   correctCount,
   totalSteps,
   xpEarned,
+  speedBonusXp = 0,
+  sessionScore = 0,
+  elapsedSeconds = 0,
   streak,
   onFinish,
   onTryAgain,
@@ -92,10 +98,37 @@ export const ReviewSummary: React.FC<Props> = ({
 
           {!isLearning && (
             <StatItem
-              delay={800}
+              delay={760}
               icon={<Award size={20} color="#ec4899" />}
               label="Streak"
               value={`${streak}`}
+            />
+          )}
+
+          {!isLearning && (
+            <StatItem
+              delay={800}
+              icon={<Zap size={20} color="#10b981" />}
+              label="Speed Bonus"
+              value={`+${speedBonusXp}`}
+            />
+          )}
+
+          {!isLearning && (
+            <StatItem
+              delay={840}
+              icon={<Target size={20} color="#0284c7" />}
+              label="Session Score"
+              value={`${sessionScore}/100`}
+            />
+          )}
+
+          {!isLearning && (
+            <StatItem
+              delay={880}
+              icon={<Target size={20} color="#6366f1" />}
+              label="Time"
+              value={`${elapsedSeconds}s`}
             />
           )}
 

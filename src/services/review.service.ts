@@ -1,5 +1,10 @@
 import { reviewApi } from '@/api/review';
-import { REVIEW_PASS_THRESHOLD } from '@/constants/config';
+import {
+  REVIEW_MIN_SECONDS_PER_WORD,
+  REVIEW_PASS_THRESHOLD,
+  REVIEW_SPEED_BONUS_CAP,
+  REVIEW_TARGET_SECONDS_PER_WORD,
+} from '@/constants/config';
 import { SourceType } from '@/enums/sourceType';
 import { createReviewRepository } from '@/repositories/review.repo';
 import * as xpConfigService from '@/services/xpConfig.service';
@@ -67,14 +72,27 @@ export async function completeReview(
   lessonId: string,
   correctCount: number,
   totalCount: number,
-  isLearningMode: boolean = false
-): Promise<{ xpEarned: number; lessonId: string; levelUpTo?: number; achievedMilestones: string[]; earnedBadges: string[] }> {
-  if (isLearningMode) return { xpEarned: 0, lessonId, achievedMilestones: [], earnedBadges: [] };
+  isLearningMode: boolean = false,
+  elapsedSeconds: number = 0
+): Promise<{ xpEarned: number; lessonId: string; levelUpTo?: number; achievedMilestones: string[]; earnedBadges: string[]; score: number; speedBonusXp: number; elapsedSeconds: number }> {
+  if (isLearningMode)
+    return { xpEarned: 0, lessonId, achievedMilestones: [], earnedBadges: [], score: 0, speedBonusXp: 0, elapsedSeconds };
 
   // 1. Calculate XP (Logic stays in service or moved to a utility)
   const xpConfig = await xpConfigService.getXpConfigBySourceType(SourceType.ReviewComplete);
   const accuracy = totalCount > 0 ? correctCount / totalCount : 0;
-  const xpEarned = Math.floor((xpConfig?.baseXp ?? 10) + (xpConfig?.variableXp ?? 1) * accuracy);
+
+  const minExpectedSeconds = Math.max(totalCount * REVIEW_MIN_SECONDS_PER_WORD, 1);
+  const targetSeconds = Math.max(totalCount * REVIEW_TARGET_SECONDS_PER_WORD, minExpectedSeconds);
+  const safeElapsedSeconds = Math.max(elapsedSeconds, minExpectedSeconds);
+  const speedRatio = Math.max(0, Math.min(1, (targetSeconds - safeElapsedSeconds) / (targetSeconds - minExpectedSeconds || 1)));
+
+  const baseXp = Math.floor((xpConfig?.baseXp ?? 10) + (xpConfig?.variableXp ?? 1) * accuracy);
+  const speedBonusXp = Math.round(REVIEW_SPEED_BONUS_CAP * speedRatio * accuracy);
+  const xpEarned = Math.max(0, baseXp + speedBonusXp);
+
+  // 100-point weighted score: 80% accuracy + 20% speed
+  const score = Math.round(Math.min(100, accuracy * 80 + speedRatio * 20));
 
   // 2. Perform local update
   const rewards = await reviewRepository.updateLessonProgressAfterReview(
@@ -84,7 +102,7 @@ export async function completeReview(
     totalCount
   );
 
-  return { xpEarned, lessonId, ...rewards };
+  return { xpEarned, lessonId, ...rewards, score, speedBonusXp, elapsedSeconds: safeElapsedSeconds };
 }
 
 /**

@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronRight, LogOut } from 'lucide-react-native';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -55,6 +55,9 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const [isRevealed, setIsRevealed] = useState(false);
   const [streak, setStreak] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
+  const [speedBonusXp, setSpeedBonusXp] = useState(0);
+  const [sessionScore, setSessionScore] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [results, setResults] = useState<any[]>([]);
   const [showSummary, setShowSummary] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -70,6 +73,13 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const reviewCompletionMutation = useReviewCompletion();
 
   const step = steps[currentStep];
+  const startedAtRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    if (totalSteps > 0) {
+      startedAtRef.current = Date.now();
+    }
+  }, [lessonId, totalSteps]);
 
   // Fetch location for current word
   const { location, isLoading: locationLoading } = useLocation(step?.locationId || '');
@@ -109,8 +119,12 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
     setIsRevealed(false);
     setStreak(0);
     setXpEarned(0);
+    setSpeedBonusXp(0);
+    setSessionScore(0);
+    setElapsedSeconds(0);
     setResults([]);
     setShowSummary(false);
+    startedAtRef.current = Date.now();
   };
 
   const handleNext = async () => {
@@ -124,13 +138,18 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
     } else {
       // Submit review
       try {
-        const { xpEarned: earnedXp, levelUpTo, achievedMilestones, earnedBadges } = await reviewCompletionMutation.mutateAsync({
+        const spentSeconds = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000));
+        const { xpEarned: earnedXp, levelUpTo, achievedMilestones, earnedBadges, score, speedBonusXp: speedBonus } = await reviewCompletionMutation.mutateAsync({
           lessonId,
           correctCount: reviewResults.correctCount,
           totalCount: totalSteps,
           isLearningMode,
+          elapsedSeconds: spentSeconds,
         });
+        setElapsedSeconds(spentSeconds);
         setXpEarned(earnedXp);
+        setSpeedBonusXp(speedBonus);
+        setSessionScore(score);
         showRewards({ levelUpTo, milestones: achievedMilestones, badges: earnedBadges });
         setShowSummary(true);
       } catch (error) {
@@ -159,6 +178,9 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
         correctCount={reviewResults.correctCount}
         totalSteps={totalSteps}
         xpEarned={xpEarned}
+        speedBonusXp={speedBonusXp}
+        sessionScore={sessionScore}
+        elapsedSeconds={elapsedSeconds}
         streak={streak}
         onFinish={() => router.push(`/lessons/${lessonId}`)}
         onTryAgain={!reviewResults.isPassed ? resetReview : undefined}
