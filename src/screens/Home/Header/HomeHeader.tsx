@@ -1,4 +1,5 @@
 import { AppImage } from '@/components/AppImage';
+import { useLevelByXp } from '@/hooks/useLevelConfigs';
 import { User } from '@/types/users';
 import { greetingByTime } from '@/utils/greeting';
 import { User2 } from 'lucide-react-native';
@@ -14,12 +15,15 @@ interface HomeHeaderProps {
 
 export function HomeHeader({ userData }: HomeHeaderProps) {
   const name = userData?.displayName ?? 'Welcome';
-  const level = userData?.level ?? 1;
   const isPremium = userData?.isPremium ?? false;
   const avatar = userData?.avatarUrl;
+  const { levelInfo } = useLevelByXp(userData.totalXp);
 
-  const xpToNextLevel = Math.max((level + 1) * 100, 100);
-  const xpProgress = Math.min(100, Math.max(0, (userData.totalXp / xpToNextLevel) * 100));
+  const level = levelInfo?.currentLevel ?? userData?.level ?? 1;
+  const xpToNextLevel = levelInfo?.xpToNextLevel ?? 0;
+  const xpInCurrent = levelInfo?.xpInCurrentLevel ?? userData.totalXp;
+  const xpProgressDenominator = Math.max(1, xpInCurrent + xpToNextLevel);
+  const xpProgress = Math.min(100, Math.max(0, (xpInCurrent / xpProgressDenominator) * 100));
 
   return (
     <CommonHeader
@@ -61,6 +65,7 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
           <LevelProgress
             userData={userData}
             xpToNextLevel={xpToNextLevel}
+            xpInCurrentLevel={xpInCurrent}
             xpProgress={xpProgress}
           />
           <StreakBadge streak={userData.stats?.currentStreak ?? 0} />

@@ -5,17 +5,18 @@ import { Text, View } from 'react-native';
 interface LevelProgressProps {
   userData: User;
   xpToNextLevel: number;
+  xpInCurrentLevel?: number;
   xpProgress: number; // 0-100
 }
 
-export function LevelProgress({ userData, xpToNextLevel, xpProgress }: LevelProgressProps) {
+export function LevelProgress({ userData, xpToNextLevel, xpInCurrentLevel = 0, xpProgress }: LevelProgressProps) {
   return (
     <View className="space-y-2">
       {/* XP Text */}
       <View className="mb-2 flex-row items-center justify-between">
         <Text className="text-xs text-teal-100">Progress to Level {userData.level + 1}</Text>
         <Text className="text-xs text-white">
-          {userData.totalXp} / {xpToNextLevel} XP
+          {xpInCurrentLevel} XP • {xpToNextLevel} XP to next
         </Text>
       </View>
 

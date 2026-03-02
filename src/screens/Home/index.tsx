@@ -3,7 +3,9 @@ import { PremiumUpdateCard } from '@/components/PremiumUpdateCard';
 import TutorialPromptCard from '@/components/PromptCard/TutorialPromptCard';
 import { motivationalQuotes } from '@/constants/motivationQuotes';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useLevelByXp } from '@/hooks/useLevelConfigs';
 import { useUserState } from '@/contexts/UserStateContext';
+import { useTotalXp } from '@/hooks/useXpEvents';
 import { HomeHeader } from '@/screens/Home/Header/HomeHeader';
 import LearningPath from '@/screens/Home/LearningPath';
 import { QuickState } from '@/screens/Home/QuickStat';
@@ -14,14 +16,23 @@ import { PalaceTrainingCard } from './PalaceTrainingCard';
 
 const HomeScreen = () => {
   const { user } = useCurrentUser();
+  const { totalXp } = useTotalXp();
+  const { levelInfo } = useLevelByXp(totalXp);
   const { userState, updateState } = useUserState();
 
   const isFirstTime = userState.isFirstTime ?? true;
+  const headerUser = user
+    ? {
+        ...user,
+        totalXp,
+        level: levelInfo?.currentLevel ?? user.level,
+      }
+    : { id: 'guest', displayName: 'Guest', email: 'guest@local', totalXp: 0, level: 1, isPremium: false };
   const showTutorialPrompt = !userState.ui.tutorialPromptDismissed;
   const todayQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
   return (
     <View className="flex-1">
-      <HomeHeader userData={user ?? { id: 'guest', displayName: 'Guest', email: 'guest@local', totalXp: 0, level: 1, isPremium: false }} />
+      <HomeHeader userData={headerUser} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
