@@ -2,6 +2,7 @@ using MemoPal.Application.Common.Interfaces;
 using MemoPal.Infrastructure.Auth;
 using MemoPal.Infrastructure.Persistence;
 using MemoPal.Infrastructure.Security;
+using MemoPal.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,8 +38,12 @@ public static class DependencyInjection
         services.AddSingleton(Options.Create(jwtOptions));
         services.AddSingleton(Options.Create(socialAuthOptions));
 
+        var fileStorageOptions = configuration.GetSection(FileStorageOptions.SectionName).Get<FileStorageOptions>() ?? new FileStorageOptions();
+        services.AddSingleton(Options.Create(fileStorageOptions));
+
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         services.AddHttpClient<IGoogleTokenValidator, GoogleTokenValidator>();
         services.AddHttpClient<IFacebookTokenValidator, FacebookTokenValidator>();

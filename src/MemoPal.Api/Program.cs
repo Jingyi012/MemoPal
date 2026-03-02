@@ -7,6 +7,8 @@ using MemoPal.Application;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Infrastructure;
 using MemoPal.Infrastructure.Security;
+using MemoPal.Infrastructure.Storage;
+using Microsoft.Extensions.FileProviders;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -100,7 +102,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseStaticFiles();
+
+var fileStorage = builder.Configuration.GetSection(FileStorageOptions.SectionName).Get<FileStorageOptions>() ?? new FileStorageOptions();
+var fileRoot = Path.GetFullPath(fileStorage.RootPath);
+Directory.CreateDirectory(fileRoot);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(fileRoot),
+    RequestPath = fileStorage.PublicBasePath
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 

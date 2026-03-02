@@ -1,19 +1,22 @@
 using MediatR;
 using MemoPal.Application.Common;
+using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Auth.Commands;
 using MemoPal.Application.Features.Auth.DTOs;
 using MemoPal.Application.Features.Auth.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.IO;
 
 namespace MemoPal.Api.Controllers;
 
 [Route("auth")]
 public sealed class AuthController : ApiControllerBase
 {
-    public AuthController(ISender sender) : base(sender)
+    private readonly IFileStorageService _fileStorageService;
+
+    public AuthController(ISender sender, IFileStorageService fileStorageService) : base(sender)
     {
+        _fileStorageService = fileStorageService;
     }
 
     [AllowAnonymous]
@@ -82,18 +85,14 @@ public sealed class AuthController : ApiControllerBase
             return BadRequest(ApiResponse<string>.Fail("Only jpg, jpeg, png, webp are allowed."));
 
         var userId = GetUserIdOrThrow();
-        var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "avatars");
-        Directory.CreateDirectory(uploadsDir);
 
-        var fileName = $"{userId}_{Guid.NewGuid():N}{ext}";
-        var filePath = Path.Combine(uploadsDir, fileName);
-
-        await using (var stream = System.IO.File.Create(filePath))
-        {
-            await file.CopyToAsync(stream, cancellationToken);
-        }
-
-        var avatarUrl = $"/uploads/avatars/{fileName}";
+        await using var stream = file.OpenReadStream();
+        var avatarUrl = await _fileStorageService.SaveImageAsync(
+            stream,
+            ext,
+            "avatars",
+            userId,
+            cancellationToken);
 
         var data = await Sender.Send(
             new UpdateProfileCommand(userId, null, avatarUrl, null),
