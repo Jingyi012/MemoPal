@@ -37,7 +37,7 @@ export interface ReviewRepository {
     xpEarned: number,
     correctCount: number,
     totalCount: number
-  ): Promise<void>;
+  ): Promise<{ levelUpTo?: number; achievedMilestones: string[]; earnedBadges: string[] }>;
   delete(reviewScheduleId: string): Promise<void>;
   upsertMany(reviewSchedules: ReviewSchedule[]): Promise<void>;
   getReviewStats(): Promise<ReviewStats>;
@@ -155,11 +155,11 @@ export function createReviewRepository(): ReviewRepository {
       xpEarned: number,
       correctCount: number,
       totalCount: number
-    ): Promise<void> {
+    ): Promise<{ levelUpTo?: number; achievedMilestones: string[]; earnedBadges: string[] }> {
       const nowIso = new Date().toISOString();
       const isPassed = correctCount / totalCount >= REVIEW_PASS_THRESHOLD;
 
-      await db.transaction(async (tx) => {
+      const outcome = await db.transaction(async (tx) => {
         const currentProgress = await tx.query.lessonProgress.findFirst({
           where: eq(schema.lessonProgress.lessonId, lessonId),
           with: {
@@ -171,7 +171,11 @@ export function createReviewRepository(): ReviewRepository {
           },
         });
 
-        if (!currentProgress) return;
+        if (!currentProgress) return { achievedMilestones: [], earnedBadges: [] };
+
+        const achievedMilestones: string[] = [];
+        const earnedBadges: string[] = [];
+        let levelUpTo: number | undefined;
 
         const currentReview = currentProgress.reviewSchedules[0];
         const currentRound = currentReview?.reviewRound ?? 0;
@@ -231,6 +235,7 @@ export function createReviewRepository(): ReviewRepository {
             .update(schema.users)
             .set({ level: eligibleLevel.level, updatedAt: nowIso })
             .where(eq(schema.users.id, currentUser.id));
+          levelUpTo = eligibleLevel.level;
         }
 
         // 4. Log XP event
@@ -282,6 +287,7 @@ export function createReviewRepository(): ReviewRepository {
               .update(schema.milestones)
               .set({ achievedAt: nowIso, updatedAt: nowIso })
               .where(eq(schema.milestones.id, milestone.id));
+            achievedMilestones.push(milestone.title);
           }
         }
 
@@ -292,7 +298,7 @@ export function createReviewRepository(): ReviewRepository {
         for (const badge of badgesToAward) {
           const isEarned =
             (badge.key === 'first_lesson' && completedLessons >= 1) ||
-            (badge.key === 'palace_complete' && completedLessons >= 30) ||
+            (badge.key === 'palace_complete' && completedLessons >= 3) ||
             (badge.key === 'review_25' && (currentProgress.totalReviews + (isPassed ? 1 : 0)) >= 25) ||
             (badge.key === 'level_5' && level >= 5);
 
@@ -301,6 +307,7 @@ export function createReviewRepository(): ReviewRepository {
               .update(schema.badges)
               .set({ earnedAt: nowIso, updatedAt: nowIso })
               .where(eq(schema.badges.id, badge.id));
+            earnedBadges.push(badge.name);
           }
         }
 
@@ -311,7 +318,11 @@ export function createReviewRepository(): ReviewRepository {
           action: 'update',
           payload: { id: currentProgress.id, updatedAt: nowIso },
         });
+
+        return { levelUpTo, achievedMilestones, earnedBadges };
       });
+
+      return outcome ?? { achievedMilestones: [], earnedBadges: [] };
     },
 
     async delete(reviewScheduleId: string): Promise<void> {

@@ -22,9 +22,9 @@ import {
 
 import { ActionSheet } from '@/components/ActionSheet';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import GamificationRewardModal from '@/components/GamificationRewardModal';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
-import { useAuth } from '@/contexts/AuthProvider';
 import { useLessonDetail } from '@/hooks/useLessonsManager';
 import { useLocation } from '@/hooks/useLocation';
 import { useReviewCompletion } from '@/hooks/useReviewCompletion';
@@ -41,7 +41,6 @@ interface ReviewTestProps {
 
 export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode = false }) => {
   const router = useRouter();
-  const { user } = useAuth();
   const inputRef = useRef<TextInput>(null);
 
   // Fetch lesson with words
@@ -59,6 +58,8 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const [results, setResults] = useState<any[]>([]);
   const [showSummary, setShowSummary] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showRewardModal, setShowRewardModal] = useState(false);
+  const [rewardState, setRewardState] = useState<{ levelUpTo?: number; milestones: string[]; badges: string[] }>({ milestones: [], badges: [] });
 
   // Memoize review results calculation
   const reviewResults = useMemo(
@@ -124,14 +125,19 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
     } else {
       // Submit review
       try {
-        const { xpEarned: earnedXp } = await reviewCompletionMutation.mutateAsync({
+        const { xpEarned: earnedXp, levelUpTo, achievedMilestones, earnedBadges } = await reviewCompletionMutation.mutateAsync({
           lessonId,
           correctCount: reviewResults.correctCount,
           totalCount: totalSteps,
           isLearningMode,
         });
         setXpEarned(earnedXp);
-        setShowSummary(true);
+        setRewardState({ levelUpTo, milestones: achievedMilestones, badges: earnedBadges });
+        if (levelUpTo || achievedMilestones.length > 0 || earnedBadges.length > 0) {
+          setShowRewardModal(true);
+        } else {
+          setShowSummary(true);
+        }
       } catch (error) {
         console.error('Error submitting review:', error);
         setShowSummary(true); // Show summary even on error to allow retry/exit
@@ -253,6 +259,17 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
             actionLabel="Exit"
             variant="destructive"
             Icon={LogOut}
+          />
+
+          <GamificationRewardModal
+            visible={showRewardModal}
+            levelUpTo={rewardState.levelUpTo}
+            milestones={rewardState.milestones}
+            badges={rewardState.badges}
+            onClose={() => {
+              setShowRewardModal(false);
+              setShowSummary(true);
+            }}
           />
         </View>
       </TouchableWithoutFeedback>

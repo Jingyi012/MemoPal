@@ -20,7 +20,7 @@ export const XP_CONFIGS = [
 
 export const MILESTONES = [
   { id: 'ms-first-lesson', key: 'first_lesson_completed', title: 'First Step', description: 'Complete your first lesson', conditionType: 'lessons_completed' as const, conditionValue: 1 },
-  { id: 'ms-first-palace', key: 'first_palace_completed', title: 'Palace Finisher', description: 'Complete all 30 lessons in one palace', conditionType: 'lessons_completed' as const, conditionValue: 30 },
+  { id: 'ms-first-palace', key: 'first_palace_completed', title: 'Palace Finisher', description: 'Complete all 3 lessons in one palace', conditionType: 'lessons_completed' as const, conditionValue: 3 },
   { id: 'ms-100-words', key: 'hundred_words', title: 'Word Collector', description: 'Learn 100 words', conditionType: 'words_learned' as const, conditionValue: 100 },
   { id: 'ms-level-5', key: 'reach_level_5', title: 'Mind Ascender', description: 'Reach level 5', conditionType: 'level' as const, conditionValue: 5 },
 ];

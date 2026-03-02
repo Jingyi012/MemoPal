@@ -68,8 +68,8 @@ export async function completeReview(
   correctCount: number,
   totalCount: number,
   isLearningMode: boolean = false
-): Promise<{ xpEarned: number; lessonId: string }> {
-  if (isLearningMode) return { xpEarned: 0, lessonId };
+): Promise<{ xpEarned: number; lessonId: string; levelUpTo?: number; achievedMilestones: string[]; earnedBadges: string[] }> {
+  if (isLearningMode) return { xpEarned: 0, lessonId, achievedMilestones: [], earnedBadges: [] };
 
   // 1. Calculate XP (Logic stays in service or moved to a utility)
   const xpConfig = await xpConfigService.getXpConfigBySourceType(SourceType.ReviewComplete);
@@ -77,14 +77,14 @@ export async function completeReview(
   const xpEarned = Math.floor((xpConfig?.baseXp ?? 10) + (xpConfig?.variableXp ?? 1) * accuracy);
 
   // 2. Perform local update
-  await reviewRepository.updateLessonProgressAfterReview(
+  const rewards = await reviewRepository.updateLessonProgressAfterReview(
     lessonId,
     xpEarned,
     correctCount,
     totalCount
   );
 
-  return { xpEarned, lessonId };
+  return { xpEarned, lessonId, ...rewards };
 }
 
 /**
