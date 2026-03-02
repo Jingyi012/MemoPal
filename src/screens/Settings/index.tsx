@@ -2,6 +2,7 @@ import { useAuth } from '@/contexts/AuthProvider';
 import { resetSeedData, seedInitialData } from '@/db/seed';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useXpIntegrityCheck } from '@/hooks/useDiagnostics';
+import { useUpdateProfile } from '@/hooks/useProfile';
 import { useQueryClient } from '@tanstack/react-query';
 import { createUserRepository } from '@/repositories/user.repo';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -19,6 +20,7 @@ import { useUserState } from '@/contexts/UserStateContext';
 import { PushNotificationService } from '@/services/notification/pushNotificationService';
 import { Bell, HelpCircle, LogOut, Moon, Shield } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
+import { EditProfileSheet } from './EditProfileSheet';
 import HelpSheet from './HelpSheet';
 import PrivacyPolicySheet from './PrivacyPolicySheet';
 import ProfileCard from './ProfileCard';
@@ -33,6 +35,7 @@ export default function SettingsScreen() {
   const { user } = useCurrentUser();
   const { userState, updateState, updatePreferences } = useUserState();
   const xpIntegrityCheck = useXpIntegrityCheck();
+  const updateProfileMutation = useUpdateProfile();
   const userRepo = createUserRepository();
   const [showLogout, setShowLogout] = useState<boolean>(false);
   const { logout } = useAuth();
@@ -114,6 +117,7 @@ export default function SettingsScreen() {
   const helpRef = useRef<BottomSheetModal>(null);
   const privacyRef = useRef<BottomSheetModal>(null);
   const reviewScheduleRef = useRef<BottomSheetModal>(null);
+  const editProfileRef = useRef<BottomSheetModal>(null);
 
   return (
     <View className="flex-1 bg-slate-50">
@@ -121,6 +125,12 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <SettingsSection title="Profile">
           <ProfileCard user={user} />
+          <SettingsRow
+            icon={<Shield size={20} color="#475569" />}
+            title="Edit Profile"
+            subtitle="Update display name, email, and avatar"
+            onPress={() => editProfileRef.current?.present()}
+          />
         </SettingsSection>
 
         <SettingsSection title="Subscription">
@@ -233,6 +243,23 @@ export default function SettingsScreen() {
           }
 
           reviewScheduleRef.current?.dismiss();
+        }}
+      />
+
+      <EditProfileSheet
+        ref={editProfileRef}
+        initialName={user?.displayName}
+        initialEmail={user?.email}
+        initialAvatarUrl={user?.avatarUrl}
+        onSave={async (payload) => {
+          if (!user) return;
+          await updateProfileMutation.mutateAsync({
+            id: user.id,
+            displayName: payload.displayName,
+            email: payload.email,
+            avatarUrl: payload.avatarUrl,
+          });
+          await queryClient.invalidateQueries();
         }}
       />
 
