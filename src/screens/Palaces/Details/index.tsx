@@ -1,10 +1,11 @@
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import TutorialPromptCard from '@/components/PromptCard/TutorialPromptCard';
+import { useUserState } from '@/contexts/UserStateContext';
 import { useLessonList } from '@/hooks/useLessonsManager';
 import { usePalace } from '@/hooks/usePalace';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { RefreshControl, ScrollView, Text } from 'react-native';
 import { CustomLessonList } from './CustomLessonsList';
 import { ReviewPalaceButton } from './ReviewPalaceButton';
@@ -16,7 +17,7 @@ interface PalaceViewProps {
 
 const PalaceDetailScreen: React.FC<PalaceViewProps> = ({ palaceId }) => {
   const router = useRouter();
-  const [showTutorialPrompt, setShowTutorialPrompt] = useState(true);
+  const { userState, updateState } = useUserState();
 
   const {
     data: palaceData,
@@ -61,8 +62,21 @@ const PalaceDetailScreen: React.FC<PalaceViewProps> = ({ palaceId }) => {
         className="p-4"
         contentContainerStyle={{ paddingBottom: 60 }}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}>
-        {showTutorialPrompt && (
-          <TutorialPromptCard dismissTutorialPrompt={() => setShowTutorialPrompt(false)} />
+        {!userState.ui.tutorialPromptDismissed && (
+          <TutorialPromptCard
+            dismissTutorialPrompt={() =>
+              updateState({ ui: { ...userState.ui, tutorialPromptDismissed: true } })
+            }
+            onViewTutorial={() =>
+              updateState({
+                ui: {
+                  ...userState.ui,
+                  tutorialPromptDismissed: true,
+                  tutorialViewedAt: new Date().toISOString(),
+                },
+              })
+            }
+          />
         )}
         <ReviewPalaceButton
           locationCount={palaceData.locationsCount}

@@ -13,6 +13,8 @@ Notifications.setNotificationHandler({
   }),
 });
 
+export const DAILY_LEARNING_NOTIFICATION_ID = 'daily-learning-reminder';
+
 export const PushNotificationService = {
   // Request permissions
   async requestPermissions() {
@@ -68,6 +70,32 @@ export const PushNotificationService = {
 
   async cancelReview(reviewId: string) {
     await Notifications.cancelScheduledNotificationAsync(reviewId);
+  },
+
+  async scheduleDailyLearning(time: string) {
+    const [h, m] = time.split(':').map((x) => Number(x));
+    if (Number.isNaN(h) || Number.isNaN(m)) return;
+
+    await Notifications.cancelScheduledNotificationAsync(DAILY_LEARNING_NOTIFICATION_ID).catch(() => undefined);
+
+    return Notifications.scheduleNotificationAsync({
+      identifier: DAILY_LEARNING_NOTIFICATION_ID,
+      content: {
+        title: 'Daily Learning Time 📚',
+        body: 'A quick session today keeps your memory palace strong.',
+        data: { url: '/(tabs)' },
+      },
+      trigger: {
+        type: SchedulableTriggerInputTypes.DAILY,
+        hour: h,
+        minute: m,
+        channelId: 'review-reminders',
+      },
+    });
+  },
+
+  async cancelDailyLearning() {
+    await Notifications.cancelScheduledNotificationAsync(DAILY_LEARNING_NOTIFICATION_ID).catch(() => undefined);
   },
 
   async cancelAll() {

@@ -17,6 +17,7 @@ import { PremiumUpdateCard } from '@/components/PremiumUpdateCard';
 import ReferrerPromptCard from '@/components/PromptCard/ReferrerPromptCard';
 import { Colors } from '@/constants/colors';
 import { useUserState } from '@/contexts/UserStateContext';
+import { PushNotificationService } from '@/services/notification/pushNotificationService';
 import { Bell, HelpCircle, LogOut, Moon, Shield } from 'lucide-react-native';
 import HelpSheet from './HelpSheet';
 import PrivacyPolicySheet from './PrivacyPolicySheet';
@@ -36,6 +37,9 @@ export default function SettingsScreen() {
   const [reviewRemindersEnabled, setReviewRemindersEnabled] = useState<boolean>(
     userState.notifications.reviewReminders
   );
+  const [dailyLearningEnabled, setDailyLearningEnabled] = useState<boolean>(
+    userState.notifications.dailyLearningReminder
+  );
 
   const saveReviewReminder = async (enabled: boolean) => {
     setReviewRemindersEnabled(enabled);
@@ -43,6 +47,29 @@ export default function SettingsScreen() {
       notifications: {
         ...userState.notifications,
         reviewReminders: enabled,
+      },
+    });
+  };
+
+  const saveDailyLearningReminder = async (enabled: boolean) => {
+    setDailyLearningEnabled(enabled);
+    const granted = await PushNotificationService.requestPermissions();
+
+    if (!granted) {
+      setDailyLearningEnabled(false);
+      return;
+    }
+
+    if (enabled) {
+      await PushNotificationService.scheduleDailyLearning(userState.preferences.reviewTime);
+    } else {
+      await PushNotificationService.cancelDailyLearning();
+    }
+
+    await updateState({
+      notifications: {
+        ...userState.notifications,
+        dailyLearningReminder: enabled,
       },
     });
   };
@@ -55,10 +82,20 @@ export default function SettingsScreen() {
 
   const togglePremiumForTesting = async () => {
     if (!user) return;
+    const nextPremium = !user.isPremium;
     await db
       .update(schema.users)
-      .set({ isPremium: !user.isPremium, updatedAt: new Date().toISOString() })
+      .set({ isPremium: nextPremium, updatedAt: new Date().toISOString() })
       .where(eq(schema.users.id, user.id));
+
+    await updateState({
+      subscription: {
+        ...userState.subscription,
+        isPremium: nextPremium,
+        status: nextPremium ? 'active' : 'canceled',
+      },
+    });
+
     await queryClient.invalidateQueries();
   };
 
@@ -84,6 +121,14 @@ export default function SettingsScreen() {
             right="switch"
             switchValue={reviewRemindersEnabled}
             onSwitchChange={saveReviewReminder}
+          />
+          <SettingsRow
+            icon={<Bell size={20} color="#475569" />}
+            title="Daily Learning Reminder"
+            subtitle="Daily reminder to come back and train"
+            right="switch"
+            switchValue={dailyLearningEnabled}
+            onSwitchChange={saveDailyLearningReminder}
           />
         </SettingsSection>
 
@@ -156,9 +201,15 @@ export default function SettingsScreen() {
       <ReviewScheduleSheet
         ref={reviewScheduleRef}
         currentTime={userState.preferences.reviewTime}
-        onSave={(time) => {
-          userState.preferences.reviewTime = time;
-          updatePreferences(userState.preferences);
+        onSave={async (time) => {
+          const nextPreferences = { ...userState.preferences, reviewTime: time };
+          await updatePreferences(nextPreferences);
+
+          if (userState.notifications.dailyLearningReminder) {
+            await PushNotificationService.requestPermissions();
+            await PushNotificationService.scheduleDailyLearning(time);
+          }
+
           reviewScheduleRef.current?.dismiss();
         }}
       />

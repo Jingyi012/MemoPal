@@ -7,7 +7,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 
 interface Props {
-  user: User | null;
+  user: User | null | undefined;
 }
 
 const ProfileCard: React.FC<Props> = ({ user }) => {
