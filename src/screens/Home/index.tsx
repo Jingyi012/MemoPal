@@ -132,7 +132,7 @@ const HomeScreen = () => {
             onPress={() => router.push('/(tabs)/palaces')}
           />
 
-          <View className="mb-4 rounded-2xl bg-teal-600 p-4">
+          <View className="mt-4 rounded-2xl bg-teal-600 p-4">
             <Text className="text-lg font-bold text-white">Daily Focus</Text>
             <Text className="mt-1 text-sm text-teal-100">
               {dueCount > 0
@@ -148,7 +148,7 @@ const HomeScreen = () => {
             </AnimatedPressable>
           </View>
 
-          <View className="mb-4 flex-row gap-2">
+          <View className="mt-4 flex-row gap-2">
             <View className="flex-1 rounded-2xl bg-white p-3">
               <Text className="text-xs text-slate-500">Current XP</Text>
               <Text className="mt-1 text-lg font-bold text-slate-900">{totalXp}</Text>
@@ -160,9 +160,11 @@ const HomeScreen = () => {
           </View>
 
           {nextMilestone ? (
-            <View className="mb-4 rounded-2xl bg-white p-4">
+            <View className="mt-4 rounded-2xl bg-white p-4">
               <Text className="text-base font-bold text-slate-900">Next Milestone</Text>
-              <Text className="mt-1 text-sm font-semibold text-slate-700">{nextMilestone.title}</Text>
+              <Text className="mt-1 text-sm font-semibold text-slate-700">
+                {nextMilestone.title}
+              </Text>
               {!!nextMilestone.description && (
                 <Text className="mt-1 text-sm text-slate-500">{nextMilestone.description}</Text>
               )}
@@ -181,7 +183,7 @@ const HomeScreen = () => {
             </View>
           ) : null}
 
-          <View className="mb-4 rounded-2xl bg-white p-4">
+          <View className="mt-4 rounded-2xl bg-white p-4">
             <Text className="text-base font-bold text-slate-900">Achievements Snapshot</Text>
             <Text className="mt-2 text-sm text-slate-600">
               {earnedBadges} badges earned • {achievedMilestones} milestones unlocked
@@ -193,7 +195,7 @@ const HomeScreen = () => {
             </Text>
           </View>
 
-          <View className="mb-4">
+          <View className="mt-4">
             <Text className="mb-2 text-base font-bold text-slate-800">Quick Actions</Text>
             <QuickAction
               title="Browse Palaces"
@@ -216,7 +218,7 @@ const HomeScreen = () => {
 
           <DailyTip />
 
-          {!user?.isPremium ? <PremiumUpdateCard className="mb-2 mt-4" /> : null}
+          {!user?.isPremium ? <PremiumUpdateCard className="mt-4" /> : null}
         </View>
       </ScrollView>
     </View>

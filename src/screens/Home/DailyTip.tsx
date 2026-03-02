@@ -56,7 +56,7 @@ export const DailyTip: React.FC<DailyTipProps> = ({ dayOfMonth }) => {
   return (
     <Animated.View
       entering={FadeInDown.delay(300)}
-      className="mb-4 rounded-2xl bg-indigo-50 p-4 shadow-sm">
+      className="mt-2 rounded-2xl bg-indigo-50 p-4 shadow-sm">
       <View className="flex-row gap-3">
         <View className="items-center justify-start pt-1">
           <Text className="text-3xl">{tip.emoji}</Text>

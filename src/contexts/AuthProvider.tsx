@@ -1,5 +1,5 @@
 import { authApi, RegisterRequest } from '@/api/auth';
-import { AUTH_STORAGE_KEY } from '@/constants/auth';
+import { AUTH_STORAGE_KEY, MOCK_USER } from '@/constants/auth';
 import { resetSeedData, seedInitialData } from '@/db/seed';
 import { clearAccessToken, setAccessToken } from '@/services/user.service';
 import { LoginRequest } from '@/types/auth';
@@ -43,6 +43,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadUser();
   }, []);
 
+  const isLocalDevMode = __DEV__ || process.env.EXPO_PUBLIC_LOCAL_DEV_MODE === 'true';
+
   const setSession = async (sessionUser: User, token: string) => {
     await Promise.all([
       AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionUser)),
@@ -51,22 +53,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(sessionUser);
   };
 
+  const setMockSession = async () => {
+    await setSession(MOCK_USER, 'local-dev-token');
+  };
+
   const login = async (req: LoginRequest) => {
+    if (isLocalDevMode) {
+      await setMockSession();
+      return;
+    }
+
     const auth = await authApi.login(req);
     await setSession(auth.user, auth.token);
   };
 
   const register = async (req: RegisterRequest) => {
+    if (isLocalDevMode) {
+      await setMockSession();
+      return;
+    }
+
     const auth = await authApi.register(req);
     await setSession(auth.user, auth.token);
   };
 
   const loginWithGoogle = async (accessToken: string) => {
+    if (isLocalDevMode) {
+      await setMockSession();
+      return;
+    }
+
     const auth = await authApi.googleLogin(accessToken);
     await setSession(auth.user, auth.token);
   };
 
   const loginWithFacebook = async (accessToken: string) => {
+    if (isLocalDevMode) {
+      await setMockSession();
+      return;
+    }
+
     const auth = await authApi.facebookLogin(accessToken);
     await setSession(auth.user, auth.token);
   };
