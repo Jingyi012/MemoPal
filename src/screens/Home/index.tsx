@@ -2,7 +2,7 @@ import { QuoteCard } from '@/components/information/QuoteCard';
 import { PremiumUpdateCard } from '@/components/PremiumUpdateCard';
 import TutorialPromptCard from '@/components/PromptCard/TutorialPromptCard';
 import { motivationalQuotes } from '@/constants/motivationQuotes';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserState } from '@/contexts/UserStateContext';
 import { HomeHeader } from '@/screens/Home/Header/HomeHeader';
 import LearningPath from '@/screens/Home/LearningPath';
@@ -13,7 +13,7 @@ import { ScrollView, View } from 'react-native';
 import { PalaceTrainingCard } from './PalaceTrainingCard';
 
 const HomeScreen = () => {
-  const { user } = useAuth();
+  const { user } = useCurrentUser();
   const { userState } = useUserState();
   const [showTutorialPrompt, setShowTutorialPrompt] = useState(true);
 
@@ -21,7 +21,7 @@ const HomeScreen = () => {
   const todayQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
   return (
     <View className="flex-1">
-      <HomeHeader userData={user!} />
+      <HomeHeader userData={user ?? { id: 'guest', displayName: 'Guest', email: 'guest@local', totalXp: 0, level: 1, isPremium: false }} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

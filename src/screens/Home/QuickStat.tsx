@@ -1,4 +1,4 @@
-import { useAuth } from '@/contexts/AuthProvider';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useRouter } from 'expo-router';
 import { Award, TrendingUp } from 'lucide-react-native';
 import React from 'react';
@@ -6,7 +6,7 @@ import { Text, View } from 'react-native';
 import { StatCard } from '../../components/StatCard';
 
 export const QuickState: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useCurrentUser();
   const router = useRouter();
   return (
     <View className="mt-6 flex-row gap-2">

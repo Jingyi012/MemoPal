@@ -5,7 +5,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAllBadges } from '@/hooks/useBadges';
 import { useLevelByXp } from '@/hooks/useLevelConfigs';
 import { useMilestones } from '@/hooks/useMilestones';
@@ -16,7 +16,7 @@ import { MilestoneItem } from './MilestoneItem';
 import { StatCard } from './StatCard';
 
 const BadgesScreen: React.FC = () => {
-  const { user, isLoading: userLoading } = useAuth();
+  const { user, isLoading: userLoading } = useCurrentUser();
 
   // Fetch consolidated data
   const { badges, isLoading: badgesLoading } = useAllBadges();

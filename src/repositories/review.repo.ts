@@ -200,19 +200,38 @@ export function createReviewRepository(): ReviewRepository {
           });
         }
 
-        // 3. Update User XP & Stats (Targeting the only user in the table)
+        // 3. Update User XP & Stats (single-user local profile)
         await tx.update(schema.users).set({
           totalXp: sql`${schema.users.totalXp} + ${xpEarned}`,
           updatedAt: nowIso,
         });
 
+        const wordsDelta = isPassed ? totalCount : 0;
         await tx.update(schema.userStats).set({
           lessonsCompleted: isPassed
             ? sql`${schema.userStats.lessonsCompleted} + 1`
             : schema.userStats.lessonsCompleted,
+          wordsLearned: isPassed
+            ? sql`${schema.userStats.wordsLearned} + ${wordsDelta}`
+            : schema.userStats.wordsLearned,
           lastActiveDate: nowIso,
           updatedAt: nowIso,
         });
+
+        // 3b. Recalculate level from total XP
+        const currentUser = await tx.query.users.findFirst();
+        const totalXpAfterUpdate = currentUser?.totalXp ?? 0;
+        const eligibleLevel = await tx.query.levelConfigs.findFirst({
+          where: sql`${schema.levelConfigs.requiredXp} <= ${totalXpAfterUpdate}`,
+          orderBy: (fields, { desc }) => [desc(fields.requiredXp)],
+        });
+
+        if (eligibleLevel && currentUser && eligibleLevel.level !== currentUser.level) {
+          await tx
+            .update(schema.users)
+            .set({ level: eligibleLevel.level, updatedAt: nowIso })
+            .where(eq(schema.users.id, currentUser.id));
+        }
 
         // 4. Log XP event
         if (xpEarned > 0) {
@@ -239,7 +258,53 @@ export function createReviewRepository(): ReviewRepository {
           });
         }
 
-        // 5. Queue lesson progress for sync
+        // 5. Milestone and badge evaluation (offline)
+        const latestUser = await tx.query.users.findFirst();
+        const latestStats = await tx.query.userStats.findFirst();
+        const completedLessons = latestStats?.lessonsCompleted ?? 0;
+        const learnedWords = latestStats?.wordsLearned ?? 0;
+        const level = latestUser?.level ?? 1;
+
+        const milestonesToAward = await tx.query.milestones.findMany({
+          where: and(eq(schema.milestones.isDeleted, false), sql`${schema.milestones.achievedAt} is null`),
+        });
+
+        for (const milestone of milestonesToAward) {
+          const pass =
+            (milestone.conditionType === 'lessons_completed' && completedLessons >= milestone.conditionValue) ||
+            (milestone.conditionType === 'words_learned' && learnedWords >= milestone.conditionValue) ||
+            (milestone.conditionType === 'level' && level >= milestone.conditionValue) ||
+            (milestone.conditionType === 'total_xp' && (latestUser?.totalXp ?? 0) >= milestone.conditionValue) ||
+            (milestone.conditionType === 'streak_days' && (latestStats?.currentStreak ?? 0) >= milestone.conditionValue);
+
+          if (pass) {
+            await tx
+              .update(schema.milestones)
+              .set({ achievedAt: nowIso, updatedAt: nowIso })
+              .where(eq(schema.milestones.id, milestone.id));
+          }
+        }
+
+        const badgesToAward = await tx.query.badges.findMany({
+          where: and(eq(schema.badges.isDeleted, false), sql`${schema.badges.earnedAt} is null`),
+        });
+
+        for (const badge of badgesToAward) {
+          const isEarned =
+            (badge.key === 'first_lesson' && completedLessons >= 1) ||
+            (badge.key === 'palace_complete' && completedLessons >= 30) ||
+            (badge.key === 'review_25' && (currentProgress.totalReviews + (isPassed ? 1 : 0)) >= 25) ||
+            (badge.key === 'level_5' && level >= 5);
+
+          if (isEarned) {
+            await tx
+              .update(schema.badges)
+              .set({ earnedAt: nowIso, updatedAt: nowIso })
+              .where(eq(schema.badges.id, badge.id));
+          }
+        }
+
+        // 6. Queue lesson progress for sync
         await SyncBase.addToQueue(tx as any, {
           entityType: EntityType.LESSON_PROGRESS,
           entityId: currentProgress.id,
@@ -323,7 +388,6 @@ export function createReviewRepository(): ReviewRepository {
     },
 
     async getReviewStats(): Promise<ReviewStats> {
-      const now = new Date().toISOString();
       const endOfDay = new Date();
       endOfDay.setHours(23, 59, 59, 999);
       const endOfDayIso = endOfDay.toISOString();
