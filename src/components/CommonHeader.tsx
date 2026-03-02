@@ -15,7 +15,7 @@ interface Actions {
 
 interface HeaderProps {
   title: string;
-  description: ReactNode;
+  description?: ReactNode;
   actions?: Actions[];
   additionalContent?: ReactNode;
   /** Optional override for the back button slot */
@@ -29,7 +29,7 @@ interface HeaderProps {
 
 export const CommonHeader: React.FC<HeaderProps> = ({
   title,
-  description,
+  description = '',
   actions = [],
   additionalContent,
   leftComponent,
