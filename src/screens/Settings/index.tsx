@@ -124,13 +124,7 @@ export default function SettingsScreen() {
       <CommonHeader title={'Settings'} description={undefined} showNotification hideBackButton />
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <SettingsSection title="Profile">
-          <ProfileCard user={user} />
-          <SettingsRow
-            icon={<Shield size={20} color="#475569" />}
-            title="Edit Profile"
-            subtitle="Update display name, email, and avatar"
-            onPress={() => editProfileRef.current?.present()}
-          />
+          <ProfileCard user={user} onEdit={() => editProfileRef.current?.present()} />
         </SettingsSection>
 
         <SettingsSection title="Subscription">
