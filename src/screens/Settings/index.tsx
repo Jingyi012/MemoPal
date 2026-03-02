@@ -1,4 +1,10 @@
 import { useAuth } from '@/contexts/AuthProvider';
+import { db } from '@/db/client';
+import { resetSeedData, seedInitialData } from '@/db/seed';
+import * as schema from '@/db/schema';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useQueryClient } from '@tanstack/react-query';
+import { eq } from 'drizzle-orm';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
@@ -22,13 +28,39 @@ import ThemeSheet from './ThemeSheet';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { user } = useAuth();
-  const { userState, resetState, updatePreferences } = useUserState();
+  const queryClient = useQueryClient();
+  const { user } = useCurrentUser();
+  const { userState, updateState, updatePreferences } = useUserState();
   const [showLogout, setShowLogout] = useState<boolean>(false);
   const { logout } = useAuth();
   const [reviewRemindersEnabled, setReviewRemindersEnabled] = useState<boolean>(
     userState.notifications.reviewReminders
   );
+
+  const saveReviewReminder = async (enabled: boolean) => {
+    setReviewRemindersEnabled(enabled);
+    await updateState({
+      notifications: {
+        ...userState.notifications,
+        reviewReminders: enabled,
+      },
+    });
+  };
+
+  const reseedData = async () => {
+    await resetSeedData();
+    await seedInitialData(true);
+    await queryClient.invalidateQueries();
+  };
+
+  const togglePremiumForTesting = async () => {
+    if (!user) return;
+    await db
+      .update(schema.users)
+      .set({ isPremium: !user.isPremium, updatedAt: new Date().toISOString() })
+      .where(eq(schema.users.id, user.id));
+    await queryClient.invalidateQueries();
+  };
 
   const skillLevelRef = useRef<BottomSheetModal>(null);
   const themeRef = useRef<BottomSheetModal>(null);
@@ -51,7 +83,7 @@ export default function SettingsScreen() {
             subtitle="Get notified when reviews are due"
             right="switch"
             switchValue={reviewRemindersEnabled}
-            onSwitchChange={setReviewRemindersEnabled}
+            onSwitchChange={saveReviewReminder}
           />
         </SettingsSection>
 
@@ -76,6 +108,21 @@ export default function SettingsScreen() {
 
         <SettingsSection>
           <PremiumUpdateCard />
+        </SettingsSection>
+
+        <SettingsSection title="Developer Tools">
+          <SettingsRow
+            icon={<Shield size={20} color="#475569" />}
+            title="Reseed Offline Data"
+            subtitle="Reset DB and apply latest seed content"
+            onPress={reseedData}
+          />
+          <SettingsRow
+            icon={<Moon size={20} color="#475569" />}
+            title={`Toggle Premium (Current: ${user?.isPremium ? 'ON' : 'OFF'})`}
+            subtitle="Testing helper"
+            onPress={togglePremiumForTesting}
+          />
         </SettingsSection>
 
         <SettingsSection title="Support">
