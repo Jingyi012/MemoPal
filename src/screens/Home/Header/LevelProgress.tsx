@@ -14,7 +14,7 @@ export function LevelProgress({ userData, xpToNextLevel, xpInCurrentLevel = 0, x
     <View className="space-y-2">
       {/* XP Text */}
       <View className="mb-2 flex-row items-center justify-between">
-        <Text className="text-xs text-teal-100">Progress to Level {userData.level + 1}</Text>
+        <Text className="text-xs text-teal-100">Current Level {userData.level}</Text>
         <Text className="text-xs text-white">
           {xpInCurrentLevel} XP • {xpToNextLevel} XP to next
         </Text>
