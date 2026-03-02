@@ -1,6 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Props {
   previousLabel?: string;
@@ -17,8 +18,12 @@ export function StepNavigationFooter({
   onNext,
   disableNext = false,
 }: Props) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View className="absolute bottom-0 w-full flex-row justify-between gap-3 border-t border-slate-100 bg-white p-5 pb-8">
+    <View
+      className="w-full flex-row justify-between gap-3 border-t border-slate-100 bg-white p-5"
+      style={{ paddingBottom: Math.max(12, insets.bottom + 8) }}>
       {/* Previous Button */}
       {onPrevious && (
         <AnimatedPressable

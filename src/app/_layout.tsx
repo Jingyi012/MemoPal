@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/colors';
 import { AuthProvider } from '@/contexts/AuthProvider';
+import { GamificationRewardProvider } from '@/contexts/GamificationRewardContext';
 import { UserStateProvider } from '@/contexts/UserStateContext';
 import { db } from '@/db/client';
 import { seedInitialData } from '@/db/seed';
@@ -88,7 +89,9 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <UserStateProvider>
-            <AppLayout />
+            <GamificationRewardProvider>
+              <AppLayout />
+            </GamificationRewardProvider>
           </UserStateProvider>
         </AuthProvider>
         <Toast config={toastConfig} topOffset={60} />

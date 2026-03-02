@@ -22,8 +22,8 @@ import {
 
 import { ActionSheet } from '@/components/ActionSheet';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import GamificationRewardModal from '@/components/GamificationRewardModal';
 import LoadingView from '@/components/LoadingView';
+import { useGamificationRewards } from '@/contexts/GamificationRewardContext';
 import { Colors } from '@/constants/colors';
 import { useLessonDetail } from '@/hooks/useLessonsManager';
 import { useLocation } from '@/hooks/useLocation';
@@ -58,8 +58,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const [results, setResults] = useState<any[]>([]);
   const [showSummary, setShowSummary] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
-  const [showRewardModal, setShowRewardModal] = useState(false);
-  const [rewardState, setRewardState] = useState<{ levelUpTo?: number; milestones: string[]; badges: string[] }>({ milestones: [], badges: [] });
+  const { showRewards } = useGamificationRewards();
 
   // Memoize review results calculation
   const reviewResults = useMemo(
@@ -132,12 +131,8 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
           isLearningMode,
         });
         setXpEarned(earnedXp);
-        setRewardState({ levelUpTo, milestones: achievedMilestones, badges: earnedBadges });
-        if (levelUpTo || achievedMilestones.length > 0 || earnedBadges.length > 0) {
-          setShowRewardModal(true);
-        } else {
-          setShowSummary(true);
-        }
+        showRewards({ levelUpTo, milestones: achievedMilestones, badges: earnedBadges });
+        setShowSummary(true);
       } catch (error) {
         console.error('Error submitting review:', error);
         setShowSummary(true); // Show summary even on error to allow retry/exit
@@ -261,16 +256,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
             Icon={LogOut}
           />
 
-          <GamificationRewardModal
-            visible={showRewardModal}
-            levelUpTo={rewardState.levelUpTo}
-            milestones={rewardState.milestones}
-            badges={rewardState.badges}
-            onClose={() => {
-              setShowRewardModal(false);
-              setShowSummary(true);
-            }}
-          />
+
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>

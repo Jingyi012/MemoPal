@@ -51,7 +51,7 @@ export function LocationCanvasStep({ palaceId, words, onChangeWords, onPrevious,
       <ScrollView
         className="flex-1 px-4 pt-4"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 60 }}>
+        contentContainerStyle={{ paddingBottom: 140 }}>
         <Text className="mb-4 ml-1 text-[11px] font-black uppercase tracking-widest text-slate-400">
           Tap a location to place a word
         </Text>
