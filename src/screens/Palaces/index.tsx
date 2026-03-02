@@ -51,20 +51,26 @@ export default function PalaceListScreen() {
           <Text
             onPress={() => setView('official')}
             className={`flex-1 rounded-xl py-2 text-center text-sm font-semibold ${view === 'official' ? 'bg-white text-slate-900' : 'text-slate-600'}`}>
-            Official ({officialPalaces.length})
+            Featured ({officialPalaces.length})
           </Text>
           {isPremium ? (
             <Text
               onPress={() => setView('custom')}
               className={`flex-1 rounded-xl py-2 text-center text-sm font-semibold ${view === 'custom' ? 'bg-white text-slate-900' : 'text-slate-600'}`}>
-              Custom ({customPalaces.length})
+              My Palaces ({customPalaces.length})
             </Text>
           ) : null}
         </View>
 
         {!isPremium ? (
-          <View className="mb-3 rounded-xl bg-amber-50 p-3">
-            <Text className="text-xs text-amber-700">Upgrade to Premium to create and manage custom palaces.</Text>
+          <View className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3">
+            <Text className="text-sm font-semibold text-amber-800">Create Your Own Palaces</Text>
+            <Text className="mt-1 text-xs text-amber-700">Unlock custom palace creation with Premium.</Text>
+            <Text
+              onPress={() => router.push('/premium')}
+              className="mt-2 self-start rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white">
+              See Premium
+            </Text>
           </View>
         ) : null}
       </View>
