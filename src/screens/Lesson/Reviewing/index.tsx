@@ -114,7 +114,10 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const streakStyle = useAnimatedStyle(() => ({ transform: [{ scale: scoreScale.value }] }));
 
   const revealAnswer = (isCorrect: boolean, entered: string) => {
-    const wordElapsed = Math.max(1, Math.round((Date.now() - currentWordStartedAtRef.current) / 1000));
+    const wordElapsed = Math.max(
+      1,
+      Math.round((Date.now() - currentWordStartedAtRef.current) / 1000)
+    );
     setPerWordSeconds((prev) => [...prev, wordElapsed]);
 
     if (isCorrect) {
@@ -174,7 +177,14 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
       // Submit review
       try {
         const spentSeconds = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000));
-        const { xpEarned: earnedXp, levelUpTo, achievedMilestones, earnedBadges, score, speedBonusXp: speedBonus } = await reviewCompletionMutation.mutateAsync({
+        const {
+          xpEarned: earnedXp,
+          levelUpTo,
+          achievedMilestones,
+          earnedBadges,
+          score,
+          speedBonusXp: speedBonus,
+        } = await reviewCompletionMutation.mutateAsync({
           lessonId,
           correctCount: reviewResults.correctCount,
           totalCount: totalSteps,
@@ -218,7 +228,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
         sessionScore={sessionScore}
         elapsedSeconds={elapsedSeconds}
         streak={streak}
-        onFinish={() => router.push(`/lessons/${lessonId}`)}
+        onFinish={() => router.replace(`/lessons/${lessonId}`)}
         onTryAgain={!reviewResults.isPassed ? resetReview : undefined}
       />
     );
@@ -314,8 +324,6 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
             variant="destructive"
             Icon={LogOut}
           />
-
-
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
