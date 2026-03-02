@@ -66,11 +66,7 @@ export default function PalaceListScreen() {
           <View className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3">
             <Text className="text-sm font-semibold text-amber-800">Create Your Own Palaces</Text>
             <Text className="mt-1 text-xs text-amber-700">Unlock custom palace creation with Premium.</Text>
-            <Text
-              onPress={() => router.push('/premium')}
-              className="mt-2 self-start rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white">
-              See Premium
-            </Text>
+
           </View>
         ) : null}
       </View>
