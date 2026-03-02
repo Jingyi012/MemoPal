@@ -44,12 +44,9 @@ export async function getPalaceById(id: string) {
  * Offline-first: write locally, queue for async sync
  */
 export async function createPalace(palace: Partial<Palace>): Promise<Palace> {
-  // 1. Create locally first
-  // Implementation: const localPalace = await palaceRepository.create(palace)
-  // 2. Queue for sync: await syncQueue.add({action: 'create', entityType: 'PALACE', ...})
-
-  // Fallback to API
-  const created = await palaceApi.create(palace as Palace);
+  const id = await repo.save(palace);
+  const created = await repo.getById(id);
+  if (!created) throw new Error('Failed to create palace');
   return created;
 }
 
@@ -57,10 +54,9 @@ export async function createPalace(palace: Partial<Palace>): Promise<Palace> {
  * Update palace (local + queue for sync)
  */
 export async function updatePalace(id: string, palace: Partial<Palace>): Promise<Palace> {
-  // 1. Update locally first
-  // 2. Queue for sync
-  // Fallback to API
-  const updated = await palaceApi.update({ ...(palace as Palace), id } as Palace);
+  await repo.save({ ...palace, id });
+  const updated = await repo.getById(id);
+  if (!updated) throw new Error('Failed to update palace');
   return updated;
 }
 
@@ -68,10 +64,7 @@ export async function updatePalace(id: string, palace: Partial<Palace>): Promise
  * Delete palace (local + queue for sync)
  */
 export async function deletePalace(id: string): Promise<boolean> {
-  // 1. Delete locally first (or mark as deleted for soft delete)
-  // 2. Queue for sync
-  // Fallback to API
-  await palaceApi.delete(id);
+  await repo.delete(id);
   return true;
 }
 

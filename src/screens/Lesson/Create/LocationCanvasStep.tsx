@@ -1,5 +1,6 @@
+import LoadingView from '@/components/LoadingView';
+import { useLocationsByPalace } from '@/hooks/useLocation';
 import { LessonWordForm } from '@/types/lesson';
-import data from '@/utils/mock/palaces.json';
 import React, { useRef } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { StepNavigationFooter } from '../../../components/StepNavigationFooter';
@@ -15,11 +16,15 @@ interface Props {
 }
 
 export function LocationCanvasStep({ palaceId, words, onChangeWords, onPrevious, onNext }: Props) {
-  const locations = data.locations.filter((x) => x.palaceId === palaceId);
+  const { locations, isLoading } = useLocationsByPalace(palaceId);
   const sheetRef = useRef<WordEditorSheetRef>(null);
   const wordsByLocation = Object.fromEntries(words.map((w) => [w.locationId, w]));
 
-  const progress = (words.length / locations.length) * 100;
+  const progress = locations.length > 0 ? (words.length / locations.length) * 100 : 0;
+
+  if (isLoading) {
+    return <LoadingView />;
+  }
 
   const handleConfirm = (locationId: string, text: string, meaning?: string) => {
     onChangeWords((prev) => {
@@ -74,7 +79,7 @@ export function LocationCanvasStep({ palaceId, words, onChangeWords, onPrevious,
         nextLabel={`Review`}
         onPrevious={onPrevious}
         onNext={onNext}
-        disableNext={words.length === 0}
+        disableNext={words.length === 0 || locations.length === 0}
       />
 
       <WordEditorSheet ref={sheetRef} onConfirm={handleConfirm} />

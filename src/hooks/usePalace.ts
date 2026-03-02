@@ -1,6 +1,6 @@
 import * as palaceService from '@/services/palace.service';
 import { Palace, PalaceDetails } from '@/types/palace';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const PALACE_KEYS = {
   all: ['palaces'] as const,
@@ -41,4 +41,17 @@ export function usePalace(id: string) {
       return listData?.find((p) => p.id === id);
     },
   });
+}
+
+export function usePalaceMutations() {
+  const queryClient = useQueryClient();
+
+  const createPalace = useMutation({
+    mutationFn: (payload: Partial<Palace>) => palaceService.createPalace(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PALACE_KEYS.all });
+    },
+  });
+
+  return { createPalace };
 }

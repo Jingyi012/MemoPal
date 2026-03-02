@@ -2,8 +2,8 @@ import LoadingView from '@/components/LoadingView';
 import { usePalaceList } from '@/hooks/usePalace';
 import { Palace } from '@/types/palace';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { FlatList } from 'react-native';
+import React, { useMemo } from 'react';
+import { FlatList, Text, View } from 'react-native';
 import { PalaceCard } from './PalaceCard';
 
 export const PalaceGrid: React.FC = () => {
@@ -27,13 +27,24 @@ export const PalaceGrid: React.FC = () => {
     return <LoadingView />;
   }
 
+  const sortedPalaces = useMemo(() => {
+    const predefined = palaces.filter((p) => !p.isCustom);
+    const custom = palaces.filter((p) => p.isCustom);
+    return [...predefined, ...custom];
+  }, [palaces]);
+
   return (
     <FlatList
-      data={palaces}
+      data={sortedPalaces}
       keyExtractor={(item) => item.id}
       onRefresh={refetch}
       refreshing={isRefetching}
       contentContainerStyle={{ padding: 16 }}
+      ListHeaderComponent={
+        <View className="mb-4 rounded-2xl bg-teal-50 p-4">
+          <Text className="text-sm font-semibold text-teal-800">Predefined palaces appear first. Custom palaces you create (premium) appear after them.</Text>
+        </View>
+      }
       renderItem={({ item }) => (
         <PalaceCard
           palace={item}
