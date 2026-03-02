@@ -13,6 +13,8 @@ export interface AuthState {
 
 export interface AuthActions {
   login: (req: LoginRequest) => Promise<void>;
+  loginWithGoogle: (accessToken: string) => Promise<void>;
+  loginWithFacebook: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 

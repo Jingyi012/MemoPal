@@ -25,6 +25,18 @@ export const authApi = {
     return response.data.data;
   },
 
+  async googleLogin(accessToken: string): Promise<AuthResponse> {
+    const response = await api.post<GeneralResponse<AuthResponse>>('/auth/google', { accessToken });
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
+
+  async facebookLogin(accessToken: string): Promise<AuthResponse> {
+    const response = await api.post<GeneralResponse<AuthResponse>>('/auth/facebook', { accessToken });
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
+
   async getCurrentProfile(): Promise<User> {
     const response = await api.get<GeneralResponse<User>>('/auth/me');
     if (!response.data.success) throw new Error(response.data.message);

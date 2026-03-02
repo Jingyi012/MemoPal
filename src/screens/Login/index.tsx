@@ -1,23 +1,24 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { AppImage } from '@/components/AppImage';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useUserState } from '@/contexts/UserStateContext';
+import { getFacebookAccessToken, getGoogleAccessToken } from '@/services/socialAuth.service';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Brain, Mail } from 'lucide-react-native';
+import { Brain } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Alert, Text, TextInput, View } from 'react-native';
 
 export const LoginScreen: React.FC = () => {
   const router = useRouter();
-  const { login, continueAsGuest } = useAuth();
+  const { login, loginWithGoogle, loginWithFacebook } = useAuth();
   const { userState } = useUserState();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canSubmit = email.includes('@') && password.length >= 6;
+  const socialEnabled = false;
 
   const handleLogin = async () => {
     if (!canSubmit || isSubmitting) return;
@@ -33,10 +34,6 @@ export const LoginScreen: React.FC = () => {
     }
   };
 
-  const handleSkip = async () => {
-    await continueAsGuest();
-    router.replace('/(tabs)');
-  };
 
   useEffect(() => {
     if (userState.isFirstTime) {
@@ -83,20 +80,52 @@ export const LoginScreen: React.FC = () => {
         <AnimatedPressable
           onPress={handleLogin}
           disabled={!canSubmit || isSubmitting}
-          className={`mb-3 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-xl px-6 py-4 ${!canSubmit || isSubmitting ? 'bg-gray-300' : 'bg-teal-600'}`}>
-          <AppImage source={require('@assets/images/google-icon.png')} className="h-5 w-5" />
+          className={`mb-3 w-full max-w-sm items-center justify-center rounded-xl px-6 py-4 ${!canSubmit || isSubmitting ? 'bg-gray-300' : 'bg-teal-600'}`}>
           <Text className="font-medium text-white">{isSubmitting ? 'Signing in...' : 'Sign In'}</Text>
+        </AnimatedPressable>
+
+        <AnimatedPressable
+          onPress={async () => {
+            if (!socialEnabled) return Alert.alert('Coming soon', 'Google sign-in is temporarily disabled in local test mode.');
+            try {
+              setIsSubmitting(true);
+              const token = await getGoogleAccessToken();
+              await loginWithGoogle(token);
+              router.replace('/(tabs)');
+            } catch (error: any) {
+              Alert.alert('Google login failed', error?.message || 'Please try again.');
+            } finally {
+              setIsSubmitting(false);
+            }
+          }}
+          disabled={isSubmitting}
+          className="mb-2 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-6 py-4">
+          <Text className="text-base">🟢</Text>
+          <Text className="font-medium text-slate-700">Continue with Google</Text>
+        </AnimatedPressable>
+
+        <AnimatedPressable
+          onPress={async () => {
+            if (!socialEnabled) return Alert.alert('Coming soon', 'Facebook sign-in is temporarily disabled in local test mode.');
+            try {
+              setIsSubmitting(true);
+              const token = await getFacebookAccessToken();
+              await loginWithFacebook(token);
+              router.replace('/(tabs)');
+            } catch (error: any) {
+              Alert.alert('Facebook login failed', error?.message || 'Please try again.');
+            } finally {
+              setIsSubmitting(false);
+            }
+          }}
+          disabled={isSubmitting}
+          className="mb-3 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-6 py-4">
+          <Text className="font-bold text-[#1877F2]">f</Text>
+          <Text className="font-medium text-slate-700">Continue with Facebook</Text>
         </AnimatedPressable>
 
         <AnimatedPressable onPress={() => router.push('/register')} className="mb-4">
           <Text className="text-slate-500">Don&apos;t have an account? Create one</Text>
-        </AnimatedPressable>
-
-        <AnimatedPressable
-          onPress={handleSkip}
-          className="w-full max-w-sm flex-row items-center justify-center gap-2 rounded-xl border-2 border-gray-200 px-6 py-4 active:bg-gray-50">
-          <Mail size={18} color="#4b5563" />
-          <Text className="font-medium text-gray-600">Continue as Guest (Limited)</Text>
         </AnimatedPressable>
       </View>
 

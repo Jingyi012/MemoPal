@@ -1,19 +1,21 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useAuth } from '@/contexts/AuthProvider';
+import { getFacebookAccessToken, getGoogleAccessToken } from '@/services/socialAuth.service';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Text, TextInput, View } from 'react-native';
 
 export default function Register() {
   const router = useRouter();
-  const { register } = useAuth();
+  const { register, loginWithGoogle, loginWithFacebook } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canSubmit = displayName.trim().length > 1 && email.includes('@') && password.length >= 6;
+  const socialEnabled = false;
 
   const handleRegister = async () => {
     if (!canSubmit || isSubmitting) return;
@@ -73,6 +75,44 @@ export default function Register() {
           <Text className="font-semibold text-white">
             {isSubmitting ? 'Creating account...' : 'Create account'}
           </Text>
+        </AnimatedPressable>
+
+        <AnimatedPressable
+          onPress={async () => {
+            if (!socialEnabled) return Alert.alert('Coming soon', 'Google sign-up is temporarily disabled in local test mode.');
+            try {
+              setIsSubmitting(true);
+              const token = await getGoogleAccessToken();
+              await loginWithGoogle(token);
+              router.replace('/(tabs)');
+            } catch (error: any) {
+              Alert.alert('Google login failed', error?.message || 'Please try again.');
+            } finally {
+              setIsSubmitting(false);
+            }
+          }}
+          disabled={isSubmitting}
+          className="items-center rounded-xl border border-slate-200 bg-white py-3">
+          <Text className="font-semibold text-slate-700">Continue with Google</Text>
+        </AnimatedPressable>
+
+        <AnimatedPressable
+          onPress={async () => {
+            if (!socialEnabled) return Alert.alert('Coming soon', 'Facebook sign-up is temporarily disabled in local test mode.');
+            try {
+              setIsSubmitting(true);
+              const token = await getFacebookAccessToken();
+              await loginWithFacebook(token);
+              router.replace('/(tabs)');
+            } catch (error: any) {
+              Alert.alert('Facebook login failed', error?.message || 'Please try again.');
+            } finally {
+              setIsSubmitting(false);
+            }
+          }}
+          disabled={isSubmitting}
+          className="items-center rounded-xl border border-slate-200 bg-white py-3">
+          <Text className="font-semibold text-slate-700">Continue with Facebook</Text>
         </AnimatedPressable>
 
         <AnimatedPressable onPress={() => router.replace('/login')} className="items-center py-2">

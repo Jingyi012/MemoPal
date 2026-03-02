@@ -1,5 +1,6 @@
 import { authApi, RegisterRequest } from '@/api/auth';
 import { AUTH_STORAGE_KEY } from '@/constants/auth';
+import { resetSeedData, seedInitialData } from '@/db/seed';
 import { clearAccessToken, setAccessToken } from '@/services/user.service';
 import { LoginRequest } from '@/types/auth';
 import { User } from '@/types/users';
@@ -14,8 +15,9 @@ export type AuthContextType = {
 
   login: (req: LoginRequest) => Promise<void>;
   register: (req: RegisterRequest) => Promise<void>;
+  loginWithGoogle: (accessToken: string) => Promise<void>;
+  loginWithFacebook: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
-  continueAsGuest: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,15 +61,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await setSession(auth.user, auth.token);
   };
 
-  const continueAsGuest = async () => {
-    await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-    await clearAccessToken();
-    setUser(null);
+  const loginWithGoogle = async (accessToken: string) => {
+    const auth = await authApi.googleLogin(accessToken);
+    await setSession(auth.user, auth.token);
+  };
+
+  const loginWithFacebook = async (accessToken: string) => {
+    const auth = await authApi.facebookLogin(accessToken);
+    await setSession(auth.user, auth.token);
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+    await AsyncStorage.clear();
     await clearAccessToken();
+    await resetSeedData();
+    await seedInitialData(true);
     setUser(null);
     router.replace('/login');
   };
@@ -80,8 +88,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         login,
         register,
+        loginWithGoogle,
+        loginWithFacebook,
         logout,
-        continueAsGuest,
       }}>
       {children}
     </AuthContext.Provider>
