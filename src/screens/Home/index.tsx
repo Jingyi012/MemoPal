@@ -8,16 +8,16 @@ import { HomeHeader } from '@/screens/Home/Header/HomeHeader';
 import LearningPath from '@/screens/Home/LearningPath';
 import { QuickState } from '@/screens/Home/QuickStat';
 import { WhyThisWorkCard } from '@/screens/Home/WhyThisWorkCard';
-import React, { useState } from 'react';
+import React from 'react';
 import { ScrollView, View } from 'react-native';
 import { PalaceTrainingCard } from './PalaceTrainingCard';
 
 const HomeScreen = () => {
   const { user } = useCurrentUser();
-  const { userState } = useUserState();
-  const [showTutorialPrompt, setShowTutorialPrompt] = useState(true);
+  const { userState, updateState } = useUserState();
 
   const isFirstTime = userState.isFirstTime ?? true;
+  const showTutorialPrompt = !userState.ui.tutorialPromptDismissed;
   const todayQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
   return (
     <View className="flex-1">
@@ -31,7 +31,22 @@ const HomeScreen = () => {
 
           {showTutorialPrompt && (
             <View className="mt-3">
-              <TutorialPromptCard dismissTutorialPrompt={() => setShowTutorialPrompt(false)} />
+              <TutorialPromptCard
+                dismissTutorialPrompt={() =>
+                  updateState({
+                    ui: { ...userState.ui, tutorialPromptDismissed: true },
+                  })
+                }
+                onViewTutorial={() =>
+                  updateState({
+                    ui: {
+                      ...userState.ui,
+                      tutorialPromptDismissed: true,
+                      tutorialViewedAt: new Date().toISOString(),
+                    },
+                  })
+                }
+              />
             </View>
           )}
           <LearningPath />

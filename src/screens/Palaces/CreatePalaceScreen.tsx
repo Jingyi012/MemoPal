@@ -6,18 +6,21 @@ import { useLocationMutations } from '@/hooks/useLocation';
 import { usePalaceMutations } from '@/hooks/usePalace';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { MinusCircle, PlusCircle } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
 
 type DraftLocation = { name: string; description: string; imageUrl: string };
-const DEFAULT_LOCATION_NAMES = ['Entrance', 'Hallway', 'Living Area', 'Kitchen', 'Dining Area', 'Study Corner', 'Bedroom', 'Storage', 'Balcony', 'Exit'];
+const MAX_LOCATIONS = 100;
+const MIN_LOCATIONS = 1;
 
-const defaults = (): DraftLocation[] =>
-  DEFAULT_LOCATION_NAMES.map((name, i) => ({
-    name,
-    description: `Custom location ${i + 1}`,
-    imageUrl: `https://picsum.photos/seed/custom-loc-${i + 1}/900/600`,
-  }));
+const makeLocation = (index: number): DraftLocation => ({
+  name: `Location ${index}`,
+  description: `Custom location ${index}`,
+  imageUrl: `https://picsum.photos/seed/custom-loc-${index}/900/600`,
+});
+
+const defaults = (): DraftLocation[] => Array.from({ length: 10 }, (_, i) => makeLocation(i + 1));
 
 async function pickImage() {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -43,6 +46,16 @@ export default function CreatePalaceScreen() {
   const palaceId = useMemo(() => name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'), [name]);
   const { createLocation } = useLocationMutations(palaceId || 'temp-palace');
 
+  const addLocation = () => {
+    if (locations.length >= MAX_LOCATIONS) return;
+    setLocations((prev) => [...prev, makeLocation(prev.length + 1)]);
+  };
+
+  const removeLocation = (index: number) => {
+    if (locations.length <= MIN_LOCATIONS) return;
+    setLocations((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const onCreate = async () => {
     if (!user?.isPremium) return;
     if (!name.trim()) return Alert.alert('Missing name', 'Please enter a palace name.');
@@ -54,7 +67,7 @@ export default function CreatePalaceScreen() {
         name: name.trim(),
         description: description.trim() || 'Custom memory palace',
         thumbnail,
-        locationsCount: 10,
+        locationsCount: locations.length,
         isLocked: false,
         requiredXp: 0,
         isPremium: true,
@@ -90,7 +103,7 @@ export default function CreatePalaceScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      <CommonHeader title="Create Custom Palace" description="Create 10 locations with custom images" hideBackButton={false} backAction={() => router.back()} />
+      <CommonHeader title="Create Custom Palace" description="Create locations with custom images" hideBackButton={false} backAction={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         <View className="rounded-2xl bg-white p-4">
           <TextInput className="rounded-xl border border-slate-200 px-4 py-3" placeholder="Palace name" value={name} onChangeText={setName} />
@@ -98,25 +111,45 @@ export default function CreatePalaceScreen() {
 
           <Text className="mt-4 text-xs font-bold uppercase text-slate-500">Palace Thumbnail</Text>
           <AnimatedPressable onPress={async () => { const uri = await pickImage(); if (uri) setThumbnail(uri); }} className="mt-2 overflow-hidden rounded-xl border border-slate-200">
-            <AppImage source={{ uri: thumbnail }} className="h-40 w-full" contentFit="cover" />
+            <View className="h-40 w-full">
+              <AppImage source={{ uri: thumbnail }} className="w-full h-full" contentFit="cover" />
+            </View>
           </AnimatedPressable>
         </View>
 
-        <View className="mt-4 gap-3">
+        <View className="mt-4 rounded-2xl bg-white p-4">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-sm font-bold text-slate-800">Locations ({locations.length}/{MAX_LOCATIONS})</Text>
+            <AnimatedPressable onPress={addLocation} className="flex-row items-center rounded-lg bg-teal-50 px-3 py-2">
+              <PlusCircle size={16} color="#0f766e" />
+              <Text className="ml-1 text-xs font-semibold text-teal-700">Add Location</Text>
+            </AnimatedPressable>
+          </View>
+        </View>
+
+        <View className="mt-3 gap-3">
           {locations.map((loc, idx) => (
             <View key={idx} className="rounded-2xl bg-white p-3">
-              <Text className="mb-2 text-xs font-semibold text-slate-500">Location {idx + 1}</Text>
-              <TextInput className="rounded-xl border border-slate-200 px-3 py-2" value={loc.name} onChangeText={(text) => setLocations((prev) => prev.map((x, i) => i === idx ? { ...x, name: text } : x))} />
-              <TextInput className="mt-2 rounded-xl border border-slate-200 px-3 py-2" value={loc.description} onChangeText={(text) => setLocations((prev) => prev.map((x, i) => i === idx ? { ...x, description: text } : x))} />
-              <AnimatedPressable onPress={async () => { const uri = await pickImage(); if (uri) setLocations((prev) => prev.map((x, i) => i === idx ? { ...x, imageUrl: uri } : x)); }} className="mt-2 overflow-hidden rounded-xl border border-slate-200">
-                <AppImage source={{ uri: loc.imageUrl }} className="h-28 w-full" contentFit="cover" />
+              <View className="mb-2 flex-row items-center justify-between">
+                <Text className="text-xs font-semibold text-slate-500">Location {idx + 1}</Text>
+                <AnimatedPressable onPress={() => removeLocation(idx)} disabled={locations.length <= MIN_LOCATIONS}>
+                  <MinusCircle size={18} color={locations.length <= MIN_LOCATIONS ? '#94a3b8' : '#ef4444'} />
+                </AnimatedPressable>
+              </View>
+
+              <TextInput className="rounded-xl border border-slate-200 px-3 py-2" value={loc.name} onChangeText={(text) => setLocations((prev) => prev.map((x, i) => (i === idx ? { ...x, name: text } : x)))} placeholder="Location name" />
+              <TextInput className="mt-2 rounded-xl border border-slate-200 px-3 py-2" value={loc.description} onChangeText={(text) => setLocations((prev) => prev.map((x, i) => (i === idx ? { ...x, description: text } : x)))} placeholder="Location description" />
+              <AnimatedPressable onPress={async () => { const uri = await pickImage(); if (uri) setLocations((prev) => prev.map((x, i) => (i === idx ? { ...x, imageUrl: uri } : x))); }} className="mt-2 overflow-hidden rounded-xl border border-slate-200">
+                <View className="h-28 w-full">
+                  <AppImage source={{ uri: loc.imageUrl }} className="w-full h-full" contentFit="cover" />
+                </View>
               </AnimatedPressable>
             </View>
           ))}
         </View>
 
         <AnimatedPressable onPress={onCreate} className="mt-5 items-center rounded-xl bg-teal-600 py-4">
-          <Text className="font-semibold text-white">{saving ? 'Creating...' : 'Create Palace'}</Text>
+          <Text className="font-semibold text-white">{saving ? 'Creating...' : `Create Palace (${locations.length} locations)`}</Text>
         </AnimatedPressable>
       </ScrollView>
     </View>

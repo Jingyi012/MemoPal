@@ -11,6 +11,13 @@ export interface UserState {
   totalVisits: number; // Total times opened app
   currentStreak: number; // Consecutive daily usage streak
 
+  // ----- UI state -----
+  ui: {
+    tutorialPromptDismissed: boolean;
+    tutorialViewedAt?: string | null;
+    palaceListTab: 'official' | 'custom';
+  };
+
   // ----- Lessons & progress -----
   lessonsProgress: {
     [lessonId: string]: LessonProgress; // map lessonId → progress
@@ -80,6 +87,11 @@ export const defaultUserState: UserState = {
   lessonsProgress: {},
   hasStartedAnyLesson: false,
   hasCompletedFirstLesson: false,
+  ui: {
+    tutorialPromptDismissed: false,
+    tutorialViewedAt: null,
+    palaceListTab: 'official',
+  },
   preferences: {
     preferredLearningTime: null,
     reviewTime: '09:00',

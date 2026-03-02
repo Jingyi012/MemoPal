@@ -8,9 +8,10 @@ import AnimatedPressable from '../AnimatedPressable';
 
 interface TutorialCardProps {
   dismissTutorialPrompt: () => void;
+  onViewTutorial: () => void;
 }
 
-const TutorialPromptCard: React.FC<TutorialCardProps> = ({ dismissTutorialPrompt }) => {
+const TutorialPromptCard: React.FC<TutorialCardProps> = ({ dismissTutorialPrompt, onViewTutorial }) => {
   const router = useRouter();
   return (
     <LinearGradient
@@ -42,7 +43,7 @@ const TutorialPromptCard: React.FC<TutorialCardProps> = ({ dismissTutorialPrompt
         <View className="gap-1">
           <AnimatedPressable
             onPress={() => {
-              //dismissTutorialPrompt();
+              onViewTutorial();
               router.push('/tutorial');
             }}>
             <LinearGradient

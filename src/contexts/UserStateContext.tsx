@@ -23,7 +23,17 @@ export const UserStateProvider = ({ children }: { children: ReactNode }) => {
     const loadState = async () => {
       try {
         const stored = await AsyncStorage.getItem(USER_STATE_KEY);
-        if (stored) setState(JSON.parse(stored));
+        if (stored) {
+          const parsed = JSON.parse(stored) as Partial<UserState>;
+          setState({
+            ...defaultUserState,
+            ...parsed,
+            ui: { ...defaultUserState.ui, ...(parsed.ui ?? {}) },
+            preferences: { ...defaultUserState.preferences, ...(parsed.preferences ?? {}) },
+            notifications: { ...defaultUserState.notifications, ...(parsed.notifications ?? {}) },
+            subscription: { ...defaultUserState.subscription, ...(parsed.subscription ?? {}) },
+          });
+        }
       } catch (err) {
         console.warn('Failed to load user state:', err);
       }
