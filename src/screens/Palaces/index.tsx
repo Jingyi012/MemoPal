@@ -40,33 +40,27 @@ export default function PalaceListScreen() {
     <View className="flex-1 bg-gray-50">
       <CommonHeader
         title="Memory Palaces"
-        description={<Text className="text-sm text-teal-100">Choose a palace to start training</Text>}
+        description={
+          <Text className="text-sm text-teal-100">Choose a palace to start training</Text>
+        }
         hideBackButton
         showNotification
         actions={isPremium ? [{ icon: Plus, onPress: () => router.push('/palaces/create') }] : []}
       />
-
       <View className="px-4 pb-2 pt-3">
-        <View className="mb-2 rounded-2xl bg-slate-200 p-1 flex-row">
-          <Text
-            onPress={() => setView('official')}
-            className={`flex-1 rounded-xl py-2 text-center text-sm font-semibold ${view === 'official' ? 'bg-white text-slate-900' : 'text-slate-600'}`}>
-            Featured ({officialPalaces.length})
-          </Text>
-          {isPremium ? (
+        {isPremium ? (
+          <View className="mb-2 flex-row rounded-2xl bg-slate-200 p-1">
+            <Text
+              onPress={() => setView('official')}
+              className={`flex-1 rounded-xl py-2 text-center text-sm font-semibold ${view === 'official' ? 'bg-white text-slate-900' : 'text-slate-600'}`}>
+              Featured ({officialPalaces.length})
+            </Text>
+
             <Text
               onPress={() => setView('custom')}
               className={`flex-1 rounded-xl py-2 text-center text-sm font-semibold ${view === 'custom' ? 'bg-white text-slate-900' : 'text-slate-600'}`}>
               My Palaces ({customPalaces.length})
             </Text>
-          ) : null}
-        </View>
-
-        {!isPremium ? (
-          <View className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3">
-            <Text className="text-sm font-semibold text-amber-800">Create Your Own Palaces</Text>
-            <Text className="mt-1 text-xs text-amber-700">Unlock custom palace creation with Premium.</Text>
-
           </View>
         ) : null}
       </View>
@@ -79,11 +73,18 @@ export default function PalaceListScreen() {
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}
         ListEmptyComponent={
           <Text className="px-2 py-6 text-center text-slate-500">
-            {view === 'custom' ? 'No custom palaces yet. Tap + to create one.' : 'No palaces available.'}
+            {view === 'custom'
+              ? 'No custom palaces yet. Tap + to create one.'
+              : 'No palaces available.'}
           </Text>
         }
         renderItem={({ item }) => (
-          <PalaceCard palace={item} isCompleted={item.isLocked} userXP={item.requiredXp} onPress={handlePalacePress} />
+          <PalaceCard
+            palace={item}
+            isCompleted={item.isLocked}
+            userXP={item.requiredXp}
+            onPress={handlePalacePress}
+          />
         )}
       />
     </View>

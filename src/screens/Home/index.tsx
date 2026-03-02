@@ -103,7 +103,7 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}>
         <View className="p-4">
-          {isFirstTime && <PalaceTrainingCard />}
+          {/* {isFirstTime && <PalaceTrainingCard />} */}
 
           {showTutorialPrompt && (
             <View className="mt-3">
