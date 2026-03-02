@@ -4,6 +4,7 @@ import { UserStateProvider } from '@/contexts/UserStateContext';
 import { db } from '@/db/client';
 import { seedInitialData } from '@/db/seed';
 import { useNotificationObserver } from '@/hooks/useNotificationObserver';
+import { useSyncManager } from '@/hooks/useSyncManager';
 import { queryClient } from '@/utils/queryClient';
 import { toastConfig } from '@/utils/toastConfig';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -46,12 +47,15 @@ function AppLayout() {
     console.error('Migration failed: ', migrationError);
   }
 
+  const isAppReady = migrationsSuccess && isSeedFinished;
+  useSyncManager(isAppReady);
+
   // 5. Wait for BOTH migrations and seeding
-  if (!migrationsSuccess || !isSeedFinished) {
+  if (!isAppReady) {
     return null;
   }
 
-  // useSyncManager();
+  
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

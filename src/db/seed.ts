@@ -1,4 +1,4 @@
-import { MOCK_USER } from '@/contexts/AuthProvider';
+import { MOCK_USER } from '@/constants/auth';
 import { db } from '@/db/client';
 import { mockLessons } from '@/db/mock/lesson.mock';
 import { mockLocations } from '@/db/mock/location.mock';
@@ -15,7 +15,7 @@ export async function seedInitialData() {
   await db.transaction(async (tx) => {
     const now = new Date().toISOString();
 
-    console.log('🌱 Seeding game configurations...');
+    console.log('Seeding game configurations...');
 
     // 1. Level Configs (Progress ladder)
     const levels = [
@@ -60,7 +60,7 @@ export async function seedInitialData() {
       await tx.insert(schema.xpConfigs).values(xp).onConflictDoNothing();
     }
 
-    console.log('🏠 Seeding core content...');
+    console.log('Seeding core content...');
 
     // 3. Palaces
     for (const p of mockPalaces) {
@@ -111,7 +111,7 @@ export async function seedInitialData() {
         .onConflictDoNothing();
     }
 
-    console.log('👤 Seeding user profile and stats...');
+    console.log('Seeding user profile and stats...');
 
     // 7. User
     await tx
@@ -171,6 +171,6 @@ export async function seedInitialData() {
       await tx.insert(schema.milestones).values(ms).onConflictDoNothing();
     }
 
-    console.log('✅ Seeding complete.');
+    console.log('Seeding complete.');
   });
 }

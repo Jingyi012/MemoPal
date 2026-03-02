@@ -4,10 +4,12 @@ import NetInfo from '@react-native-community/netinfo';
 import { useEffect, useRef } from 'react';
 import { processQueue } from '../services/sync/processQueue';
 
-export function useSyncManager() {
+export function useSyncManager(enabled: boolean = true) {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
+
     const debouncedProcessQueue = () => {
       if (debounceTimer.current) {
         clearTimeout(debounceTimer.current);
@@ -15,7 +17,7 @@ export function useSyncManager() {
 
       debounceTimer.current = setTimeout(() => {
         processQueue(db);
-      }, 500);
+      }, 800);
     };
 
     const unsubscribeData = SyncObserver.subscribe(debouncedProcessQueue);
@@ -35,5 +37,5 @@ export function useSyncManager() {
         clearTimeout(debounceTimer.current);
       }
     };
-  }, []);
+  }, [enabled]);
 }

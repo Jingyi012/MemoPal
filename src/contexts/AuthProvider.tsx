@@ -1,32 +1,19 @@
+import { authApi, RegisterRequest } from '@/api/auth';
+import { AUTH_STORAGE_KEY } from '@/constants/auth';
+import { clearAccessToken, setAccessToken } from '@/services/user.service';
+import { LoginRequest } from '@/types/auth';
 import { User } from '@/types/users';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-
-const AUTH_STORAGE_KEY = '@memopal_auth_user';
-
-export const MOCK_USER: User = {
-  id: 'user-1',
-  displayName: 'Jing Yi',
-  email: 'jingyi@test.com',
-  isPremium: false,
-  avatarUrl: undefined,
-  level: 1,
-  totalXp: 10,
-  stats: {
-    currentStreak: 5,
-    longestStreak: 6,
-    lessonsCompleted: 10,
-    wordsLearned: 50,
-  },
-};
 
 export type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
-  login: () => Promise<void>;
+  login: (req: LoginRequest) => Promise<void>;
+  register: (req: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   continueAsGuest: () => Promise<void>;
 };
@@ -34,12 +21,11 @@ export type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(MOCK_USER);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const isAuthenticated = !!user;
 
-  /** Load user from local storage */
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -55,22 +41,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadUser();
   }, []);
 
-  /** Mock login */
-  const login = async () => {
-    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(MOCK_USER));
-    setUser(MOCK_USER);
+  const setSession = async (sessionUser: User, token: string) => {
+    await Promise.all([
+      AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionUser)),
+      setAccessToken(token),
+    ]);
+    setUser(sessionUser);
   };
 
-  /** Guest mode (no user, offline only) */
+  const login = async (req: LoginRequest) => {
+    const auth = await authApi.login(req);
+    await setSession(auth.user, auth.token);
+  };
+
+  const register = async (req: RegisterRequest) => {
+    const auth = await authApi.register(req);
+    await setSession(auth.user, auth.token);
+  };
+
   const continueAsGuest = async () => {
     await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-    //setUser(null);
+    await clearAccessToken();
+    setUser(null);
   };
 
-  /** Logout */
   const logout = async () => {
     await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-    //setUser(null);
+    await clearAccessToken();
+    setUser(null);
     router.replace('/login');
   };
 
@@ -81,6 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated,
         isLoading,
         login,
+        register,
         logout,
         continueAsGuest,
       }}>

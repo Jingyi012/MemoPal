@@ -1,18 +1,32 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAccessToken } from '@/services/user.service';
 import axios, { AxiosInstance } from 'axios';
 
+function resolveApiBaseUrl() {
+  const configured = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+
+  if (!configured) {
+    return 'https://api.memopal.com';
+  }
+
+  if (!/^https?:\/\//i.test(configured)) {
+    console.warn('EXPO_PUBLIC_API_BASE_URL is invalid, falling back to default HTTPS URL.');
+    return 'https://api.memopal.com';
+  }
+
+  return configured;
+}
+
 const api: AxiosInstance = axios.create({
-  baseURL: 'https://api.memopal.com', // <-- replace with your backend URL
-  timeout: 10000, // 10s
+  baseURL: resolveApiBaseUrl(),
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// ✅ Request interceptor: attach auth token
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('authToken');
+    const token = await getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -21,16 +35,13 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Response interceptor: handle global errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (!error.response) {
-      // Network error
       console.warn('Network error:', error);
     } else if (error.response.status === 401) {
       console.warn('Unauthorized - maybe redirect to login');
-      // Optional: trigger logout or refresh token
     }
     return Promise.reject(error);
   }

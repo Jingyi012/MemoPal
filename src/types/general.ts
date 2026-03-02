@@ -19,10 +19,14 @@ export interface GeneralResponse<T> {
   [key: string]: any;
 }
 
-export interface PagedResponse<T> extends GeneralResponse<T> {
+export interface PaginationMeta {
   pageNumber: number;
   pageSize: number;
   totalCount: number;
+}
+
+export interface PagedResponse<T> extends GeneralResponse<T> {
+  pagination: PaginationMeta;
 }
 
 export interface PaginationFilterParams {
