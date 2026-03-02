@@ -36,4 +36,20 @@ export const authApi = {
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },
+
+  async uploadAvatar(fileUri: string, fileName = 'avatar.jpg'): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', {
+      uri: fileUri,
+      name: fileName,
+      type: 'image/jpeg',
+    } as any);
+
+    const response = await api.post<GeneralResponse<string>>('/auth/avatar-upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
 };

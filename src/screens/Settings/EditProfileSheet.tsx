@@ -1,8 +1,11 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppImage } from '@/components/AppImage';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
+import { uploadAvatar } from '@/services/avatar.service';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import * as ImagePicker from 'expo-image-picker';
 import React, { forwardRef, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Alert, Text, TextInput, View } from 'react-native';
 
 interface Props {
   initialName?: string;
@@ -48,13 +51,42 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
             onChangeText={setEmail}
           />
 
-          <TextInput
-            className="mt-3 rounded-xl border border-slate-200 px-4 py-3"
-            placeholder="Avatar URL (optional)"
-            autoCapitalize="none"
-            value={avatarUrl}
-            onChangeText={setAvatarUrl}
-          />
+          <Text className="mt-4 text-xs font-bold uppercase text-slate-500">Profile Picture</Text>
+          <AnimatedPressable
+            onPress={async () => {
+              const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+              if (!permission.granted) {
+                Alert.alert('Permission needed', 'Please allow photo access.');
+                return;
+              }
+
+              const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                quality: 0.8,
+                allowsEditing: true,
+                aspect: [1, 1],
+              });
+
+              if (result.canceled || !result.assets?.length) return;
+
+              setSaving(true);
+              try {
+                const uploadedUrl = await uploadAvatar(result.assets[0].uri);
+                setAvatarUrl(uploadedUrl);
+              } finally {
+                setSaving(false);
+              }
+            }}
+            className="mt-2 overflow-hidden rounded-xl border border-slate-200">
+            <View className="h-24 w-24 self-center rounded-full border border-slate-200">
+              <AppImage
+                source={avatarUrl ? { uri: avatarUrl } : undefined}
+                className="h-full w-full rounded-full"
+                contentFit="cover"
+              />
+            </View>
+            <Text className="p-3 text-center text-sm text-teal-700">Tap to upload avatar</Text>
+          </AnimatedPressable>
 
           <View className="mt-5 flex-row gap-3">
             <AnimatedPressable onPress={close} className="flex-1 items-center rounded-xl bg-slate-100 py-3">
