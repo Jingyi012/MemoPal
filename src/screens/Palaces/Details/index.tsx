@@ -51,7 +51,7 @@ const PalaceDetailScreen: React.FC<PalaceViewProps> = ({ palaceId }) => {
         title={palaceData.name}
         description={
           <Text className="text-sm text-teal-100">
-            {palaceData.locationsCount} locations • {lessons.length} lessons completed
+            {palaceData.locationsCount} locations • {lessons.length} lessons
           </Text>
         }
         backAction={() => router.replace(`/(tabs)/palaces`)}

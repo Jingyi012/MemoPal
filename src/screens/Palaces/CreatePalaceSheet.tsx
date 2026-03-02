@@ -49,17 +49,32 @@ async function pickImage(): Promise<string | null> {
   return result.assets[0].uri;
 }
 
-export default function CreatePalaceSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+export default function CreatePalaceSheet({
+  visible,
+  onClose,
+}: {
+  visible: boolean;
+  onClose: () => void;
+}) {
   const router = useRouter();
   const { user } = useCurrentUser();
   const { createPalace } = usePalaceMutations();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [thumbnail, setThumbnail] = useState('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800');
+  const [thumbnail, setThumbnail] = useState(
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800'
+  );
   const [locations, setLocations] = useState<DraftLocation[]>(createDefaultLocations());
   const [saving, setSaving] = useState(false);
 
-  const palaceId = useMemo(() => name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'), [name]);
+  const palaceId = useMemo(
+    () =>
+      name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-'),
+    [name]
+  );
   const { createLocation } = useLocationMutations(palaceId || 'temp-palace');
 
   const create = async () => {
@@ -109,35 +124,58 @@ export default function CreatePalaceSheet({ visible, onClose }: { visible: boole
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text className="text-xl font-bold text-slate-900">Create Custom Palace</Text>
             {!user?.isPremium ? (
-              <Text className="mt-2 text-sm text-amber-600">Premium required to create custom palaces.</Text>
+              <Text className="mt-2 text-sm text-amber-600">
+                Premium required to create custom palaces.
+              </Text>
             ) : null}
 
-            <TextInput className="mt-4 rounded-xl border border-slate-200 px-4 py-3" placeholder="Palace name" value={name} onChangeText={setName} />
-            <TextInput className="mt-3 rounded-xl border border-slate-200 px-4 py-3" placeholder="Description" value={description} onChangeText={setDescription} />
+            <TextInput
+              className="mt-4 rounded-xl border border-slate-200 px-4 py-3"
+              placeholder="Palace name"
+              value={name}
+              onChangeText={setName}
+            />
+            <TextInput
+              className="mt-3 rounded-xl border border-slate-200 px-4 py-3"
+              placeholder="Description"
+              value={description}
+              onChangeText={setDescription}
+            />
 
-            <Text className="mt-4 text-xs font-bold uppercase text-slate-500">Palace Thumbnail</Text>
+            <Text className="mt-4 text-xs font-bold uppercase text-slate-500">
+              Palace Thumbnail
+            </Text>
             <AnimatedPressable
               onPress={async () => {
                 const uri = await pickImage();
                 if (uri) setThumbnail(uri);
               }}
               className="mt-2 overflow-hidden rounded-xl border border-slate-200">
-              <AppImage source={{ uri: thumbnail }} className="h-36 w-full" contentFit="cover" />
+              <View className="h-36">
+                <AppImage source={{ uri: thumbnail }} className="w-full" contentFit="cover" />
+              </View>
+
               <View className="absolute right-3 top-3 rounded-full bg-black/50 p-2">
                 <ImagePlus size={16} color="white" />
               </View>
             </AnimatedPressable>
 
-            <Text className="mt-5 text-xs font-bold uppercase text-slate-500">Locations (with image upload)</Text>
+            <Text className="mt-5 text-xs font-bold uppercase text-slate-500">
+              Locations (with image upload)
+            </Text>
             <View className="mt-2 gap-3">
               {locations.map((loc, idx) => (
                 <View key={idx} className="rounded-2xl border border-slate-200 p-3">
-                  <Text className="mb-2 text-xs font-semibold text-slate-500">Location {idx + 1}</Text>
+                  <Text className="mb-2 text-xs font-semibold text-slate-500">
+                    Location {idx + 1}
+                  </Text>
                   <TextInput
                     className="rounded-xl border border-slate-200 px-3 py-2"
                     value={loc.name}
                     onChangeText={(text) =>
-                      setLocations((prev) => prev.map((x, i) => (i === idx ? { ...x, name: text } : x)))
+                      setLocations((prev) =>
+                        prev.map((x, i) => (i === idx ? { ...x, name: text } : x))
+                      )
                     }
                     placeholder="Location name"
                   />
@@ -145,7 +183,9 @@ export default function CreatePalaceSheet({ visible, onClose }: { visible: boole
                     className="mt-2 rounded-xl border border-slate-200 px-3 py-2"
                     value={loc.description}
                     onChangeText={(text) =>
-                      setLocations((prev) => prev.map((x, i) => (i === idx ? { ...x, description: text } : x)))
+                      setLocations((prev) =>
+                        prev.map((x, i) => (i === idx ? { ...x, description: text } : x))
+                      )
                     }
                     placeholder="Location description"
                   />
@@ -153,23 +193,35 @@ export default function CreatePalaceSheet({ visible, onClose }: { visible: boole
                     onPress={async () => {
                       const uri = await pickImage();
                       if (!uri) return;
-                      setLocations((prev) => prev.map((x, i) => (i === idx ? { ...x, imageUrl: uri } : x)));
+                      setLocations((prev) =>
+                        prev.map((x, i) => (i === idx ? { ...x, imageUrl: uri } : x))
+                      );
                     }}
                     className="mt-2 overflow-hidden rounded-xl border border-slate-200">
-                    <AppImage source={{ uri: loc.imageUrl }} className="h-28 w-full" contentFit="cover" />
+                    <View className="h-36">
+                      <AppImage
+                        source={{ uri: loc.imageUrl }}
+                        className="w-full"
+                        contentFit="cover"
+                      />
+                    </View>
                   </AnimatedPressable>
                 </View>
               ))}
             </View>
 
             <View className="mt-5 flex-row gap-3">
-              <AnimatedPressable onPress={onClose} className="flex-1 items-center rounded-xl bg-slate-100 py-3">
+              <AnimatedPressable
+                onPress={onClose}
+                className="flex-1 items-center rounded-xl bg-slate-100 py-3">
                 <Text className="font-semibold text-slate-700">Cancel</Text>
               </AnimatedPressable>
               <AnimatedPressable
                 onPress={create}
                 className={`flex-1 items-center rounded-xl py-3 ${user?.isPremium ? 'bg-teal-600' : 'bg-slate-300'}`}>
-                <Text className="font-semibold text-white">{saving ? 'Creating...' : 'Create'}</Text>
+                <Text className="font-semibold text-white">
+                  {saving ? 'Creating...' : 'Create'}
+                </Text>
               </AnimatedPressable>
             </View>
           </ScrollView>
