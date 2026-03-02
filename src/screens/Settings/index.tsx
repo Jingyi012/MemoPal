@@ -4,7 +4,7 @@ import { resetSeedData, seedInitialData } from '@/db/seed';
 import * as schema from '@/db/schema';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useQueryClient } from '@tanstack/react-query';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
@@ -19,6 +19,7 @@ import { Colors } from '@/constants/colors';
 import { useUserState } from '@/contexts/UserStateContext';
 import { PushNotificationService } from '@/services/notification/pushNotificationService';
 import { Bell, HelpCircle, LogOut, Moon, Shield } from 'lucide-react-native';
+import Toast from 'react-native-toast-message';
 import HelpSheet from './HelpSheet';
 import PrivacyPolicySheet from './PrivacyPolicySheet';
 import ProfileCard from './ProfileCard';
@@ -66,6 +67,28 @@ export default function SettingsScreen() {
     await resetSeedData();
     await seedInitialData(true);
     await queryClient.invalidateQueries();
+  };
+
+  const checkXpIntegrity = async () => {
+    const current = await db.query.users.findFirst();
+    const summed = await db
+      .select({ total: sql<number>`sum(${schema.xpEvents.xpAmount})` })
+      .from(schema.xpEvents)
+      .where(eq(schema.xpEvents.isDeleted, false));
+
+    const sumXp = summed[0]?.total ?? 0;
+    const userXp = current?.totalXp ?? 0;
+
+    if (sumXp === userXp) {
+      Toast.show({ type: 'success', text1: 'XP integrity OK', text2: `users.totalXp = ${userXp}` });
+      return;
+    }
+
+    Toast.show({
+      type: 'error',
+      text1: 'XP mismatch detected',
+      text2: `users.totalXp=${userXp}, xp_events_sum=${sumXp}`,
+    });
   };
 
   const togglePremiumForTesting = async () => {
@@ -169,6 +192,12 @@ export default function SettingsScreen() {
             title={`Toggle Premium (Current: ${user?.isPremium ? 'ON' : 'OFF'})`}
             subtitle="Testing helper"
             onPress={togglePremiumForTesting}
+          />
+          <SettingsRow
+            icon={<Shield size={20} color="#475569" />}
+            title="Check XP Integrity"
+            subtitle="Compare users.totalXp with xp_events sum"
+            onPress={checkXpIntegrity}
           />
         </SettingsSection>
 
