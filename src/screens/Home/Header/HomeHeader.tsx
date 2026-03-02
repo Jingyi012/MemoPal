@@ -49,10 +49,12 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
       // Back button slot replaced with avatar
       leftComponent={
         avatar ? (
-          <AppImage
-            source={{ uri: avatar }}
-            className="h-10 w-10 rounded-full border-2 border-white"
-          />
+          <View className="h-10 w-10">
+            <AppImage
+              source={{ uri: avatar }}
+              style={{ width: '100%', height: '100%', borderRadius: 999 }}
+            />
+          </View>
         ) : (
           <View className="h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-white/20">
             <User2 size={20} color="white" />

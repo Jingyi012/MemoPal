@@ -17,13 +17,22 @@ const ProfileCard: React.FC<Props> = ({ user, onEdit }) => {
     <View className="flex-row items-center gap-4 p-2">
       <View className="h-16 w-16 overflow-hidden rounded-full border-2 border-gray-200 bg-slate-100">
         {user?.avatarUrl ? (
-          <AppImage source={{ uri: user.avatarUrl }} style={{ width: '100%', height: '100%', borderRadius: 999 }} />
+          <AppImage
+            source={{ uri: user.avatarUrl }}
+            style={{ width: '100%', height: '100%', borderRadius: 999 }}
+          />
         ) : (
           <LinearGradient
             colors={[Colors.teal500, Colors.indigo600]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ width: '100%', height: '100%', borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}>
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: 999,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
             <User2 size={25} color="white" />
           </LinearGradient>
         )}

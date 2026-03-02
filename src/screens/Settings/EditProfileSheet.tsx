@@ -78,11 +78,13 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
                 contentFit="cover"
               />
             </View>
-            <Text className="p-3 text-center text-sm text-teal-700">Tap to choose avatar (offline supported)</Text>
+            <Text className="p-3 text-center text-sm text-teal-700">Tap to choose image</Text>
           </AnimatedPressable>
 
           <View className="mt-5 flex-row gap-3">
-            <AnimatedPressable onPress={close} className="flex-1 items-center rounded-xl bg-slate-100 py-3">
+            <AnimatedPressable
+              onPress={close}
+              className="flex-1 items-center rounded-xl bg-slate-100 py-3">
               <Text className="font-semibold text-slate-700">Cancel</Text>
             </AnimatedPressable>
             <AnimatedPressable
