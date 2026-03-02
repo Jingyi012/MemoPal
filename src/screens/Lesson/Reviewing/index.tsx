@@ -24,6 +24,7 @@ import { ActionSheet } from '@/components/ActionSheet';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import LoadingView from '@/components/LoadingView';
 import { useGamificationRewards } from '@/contexts/GamificationRewardContext';
+import { REVIEW_TARGET_SECONDS_PER_WORD } from '@/constants/config';
 import { Colors } from '@/constants/colors';
 import { useLessonDetail } from '@/hooks/useLessonsManager';
 import { useLocation } from '@/hooks/useLocation';
@@ -58,6 +59,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const [speedBonusXp, setSpeedBonusXp] = useState(0);
   const [sessionScore, setSessionScore] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [countdownSeconds, setCountdownSeconds] = useState(REVIEW_TARGET_SECONDS_PER_WORD);
   const [results, setResults] = useState<any[]>([]);
   const [perWordSeconds, setPerWordSeconds] = useState<number[]>([]);
   const [showSummary, setShowSummary] = useState(false);
@@ -81,8 +83,21 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
     if (totalSteps > 0) {
       startedAtRef.current = Date.now();
       currentWordStartedAtRef.current = Date.now();
+      setCountdownSeconds(REVIEW_TARGET_SECONDS_PER_WORD);
     }
   }, [lessonId, totalSteps]);
+
+  useEffect(() => {
+    if (isRevealed) return;
+
+    const timer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - currentWordStartedAtRef.current) / 1000);
+      const left = Math.max(0, REVIEW_TARGET_SECONDS_PER_WORD - elapsed);
+      setCountdownSeconds(left);
+    }, 250);
+
+    return () => clearInterval(timer);
+  }, [currentStep, isRevealed]);
 
   // Fetch location for current word
   const { location, isLoading: locationLoading } = useLocation(step?.locationId || '');
@@ -133,6 +148,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
     setShowSummary(false);
     startedAtRef.current = Date.now();
     currentWordStartedAtRef.current = Date.now();
+    setCountdownSeconds(REVIEW_TARGET_SECONDS_PER_WORD);
   };
 
   const handleNext = async () => {
@@ -143,6 +159,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
       setInputValue('');
       setCurrentStep((s) => s + 1);
       currentWordStartedAtRef.current = Date.now();
+      setCountdownSeconds(REVIEW_TARGET_SECONDS_PER_WORD);
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
       // Submit review
@@ -209,6 +226,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
             totalSteps={totalSteps}
             streak={streak}
             streakStyle={streakStyle}
+            countdownSeconds={countdownSeconds}
             onExit={() => setShowExitModal(true)}
           />
 
