@@ -5,6 +5,7 @@ using MemoPal.Application.Features.Auth.DTOs;
 using MemoPal.Application.Features.Auth.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
 
 namespace MemoPal.Api.Controllers;
 
@@ -65,6 +66,40 @@ public sealed class AuthController : ApiControllerBase
             new UpdateProfileCommand(GetUserIdOrThrow(), request.DisplayName, request.AvatarUrl, request.Email),
             cancellationToken);
         return Ok(ApiResponse<UserWithStatDto>.Ok(data));
+    }
+
+    [Authorize]
+    [HttpPost("avatar-upload")]
+    [RequestSizeLimit(10_000_000)]
+    public async Task<ActionResult<ApiResponse<string>>> UploadAvatar([FromForm] IFormFile file, CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(ApiResponse<string>.Fail("File is required."));
+
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        if (!allowed.Contains(ext))
+            return BadRequest(ApiResponse<string>.Fail("Only jpg, jpeg, png, webp are allowed."));
+
+        var userId = GetUserIdOrThrow();
+        var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "avatars");
+        Directory.CreateDirectory(uploadsDir);
+
+        var fileName = $"{userId}_{Guid.NewGuid():N}{ext}";
+        var filePath = Path.Combine(uploadsDir, fileName);
+
+        await using (var stream = System.IO.File.Create(filePath))
+        {
+            await file.CopyToAsync(stream, cancellationToken);
+        }
+
+        var avatarUrl = $"/uploads/avatars/{fileName}";
+
+        var data = await Sender.Send(
+            new UpdateProfileCommand(userId, null, avatarUrl, null),
+            cancellationToken);
+
+        return Ok(ApiResponse<string>.Ok(data.AvatarUrl ?? avatarUrl));
     }
 
     public sealed class RegisterRequest

@@ -100,6 +100,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
