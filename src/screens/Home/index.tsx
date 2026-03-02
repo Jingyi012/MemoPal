@@ -53,7 +53,7 @@ const HomeScreen = () => {
           <WhyThisWorkCard />
           <QuickState />
           <QuoteCard todayQuote={todayQuote} />
-          <PremiumUpdateCard className="mt-6" />
+          {!user?.isPremium ? <PremiumUpdateCard className="mt-6" /> : null}
         </View>
       </ScrollView>
     </View>

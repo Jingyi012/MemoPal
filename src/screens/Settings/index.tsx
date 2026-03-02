@@ -83,16 +83,24 @@ export default function SettingsScreen() {
   const togglePremiumForTesting = async () => {
     if (!user) return;
     const nextPremium = !user.isPremium;
+    const now = new Date();
+    const nextExpiry = new Date(now);
+    nextExpiry.setMonth(nextExpiry.getMonth() + 1);
+
     await db
       .update(schema.users)
-      .set({ isPremium: nextPremium, updatedAt: new Date().toISOString() })
+      .set({ isPremium: nextPremium, updatedAt: now.toISOString() })
       .where(eq(schema.users.id, user.id));
 
     await updateState({
       subscription: {
         ...userState.subscription,
         isPremium: nextPremium,
+        planId: nextPremium ? 'premium_monthly' : undefined,
+        startedAt: nextPremium ? now.toISOString() : userState.subscription.startedAt,
+        expiresAt: nextPremium ? nextExpiry.toISOString() : now.toISOString(),
         status: nextPremium ? 'active' : 'canceled',
+        autoRenew: nextPremium,
       },
     });
 
@@ -111,6 +119,18 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <SettingsSection title="Profile">
           <ProfileCard user={user} />
+        </SettingsSection>
+
+        <SettingsSection title="Subscription">
+          <SettingsRow
+            icon={<Shield size={20} color="#475569" />}
+            title={userState.subscription.isPremium ? 'Premium Active' : 'Free Plan'}
+            subtitle={
+              userState.subscription.isPremium
+                ? `Plan: ${userState.subscription.planId ?? 'premium'} • Expires: ${userState.subscription.expiresAt ? new Date(userState.subscription.expiresAt).toLocaleDateString() : '-'}`
+                : 'Upgrade to unlock custom palace features'
+            }
+          />
         </SettingsSection>
 
         <SettingsSection title="Notifications">
@@ -151,9 +171,11 @@ export default function SettingsScreen() {
           <ReferrerPromptCard router={router} />
         </SettingsSection>
 
-        <SettingsSection>
-          <PremiumUpdateCard />
-        </SettingsSection>
+        {!user?.isPremium ? (
+          <SettingsSection>
+            <PremiumUpdateCard />
+          </SettingsSection>
+        ) : null}
 
         <SettingsSection title="Developer Tools">
           <SettingsRow

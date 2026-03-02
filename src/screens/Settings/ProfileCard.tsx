@@ -2,7 +2,7 @@ import { AppImage } from '@/components/AppImage';
 import { Colors } from '@/constants/colors';
 import { User } from '@/types/users';
 import { LinearGradient } from 'expo-linear-gradient';
-import { User2 } from 'lucide-react-native';
+import { Crown, User2 } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -30,7 +30,15 @@ const ProfileCard: React.FC<Props> = ({ user }) => {
       )}
 
       <View className="flex-1">
-        <Text className="text-base font-semibold text-gray-900">{user?.displayName}</Text>
+        <View className="flex-row items-center">
+          <Text className="text-base font-semibold text-gray-900">{user?.displayName}</Text>
+          {user?.isPremium ? (
+            <View className="ml-2 flex-row items-center rounded-full bg-amber-100 px-2 py-0.5">
+              <Crown size={12} color="#b45309" />
+              <Text className="ml-1 text-[10px] font-bold uppercase text-amber-700">Premium</Text>
+            </View>
+          ) : null}
+        </View>
         <Text className="text-sm text-gray-500">{user?.email ?? 'Guest Account'}</Text>
       </View>
     </View>
