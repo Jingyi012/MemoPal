@@ -6,7 +6,7 @@ import { PALACES } from '@/db/seeding/catalog';
 import { BADGES, LEVEL_CONFIGS, MILESTONES, XP_CONFIGS } from '@/db/seeding/gamification';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const SEED_VERSION = 'offline-v3-palace-5x10x3-lessons';
+const SEED_VERSION = 'offline-v4-gamification-refresh';
 const SEED_VERSION_KEY = '@memopal_seed_version';
 
 async function clearAllSeededTables(tx: any) {

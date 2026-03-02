@@ -88,7 +88,6 @@ export function LessonInfoStep({ value, onChange, onNext }: Props) {
       className="flex-1 bg-white">
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 140 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
         <View className="p-4">

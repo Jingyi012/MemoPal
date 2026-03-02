@@ -48,14 +48,11 @@ export function LocationCanvasStep({ palaceId, words, onChangeWords, onPrevious,
         </View>
       </View>
 
-      <ScrollView
-        className="flex-1 px-4 pt-4"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 140 }}>
+      <ScrollView className="flex-1 px-4 pt-4" showsVerticalScrollIndicator={false}>
         <Text className="mb-4 ml-1 text-[11px] font-black uppercase tracking-widest text-slate-400">
           Tap a location to place a word
         </Text>
-        <View className="flex-row flex-wrap gap-4">
+        <View className="flex-row flex-wrap justify-between">
           {locations.map((location) => (
             <LocationCard
               key={location.id}

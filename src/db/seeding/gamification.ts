@@ -20,14 +20,18 @@ export const XP_CONFIGS = [
 
 export const MILESTONES = [
   { id: 'ms-first-lesson', key: 'first_lesson_completed', title: 'First Step', description: 'Complete your first lesson', conditionType: 'lessons_completed' as const, conditionValue: 1 },
+  { id: 'ms-five-lessons', key: 'five_lessons_completed', title: 'Steady Learner', description: 'Complete 5 lessons', conditionType: 'lessons_completed' as const, conditionValue: 5 },
   { id: 'ms-first-palace', key: 'first_palace_completed', title: 'Palace Finisher', description: 'Complete all 3 lessons in one palace', conditionType: 'lessons_completed' as const, conditionValue: 3 },
   { id: 'ms-100-words', key: 'hundred_words', title: 'Word Collector', description: 'Learn 100 words', conditionType: 'words_learned' as const, conditionValue: 100 },
+  { id: 'ms-level-2', key: 'reach_level_2', title: 'Level 2 Unlocked', description: 'Reach level 2', conditionType: 'level' as const, conditionValue: 2 },
   { id: 'ms-level-5', key: 'reach_level_5', title: 'Mind Ascender', description: 'Reach level 5', conditionType: 'level' as const, conditionValue: 5 },
+  { id: 'ms-level-7', key: 'reach_level_7', title: 'Mastermind', description: 'Reach level 7', conditionType: 'level' as const, conditionValue: 7 },
 ];
 
 export const BADGES = [
   { id: 'badge-first-lesson', key: 'first_lesson', name: 'First Spark', description: 'Complete your first lesson', icon: 'sparkles', iconUrl: null, rarity: 'common' as const },
-  { id: 'badge-palace-complete', key: 'palace_complete', name: 'Palace Conqueror', description: 'Complete one full palace', icon: 'castle', iconUrl: null, rarity: 'rare' as const },
-  { id: 'badge-review-25', key: 'review_25', name: 'Recall Runner', description: 'Complete 25 reviews', icon: 'brain', iconUrl: null, rarity: 'epic' as const },
+  { id: 'badge-review-25', key: 'reviews_25', name: 'Recall Runner', description: 'Complete 25 reviews', icon: 'brain', iconUrl: null, rarity: 'rare' as const },
+  { id: 'badge-lessons-10', key: 'lessons_completed_10', name: 'Focused Learner', description: 'Complete 10 lessons', icon: 'book-open', iconUrl: null, rarity: 'rare' as const },
+  { id: 'badge-words-100', key: 'words_learned_100', name: 'Lexicon Builder', description: 'Learn 100 words', icon: 'badge-check', iconUrl: null, rarity: 'epic' as const },
   { id: 'badge-level-5', key: 'level_5', name: 'Mind Architect', description: 'Reach Level 5', icon: 'crown', iconUrl: null, rarity: 'legendary' as const },
 ];

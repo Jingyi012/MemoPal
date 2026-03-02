@@ -12,6 +12,38 @@ import { calculateNextDueDate, REVIEW_INTERVALS } from '@/utils/review';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 
+function isBadgeEarnedByKey(
+  key: string,
+  metrics: { completedLessons: number; learnedWords: number; level: number; totalReviews: number; totalXp: number }
+) {
+  if (key === 'first_lesson') return metrics.completedLessons >= 1;
+  if (key === 'palace_complete') return metrics.completedLessons >= 3;
+  if (key === 'review_25') return metrics.totalReviews >= 25;
+  if (key === 'level_5') return metrics.level >= 5;
+
+  const dynamicMatch = key.match(/^(level|reviews|lessons_completed|words_learned|total_xp)_(\d+)$/);
+  if (!dynamicMatch) return false;
+
+  const [, metric, rawTarget] = dynamicMatch;
+  const target = Number(rawTarget);
+  if (Number.isNaN(target)) return false;
+
+  switch (metric) {
+    case 'level':
+      return metrics.level >= target;
+    case 'reviews':
+      return metrics.totalReviews >= target;
+    case 'lessons_completed':
+      return metrics.completedLessons >= target;
+    case 'words_learned':
+      return metrics.learnedWords >= target;
+    case 'total_xp':
+      return metrics.totalXp >= target;
+    default:
+      return false;
+  }
+}
+
 export interface ReviewRepository {
   getReviewSchedule(lessonProgressId: string): Promise<ReviewSchedule[]>;
   getDueReviews(): Promise<ReviewSchedule[]>;
@@ -295,12 +327,16 @@ export function createReviewRepository(): ReviewRepository {
           where: and(eq(schema.badges.isDeleted, false), sql`${schema.badges.earnedAt} is null`),
         });
 
+        const totalReviews = currentProgress.totalReviews + (isPassed ? 1 : 0);
+
         for (const badge of badgesToAward) {
-          const isEarned =
-            (badge.key === 'first_lesson' && completedLessons >= 1) ||
-            (badge.key === 'palace_complete' && completedLessons >= 3) ||
-            (badge.key === 'review_25' && (currentProgress.totalReviews + (isPassed ? 1 : 0)) >= 25) ||
-            (badge.key === 'level_5' && level >= 5);
+          const isEarned = isBadgeEarnedByKey(badge.key, {
+            completedLessons,
+            learnedWords,
+            level,
+            totalReviews,
+            totalXp: latestUser?.totalXp ?? 0,
+          });
 
           if (isEarned) {
             await tx

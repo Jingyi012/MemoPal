@@ -15,7 +15,7 @@ export function LocationCard({ location, word, onPress }: Props) {
   return (
     <AnimatedPressable
       onPress={onPress}
-      className="relative w-[48%] overflow-hidden rounded-2xl shadow-sm">
+      className="relative mb-4 w-[49%] overflow-hidden rounded-2xl shadow-sm">
       {/* Background Image */}
       <AppImage source={{ uri: location.imageUrl }} className="w-full" style={{ height: 144 }} />
 

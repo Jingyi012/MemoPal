@@ -26,10 +26,7 @@ export function ReviewSummaryStep({ form, isSaving, onEditInfo, onEditWords, onS
 
   return (
     <View className="flex-1 bg-white">
-      <ScrollView
-        className="flex-1 px-5"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 140 }}>
+      <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="py-6">
           <Text className="text-2xl font-black text-slate-800">Final Review</Text>
