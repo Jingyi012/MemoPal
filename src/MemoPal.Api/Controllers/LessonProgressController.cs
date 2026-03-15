@@ -18,15 +18,13 @@ public sealed class LessonProgressController : ApiControllerBase
     [HttpGet("/lessons/{lessonId}/progress")]
     public async Task<ActionResult<ApiResponse<LessonProgressDto>>> GetProgress(string lessonId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetLessonProgressQuery(GetUserIdOrThrow(), lessonId), cancellationToken);
-        return Ok(ApiResponse<LessonProgressDto>.Ok(data));
+        var result = await Sender.Send(new GetLessonProgressQuery(GetUserIdOrThrow(), lessonId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPut("/lessons/{lessonId}/progress")]
     public async Task<ActionResult<ApiResponse<LessonProgressDto>>> UpdateProgress(string lessonId, [FromBody] LessonProgressUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new UpdateLessonProgressCommand(GetUserIdOrThrow(), lessonId, request), cancellationToken);
-        return Ok(ApiResponse<LessonProgressDto>.Ok(data));
+        var result = await Sender.Send(new UpdateLessonProgressCommand(GetUserIdOrThrow(), lessonId, request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPost("/lessons/progress/batch")]
@@ -43,3 +41,4 @@ public sealed class LessonProgressController : ApiControllerBase
         return Ok(ApiResponse<IReadOnlyList<LessonProgressDto>>.Ok(data));
     }
 }
+

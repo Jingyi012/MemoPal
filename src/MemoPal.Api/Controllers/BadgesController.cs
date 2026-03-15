@@ -25,15 +25,13 @@ public sealed class BadgesController : ApiControllerBase
     [HttpGet("/badges/{badgeId}")]
     public async Task<ActionResult<ApiResponse<BadgeDto>>> GetById(string badgeId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetBadgeQuery(GetUserIdOrThrow(), badgeId), cancellationToken);
-        return Ok(ApiResponse<BadgeDto>.Ok(data));
+        var result = await Sender.Send(new GetBadgeQuery(GetUserIdOrThrow(), badgeId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPost("/badges/{badgeId}/award")]
     public async Task<ActionResult<ApiResponse<bool>>> Award(string badgeId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new AwardBadgeCommand(GetUserIdOrThrow(), badgeId), cancellationToken);
-        return Ok(ApiResponse<bool>.Ok(data));
+        var result = await Sender.Send(new AwardBadgeCommand(GetUserIdOrThrow(), badgeId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpGet("/badges/updated")]
@@ -43,3 +41,4 @@ public sealed class BadgesController : ApiControllerBase
         return Ok(ApiResponse<IReadOnlyList<BadgeDto>>.Ok(data));
     }
 }
+

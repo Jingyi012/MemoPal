@@ -25,8 +25,7 @@ public sealed class NotificationsController : ApiControllerBase
     [HttpGet("/notifications/{notificationId}")]
     public async Task<ActionResult<ApiResponse<NotificationDto>>> GetById(string notificationId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetNotificationQuery(GetUserIdOrThrow(), notificationId), cancellationToken);
-        return Ok(ApiResponse<NotificationDto>.Ok(data));
+        var result = await Sender.Send(new GetNotificationQuery(GetUserIdOrThrow(), notificationId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpGet("/palaces/{palaceId}/notifications")]
@@ -39,15 +38,13 @@ public sealed class NotificationsController : ApiControllerBase
     [HttpPost("/notifications")]
     public async Task<ActionResult<ApiResponse<NotificationDto>>> Create([FromBody] NotificationUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new CreateNotificationCommand(GetUserIdOrThrow(), request), cancellationToken);
-        return Ok(ApiResponse<NotificationDto>.Ok(data));
+        var result = await Sender.Send(new CreateNotificationCommand(GetUserIdOrThrow(), request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPut("/notifications/{notificationId}")]
     public async Task<ActionResult<ApiResponse<NotificationDto>>> Update(string notificationId, [FromBody] NotificationUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new UpdateNotificationCommand(GetUserIdOrThrow(), notificationId, request), cancellationToken);
-        return Ok(ApiResponse<NotificationDto>.Ok(data));
+        var result = await Sender.Send(new UpdateNotificationCommand(GetUserIdOrThrow(), notificationId, request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpDelete("/notifications/{notificationId}")]
@@ -71,3 +68,4 @@ public sealed class NotificationsController : ApiControllerBase
         return Ok(ApiResponse<IReadOnlyList<NotificationDto>>.Ok(data));
     }
 }
+

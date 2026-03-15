@@ -25,22 +25,19 @@ public sealed class LevelConfigsController : ApiControllerBase
     [HttpGet("/level-configs/{level:int}")]
     public async Task<ActionResult<ApiResponse<LevelConfigDto>>> GetByLevel(int level, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetLevelConfigQuery(level), cancellationToken);
-        return Ok(ApiResponse<LevelConfigDto>.Ok(data));
+        var result = await Sender.Send(new GetLevelConfigQuery(level), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPost("/level-configs")]
     public async Task<ActionResult<ApiResponse<LevelConfigDto>>> Create([FromBody] LevelConfigUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new CreateLevelConfigCommand(request), cancellationToken);
-        return Ok(ApiResponse<LevelConfigDto>.Ok(data));
+        var result = await Sender.Send(new CreateLevelConfigCommand(request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPut("/level-configs/{level:int}")]
     public async Task<ActionResult<ApiResponse<LevelConfigDto>>> Update(int level, [FromBody] LevelConfigUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new UpdateLevelConfigCommand(level, request), cancellationToken);
-        return Ok(ApiResponse<LevelConfigDto>.Ok(data));
+        var result = await Sender.Send(new UpdateLevelConfigCommand(level, request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpDelete("/level-configs/{level:int}")]
@@ -57,3 +54,4 @@ public sealed class LevelConfigsController : ApiControllerBase
         return Ok(ApiResponse<IReadOnlyList<LevelConfigDto>>.Ok(data));
     }
 }
+

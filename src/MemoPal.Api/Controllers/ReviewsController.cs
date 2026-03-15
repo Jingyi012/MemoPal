@@ -39,22 +39,19 @@ public sealed class ReviewsController : ApiControllerBase
     [HttpPatch("/reviews/{reviewId}")]
     public async Task<ActionResult<ApiResponse<ReviewScheduleDto>>> Update(string reviewId, [FromBody] ReviewScheduleUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new UpdateReviewCommand(GetUserIdOrThrow(), reviewId, request), cancellationToken);
-        return Ok(ApiResponse<ReviewScheduleDto>.Ok(data));
+        var result = await Sender.Send(new UpdateReviewCommand(GetUserIdOrThrow(), reviewId, request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPost("/reviews/{reviewId}/complete")]
     public async Task<ActionResult<ApiResponse<ReviewScheduleDto>>> Complete(string reviewId, [FromBody] CompleteReviewRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new CompleteReviewCommand(GetUserIdOrThrow(), reviewId, request.CorrectCount, request.TotalCount), cancellationToken);
-        return Ok(ApiResponse<ReviewScheduleDto>.Ok(data));
+        var result = await Sender.Send(new CompleteReviewCommand(GetUserIdOrThrow(), reviewId, request.CorrectCount, request.TotalCount), cancellationToken);`n        return Ok(result);
     }
 
     [HttpGet("/reviews/stats")]
     public async Task<ActionResult<ApiResponse<ReviewStatsDto>>> Stats(CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetReviewStatsQuery(GetUserIdOrThrow()), cancellationToken);
-        return Ok(ApiResponse<ReviewStatsDto>.Ok(data));
+        var result = await Sender.Send(new GetReviewStatsQuery(GetUserIdOrThrow()), cancellationToken);`n        return Ok(result);
     }
 
     [HttpGet("/reviews/updated")]
@@ -64,3 +61,4 @@ public sealed class ReviewsController : ApiControllerBase
         return Ok(ApiResponse<IReadOnlyList<ReviewScheduleDto>>.Ok(data));
     }
 }
+

@@ -18,22 +18,19 @@ public sealed class UsersController : ApiControllerBase
     [HttpGet("/users/stats")]
     public async Task<ActionResult<ApiResponse<UserStatsDto>>> GetStats(CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetUserStatsQuery(GetUserIdOrThrow()), cancellationToken);
-        return Ok(ApiResponse<UserStatsDto>.Ok(data));
+        var result = await Sender.Send(new GetUserStatsQuery(GetUserIdOrThrow()), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPatch("/users/stats")]
     public async Task<ActionResult<ApiResponse<UserStatsDto>>> UpdateStats([FromBody] UpdateUserStatsRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new UpdateUserStatsCommand(GetUserIdOrThrow(), request), cancellationToken);
-        return Ok(ApiResponse<UserStatsDto>.Ok(data));
+        var result = await Sender.Send(new UpdateUserStatsCommand(GetUserIdOrThrow(), request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpGet("/users/level")]
     public async Task<ActionResult<ApiResponse<UserLevelDto>>> GetLevel(CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetUserLevelQuery(GetUserIdOrThrow()), cancellationToken);
-        return Ok(ApiResponse<UserLevelDto>.Ok(data));
+        var result = await Sender.Send(new GetUserLevelQuery(GetUserIdOrThrow()), cancellationToken);`n        return Ok(result);
     }
 
     [HttpGet("/stats/updated")]
@@ -43,3 +40,4 @@ public sealed class UsersController : ApiControllerBase
         return Ok(ApiResponse<IReadOnlyList<UserStatsDto>>.Ok(data));
     }
 }
+

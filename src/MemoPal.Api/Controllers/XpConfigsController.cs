@@ -25,22 +25,19 @@ public sealed class XpConfigsController : ApiControllerBase
     [HttpGet("/xp-configs/{sourceType}")]
     public async Task<ActionResult<ApiResponse<XpConfigDto>>> GetBySourceType(string sourceType, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetXpConfigBySourceTypeQuery(sourceType), cancellationToken);
-        return Ok(ApiResponse<XpConfigDto>.Ok(data));
+        var result = await Sender.Send(new GetXpConfigBySourceTypeQuery(sourceType), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPost("/xp-configs")]
     public async Task<ActionResult<ApiResponse<XpConfigDto>>> Create([FromBody] XpConfigUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new CreateXpConfigCommand(request), cancellationToken);
-        return Ok(ApiResponse<XpConfigDto>.Ok(data));
+        var result = await Sender.Send(new CreateXpConfigCommand(request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPatch("/xp-configs/{id}")]
     public async Task<ActionResult<ApiResponse<XpConfigDto>>> Update(string id, [FromBody] XpConfigUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new UpdateXpConfigCommand(id, request), cancellationToken);
-        return Ok(ApiResponse<XpConfigDto>.Ok(data));
+        var result = await Sender.Send(new UpdateXpConfigCommand(id, request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpDelete("/xp-configs/{id}")]
@@ -57,3 +54,4 @@ public sealed class XpConfigsController : ApiControllerBase
         return Ok(ApiResponse<IReadOnlyList<XpConfigDto>>.Ok(data));
     }
 }
+

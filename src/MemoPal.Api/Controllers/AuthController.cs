@@ -23,16 +23,14 @@ public sealed class AuthController : ApiControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new RegisterCommand(request.DisplayName, request.Email, request.Password), cancellationToken);
-        return Ok(ApiResponse<AuthResponseDto>.Ok(data));
+        var result = await Sender.Send(new RegisterCommand(request.DisplayName, request.Email, request.Password), cancellationToken);`n        return Ok(result);
     }
 
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new LoginCommand(request.Email, request.Password), cancellationToken);
-        return Ok(ApiResponse<AuthResponseDto>.Ok(data));
+        var result = await Sender.Send(new LoginCommand(request.Email, request.Password), cancellationToken);`n        return Ok(result);
     }
 
     [AllowAnonymous]
@@ -40,8 +38,7 @@ public sealed class AuthController : ApiControllerBase
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> GoogleLogin([FromBody] GoogleLoginRequest request, CancellationToken cancellationToken)
     {
         var token = string.IsNullOrWhiteSpace(request.GoogleAccessToken) ? request.AccessToken : request.GoogleAccessToken;
-        var data = await Sender.Send(new GoogleLoginCommand(token ?? string.Empty), cancellationToken);
-        return Ok(ApiResponse<AuthResponseDto>.Ok(data));
+        var result = await Sender.Send(new GoogleLoginCommand(token ?? string.Empty), cancellationToken);`n        return Ok(result);
     }
 
     [AllowAnonymous]
@@ -49,26 +46,23 @@ public sealed class AuthController : ApiControllerBase
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> FacebookLogin([FromBody] FacebookLoginRequest request, CancellationToken cancellationToken)
     {
         var token = string.IsNullOrWhiteSpace(request.FacebookAccessToken) ? request.AccessToken : request.FacebookAccessToken;
-        var data = await Sender.Send(new FacebookLoginCommand(token ?? string.Empty), cancellationToken);
-        return Ok(ApiResponse<AuthResponseDto>.Ok(data));
+        var result = await Sender.Send(new FacebookLoginCommand(token ?? string.Empty), cancellationToken);`n        return Ok(result);
     }
 
     [Authorize]
     [HttpGet("me")]
     public async Task<ActionResult<ApiResponse<UserWithStatDto>>> GetMe(CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetMeQuery(GetUserIdOrThrow()), cancellationToken);
-        return Ok(ApiResponse<UserWithStatDto>.Ok(data));
+        var result = await Sender.Send(new GetMeQuery(GetUserIdOrThrow()), cancellationToken);`n        return Ok(result);
     }
 
     [Authorize]
     [HttpPatch("profile")]
     public async Task<ActionResult<ApiResponse<UserWithStatDto>>> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(
+        var result = await Sender.Send(
             new UpdateProfileCommand(GetUserIdOrThrow(), request.DisplayName, request.AvatarUrl, request.Email),
-            cancellationToken);
-        return Ok(ApiResponse<UserWithStatDto>.Ok(data));
+            cancellationToken);`n        return Ok(result);
     }
 
     [Authorize]
@@ -133,3 +127,4 @@ public sealed class AuthController : ApiControllerBase
         public string? FacebookAccessToken { get; set; }
     }
 }
+

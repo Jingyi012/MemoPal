@@ -32,22 +32,19 @@ public sealed class AdminUsersController : ApiControllerBase
     [HttpGet("{userId}")]
     public async Task<ActionResult<ApiResponse<ManagedUserDto>>> GetUser(string userId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetManagedUserQuery(userId), cancellationToken);
-        return Ok(ApiResponse<ManagedUserDto>.Ok(data));
+        var result = await Sender.Send(new GetManagedUserQuery(userId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPost]
     public async Task<ActionResult<ApiResponse<ManagedUserDto>>> CreateUser([FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new CreateManagedUserCommand(request), cancellationToken);
-        return Ok(ApiResponse<ManagedUserDto>.Ok(data));
+        var result = await Sender.Send(new CreateManagedUserCommand(request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPut("{userId}")]
     public async Task<ActionResult<ApiResponse<ManagedUserDto>>> UpdateUser(string userId, [FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new UpdateManagedUserCommand(userId, request), cancellationToken);
-        return Ok(ApiResponse<ManagedUserDto>.Ok(data));
+        var result = await Sender.Send(new UpdateManagedUserCommand(userId, request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpDelete("{userId}")]
@@ -57,3 +54,4 @@ public sealed class AdminUsersController : ApiControllerBase
         return Ok(ApiResponse<object?>.Ok(null));
     }
 }
+

@@ -25,8 +25,7 @@ public sealed class LessonsController : ApiControllerBase
     [HttpGet("/lessons/{lessonId}")]
     public async Task<ActionResult<ApiResponse<LessonDto>>> GetById(string lessonId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetLessonQuery(GetUserIdOrThrow(), lessonId), cancellationToken);
-        return Ok(ApiResponse<LessonDto>.Ok(data));
+        var result = await Sender.Send(new GetLessonQuery(GetUserIdOrThrow(), lessonId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpGet("/palaces/{palaceId}/lessons")]
@@ -39,15 +38,13 @@ public sealed class LessonsController : ApiControllerBase
     [HttpPost("/lessons")]
     public async Task<ActionResult<ApiResponse<LessonDto>>> Create([FromBody] LessonUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new CreateLessonCommand(GetUserIdOrThrow(), request), cancellationToken);
-        return Ok(ApiResponse<LessonDto>.Ok(data));
+        var result = await Sender.Send(new CreateLessonCommand(GetUserIdOrThrow(), request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPut("/lessons/{lessonId}")]
     public async Task<ActionResult<ApiResponse<LessonDto>>> Update(string lessonId, [FromBody] LessonUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new UpdateLessonCommand(GetUserIdOrThrow(), lessonId, request), cancellationToken);
-        return Ok(ApiResponse<LessonDto>.Ok(data));
+        var result = await Sender.Send(new UpdateLessonCommand(GetUserIdOrThrow(), lessonId, request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpDelete("/lessons/{lessonId}")]
@@ -64,3 +61,4 @@ public sealed class LessonsController : ApiControllerBase
         return Ok(ApiResponse<IReadOnlyList<LessonDto>>.Ok(data));
     }
 }
+

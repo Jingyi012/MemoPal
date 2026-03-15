@@ -25,15 +25,13 @@ public sealed class WordsController : ApiControllerBase
     [HttpGet("/words/{wordId}")]
     public async Task<ActionResult<ApiResponse<WordDto>>> GetById(string wordId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetWordQuery(GetUserIdOrThrow(), wordId), cancellationToken);
-        return Ok(ApiResponse<WordDto>.Ok(data));
+        var result = await Sender.Send(new GetWordQuery(GetUserIdOrThrow(), wordId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPost("/words")]
     public async Task<ActionResult<ApiResponse<WordDto>>> Create([FromBody] WordUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new CreateWordCommand(GetUserIdOrThrow(), request), cancellationToken);
-        return Ok(ApiResponse<WordDto>.Ok(data));
+        var result = await Sender.Send(new CreateWordCommand(GetUserIdOrThrow(), request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPost("/words/batch")]
@@ -46,8 +44,7 @@ public sealed class WordsController : ApiControllerBase
     [HttpPatch("/words/{wordId}")]
     public async Task<ActionResult<ApiResponse<WordDto>>> Update(string wordId, [FromBody] WordUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new UpdateWordCommand(GetUserIdOrThrow(), wordId, request), cancellationToken);
-        return Ok(ApiResponse<WordDto>.Ok(data));
+        var result = await Sender.Send(new UpdateWordCommand(GetUserIdOrThrow(), wordId, request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPatch("/words/batch")]
@@ -78,3 +75,4 @@ public sealed class WordsController : ApiControllerBase
         return Ok(ApiResponse<IReadOnlyList<WordDto>>.Ok(data));
     }
 }
+

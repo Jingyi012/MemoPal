@@ -25,15 +25,13 @@ public sealed class MilestonesController : ApiControllerBase
     [HttpGet("/milestones/{milestoneId}")]
     public async Task<ActionResult<ApiResponse<MilestoneDto>>> GetById(string milestoneId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetMilestoneQuery(GetUserIdOrThrow(), milestoneId), cancellationToken);
-        return Ok(ApiResponse<MilestoneDto>.Ok(data));
+        var result = await Sender.Send(new GetMilestoneQuery(GetUserIdOrThrow(), milestoneId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPost("/milestones/{milestoneId}/award")]
     public async Task<ActionResult<ApiResponse<bool>>> Award(string milestoneId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new AwardMilestoneCommand(GetUserIdOrThrow(), milestoneId), cancellationToken);
-        return Ok(ApiResponse<bool>.Ok(data));
+        var result = await Sender.Send(new AwardMilestoneCommand(GetUserIdOrThrow(), milestoneId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpGet("/milestones/updated")]
@@ -43,3 +41,4 @@ public sealed class MilestonesController : ApiControllerBase
         return Ok(ApiResponse<IReadOnlyList<MilestoneDto>>.Ok(data));
     }
 }
+

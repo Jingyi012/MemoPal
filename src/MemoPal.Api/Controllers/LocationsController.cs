@@ -25,22 +25,19 @@ public sealed class LocationsController : ApiControllerBase
     [HttpGet("/locations/{locationId}")]
     public async Task<ActionResult<ApiResponse<LocationDto>>> GetById(string locationId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetLocationQuery(GetUserIdOrThrow(), locationId), cancellationToken);
-        return Ok(ApiResponse<LocationDto>.Ok(data));
+        var result = await Sender.Send(new GetLocationQuery(GetUserIdOrThrow(), locationId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPost("/locations")]
     public async Task<ActionResult<ApiResponse<LocationDto>>> Create([FromBody] LocationUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new CreateLocationCommand(GetUserIdOrThrow(), request), cancellationToken);
-        return Ok(ApiResponse<LocationDto>.Ok(data));
+        var result = await Sender.Send(new CreateLocationCommand(GetUserIdOrThrow(), request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPut("/locations/{locationId}")]
     public async Task<ActionResult<ApiResponse<LocationDto>>> Update(string locationId, [FromBody] LocationUpsertRequest request, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new UpdateLocationCommand(GetUserIdOrThrow(), locationId, request), cancellationToken);
-        return Ok(ApiResponse<LocationDto>.Ok(data));
+        var result = await Sender.Send(new UpdateLocationCommand(GetUserIdOrThrow(), locationId, request), cancellationToken);`n        return Ok(result);
     }
 
     [HttpDelete("/locations/{locationId}")]
@@ -57,3 +54,4 @@ public sealed class LocationsController : ApiControllerBase
         return Ok(ApiResponse<IReadOnlyList<LocationDto>>.Ok(data));
     }
 }
+
