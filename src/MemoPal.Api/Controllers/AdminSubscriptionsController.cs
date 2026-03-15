@@ -18,7 +18,7 @@ public sealed class AdminSubscriptionsController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PaginatedResponse<AdminUserSubscriptionDto>>> GetPaged(
+    public async Task<IActionResult> GetPaged(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? search = null,
@@ -39,7 +39,7 @@ public sealed class AdminSubscriptionsController : ApiControllerBase
     }
 
     [HttpPatch("{subscriptionId}")]
-    public async Task<ActionResult<ApiResponse<AdminUserSubscriptionDto>>> Update(
+    public async Task<IActionResult> Update(
         [FromRoute] string subscriptionId,
         [FromBody] AdminUpdateSubscriptionRequest request,
         CancellationToken cancellationToken)
@@ -51,3 +51,4 @@ public sealed class AdminSubscriptionsController : ApiControllerBase
         return Ok(result);
     }
 }
+

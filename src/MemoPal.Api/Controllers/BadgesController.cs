@@ -16,29 +16,30 @@ public sealed class BadgesController : ApiControllerBase
     }
 
     [HttpGet("/badges")]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<BadgeDto>>>> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult>> GetAll(CancellationToken cancellationToken)
     {
         var data = await Sender.Send(new GetBadgesQuery(GetUserIdOrThrow()), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<BadgeDto>>.Ok(data));
+        return Ok(data);
     }
 
     [HttpGet("/badges/{badgeId}")]
-    public async Task<ActionResult<ApiResponse<BadgeDto>>> GetById(string badgeId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetById(string badgeId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetBadgeQuery(GetUserIdOrThrow(), badgeId), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new GetBadgeQuery(GetUserIdOrThrow(), badgeId), cancellationToken); return Ok(result);
     }
 
     [HttpPost("/badges/{badgeId}/award")]
-    public async Task<ActionResult<ApiResponse<bool>>> Award(string badgeId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Award(string badgeId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new AwardBadgeCommand(GetUserIdOrThrow(), badgeId), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new AwardBadgeCommand(GetUserIdOrThrow(), badgeId), cancellationToken); return Ok(result);
     }
 
     [HttpGet("/badges/updated")]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<BadgeDto>>>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
+    public async Task<IActionResult>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
     {
         var data = await Sender.Send(new GetUpdatedBadgesQuery(GetUserIdOrThrow(), since), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<BadgeDto>>.Ok(data));
+        return Ok(data);
     }
 }
+
 

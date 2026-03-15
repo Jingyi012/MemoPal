@@ -18,7 +18,7 @@ public sealed class AdminSystemSettingsController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PaginatedResponse<SystemSettingDto>>> GetPaged(
+    public async Task<IActionResult> GetPaged(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? search = null,
@@ -29,7 +29,7 @@ public sealed class AdminSystemSettingsController : ApiControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApiResponse<SystemSettingDto>>> Upsert(
+    public async Task<IActionResult> Upsert(
         [FromBody] UpsertSystemSettingRequest request,
         CancellationToken cancellationToken)
     {
@@ -38,3 +38,4 @@ public sealed class AdminSystemSettingsController : ApiControllerBase
         return Ok(result);
     }
 }
+

@@ -18,7 +18,7 @@ public sealed class AdminUsersController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PaginatedResponse<ManagedUserDto>>> GetUsers(
+    public async Task<IActionResult> GetUsers(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? search = null,
@@ -30,28 +30,32 @@ public sealed class AdminUsersController : ApiControllerBase
     }
 
     [HttpGet("{userId}")]
-    public async Task<ActionResult<ApiResponse<ManagedUserDto>>> GetUser(string userId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetUser(string userId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetManagedUserQuery(userId), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new GetManagedUserQuery(userId), cancellationToken);
+        return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApiResponse<ManagedUserDto>>> CreateUser([FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateUser([FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new CreateManagedUserCommand(request), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new CreateManagedUserCommand(request), cancellationToken);
+        return Ok(result);
     }
 
     [HttpPut("{userId}")]
-    public async Task<ActionResult<ApiResponse<ManagedUserDto>>> UpdateUser(string userId, [FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateUser(string userId, [FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UpdateManagedUserCommand(userId, request), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new UpdateManagedUserCommand(userId, request), cancellationToken);
+        return Ok(result);
     }
 
     [HttpDelete("{userId}")]
-    public async Task<ActionResult<ApiResponse<object?>>> DeleteUser(string userId, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteUser(string userId, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteManagedUserCommand(userId), cancellationToken);
-        return Ok(ApiResponse<object?>.Ok(null));
+        var result = await Sender.Send(new DeleteManagedUserCommand(userId), cancellationToken);
+        return Ok(result);
     }
 }
+
 

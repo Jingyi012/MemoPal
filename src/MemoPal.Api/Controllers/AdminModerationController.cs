@@ -18,7 +18,7 @@ public sealed class AdminModerationController : ApiControllerBase
     }
 
     [HttpGet("custom-content")]
-    public async Task<ActionResult<PaginatedResponse<AdminModerationItemDto>>> GetCustomContent(
+    public async Task<IActionResult> GetCustomContent(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -28,7 +28,7 @@ public sealed class AdminModerationController : ApiControllerBase
     }
 
     [HttpPatch("{type}/{id}")]
-    public async Task<ActionResult<ApiResponse<AdminModerationItemDto>>> UpdateItem(
+    public async Task<IActionResult> UpdateItem(
         [FromRoute] string type,
         [FromRoute] string id,
         [FromBody] AdminModerationUpdateRequest request,
@@ -39,3 +39,4 @@ public sealed class AdminModerationController : ApiControllerBase
         return Ok(result);
     }
 }
+

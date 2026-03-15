@@ -18,14 +18,14 @@ public sealed class BillingController : ApiControllerBase
 
     [Authorize]
     [HttpGet("entitlement")]
-    public async Task<ActionResult<ApiResponse<SubscriptionEntitlementDto>>> GetEntitlement(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetEntitlement(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetEntitlementQuery(GetUserIdOrThrow()), cancellationToken);`n        return Ok(result);
     }
 
     [Authorize]
     [HttpPost("subscribe")]
-    public async Task<ActionResult<ApiResponse<SubscriptionEntitlementDto>>> Subscribe([FromBody] SubscribeRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Subscribe([FromBody] SubscribeRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new SubscribeCommand(GetUserIdOrThrow(), request), cancellationToken);`n        return Ok(result);
     }
@@ -33,11 +33,12 @@ public sealed class BillingController : ApiControllerBase
     // For provider webhook relay / admin simulation. In production this should be protected by provider signature verification.
     [Authorize(Roles = UserRoles.Admin)]
     [HttpPost("webhooks/subscription")]
-    public async Task<ActionResult<ApiResponse<SubscriptionEntitlementDto>>> HandleWebhook(
+    public async Task<IActionResult> HandleWebhook(
         [FromBody] WebhookSubscriptionEventRequest request,
         CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new HandleSubscriptionWebhookCommand(request), cancellationToken);`n        return Ok(result);
     }
 }
+
 

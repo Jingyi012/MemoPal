@@ -21,54 +21,60 @@ public sealed class AuthController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new RegisterCommand(request.DisplayName, request.Email, request.Password), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new RegisterCommand(request.DisplayName, request.Email, request.Password), cancellationToken);
+        return Ok(result);
     }
 
     [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new LoginCommand(request.Email, request.Password), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new LoginCommand(request.Email, request.Password), cancellationToken);
+        return Ok(result);
     }
 
     [AllowAnonymous]
     [HttpPost("google")]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> GoogleLogin([FromBody] GoogleLoginRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request, CancellationToken cancellationToken)
     {
         var token = string.IsNullOrWhiteSpace(request.GoogleAccessToken) ? request.AccessToken : request.GoogleAccessToken;
-        var result = await Sender.Send(new GoogleLoginCommand(token ?? string.Empty), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new GoogleLoginCommand(token ?? string.Empty), cancellationToken);
+        return Ok(result);
     }
 
     [AllowAnonymous]
     [HttpPost("facebook")]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> FacebookLogin([FromBody] FacebookLoginRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> FacebookLogin([FromBody] FacebookLoginRequest request, CancellationToken cancellationToken)
     {
         var token = string.IsNullOrWhiteSpace(request.FacebookAccessToken) ? request.AccessToken : request.FacebookAccessToken;
-        var result = await Sender.Send(new FacebookLoginCommand(token ?? string.Empty), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new FacebookLoginCommand(token ?? string.Empty), cancellationToken);
+        return Ok(result);
     }
 
     [Authorize]
     [HttpGet("me")]
-    public async Task<ActionResult<ApiResponse<UserWithStatDto>>> GetMe(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetMe(CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetMeQuery(GetUserIdOrThrow()), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new GetMeQuery(GetUserIdOrThrow()), cancellationToken);
+        return Ok(result);
     }
 
     [Authorize]
     [HttpPatch("profile")]
-    public async Task<ActionResult<ApiResponse<UserWithStatDto>>> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
             new UpdateProfileCommand(GetUserIdOrThrow(), request.DisplayName, request.AvatarUrl, request.Email),
-            cancellationToken);`n        return Ok(result);
+            cancellationToken);
+        return Ok(result);
     }
 
     [Authorize]
     [HttpPost("avatar-upload")]
     [RequestSizeLimit(10_000_000)]
-    public async Task<ActionResult<ApiResponse<string>>> UploadAvatar([FromForm] IFormFile file, CancellationToken cancellationToken)
+    public async Task<IActionResult> UploadAvatar([FromForm] IFormFile file, CancellationToken cancellationToken)
     {
         if (file is null || file.Length == 0)
             return BadRequest(ApiResponse<string>.Fail("File is required."));
@@ -92,7 +98,7 @@ public sealed class AuthController : ApiControllerBase
             new UpdateProfileCommand(userId, null, avatarUrl, null),
             cancellationToken);
 
-        return Ok(ApiResponse<string>.Ok(data.AvatarUrl ?? avatarUrl));
+        return Ok(data);
     }
 
     public sealed class RegisterRequest
@@ -127,4 +133,5 @@ public sealed class AuthController : ApiControllerBase
         public string? FacebookAccessToken { get; set; }
     }
 }
+
 

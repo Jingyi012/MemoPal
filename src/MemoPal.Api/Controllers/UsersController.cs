@@ -16,28 +16,32 @@ public sealed class UsersController : ApiControllerBase
     }
 
     [HttpGet("/users/stats")]
-    public async Task<ActionResult<ApiResponse<UserStatsDto>>> GetStats(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetStats(CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetUserStatsQuery(GetUserIdOrThrow()), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new GetUserStatsQuery(GetUserIdOrThrow()), cancellationToken); 
+        return Ok(result);
     }
 
     [HttpPatch("/users/stats")]
-    public async Task<ActionResult<ApiResponse<UserStatsDto>>> UpdateStats([FromBody] UpdateUserStatsRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateStats([FromBody] UpdateUserStatsRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UpdateUserStatsCommand(GetUserIdOrThrow(), request), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new UpdateUserStatsCommand(GetUserIdOrThrow(), request), cancellationToken); 
+        return Ok(result);
     }
 
     [HttpGet("/users/level")]
-    public async Task<ActionResult<ApiResponse<UserLevelDto>>> GetLevel(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetLevel(CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetUserLevelQuery(GetUserIdOrThrow()), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new GetUserLevelQuery(GetUserIdOrThrow()), cancellationToken); 
+        return Ok(result);
     }
 
     [HttpGet("/stats/updated")]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<UserStatsDto>>>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
+    public async Task<IActionResult>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
     {
         var data = await Sender.Send(new GetUpdatedUserStatsQuery(GetUserIdOrThrow(), since), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<UserStatsDto>>.Ok(data));
+        return Ok(data);
     }
 }
+
 

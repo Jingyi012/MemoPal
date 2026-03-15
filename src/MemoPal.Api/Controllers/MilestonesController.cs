@@ -16,29 +16,30 @@ public sealed class MilestonesController : ApiControllerBase
     }
 
     [HttpGet("/milestones")]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<MilestoneDto>>>> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult>> GetAll(CancellationToken cancellationToken)
     {
         var data = await Sender.Send(new GetMilestonesQuery(GetUserIdOrThrow()), cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<MilestoneDto>>.Ok(data));
     }
 
     [HttpGet("/milestones/{milestoneId}")]
-    public async Task<ActionResult<ApiResponse<MilestoneDto>>> GetById(string milestoneId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetById(string milestoneId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetMilestoneQuery(GetUserIdOrThrow(), milestoneId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpPost("/milestones/{milestoneId}/award")]
-    public async Task<ActionResult<ApiResponse<bool>>> Award(string milestoneId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Award(string milestoneId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new AwardMilestoneCommand(GetUserIdOrThrow(), milestoneId), cancellationToken);`n        return Ok(result);
     }
 
     [HttpGet("/milestones/updated")]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<MilestoneDto>>>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
+    public async Task<IActionResult>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
     {
         var data = await Sender.Send(new GetUpdatedMilestonesQuery(GetUserIdOrThrow(), since), cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<MilestoneDto>>.Ok(data));
     }
 }
+
 
