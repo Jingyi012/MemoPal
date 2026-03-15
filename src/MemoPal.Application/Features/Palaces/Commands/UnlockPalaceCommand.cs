@@ -1,12 +1,13 @@
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Palaces.Commands;
 
-public sealed record UnlockPalaceCommand(string UserId, string PalaceId) : IRequest<bool>;
+public sealed record UnlockPalaceCommand(string UserId, string PalaceId) : IRequest<ApiResponse<bool>>;
 
-public sealed class UnlockPalaceCommandHandler : IRequestHandler<UnlockPalaceCommand, bool>
+public sealed class UnlockPalaceCommandHandler : IRequestHandler<UnlockPalaceCommand, ApiResponse<bool>>
 {
     private readonly IAppDbContext _db;
 
@@ -15,7 +16,7 @@ public sealed class UnlockPalaceCommandHandler : IRequestHandler<UnlockPalaceCom
         _db = db;
     }
 
-    public async Task<bool> Handle(UnlockPalaceCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<bool>> Handle(UnlockPalaceCommand request, CancellationToken cancellationToken)
     {
         var entity = await _db.Palaces.FirstOrDefaultAsync(
             x => x.Id == request.PalaceId &&
@@ -23,12 +24,12 @@ public sealed class UnlockPalaceCommandHandler : IRequestHandler<UnlockPalaceCom
                  (!x.IsCustom || x.CreatedBy == request.UserId),
             cancellationToken);
 
-        if (entity is null) return false;
+        if (entity is null) return ApiResponse<bool>.Fail("Palace not found.");
 
         entity.IsLocked = false;
         entity.UnlockedAt = DateTime.UtcNow;
         entity.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
-        return true;
+        return ApiResponse<bool>.Ok(true);
     }
 }

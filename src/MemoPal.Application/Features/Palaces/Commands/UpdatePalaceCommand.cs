@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Palaces.DTOs;
@@ -7,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Palaces.Commands;
 
-public sealed record UpdatePalaceCommand(string UserId, string PalaceId, PalaceUpsertRequest Request) : IRequest<PalaceDto>;
+public sealed record UpdatePalaceCommand(string UserId, string PalaceId, PalaceUpsertRequest Request) : IRequest<ApiResponse<PalaceDto>>;
 
-public sealed class UpdatePalaceCommandHandler : IRequestHandler<UpdatePalaceCommand, PalaceDto>
+public sealed class UpdatePalaceCommandHandler : IRequestHandler<UpdatePalaceCommand, ApiResponse<PalaceDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -18,7 +19,7 @@ public sealed class UpdatePalaceCommandHandler : IRequestHandler<UpdatePalaceCom
         _db = db;
     }
 
-    public async Task<PalaceDto> Handle(UpdatePalaceCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<PalaceDto>> Handle(UpdatePalaceCommand request, CancellationToken cancellationToken)
     {
         var entity = await _db.Palaces.FirstOrDefaultAsync(
                 x => x.Id == request.PalaceId &&
@@ -42,7 +43,7 @@ public sealed class UpdatePalaceCommandHandler : IRequestHandler<UpdatePalaceCom
         entity.DeletedAt = request.Request.DeletedAt ?? entity.DeletedAt;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return entity.Adapt<PalaceDto>();
+        return ApiResponse<PalaceDto>.Ok(entity.Adapt<PalaceDto>());
     }
 }
 

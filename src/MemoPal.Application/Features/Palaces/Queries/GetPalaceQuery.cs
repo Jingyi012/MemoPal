@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Palaces.DTOs;
@@ -7,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Palaces.Queries;
 
-public sealed record GetPalaceQuery(string UserId, string PalaceId) : IRequest<PalaceDto>;
+public sealed record GetPalaceQuery(string UserId, string PalaceId) : IRequest<ApiResponse<PalaceDto>>;
 
-public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, PalaceDto>
+public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, ApiResponse<PalaceDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -18,7 +19,7 @@ public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, Pala
         _db = db;
     }
 
-    public async Task<PalaceDto> Handle(GetPalaceQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<PalaceDto>> Handle(GetPalaceQuery request, CancellationToken cancellationToken)
     {
         var palace = await _db.Palaces.FirstOrDefaultAsync(
                 x => x.Id == request.PalaceId &&
@@ -27,7 +28,7 @@ public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, Pala
                 cancellationToken)
             ?? throw new NotFoundAppException("Palace not found.");
 
-        return palace.Adapt<PalaceDto>();
+        return ApiResponse<PalaceDto>.Ok(palace.Adapt<PalaceDto>());
     }
 }
 
