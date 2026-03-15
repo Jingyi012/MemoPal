@@ -8,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Milestones.Queries;
 
-public sealed record GetMilestoneDefinitionQuery(string MilestoneId) : IRequest<MilestoneDefinitionDto>;
+public sealed record GetMilestoneDefinitionQuery(string MilestoneId) : IRequest<ApiResponse<MilestoneDefinitionDto>>;
 
-public sealed class GetMilestoneDefinitionQueryHandler : IRequestHandler<GetMilestoneDefinitionQuery, MilestoneDefinitionDto>
+public sealed class GetMilestoneDefinitionQueryHandler : IRequestHandler<GetMilestoneDefinitionQuery, ApiResponse<MilestoneDefinitionDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,20 +19,20 @@ public sealed class GetMilestoneDefinitionQueryHandler : IRequestHandler<GetMile
         _db = db;
     }
 
-    public async Task<MilestoneDefinitionDto> Handle(GetMilestoneDefinitionQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<MilestoneDefinitionDto>> Handle(GetMilestoneDefinitionQuery request, CancellationToken cancellationToken)
     {
         var entity = await _db.MilestoneDefinitions
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == request.MilestoneId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("Milestone definition not found.");
 
-        return entity.Adapt<MilestoneDefinitionDto>();
+        return ApiResponse<MilestoneDefinitionDto>.Ok(entity.Adapt<MilestoneDefinitionDto>());
     }
 }
 
-public sealed record GetPagedMilestoneDefinitionsQuery(int PageNumber = 1, int PageSize = 10, string? Search = null) : IRequest<PagedResult<MilestoneDefinitionDto>>;
+public sealed record GetPagedMilestoneDefinitionsQuery(int PageNumber = 1, int PageSize = 10, string? Search = null) : IRequest<PaginatedResponse<MilestoneDefinitionDto>>;
 
-public sealed class GetPagedMilestoneDefinitionsQueryHandler : IRequestHandler<GetPagedMilestoneDefinitionsQuery, PagedResult<MilestoneDefinitionDto>>
+public sealed class GetPagedMilestoneDefinitionsQueryHandler : IRequestHandler<GetPagedMilestoneDefinitionsQuery, PaginatedResponse<MilestoneDefinitionDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -41,7 +41,7 @@ public sealed class GetPagedMilestoneDefinitionsQueryHandler : IRequestHandler<G
         _db = db;
     }
 
-    public async Task<PagedResult<MilestoneDefinitionDto>> Handle(GetPagedMilestoneDefinitionsQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedResponse<MilestoneDefinitionDto>> Handle(GetPagedMilestoneDefinitionsQuery request, CancellationToken cancellationToken)
     {
         var pageNumber = request.PageNumber <= 0 ? 1 : request.PageNumber;
         var pageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, 200);
@@ -64,10 +64,11 @@ public sealed class GetPagedMilestoneDefinitionsQueryHandler : IRequestHandler<G
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<MilestoneDefinitionDto>(
+        return PaginatedResponse<MilestoneDefinitionDto>.Ok(
             data.Select(x => x.Adapt<MilestoneDefinitionDto>()).ToList(),
             pageNumber,
             pageSize,
             totalCount);
     }
 }
+

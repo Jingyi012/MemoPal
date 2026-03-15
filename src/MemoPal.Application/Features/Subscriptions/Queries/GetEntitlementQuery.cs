@@ -1,13 +1,14 @@
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Subscriptions.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Subscriptions.Queries;
 
-public sealed record GetEntitlementQuery(string UserId) : IRequest<SubscriptionEntitlementDto>;
+public sealed record GetEntitlementQuery(string UserId) : IRequest<ApiResponse<SubscriptionEntitlementDto>>;
 
-public sealed class GetEntitlementQueryHandler : IRequestHandler<GetEntitlementQuery, SubscriptionEntitlementDto>
+public sealed class GetEntitlementQueryHandler : IRequestHandler<GetEntitlementQuery, ApiResponse<SubscriptionEntitlementDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -16,7 +17,7 @@ public sealed class GetEntitlementQueryHandler : IRequestHandler<GetEntitlementQ
         _db = db;
     }
 
-    public async Task<SubscriptionEntitlementDto> Handle(GetEntitlementQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<SubscriptionEntitlementDto>> Handle(GetEntitlementQuery request, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
         var latest = await _db.UserSubscriptions
@@ -26,11 +27,11 @@ public sealed class GetEntitlementQueryHandler : IRequestHandler<GetEntitlementQ
 
         if (latest is null)
         {
-            return new SubscriptionEntitlementDto(false, null, null, null, null, null, false, null);
+            return ApiResponse<SubscriptionEntitlementDto>.Ok(new SubscriptionEntitlementDto(false, null, null, null, null, null, false, null));
         }
 
         var active = latest.Status == "active" && (!latest.ExpiresAt.HasValue || latest.ExpiresAt > now);
-        return new SubscriptionEntitlementDto(
+        return ApiResponse<SubscriptionEntitlementDto>.Ok(new SubscriptionEntitlementDto(
             active,
             latest.PlanId,
             latest.Provider,
@@ -39,6 +40,9 @@ public sealed class GetEntitlementQueryHandler : IRequestHandler<GetEntitlementQ
             latest.ExpiresAt,
             latest.AutoRenew,
             latest.LastVerifiedAt
-        );
+        ));
     }
 }
+
+
+

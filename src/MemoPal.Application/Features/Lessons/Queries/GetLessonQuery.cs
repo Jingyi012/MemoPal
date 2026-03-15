@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.LessonProgress.DTOs;
@@ -10,9 +11,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Lessons.Queries;
 
-public sealed record GetLessonQuery(string UserId, string LessonId) : IRequest<LessonDto>;
+public sealed record GetLessonQuery(string UserId, string LessonId) : IRequest<ApiResponse<LessonDto>>;
 
-public sealed class GetLessonQueryHandler : IRequestHandler<GetLessonQuery, LessonDto>
+public sealed class GetLessonQueryHandler : IRequestHandler<GetLessonQuery, ApiResponse<LessonDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -21,7 +22,7 @@ public sealed class GetLessonQueryHandler : IRequestHandler<GetLessonQuery, Less
         _db = db;
     }
 
-    public async Task<LessonDto> Handle(GetLessonQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<LessonDto>> Handle(GetLessonQuery request, CancellationToken cancellationToken)
     {
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
                 x => x.Id == request.LessonId &&
@@ -52,7 +53,10 @@ public sealed class GetLessonQueryHandler : IRequestHandler<GetLessonQuery, Less
             .ToListAsync(cancellationToken);
         var wordDtos = words.Select(x => x.Adapt<WordDto>()).ToList();
 
-        return (lesson, progressDto, (IReadOnlyList<WordDto>)wordDtos).Adapt<LessonDto>();
+        return ApiResponse<LessonDto>.Ok((lesson, progressDto, (IReadOnlyList<WordDto>)wordDtos).Adapt<LessonDto>());
     }
 }
+
+
+
 

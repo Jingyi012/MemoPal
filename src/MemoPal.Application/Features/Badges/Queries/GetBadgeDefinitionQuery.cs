@@ -8,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Badges.Queries;
 
-public sealed record GetBadgeDefinitionQuery(string BadgeId) : IRequest<BadgeDefinitionDto>;
+public sealed record GetBadgeDefinitionQuery(string BadgeId) : IRequest<ApiResponse<BadgeDefinitionDto>>;
 
-public sealed class GetBadgeDefinitionQueryHandler : IRequestHandler<GetBadgeDefinitionQuery, BadgeDefinitionDto>
+public sealed class GetBadgeDefinitionQueryHandler : IRequestHandler<GetBadgeDefinitionQuery, ApiResponse<BadgeDefinitionDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,20 +19,20 @@ public sealed class GetBadgeDefinitionQueryHandler : IRequestHandler<GetBadgeDef
         _db = db;
     }
 
-    public async Task<BadgeDefinitionDto> Handle(GetBadgeDefinitionQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<BadgeDefinitionDto>> Handle(GetBadgeDefinitionQuery request, CancellationToken cancellationToken)
     {
         var entity = await _db.BadgeDefinitions
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == request.BadgeId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("Badge definition not found.");
 
-        return entity.Adapt<BadgeDefinitionDto>();
+        return ApiResponse<BadgeDefinitionDto>.Ok(entity.Adapt<BadgeDefinitionDto>());
     }
 }
 
-public sealed record GetPagedBadgeDefinitionsQuery(int PageNumber = 1, int PageSize = 10, string? Search = null) : IRequest<PagedResult<BadgeDefinitionDto>>;
+public sealed record GetPagedBadgeDefinitionsQuery(int PageNumber = 1, int PageSize = 10, string? Search = null) : IRequest<PaginatedResponse<BadgeDefinitionDto>>;
 
-public sealed class GetPagedBadgeDefinitionsQueryHandler : IRequestHandler<GetPagedBadgeDefinitionsQuery, PagedResult<BadgeDefinitionDto>>
+public sealed class GetPagedBadgeDefinitionsQueryHandler : IRequestHandler<GetPagedBadgeDefinitionsQuery, PaginatedResponse<BadgeDefinitionDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -41,7 +41,7 @@ public sealed class GetPagedBadgeDefinitionsQueryHandler : IRequestHandler<GetPa
         _db = db;
     }
 
-    public async Task<PagedResult<BadgeDefinitionDto>> Handle(GetPagedBadgeDefinitionsQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedResponse<BadgeDefinitionDto>> Handle(GetPagedBadgeDefinitionsQuery request, CancellationToken cancellationToken)
     {
         var pageNumber = request.PageNumber <= 0 ? 1 : request.PageNumber;
         var pageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, 200);
@@ -64,10 +64,11 @@ public sealed class GetPagedBadgeDefinitionsQueryHandler : IRequestHandler<GetPa
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<BadgeDefinitionDto>(
+        return PaginatedResponse<BadgeDefinitionDto>.Ok(
             data.Select(x => x.Adapt<BadgeDefinitionDto>()).ToList(),
             pageNumber,
             pageSize,
             totalCount);
     }
 }
+

@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Words.DTOs;
@@ -7,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Words.Queries;
 
-public sealed record GetWordQuery(string UserId, string WordId) : IRequest<WordDto>;
+public sealed record GetWordQuery(string UserId, string WordId) : IRequest<ApiResponse<WordDto>>;
 
-public sealed class GetWordQueryHandler : IRequestHandler<GetWordQuery, WordDto>
+public sealed class GetWordQueryHandler : IRequestHandler<GetWordQuery, ApiResponse<WordDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -18,7 +19,7 @@ public sealed class GetWordQueryHandler : IRequestHandler<GetWordQuery, WordDto>
         _db = db;
     }
 
-    public async Task<WordDto> Handle(GetWordQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<WordDto>> Handle(GetWordQuery request, CancellationToken cancellationToken)
     {
         var word = await _db.Words.FirstOrDefaultAsync(x => x.Id == request.WordId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("Word not found.");
@@ -28,7 +29,10 @@ public sealed class GetWordQueryHandler : IRequestHandler<GetWordQuery, WordDto>
                  (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
             cancellationToken);
         if (lesson is null) throw new NotFoundAppException("Word not found.");
-        return word.Adapt<WordDto>();
+        return ApiResponse<WordDto>.Ok(word.Adapt<WordDto>());
     }
 }
+
+
+
 

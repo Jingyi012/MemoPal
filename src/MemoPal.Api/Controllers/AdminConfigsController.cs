@@ -29,8 +29,8 @@ public sealed class AdminConfigsController : ApiControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        var page = await Sender.Send(new GetPagedXpConfigsQuery(pageNumber, pageSize), cancellationToken);
-        return Ok(PaginatedResponse<XpConfigDto>.Ok(page.Items, page.PageNumber, page.PageSize, page.TotalCount));
+        var result = await Sender.Send(new GetPagedXpConfigsQuery(pageNumber, pageSize), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("xp-configs/{sourceType}")]
@@ -64,8 +64,8 @@ public sealed class AdminConfigsController : ApiControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        var page = await Sender.Send(new GetPagedLevelConfigsQuery(pageNumber, pageSize), cancellationToken);
-        return Ok(PaginatedResponse<LevelConfigDto>.Ok(page.Items, page.PageNumber, page.PageSize, page.TotalCount));
+        var result = await Sender.Send(new GetPagedLevelConfigsQuery(pageNumber, pageSize), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("level-configs/{level:int}")]
@@ -92,8 +92,8 @@ public sealed class AdminConfigsController : ApiControllerBase
     [HttpDelete("level-configs/{level:int}")]
     public async Task<IActionResult> DeleteLevelConfig(int level, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteLevelConfigCommand(level), cancellationToken);
-        return Ok(ApiResponse<object?>.Ok(null));
+        var result = await Sender.Send(new DeleteLevelConfigCommand(level), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("badge-definitions")]
@@ -103,8 +103,8 @@ public sealed class AdminConfigsController : ApiControllerBase
         [FromQuery] string? search = null,
         CancellationToken cancellationToken = default)
     {
-        var page = await Sender.Send(new GetPagedBadgeDefinitionsQuery(pageNumber, pageSize, search), cancellationToken);
-        return Ok(PaginatedResponse<BadgeDefinitionDto>.Ok(page.Items, page.PageNumber, page.PageSize, page.TotalCount));
+        var result = await Sender.Send(new GetPagedBadgeDefinitionsQuery(pageNumber, pageSize, search), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("badge-definitions/{badgeId}")]
@@ -131,8 +131,8 @@ public sealed class AdminConfigsController : ApiControllerBase
     [HttpDelete("badge-definitions/{badgeId}")]
     public async Task<IActionResult> DeleteBadgeDefinition(string badgeId, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteBadgeDefinitionCommand(badgeId), cancellationToken);
-        return Ok(ApiResponse<object?>.Ok(null));
+        var result = await Sender.Send(new DeleteBadgeDefinitionCommand(badgeId), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("milestone-definitions")]
@@ -142,8 +142,8 @@ public sealed class AdminConfigsController : ApiControllerBase
         [FromQuery] string? search = null,
         CancellationToken cancellationToken = default)
     {
-        var page = await Sender.Send(new GetPagedMilestoneDefinitionsQuery(pageNumber, pageSize, search), cancellationToken);
-        return Ok(PaginatedResponse<MilestoneDefinitionDto>.Ok(page.Items, page.PageNumber, page.PageSize, page.TotalCount));
+        var result = await Sender.Send(new GetPagedMilestoneDefinitionsQuery(pageNumber, pageSize, search), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("milestone-definitions/{milestoneId}")]

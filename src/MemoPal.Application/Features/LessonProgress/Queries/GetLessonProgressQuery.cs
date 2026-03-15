@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.LessonProgress.DTOs;
@@ -8,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.LessonProgress.Queries;
 
-public sealed record GetLessonProgressQuery(string UserId, string LessonId) : IRequest<LessonProgressDto>;
+public sealed record GetLessonProgressQuery(string UserId, string LessonId) : IRequest<ApiResponse<LessonProgressDto>>;
 
-public sealed class GetLessonProgressQueryHandler : IRequestHandler<GetLessonProgressQuery, LessonProgressDto>
+public sealed class GetLessonProgressQueryHandler : IRequestHandler<GetLessonProgressQuery, ApiResponse<LessonProgressDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,7 +20,7 @@ public sealed class GetLessonProgressQueryHandler : IRequestHandler<GetLessonPro
         _db = db;
     }
 
-    public async Task<LessonProgressDto> Handle(GetLessonProgressQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<LessonProgressDto>> Handle(GetLessonProgressQuery request, CancellationToken cancellationToken)
     {
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
             x => x.Id == request.LessonId &&
@@ -38,7 +39,10 @@ public sealed class GetLessonProgressQueryHandler : IRequestHandler<GetLessonPro
             .ToListAsync(cancellationToken);
 
         var reviewDtos = schedules.Select(x => x.Adapt<ReviewScheduleDto>()).ToList();
-        return (progress, (IReadOnlyList<ReviewScheduleDto>)reviewDtos).Adapt<LessonProgressDto>();
+        return ApiResponse<LessonProgressDto>.Ok((progress, (IReadOnlyList<ReviewScheduleDto>)reviewDtos).Adapt<LessonProgressDto>());
     }
 }
+
+
+
 

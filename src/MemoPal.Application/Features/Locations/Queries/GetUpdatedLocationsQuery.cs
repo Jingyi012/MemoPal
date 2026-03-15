@@ -1,14 +1,15 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Locations.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Locations.Queries;
 
-public sealed record GetUpdatedLocationsQuery(string UserId, DateTime Since) : IRequest<IReadOnlyList<LocationDto>>;
+public sealed record GetUpdatedLocationsQuery(string UserId, DateTime Since) : IRequest<ApiResponse<IReadOnlyList<LocationDto>>>;
 
-public sealed class GetUpdatedLocationsQueryHandler : IRequestHandler<GetUpdatedLocationsQuery, IReadOnlyList<LocationDto>>
+public sealed class GetUpdatedLocationsQueryHandler : IRequestHandler<GetUpdatedLocationsQuery, ApiResponse<IReadOnlyList<LocationDto>>>
 {
     private readonly IAppDbContext _db;
 
@@ -17,7 +18,7 @@ public sealed class GetUpdatedLocationsQueryHandler : IRequestHandler<GetUpdated
         _db = db;
     }
 
-    public async Task<IReadOnlyList<LocationDto>> Handle(GetUpdatedLocationsQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<IReadOnlyList<LocationDto>>> Handle(GetUpdatedLocationsQuery request, CancellationToken cancellationToken)
     {
         var data = await _db.Locations
             .Where(x => x.UpdatedAt > request.Since)
@@ -30,7 +31,10 @@ public sealed class GetUpdatedLocationsQueryHandler : IRequestHandler<GetUpdated
             .Select(x => x.location)
             .ToListAsync(cancellationToken);
 
-        return data.Select(x => x.Adapt<LocationDto>()).ToList();
+        return ApiResponse<IReadOnlyList<LocationDto>>.Ok(data.Select(x => x.Adapt<LocationDto>()).ToList());
     }
 }
+
+
+
 

@@ -25,8 +25,8 @@ public sealed class AdminUsersController : ApiControllerBase
         [FromQuery] bool includeDeleted = false,
         CancellationToken cancellationToken = default)
     {
-        var page = await Sender.Send(new GetPagedManagedUsersQuery(pageNumber, pageSize, search, includeDeleted), cancellationToken);
-        return Ok(PaginatedResponse<ManagedUserDto>.Ok(page.Items, page.PageNumber, page.PageSize, page.TotalCount));
+        var result = await Sender.Send(new GetPagedManagedUsersQuery(pageNumber, pageSize, search, includeDeleted), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("{userId}")]

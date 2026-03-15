@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Badges.DTOs;
@@ -7,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Badges.Queries;
 
-public sealed record GetBadgeQuery(string UserId, string BadgeId) : IRequest<BadgeDto>;
+public sealed record GetBadgeQuery(string UserId, string BadgeId) : IRequest<ApiResponse<BadgeDto>>;
 
-public sealed class GetBadgeQueryHandler : IRequestHandler<GetBadgeQuery, BadgeDto>
+public sealed class GetBadgeQueryHandler : IRequestHandler<GetBadgeQuery, ApiResponse<BadgeDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -18,7 +19,7 @@ public sealed class GetBadgeQueryHandler : IRequestHandler<GetBadgeQuery, BadgeD
         _db = db;
     }
 
-    public async Task<BadgeDto> Handle(GetBadgeQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<BadgeDto>> Handle(GetBadgeQuery request, CancellationToken cancellationToken)
     {
         var def = await _db.BadgeDefinitions.FirstOrDefaultAsync(x => x.Id == request.BadgeId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("Badge not found.");
@@ -26,7 +27,10 @@ public sealed class GetBadgeQueryHandler : IRequestHandler<GetBadgeQuery, BadgeD
             x => x.BadgeId == request.BadgeId && x.UserId == request.UserId && !x.IsDeleted,
             cancellationToken);
 
-        return (def, earned).Adapt<BadgeDto>();
+        return ApiResponse<BadgeDto>.Ok((def, earned).Adapt<BadgeDto>());
     }
 }
+
+
+
 
