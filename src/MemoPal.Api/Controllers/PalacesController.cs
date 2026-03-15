@@ -17,13 +17,12 @@ public sealed class PalacesController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PaginatedResponse<PalaceDto>>> GetAll(
-        [FromQuery] bool paginate = false,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20,
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<PalaceDto>>>> GetAll(
+        [FromQuery] int? pageNumber = null,
+        [FromQuery] int? pageSize = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await Sender.Send(new GetPalacesQuery(GetUserIdOrThrow(), paginate, pageNumber, pageSize), cancellationToken);
+        var result = await Sender.Send(new GetPalacesQuery(GetUserIdOrThrow(), pageNumber, pageSize), cancellationToken);
         return Ok(result);
     }
 
