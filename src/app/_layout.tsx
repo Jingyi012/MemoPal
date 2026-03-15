@@ -5,6 +5,7 @@ import { UserStateProvider } from '@/contexts/UserStateContext';
 import { db } from '@/db/client';
 import { seedInitialData } from '@/db/seed';
 import { useNotificationObserver } from '@/hooks/useNotificationObserver';
+import { useSubscriptionEntitlementSync } from '@/hooks/useSubscriptionEntitlementSync';
 import { useSubscriptionGuard } from '@/hooks/useSubscriptionGuard';
 import { useSyncManager } from '@/hooks/useSyncManager';
 import { queryClient } from '@/utils/queryClient';
@@ -52,6 +53,7 @@ function AppLayout() {
   const isAppReady = migrationsSuccess && isSeedFinished;
   useSyncManager(isAppReady);
   useSubscriptionGuard(isAppReady);
+  useSubscriptionEntitlementSync(isAppReady);
 
   // 5. Wait for BOTH migrations and seeding
   if (!isAppReady) {
