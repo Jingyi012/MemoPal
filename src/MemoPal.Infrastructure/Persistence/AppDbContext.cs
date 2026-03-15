@@ -33,6 +33,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<LevelConfig> LevelConfigs => Set<LevelConfig>();
     public DbSet<XpEvent> XpEvents => Set<XpEvent>();
     public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
+    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -177,6 +178,13 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.Provider).HasMaxLength(64);
             b.Property(x => x.PlanId).HasMaxLength(128);
             b.Property(x => x.Status).HasMaxLength(32);
+        });
+
+        modelBuilder.Entity<SystemSetting>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => x.Key).IsUnique();
+            b.Property(x => x.Key).HasMaxLength(128);
         });
     }
 
