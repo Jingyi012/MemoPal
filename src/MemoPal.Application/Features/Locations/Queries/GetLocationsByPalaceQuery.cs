@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Locations.DTOs;
@@ -7,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Locations.Queries;
 
-public sealed record GetLocationsByPalaceQuery(string UserId, string PalaceId) : IRequest<IReadOnlyList<LocationDto>>;
+public sealed record GetLocationsByPalaceQuery(string UserId, string PalaceId, int? PageNumber = null, int? PageSize = null) : IRequest<ApiResponse<IReadOnlyList<LocationDto>>>;
 
-public sealed class GetLocationsByPalaceQueryHandler : IRequestHandler<GetLocationsByPalaceQuery, IReadOnlyList<LocationDto>>
+public sealed class GetLocationsByPalaceQueryHandler : IRequestHandler<GetLocationsByPalaceQuery, ApiResponse<IReadOnlyList<LocationDto>>>
 {
     private readonly IAppDbContext _db;
 
@@ -18,7 +19,7 @@ public sealed class GetLocationsByPalaceQueryHandler : IRequestHandler<GetLocati
         _db = db;
     }
 
-    public async Task<IReadOnlyList<LocationDto>> Handle(GetLocationsByPalaceQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<IReadOnlyList<LocationDto>>> Handle(GetLocationsByPalaceQuery request, CancellationToken cancellationToken)
     {
         var palace = await _db.Palaces.FirstOrDefaultAsync(
             x => x.Id == request.PalaceId && !x.IsDeleted && (!x.IsCustom || x.CreatedBy == request.UserId),
