@@ -27,7 +27,13 @@ public static class DependencyInjection
                 var connectionString = configuration.GetConnectionString("DefaultConnection")
                     ?? "Host=localhost;Port=5432;Database=memopal;Username=postgres;Password=postgres";
 
-                options.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure());
+                options.UseNpgsql(
+                    connectionString,
+                    npgsql =>
+                    {
+                        npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
+                        npgsql.EnableRetryOnFailure();
+                    });
             }
         });
 
