@@ -56,7 +56,6 @@ public sealed class CreateWordCommandHandler : IRequestHandler<CreateWordCommand
         entity.Text = request.Request.Text!.Trim();
         entity.Meaning = request.Request.Meaning;
         entity.UpdatedAt = request.Request.UpdatedAt ?? now;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;
 

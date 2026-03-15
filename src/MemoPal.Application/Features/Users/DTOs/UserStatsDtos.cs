@@ -31,7 +31,6 @@ public sealed record ManagedUserDto(
     bool IsPremium,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    DateTime? LastSyncedAt,
     bool IsDeleted,
     DateTime? DeletedAt,
     string? CreatedBy,

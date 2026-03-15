@@ -10,7 +10,6 @@ public sealed record MilestoneDto(
     DateTime? AchievedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    DateTime? LastSyncedAt,
     bool IsDeleted,
     DateTime? DeletedAt
 );
@@ -24,7 +23,6 @@ public sealed record MilestoneDefinitionDto(
     int ConditionValue,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    DateTime? LastSyncedAt,
     bool IsDeleted,
     DateTime? DeletedAt,
     string? CreatedBy,
@@ -41,7 +39,6 @@ public sealed class MilestoneDefinitionUpsertRequest
     public int ConditionValue { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public DateTime? LastSyncedAt { get; set; }
     public bool? IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
 }

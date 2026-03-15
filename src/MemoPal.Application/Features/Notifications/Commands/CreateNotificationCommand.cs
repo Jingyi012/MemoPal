@@ -51,7 +51,6 @@ public sealed class CreateNotificationCommandHandler : IRequestHandler<CreateNot
         entity.IsDismissed = request.Request.IsDismissed;
         entity.ReadAt = request.Request.ReadAt;
         entity.UpdatedAt = request.Request.UpdatedAt ?? now;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;
 

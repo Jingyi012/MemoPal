@@ -6,7 +6,6 @@ public sealed record LevelConfigDto(
     string? Title,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    DateTime? LastSyncedAt,
     bool IsDeleted,
     DateTime? DeletedAt
 );
@@ -19,7 +18,6 @@ public sealed record XpConfigDto(
     bool IsActive,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    DateTime? LastSyncedAt,
     bool IsDeleted,
     DateTime? DeletedAt
 );
@@ -31,7 +29,6 @@ public sealed class LevelConfigUpsertRequest
     public string? Title { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public DateTime? LastSyncedAt { get; set; }
     public bool? IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
 }
@@ -45,7 +42,6 @@ public sealed class XpConfigUpsertRequest
     public bool IsActive { get; set; } = true;
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public DateTime? LastSyncedAt { get; set; }
     public bool? IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
 }

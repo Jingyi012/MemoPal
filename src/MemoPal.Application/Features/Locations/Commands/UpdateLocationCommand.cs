@@ -33,7 +33,6 @@ public sealed class UpdateLocationCommandHandler : IRequestHandler<UpdateLocatio
         if (!string.IsNullOrWhiteSpace(request.Request.ImageUrl)) entity.ImageUrl = request.Request.ImageUrl.Trim();
         entity.Position = request.Request.Position;
         entity.UpdatedAt = request.Request.UpdatedAt ?? DateTime.UtcNow;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? entity.IsDeleted;
         entity.DeletedAt = request.Request.DeletedAt ?? entity.DeletedAt;
 

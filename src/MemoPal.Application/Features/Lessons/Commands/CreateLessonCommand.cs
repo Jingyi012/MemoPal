@@ -58,7 +58,6 @@ public sealed class CreateLessonCommandHandler : IRequestHandler<CreateLessonCom
         lesson.Privacy = string.IsNullOrWhiteSpace(request.Request.Privacy) ? "private" : request.Request.Privacy;
         lesson.CreatedBy = request.Request.IsCustom.GetValueOrDefault() ? request.UserId : request.Request.CreatedBy;
         lesson.UpdatedAt = request.Request.UpdatedAt ?? now;
-        lesson.LastSyncedAt = request.Request.LastSyncedAt;
         lesson.IsDeleted = request.Request.IsDeleted ?? false;
         lesson.DeletedAt = request.Request.DeletedAt;
 

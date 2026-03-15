@@ -62,6 +62,10 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
 
+var adminBootstrapOptions = builder.Configuration.GetSection(AdminBootstrapOptions.SectionName).Get<AdminBootstrapOptions>() ?? new AdminBootstrapOptions();
+builder.Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(adminBootstrapOptions));
+builder.Services.AddScoped<AdminBootstrapper>();
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -116,5 +120,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var bootstrapper = scope.ServiceProvider.GetRequiredService<AdminBootstrapper>();
+    await bootstrapper.SeedAsync();
+}
 
 app.Run();

@@ -38,7 +38,6 @@ public sealed class UpdatePalaceCommandHandler : IRequestHandler<UpdatePalaceCom
         entity.IsPremium = request.Request.IsPremium;
         entity.IsCustom = request.Request.IsCustom;
         entity.UpdatedAt = request.Request.UpdatedAt ?? DateTime.UtcNow;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? entity.IsDeleted;
         entity.DeletedAt = request.Request.DeletedAt ?? entity.DeletedAt;
 

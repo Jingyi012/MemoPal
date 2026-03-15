@@ -9,7 +9,6 @@ public sealed record ReviewScheduleDto(
     DateTime? CompletedDate,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    DateTime? LastSyncedAt,
     bool IsDeleted,
     DateTime? DeletedAt
 );
@@ -24,7 +23,6 @@ public sealed class ReviewScheduleUpsertRequest
     public DateTime? CompletedDate { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public DateTime? LastSyncedAt { get; set; }
     public bool? IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
 }

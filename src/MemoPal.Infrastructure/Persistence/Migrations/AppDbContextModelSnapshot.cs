@@ -52,9 +52,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -111,9 +108,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<bool?>("IsPremium")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("PalaceId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -168,9 +162,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("LastReviewDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("LessonId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -222,9 +213,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int>("RequiredXp")
                         .HasColumnType("integer");
 
@@ -263,9 +251,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -323,9 +308,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -370,9 +352,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("ReadAt")
                         .HasColumnType("timestamp with time zone");
@@ -438,9 +417,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsPremium")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int>("LocationsCount")
                         .HasColumnType("integer");
 
@@ -495,9 +471,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("LessonProgressId")
                         .IsRequired()
@@ -561,9 +534,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsPremium")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int>("Level")
                         .HasColumnType("integer");
 
@@ -619,9 +589,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -661,9 +628,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("MilestoneId")
                         .IsRequired()
@@ -709,9 +673,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("LastActiveDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int>("LessonsCompleted")
                         .HasColumnType("integer");
 
@@ -751,9 +712,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("LastVerifiedAt")
                         .HasColumnType("timestamp with time zone");
@@ -816,9 +774,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("LessonId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -872,9 +827,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("SourceType")
                         .IsRequired()
                         .HasColumnType("text");
@@ -916,9 +868,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastSyncedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SourceId")
                         .HasColumnType("text");

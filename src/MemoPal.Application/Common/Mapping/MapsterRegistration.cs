@@ -54,7 +54,6 @@ public static class MapsterRegistration
                 null,
                 src.CreatedAt,
                 src.UpdatedAt,
-                src.LastSyncedAt,
                 src.IsDeleted,
                 src.DeletedAt));
 
@@ -69,7 +68,6 @@ public static class MapsterRegistration
             .Map(dest => dest.Stats, src => src.Stats == null ? null : src.Stats.Adapt<UserStatsDto>())
             .Map(dest => dest.CreatedAt, src => src.User.CreatedAt)
             .Map(dest => dest.UpdatedAt, src => src.User.UpdatedAt)
-            .Map(dest => dest.LastSyncedAt, src => src.User.LastSyncedAt)
             .Map(dest => dest.IsDeleted, src => src.User.IsDeleted)
             .Map(dest => dest.DeletedAt, src => src.User.DeletedAt);
 
@@ -84,7 +82,6 @@ public static class MapsterRegistration
             .Map(dest => dest.EarnedAt, src => src.UserBadge == null ? null : src.UserBadge.EarnedAt)
             .Map(dest => dest.CreatedAt, src => src.Badge.CreatedAt)
             .Map(dest => dest.UpdatedAt, src => src.Badge.UpdatedAt)
-            .Map(dest => dest.LastSyncedAt, src => src.Badge.LastSyncedAt)
             .Map(dest => dest.IsDeleted, src => src.Badge.IsDeleted)
             .Map(dest => dest.DeletedAt, src => src.Badge.DeletedAt);
 
@@ -98,7 +95,6 @@ public static class MapsterRegistration
             .Map(dest => dest.AchievedAt, src => src.UserMilestone == null ? null : src.UserMilestone.AchievedAt)
             .Map(dest => dest.CreatedAt, src => src.Milestone.CreatedAt)
             .Map(dest => dest.UpdatedAt, src => src.Milestone.UpdatedAt)
-            .Map(dest => dest.LastSyncedAt, src => src.Milestone.LastSyncedAt)
             .Map(dest => dest.IsDeleted, src => src.Milestone.IsDeleted)
             .Map(dest => dest.DeletedAt, src => src.Milestone.DeletedAt);
 
@@ -113,7 +109,6 @@ public static class MapsterRegistration
             .Map(dest => dest.XpEarned, src => src.Progress.XpEarned)
             .Map(dest => dest.CreatedAt, src => src.Progress.CreatedAt)
             .Map(dest => dest.UpdatedAt, src => src.Progress.UpdatedAt)
-            .Map(dest => dest.LastSyncedAt, src => src.Progress.LastSyncedAt)
             .Map(dest => dest.IsDeleted, src => src.Progress.IsDeleted)
             .Map(dest => dest.DeletedAt, src => src.Progress.DeletedAt);
 
@@ -137,7 +132,6 @@ public static class MapsterRegistration
             .Map(dest => dest.Words, src => src.Words)
             .Map(dest => dest.CreatedAt, src => src.Lesson.CreatedAt)
             .Map(dest => dest.UpdatedAt, src => src.Lesson.UpdatedAt)
-            .Map(dest => dest.LastSyncedAt, src => src.Lesson.LastSyncedAt)
             .Map(dest => dest.IsDeleted, src => src.Lesson.IsDeleted)
             .Map(dest => dest.DeletedAt, src => src.Lesson.DeletedAt);
     }

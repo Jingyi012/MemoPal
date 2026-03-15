@@ -55,7 +55,6 @@ public sealed class UpdateNotificationCommandHandler : IRequestHandler<UpdateNot
         entity.IsDismissed = request.Request.IsDismissed;
         entity.ReadAt = request.Request.ReadAt;
         entity.UpdatedAt = request.Request.UpdatedAt ?? DateTime.UtcNow;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? entity.IsDeleted;
         entity.DeletedAt = request.Request.DeletedAt ?? entity.DeletedAt;
 

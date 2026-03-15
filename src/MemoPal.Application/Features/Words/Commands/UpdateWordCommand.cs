@@ -34,7 +34,6 @@ public sealed class UpdateWordCommandHandler : IRequestHandler<UpdateWordCommand
         if (!string.IsNullOrWhiteSpace(request.Request.Meaning)) entity.Meaning = request.Request.Meaning;
         if (!string.IsNullOrWhiteSpace(request.Request.LocationId)) entity.LocationId = request.Request.LocationId;
         entity.UpdatedAt = request.Request.UpdatedAt ?? DateTime.UtcNow;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? entity.IsDeleted;
         entity.DeletedAt = request.Request.DeletedAt ?? entity.DeletedAt;
 

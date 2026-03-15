@@ -38,7 +38,6 @@ public sealed class CreateLevelConfigCommandHandler : IRequestHandler<CreateLeve
         entity.RequiredXp = request.Request.RequiredXp;
         entity.Title = request.Request.Title;
         entity.UpdatedAt = request.Request.UpdatedAt ?? now;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;
 

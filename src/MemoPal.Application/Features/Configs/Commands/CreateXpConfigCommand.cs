@@ -42,7 +42,6 @@ public sealed class CreateXpConfigCommandHandler : IRequestHandler<CreateXpConfi
         entity.VariableXp = request.Request.VariableXp;
         entity.IsActive = request.Request.IsActive;
         entity.UpdatedAt = request.Request.UpdatedAt ?? now;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;
 

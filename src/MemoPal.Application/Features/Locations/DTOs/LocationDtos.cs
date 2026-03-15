@@ -9,7 +9,6 @@ public sealed record LocationDto(
     string ImageUrl,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    DateTime? LastSyncedAt,
     bool IsDeleted,
     DateTime? DeletedAt
 );
@@ -24,7 +23,6 @@ public sealed class LocationUpsertRequest
     public string? ImageUrl { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public DateTime? LastSyncedAt { get; set; }
     public bool? IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
 }

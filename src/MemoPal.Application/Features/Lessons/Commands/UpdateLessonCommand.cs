@@ -39,7 +39,6 @@ public sealed class UpdateLessonCommandHandler : IRequestHandler<UpdateLessonCom
         lesson.IsPremium = request.Request.IsPremium;
         if (!string.IsNullOrWhiteSpace(request.Request.Privacy)) lesson.Privacy = request.Request.Privacy;
         lesson.UpdatedAt = request.Request.UpdatedAt ?? DateTime.UtcNow;
-        lesson.LastSyncedAt = request.Request.LastSyncedAt;
         lesson.IsDeleted = request.Request.IsDeleted ?? lesson.IsDeleted;
         lesson.DeletedAt = request.Request.DeletedAt ?? lesson.DeletedAt;
 

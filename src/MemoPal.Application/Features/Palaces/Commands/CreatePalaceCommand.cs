@@ -52,7 +52,6 @@ public sealed class CreatePalaceCommandHandler : IRequestHandler<CreatePalaceCom
         entity.IsCustom = request.Request.IsCustom;
         entity.CreatedBy = request.Request.IsCustom ? request.UserId : request.Request.CreatedBy;
         entity.UpdatedAt = request.Request.UpdatedAt ?? now;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;
 

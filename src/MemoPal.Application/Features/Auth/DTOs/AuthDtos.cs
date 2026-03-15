@@ -15,7 +15,6 @@ public sealed record UserWithStatDto(
     UserStatsDto? Stats,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    DateTime? LastSyncedAt,
     bool IsDeleted,
     DateTime? DeletedAt
 );

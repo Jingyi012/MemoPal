@@ -52,7 +52,6 @@ public sealed class UpdateLessonProgressCommandHandler : IRequestHandler<UpdateL
         progress.LastReviewDate = request.Request.LastReviewDate;
         progress.XpEarned = request.Request.XpEarned;
         progress.UpdatedAt = request.Request.UpdatedAt ?? now;
-        progress.LastSyncedAt = request.Request.LastSyncedAt;
         progress.IsDeleted = request.Request.IsDeleted ?? false;
         progress.DeletedAt = request.Request.DeletedAt;
 
@@ -81,7 +80,6 @@ public sealed class UpdateLessonProgressCommandHandler : IRequestHandler<UpdateL
                 schedule.Completed = scheduleRequest.Completed;
                 schedule.CompletedDate = scheduleRequest.CompletedDate;
                 schedule.UpdatedAt = scheduleRequest.UpdatedAt ?? now;
-                schedule.LastSyncedAt = scheduleRequest.LastSyncedAt;
                 schedule.IsDeleted = scheduleRequest.IsDeleted ?? false;
                 schedule.DeletedAt = scheduleRequest.DeletedAt;
             }

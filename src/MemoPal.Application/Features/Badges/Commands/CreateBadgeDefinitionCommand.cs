@@ -45,7 +45,6 @@ public sealed class CreateBadgeDefinitionCommandHandler : IRequestHandler<Create
         entity.IconUrl = request.Request.IconUrl;
         entity.Rarity = request.Request.Rarity;
         entity.UpdatedAt = request.Request.UpdatedAt ?? now;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;
 

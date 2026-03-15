@@ -53,7 +53,6 @@ public sealed class CreateLocationCommandHandler : IRequestHandler<CreateLocatio
         entity.Description = request.Request.Description.Trim();
         entity.ImageUrl = request.Request.ImageUrl.Trim();
         entity.UpdatedAt = request.Request.UpdatedAt ?? now;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;
 

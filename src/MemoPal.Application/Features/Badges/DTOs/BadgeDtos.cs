@@ -11,7 +11,6 @@ public sealed record BadgeDto(
     DateTime? EarnedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    DateTime? LastSyncedAt,
     bool IsDeleted,
     DateTime? DeletedAt
 );
@@ -26,7 +25,6 @@ public sealed record BadgeDefinitionDto(
     string? Rarity,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    DateTime? LastSyncedAt,
     bool IsDeleted,
     DateTime? DeletedAt,
     string? CreatedBy,
@@ -44,7 +42,6 @@ public sealed class BadgeDefinitionUpsertRequest
     public string? Rarity { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public DateTime? LastSyncedAt { get; set; }
     public bool? IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
 }

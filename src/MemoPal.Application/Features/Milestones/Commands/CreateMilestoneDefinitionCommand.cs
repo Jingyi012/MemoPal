@@ -44,7 +44,6 @@ public sealed class CreateMilestoneDefinitionCommandHandler : IRequestHandler<Cr
         entity.ConditionType = request.Request.ConditionType.Trim();
         entity.ConditionValue = request.Request.ConditionValue;
         entity.UpdatedAt = request.Request.UpdatedAt ?? now;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;
 

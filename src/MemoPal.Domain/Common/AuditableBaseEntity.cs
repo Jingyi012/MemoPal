@@ -6,7 +6,6 @@ public abstract class AuditableBaseEntity : BaseEntity
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
-    public DateTime? LastSyncedAt { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
 }

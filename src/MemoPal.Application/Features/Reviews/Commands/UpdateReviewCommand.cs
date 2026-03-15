@@ -30,7 +30,6 @@ public sealed class UpdateReviewCommandHandler : IRequestHandler<UpdateReviewCom
         entity.Completed = request.Request.Completed;
         entity.CompletedDate = request.Request.CompletedDate;
         entity.UpdatedAt = request.Request.UpdatedAt ?? DateTime.UtcNow;
-        entity.LastSyncedAt = request.Request.LastSyncedAt;
         entity.IsDeleted = request.Request.IsDeleted ?? entity.IsDeleted;
         entity.DeletedAt = request.Request.DeletedAt ?? entity.DeletedAt;
 
