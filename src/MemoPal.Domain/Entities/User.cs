@@ -12,8 +12,8 @@ public sealed class User : AuditableBaseEntity
     public int TotalXp { get; set; }
     public int Level { get; set; } = 1;
     public bool IsPremium { get; set; }
+    public string? ReferredByUserId { get; set; }
 
     public UserStats? Stats { get; set; }
 }
-
 

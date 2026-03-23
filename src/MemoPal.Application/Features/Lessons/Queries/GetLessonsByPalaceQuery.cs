@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Security;
 using MemoPal.Application.Features.Lessons.DTOs;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,8 +22,11 @@ public sealed class GetLessonsByPalaceQueryHandler : IRequestHandler<GetLessonsB
 
     public async Task<ApiResponse<IReadOnlyList<LessonDto>>> Handle(GetLessonsByPalaceQuery request, CancellationToken cancellationToken)
     {
-        var palace = await _db.Palaces.FirstOrDefaultAsync(
-            x => x.Id == request.PalaceId && !x.IsDeleted && (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
+        var palace = await PalaceAccessPolicy.FindAccessiblePalaceAsync(
+            _db,
+            request.PalaceId,
+            request.UserId,
+            request.IsAdmin,
             cancellationToken);
         if (palace is null) throw new NotFoundAppException("Palace not found.");
 

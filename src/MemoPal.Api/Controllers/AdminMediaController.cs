@@ -21,12 +21,13 @@ public sealed class AdminMediaController : ApiControllerBase
     }
 
     [HttpPost("images")]
+    [Consumes("multipart/form-data")]
     [RequestSizeLimit(10_000_000)]
     public async Task<IActionResult> UploadImage(
-        [FromForm] IFormFile? file,
-        [FromForm] string? category,
+        [FromForm] UploadImageRequest request,
         CancellationToken cancellationToken)
     {
+        var file = request.File;
         if (file is null || file.Length == 0)
             return BadRequest(ApiResponse<string>.Fail("Image file is required."));
 
@@ -34,9 +35,9 @@ public sealed class AdminMediaController : ApiControllerBase
         if (!AllowedExtensions.Contains(ext))
             return BadRequest(ApiResponse<string>.Fail("Only jpg, jpeg, png, webp are allowed."));
 
-        var sanitizedCategory = string.IsNullOrWhiteSpace(category)
+        var sanitizedCategory = string.IsNullOrWhiteSpace(request.Category)
             ? "content"
-            : Regex.Replace(category.Trim().ToLowerInvariant(), "[^a-z0-9_-]", string.Empty);
+            : Regex.Replace(request.Category.Trim().ToLowerInvariant(), "[^a-z0-9_-]", string.Empty);
         if (string.IsNullOrWhiteSpace(sanitizedCategory))
             sanitizedCategory = "content";
 
@@ -48,6 +49,12 @@ public sealed class AdminMediaController : ApiControllerBase
             $"admin_{GetUserIdOrThrow()}",
             cancellationToken);
 
-        return Ok(ApiResponse<string>.Ok(path));
+        return Ok(ApiResponse<string>.Ok(ToAbsoluteMediaUrl(path)));
+    }
+
+    public sealed class UploadImageRequest
+    {
+        public IFormFile? File { get; set; }
+        public string? Category { get; set; }
     }
 }

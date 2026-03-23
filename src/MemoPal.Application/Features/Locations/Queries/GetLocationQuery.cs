@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Security;
 using MemoPal.Application.Features.Locations.DTOs;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,8 +25,11 @@ public sealed class GetLocationQueryHandler : IRequestHandler<GetLocationQuery, 
         var location = await _db.Locations.FirstOrDefaultAsync(x => x.Id == request.LocationId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("Location not found.");
 
-        var palace = await _db.Palaces.FirstOrDefaultAsync(
-            x => x.Id == location.PalaceId && !x.IsDeleted && (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
+        var palace = await PalaceAccessPolicy.FindAccessiblePalaceAsync(
+            _db,
+            location.PalaceId,
+            request.UserId,
+            request.IsAdmin,
             cancellationToken);
         if (palace is null)
         {

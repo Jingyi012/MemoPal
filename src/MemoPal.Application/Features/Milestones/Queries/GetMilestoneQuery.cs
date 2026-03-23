@@ -1,9 +1,9 @@
-using Mapster;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Milestones.DTOs;
+using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Milestones.Queries;
@@ -30,7 +30,23 @@ public sealed class GetMilestoneQueryHandler : IRequestHandler<GetMilestoneQuery
             x => x.UserId == request.UserId && x.MilestoneId == request.MilestoneId && !x.IsDeleted,
             cancellationToken);
 
-        return ApiResponse<MilestoneDto>.Ok((definition, achieved).Adapt<MilestoneDto>());
+        return ApiResponse<MilestoneDto>.Ok(ToMilestoneDto(definition, achieved));
+    }
+
+    private static MilestoneDto ToMilestoneDto(MilestoneDefinition definition, UserMilestone? achieved)
+    {
+        return new MilestoneDto(
+            definition.Id,
+            definition.Key,
+            definition.Title,
+            definition.Description,
+            definition.ConditionType,
+            definition.ConditionValue,
+            achieved?.AchievedAt,
+            definition.CreatedAt,
+            definition.UpdatedAt,
+            definition.IsDeleted,
+            definition.DeletedAt);
     }
 }
 

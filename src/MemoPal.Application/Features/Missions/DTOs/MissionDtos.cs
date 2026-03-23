@@ -54,3 +54,17 @@ public sealed record UserMissionDashboardDto(
     DateTime GeneratedAtUtc,
     IReadOnlyList<MissionProgressDto> Missions
 );
+
+public sealed class GamificationMobileUiConfigDto
+{
+    public string HomeMissionCardTitle { get; set; } = "Mission Board";
+    public string HomeMissionCardDescription { get; set; } = "Track your current missions and claim rewards.";
+    public string MissionScreenTitle { get; set; } = "Mission Board";
+    public string MissionScreenDescription { get; set; } = "Complete missions to earn XP and stay consistent.";
+    public string MissionSectionTitle { get; set; } = "Active Missions";
+    public string MissionSectionDescription { get; set; } = "Complete each mission and claim your XP reward.";
+    public string BadgeSectionTitle { get; set; } = "Badges";
+    public string MilestoneSectionTitle { get; set; } = "Milestone Journey";
+    public Dictionary<string, string> MilestoneTypeLabels { get; set; } = new();
+    public int HomeMissionPreviewCount { get; set; } = 2;
+}

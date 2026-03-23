@@ -20,26 +20,35 @@ public sealed class GetEntitlementQueryHandler : IRequestHandler<GetEntitlementQ
     public async Task<ApiResponse<SubscriptionEntitlementDto>> Handle(GetEntitlementQuery request, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var latest = await _db.UserSubscriptions
+        var subscriptions = await _db.UserSubscriptions
             .Where(x => x.UserId == request.UserId && !x.IsDeleted)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
+            .OrderByDescending(x => x.StartedAt)
+            .ThenByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
 
-        if (latest is null)
+        if (subscriptions.Count == 0)
         {
             return ApiResponse<SubscriptionEntitlementDto>.Ok(new SubscriptionEntitlementDto(false, null, null, null, null, null, false, null));
         }
 
-        var active = latest.Status == "active" && (!latest.ExpiresAt.HasValue || latest.ExpiresAt > now);
+        var active = subscriptions
+            .Where(x => x.Status == "active" && (!x.ExpiresAt.HasValue || x.ExpiresAt > now))
+            .OrderByDescending(x => x.ExpiresAt ?? DateTime.MaxValue)
+            .ThenByDescending(x => x.StartedAt)
+            .FirstOrDefault();
+
+        var selected = active ?? subscriptions[0];
+        var isPremiumActive = active is not null;
+
         return ApiResponse<SubscriptionEntitlementDto>.Ok(new SubscriptionEntitlementDto(
-            active,
-            latest.PlanId,
-            latest.Provider,
-            latest.Status,
-            latest.StartedAt,
-            latest.ExpiresAt,
-            latest.AutoRenew,
-            latest.LastVerifiedAt
+            isPremiumActive,
+            selected.PlanId,
+            selected.Provider,
+            selected.Status,
+            selected.StartedAt,
+            selected.ExpiresAt,
+            selected.AutoRenew,
+            selected.LastVerifiedAt
         ));
     }
 }

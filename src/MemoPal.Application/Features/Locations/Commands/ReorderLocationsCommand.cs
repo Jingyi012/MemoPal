@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Security;
 using MemoPal.Application.Features.Locations.DTOs;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,10 +32,11 @@ public sealed class ReorderLocationsCommandHandler
             throw new ValidationAppException("LocationIds is required.");
         }
 
-        var palace = await _db.Palaces.FirstOrDefaultAsync(
-                x => x.Id == request.PalaceId &&
-                     !x.IsDeleted &&
-                     (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
+        var palace = await PalaceAccessPolicy.FindManageablePalaceAsync(
+                _db,
+                request.PalaceId,
+                request.UserId,
+                request.IsAdmin,
                 cancellationToken)
             ?? throw new NotFoundAppException("Palace not found.");
 

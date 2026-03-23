@@ -123,7 +123,7 @@ public class LocationReorderTests
             LocationsCount = 3,
             Thumbnail = "thumb.png",
             IsLocked = false,
-            RequiredXp = 0,
+            Level = 1,
             IsPremium = false,
             IsCustom = false,
             CreatedAt = DateTime.UtcNow,

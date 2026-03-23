@@ -8,6 +8,7 @@ public interface IAppDbContext
     DbSet<User> Users { get; }
     DbSet<UserStats> UserStats { get; }
     DbSet<Palace> Palaces { get; }
+    DbSet<UserPalace> UserPalaces { get; }
     DbSet<Location> Locations { get; }
     DbSet<Lesson> Lessons { get; }
     DbSet<Word> Words { get; }
@@ -23,7 +24,9 @@ public interface IAppDbContext
     DbSet<XpEvent> XpEvents { get; }
     DbSet<UserSubscription> UserSubscriptions { get; }
     DbSet<SystemSetting> SystemSettings { get; }
+    DbSet<ReferralProfile> ReferralProfiles { get; }
+    DbSet<ReferralRecord> ReferralRecords { get; }
+    DbSet<ReferralMilestoneReward> ReferralMilestoneRewards { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
-

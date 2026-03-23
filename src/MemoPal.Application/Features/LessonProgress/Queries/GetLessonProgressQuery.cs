@@ -31,7 +31,22 @@ public sealed class GetLessonProgressQueryHandler : IRequestHandler<GetLessonPro
 
         var progress = await _db.LessonProgresses.FirstOrDefaultAsync(
             x => x.UserId == request.UserId && x.LessonId == request.LessonId && !x.IsDeleted,
-            cancellationToken) ?? throw new NotFoundAppException("Lesson progress not found.");
+            cancellationToken);
+
+        if (progress is null)
+        {
+            progress = new Domain.Entities.LessonProgress
+            {
+                UserId = request.UserId,
+                LessonId = request.LessonId,
+                MasteryLevel = "new",
+                TotalReviews = 0,
+                XpEarned = 0,
+            };
+
+            await _db.LessonProgresses.AddAsync(progress, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
 
         var schedules = await _db.ReviewSchedules
             .Where(x => x.UserId == request.UserId && x.LessonProgressId == progress.Id && !x.IsDeleted)
@@ -39,7 +54,21 @@ public sealed class GetLessonProgressQueryHandler : IRequestHandler<GetLessonPro
             .ToListAsync(cancellationToken);
 
         var reviewDtos = schedules.Select(x => x.Adapt<ReviewScheduleDto>()).ToList();
-        return ApiResponse<LessonProgressDto>.Ok((progress, (IReadOnlyList<ReviewScheduleDto>)reviewDtos).Adapt<LessonProgressDto>());
+        var progressDto = new LessonProgressDto(
+            progress.Id,
+            progress.LessonId,
+            progress.FirstCompletedDate,
+            reviewDtos,
+            progress.TotalReviews,
+            progress.MasteryLevel,
+            progress.LastReviewDate,
+            progress.XpEarned,
+            progress.CreatedAt,
+            progress.UpdatedAt,
+            progress.IsDeleted,
+            progress.DeletedAt);
+
+        return ApiResponse<LessonProgressDto>.Ok(progressDto);
     }
 }
 

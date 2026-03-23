@@ -27,13 +27,22 @@ public sealed class UpdateWordCommandHandler : IRequestHandler<UpdateWordCommand
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
             x => x.Id == entity.LessonId &&
                  !x.IsDeleted &&
-                 (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
+                 (request.IsAdmin || (x.IsCustom == true && x.CreatedBy == request.UserId)),
             cancellationToken);
         if (lesson is null) throw new NotFoundAppException("Word not found.");
 
         if (!string.IsNullOrWhiteSpace(request.Request.Text)) entity.Text = request.Request.Text.Trim();
         if (!string.IsNullOrWhiteSpace(request.Request.Meaning)) entity.Meaning = request.Request.Meaning;
-        if (!string.IsNullOrWhiteSpace(request.Request.LocationId)) entity.LocationId = request.Request.LocationId;
+        if (!string.IsNullOrWhiteSpace(request.Request.LocationId))
+        {
+            var locationExists = await _db.Locations.AnyAsync(
+                x => x.Id == request.Request.LocationId &&
+                     x.PalaceId == lesson.PalaceId &&
+                     !x.IsDeleted,
+                cancellationToken);
+            if (!locationExists) throw new NotFoundAppException("Location not found.");
+            entity.LocationId = request.Request.LocationId;
+        }
         entity.UpdatedAt = request.Request.UpdatedAt ?? DateTime.UtcNow;
         entity.IsDeleted = request.Request.IsDeleted ?? entity.IsDeleted;
         entity.DeletedAt = request.Request.DeletedAt ?? entity.DeletedAt;

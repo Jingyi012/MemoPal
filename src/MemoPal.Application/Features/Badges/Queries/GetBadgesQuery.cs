@@ -1,8 +1,8 @@
-using Mapster;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Badges.DTOs;
+using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Badges.Queries;
@@ -32,9 +32,25 @@ public sealed class GetBadgesQueryHandler : IRequestHandler<GetBadgesQuery, ApiR
         var items = defs.Select(d =>
         {
             map.TryGetValue(d.Id, out var earned);
-            return (d, earned).Adapt<BadgeDto>();
+            return ToBadgeDto(d, earned);
         }).ToList();
         return ApiResponse<IReadOnlyList<BadgeDto>>.Ok(items);
     }
-}
 
+    private static BadgeDto ToBadgeDto(BadgeDefinition definition, UserBadge? earned)
+    {
+        return new BadgeDto(
+            definition.Id,
+            definition.Key,
+            definition.Name,
+            definition.Description,
+            definition.Icon,
+            definition.IconUrl,
+            definition.Rarity,
+            earned?.EarnedAt,
+            definition.CreatedAt,
+            definition.UpdatedAt,
+            definition.IsDeleted,
+            definition.DeletedAt);
+    }
+}

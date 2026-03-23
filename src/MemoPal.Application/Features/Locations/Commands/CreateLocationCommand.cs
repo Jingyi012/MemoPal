@@ -3,6 +3,8 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Media;
+using MemoPal.Application.Common.Security;
 using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Locations.DTOs;
 using MemoPal.Domain.Entities;
@@ -31,8 +33,11 @@ public sealed class CreateLocationCommandHandler : IRequestHandler<CreateLocatio
             throw new ValidationAppException("palaceId, name, description, and imageUrl are required.");
         }
 
-        var palace = await _db.Palaces.FirstOrDefaultAsync(
-            x => x.Id == request.Request.PalaceId && !x.IsDeleted && (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
+        var palace = await PalaceAccessPolicy.FindManageablePalaceAsync(
+            _db,
+            request.Request.PalaceId!,
+            request.UserId,
+            request.IsAdmin,
             cancellationToken);
         if (palace is null) throw new NotFoundAppException("Palace not found.");
 
@@ -70,7 +75,7 @@ public sealed class CreateLocationCommandHandler : IRequestHandler<CreateLocatio
         entity.Position = request.Request.Position;
         entity.Name = request.Request.Name.Trim();
         entity.Description = request.Request.Description.Trim();
-        entity.ImageUrl = request.Request.ImageUrl.Trim();
+        entity.ImageUrl = MediaPathNormalizer.Normalize(request.Request.ImageUrl);
         entity.UpdatedAt = request.Request.UpdatedAt ?? now;
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;

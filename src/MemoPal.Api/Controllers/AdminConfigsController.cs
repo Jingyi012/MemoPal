@@ -107,28 +107,54 @@ public sealed class AdminConfigsController : ApiControllerBase
         CancellationToken cancellationToken = default)
     {
         var result = await Sender.Send(new GetPagedBadgeDefinitionsQuery(pageNumber, pageSize, search), cancellationToken);
-        return Ok(result);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(result);
+        }
+
+        var mapped = MapMediaUrls(result.Data);
+        return Ok(PaginatedResponse<BadgeDefinitionDto>.Ok(
+            mapped,
+            result.Pagination.PageNumber,
+            result.Pagination.PageSize,
+            result.Pagination.TotalCount,
+            result.Message));
     }
 
     [HttpGet("badge-definitions/{badgeId}")]
     public async Task<IActionResult> GetBadgeDefinition(string badgeId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetBadgeDefinitionQuery(badgeId), cancellationToken); 
-        return Ok(result);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(result);
+        }
+
+        return Ok(ApiResponse<BadgeDefinitionDto>.Ok(MapMediaUrls(result.Data), result.Message));
     }
 
     [HttpPost("badge-definitions")]
     public async Task<IActionResult> CreateBadgeDefinition([FromBody] BadgeDefinitionUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new CreateBadgeDefinitionCommand(request), cancellationToken); 
-        return Ok(result);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(result);
+        }
+
+        return Ok(ApiResponse<BadgeDefinitionDto>.Ok(MapMediaUrls(result.Data), result.Message));
     }
 
     [HttpPut("badge-definitions/{badgeId}")]
     public async Task<IActionResult> UpdateBadgeDefinition(string badgeId, [FromBody] BadgeDefinitionUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new UpdateBadgeDefinitionCommand(badgeId, request), cancellationToken); 
-        return Ok(result);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(result);
+        }
+
+        return Ok(ApiResponse<BadgeDefinitionDto>.Ok(MapMediaUrls(result.Data), result.Message));
     }
 
     [HttpDelete("badge-definitions/{badgeId}")]
@@ -191,4 +217,3 @@ public sealed class AdminConfigsController : ApiControllerBase
         return Ok(result);
     }
 }
-

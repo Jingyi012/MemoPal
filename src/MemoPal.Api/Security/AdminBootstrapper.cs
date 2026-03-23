@@ -457,8 +457,6 @@ public sealed class AdminBootstrapper
         }
 
         var now = DateTime.UtcNow;
-        var levelXp = LevelSeed.ToDictionary(x => x.Level, x => x.RequiredXp);
-
         foreach (var palaceSeed in palaceSeeds)
         {
             var palaceId = $"seed-palace-lv{palaceSeed.Level:00}";
@@ -477,8 +475,9 @@ public sealed class AdminBootstrapper
             palace.Name = $"Level {palaceSeed.Level:00} - {palaceSeed.Name}";
             palace.Description = palaceSeed.Description;
             palace.Thumbnail = CopySeedImageToPublicPath(palaceSeed.ThumbnailImagePath, palaceSeed.FolderName);
-            palace.RequiredXp = levelXp.GetValueOrDefault(palaceSeed.Level, 0);
-            palace.IsLocked = palaceSeed.Level > 1;
+            palace.Level = palaceSeed.Level;
+            // IsLocked is a global admin lock switch, not progression state.
+            palace.IsLocked = false;
             palace.IsPremium = false;
             palace.IsCustom = false;
             palace.IsDeleted = false;

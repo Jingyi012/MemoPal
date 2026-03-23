@@ -44,11 +44,15 @@ public sealed class UpdateWordsBatchCommandHandler : IRequestHandler<UpdateWords
                 var lesson = await _db.Lessons.FirstOrDefaultAsync(
                     x => x.Id == item.LessonId &&
                          !x.IsDeleted &&
-                         (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
+                         (request.IsAdmin || (x.IsCustom == true && x.CreatedBy == request.UserId)),
                     cancellationToken);
                 if (lesson is null) throw new NotFoundAppException("Lesson not found.");
 
-                var locationExists = await _db.Locations.AnyAsync(x => x.Id == item.LocationId && !x.IsDeleted, cancellationToken);
+                var locationExists = await _db.Locations.AnyAsync(
+                    x => x.Id == item.LocationId &&
+                         x.PalaceId == lesson.PalaceId &&
+                         !x.IsDeleted,
+                    cancellationToken);
                 if (!locationExists) throw new NotFoundAppException("Location not found.");
 
                 var id = Guid.NewGuid().ToString("D");
@@ -78,13 +82,22 @@ public sealed class UpdateWordsBatchCommandHandler : IRequestHandler<UpdateWords
                 var lesson = await _db.Lessons.FirstOrDefaultAsync(
                     x => x.Id == entity.LessonId &&
                          !x.IsDeleted &&
-                         (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
+                         (request.IsAdmin || (x.IsCustom == true && x.CreatedBy == request.UserId)),
                     cancellationToken);
                 if (lesson is null) throw new NotFoundAppException("Word not found.");
 
                 if (!string.IsNullOrWhiteSpace(item.Text)) entity.Text = item.Text.Trim();
                 if (!string.IsNullOrWhiteSpace(item.Meaning)) entity.Meaning = item.Meaning;
-                if (!string.IsNullOrWhiteSpace(item.LocationId)) entity.LocationId = item.LocationId;
+                if (!string.IsNullOrWhiteSpace(item.LocationId))
+                {
+                    var locationExists = await _db.Locations.AnyAsync(
+                        x => x.Id == item.LocationId &&
+                             x.PalaceId == lesson.PalaceId &&
+                             !x.IsDeleted,
+                        cancellationToken);
+                    if (!locationExists) throw new NotFoundAppException("Location not found.");
+                    entity.LocationId = item.LocationId;
+                }
                 entity.UpdatedAt = item.UpdatedAt ?? now;
                 entity.IsDeleted = item.IsDeleted ?? entity.IsDeleted;
                 entity.DeletedAt = item.DeletedAt ?? entity.DeletedAt;

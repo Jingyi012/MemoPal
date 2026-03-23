@@ -26,35 +26,66 @@ public sealed class AdminUsersController : ApiControllerBase
         CancellationToken cancellationToken = default)
     {
         var result = await Sender.Send(new GetPagedManagedUsersQuery(pageNumber, pageSize, search, includeDeleted), cancellationToken);
-        return Ok(result);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(result);
+        }
+
+        var mapped = MapMediaUrls(result.Data);
+        return Ok(PaginatedResponse<ManagedUserDto>.Ok(
+            mapped,
+            result.Pagination.PageNumber,
+            result.Pagination.PageSize,
+            result.Pagination.TotalCount,
+            result.Message));
     }
 
     [HttpGet("{userId}")]
     public async Task<IActionResult> GetUser(string userId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetManagedUserQuery(userId), cancellationToken);
-        return Ok(result);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(result);
+        }
+
+        return Ok(ApiResponse<ManagedUserDto>.Ok(MapMediaUrls(result.Data), result.Message));
     }
 
     [HttpGet("{userId}/data")]
     public async Task<IActionResult> GetUserData(string userId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetManagedUserDataQuery(userId), cancellationToken);
-        return Ok(result);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(result);
+        }
+
+        return Ok(ApiResponse<ManagedUserDataDto>.Ok(MapMediaUrls(result.Data), result.Message));
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new CreateManagedUserCommand(request), cancellationToken);
-        return Ok(result);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(result);
+        }
+
+        return Ok(ApiResponse<ManagedUserDto>.Ok(MapMediaUrls(result.Data), result.Message));
     }
 
     [HttpPut("{userId}")]
     public async Task<IActionResult> UpdateUser(string userId, [FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new UpdateManagedUserCommand(userId, request), cancellationToken);
-        return Ok(result);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(result);
+        }
+
+        return Ok(ApiResponse<ManagedUserDto>.Ok(MapMediaUrls(result.Data), result.Message));
     }
 
     [HttpDelete("{userId}")]
@@ -63,5 +94,5 @@ public sealed class AdminUsersController : ApiControllerBase
         var result = await Sender.Send(new DeleteManagedUserCommand(userId), cancellationToken);
         return Ok(result);
     }
-}
 
+}

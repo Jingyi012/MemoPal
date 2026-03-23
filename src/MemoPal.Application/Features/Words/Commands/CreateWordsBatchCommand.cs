@@ -43,11 +43,15 @@ public sealed class CreateWordsBatchCommandHandler : IRequestHandler<CreateWords
             var lesson = await _db.Lessons.FirstOrDefaultAsync(
                 x => x.Id == item.LessonId &&
                      !x.IsDeleted &&
-                     (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
+                     (request.IsAdmin || (x.IsCustom == true && x.CreatedBy == request.UserId)),
                 cancellationToken);
             if (lesson is null) throw new NotFoundAppException("Lesson not found.");
 
-            var locationExists = await _db.Locations.AnyAsync(x => x.Id == item.LocationId && !x.IsDeleted, cancellationToken);
+            var locationExists = await _db.Locations.AnyAsync(
+                x => x.Id == item.LocationId &&
+                     x.PalaceId == lesson.PalaceId &&
+                     !x.IsDeleted,
+                cancellationToken);
             if (!locationExists) throw new NotFoundAppException("Location not found.");
 
             var id = string.IsNullOrWhiteSpace(item.Id) ? Guid.NewGuid().ToString("D") : item.Id!;

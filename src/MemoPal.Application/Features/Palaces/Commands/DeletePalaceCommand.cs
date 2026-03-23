@@ -1,7 +1,7 @@
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using MemoPal.Application.Common.Security;
 
 namespace MemoPal.Application.Features.Palaces.Commands;
 
@@ -18,10 +18,11 @@ public sealed class DeletePalaceCommandHandler : IRequestHandler<DeletePalaceCom
 
     public async Task<ApiResponse<bool>> Handle(DeletePalaceCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _db.Palaces.FirstOrDefaultAsync(
-            x => x.Id == request.PalaceId &&
-                 !x.IsDeleted &&
-                 (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
+        var entity = await PalaceAccessPolicy.FindManageablePalaceAsync(
+            _db,
+            request.PalaceId,
+            request.UserId,
+            request.IsAdmin,
             cancellationToken);
 
         if (entity is null) return ApiResponse<bool>.Fail("Palace not found.");

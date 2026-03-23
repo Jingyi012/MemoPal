@@ -43,6 +43,9 @@ public class FeatureLimitTests
         db.Palaces.AddRange(
             CreateCustomPalace("palace-1", "user-premium"),
             CreateCustomPalace("palace-2", "user-premium"));
+        db.UserPalaces.AddRange(
+            CreateUserPalace("up-1", "user-premium", "palace-1"),
+            CreateUserPalace("up-2", "user-premium", "palace-2"));
         await db.SaveChangesAsync();
 
         var handler = new CreatePalaceCommandHandler(db);
@@ -137,10 +140,25 @@ public class FeatureLimitTests
             Thumbnail = "thumb.png",
             LocationsCount = 0,
             IsLocked = false,
-            RequiredXp = 0,
+            Level = 1,
             IsPremium = false,
             IsCustom = true,
             CreatedBy = userId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+
+    private static UserPalace CreateUserPalace(string id, string userId, string palaceId)
+    {
+        return new UserPalace
+        {
+            Id = id,
+            UserId = userId,
+            PalaceId = palaceId,
+            IsOwner = true,
+            IsUnlocked = true,
+            UnlockedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -156,7 +174,7 @@ public class FeatureLimitTests
             Thumbnail = "thumb.png",
             LocationsCount = 0,
             IsLocked = false,
-            RequiredXp = 0,
+            Level = 1,
             IsPremium = false,
             IsCustom = false,
             CreatedAt = DateTime.UtcNow,
@@ -196,7 +214,7 @@ public class FeatureLimitTests
             IsCustom = true,
             IsPremium = false,
             IsLocked = false,
-            RequiredXp = 0
+            Level = 1
         });
     }
 

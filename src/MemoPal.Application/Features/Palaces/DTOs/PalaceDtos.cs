@@ -8,7 +8,7 @@ public sealed record PalaceDto(
     string Thumbnail,
     bool IsLocked,
     DateTime? UnlockedAt,
-    int RequiredXp,
+    int Level,
     bool IsPremium,
     bool IsCustom,
     string? CreatedBy,
@@ -27,7 +27,7 @@ public sealed class PalaceUpsertRequest
     public string? Thumbnail { get; set; }
     public bool IsLocked { get; set; }
     public DateTime? UnlockedAt { get; set; }
-    public int RequiredXp { get; set; }
+    public int Level { get; set; } = 1;
     public bool IsPremium { get; set; }
     public bool IsCustom { get; set; }
     public string? CreatedBy { get; set; }

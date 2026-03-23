@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Security;
 using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Lessons.DTOs;
 using MemoPal.Domain.Entities;
@@ -29,10 +30,18 @@ public sealed class CreateLessonCommandHandler : IRequestHandler<CreateLessonCom
             throw new ValidationAppException("palaceId and title are required.");
         }
 
-        var palace = await _db.Palaces.FirstOrDefaultAsync(
-            x => x.Id == request.Request.PalaceId && !x.IsDeleted && (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
+        var palace = await PalaceAccessPolicy.FindAccessiblePalaceAsync(
+            _db,
+            request.Request.PalaceId!,
+            request.UserId,
+            request.IsAdmin,
             cancellationToken);
         if (palace is null) throw new NotFoundAppException("Palace not found.");
+
+        if (!request.IsAdmin && request.Request.IsCustom != true)
+        {
+            throw new ValidationAppException("Only custom lessons can be created by users.");
+        }
 
         var now = DateTime.UtcNow;
         var id = string.IsNullOrWhiteSpace(request.Request.Id) ? Guid.NewGuid().ToString("D") : request.Request.Id!;

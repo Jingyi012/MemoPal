@@ -1,6 +1,7 @@
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Locations.Commands;
@@ -21,8 +22,11 @@ public sealed class DeleteLocationCommandHandler : IRequestHandler<DeleteLocatio
         var entity = await _db.Locations.FirstOrDefaultAsync(x => x.Id == request.LocationId && !x.IsDeleted, cancellationToken);
         if (entity is null) return ApiResponse<bool>.Ok(false);
 
-        var palace = await _db.Palaces.FirstOrDefaultAsync(
-            x => x.Id == entity.PalaceId && !x.IsDeleted && (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
+        var palace = await PalaceAccessPolicy.FindManageablePalaceAsync(
+            _db,
+            entity.PalaceId,
+            request.UserId,
+            request.IsAdmin,
             cancellationToken);
         if (palace is null) return ApiResponse<bool>.Ok(false);
 

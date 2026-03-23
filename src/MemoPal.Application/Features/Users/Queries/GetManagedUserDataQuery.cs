@@ -30,18 +30,38 @@ public sealed class GetManagedUserDataQueryHandler : IRequestHandler<GetManagedU
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.UserId == request.UserId, cancellationToken);
 
-        var palaces = await _db.Palaces
+        var userPalaceRelations = await _db.UserPalaces
             .AsNoTracking()
-            .Where(x => x.CreatedBy == request.UserId)
+            .Where(x => x.UserId == request.UserId && !x.IsDeleted)
             .OrderByDescending(x => x.UpdatedAt)
             .ToListAsync(cancellationToken);
 
-        var palaceIds = palaces.Select(x => x.Id).ToList();
-        var locations = palaceIds.Count == 0
+        var palaceIds = userPalaceRelations
+            .Select(x => x.PalaceId)
+            .Distinct()
+            .ToList();
+
+        var palaces = palaceIds.Count == 0
+            ? []
+            : await _db.Palaces
+                .AsNoTracking()
+                .Where(x => palaceIds.Contains(x.Id) && !x.IsDeleted)
+                .OrderByDescending(x => x.UpdatedAt)
+                .ToListAsync(cancellationToken);
+
+        var userPalaceByPalaceId = userPalaceRelations
+            .GroupBy(x => x.PalaceId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(x => x.UpdatedAt).First(),
+                StringComparer.Ordinal);
+
+        var palaceIdList = palaces.Select(x => x.Id).ToList();
+        var locations = palaceIdList.Count == 0
             ? []
             : await _db.Locations
                 .AsNoTracking()
-                .Where(x => palaceIds.Contains(x.PalaceId))
+                .Where(x => palaceIdList.Contains(x.PalaceId))
                 .OrderBy(x => x.Position)
                 .ThenByDescending(x => x.UpdatedAt)
                 .ToListAsync(cancellationToken);
@@ -177,17 +197,24 @@ public sealed class GetManagedUserDataQueryHandler : IRequestHandler<GetManagedU
                 StringComparer.Ordinal);
 
         var palaceDtos = palaces
-            .Select(x => new ManagedUserPalaceDataDto(
-                x.Id,
-                x.Name,
-                x.Description,
-                x.RequiredXp,
-                x.IsPremium,
-                x.IsCustom,
-                x.IsDeleted,
-                x.CreatedAt,
-                x.UpdatedAt,
-                locationsByPalaceId.GetValueOrDefault(x.Id) ?? []))
+            .Select(x =>
+            {
+                userPalaceByPalaceId.TryGetValue(x.Id, out var relation);
+                return new ManagedUserPalaceDataDto(
+                    x.Id,
+                    x.Name,
+                    x.Description,
+                    x.Level,
+                    x.IsPremium,
+                    x.IsCustom,
+                    relation?.IsOwner ?? false,
+                    relation?.IsUnlocked ?? false,
+                    relation?.UnlockedAt,
+                    x.IsDeleted,
+                    x.CreatedAt,
+                    x.UpdatedAt,
+                    locationsByPalaceId.GetValueOrDefault(x.Id) ?? []);
+            })
             .ToList();
 
         var lessonDtos = lessons

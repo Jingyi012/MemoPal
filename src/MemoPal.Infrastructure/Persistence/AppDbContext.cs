@@ -19,6 +19,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<UserStats> UserStats => Set<UserStats>();
     public DbSet<Palace> Palaces => Set<Palace>();
+    public DbSet<UserPalace> UserPalaces => Set<UserPalace>();
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<Lesson> Lessons => Set<Lesson>();
     public DbSet<Word> Words => Set<Word>();
@@ -34,6 +35,9 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<XpEvent> XpEvents => Set<XpEvent>();
     public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+    public DbSet<ReferralProfile> ReferralProfiles => Set<ReferralProfile>();
+    public DbSet<ReferralRecord> ReferralRecords => Set<ReferralRecord>();
+    public DbSet<ReferralMilestoneReward> ReferralMilestoneRewards => Set<ReferralMilestoneReward>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +48,7 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.Email).HasMaxLength(320);
             b.Property(x => x.DisplayName).HasMaxLength(200);
             b.Property(x => x.Role).HasMaxLength(32).HasDefaultValue(UserRoles.User);
+            b.Property(x => x.ReferredByUserId).HasMaxLength(64);
             b.HasOne(x => x.Stats)
                 .WithOne(x => x.User)
                 .HasForeignKey<UserStats>(x => x.UserId)
@@ -62,6 +67,20 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasMany(x => x.Locations)
                 .WithOne(x => x.Palace)
                 .HasForeignKey(x => x.PalaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserPalace>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.UserId, x.PalaceId }).IsUnique();
+            b.HasOne(x => x.Palace)
+                .WithMany()
+                .HasForeignKey(x => x.PalaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -185,6 +204,35 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasKey(x => x.Id);
             b.HasIndex(x => x.Key).IsUnique();
             b.Property(x => x.Key).HasMaxLength(128);
+        });
+
+        modelBuilder.Entity<ReferralProfile>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => x.UserId).IsUnique();
+            b.HasIndex(x => x.ReferralCode).IsUnique();
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.ReferralCode).HasMaxLength(64);
+        });
+
+        modelBuilder.Entity<ReferralRecord>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => x.RefereeUserId).IsUnique();
+            b.HasIndex(x => x.ReferrerUserId);
+            b.HasIndex(x => new { x.ReferrerUserId, x.RedeemedAt });
+            b.Property(x => x.ReferrerUserId).HasMaxLength(64);
+            b.Property(x => x.RefereeUserId).HasMaxLength(64);
+            b.Property(x => x.ReferralCode).HasMaxLength(64);
+        });
+
+        modelBuilder.Entity<ReferralMilestoneReward>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.ReferrerUserId, x.MilestoneKey }).IsUnique();
+            b.HasIndex(x => new { x.ReferrerUserId, x.AwardedAt });
+            b.Property(x => x.ReferrerUserId).HasMaxLength(64);
+            b.Property(x => x.MilestoneKey).HasMaxLength(96);
         });
     }
 

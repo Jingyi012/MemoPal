@@ -18,4 +18,11 @@ public sealed class MissionsController : ApiControllerBase
         var result = await Sender.Send(new GetUserMissionDashboardQuery(GetUserIdOrThrow()), cancellationToken);
         return Ok(result);
     }
+
+    [HttpGet("/missions/ui-config")]
+    public async Task<IActionResult> GetMobileUiConfig(CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new GetGamificationMobileUiConfigQuery(), cancellationToken);
+        return Ok(result);
+    }
 }

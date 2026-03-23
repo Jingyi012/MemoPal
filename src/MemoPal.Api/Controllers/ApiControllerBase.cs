@@ -1,7 +1,11 @@
+using Mapster;
+using MemoPal.Api.Mapping;
 using MediatR;
+using MemoPal.Api.Options;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -34,5 +38,65 @@ public abstract class ApiControllerBase : ControllerBase
     protected bool IsAdmin()
     {
         return User.IsInRole(UserRoles.Admin);
+    }
+
+    protected T MapMediaUrls<T>(T value)
+    {
+        var config = MediaUrlMapsterConfigFactory.Get(GetMediaBaseUrl());
+        return value.Adapt<T>(config);
+    }
+
+    protected IReadOnlyList<T> MapMediaUrls<T>(IReadOnlyList<T> value)
+    {
+        var config = MediaUrlMapsterConfigFactory.Get(GetMediaBaseUrl());
+        return value.Adapt<List<T>>(config);
+    }
+
+    protected string ToAbsoluteMediaUrl(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        if (Uri.TryCreate(value, UriKind.Absolute, out _))
+        {
+            return value;
+        }
+
+        var normalized = value.Trim().Replace('\\', '/');
+        if (normalized.StartsWith("~/", StringComparison.Ordinal))
+        {
+            normalized = normalized[1..];
+        }
+
+        if (!normalized.StartsWith("/", StringComparison.Ordinal))
+        {
+            normalized = "/" + normalized.TrimStart('/');
+        }
+
+        return $"{GetMediaBaseUrl()}{normalized}";
+    }
+
+    protected string? ToAbsoluteMediaUrlOrNull(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : ToAbsoluteMediaUrl(value);
+    }
+
+    private string GetMediaBaseUrl()
+    {
+        var configuredMediaBaseUrl = HttpContext?.RequestServices
+            .GetService<IOptions<MediaUrlOptions>>()?
+            .Value
+            .BaseUrl?
+            .Trim();
+
+        if (!string.IsNullOrWhiteSpace(configuredMediaBaseUrl) &&
+            Uri.TryCreate(configuredMediaBaseUrl, UriKind.Absolute, out var configuredUri))
+        {
+            return $"{configuredUri.Scheme}://{configuredUri.Authority}{configuredUri.AbsolutePath.TrimEnd('/')}";
+        }
+
+        return $"{Request.Scheme}://{Request.Host}{Request.PathBase}".TrimEnd('/');
     }
 }

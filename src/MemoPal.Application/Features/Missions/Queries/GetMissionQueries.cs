@@ -33,6 +33,33 @@ public sealed class GetMissionTemplatesQueryHandler
     }
 }
 
+public sealed record GetGamificationMobileUiConfigQuery() : IRequest<ApiResponse<GamificationMobileUiConfigDto>>;
+
+public sealed class GetGamificationMobileUiConfigQueryHandler
+    : IRequestHandler<GetGamificationMobileUiConfigQuery, ApiResponse<GamificationMobileUiConfigDto>>
+{
+    private readonly IAppDbContext _db;
+
+    public GetGamificationMobileUiConfigQueryHandler(IAppDbContext db)
+    {
+        _db = db;
+    }
+
+    public async Task<ApiResponse<GamificationMobileUiConfigDto>> Handle(
+        GetGamificationMobileUiConfigQuery request,
+        CancellationToken cancellationToken)
+    {
+        var setting = await _db.SystemSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => !x.IsDeleted && x.Key == SystemSettingKeys.GamificationMobileUiConfig,
+                cancellationToken);
+
+        var config = GamificationMobileUiConfigSerializer.ParseOrDefault(setting?.Value);
+        return ApiResponse<GamificationMobileUiConfigDto>.Ok(config);
+    }
+}
+
 public sealed record GetUserMissionDashboardQuery(string UserId) : IRequest<ApiResponse<UserMissionDashboardDto>>;
 
 public sealed class GetUserMissionDashboardQueryHandler

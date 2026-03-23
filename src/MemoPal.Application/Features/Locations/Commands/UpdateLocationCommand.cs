@@ -3,6 +3,8 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Media;
+using MemoPal.Application.Common.Security;
 using MemoPal.Application.Features.Locations.DTOs;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,14 +26,17 @@ public sealed class UpdateLocationCommandHandler : IRequestHandler<UpdateLocatio
         var entity = await _db.Locations.FirstOrDefaultAsync(x => x.Id == request.LocationId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("Location not found.");
 
-        var palace = await _db.Palaces.FirstOrDefaultAsync(
-            x => x.Id == entity.PalaceId && !x.IsDeleted && (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
+        var palace = await PalaceAccessPolicy.FindManageablePalaceAsync(
+            _db,
+            entity.PalaceId,
+            request.UserId,
+            request.IsAdmin,
             cancellationToken);
         if (palace is null) throw new NotFoundAppException("Location not found.");
 
         if (!string.IsNullOrWhiteSpace(request.Request.Name)) entity.Name = request.Request.Name.Trim();
         if (!string.IsNullOrWhiteSpace(request.Request.Description)) entity.Description = request.Request.Description.Trim();
-        if (!string.IsNullOrWhiteSpace(request.Request.ImageUrl)) entity.ImageUrl = request.Request.ImageUrl.Trim();
+        if (!string.IsNullOrWhiteSpace(request.Request.ImageUrl)) entity.ImageUrl = MediaPathNormalizer.Normalize(request.Request.ImageUrl);
         entity.Position = request.Request.Position;
         entity.UpdatedAt = request.Request.UpdatedAt ?? DateTime.UtcNow;
         entity.IsDeleted = request.Request.IsDeleted ?? entity.IsDeleted;

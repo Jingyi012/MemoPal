@@ -24,7 +24,7 @@ public sealed class DeleteWordCommandHandler : IRequestHandler<DeleteWordCommand
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
             x => x.Id == entity.LessonId &&
                  !x.IsDeleted &&
-                 (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
+                 (request.IsAdmin || (x.IsCustom == true && x.CreatedBy == request.UserId)),
             cancellationToken);
         if (lesson is null) return ApiResponse<bool>.Ok(false);
 

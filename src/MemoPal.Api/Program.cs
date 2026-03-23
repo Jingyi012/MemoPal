@@ -10,6 +10,8 @@ using MemoPal.Infrastructure;
 using MemoPal.Infrastructure.Security;
 using MemoPal.Infrastructure.Storage;
 using Microsoft.Extensions.FileProviders;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -22,6 +24,53 @@ var allowedCorsOrigins = builder.Configuration
     .Where(origin => !string.IsNullOrWhiteSpace(origin))
     .Distinct(StringComparer.OrdinalIgnoreCase)
     .ToArray() ?? [];
+var allowedCorsOriginSet = new HashSet<string>(allowedCorsOrigins, StringComparer.OrdinalIgnoreCase);
+
+static bool IsPrivateNetworkIp(IPAddress ip)
+{
+    if (IPAddress.IsLoopback(ip))
+    {
+        return true;
+    }
+
+    if (ip.AddressFamily == AddressFamily.InterNetwork)
+    {
+        var bytes = ip.GetAddressBytes();
+        return bytes[0] == 10 ||
+               (bytes[0] == 172 && bytes[1] is >= 16 and <= 31) ||
+               (bytes[0] == 192 && bytes[1] == 168);
+    }
+
+    if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+    {
+        return ip.IsIPv6LinkLocal || ip.IsIPv6SiteLocal;
+    }
+
+    return false;
+}
+
+static bool IsDevelopmentOriginAllowed(string origin)
+{
+    if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+    {
+        return false;
+    }
+
+    if (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
+        !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+    {
+        return false;
+    }
+
+    if (string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(uri.Host, "127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(uri.Host, "::1", StringComparison.OrdinalIgnoreCase))
+    {
+        return true;
+    }
+
+    return IPAddress.TryParse(uri.Host, out var ip) && IsPrivateNetworkIp(ip);
+}
 
 builder.Services
     .AddControllers()
@@ -69,21 +118,18 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
 builder.Services.Configure<BillingWebhookOptions>(builder.Configuration.GetSection(BillingWebhookOptions.SectionName));
+builder.Services.Configure<MediaUrlOptions>(builder.Configuration.GetSection(MediaUrlOptions.SectionName));
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("MemoPalCors", policy =>
     {
-        if (allowedCorsOrigins.Length > 0)
+        var isDevelopment = builder.Environment.IsDevelopment();
+
+        if (allowedCorsOriginSet.Count > 0 || isDevelopment)
         {
-            policy.WithOrigins(allowedCorsOrigins);
-        }
-        else if (builder.Environment.IsDevelopment())
-        {
-            policy.WithOrigins(
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "http://localhost:4173",
-                "http://127.0.0.1:4173");
+            policy.SetIsOriginAllowed(origin =>
+                allowedCorsOriginSet.Contains(origin) ||
+                (isDevelopment && IsDevelopmentOriginAllowed(origin)));
         }
 
         policy.AllowAnyHeader()
@@ -153,8 +199,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
+if (adminBootstrapOptions.Enabled || adminBootstrapOptions.SeedGamificationMockData)
 {
+    using var scope = app.Services.CreateScope();
     var bootstrapper = scope.ServiceProvider.GetRequiredService<AdminBootstrapper>();
     await bootstrapper.SeedAsync();
 }
