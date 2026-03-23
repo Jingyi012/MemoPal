@@ -1,14 +1,15 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Milestones.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Milestones.Queries;
 
-public sealed record GetMilestonesQuery(string UserId) : IRequest<IReadOnlyList<MilestoneDto>>;
+public sealed record GetMilestonesQuery(string UserId) : IRequest<ApiResponse<IReadOnlyList<MilestoneDto>>>;
 
-public sealed class GetMilestonesQueryHandler : IRequestHandler<GetMilestonesQuery, IReadOnlyList<MilestoneDto>>
+public sealed class GetMilestonesQueryHandler : IRequestHandler<GetMilestonesQuery, ApiResponse<IReadOnlyList<MilestoneDto>>>
 {
     private readonly IAppDbContext _db;
 
@@ -17,7 +18,7 @@ public sealed class GetMilestonesQueryHandler : IRequestHandler<GetMilestonesQue
         _db = db;
     }
 
-    public async Task<IReadOnlyList<MilestoneDto>> Handle(GetMilestonesQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<IReadOnlyList<MilestoneDto>>> Handle(GetMilestonesQuery request, CancellationToken cancellationToken)
     {
         var defs = await _db.MilestoneDefinitions
             .Where(x => !x.IsDeleted)
@@ -28,11 +29,12 @@ public sealed class GetMilestonesQueryHandler : IRequestHandler<GetMilestonesQue
             .ToListAsync(cancellationToken);
         var map = userMilestones.ToDictionary(x => x.MilestoneId, x => x);
 
-        return defs.Select(d =>
+        var items = defs.Select(d =>
         {
             map.TryGetValue(d.Id, out var achieved);
             return (d, achieved).Adapt<MilestoneDto>();
         }).ToList();
+        return ApiResponse<IReadOnlyList<MilestoneDto>>.Ok(items);
     }
 }
 

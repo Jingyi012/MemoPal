@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Reviews.DTOs;
@@ -8,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Reviews.Commands;
 
-public sealed record CompleteReviewCommand(string UserId, string ReviewId, int? CorrectCount, int? TotalCount) : IRequest<ReviewScheduleDto>;
+public sealed record CompleteReviewCommand(string UserId, string ReviewId, int? CorrectCount, int? TotalCount) : IRequest<ApiResponse<ReviewScheduleDto>>;
 
-public sealed class CompleteReviewCommandHandler : IRequestHandler<CompleteReviewCommand, ReviewScheduleDto>
+public sealed class CompleteReviewCommandHandler : IRequestHandler<CompleteReviewCommand, ApiResponse<ReviewScheduleDto>>
 {
     private static readonly int[] ReviewIntervalsDays = [1, 3, 7, 30];
     private const double PassThreshold = 0.7d;
@@ -22,7 +23,7 @@ public sealed class CompleteReviewCommandHandler : IRequestHandler<CompleteRevie
         _db = db;
     }
 
-    public async Task<ReviewScheduleDto> Handle(CompleteReviewCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<ReviewScheduleDto>> Handle(CompleteReviewCommand request, CancellationToken cancellationToken)
     {
         var review = await _db.ReviewSchedules.FirstOrDefaultAsync(
                 x => x.Id == request.ReviewId && x.UserId == request.UserId && !x.IsDeleted,
@@ -31,7 +32,7 @@ public sealed class CompleteReviewCommandHandler : IRequestHandler<CompleteRevie
 
         if (review.Completed)
         {
-            return review.Adapt<ReviewScheduleDto>();
+            return ApiResponse<ReviewScheduleDto>.Ok(review.Adapt<ReviewScheduleDto>());
         }
 
         var now = DateTime.UtcNow;
@@ -82,6 +83,7 @@ public sealed class CompleteReviewCommandHandler : IRequestHandler<CompleteRevie
         }
 
         await _db.SaveChangesAsync(cancellationToken);
-        return review.Adapt<ReviewScheduleDto>();
+        var result = review.Adapt<ReviewScheduleDto>();
+        return ApiResponse<ReviewScheduleDto>.Ok(result);
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Locations.Queries;
 
-public sealed record GetLocationsByPalaceQuery(string UserId, string PalaceId, int? PageNumber = null, int? PageSize = null) : IRequest<ApiResponse<IReadOnlyList<LocationDto>>>;
+public sealed record GetLocationsByPalaceQuery(string UserId, string PalaceId, int? PageNumber = null, int? PageSize = null, bool IsAdmin = false) : IRequest<ApiResponse<IReadOnlyList<LocationDto>>>;
 
 public sealed class GetLocationsByPalaceQueryHandler : IRequestHandler<GetLocationsByPalaceQuery, ApiResponse<IReadOnlyList<LocationDto>>>
 {
@@ -22,7 +22,7 @@ public sealed class GetLocationsByPalaceQueryHandler : IRequestHandler<GetLocati
     public async Task<ApiResponse<IReadOnlyList<LocationDto>>> Handle(GetLocationsByPalaceQuery request, CancellationToken cancellationToken)
     {
         var palace = await _db.Palaces.FirstOrDefaultAsync(
-            x => x.Id == request.PalaceId && !x.IsDeleted && (!x.IsCustom || x.CreatedBy == request.UserId),
+            x => x.Id == request.PalaceId && !x.IsDeleted && (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
             cancellationToken);
 
         if (palace is null)
@@ -30,12 +30,24 @@ public sealed class GetLocationsByPalaceQueryHandler : IRequestHandler<GetLocati
             throw new NotFoundAppException("Palace not found.");
         }
 
-        var data = await _db.Locations
+        var query = _db.Locations
             .Where(x => x.PalaceId == request.PalaceId && !x.IsDeleted)
             .OrderBy(x => x.Position)
-            .ToListAsync(cancellationToken);
+            .AsQueryable();
 
-        return data.Select(x => x.Adapt<LocationDto>()).ToList();
+        var usePagination = request.PageNumber.HasValue && request.PageSize.HasValue;
+
+        if (!usePagination)
+        {
+            var locations = await query.ToListAsync(cancellationToken);
+            return ApiResponse<IReadOnlyList<LocationDto>>.Ok(locations.Select(x => x.Adapt<LocationDto>()).ToList());
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var pageNumber = Math.Max(1, request.PageNumber!.Value);
+        var pageSize = Math.Clamp(request.PageSize!.Value, 1, 100);
+        var paged = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+
+        return PaginatedResponse<LocationDto>.Ok(paged.Select(x => x.Adapt<LocationDto>()).ToList(), pageNumber, pageSize, totalCount);
     }
 }
-

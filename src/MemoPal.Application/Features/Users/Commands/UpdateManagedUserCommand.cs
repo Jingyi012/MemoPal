@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Users.DTOs;
@@ -8,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Users.Commands;
 
-public sealed record UpdateManagedUserCommand(string UserId, ManagedUserUpsertRequest Request) : IRequest<ManagedUserDto>;
+public sealed record UpdateManagedUserCommand(string UserId, ManagedUserUpsertRequest Request) : IRequest<ApiResponse<ManagedUserDto>>;
 
-public sealed class UpdateManagedUserCommandHandler : IRequestHandler<UpdateManagedUserCommand, ManagedUserDto>
+public sealed class UpdateManagedUserCommandHandler : IRequestHandler<UpdateManagedUserCommand, ApiResponse<ManagedUserDto>>
 {
     private readonly IAppDbContext _db;
     private readonly IPasswordHasher _passwordHasher;
@@ -21,7 +22,7 @@ public sealed class UpdateManagedUserCommandHandler : IRequestHandler<UpdateMana
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<ManagedUserDto> Handle(UpdateManagedUserCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<ManagedUserDto>> Handle(UpdateManagedUserCommand request, CancellationToken cancellationToken)
     {
         var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId, cancellationToken)
             ?? throw new NotFoundAppException("User not found.");
@@ -65,7 +66,7 @@ public sealed class UpdateManagedUserCommandHandler : IRequestHandler<UpdateMana
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
 
-        return user.Adapt<ManagedUserDto>();
+        return ApiResponse<ManagedUserDto>.Ok(user.Adapt<ManagedUserDto>());
     }
 
     private static string NormalizeRole(string? role)

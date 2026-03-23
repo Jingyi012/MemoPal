@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Auth.DTOs;
@@ -9,9 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Auth.Commands;
 
-public sealed record FacebookLoginCommand(string FacebookAccessToken) : IRequest<AuthResponseDto>;
+public sealed record FacebookLoginCommand(string FacebookAccessToken) : IRequest<ApiResponse<AuthResponseDto>>;
 
-public sealed class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginCommand, AuthResponseDto>
+public sealed class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginCommand, ApiResponse<AuthResponseDto>>
 {
     private readonly IAppDbContext _db;
     private readonly IFacebookTokenValidator _facebookTokenValidator;
@@ -30,7 +31,7 @@ public sealed class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginC
         _tokenGenerator = tokenGenerator;
     }
 
-    public async Task<AuthResponseDto> Handle(FacebookLoginCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<AuthResponseDto>> Handle(FacebookLoginCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.FacebookAccessToken))
         {
@@ -53,7 +54,7 @@ public sealed class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginC
         }
 
         var token = _tokenGenerator.GenerateToken(user.Id, user.Email, user.Role);
-        return new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>());
+        return ApiResponse < AuthResponseDto > .Ok(new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>()));
     }
 
     private async Task<User> ResolveUserAsync(ExternalAuthUserInfo profile, CancellationToken cancellationToken)

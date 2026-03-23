@@ -20,12 +20,25 @@ public sealed class GetNotificationsQueryHandler : IRequestHandler<GetNotificati
 
     public async Task<ApiResponse<IReadOnlyList<NotificationDto>>> Handle(GetNotificationsQuery request, CancellationToken cancellationToken)
     {
-        var data = await _db.Notifications
+        var baseQuery = _db.Notifications
             .Where(x => x.UserId == request.UserId && !x.IsDeleted)
             .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .AsQueryable();
 
-        return data.Select(x => x.Adapt<NotificationDto>()).ToList();
+        var usePagination = request.PageNumber.HasValue && request.PageSize.HasValue;
+
+        if (!usePagination)
+        {
+            var data = await baseQuery.ToListAsync(cancellationToken);
+            return ApiResponse<IReadOnlyList<NotificationDto>>.Ok(data.Select(x => x.Adapt<NotificationDto>()).ToList());
+        }
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var pageNumber = Math.Max(1, request.PageNumber!.Value);
+        var pageSize = Math.Clamp(request.PageSize!.Value, 1, 100);
+        var paged = await baseQuery.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+
+        return PaginatedResponse<NotificationDto>.Ok(paged.Select(x => x.Adapt<NotificationDto>()).ToList(), pageNumber, pageSize, totalCount);
     }
 }
 

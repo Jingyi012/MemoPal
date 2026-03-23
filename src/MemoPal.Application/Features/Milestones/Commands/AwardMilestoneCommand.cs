@@ -1,4 +1,5 @@
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Domain.Entities;
@@ -6,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Milestones.Commands;
 
-public sealed record AwardMilestoneCommand(string UserId, string MilestoneId) : IRequest<bool>;
+public sealed record AwardMilestoneCommand(string UserId, string MilestoneId) : IRequest<ApiResponse<bool>>;
 
-public sealed class AwardMilestoneCommandHandler : IRequestHandler<AwardMilestoneCommand, bool>
+public sealed class AwardMilestoneCommandHandler : IRequestHandler<AwardMilestoneCommand, ApiResponse<bool>>
 {
     private readonly IAppDbContext _db;
 
@@ -17,7 +18,7 @@ public sealed class AwardMilestoneCommandHandler : IRequestHandler<AwardMileston
         _db = db;
     }
 
-    public async Task<bool> Handle(AwardMilestoneCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<bool>> Handle(AwardMilestoneCommand request, CancellationToken cancellationToken)
     {
         var definition = await _db.MilestoneDefinitions.FirstOrDefaultAsync(
                 x => x.Id == request.MilestoneId && !x.IsDeleted,
@@ -51,6 +52,6 @@ public sealed class AwardMilestoneCommandHandler : IRequestHandler<AwardMileston
         }
 
         await _db.SaveChangesAsync(cancellationToken);
-        return true;
+        return ApiResponse<bool>.Ok(true);
     }
 }

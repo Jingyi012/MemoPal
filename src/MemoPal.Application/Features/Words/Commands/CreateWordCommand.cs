@@ -1,16 +1,18 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Words.DTOs;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Words.Commands;
 
-public sealed record CreateWordCommand(string UserId, WordUpsertRequest Request) : IRequest<WordDto>;
+public sealed record CreateWordCommand(string UserId, WordUpsertRequest Request, bool IsAdmin = false) : IRequest<ApiResponse<WordDto>>;
 
-public sealed class CreateWordCommandHandler : IRequestHandler<CreateWordCommand, WordDto>
+public sealed class CreateWordCommandHandler : IRequestHandler<CreateWordCommand, ApiResponse<WordDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,7 +21,7 @@ public sealed class CreateWordCommandHandler : IRequestHandler<CreateWordCommand
         _db = db;
     }
 
-    public async Task<WordDto> Handle(CreateWordCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<WordDto>> Handle(CreateWordCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Request.LessonId) ||
             string.IsNullOrWhiteSpace(request.Request.LocationId) ||
@@ -31,7 +33,7 @@ public sealed class CreateWordCommandHandler : IRequestHandler<CreateWordCommand
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
             x => x.Id == request.Request.LessonId &&
                  !x.IsDeleted &&
-                 (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
+                 (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
             cancellationToken);
         if (lesson is null) throw new NotFoundAppException("Lesson not found.");
 
@@ -41,6 +43,22 @@ public sealed class CreateWordCommandHandler : IRequestHandler<CreateWordCommand
         var now = DateTime.UtcNow;
         var id = string.IsNullOrWhiteSpace(request.Request.Id) ? Guid.NewGuid().ToString("D") : request.Request.Id!;
         var entity = await _db.Words.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (entity is null && lesson.IsCustom == true && !request.IsAdmin)
+        {
+            var currentUser = await _db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId, cancellationToken)
+                ?? throw new NotFoundAppException("Current user not found.");
+            var allowedCustomWordsPerLesson = await _db.GetCustomWordsPerLessonLimitAsync(currentUser.IsPremium, cancellationToken);
+            var existingWords = await _db.Words.CountAsync(
+                x => x.LessonId == lesson.Id && !x.IsDeleted,
+                cancellationToken);
+
+            if (existingWords >= allowedCustomWordsPerLesson)
+            {
+                throw new ValidationAppException("You have reached the maximum number of custom words allowed for this lesson.");
+            }
+        }
+
         if (entity is null)
         {
             entity = new Word
@@ -63,7 +81,8 @@ public sealed class CreateWordCommandHandler : IRequestHandler<CreateWordCommand
         lesson.UpdatedAt = now;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return entity.Adapt<WordDto>();
+        var result = entity.Adapt<WordDto>();
+        return ApiResponse<WordDto>.Ok(result);
     }
 }
 

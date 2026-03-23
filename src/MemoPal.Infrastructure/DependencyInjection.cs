@@ -24,11 +24,8 @@ public static class DependencyInjection
             }
             else
             {
-                var connectionString = configuration.GetConnectionString("DefaultConnection")
-                    ?? "Host=localhost;Port=5432;Database=memopal;Username=postgres;Password=postgres";
-
                 options.UseNpgsql(
-                    connectionString,
+                    configuration.GetConnectionString("DefaultConnection"),
                     npgsql =>
                     {
                         npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);

@@ -36,12 +36,13 @@ public sealed class UsersController : ApiControllerBase
         return Ok(result);
     }
 
-    [HttpGet("/stats/updated")]
-    public async Task<IActionResult>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
+    [HttpGet("/users/feature-limits")]
+    public async Task<IActionResult> GetFeatureLimits(CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetUpdatedUserStatsQuery(GetUserIdOrThrow(), since), cancellationToken);
-        return Ok(data);
+        var result = await Sender.Send(new GetFeatureLimitsQuery(GetUserIdOrThrow()), cancellationToken);
+        return Ok(result);
     }
+
 }
 
 

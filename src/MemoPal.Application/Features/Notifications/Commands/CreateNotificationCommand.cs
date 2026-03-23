@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Notifications.DTOs;
@@ -8,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Notifications.Commands;
 
-public sealed record CreateNotificationCommand(string UserId, NotificationUpsertRequest Request) : IRequest<NotificationDto>;
+public sealed record CreateNotificationCommand(string UserId, NotificationUpsertRequest Request) : IRequest<ApiResponse<NotificationDto>>;
 
-public sealed class CreateNotificationCommandHandler : IRequestHandler<CreateNotificationCommand, NotificationDto>
+public sealed class CreateNotificationCommandHandler : IRequestHandler<CreateNotificationCommand, ApiResponse<NotificationDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,7 +20,7 @@ public sealed class CreateNotificationCommandHandler : IRequestHandler<CreateNot
         _db = db;
     }
 
-    public async Task<NotificationDto> Handle(CreateNotificationCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<NotificationDto>> Handle(CreateNotificationCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Request.Type) ||
             string.IsNullOrWhiteSpace(request.Request.Title) ||
@@ -55,7 +56,8 @@ public sealed class CreateNotificationCommandHandler : IRequestHandler<CreateNot
         entity.DeletedAt = request.Request.DeletedAt;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return entity.Adapt<NotificationDto>();
+        var result = entity.Adapt<NotificationDto>();
+        return ApiResponse<NotificationDto>.Ok(result);
     }
 }
 

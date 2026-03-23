@@ -1,14 +1,15 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Reviews.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Reviews.Queries;
 
-public sealed record GetPendingReviewsQuery(string UserId) : IRequest<IReadOnlyList<ReviewScheduleDto>>;
+public sealed record GetPendingReviewsQuery(string UserId) : IRequest<ApiResponse<IReadOnlyList<ReviewScheduleDto>>>;
 
-public sealed class GetPendingReviewsQueryHandler : IRequestHandler<GetPendingReviewsQuery, IReadOnlyList<ReviewScheduleDto>>
+public sealed class GetPendingReviewsQueryHandler : IRequestHandler<GetPendingReviewsQuery, ApiResponse<IReadOnlyList<ReviewScheduleDto>>>
 {
     private readonly IAppDbContext _db;
 
@@ -17,7 +18,7 @@ public sealed class GetPendingReviewsQueryHandler : IRequestHandler<GetPendingRe
         _db = db;
     }
 
-    public async Task<IReadOnlyList<ReviewScheduleDto>> Handle(GetPendingReviewsQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<IReadOnlyList<ReviewScheduleDto>>> Handle(GetPendingReviewsQuery request, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
         var data = await _db.ReviewSchedules
@@ -25,7 +26,8 @@ public sealed class GetPendingReviewsQueryHandler : IRequestHandler<GetPendingRe
             .OrderBy(x => x.DueDate)
             .ToListAsync(cancellationToken);
 
-        return data.Select(x => x.Adapt<ReviewScheduleDto>()).ToList();
+        var items = data.Select(x => x.Adapt<ReviewScheduleDto>()).ToList();
+        return ApiResponse<IReadOnlyList<ReviewScheduleDto>>.Ok(items);
     }
 }
 

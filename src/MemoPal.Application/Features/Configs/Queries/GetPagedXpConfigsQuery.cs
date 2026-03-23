@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Configs.Queries;
 
-public sealed record GetPagedXpConfigsQuery(int PageNumber = 1, int PageSize = 10) : IRequest<PagedResult<XpConfigDto>>;
+public sealed record GetPagedXpConfigsQuery(int PageNumber = 1, int PageSize = 10) : IRequest<PaginatedResponse<XpConfigDto>>;
 
-public sealed class GetPagedXpConfigsQueryHandler : IRequestHandler<GetPagedXpConfigsQuery, PagedResult<XpConfigDto>>
+public sealed class GetPagedXpConfigsQueryHandler : IRequestHandler<GetPagedXpConfigsQuery, PaginatedResponse<XpConfigDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -18,7 +18,7 @@ public sealed class GetPagedXpConfigsQueryHandler : IRequestHandler<GetPagedXpCo
         _db = db;
     }
 
-    public async Task<PagedResult<XpConfigDto>> Handle(GetPagedXpConfigsQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedResponse<XpConfigDto>> Handle(GetPagedXpConfigsQuery request, CancellationToken cancellationToken)
     {
         var pageNumber = request.PageNumber <= 0 ? 1 : request.PageNumber;
         var pageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, 200);
@@ -34,7 +34,7 @@ public sealed class GetPagedXpConfigsQueryHandler : IRequestHandler<GetPagedXpCo
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<XpConfigDto>(
+        return PaginatedResponse<XpConfigDto>.Ok(
             data.Select(x => x.Adapt<XpConfigDto>()).ToList(),
             pageNumber,
             pageSize,

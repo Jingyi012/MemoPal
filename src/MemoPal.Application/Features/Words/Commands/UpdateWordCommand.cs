@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Words.DTOs;
@@ -7,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Words.Commands;
 
-public sealed record UpdateWordCommand(string UserId, string WordId, WordUpsertRequest Request) : IRequest<WordDto>;
+public sealed record UpdateWordCommand(string UserId, string WordId, WordUpsertRequest Request, bool IsAdmin = false) : IRequest<ApiResponse<WordDto>>;
 
-public sealed class UpdateWordCommandHandler : IRequestHandler<UpdateWordCommand, WordDto>
+public sealed class UpdateWordCommandHandler : IRequestHandler<UpdateWordCommand, ApiResponse<WordDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -18,7 +19,7 @@ public sealed class UpdateWordCommandHandler : IRequestHandler<UpdateWordCommand
         _db = db;
     }
 
-    public async Task<WordDto> Handle(UpdateWordCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<WordDto>> Handle(UpdateWordCommand request, CancellationToken cancellationToken)
     {
         var entity = await _db.Words.FirstOrDefaultAsync(x => x.Id == request.WordId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("Word not found.");
@@ -26,7 +27,7 @@ public sealed class UpdateWordCommandHandler : IRequestHandler<UpdateWordCommand
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
             x => x.Id == entity.LessonId &&
                  !x.IsDeleted &&
-                 (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
+                 (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
             cancellationToken);
         if (lesson is null) throw new NotFoundAppException("Word not found.");
 
@@ -38,7 +39,8 @@ public sealed class UpdateWordCommandHandler : IRequestHandler<UpdateWordCommand
         entity.DeletedAt = request.Request.DeletedAt ?? entity.DeletedAt;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return entity.Adapt<WordDto>();
+        var result = entity.Adapt<WordDto>();
+        return ApiResponse<WordDto>.Ok(result);
     }
 }
 

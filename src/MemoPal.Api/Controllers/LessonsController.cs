@@ -16,53 +16,47 @@ public sealed class LessonsController : ApiControllerBase
     }
 
     [HttpGet("/lessons")]
-    public async Task<IActionResult>> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetAllLessonsQuery(GetUserIdOrThrow()), cancellationToken);
+        var data = await Sender.Send(new GetAllLessonsQuery(GetUserIdOrThrow(), IsAdmin: IsAdmin()), cancellationToken);
         return Ok(data);
     }
 
     [HttpGet("/lessons/{lessonId}")]
     public async Task<IActionResult> GetById(string lessonId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetLessonQuery(GetUserIdOrThrow(), lessonId), cancellationToken);
+        var result = await Sender.Send(new GetLessonQuery(GetUserIdOrThrow(), lessonId, IsAdmin()), cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("/palaces/{palaceId}/lessons")]
-    public async Task<IActionResult>> GetByPalace(string palaceId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetByPalace(string palaceId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetLessonsByPalaceQuery(GetUserIdOrThrow(), palaceId), cancellationToken);
+        var data = await Sender.Send(new GetLessonsByPalaceQuery(GetUserIdOrThrow(), palaceId, IsAdmin: IsAdmin()), cancellationToken);
         return Ok(data);
     }
 
     [HttpPost("/lessons")]
     public async Task<IActionResult> Create([FromBody] LessonUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new CreateLessonCommand(GetUserIdOrThrow(), request), cancellationToken);
+        var result = await Sender.Send(new CreateLessonCommand(GetUserIdOrThrow(), request, IsAdmin()), cancellationToken);
         return Ok(result);
     }
 
     [HttpPut("/lessons/{lessonId}")]
     public async Task<IActionResult> Update(string lessonId, [FromBody] LessonUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UpdateLessonCommand(GetUserIdOrThrow(), lessonId, request), cancellationToken);
+        var result = await Sender.Send(new UpdateLessonCommand(GetUserIdOrThrow(), lessonId, request, IsAdmin()), cancellationToken);
         return Ok(result);
     }
 
     [HttpDelete("/lessons/{lessonId}")]
     public async Task<IActionResult> Delete(string lessonId, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteLessonCommand(GetUserIdOrThrow(), lessonId), cancellationToken);
+        await Sender.Send(new DeleteLessonCommand(GetUserIdOrThrow(), lessonId, IsAdmin()), cancellationToken);
         return Ok(ApiResponse<object?>.Ok(null));
     }
 
-    [HttpGet("/lessons/updated")]
-    public async Task<IActionResult>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
-    {
-        var data = await Sender.Send(new GetUpdatedLessonsQuery(GetUserIdOrThrow(), since), cancellationToken);
-        return Ok(data);
-    }
 }
 
 

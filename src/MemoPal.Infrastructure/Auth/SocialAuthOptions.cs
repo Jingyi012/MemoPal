@@ -6,4 +6,5 @@ public sealed class SocialAuthOptions
 
     public string? GoogleAudience { get; set; }
     public string? FacebookAppId { get; set; }
+    public string? FacebookAppSecret { get; set; }
 }

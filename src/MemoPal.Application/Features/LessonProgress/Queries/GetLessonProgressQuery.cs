@@ -25,7 +25,7 @@ public sealed class GetLessonProgressQueryHandler : IRequestHandler<GetLessonPro
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
             x => x.Id == request.LessonId &&
                  !x.IsDeleted &&
-                 (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
+                 (x.IsCustom != true || x.CreatedBy == request.UserId),
             cancellationToken);
         if (lesson is null) throw new NotFoundAppException("Lesson not found.");
 

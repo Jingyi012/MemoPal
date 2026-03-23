@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Notifications.DTOs;
@@ -7,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Notifications.Commands;
 
-public sealed record UpdateNotificationCommand(string UserId, string NotificationId, NotificationUpsertRequest Request) : IRequest<NotificationDto>;
+public sealed record UpdateNotificationCommand(string UserId, string NotificationId, NotificationUpsertRequest Request) : IRequest<ApiResponse<NotificationDto>>;
 
-public sealed class UpdateNotificationCommandHandler : IRequestHandler<UpdateNotificationCommand, NotificationDto>
+public sealed class UpdateNotificationCommandHandler : IRequestHandler<UpdateNotificationCommand, ApiResponse<NotificationDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -18,7 +19,7 @@ public sealed class UpdateNotificationCommandHandler : IRequestHandler<UpdateNot
         _db = db;
     }
 
-    public async Task<NotificationDto> Handle(UpdateNotificationCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<NotificationDto>> Handle(UpdateNotificationCommand request, CancellationToken cancellationToken)
     {
         if (request.Request.Scope == "all")
         {
@@ -38,7 +39,7 @@ public sealed class UpdateNotificationCommandHandler : IRequestHandler<UpdateNot
 
             var latest = all.OrderByDescending(x => x.UpdatedAt).FirstOrDefault()
                 ?? throw new NotFoundAppException("Notification not found.");
-            return latest.Adapt<NotificationDto>();
+            return ApiResponse<NotificationDto>.Ok(latest.Adapt<NotificationDto>());
         }
 
         var entity = await _db.Notifications.FirstOrDefaultAsync(
@@ -59,7 +60,8 @@ public sealed class UpdateNotificationCommandHandler : IRequestHandler<UpdateNot
         entity.DeletedAt = request.Request.DeletedAt ?? entity.DeletedAt;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return entity.Adapt<NotificationDto>();
+        var result = entity.Adapt<NotificationDto>();
+        return ApiResponse<NotificationDto>.Ok(result);
     }
 }
 

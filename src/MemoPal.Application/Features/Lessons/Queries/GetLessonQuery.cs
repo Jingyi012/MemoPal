@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Lessons.Queries;
 
-public sealed record GetLessonQuery(string UserId, string LessonId) : IRequest<ApiResponse<LessonDto>>;
+public sealed record GetLessonQuery(string UserId, string LessonId, bool IsAdmin = false) : IRequest<ApiResponse<LessonDto>>;
 
 public sealed class GetLessonQueryHandler : IRequestHandler<GetLessonQuery, ApiResponse<LessonDto>>
 {
@@ -27,7 +27,7 @@ public sealed class GetLessonQueryHandler : IRequestHandler<GetLessonQuery, ApiR
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
                 x => x.Id == request.LessonId &&
                      !x.IsDeleted &&
-                     (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
+                     (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
                 cancellationToken)
             ?? throw new NotFoundAppException("Lesson not found.");
 
@@ -53,7 +53,13 @@ public sealed class GetLessonQueryHandler : IRequestHandler<GetLessonQuery, ApiR
             .ToListAsync(cancellationToken);
         var wordDtos = words.Select(x => x.Adapt<WordDto>()).ToList();
 
-        return ApiResponse<LessonDto>.Ok((lesson, progressDto, (IReadOnlyList<WordDto>)wordDtos).Adapt<LessonDto>());
+        var lessonDto = lesson.Adapt<LessonDto>() with
+        {
+            Progress = progressDto,
+            Words = wordDtos
+        };
+
+        return ApiResponse<LessonDto>.Ok(lessonDto);
     }
 }
 

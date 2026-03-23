@@ -1,12 +1,13 @@
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Lessons.Commands;
 
-public sealed record DeleteLessonCommand(string UserId, string LessonId) : IRequest<bool>;
+public sealed record DeleteLessonCommand(string UserId, string LessonId, bool IsAdmin = false) : IRequest<ApiResponse<bool>>;
 
-public sealed class DeleteLessonCommandHandler : IRequestHandler<DeleteLessonCommand, bool>
+public sealed class DeleteLessonCommandHandler : IRequestHandler<DeleteLessonCommand, ApiResponse<bool>>
 {
     private readonly IAppDbContext _db;
 
@@ -15,15 +16,15 @@ public sealed class DeleteLessonCommandHandler : IRequestHandler<DeleteLessonCom
         _db = db;
     }
 
-    public async Task<bool> Handle(DeleteLessonCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<bool>> Handle(DeleteLessonCommand request, CancellationToken cancellationToken)
     {
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
             x => x.Id == request.LessonId &&
                  !x.IsDeleted &&
-                 (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
+                 (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
             cancellationToken);
 
-        if (lesson is null) return false;
+        if (lesson is null) return ApiResponse<bool>.Ok(false);
 
         lesson.IsDeleted = true;
         lesson.DeletedAt = DateTime.UtcNow;
@@ -38,6 +39,6 @@ public sealed class DeleteLessonCommandHandler : IRequestHandler<DeleteLessonCom
         }
 
         await _db.SaveChangesAsync(cancellationToken);
-        return true;
+        return ApiResponse<bool>.Ok(true);
     }
 }

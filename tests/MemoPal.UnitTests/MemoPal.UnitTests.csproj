@@ -21,6 +21,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\MemoPal.Application\MemoPal.Application.csproj" />
     <ProjectReference Include="..\..\src\MemoPal.Domain\MemoPal.Domain.csproj" />
+    <ProjectReference Include="..\..\src\MemoPal.Api\MemoPal.Api.csproj" />
+    <ProjectReference Include="..\..\src\MemoPal.Infrastructure\MemoPal.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

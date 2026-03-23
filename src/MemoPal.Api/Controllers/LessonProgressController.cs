@@ -18,28 +18,22 @@ public sealed class LessonProgressController : ApiControllerBase
     [HttpGet("/lessons/{lessonId}/progress")]
     public async Task<IActionResult> GetProgress(string lessonId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetLessonProgressQuery(GetUserIdOrThrow(), lessonId), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new GetLessonProgressQuery(GetUserIdOrThrow(), lessonId), cancellationToken); return Ok(result);
     }
 
     [HttpPut("/lessons/{lessonId}/progress")]
     public async Task<IActionResult> UpdateProgress(string lessonId, [FromBody] LessonProgressUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UpdateLessonProgressCommand(GetUserIdOrThrow(), lessonId, request), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new UpdateLessonProgressCommand(GetUserIdOrThrow(), lessonId, request), cancellationToken); return Ok(result);
     }
 
     [HttpPost("/lessons/progress/batch")]
-    public async Task<IActionResult>> SyncBatch([FromBody] ProgressBatchRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> SyncBatch([FromBody] ProgressBatchRequest request, CancellationToken cancellationToken)
     {
         var data = await Sender.Send(new SyncLessonProgressBatchCommand(GetUserIdOrThrow(), request.Data), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<LessonProgressDto>>.Ok(data));
+        return Ok(data);
     }
 
-    [HttpGet("/lessons/progress/updated")]
-    public async Task<IActionResult>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
-    {
-        var data = await Sender.Send(new GetUpdatedLessonProgressQuery(GetUserIdOrThrow(), since), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<LessonProgressDto>>.Ok(data));
-    }
 }
 
 

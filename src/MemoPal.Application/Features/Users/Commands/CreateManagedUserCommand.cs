@@ -1,7 +1,9 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Features.Auth.DTOs;
 using MemoPal.Application.Features.Users.DTOs;
 using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
@@ -9,9 +11,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Users.Commands;
 
-public sealed record CreateManagedUserCommand(ManagedUserUpsertRequest Request) : IRequest<ManagedUserDto>;
+public sealed record CreateManagedUserCommand(ManagedUserUpsertRequest Request) : IRequest<ApiResponse<ManagedUserDto>>;
 
-public sealed class CreateManagedUserCommandHandler : IRequestHandler<CreateManagedUserCommand, ManagedUserDto>
+public sealed class CreateManagedUserCommandHandler : IRequestHandler<CreateManagedUserCommand, ApiResponse<ManagedUserDto>>
 {
     private readonly IAppDbContext _db;
     private readonly IPasswordHasher _passwordHasher;
@@ -22,7 +24,7 @@ public sealed class CreateManagedUserCommandHandler : IRequestHandler<CreateMana
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<ManagedUserDto> Handle(CreateManagedUserCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<ManagedUserDto>> Handle(CreateManagedUserCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Request.DisplayName)
             || string.IsNullOrWhiteSpace(request.Request.Email)
@@ -66,7 +68,7 @@ public sealed class CreateManagedUserCommandHandler : IRequestHandler<CreateMana
         await _db.UserStats.AddAsync(stats, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return user.Adapt<ManagedUserDto>();
+        return ApiResponse<ManagedUserDto>.Ok(user.Adapt<ManagedUserDto>());
     }
 
     private static string NormalizeRole(string? role)

@@ -1,14 +1,15 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Badges.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Badges.Queries;
 
-public sealed record GetBadgesQuery(string UserId) : IRequest<IReadOnlyList<BadgeDto>>;
+public sealed record GetBadgesQuery(string UserId) : IRequest<ApiResponse<IReadOnlyList<BadgeDto>>>;
 
-public sealed class GetBadgesQueryHandler : IRequestHandler<GetBadgesQuery, IReadOnlyList<BadgeDto>>
+public sealed class GetBadgesQueryHandler : IRequestHandler<GetBadgesQuery, ApiResponse<IReadOnlyList<BadgeDto>>>
 {
     private readonly IAppDbContext _db;
 
@@ -17,7 +18,7 @@ public sealed class GetBadgesQueryHandler : IRequestHandler<GetBadgesQuery, IRea
         _db = db;
     }
 
-    public async Task<IReadOnlyList<BadgeDto>> Handle(GetBadgesQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<IReadOnlyList<BadgeDto>>> Handle(GetBadgesQuery request, CancellationToken cancellationToken)
     {
         var defs = await _db.BadgeDefinitions
             .Where(x => !x.IsDeleted)
@@ -28,11 +29,12 @@ public sealed class GetBadgesQueryHandler : IRequestHandler<GetBadgesQuery, IRea
             .ToListAsync(cancellationToken);
         var map = userBadges.ToDictionary(x => x.BadgeId, x => x);
 
-        return defs.Select(d =>
+        var items = defs.Select(d =>
         {
             map.TryGetValue(d.Id, out var earned);
             return (d, earned).Adapt<BadgeDto>();
         }).ToList();
+        return ApiResponse<IReadOnlyList<BadgeDto>>.Ok(items);
     }
 }
 

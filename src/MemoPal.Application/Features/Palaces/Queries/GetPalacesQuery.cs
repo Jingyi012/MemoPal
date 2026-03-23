@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Palaces.Queries;
 
-public sealed record GetPalacesQuery(string UserId, int? PageNumber = null, int? PageSize = null)
+public sealed record GetPalacesQuery(string UserId, int? PageNumber = null, int? PageSize = null, bool IsAdmin = false)
     : IRequest<ApiResponse<IReadOnlyList<PalaceDto>>>;
 
 public sealed class GetPalacesQueryHandler : IRequestHandler<GetPalacesQuery, ApiResponse<IReadOnlyList<PalaceDto>>>
@@ -22,7 +22,7 @@ public sealed class GetPalacesQueryHandler : IRequestHandler<GetPalacesQuery, Ap
     public async Task<ApiResponse<IReadOnlyList<PalaceDto>>> Handle(GetPalacesQuery request, CancellationToken cancellationToken)
     {
         var baseQuery = _db.Palaces
-            .Where(x => !x.IsDeleted && (!x.IsCustom || x.CreatedBy == request.UserId))
+            .Where(x => !x.IsDeleted && (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId))
             .OrderBy(x => x.CreatedAt)
             .AsQueryable();
 
@@ -48,4 +48,3 @@ public sealed class GetPalacesQueryHandler : IRequestHandler<GetPalacesQuery, Ap
         return PaginatedResponse<PalaceDto>.Ok(items, pageNumber, pageSize, totalCount);
     }
 }
-

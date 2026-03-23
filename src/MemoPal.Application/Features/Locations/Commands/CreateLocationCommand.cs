@@ -1,16 +1,18 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Locations.DTOs;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Locations.Commands;
 
-public sealed record CreateLocationCommand(string UserId, LocationUpsertRequest Request) : IRequest<LocationDto>;
+public sealed record CreateLocationCommand(string UserId, LocationUpsertRequest Request, bool IsAdmin = false) : IRequest<ApiResponse<LocationDto>>;
 
-public sealed class CreateLocationCommandHandler : IRequestHandler<CreateLocationCommand, LocationDto>
+public sealed class CreateLocationCommandHandler : IRequestHandler<CreateLocationCommand, ApiResponse<LocationDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,7 +21,7 @@ public sealed class CreateLocationCommandHandler : IRequestHandler<CreateLocatio
         _db = db;
     }
 
-    public async Task<LocationDto> Handle(CreateLocationCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<LocationDto>> Handle(CreateLocationCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Request.PalaceId) ||
             string.IsNullOrWhiteSpace(request.Request.Name) ||
@@ -30,13 +32,30 @@ public sealed class CreateLocationCommandHandler : IRequestHandler<CreateLocatio
         }
 
         var palace = await _db.Palaces.FirstOrDefaultAsync(
-            x => x.Id == request.Request.PalaceId && !x.IsDeleted && (!x.IsCustom || x.CreatedBy == request.UserId),
+            x => x.Id == request.Request.PalaceId && !x.IsDeleted && (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
             cancellationToken);
         if (palace is null) throw new NotFoundAppException("Palace not found.");
 
         var now = DateTime.UtcNow;
         var id = string.IsNullOrWhiteSpace(request.Request.Id) ? Guid.NewGuid().ToString("D") : request.Request.Id!;
         var entity = await _db.Locations.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (entity is null && palace.IsCustom && !request.IsAdmin)
+        {
+            var currentUser = await _db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId, cancellationToken)
+                ?? throw new NotFoundAppException("Current user not found.");
+            var allowedCustomLocationsPerPalace = await _db.GetCustomLocationsPerPalaceLimitAsync(currentUser.IsPremium, cancellationToken);
+            var existingCustomLocations = await _db.Locations.CountAsync(
+                x => x.PalaceId == request.Request.PalaceId &&
+                     !x.IsDeleted,
+                cancellationToken);
+
+            if (existingCustomLocations >= allowedCustomLocationsPerPalace)
+            {
+                throw new ValidationAppException("You have reached the maximum number of custom locations allowed for this palace.");
+            }
+        }
+
         if (entity is null)
         {
             entity = new Location
@@ -60,7 +79,8 @@ public sealed class CreateLocationCommandHandler : IRequestHandler<CreateLocatio
         palace.UpdatedAt = now;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return entity.Adapt<LocationDto>();
+        var result = entity.Adapt<LocationDto>();
+        return ApiResponse<LocationDto>.Ok(result);
     }
 }
 

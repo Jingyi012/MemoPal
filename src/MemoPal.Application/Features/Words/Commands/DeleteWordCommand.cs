@@ -1,12 +1,13 @@
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Words.Commands;
 
-public sealed record DeleteWordCommand(string UserId, string WordId) : IRequest<bool>;
+public sealed record DeleteWordCommand(string UserId, string WordId, bool IsAdmin = false) : IRequest<ApiResponse<bool>>;
 
-public sealed class DeleteWordCommandHandler : IRequestHandler<DeleteWordCommand, bool>
+public sealed class DeleteWordCommandHandler : IRequestHandler<DeleteWordCommand, ApiResponse<bool>>
 {
     private readonly IAppDbContext _db;
 
@@ -15,17 +16,17 @@ public sealed class DeleteWordCommandHandler : IRequestHandler<DeleteWordCommand
         _db = db;
     }
 
-    public async Task<bool> Handle(DeleteWordCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<bool>> Handle(DeleteWordCommand request, CancellationToken cancellationToken)
     {
         var entity = await _db.Words.FirstOrDefaultAsync(x => x.Id == request.WordId && !x.IsDeleted, cancellationToken);
-        if (entity is null) return false;
+        if (entity is null) return ApiResponse<bool>.Ok(false);
 
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
             x => x.Id == entity.LessonId &&
                  !x.IsDeleted &&
-                 (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
+                 (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
             cancellationToken);
-        if (lesson is null) return false;
+        if (lesson is null) return ApiResponse<bool>.Ok(false);
 
         entity.IsDeleted = true;
         entity.DeletedAt = DateTime.UtcNow;
@@ -35,7 +36,7 @@ public sealed class DeleteWordCommandHandler : IRequestHandler<DeleteWordCommand
         lesson.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return true;
+        return ApiResponse<bool>.Ok(true);
     }
 }
 

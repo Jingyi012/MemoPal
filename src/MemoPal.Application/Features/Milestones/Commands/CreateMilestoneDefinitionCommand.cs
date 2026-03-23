@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Milestones.DTOs;
@@ -8,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Milestones.Commands;
 
-public sealed record CreateMilestoneDefinitionCommand(MilestoneDefinitionUpsertRequest Request) : IRequest<MilestoneDefinitionDto>;
+public sealed record CreateMilestoneDefinitionCommand(MilestoneDefinitionUpsertRequest Request) : IRequest<ApiResponse<MilestoneDefinitionDto>>;
 
-public sealed class CreateMilestoneDefinitionCommandHandler : IRequestHandler<CreateMilestoneDefinitionCommand, MilestoneDefinitionDto>
+public sealed class CreateMilestoneDefinitionCommandHandler : IRequestHandler<CreateMilestoneDefinitionCommand, ApiResponse<MilestoneDefinitionDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,7 +20,7 @@ public sealed class CreateMilestoneDefinitionCommandHandler : IRequestHandler<Cr
         _db = db;
     }
 
-    public async Task<MilestoneDefinitionDto> Handle(CreateMilestoneDefinitionCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<MilestoneDefinitionDto>> Handle(CreateMilestoneDefinitionCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Request.Key) || string.IsNullOrWhiteSpace(request.Request.Title) || string.IsNullOrWhiteSpace(request.Request.ConditionType))
             throw new ValidationAppException("key, title, and conditionType are required.");
@@ -48,6 +49,7 @@ public sealed class CreateMilestoneDefinitionCommandHandler : IRequestHandler<Cr
         entity.DeletedAt = request.Request.DeletedAt;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return entity.Adapt<MilestoneDefinitionDto>();
+        var result = entity.Adapt<MilestoneDefinitionDto>();
+        return ApiResponse<MilestoneDefinitionDto>.Ok(result);
     }
 }

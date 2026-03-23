@@ -9,6 +9,9 @@ using MemoPal.Application.Features.Configs.Queries;
 using MemoPal.Application.Features.Milestones.Commands;
 using MemoPal.Application.Features.Milestones.DTOs;
 using MemoPal.Application.Features.Milestones.Queries;
+using MemoPal.Application.Features.Missions.Commands;
+using MemoPal.Application.Features.Missions.DTOs;
+using MemoPal.Application.Features.Missions.Queries;
 using MemoPal.Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -173,6 +176,19 @@ public sealed class AdminConfigsController : ApiControllerBase
         await Sender.Send(new DeleteMilestoneDefinitionCommand(milestoneId), cancellationToken);
         return Ok(ApiResponse<object?>.Ok(null));
     }
-}
 
+    [HttpGet("mission-templates")]
+    public async Task<IActionResult> GetMissionTemplates(CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new GetMissionTemplatesQuery(), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPut("mission-templates")]
+    public async Task<IActionResult> UpsertMissionTemplates([FromBody] UpsertMissionTemplatesRequest request, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new UpsertMissionTemplatesCommand(request), cancellationToken);
+        return Ok(result);
+    }
+}
 

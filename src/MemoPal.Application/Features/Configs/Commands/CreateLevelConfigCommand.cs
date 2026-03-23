@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Configs.DTOs;
@@ -8,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Configs.Commands;
 
-public sealed record CreateLevelConfigCommand(LevelConfigUpsertRequest Request) : IRequest<LevelConfigDto>;
+public sealed record CreateLevelConfigCommand(LevelConfigUpsertRequest Request) : IRequest<ApiResponse<LevelConfigDto>>;
 
-public sealed class CreateLevelConfigCommandHandler : IRequestHandler<CreateLevelConfigCommand, LevelConfigDto>
+public sealed class CreateLevelConfigCommandHandler : IRequestHandler<CreateLevelConfigCommand, ApiResponse<LevelConfigDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,7 +20,7 @@ public sealed class CreateLevelConfigCommandHandler : IRequestHandler<CreateLeve
         _db = db;
     }
 
-    public async Task<LevelConfigDto> Handle(CreateLevelConfigCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<LevelConfigDto>> Handle(CreateLevelConfigCommand request, CancellationToken cancellationToken)
     {
         if (request.Request.Level <= 0) throw new ValidationAppException("level must be greater than 0.");
 
@@ -42,7 +43,8 @@ public sealed class CreateLevelConfigCommandHandler : IRequestHandler<CreateLeve
         entity.DeletedAt = request.Request.DeletedAt;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return entity.Adapt<LevelConfigDto>();
+        var result = entity.Adapt<LevelConfigDto>();
+        return ApiResponse<LevelConfigDto>.Ok(result);
     }
 }
 

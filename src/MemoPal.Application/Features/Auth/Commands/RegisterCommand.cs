@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Auth.DTOs;
@@ -9,9 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Auth.Commands;
 
-public sealed record RegisterCommand(string DisplayName, string Email, string Password) : IRequest<AuthResponseDto>;
+public sealed record RegisterCommand(string DisplayName, string Email, string Password) : IRequest<ApiResponse<AuthResponseDto>>;
 
-public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthResponseDto>
+public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiResponse<AuthResponseDto>>
 {
     private readonly IAppDbContext _db;
     private readonly IPasswordHasher _passwordHasher;
@@ -24,7 +25,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
         _tokenGenerator = tokenGenerator;
     }
 
-    public async Task<AuthResponseDto> Handle(RegisterCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<AuthResponseDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.DisplayName) ||
             string.IsNullOrWhiteSpace(request.Email) ||
@@ -64,6 +65,6 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
         await _db.SaveChangesAsync(cancellationToken);
 
         var token = _tokenGenerator.GenerateToken(user.Id, user.Email, user.Role);
-        return new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>());
+        return ApiResponse < AuthResponseDto > .Ok(new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>()));
     }
 }

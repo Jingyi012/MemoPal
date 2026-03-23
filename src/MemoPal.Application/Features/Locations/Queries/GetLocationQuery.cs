@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Locations.Queries;
 
-public sealed record GetLocationQuery(string UserId, string LocationId) : IRequest<ApiResponse<LocationDto>>;
+public sealed record GetLocationQuery(string UserId, string LocationId, bool IsAdmin = false) : IRequest<ApiResponse<LocationDto>>;
 
 public sealed class GetLocationQueryHandler : IRequestHandler<GetLocationQuery, ApiResponse<LocationDto>>
 {
@@ -25,7 +25,7 @@ public sealed class GetLocationQueryHandler : IRequestHandler<GetLocationQuery, 
             ?? throw new NotFoundAppException("Location not found.");
 
         var palace = await _db.Palaces.FirstOrDefaultAsync(
-            x => x.Id == location.PalaceId && !x.IsDeleted && (!x.IsCustom || x.CreatedBy == request.UserId),
+            x => x.Id == location.PalaceId && !x.IsDeleted && (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
             cancellationToken);
         if (palace is null)
         {

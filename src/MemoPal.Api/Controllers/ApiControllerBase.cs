@@ -1,5 +1,6 @@
 using MediatR;
 using MemoPal.Application.Common.Exceptions;
+using MemoPal.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -28,5 +29,10 @@ public abstract class ApiControllerBase : ControllerBase
         }
 
         return userId;
+    }
+
+    protected bool IsAdmin()
+    {
+        return User.IsInRole(UserRoles.Admin);
     }
 }

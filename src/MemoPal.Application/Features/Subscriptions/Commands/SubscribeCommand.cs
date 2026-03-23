@@ -1,14 +1,16 @@
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Features.Subscriptions;
 using MemoPal.Application.Features.Subscriptions.DTOs;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Subscriptions.Commands;
 
-public sealed record SubscribeCommand(string UserId, SubscribeRequest Request) : IRequest<SubscriptionEntitlementDto>;
+public sealed record SubscribeCommand(string UserId, SubscribeRequest Request) : IRequest<ApiResponse<SubscriptionEntitlementDto>>;
 
-public sealed class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, SubscriptionEntitlementDto>
+public sealed class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, ApiResponse<SubscriptionEntitlementDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -17,8 +19,10 @@ public sealed class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, 
         _db = db;
     }
 
-    public async Task<SubscriptionEntitlementDto> Handle(SubscribeCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<SubscriptionEntitlementDto>> Handle(SubscribeCommand request, CancellationToken cancellationToken)
     {
+        SubscriptionValidation.ValidateAndNormalize(request.Request);
+
         var now = DateTime.UtcNow;
         var expiresAt = now.AddDays(Math.Max(1, request.Request.DurationDays));
 
@@ -47,7 +51,7 @@ public sealed class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, 
 
         await _db.SaveChangesAsync(cancellationToken);
 
-        return new SubscriptionEntitlementDto(
+        var result = new SubscriptionEntitlementDto(
             true,
             subscription.PlanId,
             subscription.Provider,
@@ -57,5 +61,6 @@ public sealed class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, 
             subscription.AutoRenew,
             subscription.LastVerifiedAt
         );
+        return ApiResponse<SubscriptionEntitlementDto>.Ok(result);
     }
 }

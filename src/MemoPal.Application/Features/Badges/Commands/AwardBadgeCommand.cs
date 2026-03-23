@@ -1,4 +1,5 @@
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Domain.Entities;
@@ -6,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Badges.Commands;
 
-public sealed record AwardBadgeCommand(string UserId, string BadgeId) : IRequest<bool>;
+public sealed record AwardBadgeCommand(string UserId, string BadgeId) : IRequest<ApiResponse<bool>>;
 
-public sealed class AwardBadgeCommandHandler : IRequestHandler<AwardBadgeCommand, bool>
+public sealed class AwardBadgeCommandHandler : IRequestHandler<AwardBadgeCommand, ApiResponse<bool>>
 {
     private readonly IAppDbContext _db;
 
@@ -17,7 +18,7 @@ public sealed class AwardBadgeCommandHandler : IRequestHandler<AwardBadgeCommand
         _db = db;
     }
 
-    public async Task<bool> Handle(AwardBadgeCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<bool>> Handle(AwardBadgeCommand request, CancellationToken cancellationToken)
     {
         var definition = await _db.BadgeDefinitions.FirstOrDefaultAsync(x => x.Id == request.BadgeId && !x.IsDeleted, cancellationToken);
         if (definition is null) throw new NotFoundAppException("Badge not found.");
@@ -49,6 +50,6 @@ public sealed class AwardBadgeCommandHandler : IRequestHandler<AwardBadgeCommand
         }
 
         await _db.SaveChangesAsync(cancellationToken);
-        return true;
+        return ApiResponse<bool>.Ok(true);
     }
 }

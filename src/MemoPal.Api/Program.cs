@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using MemoPal.Api.Middleware;
+using MemoPal.Api.Options;
 using MemoPal.Api.Security;
 using MemoPal.Application;
 using MemoPal.Application.Common.Interfaces;
@@ -15,6 +16,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+var allowedCorsOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>()?
+    .Where(origin => !string.IsNullOrWhiteSpace(origin))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray() ?? [];
 
 builder.Services
     .AddControllers()
@@ -61,6 +68,28 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
+builder.Services.Configure<BillingWebhookOptions>(builder.Configuration.GetSection(BillingWebhookOptions.SectionName));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("MemoPalCors", policy =>
+    {
+        if (allowedCorsOrigins.Length > 0)
+        {
+            policy.WithOrigins(allowedCorsOrigins);
+        }
+        else if (builder.Environment.IsDevelopment())
+        {
+            policy.WithOrigins(
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:4173",
+                "http://127.0.0.1:4173");
+        }
+
+        policy.AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var adminBootstrapOptions = builder.Configuration.GetSection(AdminBootstrapOptions.SectionName).Get<AdminBootstrapOptions>() ?? new AdminBootstrapOptions();
 builder.Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(adminBootstrapOptions));
@@ -106,6 +135,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseRouting();
+app.UseCors("MemoPalCors");
 
 var fileStorage = builder.Configuration.GetSection(FileStorageOptions.SectionName).Get<FileStorageOptions>() ?? new FileStorageOptions();
 var fileRoot = Path.GetFullPath(fileStorage.RootPath);

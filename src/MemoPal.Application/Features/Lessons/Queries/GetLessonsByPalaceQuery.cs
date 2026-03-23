@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Lessons.Queries;
 
-public sealed record GetLessonsByPalaceQuery(string UserId, string PalaceId, int? PageNumber = null, int? PageSize = null) : IRequest<ApiResponse<IReadOnlyList<LessonDto>>>;
+public sealed record GetLessonsByPalaceQuery(string UserId, string PalaceId, int? PageNumber = null, int? PageSize = null, bool IsAdmin = false) : IRequest<ApiResponse<IReadOnlyList<LessonDto>>>;
 
 public sealed class GetLessonsByPalaceQueryHandler : IRequestHandler<GetLessonsByPalaceQuery, ApiResponse<IReadOnlyList<LessonDto>>>
 {
@@ -22,7 +22,7 @@ public sealed class GetLessonsByPalaceQueryHandler : IRequestHandler<GetLessonsB
     public async Task<ApiResponse<IReadOnlyList<LessonDto>>> Handle(GetLessonsByPalaceQuery request, CancellationToken cancellationToken)
     {
         var palace = await _db.Palaces.FirstOrDefaultAsync(
-            x => x.Id == request.PalaceId && !x.IsDeleted && (!x.IsCustom || x.CreatedBy == request.UserId),
+            x => x.Id == request.PalaceId && !x.IsDeleted && (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
             cancellationToken);
         if (palace is null) throw new NotFoundAppException("Palace not found.");
 
@@ -46,4 +46,3 @@ public sealed class GetLessonsByPalaceQueryHandler : IRequestHandler<GetLessonsB
         return PaginatedResponse<LessonDto>.Ok(paged.Select(x => x.Adapt<LessonDto>()).ToList(), pageNumber, pageSize, totalCount);
     }
 }
-

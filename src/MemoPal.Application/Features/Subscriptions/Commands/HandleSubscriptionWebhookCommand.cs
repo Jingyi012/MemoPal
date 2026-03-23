@@ -1,14 +1,16 @@
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Features.Subscriptions;
 using MemoPal.Application.Features.Subscriptions.DTOs;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Subscriptions.Commands;
 
-public sealed record HandleSubscriptionWebhookCommand(WebhookSubscriptionEventRequest Request) : IRequest<SubscriptionEntitlementDto>;
+public sealed record HandleSubscriptionWebhookCommand(WebhookSubscriptionEventRequest Request) : IRequest<ApiResponse<SubscriptionEntitlementDto>>;
 
-public sealed class HandleSubscriptionWebhookCommandHandler : IRequestHandler<HandleSubscriptionWebhookCommand, SubscriptionEntitlementDto>
+public sealed class HandleSubscriptionWebhookCommandHandler : IRequestHandler<HandleSubscriptionWebhookCommand, ApiResponse<SubscriptionEntitlementDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -17,8 +19,10 @@ public sealed class HandleSubscriptionWebhookCommandHandler : IRequestHandler<Ha
         _db = db;
     }
 
-    public async Task<SubscriptionEntitlementDto> Handle(HandleSubscriptionWebhookCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<SubscriptionEntitlementDto>> Handle(HandleSubscriptionWebhookCommand request, CancellationToken cancellationToken)
     {
+        SubscriptionValidation.ValidateAndNormalize(request.Request);
+
         var now = DateTime.UtcNow;
         var payload = request.Request;
 
@@ -68,7 +72,7 @@ public sealed class HandleSubscriptionWebhookCommandHandler : IRequestHandler<Ha
 
         await _db.SaveChangesAsync(cancellationToken);
 
-        return new SubscriptionEntitlementDto(
+        var result = new SubscriptionEntitlementDto(
             active,
             subscription.PlanId,
             subscription.Provider,
@@ -78,5 +82,6 @@ public sealed class HandleSubscriptionWebhookCommandHandler : IRequestHandler<Ha
             subscription.AutoRenew,
             subscription.LastVerifiedAt
         );
+        return ApiResponse<SubscriptionEntitlementDto>.Ok(result);
     }
 }

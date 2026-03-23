@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Configs.DTOs;
@@ -8,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Configs.Commands;
 
-public sealed record CreateXpConfigCommand(XpConfigUpsertRequest Request) : IRequest<XpConfigDto>;
+public sealed record CreateXpConfigCommand(XpConfigUpsertRequest Request) : IRequest<ApiResponse<XpConfigDto>>;
 
-public sealed class CreateXpConfigCommandHandler : IRequestHandler<CreateXpConfigCommand, XpConfigDto>
+public sealed class CreateXpConfigCommandHandler : IRequestHandler<CreateXpConfigCommand, ApiResponse<XpConfigDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,7 +20,7 @@ public sealed class CreateXpConfigCommandHandler : IRequestHandler<CreateXpConfi
         _db = db;
     }
 
-    public async Task<XpConfigDto> Handle(CreateXpConfigCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<XpConfigDto>> Handle(CreateXpConfigCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Request.SourceType))
             throw new ValidationAppException("sourceType is required.");
@@ -46,7 +47,8 @@ public sealed class CreateXpConfigCommandHandler : IRequestHandler<CreateXpConfi
         entity.DeletedAt = request.Request.DeletedAt;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return entity.Adapt<XpConfigDto>();
+        var result = entity.Adapt<XpConfigDto>();
+        return ApiResponse<XpConfigDto>.Ok(result);
     }
 }
 

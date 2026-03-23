@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Lessons.DTOs;
@@ -8,9 +9,9 @@ using System.Text.Json;
 
 namespace MemoPal.Application.Features.Lessons.Commands;
 
-public sealed record UpdateLessonCommand(string UserId, string LessonId, LessonUpsertRequest Request) : IRequest<LessonDto>;
+public sealed record UpdateLessonCommand(string UserId, string LessonId, LessonUpsertRequest Request, bool IsAdmin = false) : IRequest<ApiResponse<LessonDto>>;
 
-public sealed class UpdateLessonCommandHandler : IRequestHandler<UpdateLessonCommand, LessonDto>
+public sealed class UpdateLessonCommandHandler : IRequestHandler<UpdateLessonCommand, ApiResponse<LessonDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,12 +20,12 @@ public sealed class UpdateLessonCommandHandler : IRequestHandler<UpdateLessonCom
         _db = db;
     }
 
-    public async Task<LessonDto> Handle(UpdateLessonCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<LessonDto>> Handle(UpdateLessonCommand request, CancellationToken cancellationToken)
     {
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
                 x => x.Id == request.LessonId &&
                      !x.IsDeleted &&
-                     (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
+                     (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
                 cancellationToken)
             ?? throw new NotFoundAppException("Lesson not found.");
 
@@ -43,7 +44,8 @@ public sealed class UpdateLessonCommandHandler : IRequestHandler<UpdateLessonCom
         lesson.DeletedAt = request.Request.DeletedAt ?? lesson.DeletedAt;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return lesson.Adapt<LessonDto>();
+        var result = lesson.Adapt<LessonDto>();
+        return ApiResponse<LessonDto>.Ok(result);
     }
 }
 

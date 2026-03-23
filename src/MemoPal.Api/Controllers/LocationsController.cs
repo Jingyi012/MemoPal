@@ -16,43 +16,44 @@ public sealed class LocationsController : ApiControllerBase
     }
 
     [HttpGet("/palaces/{palaceId}/locations")]
-    public async Task<IActionResult>> GetByPalace(string palaceId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetByPalace(string palaceId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetLocationsByPalaceQuery(GetUserIdOrThrow(), palaceId), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<LocationDto>>.Ok(data));
+        var data = await Sender.Send(new GetLocationsByPalaceQuery(GetUserIdOrThrow(), palaceId, IsAdmin: IsAdmin()), cancellationToken);
+        return Ok(data);
     }
 
     [HttpGet("/locations/{locationId}")]
     public async Task<IActionResult> GetById(string locationId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetLocationQuery(GetUserIdOrThrow(), locationId), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new GetLocationQuery(GetUserIdOrThrow(), locationId, IsAdmin()), cancellationToken); return Ok(result);
     }
 
     [HttpPost("/locations")]
     public async Task<IActionResult> Create([FromBody] LocationUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new CreateLocationCommand(GetUserIdOrThrow(), request), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new CreateLocationCommand(GetUserIdOrThrow(), request, IsAdmin()), cancellationToken); return Ok(result);
     }
 
     [HttpPut("/locations/{locationId}")]
     public async Task<IActionResult> Update(string locationId, [FromBody] LocationUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UpdateLocationCommand(GetUserIdOrThrow(), locationId, request), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new UpdateLocationCommand(GetUserIdOrThrow(), locationId, request, IsAdmin()), cancellationToken); return Ok(result);
+    }
+
+    [HttpPost("/palaces/{palaceId}/locations/reorder")]
+    public async Task<IActionResult> Reorder(string palaceId, [FromBody] LocationReorderRequest request, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new ReorderLocationsCommand(GetUserIdOrThrow(), palaceId, request, IsAdmin()), cancellationToken);
+        return Ok(result);
     }
 
     [HttpDelete("/locations/{locationId}")]
     public async Task<IActionResult> Delete(string locationId, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteLocationCommand(GetUserIdOrThrow(), locationId), cancellationToken);
-        return Ok(ApiResponse<object?>.Ok(null));
+        var data = await Sender.Send(new DeleteLocationCommand(GetUserIdOrThrow(), locationId, IsAdmin()), cancellationToken);
+        return Ok(data);
     }
 
-    [HttpGet("/locations/updated")]
-    public async Task<IActionResult>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
-    {
-        var data = await Sender.Send(new GetUpdatedLocationsQuery(GetUserIdOrThrow(), since), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<LocationDto>>.Ok(data));
-    }
 }
 
 

@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Badges.DTOs;
@@ -8,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Badges.Commands;
 
-public sealed record CreateBadgeDefinitionCommand(BadgeDefinitionUpsertRequest Request) : IRequest<BadgeDefinitionDto>;
+public sealed record CreateBadgeDefinitionCommand(BadgeDefinitionUpsertRequest Request) : IRequest<ApiResponse<BadgeDefinitionDto>>;
 
-public sealed class CreateBadgeDefinitionCommandHandler : IRequestHandler<CreateBadgeDefinitionCommand, BadgeDefinitionDto>
+public sealed class CreateBadgeDefinitionCommandHandler : IRequestHandler<CreateBadgeDefinitionCommand, ApiResponse<BadgeDefinitionDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,7 +20,7 @@ public sealed class CreateBadgeDefinitionCommandHandler : IRequestHandler<Create
         _db = db;
     }
 
-    public async Task<BadgeDefinitionDto> Handle(CreateBadgeDefinitionCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<BadgeDefinitionDto>> Handle(CreateBadgeDefinitionCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Request.Key) || string.IsNullOrWhiteSpace(request.Request.Name))
             throw new ValidationAppException("key and name are required.");
@@ -49,6 +50,7 @@ public sealed class CreateBadgeDefinitionCommandHandler : IRequestHandler<Create
         entity.DeletedAt = request.Request.DeletedAt;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return entity.Adapt<BadgeDefinitionDto>();
+        var result = entity.Adapt<BadgeDefinitionDto>();
+        return ApiResponse<BadgeDefinitionDto>.Ok(result);
     }
 }

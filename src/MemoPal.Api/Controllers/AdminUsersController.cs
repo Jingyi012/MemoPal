@@ -36,6 +36,13 @@ public sealed class AdminUsersController : ApiControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{userId}/data")]
+    public async Task<IActionResult> GetUserData(string userId, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new GetManagedUserDataQuery(userId), cancellationToken);
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
     {
@@ -57,5 +64,4 @@ public sealed class AdminUsersController : ApiControllerBase
         return Ok(result);
     }
 }
-
 

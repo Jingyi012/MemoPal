@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Reviews.DTOs;
@@ -7,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Reviews.Commands;
 
-public sealed record UpdateReviewCommand(string UserId, string ReviewId, ReviewScheduleUpsertRequest Request) : IRequest<ReviewScheduleDto>;
+public sealed record UpdateReviewCommand(string UserId, string ReviewId, ReviewScheduleUpsertRequest Request) : IRequest<ApiResponse<ReviewScheduleDto>>;
 
-public sealed class UpdateReviewCommandHandler : IRequestHandler<UpdateReviewCommand, ReviewScheduleDto>
+public sealed class UpdateReviewCommandHandler : IRequestHandler<UpdateReviewCommand, ApiResponse<ReviewScheduleDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -18,7 +19,7 @@ public sealed class UpdateReviewCommandHandler : IRequestHandler<UpdateReviewCom
         _db = db;
     }
 
-    public async Task<ReviewScheduleDto> Handle(UpdateReviewCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<ReviewScheduleDto>> Handle(UpdateReviewCommand request, CancellationToken cancellationToken)
     {
         var entity = await _db.ReviewSchedules.FirstOrDefaultAsync(
                 x => x.Id == request.ReviewId && x.UserId == request.UserId && !x.IsDeleted,
@@ -34,7 +35,8 @@ public sealed class UpdateReviewCommandHandler : IRequestHandler<UpdateReviewCom
         entity.DeletedAt = request.Request.DeletedAt ?? entity.DeletedAt;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return entity.Adapt<ReviewScheduleDto>();
+        var result = entity.Adapt<ReviewScheduleDto>();
+        return ApiResponse<ReviewScheduleDto>.Ok(result);
     }
 }
 

@@ -20,6 +20,14 @@ public sealed class UpdateUserStatsRequest
 
 public sealed record UserLevelDto(int Level, int Xp);
 
+public sealed record FeatureLimitsDto(
+    bool IsPremium,
+    int CustomPalaces,
+    int CustomLessonsPerPalace,
+    int CustomLocationsPerPalace,
+    int CustomWordsPerLesson
+);
+
 public sealed record ManagedUserDto(
     string Id,
     string DisplayName,

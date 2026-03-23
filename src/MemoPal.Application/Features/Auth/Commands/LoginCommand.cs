@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Auth.DTOs;
@@ -7,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Auth.Commands;
 
-public sealed record LoginCommand(string Email, string Password) : IRequest<AuthResponseDto>;
+public sealed record LoginCommand(string Email, string Password) : IRequest<ApiResponse<AuthResponseDto>>;
 
-public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto>
+public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, ApiResponse<AuthResponseDto>>
 {
     private readonly IAppDbContext _db;
     private readonly IPasswordHasher _passwordHasher;
@@ -22,7 +23,7 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResp
         _tokenGenerator = tokenGenerator;
     }
 
-    public async Task<AuthResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<AuthResponseDto>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
         {
@@ -38,6 +39,7 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResp
 
         var stats = await _db.UserStats.FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
         var token = _tokenGenerator.GenerateToken(user.Id, user.Email, user.Role);
-        return new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>());
+        var result = new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>());
+        return ApiResponse<AuthResponseDto>.Ok(result);
     }
 }

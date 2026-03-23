@@ -27,3 +27,7 @@ public sealed class LocationUpsertRequest
     public DateTime? DeletedAt { get; set; }
 }
 
+public sealed class LocationReorderRequest
+{
+    public IReadOnlyList<string> LocationIds { get; set; } = [];
+}

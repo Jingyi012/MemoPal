@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Words.Queries;
 
-public sealed record GetWordQuery(string UserId, string WordId) : IRequest<ApiResponse<WordDto>>;
+public sealed record GetWordQuery(string UserId, string WordId, bool IsAdmin = false) : IRequest<ApiResponse<WordDto>>;
 
 public sealed class GetWordQueryHandler : IRequestHandler<GetWordQuery, ApiResponse<WordDto>>
 {
@@ -26,7 +26,7 @@ public sealed class GetWordQueryHandler : IRequestHandler<GetWordQuery, ApiRespo
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
             x => x.Id == word.LessonId &&
                  !x.IsDeleted &&
-                 (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
+                 (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
             cancellationToken);
         if (lesson is null) throw new NotFoundAppException("Word not found.");
         return ApiResponse<WordDto>.Ok(word.Adapt<WordDto>());

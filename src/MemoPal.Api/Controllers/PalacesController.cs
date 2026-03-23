@@ -17,40 +17,40 @@ public sealed class PalacesController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult>> GetAll(
+    public async Task<IActionResult> GetAll(
         [FromQuery] int? pageNumber = null,
         [FromQuery] int? pageSize = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await Sender.Send(new GetPalacesQuery(GetUserIdOrThrow(), pageNumber, pageSize), cancellationToken);
+        var result = await Sender.Send(new GetPalacesQuery(GetUserIdOrThrow(), pageNumber, pageSize, IsAdmin()), cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("{palaceId}")]
     public async Task<IActionResult> GetById(string palaceId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetPalaceQuery(GetUserIdOrThrow(), palaceId), cancellationToken);
+        var result = await Sender.Send(new GetPalaceQuery(GetUserIdOrThrow(), palaceId, IsAdmin()), cancellationToken);
         return Ok(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PalaceUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new CreatePalaceCommand(GetUserIdOrThrow(), request), cancellationToken);
+        var result = await Sender.Send(new CreatePalaceCommand(GetUserIdOrThrow(), request, IsAdmin()), cancellationToken);
         return Ok(result);
     }
 
     [HttpPut("{palaceId}")]
     public async Task<IActionResult> Update(string palaceId, [FromBody] PalaceUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UpdatePalaceCommand(GetUserIdOrThrow(), palaceId, request), cancellationToken);
+        var result = await Sender.Send(new UpdatePalaceCommand(GetUserIdOrThrow(), palaceId, request, IsAdmin()), cancellationToken);
         return Ok(result);
     }
 
     [HttpDelete("{palaceId}")]
     public async Task<IActionResult> Delete(string palaceId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new DeletePalaceCommand(GetUserIdOrThrow(), palaceId), cancellationToken);
+        var result = await Sender.Send(new DeletePalaceCommand(GetUserIdOrThrow(), palaceId, IsAdmin()), cancellationToken);
         if (!result.Success) return NotFound(result);
         return Ok(result);
     }
@@ -58,16 +58,10 @@ public sealed class PalacesController : ApiControllerBase
     [HttpPost("{palaceId}/unlock")]
     public async Task<IActionResult> Unlock(string palaceId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UnlockPalaceCommand(GetUserIdOrThrow(), palaceId), cancellationToken);
+        var result = await Sender.Send(new UnlockPalaceCommand(GetUserIdOrThrow(), palaceId, IsAdmin()), cancellationToken);
         if (!result.Success) return NotFound(result);
         return Ok(result);
     }
 
-    [HttpGet("updated")]
-    public async Task<IActionResult>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new GetUpdatedPalacesQuery(GetUserIdOrThrow(), since), cancellationToken);
-        return Ok(result);
-    }
 }
 

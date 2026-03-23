@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.LessonProgress.DTOs;
@@ -9,9 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.LessonProgress.Commands;
 
-public sealed record UpdateLessonProgressCommand(string UserId, string LessonId, LessonProgressUpsertRequest Request) : IRequest<LessonProgressDto>;
+public sealed record UpdateLessonProgressCommand(string UserId, string LessonId, LessonProgressUpsertRequest Request) : IRequest<ApiResponse<LessonProgressDto>>;
 
-public sealed class UpdateLessonProgressCommandHandler : IRequestHandler<UpdateLessonProgressCommand, LessonProgressDto>
+public sealed class UpdateLessonProgressCommandHandler : IRequestHandler<UpdateLessonProgressCommand, ApiResponse<LessonProgressDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -20,12 +21,12 @@ public sealed class UpdateLessonProgressCommandHandler : IRequestHandler<UpdateL
         _db = db;
     }
 
-    public async Task<LessonProgressDto> Handle(UpdateLessonProgressCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<LessonProgressDto>> Handle(UpdateLessonProgressCommand request, CancellationToken cancellationToken)
     {
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
             x => x.Id == request.LessonId &&
                  !x.IsDeleted &&
-                 (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
+                 (x.IsCustom != true || x.CreatedBy == request.UserId),
             cancellationToken);
         if (lesson is null) throw new NotFoundAppException("Lesson not found.");
 
@@ -92,7 +93,8 @@ public sealed class UpdateLessonProgressCommandHandler : IRequestHandler<UpdateL
             .OrderBy(x => x.ReviewRound)
             .ToListAsync(cancellationToken);
         var reviewDtos = schedules.Select(x => x.Adapt<ReviewScheduleDto>()).ToList();
-        return (progress, (IReadOnlyList<ReviewScheduleDto>)reviewDtos).Adapt<LessonProgressDto>();
+        var result = (progress, (IReadOnlyList<ReviewScheduleDto>)reviewDtos).Adapt<LessonProgressDto>();
+        return ApiResponse<LessonProgressDto>.Ok(result);
     }
 }
 

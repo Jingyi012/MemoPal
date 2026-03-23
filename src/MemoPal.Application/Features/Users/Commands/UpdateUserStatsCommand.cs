@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Users.DTOs;
@@ -8,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Users.Commands;
 
-public sealed record UpdateUserStatsCommand(string UserId, UpdateUserStatsRequest Request) : IRequest<UserStatsDto>;
+public sealed record UpdateUserStatsCommand(string UserId, UpdateUserStatsRequest Request) : IRequest<ApiResponse<UserStatsDto>>;
 
-public sealed class UpdateUserStatsCommandHandler : IRequestHandler<UpdateUserStatsCommand, UserStatsDto>
+public sealed class UpdateUserStatsCommandHandler : IRequestHandler<UpdateUserStatsCommand, ApiResponse<UserStatsDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,7 +20,7 @@ public sealed class UpdateUserStatsCommandHandler : IRequestHandler<UpdateUserSt
         _db = db;
     }
 
-    public async Task<UserStatsDto> Handle(UpdateUserStatsCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<UserStatsDto>> Handle(UpdateUserStatsCommand request, CancellationToken cancellationToken)
     {
         var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("User not found.");
@@ -54,6 +55,7 @@ public sealed class UpdateUserStatsCommandHandler : IRequestHandler<UpdateUserSt
         user.UpdatedAt = now;
 
         await _db.SaveChangesAsync(cancellationToken);
-        return stats.Adapt<UserStatsDto>();
+        var result = stats.Adapt<UserStatsDto>();
+        return ApiResponse<UserStatsDto>.Ok(result);
     }
 }

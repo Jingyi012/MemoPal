@@ -16,64 +16,58 @@ public sealed class WordsController : ApiControllerBase
     }
 
     [HttpGet("/words")]
-    public async Task<IActionResult>> GetByLesson([FromQuery] string lessonId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetByLesson([FromQuery] string lessonId, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new GetWordsByLessonQuery(GetUserIdOrThrow(), lessonId), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<WordDto>>.Ok(data));
+        var data = await Sender.Send(new GetWordsByLessonQuery(GetUserIdOrThrow(), lessonId, IsAdmin: IsAdmin()), cancellationToken);
+        return Ok(data);
     }
 
     [HttpGet("/words/{wordId}")]
     public async Task<IActionResult> GetById(string wordId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetWordQuery(GetUserIdOrThrow(), wordId), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new GetWordQuery(GetUserIdOrThrow(), wordId, IsAdmin()), cancellationToken); return Ok(result);
     }
 
     [HttpPost("/words")]
     public async Task<IActionResult> Create([FromBody] WordUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new CreateWordCommand(GetUserIdOrThrow(), request), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new CreateWordCommand(GetUserIdOrThrow(), request, IsAdmin()), cancellationToken); return Ok(result);
     }
 
     [HttpPost("/words/batch")]
-    public async Task<IActionResult>> CreateBatch([FromBody] IReadOnlyList<WordUpsertRequest> requests, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateBatch([FromBody] IReadOnlyList<WordUpsertRequest> requests, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new CreateWordsBatchCommand(GetUserIdOrThrow(), requests), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<WordDto>>.Ok(data));
+        var data = await Sender.Send(new CreateWordsBatchCommand(GetUserIdOrThrow(), requests, IsAdmin()), cancellationToken);
+        return Ok(data);
     }
 
     [HttpPatch("/words/{wordId}")]
     public async Task<IActionResult> Update(string wordId, [FromBody] WordUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UpdateWordCommand(GetUserIdOrThrow(), wordId, request), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new UpdateWordCommand(GetUserIdOrThrow(), wordId, request, IsAdmin()), cancellationToken); return Ok(result);
     }
 
     [HttpPatch("/words/batch")]
-    public async Task<IActionResult>> UpdateBatch([FromBody] IReadOnlyList<WordUpsertRequest> requests, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateBatch([FromBody] IReadOnlyList<WordUpsertRequest> requests, CancellationToken cancellationToken)
     {
-        var data = await Sender.Send(new UpdateWordsBatchCommand(GetUserIdOrThrow(), requests), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<WordDto>>.Ok(data));
+        var data = await Sender.Send(new UpdateWordsBatchCommand(GetUserIdOrThrow(), requests, IsAdmin()), cancellationToken);
+        return Ok(data);
     }
 
     [HttpDelete("/words/{wordId}")]
     public async Task<IActionResult> Delete(string wordId, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteWordCommand(GetUserIdOrThrow(), wordId), cancellationToken);
+        await Sender.Send(new DeleteWordCommand(GetUserIdOrThrow(), wordId, IsAdmin()), cancellationToken);
         return Ok(ApiResponse<object?>.Ok(null));
     }
 
     [HttpPost("/words/batch/delete")]
     public async Task<IActionResult> DeleteBatch([FromBody] BatchDeleteWordsRequest request, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteWordsBatchCommand(GetUserIdOrThrow(), request.Ids), cancellationToken);
+        await Sender.Send(new DeleteWordsBatchCommand(GetUserIdOrThrow(), request.Ids, IsAdmin()), cancellationToken);
         return Ok(ApiResponse<object?>.Ok(null));
     }
 
-    [HttpGet("/words/updated")]
-    public async Task<IActionResult>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
-    {
-        var data = await Sender.Send(new GetUpdatedWordsQuery(GetUserIdOrThrow(), since), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<WordDto>>.Ok(data));
-    }
 }
 
 

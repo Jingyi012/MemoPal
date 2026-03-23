@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Words.Queries;
 
-public sealed record GetWordsByLessonQuery(string UserId, string LessonId, int? PageNumber = null, int? PageSize = null) : IRequest<ApiResponse<IReadOnlyList<WordDto>>>;
+public sealed record GetWordsByLessonQuery(string UserId, string LessonId, int? PageNumber = null, int? PageSize = null, bool IsAdmin = false) : IRequest<ApiResponse<IReadOnlyList<WordDto>>>;
 
 public sealed class GetWordsByLessonQueryHandler : IRequestHandler<GetWordsByLessonQuery, ApiResponse<IReadOnlyList<WordDto>>>
 {
@@ -24,7 +24,7 @@ public sealed class GetWordsByLessonQueryHandler : IRequestHandler<GetWordsByLes
         var lesson = await _db.Lessons.FirstOrDefaultAsync(
             x => x.Id == request.LessonId &&
                  !x.IsDeleted &&
-                 (!x.IsCustom.GetValueOrDefault() || x.CreatedBy == request.UserId),
+                 (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId),
             cancellationToken);
         if (lesson is null) throw new NotFoundAppException("Lesson not found.");
 
@@ -48,4 +48,3 @@ public sealed class GetWordsByLessonQueryHandler : IRequestHandler<GetWordsByLes
         return PaginatedResponse<WordDto>.Ok(paged.Select(x => x.Adapt<WordDto>()).ToList(), pageNumber, pageSize, totalCount);
     }
 }
-

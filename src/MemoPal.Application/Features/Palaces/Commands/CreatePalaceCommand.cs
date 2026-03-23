@@ -3,13 +3,14 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Palaces.DTOs;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Palaces.Commands;
 
-public sealed record CreatePalaceCommand(string UserId, PalaceUpsertRequest Request) : IRequest<ApiResponse<PalaceDto>>;
+public sealed record CreatePalaceCommand(string UserId, PalaceUpsertRequest Request, bool IsAdmin = false) : IRequest<ApiResponse<PalaceDto>>;
 
 public sealed class CreatePalaceCommandHandler : IRequestHandler<CreatePalaceCommand, ApiResponse<PalaceDto>>
 {
@@ -32,6 +33,22 @@ public sealed class CreatePalaceCommandHandler : IRequestHandler<CreatePalaceCom
         var now = DateTime.UtcNow;
         var id = string.IsNullOrWhiteSpace(request.Request.Id) ? Guid.NewGuid().ToString("D") : request.Request.Id!;
         var entity = await _db.Palaces.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (entity is null && request.Request.IsCustom && !request.IsAdmin)
+        {
+            var currentUser = await _db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId, cancellationToken)
+                ?? throw new NotFoundAppException("Current user not found.");
+            var allowedCustomPalaces = await _db.GetCustomPalaceLimitAsync(currentUser.IsPremium, cancellationToken);
+            var existingCustomPalaces = await _db.Palaces.CountAsync(
+                x => x.CreatedBy == request.UserId && x.IsCustom && !x.IsDeleted,
+                cancellationToken);
+
+            if (existingCustomPalaces >= allowedCustomPalaces)
+            {
+                throw new ValidationAppException("You have reached the maximum number of custom palaces allowed for your plan.");
+            }
+        }
+
         if (entity is null)
         {
             entity = new Palace

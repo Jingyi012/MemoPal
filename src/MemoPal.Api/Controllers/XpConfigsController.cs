@@ -16,43 +16,40 @@ public sealed class XpConfigsController : ApiControllerBase
     }
 
     [HttpGet("/xp-configs")]
-    public async Task<IActionResult>> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var data = await Sender.Send(new GetXpConfigsQuery(), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<XpConfigDto>>.Ok(data));
+        return Ok(data);
     }
 
     [HttpGet("/xp-configs/{sourceType}")]
     public async Task<IActionResult> GetBySourceType(string sourceType, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetXpConfigBySourceTypeQuery(sourceType), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new GetXpConfigBySourceTypeQuery(sourceType), cancellationToken); 
+        return Ok(result);
     }
 
     [HttpPost("/xp-configs")]
     public async Task<IActionResult> Create([FromBody] XpConfigUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new CreateXpConfigCommand(request), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new CreateXpConfigCommand(request), cancellationToken); 
+        return Ok(result);
     }
 
     [HttpPatch("/xp-configs/{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] XpConfigUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UpdateXpConfigCommand(id, request), cancellationToken);`n        return Ok(result);
+        var result = await Sender.Send(new UpdateXpConfigCommand(id, request), cancellationToken); 
+        return Ok(result);
     }
 
     [HttpDelete("/xp-configs/{id}")]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteXpConfigCommand(id), cancellationToken);
-        return Ok(ApiResponse<object?>.Ok(null));
+        var data = await Sender.Send(new DeleteXpConfigCommand(id), cancellationToken);
+        return Ok(data);
     }
 
-    [HttpGet("/xp-configs/updated")]
-    public async Task<IActionResult>> GetUpdated([FromQuery] DateTime since, CancellationToken cancellationToken)
-    {
-        var data = await Sender.Send(new GetUpdatedXpConfigsQuery(since), cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<XpConfigDto>>.Ok(data));
-    }
 }
 
 

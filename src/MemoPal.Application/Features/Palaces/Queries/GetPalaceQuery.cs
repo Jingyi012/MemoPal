@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Palaces.Queries;
 
-public sealed record GetPalaceQuery(string UserId, string PalaceId) : IRequest<ApiResponse<PalaceDto>>;
+public sealed record GetPalaceQuery(string UserId, string PalaceId, bool IsAdmin = false) : IRequest<ApiResponse<PalaceDto>>;
 
 public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, ApiResponse<PalaceDto>>
 {
@@ -24,11 +24,10 @@ public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, ApiR
         var palace = await _db.Palaces.FirstOrDefaultAsync(
                 x => x.Id == request.PalaceId &&
                      !x.IsDeleted &&
-                     (!x.IsCustom || x.CreatedBy == request.UserId),
+                     (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
                 cancellationToken)
             ?? throw new NotFoundAppException("Palace not found.");
 
         return ApiResponse<PalaceDto>.Ok(palace.Adapt<PalaceDto>());
     }
 }
-

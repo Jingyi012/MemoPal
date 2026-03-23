@@ -1,5 +1,6 @@
 using Mapster;
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Auth.DTOs;
@@ -7,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Auth.Commands;
 
-public sealed record UpdateProfileCommand(string UserId, string? DisplayName, string? AvatarUrl, string? Email) : IRequest<UserWithStatDto>;
+public sealed record UpdateProfileCommand(string UserId, string? DisplayName, string? AvatarUrl, string? Email) : IRequest<ApiResponse<UserWithStatDto>>;
 
-public sealed class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand, UserWithStatDto>
+public sealed class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand, ApiResponse<UserWithStatDto>>
 {
     private readonly IAppDbContext _db;
 
@@ -18,7 +19,7 @@ public sealed class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileC
         _db = db;
     }
 
-    public async Task<UserWithStatDto> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<UserWithStatDto>> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
     {
         var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("User not found.");
@@ -49,6 +50,6 @@ public sealed class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileC
         await _db.SaveChangesAsync(cancellationToken);
 
         var stats = await _db.UserStats.FirstOrDefaultAsync(x => x.UserId == request.UserId, cancellationToken);
-        return (user, stats).Adapt<UserWithStatDto>();
+        return ApiResponse<UserWithStatDto>.Ok((user, stats).Adapt<UserWithStatDto>());
     }
 }

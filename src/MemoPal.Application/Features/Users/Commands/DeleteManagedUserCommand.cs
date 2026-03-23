@@ -1,12 +1,13 @@
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Users.Commands;
 
-public sealed record DeleteManagedUserCommand(string UserId) : IRequest<bool>;
+public sealed record DeleteManagedUserCommand(string UserId) : IRequest<ApiResponse<bool>>;
 
-public sealed class DeleteManagedUserCommandHandler : IRequestHandler<DeleteManagedUserCommand, bool>
+public sealed class DeleteManagedUserCommandHandler : IRequestHandler<DeleteManagedUserCommand, ApiResponse<bool>>
 {
     private readonly IAppDbContext _db;
 
@@ -15,11 +16,11 @@ public sealed class DeleteManagedUserCommandHandler : IRequestHandler<DeleteMana
         _db = db;
     }
 
-    public async Task<bool> Handle(DeleteManagedUserCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<bool>> Handle(DeleteManagedUserCommand request, CancellationToken cancellationToken)
     {
         var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId && !x.IsDeleted, cancellationToken);
         if (user is null)
-            return false;
+            return ApiResponse<bool>.Ok(false);
 
         user.IsDeleted = true;
         user.DeletedAt = DateTime.UtcNow;
@@ -34,6 +35,6 @@ public sealed class DeleteManagedUserCommandHandler : IRequestHandler<DeleteMana
         }
 
         await _db.SaveChangesAsync(cancellationToken);
-        return true;
+        return ApiResponse<bool>.Ok(true);
     }
 }

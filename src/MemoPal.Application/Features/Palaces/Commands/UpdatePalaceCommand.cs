@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Palaces.Commands;
 
-public sealed record UpdatePalaceCommand(string UserId, string PalaceId, PalaceUpsertRequest Request) : IRequest<ApiResponse<PalaceDto>>;
+public sealed record UpdatePalaceCommand(string UserId, string PalaceId, PalaceUpsertRequest Request, bool IsAdmin = false) : IRequest<ApiResponse<PalaceDto>>;
 
 public sealed class UpdatePalaceCommandHandler : IRequestHandler<UpdatePalaceCommand, ApiResponse<PalaceDto>>
 {
@@ -24,7 +24,7 @@ public sealed class UpdatePalaceCommandHandler : IRequestHandler<UpdatePalaceCom
         var entity = await _db.Palaces.FirstOrDefaultAsync(
                 x => x.Id == request.PalaceId &&
                      !x.IsDeleted &&
-                     (!x.IsCustom || x.CreatedBy == request.UserId),
+                     (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
                 cancellationToken)
             ?? throw new NotFoundAppException("Palace not found.");
 

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Palaces.Commands;
 
-public sealed record UnlockPalaceCommand(string UserId, string PalaceId) : IRequest<ApiResponse<bool>>;
+public sealed record UnlockPalaceCommand(string UserId, string PalaceId, bool IsAdmin = false) : IRequest<ApiResponse<bool>>;
 
 public sealed class UnlockPalaceCommandHandler : IRequestHandler<UnlockPalaceCommand, ApiResponse<bool>>
 {
@@ -21,7 +21,7 @@ public sealed class UnlockPalaceCommandHandler : IRequestHandler<UnlockPalaceCom
         var entity = await _db.Palaces.FirstOrDefaultAsync(
             x => x.Id == request.PalaceId &&
                  !x.IsDeleted &&
-                 (!x.IsCustom || x.CreatedBy == request.UserId),
+                 (request.IsAdmin || !x.IsCustom || x.CreatedBy == request.UserId),
             cancellationToken);
 
         if (entity is null) return ApiResponse<bool>.Fail("Palace not found.");

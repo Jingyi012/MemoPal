@@ -1,11 +1,12 @@
 using MediatR;
+using MemoPal.Application.Common;
 using MemoPal.Application.Features.Configs.DTOs;
 
 namespace MemoPal.Application.Features.Configs.Commands;
 
-public sealed record UpdateLevelConfigCommand(int Level, LevelConfigUpsertRequest Request) : IRequest<LevelConfigDto>;
+public sealed record UpdateLevelConfigCommand(int Level, LevelConfigUpsertRequest Request) : IRequest<ApiResponse<LevelConfigDto>>;
 
-public sealed class UpdateLevelConfigCommandHandler : IRequestHandler<UpdateLevelConfigCommand, LevelConfigDto>
+public sealed class UpdateLevelConfigCommandHandler : IRequestHandler<UpdateLevelConfigCommand, ApiResponse<LevelConfigDto>>
 {
     private readonly IMediator _mediator;
 
@@ -14,10 +15,10 @@ public sealed class UpdateLevelConfigCommandHandler : IRequestHandler<UpdateLeve
         _mediator = mediator;
     }
 
-    public Task<LevelConfigDto> Handle(UpdateLevelConfigCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<LevelConfigDto>> Handle(UpdateLevelConfigCommand request, CancellationToken cancellationToken)
     {
         request.Request.Level = request.Level;
-        return _mediator.Send(new CreateLevelConfigCommand(request.Request), cancellationToken);
+        return await _mediator.Send(new CreateLevelConfigCommand(request.Request), cancellationToken);
     }
 }
 
