@@ -6,7 +6,7 @@ export interface PalaceDto {
   thumbnail: string;
   isLocked: boolean;
   unlockedAt?: string | null;
-  requiredXp: number;
+  level: number;
   isPremium: boolean;
   isCustom: boolean;
   createdBy?: string | null;
@@ -24,7 +24,7 @@ export interface PalaceUpsertRequest {
   thumbnail: string;
   isLocked: boolean;
   unlockedAt?: string | null;
-  requiredXp: number;
+  level: number;
   isPremium: boolean;
   isCustom: boolean;
   createdBy?: string | null;

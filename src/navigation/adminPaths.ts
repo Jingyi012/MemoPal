@@ -20,6 +20,10 @@ export const adminPaths = {
   configMilestones: '/admin/configs/milestones',
   configMissions: '/admin/configs/missions',
 
+  referralsRoot: '/admin/referrals',
+  referralConfig: '/admin/referrals/config',
+  referralUsers: '/admin/referrals/users',
+
   subscriptions: '/admin/subscriptions',
   systemSettings: '/admin/system-settings',
 } as const;

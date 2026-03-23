@@ -9,6 +9,8 @@ import MilestoneDefinitionsPage from './pages/MilestoneDefinitionsPage';
 import MissionTemplatesPage from './pages/MissionTemplatesPage';
 import PalaceDetailsPage from './pages/PalaceDetailsPage';
 import PalacesPage from './pages/PalacesPage';
+import ReferralConfigPage from './pages/ReferralConfigPage';
+import ReferralUsersPage from './pages/ReferralUsersPage';
 import UserDataPage from './pages/UserDataPage';
 import UsersPage from './pages/UsersPage';
 import SubscriptionsPage from './pages/SubscriptionsPage';
@@ -47,6 +49,11 @@ export default function App() {
               <Route path="badges" element={<BadgeDefinitionsPage />} />
               <Route path="milestones" element={<MilestoneDefinitionsPage />} />
               <Route path="missions" element={<MissionTemplatesPage />} />
+            </Route>
+            <Route path="referrals">
+              <Route index element={<Navigate to="config" replace />} />
+              <Route path="config" element={<ReferralConfigPage />} />
+              <Route path="users" element={<ReferralUsersPage />} />
             </Route>
             <Route path="subscriptions" element={<SubscriptionsPage />} />
             <Route path="system-settings" element={<SystemSettingsPage />} />

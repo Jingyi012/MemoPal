@@ -42,7 +42,7 @@ export function PalaceOverviewCard({ palaceId, palace, onChanged }: PalaceOvervi
       <Descriptions column={1} size='small' labelStyle={{ width: 140 }}>
         <Descriptions.Item label='Name'>{palace.name}</Descriptions.Item>
         <Descriptions.Item label='Description'>{palace.description}</Descriptions.Item>
-        <Descriptions.Item label='Required XP'>{palace.requiredXp}</Descriptions.Item>
+        <Descriptions.Item label='Unlock Level'>{palace.level}</Descriptions.Item>
         <Descriptions.Item label='Thumbnail'>
           <MediaThumbnail
             path={palace.thumbnail}
@@ -62,7 +62,7 @@ export function PalaceOverviewCard({ palaceId, palace, onChanged }: PalaceOvervi
           name: palace.name,
           description: palace.description,
           thumbnail: palace.thumbnail,
-          requiredXp: palace.requiredXp,
+          level: palace.level,
           isPremium: palace.isPremium,
           isCustom: palace.isCustom,
           isLocked: palace.isLocked,
@@ -88,11 +88,11 @@ export function PalaceOverviewCard({ palaceId, palace, onChanged }: PalaceOvervi
           <ImageUploadField category='palace' />
         </ProForm.Item>
         <ProFormDigit
-          name='requiredXp'
-          label='Required XP'
-          min={0}
+          name='level'
+          label='Unlock Level'
+          min={1}
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter XP required to unlock' }}
+          fieldProps={{ placeholder: 'Enter required user level' }}
         />
         <ProFormSwitch name='isPremium' label='Premium' />
         <ProFormSwitch name='isCustom' label='Custom' />

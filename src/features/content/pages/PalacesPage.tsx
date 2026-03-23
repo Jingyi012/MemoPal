@@ -72,7 +72,7 @@ export default function PalacesPage() {
         ),
       },
       { title: 'Locations', dataIndex: 'locationsCount', width: 100 },
-      { title: 'Required XP', dataIndex: 'requiredXp', width: 110 },
+      { title: 'Unlock Level', dataIndex: 'level', width: 110 },
       { title: 'Premium', dataIndex: 'isPremium', valueType: 'switch', width: 90 },
       { title: 'Custom', dataIndex: 'isCustom', valueType: 'switch', width: 90 },
       {
@@ -130,7 +130,7 @@ export default function PalacesPage() {
         {...formLayout}
         onOpenChange={setCreateOpen}
         initialValues={{
-          requiredXp: 0,
+          level: 1,
           isPremium: false,
           isCustom: false,
           isLocked: false,
@@ -156,11 +156,11 @@ export default function PalacesPage() {
           <ImageUploadField category='palace' />
         </ProForm.Item>
         <ProFormDigit
-          name='requiredXp'
-          label='Required XP'
-          min={0}
+          name='level'
+          label='Unlock Level'
+          min={1}
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter XP required to unlock' }}
+          fieldProps={{ placeholder: 'Enter required user level' }}
         />
         <ProFormSwitch name='isPremium' label='Premium' />
         <ProFormSwitch name='isCustom' label='Custom' />
@@ -177,7 +177,7 @@ export default function PalacesPage() {
                 name: editing.name,
                 description: editing.description,
                 thumbnail: editing.thumbnail,
-                requiredXp: editing.requiredXp,
+                level: editing.level,
                 isPremium: editing.isPremium,
                 isCustom: editing.isCustom,
                 isLocked: editing.isLocked,
@@ -212,11 +212,11 @@ export default function PalacesPage() {
           <ImageUploadField category='palace' />
         </ProForm.Item>
         <ProFormDigit
-          name='requiredXp'
-          label='Required XP'
-          min={0}
+          name='level'
+          label='Unlock Level'
+          min={1}
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter XP required to unlock' }}
+          fieldProps={{ placeholder: 'Enter required user level' }}
         />
         <ProFormSwitch name='isPremium' label='Premium' />
         <ProFormSwitch name='isCustom' label='Custom' />

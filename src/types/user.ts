@@ -42,7 +42,7 @@ export interface ManagedUserPalaceDataDto {
   id: string;
   name: string;
   description: string;
-  requiredXp: number;
+  level: number;
   isPremium: boolean;
   isCustom: boolean;
   isDeleted: boolean;

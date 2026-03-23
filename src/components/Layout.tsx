@@ -1,6 +1,7 @@
 import {
   BookOutlined,
   LogoutOutlined,
+  ShareAltOutlined,
   SettingOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
@@ -30,6 +31,8 @@ export default function Layout() {
           <TeamOutlined />
         ) : item.icon === "content" ? (
           <BookOutlined />
+        ) : item.icon === "referral" ? (
+          <ShareAltOutlined />
         ) : (
           <SettingOutlined />
         ),

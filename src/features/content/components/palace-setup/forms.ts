@@ -10,7 +10,7 @@ export type PalaceFormValues = {
   name: string;
   description: string;
   thumbnail: string;
-  requiredXp: number;
+  level: number;
   isPremium: boolean;
   isCustom: boolean;
   isLocked: boolean;
@@ -41,7 +41,7 @@ export function buildPalacePayload(
     name: values.name.trim(),
     description: values.description.trim(),
     thumbnail: values.thumbnail,
-    requiredXp: values.requiredXp,
+    level: values.level,
     isPremium: values.isPremium,
     isCustom: values.isCustom,
     isLocked: values.isLocked,

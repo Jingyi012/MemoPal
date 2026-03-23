@@ -166,7 +166,7 @@ export default function UserDataPage() {
                     dataSource={data.palaces}
                     columns={[
                       { title: 'Name', dataIndex: 'name' },
-                      { title: 'Required XP', dataIndex: 'requiredXp', width: 110 },
+                      { title: 'Unlock Level', dataIndex: 'level', width: 110 },
                       { title: 'Locations', render: (_, row) => row.locations.length, width: 100 },
                       { title: 'Updated', dataIndex: 'updatedAt', render: (v) => formatDateTime(v), width: 160 },
                     ]}

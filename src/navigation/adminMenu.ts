@@ -1,6 +1,6 @@
 import { adminPaths } from './adminPaths';
 
-export type AdminMenuIcon = 'users' | 'content' | 'config' | 'generic';
+export type AdminMenuIcon = 'users' | 'content' | 'config' | 'referral' | 'generic';
 
 export interface AdminMenuItem {
   path: string;
@@ -28,6 +28,15 @@ export const adminMenuItems: AdminMenuItem[] = [
       { path: adminPaths.configBadges, name: 'Badge Definitions' },
       { path: adminPaths.configMilestones, name: 'Milestone Definitions' },
       { path: adminPaths.configMissions, name: 'Mission Templates' },
+    ],
+  },
+  {
+    path: adminPaths.referralsRoot,
+    name: 'Referral Program',
+    icon: 'referral',
+    routes: [
+      { path: adminPaths.referralConfig, name: 'Reward Config' },
+      { path: adminPaths.referralUsers, name: 'Referrer Users' },
     ],
   },
   { path: adminPaths.subscriptions, name: 'Subscriptions', icon: 'generic' },
