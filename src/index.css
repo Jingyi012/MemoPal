@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.ant-pro-layout,
+.ant-pro-layout .ant-pro-layout-container,
+.ant-pro-layout .ant-pro-layout-content {
+  width: 100%;
+  max-width: 100%;
+}
+
+.ant-pro-layout .ant-pro-grid-content,
+.ant-pro-page-container .ant-pro-grid-content,
+.ant-pro-page-container-children-container {
+  width: 100%;
+  max-width: 100% !important;
+}
+
+.ant-pro-page-container-children-container {
+  padding-inline: 0 !important;
+}
