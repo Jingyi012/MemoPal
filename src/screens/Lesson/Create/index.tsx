@@ -1,12 +1,13 @@
 import { ActionSheet } from '@/components/ActionSheet';
 import { CommonHeader } from '@/components/CommonHeader';
 import { SegmentedProgressBar } from '@/components/SegmentedProgressBar';
-import { useLessonMutations } from '@/hooks/useLessonsManager';
+import { useFeatureLimits } from '@/hooks/useFeatureLimits';
+import { useLessonList, useLessonMutations } from '@/hooks/useLessonsManager';
 import { LessonForm, LessonWordForm } from '@/types/lesson';
 import { useRouter } from 'expo-router';
 import { LogOut, X } from 'lucide-react-native';
 import { useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { LessonInfoStep } from './LessonInfoStep';
 import { LocationCanvasStep } from './LocationCanvasStep';
@@ -26,8 +27,13 @@ const STEPS: { key: CreateLessonStep; label: string }[] = [
 
 export const CreateLessonScreen: React.FC<Props> = ({ palaceId }) => {
   const router = useRouter();
+  const { limits, isLoading: isLoadingLimits } = useFeatureLimits();
+  const { data: lessons = [] } = useLessonList(palaceId);
 
   const { saveLesson } = useLessonMutations(palaceId);
+  const lessonLimit = limits.customLessonsPerPalace;
+  const wordsLimit = limits.customWordsPerLesson;
+  const isLessonLimitReached = lessons.length >= lessonLimit;
 
   const [step, setStep] = useState<CreateLessonStep>('info');
   const [isSaving, setIsSaving] = useState(false);
@@ -49,6 +55,22 @@ export const CreateLessonScreen: React.FC<Props> = ({ palaceId }) => {
 
   const handleSaveLesson = async () => {
     if (isSaving) return;
+    if (isLessonLimitReached) {
+      Toast.show({
+        type: 'error',
+        text1: 'Lesson limit reached',
+        text2: `This palace already has ${lessons.length}/${lessonLimit} custom lessons.`,
+      });
+      return;
+    }
+    if (words.length > wordsLimit) {
+      Toast.show({
+        type: 'error',
+        text1: 'Word limit reached',
+        text2: `You can add up to ${wordsLimit} words in one custom lesson.`,
+      });
+      return;
+    }
 
     try {
       setIsSaving(true);
@@ -77,6 +99,31 @@ export const CreateLessonScreen: React.FC<Props> = ({ palaceId }) => {
       setIsSaving(false);
     }
   };
+
+  if (isLoadingLimits) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#0f766e" />
+      </View>
+    );
+  }
+
+  if (isLessonLimitReached) {
+    return (
+      <View className="flex-1 bg-white">
+        <CommonHeader
+          title="Create Lesson"
+          hideBackButton={false}
+          backAction={() => router.back()}
+        />
+        <View className="p-5">
+          <Text className="text-amber-700">
+            Lesson limit reached for this palace ({lessons.length}/{lessonLimit}).
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-white">
@@ -113,6 +160,7 @@ export const CreateLessonScreen: React.FC<Props> = ({ palaceId }) => {
           <LocationCanvasStep
             palaceId={palaceId}
             words={words}
+            wordsLimit={wordsLimit}
             onChangeWords={setWords}
             onPrevious={() => setStep('info')}
             onNext={() => setStep('review')}

@@ -8,6 +8,7 @@ import { useNotificationObserver } from '@/hooks/useNotificationObserver';
 import { useSubscriptionEntitlementSync } from '@/hooks/useSubscriptionEntitlementSync';
 import { useSubscriptionGuard } from '@/hooks/useSubscriptionGuard';
 import { useSyncManager } from '@/hooks/useSyncManager';
+import { useGamificationBootstrap } from '@/hooks/useGamificationBootstrap';
 import { queryClient } from '@/utils/queryClient';
 import { toastConfig } from '@/utils/toastConfig';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -51,6 +52,7 @@ function AppLayout() {
   }
 
   const isAppReady = migrationsSuccess && isSeedFinished;
+  useGamificationBootstrap(isAppReady);
   useSyncManager(isAppReady);
   useSubscriptionGuard(isAppReady);
   useSubscriptionEntitlementSync(isAppReady);

@@ -53,14 +53,4 @@ export const locationApi = {
     if (!response.data.success) throw new Error(response.data.message);
   },
 
-  /**
-   * Fetch locations updated since last sync
-   */
-  async getUpdatedSince(lastSyncedAt: string): Promise<Location[]> {
-    const response = await api.get<GeneralResponse<Location[]>>('/locations/updated', {
-      params: { since: lastSyncedAt },
-    });
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
 };

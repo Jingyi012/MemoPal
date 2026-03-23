@@ -7,7 +7,6 @@ import { Book, ChevronRight, Mail } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import Animated, {
-  useAnimatedRef,
   useAnimatedStyle,
   useDerivedValue,
   withTiming,
@@ -34,7 +33,7 @@ const faqItems = [
   {
     question: 'How many palaces can I create?',
     answer:
-      'Free users get 1 beginner palace (10 locations). Premium users can create unlimited custom palaces with up to 100 locations each.',
+      'Creation limits are based on your current plan. Palace, lesson, location, and word limits are configured from the server and may differ between free and premium plans.',
   },
   {
     question: 'What happens if I miss a review?',
@@ -126,6 +125,7 @@ const HelpSheet = forwardRef<Ref, HelpSheetProps>(({ router }, ref) => {
     </CustomBottomSheetModal>
   );
 });
+HelpSheet.displayName = 'HelpSheet';
 
 // --- Sub-component: AccordionItem ---
 const AccordionItem = ({
@@ -137,8 +137,6 @@ const AccordionItem = ({
   isExpanded: boolean;
   onPress: () => void;
 }) => {
-  const listRef = useAnimatedRef<Animated.View>();
-
   // Create a transition value (0 to 1)
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 100 }));
 

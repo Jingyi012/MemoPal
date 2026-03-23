@@ -10,12 +10,13 @@ import { WordEditorSheet, WordEditorSheetRef } from './WordEditorSheet';
 interface Props {
   palaceId: string;
   words: LessonWordForm[];
+  wordsLimit: number;
   onChangeWords: React.Dispatch<React.SetStateAction<LessonWordForm[]>>;
   onPrevious: () => void;
   onNext: () => void;
 }
 
-export function LocationCanvasStep({ palaceId, words, onChangeWords, onPrevious, onNext }: Props) {
+export function LocationCanvasStep({ palaceId, words, wordsLimit, onChangeWords, onPrevious, onNext }: Props) {
   const { locations, isLoading } = useLocationsByPalace(palaceId);
   const sheetRef = useRef<WordEditorSheetRef>(null);
   const wordsByLocation = Object.fromEntries(words.map((w) => [w.locationId, w]));
@@ -40,12 +41,13 @@ export function LocationCanvasStep({ palaceId, words, onChangeWords, onPrevious,
         <View className="mb-2 flex-row items-center justify-between">
           <Text className="text-sm font-bold text-slate-800">Placement Progress</Text>
           <Text className="text-xs font-medium text-teal-600">
-            {words.length} / {locations.length}
+            {words.length} / {Math.min(locations.length, wordsLimit)}
           </Text>
         </View>
         <View className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
           <View className="h-full rounded-full bg-teal-500" style={{ width: `${progress}%` }} />
         </View>
+        <Text className="mt-2 text-xs text-slate-500">Word limit for this lesson: {wordsLimit}</Text>
       </View>
 
       <ScrollView className="flex-1 px-4 pt-4" showsVerticalScrollIndicator={false}>
@@ -76,7 +78,7 @@ export function LocationCanvasStep({ palaceId, words, onChangeWords, onPrevious,
         nextLabel={`Review`}
         onPrevious={onPrevious}
         onNext={onNext}
-        disableNext={words.length === 0 || locations.length === 0}
+        disableNext={words.length === 0 || locations.length === 0 || words.length > wordsLimit}
       />
 
       <WordEditorSheet ref={sheetRef} onConfirm={handleConfirm} />

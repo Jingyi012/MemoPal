@@ -59,14 +59,4 @@ export const palaceApi = {
     return response.data.success;
   },
 
-  /**
-   * Fetch palaces updated since last sync
-   */
-  async getUpdatedSince(lastSyncedAt: string): Promise<Palace[]> {
-    const response = await api.get<GeneralResponse<Palace[]>>('/palaces/updated', {
-      params: { since: lastSyncedAt },
-    });
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
 };

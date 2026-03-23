@@ -1,6 +1,6 @@
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useFeatureLimits } from '@/hooks/useFeatureLimits';
 import { usePalaceList } from '@/hooks/usePalace';
 import { useUserState } from '@/contexts/UserStateContext';
 import { Palace } from '@/types/palace';
@@ -12,15 +12,17 @@ import { PalaceCard } from './PalaceCard';
 
 export default function PalaceListScreen() {
   const router = useRouter();
-  const { user } = useCurrentUser();
+  const { limits } = useFeatureLimits();
   const { userState, updateState } = useUserState();
   const { data: palaces = [], isLoading, isRefetching, refetch } = usePalaceList();
 
-  const isPremium = !!user?.isPremium;
-  const view = isPremium ? userState.ui.palaceListTab : 'official';
+  const customPalaceLimit = limits.customPalaces;
+  const canUseCustomPalaces = customPalaceLimit > 0;
+  const view = canUseCustomPalaces ? userState.ui.palaceListTab : 'official';
   const officialPalaces = useMemo(() => palaces.filter((p) => !p.isCustom), [palaces]);
   const customPalaces = useMemo(() => palaces.filter((p) => p.isCustom), [palaces]);
   const shownPalaces = view === 'official' ? officialPalaces : customPalaces;
+  const canCreateMoreCustomPalaces = customPalaces.length < customPalaceLimit;
 
   const setView = (next: 'official' | 'custom') =>
     updateState({ ui: { ...userState.ui, palaceListTab: next } });
@@ -45,10 +47,14 @@ export default function PalaceListScreen() {
         }
         hideBackButton
         showNotification
-        actions={isPremium ? [{ icon: Plus, onPress: () => router.push('/palaces/create') }] : []}
+        actions={
+          canUseCustomPalaces && canCreateMoreCustomPalaces
+            ? [{ icon: Plus, onPress: () => router.push('/palaces/create') }]
+            : []
+        }
       />
       <View className="px-4 pb-2 pt-3">
-        {isPremium ? (
+        {canUseCustomPalaces ? (
           <View className="mb-2 flex-row rounded-2xl bg-slate-200 p-1">
             <Text
               onPress={() => setView('official')}

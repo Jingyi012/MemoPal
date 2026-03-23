@@ -42,15 +42,4 @@ export const lessonProgressApi = {
     return response.data.data;
   },
 
-  /**
-   * Fetch all progress updates since last sync timestamp
-   * Used for downloading backend changes
-   */
-  async getUpdatedSince(lastSyncedAt: string): Promise<LessonProgress[]> {
-    const response = await api.get<GeneralResponse<LessonProgress[]>>('/lessons/progress/updated', {
-      params: { since: lastSyncedAt },
-    });
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
 };

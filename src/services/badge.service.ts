@@ -3,11 +3,9 @@ import { db } from '@/db/client';
 import { EntityType } from '@/enums/entityType';
 import { createBadgeRepository } from '@/repositories/badge.repo';
 import { Badge } from '@/types/levelAndbadge';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { eq } from 'drizzle-orm';
 
 const repo = createBadgeRepository();
-const BADGES_LAST_SYNC_KEY = '@memopal_badges_last_sync';
 
 /**
  * Get all available badges with two-way sync
@@ -15,12 +13,10 @@ const BADGES_LAST_SYNC_KEY = '@memopal_badges_last_sync';
  */
 export async function getAllBadges(): Promise<Badge[]> {
   try {
-    const lastSync = (await AsyncStorage.getItem(BADGES_LAST_SYNC_KEY)) || new Date(0).toISOString();
-    const remoteBadges = await badgeApi.getUpdatedSince(lastSync);
+    const remoteBadges = await badgeApi.getAll();
 
     if (remoteBadges && remoteBadges.length > 0) {
       await repo.upsertMany(remoteBadges);
-      await AsyncStorage.setItem(BADGES_LAST_SYNC_KEY, new Date().toISOString());
     }
   } catch (error) {
     console.warn('Failed to sync badges from backend, using local data:', error);

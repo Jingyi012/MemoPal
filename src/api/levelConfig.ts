@@ -53,14 +53,4 @@ export const levelConfigApi = {
     if (!response.data.success) throw new Error(response.data.message);
   },
 
-  /**
-   * Fetch level configs updated since last sync
-   */
-  async getUpdatedSince(lastSyncedAt: string): Promise<LevelConfigs[]> {
-    const response = await api.get<GeneralResponse<LevelConfigs[]>>('/level-configs/updated', {
-      params: { since: lastSyncedAt },
-    });
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
 };

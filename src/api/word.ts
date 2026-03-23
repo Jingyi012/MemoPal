@@ -80,14 +80,4 @@ export const wordApi = {
     if (!response.data.success) throw new Error(response.data.message);
   },
 
-  /**
-   * Fetch words updated since last sync
-   */
-  async getUpdatedSince(lastSyncedAt: string): Promise<Word[]> {
-    const response = await api.get<GeneralResponse<Word[]>>('/words/updated', {
-      params: { since: lastSyncedAt },
-    });
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
 };

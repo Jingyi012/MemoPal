@@ -1,17 +1,16 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useFeatureLimits } from '@/hooks/useFeatureLimits';
 import { useLocationMutations } from '@/hooks/useLocation';
-import { usePalaceMutations } from '@/hooks/usePalace';
+import { usePalaceList, usePalaceMutations } from '@/hooks/usePalace';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { MinusCircle, PlusCircle } from 'lucide-react-native';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
 
 type DraftLocation = { name: string; description: string; imageUrl: string };
-const MAX_LOCATIONS = 100;
 const MIN_LOCATIONS = 1;
 
 const makeLocation = (index: number): DraftLocation => ({
@@ -35,7 +34,8 @@ async function pickImage() {
 
 export default function CreatePalaceScreen() {
   const router = useRouter();
-  const { user } = useCurrentUser();
+  const { data: palaces = [] } = usePalaceList();
+  const { limits, isLoading: isLoadingLimits } = useFeatureLimits();
   const { createPalace } = usePalaceMutations();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -45,9 +45,26 @@ export default function CreatePalaceScreen() {
 
   const palaceId = useMemo(() => name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'), [name]);
   const { createLocation } = useLocationMutations(palaceId || 'temp-palace');
+  const customPalacesCount = useMemo(
+    () => palaces.filter((palace) => palace.isCustom && !palace.isDeleted).length,
+    [palaces]
+  );
+  const maxPalaces = limits.customPalaces;
+  const maxLocations = Math.max(MIN_LOCATIONS, limits.customLocationsPerPalace);
+  const canCreateCustomPalace = customPalacesCount < maxPalaces;
+
+  useEffect(() => {
+    setLocations((prev) => {
+      const trimmed = prev.slice(0, maxLocations);
+      if (trimmed.length === 0) {
+        return [makeLocation(1)];
+      }
+      return trimmed;
+    });
+  }, [maxLocations]);
 
   const addLocation = () => {
-    if (locations.length >= MAX_LOCATIONS) return;
+    if (locations.length >= maxLocations) return;
     setLocations((prev) => [...prev, makeLocation(prev.length + 1)]);
   };
 
@@ -57,8 +74,22 @@ export default function CreatePalaceScreen() {
   };
 
   const onCreate = async () => {
-    if (!user?.isPremium) return;
+    if (!canCreateCustomPalace) {
+      Alert.alert(
+        'Limit reached',
+        `You have reached your custom palace limit (${customPalacesCount}/${maxPalaces}).`
+      );
+      return;
+    }
+
     if (!name.trim()) return Alert.alert('Missing name', 'Please enter a palace name.');
+    if (locations.length > maxLocations) {
+      Alert.alert(
+        'Too many locations',
+        `This plan allows up to ${maxLocations} locations per custom palace.`
+      );
+      return;
+    }
 
     setSaving(true);
     try {
@@ -70,7 +101,7 @@ export default function CreatePalaceScreen() {
         locationsCount: locations.length,
         isLocked: false,
         requiredXp: 0,
-        isPremium: true,
+        isPremium: false,
         isCustom: true,
       });
 
@@ -87,16 +118,36 @@ export default function CreatePalaceScreen() {
       }
 
       router.replace(`/palaces/${palace.id}`);
+    } catch (error: unknown) {
+      console.error('Failed to create custom palace:', error);
+      const message =
+        error instanceof Error ? error.message : 'Unable to create custom palace right now.';
+      Alert.alert('Create failed', message);
     } finally {
       setSaving(false);
     }
   };
 
-  if (!user?.isPremium) {
+  if (isLoadingLimits) {
     return (
       <View className="flex-1 bg-slate-50">
         <CommonHeader title="Create Palace" hideBackButton={false} backAction={() => router.back()} />
-        <View className="p-5"><Text className="text-amber-700">Premium is required to create custom palaces.</Text></View>
+        <View className="p-5">
+          <Text className="text-slate-700">Loading feature limits...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (!canCreateCustomPalace) {
+    return (
+      <View className="flex-1 bg-slate-50">
+        <CommonHeader title="Create Palace" hideBackButton={false} backAction={() => router.back()} />
+        <View className="p-5">
+          <Text className="text-amber-700">
+            You have reached your custom palace limit ({customPalacesCount}/{maxPalaces}).
+          </Text>
+        </View>
       </View>
     );
   }
@@ -119,10 +170,14 @@ export default function CreatePalaceScreen() {
 
         <View className="mt-4 rounded-2xl bg-white p-4">
           <View className="flex-row items-center justify-between">
-            <Text className="text-sm font-bold text-slate-800">Locations ({locations.length}/{MAX_LOCATIONS})</Text>
-            <AnimatedPressable onPress={addLocation} className="flex-row items-center rounded-lg bg-teal-50 px-3 py-2">
+            <Text className="text-sm font-bold text-slate-800">Locations ({locations.length}/{maxLocations})</Text>
+            <AnimatedPressable
+              onPress={addLocation}
+              className={`flex-row items-center rounded-lg px-3 py-2 ${locations.length >= maxLocations ? 'bg-slate-100' : 'bg-teal-50'}`}>
               <PlusCircle size={16} color="#0f766e" />
-              <Text className="ml-1 text-xs font-semibold text-teal-700">Add Location</Text>
+              <Text className="ml-1 text-xs font-semibold text-teal-700">
+                {locations.length >= maxLocations ? 'Limit Reached' : 'Add Location'}
+              </Text>
             </AnimatedPressable>
           </View>
         </View>

@@ -209,6 +209,14 @@ export function createLessonProgressRepository(): LessonProgressRepository {
             entityType: EntityType.LESSON_PROGRESS,
             entityId: lessonId,
             action: 'delete',
+            payload: {
+              id: record.id,
+              lessonId,
+              isDeleted: true,
+              deletedAt: now,
+              updatedAt: now,
+              reviewSchedules: [],
+            },
           });
         } else {
           await SyncBase.removePendingSyncs(tx as any, lessonId);

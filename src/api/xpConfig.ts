@@ -51,14 +51,4 @@ export const xpConfigApi = {
     return response.data.success;
   },
 
-  /**
-   * Get XP configs updated since last sync
-   */
-  async getUpdatedSince(lastSyncedAt: string): Promise<XpConfig[]> {
-    const response = await api.get<GeneralResponse<XpConfig[]>>('/xp-configs/updated', {
-      params: { since: lastSyncedAt },
-    });
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
 };

@@ -4,10 +4,17 @@ import { StepNavigationFooter } from '@/components/StepNavigationFooter';
 import { SourceType } from '@/enums/sourceType';
 import { useLessonProgress, useSaveLessonProgress } from '@/hooks/useLessonProgress';
 import { useLessonDetail } from '@/hooks/useLessonsManager';
+import { MISSION_KEYS } from '@/hooks/useMissions';
 import { usePalace } from '@/hooks/usePalace';
+import { BADGE_KEYS } from '@/hooks/useBadges';
+import { CURRENT_USER_KEYS } from '@/hooks/useCurrentUser';
+import { MILESTONE_KEYS } from '@/hooks/useMilestones';
+import { XP_KEYS } from '@/hooks/useXpEvents';
 import { useXpConfigBySource } from '@/hooks/useXpConfig';
+import { recordXpEventWithClientEventId } from '@/services/xpEvents.service';
+import { useQueryClient } from '@tanstack/react-query';
 import { Sparkles } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { LearningCompletion } from './LearningCompletion';
@@ -17,33 +24,30 @@ interface LearningFlowProps {
 }
 
 export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
+  const queryClient = useQueryClient();
   const { isLoading: detailLoading, data: lesson } = useLessonDetail(lessonId);
   const { isLoading: progressLoading, progress: lessonProgress } = useLessonProgress(lessonId);
   const { data: palaceDetails } = usePalace(lesson?.palaceId!);
   const locations = palaceDetails?.locations;
 
-  if (detailLoading || progressLoading) {
-    return <LoadingView />;
-  }
-
-  if (!lesson || !locations) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-slate-600">Lesson not found</Text>
-      </View>
-    );
-  }
-
   const [currentStep, setCurrentStep] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [completionXp, setCompletionXp] = useState(0);
+  const [isFinalizingCompletion, setIsFinalizingCompletion] = useState(false);
+  const [hasFinalizedCompletion, setHasFinalizedCompletion] = useState(false);
 
-  const words = useMemo(() => lesson.words, [lesson.words]);
+  const words = useMemo(() => lesson?.words ?? [], [lesson?.words]);
+  const safeWordCount = Math.max(words.length, 1);
 
-  const progress = ((currentStep + 1) / words.length) * 100;
-  const currentWord = words[currentStep];
+  const progress = ((currentStep + 1) / safeWordCount) * 100;
+  const currentWord = words[currentStep] ?? null;
   const isLastStep = currentStep === words.length - 1;
 
   const handleNext = () => {
+    if (words.length === 0) {
+      return;
+    }
+
     if (currentStep < words.length - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
@@ -60,13 +64,87 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
   /* ================= COMPLETION ================= */
   const { data: xpConfig } = useXpConfigBySource(SourceType.LessonInitialCompletion);
   const { saveProgressAsync } = useSaveLessonProgress();
+
+  useEffect(() => {
+    if (!isCompleted || hasFinalizedCompletion || !lesson) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const finalizeCompletion = async () => {
+      setIsFinalizingCompletion(true);
+
+      try {
+        let earnedXp = 0;
+
+        if (lessonProgress?.masteryLevel === 'new') {
+          earnedXp = Math.max(0, (xpConfig?.baseXp ?? 25) + (xpConfig?.variableXp ?? 0));
+
+          const nextProgress = {
+            ...lessonProgress,
+            masteryLevel: 'learning' as const,
+            firstCompletedDate: new Date().toISOString(),
+          };
+          await saveProgressAsync(nextProgress);
+
+          await recordXpEventWithClientEventId(
+            SourceType.LessonInitialCompletion,
+            earnedXp,
+            `lesson_initial_completion:${lessonId}`,
+            lessonId
+          );
+
+          queryClient.invalidateQueries({ queryKey: XP_KEYS.all });
+          queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
+          queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.all });
+          queryClient.invalidateQueries({ queryKey: BADGE_KEYS.all });
+          queryClient.invalidateQueries({ queryKey: MISSION_KEYS.all });
+        }
+
+        if (!isMounted) return;
+        setCompletionXp(earnedXp);
+      } catch (error) {
+        console.error('Failed to finalize lesson completion rewards:', error);
+      } finally {
+        if (!isMounted) return;
+        setHasFinalizedCompletion(true);
+        setIsFinalizingCompletion(false);
+      }
+    };
+
+    void finalizeCompletion();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    hasFinalizedCompletion,
+    isCompleted,
+    lesson,
+    lessonId,
+    lessonProgress,
+    queryClient,
+    saveProgressAsync,
+    xpConfig?.baseXp,
+    xpConfig?.variableXp,
+  ]);
+
+  if (detailLoading || progressLoading) {
+    return <LoadingView />;
+  }
+
+  if (!lesson || !locations || words.length === 0 || !currentWord) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-slate-600">Lesson not found</Text>
+      </View>
+    );
+  }
+
   if (isCompleted) {
-    var earnedXp = 0;
-    if (lessonProgress?.masteryLevel === 'new') {
-      //earnedXp = xpConfig?.baseXp ?? DEFAULT_XP;
-      lessonProgress.masteryLevel = 'learning';
-      lessonProgress.firstCompletedDate = new Date().toISOString();
-      saveProgressAsync(lessonProgress);
+    if (isFinalizingCompletion && !hasFinalizedCompletion) {
+      return <LoadingView />;
     }
 
     return (
@@ -74,7 +152,7 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
         stepsCount={words.length}
         lessonId={lessonId}
         palaceId={lesson.palaceId}
-        earnedXp={earnedXp}
+        earnedXp={completionXp}
       />
     );
   }

@@ -1,5 +1,5 @@
 import { SourceType } from '@/enums/sourceType';
-import { createXpEventsRepository } from '@/repositories/xpEvents.repo';
+import { createXpEventsRepository, XpEventCreateResult } from '@/repositories/xpEvents.repo';
 import * as Crypto from 'expo-crypto';
 
 const repo = createXpEventsRepository();
@@ -8,9 +8,18 @@ export async function recordXpEvent(
   sourceType: SourceType,
   xpAmount: number,
   sourceId?: string
-): Promise<string> {
+): Promise<XpEventCreateResult> {
   const clientEventId = Crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 
+  return await recordXpEventWithClientEventId(sourceType, xpAmount, clientEventId, sourceId);
+}
+
+export async function recordXpEventWithClientEventId(
+  sourceType: SourceType,
+  xpAmount: number,
+  clientEventId: string,
+  sourceId?: string
+): Promise<XpEventCreateResult> {
   return await repo.create({
     sourceType: sourceType as string,
     sourceId,

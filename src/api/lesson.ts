@@ -59,14 +59,4 @@ export const lessonApi = {
     if (!response.data.success) throw new Error(response.data.message);
   },
 
-  /**
-   * Fetch lessons updated since last sync
-   */
-  async getUpdatedSince(lastSyncedAt: string): Promise<Lesson[]> {
-    const response = await api.get<GeneralResponse<Lesson[]>>('/lessons/updated', {
-      params: { since: lastSyncedAt },
-    });
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
 };

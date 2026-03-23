@@ -33,14 +33,4 @@ export const badgeApi = {
     return response.data.success;
   },
 
-  /**
-   * Get badges updated since last sync
-   */
-  async getUpdatedSince(lastSyncedAt: string): Promise<Badge[]> {
-    const response = await api.get<GeneralResponse<Badge[]>>('/badges/updated', {
-      params: { since: lastSyncedAt },
-    });
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
 };

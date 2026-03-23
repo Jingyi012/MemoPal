@@ -1,11 +1,17 @@
 import { db as defaultDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
-import * as lessonService from '@/services/lesson.service';
-import * as lessonProgressService from '@/services/lessonProgress.service';
-import * as palaceService from '@/services/palace.service';
+import { badgeApi } from '@/api/badge';
+import { lessonApi } from '@/api/lesson';
+import { lessonProgressApi } from '@/api/lessonProgress';
+import { milestoneApi } from '@/api/milestone';
+import { locationApi } from '@/api/location';
+import { notificationApi } from '@/api/notification';
+import { palaceApi } from '@/api/palace';
+import { reviewApi } from '@/api/review';
+import { xpEventApi } from '@/api/xpEvent';
+import { wordApi } from '@/api/word';
 import { SyncBase } from '@/services/sync/sync.base';
-import * as wordService from '@/services/word.service';
 import NetInfo from '@react-native-community/netinfo';
 import { eq } from 'drizzle-orm';
 
@@ -15,9 +21,61 @@ const tableMap: Record<string, any> = {
   [EntityType.LESSON]: schema.lessons,
   [EntityType.WORD]: schema.words,
   [EntityType.LESSON_PROGRESS]: schema.lessonProgress,
+  [EntityType.LOCATION]: schema.locations,
+  [EntityType.NOTIFICATION]: schema.notifications,
+  [EntityType.XP_EVENT]: schema.xpEvents,
+  [EntityType.BADGE]: schema.badges,
+  [EntityType.MILESTONE]: schema.milestones,
+  [EntityType.REVIEW_SCHEDULE]: schema.reviewSchedules,
 };
 
 let isProcessing = false;
+
+function parseSyncPayload(raw: string | null | undefined) {
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.warn('Invalid sync payload', error);
+    return null;
+  }
+}
+
+async function hydrateXpEventPayload(db: typeof defaultDb, item: any, payload: any) {
+  const hasRequiredFields =
+    payload &&
+    typeof payload.id === 'string' &&
+    typeof payload.sourceType === 'string' &&
+    typeof payload.xpAmount === 'number' &&
+    typeof payload.clientEventId === 'string' &&
+    payload.clientEventId.length > 0;
+
+  if (hasRequiredFields) {
+    return payload;
+  }
+
+  const localEvent = await db.query.xpEvents.findFirst({
+    where: (event, { eq }) => eq(event.id, item.entityId),
+  });
+
+  if (!localEvent) {
+    return null;
+  }
+
+  return {
+    id: localEvent.id,
+    sourceType: localEvent.sourceType,
+    sourceId: localEvent.sourceId ?? undefined,
+    xpAmount: localEvent.xpAmount,
+    clientEventId: localEvent.clientEventId,
+    createdAt: localEvent.createdAt,
+    updatedAt: localEvent.updatedAt,
+    lastSyncedAt: localEvent.lastSyncedAt,
+    isDeleted: localEvent.isDeleted,
+    deletedAt: localEvent.deletedAt,
+  };
+}
 
 export async function processQueue(db = defaultDb) {
   if (isProcessing) return;
@@ -45,22 +103,28 @@ export async function processQueue(db = defaultDb) {
         const deleteItems = wordItems.filter((w) => w.action === 'delete');
 
         if (createItems.length > 0) {
-          const payloads = createItems.map((item) =>
-            item.payload ? JSON.parse(item.payload) : null
-          );
-          await wordService.createWordsBatch(payloads);
+          const payloads = createItems
+            .map((item) => parseSyncPayload(item.payload))
+            .filter(Boolean);
+
+          if (payloads.length > 0) {
+            await wordApi.createBatch(payloads as any[]);
+          }
         }
 
         if (updateItems.length > 0) {
-          const payloads = updateItems.map((item) =>
-            item.payload ? JSON.parse(item.payload) : null
-          );
-          await wordService.updateWordsBatch(payloads);
+          const payloads = updateItems
+            .map((item) => parseSyncPayload(item.payload))
+            .filter(Boolean);
+
+          if (payloads.length > 0) {
+            await wordApi.updateBatch(payloads as any[]);
+          }
         }
 
         if (deleteItems.length > 0) {
           const ids = deleteItems.map((item) => item.entityId);
-          await wordService.deleteWordsBatch(ids);
+          await wordApi.deleteBatch(ids);
         }
         // Post-process Words: apply the "dirty" check for each item in the batch
         for (const item of wordItems) {
@@ -84,60 +148,179 @@ export async function processQueue(db = defaultDb) {
 
     for (const item of otherItems) {
       try {
-        const payload = item.payload ? JSON.parse(item.payload) : null;
+        let payload = parseSyncPayload(item.payload);
         let isSuccess = false;
+        let syncEntityId = item.entityId;
 
         // 2. Process API Calls
         switch (item.entityType) {
           case EntityType.PALACE:
-            if (item.action === 'create') await palaceService.createPalace(payload);
-            else if (item.action === 'update')
-              await palaceService.updatePalace(item.entityId, payload);
-            else if (item.action === 'delete') await palaceService.deletePalace(item.entityId);
+            if (item.action !== 'delete' && !payload) {
+              console.warn('Missing payload for PALACE queue item', item.id);
+              continue;
+            }
+            if (item.action === 'create') await palaceApi.create(payload);
+            else if (item.action === 'update') await palaceApi.update(payload);
+            else if (item.action === 'delete') await palaceApi.delete(item.entityId);
+            else {
+              console.warn('Unsupported action for PALACE', item.action);
+              continue;
+            }
             isSuccess = true;
             break;
 
           case EntityType.LESSON:
-            if (item.action === 'create') await lessonService.createLesson(payload);
-            else if (item.action === 'update')
-              await lessonService.updateLesson(item.entityId, payload);
-            else if (item.action === 'delete') await lessonService.deleteLesson(item.entityId);
+            if (item.action !== 'delete' && !payload) {
+              console.warn('Missing payload for LESSON queue item', item.id);
+              continue;
+            }
+            if (item.action === 'create') await lessonApi.create(payload);
+            else if (item.action === 'update') await lessonApi.update(payload);
+            else if (item.action === 'delete') await lessonApi.delete(item.entityId);
+            else {
+              console.warn('Unsupported action for LESSON', item.action);
+              continue;
+            }
             isSuccess = true;
             break;
 
-          // case EntityType.WORD:
-          //   if (item.action === 'create') await wordService.createWord(payload);
-          //   else if (item.action === 'update') await wordService.updateWord(item.entityId, payload);
-          //   else if (item.action === 'delete') await wordService.deleteWord(item.entityId);
-          //   isSuccess = true;
-          //   break;
+          case EntityType.LOCATION:
+            if (item.action !== 'delete' && !payload) {
+              console.warn('Missing payload for LOCATION queue item', item.id);
+              continue;
+            }
+            if (item.action === 'create') await locationApi.create(payload);
+            else if (item.action === 'update') await locationApi.update(payload);
+            else if (item.action === 'delete') await locationApi.delete(item.entityId);
+            else {
+              console.warn('Unsupported action for LOCATION', item.action);
+              continue;
+            }
+            isSuccess = true;
+            break;
+
+          case EntityType.NOTIFICATION:
+            if (item.action !== 'delete' && !payload) {
+              console.warn('Missing payload for NOTIFICATION queue item', item.id);
+              continue;
+            }
+            if (item.action === 'create') await notificationApi.create(payload);
+            else if (item.action === 'update') await notificationApi.update(payload);
+            else if (item.action === 'delete') await notificationApi.delete(item.entityId);
+            else {
+              console.warn('Unsupported action for NOTIFICATION', item.action);
+              continue;
+            }
+            isSuccess = true;
+            break;
 
           case EntityType.LESSON_PROGRESS:
-            await lessonProgressService.saveProgress(payload);
+            if (!payload?.lessonId) {
+              const localProgress = await db.query.lessonProgress.findFirst({
+                where: (progress, { or, eq }) =>
+                  or(eq(progress.lessonId, item.entityId), eq(progress.id, item.entityId)),
+                with: {
+                  reviewSchedules: {
+                    orderBy: (entries, { asc }) => [asc(entries.reviewRound)],
+                  },
+                },
+              });
+
+              if (!localProgress) {
+                console.warn('Missing lessonId for LESSON_PROGRESS queue item', item.id);
+                continue;
+              }
+
+              payload = localProgress;
+            }
+
+            await lessonProgressApi.updateProgress(payload);
+            syncEntityId = payload.lessonId;
+            isSuccess = true;
+            break;
+
+          case EntityType.XP_EVENT:
+            if (item.action !== 'create') {
+              console.warn('Unsupported action for XP_EVENT', item.action);
+              continue;
+            }
+            payload = await hydrateXpEventPayload(db, item, payload);
+            if (!payload?.clientEventId) {
+              console.warn('Missing payload for XP_EVENT queue item', item.id);
+              continue;
+            }
+            await xpEventApi.create(payload);
+            isSuccess = true;
+            break;
+
+          case EntityType.BADGE:
+            if (item.action !== 'create' && item.action !== 'update') {
+              console.warn('Unsupported action for BADGE', item.action);
+              continue;
+            }
+            await badgeApi.awardBadge(item.entityId);
+            isSuccess = true;
+            break;
+
+          case EntityType.MILESTONE:
+            if (item.action !== 'create' && item.action !== 'update') {
+              console.warn('Unsupported action for MILESTONE', item.action);
+              continue;
+            }
+            await milestoneApi.awardMilestone(item.entityId);
+            isSuccess = true;
+            break;
+
+          case EntityType.REVIEW_SCHEDULE:
+            if (item.action === 'create' || item.action === 'delete') {
+              console.warn('No backend create/delete endpoint for REVIEW_SCHEDULE', item.action);
+              await db.delete(schema.syncQueue).where(eq(schema.syncQueue.id, item.id));
+              continue;
+            }
+
+            if (!payload) {
+              console.warn('Missing payload for REVIEW_SCHEDULE queue item', item.id);
+              continue;
+            }
+
+            if (payload.completed === true) {
+              await reviewApi.complete(item.entityId, payload.correctCount, payload.totalCount);
+            } else {
+              await reviewApi.update({ ...payload, id: item.entityId });
+            }
+
             isSuccess = true;
             break;
 
           default:
             console.warn('Unknown entityType', item.entityType);
-            // Delete corrupt item from queue
-            await db.delete(schema.syncQueue).where(eq(schema.syncQueue.id, item.id));
             continue;
         }
 
         // 3. Post-Process Local DB (Transaction)
         if (isSuccess) {
           await db.transaction(async (tx) => {
+            const dirtyCheckEntityId =
+              item.entityType === EntityType.LESSON_PROGRESS ? syncEntityId : item.entityId;
+
             if (item.action !== 'delete') {
               // Check if the user made NEW changes while we were talking to the server
-              const stillDirty = await SyncBase.isDirty(tx, item.entityId);
+              const stillDirty = await SyncBase.isDirty(tx, dirtyCheckEntityId);
 
               if (!stillDirty) {
                 const targetTable = tableMap[item.entityType];
                 if (targetTable) {
-                  await tx
-                    .update(targetTable)
-                    .set({ lastSyncedAt: new Date().toISOString() })
-                    .where(eq(targetTable.id, item.entityId));
+                  if (item.entityType === EntityType.LESSON_PROGRESS) {
+                    await tx
+                      .update(targetTable)
+                      .set({ lastSyncedAt: new Date().toISOString() })
+                      .where(eq(schema.lessonProgress.lessonId, syncEntityId));
+                  } else {
+                    await tx
+                      .update(targetTable)
+                      .set({ lastSyncedAt: new Date().toISOString() })
+                      .where(eq(targetTable.id, syncEntityId));
+                  }
                 }
               }
             }

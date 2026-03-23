@@ -14,34 +14,99 @@ import * as Crypto from 'expo-crypto';
 
 function isBadgeEarnedByKey(
   key: string,
-  metrics: { completedLessons: number; learnedWords: number; level: number; totalReviews: number; totalXp: number }
-) {
-  if (key === 'first_lesson') return metrics.completedLessons >= 1;
-  if (key === 'palace_complete') return metrics.completedLessons >= 3;
-  if (key === 'review_25') return metrics.totalReviews >= 25;
-  if (key === 'level_5') return metrics.level >= 5;
-
-  const dynamicMatch = key.match(/^(level|reviews|lessons_completed|words_learned|total_xp)_(\d+)$/);
-  if (!dynamicMatch) return false;
-
-  const [, metric, rawTarget] = dynamicMatch;
-  const target = Number(rawTarget);
-  if (Number.isNaN(target)) return false;
-
-  switch (metric) {
-    case 'level':
-      return metrics.level >= target;
-    case 'reviews':
-      return metrics.totalReviews >= target;
-    case 'lessons_completed':
-      return metrics.completedLessons >= target;
-    case 'words_learned':
-      return metrics.learnedWords >= target;
-    case 'total_xp':
-      return metrics.totalXp >= target;
-    default:
-      return false;
+  metrics: {
+    completedLessons: number;
+    learnedWords: number;
+    level: number;
+    totalReviews: number;
+    totalXp: number;
+    currentStreak: number;
+    missionCompletions: number;
   }
+) {
+  const normalized = key.trim().toLowerCase();
+
+  switch (normalized) {
+    case 'first_lesson':
+    case 'palace_pioneer':
+      return metrics.completedLessons >= 1;
+    case 'palace_complete':
+      return metrics.completedLessons >= 3;
+    case 'lesson_sprinter':
+      return metrics.completedLessons >= 5;
+    case 'memory_builder':
+      return metrics.completedLessons >= 10 && metrics.learnedWords >= 100;
+    case 'review_25':
+      return metrics.totalReviews >= 25;
+    case 'review_rhythm':
+      return metrics.totalReviews >= 10;
+    case 'review_streak_7':
+      return metrics.currentStreak >= 7;
+    case 'review_streak_30':
+      return metrics.currentStreak >= 30;
+    case 'level_5':
+    case 'level_climber_5':
+      return metrics.level >= 5;
+    case 'level_master_10':
+      return metrics.level >= 10;
+    case 'word_collector_300':
+      return metrics.learnedWords >= 300;
+    case 'mission_specialist':
+      return metrics.missionCompletions >= 5;
+    default:
+      break;
+  }
+
+  const metricMatch = normalized.match(
+    /^(level|reviews|lessons_completed|words_learned|total_xp|streak_days|missions_completed)_(\d+)$/
+  );
+
+  if (metricMatch) {
+    const [, metric, rawTarget] = metricMatch;
+    const target = Number(rawTarget);
+    if (Number.isNaN(target)) return false;
+
+    switch (metric) {
+      case 'level':
+        return metrics.level >= target;
+      case 'reviews':
+        return metrics.totalReviews >= target;
+      case 'lessons_completed':
+        return metrics.completedLessons >= target;
+      case 'words_learned':
+        return metrics.learnedWords >= target;
+      case 'total_xp':
+        return metrics.totalXp >= target;
+      case 'streak_days':
+        return metrics.currentStreak >= target;
+      case 'missions_completed':
+        return metrics.missionCompletions >= target;
+      default:
+        return false;
+    }
+  }
+
+  const reviewStreakMatch = normalized.match(/^review_streak_(\d+)$/);
+  if (reviewStreakMatch) {
+    return metrics.currentStreak >= Number(reviewStreakMatch[1]);
+  }
+
+  const levelClimberMatch = normalized.match(/^level_climber_(\d+)$/);
+  if (levelClimberMatch) {
+    return metrics.level >= Number(levelClimberMatch[1]);
+  }
+
+  const levelMasterMatch = normalized.match(/^level_master_(\d+)$/);
+  if (levelMasterMatch) {
+    return metrics.level >= Number(levelMasterMatch[1]);
+  }
+
+  const wordCollectorMatch = normalized.match(/^word_collector_(\d+)$/);
+  if (wordCollectorMatch) {
+    return metrics.learnedWords >= Number(wordCollectorMatch[1]);
+  }
+
+  return false;
 }
 
 export interface ReviewRepository {
@@ -107,13 +172,14 @@ export function createReviewRepository(): ReviewRepository {
         const reviewId = Crypto.randomUUID();
         const now = new Date().toISOString();
 
-        const lesson = await tx
+        const lessonRows = await tx
           .select()
           .from(schema.lessons)
           .where(eq(schema.lessons.id, progress.lessonId))
           .limit(1);
 
-        const lessonId = lesson?.id || '';
+        const lesson = lessonRows[0];
+        const lessonId = lesson?.id || progress.lessonId || '';
         const lessonName = lesson?.title || 'Lesson';
 
         await tx
@@ -137,17 +203,6 @@ export function createReviewRepository(): ReviewRepository {
           dueDate: nextDueDate.toISOString(),
         });
 
-        await SyncBase.addToQueue(tx, {
-          entityType: EntityType.REVIEW_SCHEDULE,
-          entityId: reviewId,
-          action: 'create',
-          payload: {
-            lessonProgressId: progress.id,
-            reviewRound: nextRound,
-            dueDate: nextDueDate.toISOString(),
-            completed: false,
-          },
-        });
       }
     },
 
@@ -288,9 +343,13 @@ export function createReviewRepository(): ReviewRepository {
             entityId: xpEventId,
             action: 'create',
             payload: {
-              xpAmount: xpEarned,
+              id: xpEventId,
               sourceType: SourceType.ReviewComplete,
               sourceId: lessonId,
+              xpAmount: xpEarned,
+              clientEventId: xpEventId,
+              createdAt: nowIso,
+              updatedAt: nowIso,
             },
           });
         }
@@ -328,6 +387,16 @@ export function createReviewRepository(): ReviewRepository {
         });
 
         const totalReviews = currentProgress.totalReviews + (isPassed ? 1 : 0);
+        const missionCompletionAggregate = await tx
+          .select({ total: sql<number>`count(*)` })
+          .from(schema.xpEvents)
+          .where(
+            and(
+              eq(schema.xpEvents.isDeleted, false),
+              eq(schema.xpEvents.sourceType, SourceType.MissionComplete)
+            )
+          );
+        const missionCompletions = Math.max(0, missionCompletionAggregate[0]?.total ?? 0);
 
         for (const badge of badgesToAward) {
           const isEarned = isBadgeEarnedByKey(badge.key, {
@@ -336,6 +405,8 @@ export function createReviewRepository(): ReviewRepository {
             level,
             totalReviews,
             totalXp: latestUser?.totalXp ?? 0,
+            currentStreak: latestStats?.currentStreak ?? 0,
+            missionCompletions,
           });
 
           if (isEarned) {
@@ -347,12 +418,31 @@ export function createReviewRepository(): ReviewRepository {
           }
         }
 
+        const refreshedProgress = await tx.query.lessonProgress.findFirst({
+          where: eq(schema.lessonProgress.id, currentProgress.id),
+          with: {
+            reviewSchedules: {
+              orderBy: asc(schema.reviewSchedules.reviewRound),
+            },
+          },
+        });
+
         // 6. Queue lesson progress for sync
         await SyncBase.addToQueue(tx as any, {
           entityType: EntityType.LESSON_PROGRESS,
-          entityId: currentProgress.id,
+          entityId: currentProgress.lessonId,
           action: 'update',
-          payload: { id: currentProgress.id, updatedAt: nowIso },
+          payload: refreshedProgress
+            ? { ...refreshedProgress }
+            : {
+                ...currentProgress,
+                lessonId: currentProgress.lessonId,
+                updatedAt: nowIso,
+                totalReviews: currentProgress.totalReviews + (isPassed ? 1 : 0),
+                masteryLevel: isPassed && currentRound >= MAX_REVIEW_ROUND ? 'mastered' : 'reviewing',
+                lastReviewDate: nowIso,
+                xpEarned: currentProgress.xpEarned + xpEarned,
+              },
         });
 
         return { levelUpTo, achievedMilestones, earnedBadges };

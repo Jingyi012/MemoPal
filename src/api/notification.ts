@@ -77,14 +77,4 @@ export const notificationApi = {
     return response.data.data;
   },
 
-  /**
-   * Fetch notifications updated since last sync
-   */
-  async getUpdatedSince(lastSyncedAt: string): Promise<Notification[]> {
-    const response = await api.get<GeneralResponse<Notification[]>>('/notifications/updated', {
-      params: { since: lastSyncedAt },
-    });
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
 };

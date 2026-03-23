@@ -10,6 +10,14 @@ export interface UserStats {
   updatedAt?: string;
 }
 
+export interface FeatureLimits {
+  isPremium: boolean;
+  customPalaces: number;
+  customLessonsPerPalace: number;
+  customLocationsPerPalace: number;
+  customWordsPerLesson: number;
+}
+
 /**
  * API calls for user stats - organized by entity
  */
@@ -42,13 +50,12 @@ export const userStatsApi = {
   },
 
   /**
-   * Get stats updated since last sync
+   * Get current user's effective feature limits (free/premium resolved by backend)
    */
-  async getUpdatedSince(lastSyncedAt: string): Promise<UserStats[]> {
-    const response = await api.get<GeneralResponse<UserStats[]>>('/stats/updated', {
-      params: { since: lastSyncedAt },
-    });
+  async getFeatureLimits(): Promise<FeatureLimits> {
+    const response = await api.get<GeneralResponse<FeatureLimits>>(`/users/feature-limits`);
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },
+
 };
