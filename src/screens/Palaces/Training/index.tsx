@@ -24,7 +24,6 @@ export const PalaceTrainingScreen: React.FC<PalaceTrainingProps> = ({
   const router = useRouter();
 
   const { data, isLoading } = usePalace(palaceId);
-
   const displayName = customPalace?.name || palaceName || 'Memory Palace';
 
   const palaceLocations = useMemo(() => {

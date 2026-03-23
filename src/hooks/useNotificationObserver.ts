@@ -4,27 +4,33 @@ import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
-export const useNotificationObserver = () => {
+export const useNotificationObserver = (enabled: boolean = true) => {
   const router = useRouter();
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
+
     const initializeNotifications = async () => {
-      // 1. Ensure permissions
-      const granted = await PushNotificationService.requestPermissions();
+      try {
+        // 1. Ensure permissions
+        const granted = await PushNotificationService.requestPermissions();
 
-      if (granted) {
-        // 2. Sync hardware (Ensures future Push Notifications are set in the OS)
-        await InAppNotificationSync.syncAllUpcoming();
+        if (granted) {
+          // 2. Sync hardware (Ensures future Push Notifications are set in the OS)
+          await InAppNotificationSync.syncAllUpcoming();
 
-        // 3. Refresh In-App Inbox (Converts reviews that became due while
-        // the app was closed into visible rows in your Notifications table)
-        await InAppNotificationSync.refreshInAppInbox();
+          // 3. Refresh In-App Inbox (Converts reviews that became due while
+          // the app was closed into visible rows in your Notifications table)
+          await InAppNotificationSync.refreshInAppInbox();
+        }
+      } catch (error) {
+        console.warn('Notification observer initialization skipped:', error);
       }
     };
 
-    initializeNotifications();
+    void initializeNotifications();
 
     // Foreground listener: Fires when a notification arrives while app is OPEN
     notificationListener.current = Notifications.addNotificationReceivedListener(
@@ -55,5 +61,5 @@ export const useNotificationObserver = () => {
       if (notificationListener.current) notificationListener.current.remove();
       if (responseListener.current) responseListener.current.remove();
     };
-  }, []);
+  }, [enabled, router]);
 };

@@ -3,7 +3,8 @@ import { CommonHeader } from '@/components/CommonHeader';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export default function Support() {
   const router = useRouter();
@@ -12,7 +13,11 @@ export default function Support() {
 
   const handleSend = async () => {
     if (!message.trim()) {
-      Alert.alert('Message required', 'Please describe your issue before sending.');
+      Toast.show({
+        type: 'error',
+        text1: 'Message required',
+        text2: 'Please describe your issue before sending.',
+      });
       return;
     }
 
@@ -20,7 +25,11 @@ export default function Support() {
     const canOpen = await Linking.canOpenURL(mailto);
 
     if (!canOpen) {
-      Alert.alert('No email app found', 'Please email support@memopal.com manually.');
+      Toast.show({
+        type: 'error',
+        text1: 'No email app found',
+        text2: 'Please email support@memopal.com manually.',
+      });
       return;
     }
 

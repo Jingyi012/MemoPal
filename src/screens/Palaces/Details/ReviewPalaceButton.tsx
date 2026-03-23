@@ -1,5 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { CheckCircle2, MapPin } from 'lucide-react-native';
+import { ChevronRight, Compass, MapPin } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -13,24 +13,28 @@ export const ReviewPalaceButton: React.FC<Props> = ({
   locationCount = 0,
 }) => {
   return (
-    <View className="mt-3">
-      <AnimatedPressable onPress={onStartPalaceTraining} className="w-full rounded-xl bg-white p-3">
-        <View className={`flex-row items-center gap-3`}>
-          {/* Icon circle */}
-          <View className="h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle2 size={20} color="#16a34a" />
+    <View className="mt-4">
+      <AnimatedPressable
+        onPress={onStartPalaceTraining}
+        className="w-full overflow-hidden rounded-2xl border border-teal-100 bg-white p-4 shadow-sm">
+        <View className="flex-row items-center gap-3">
+          <View className="h-10 w-10 items-center justify-center rounded-full bg-teal-100">
+            <Compass size={20} color="#0f766e" />
           </View>
 
-          {/* Text */}
           <View className="flex-1">
-            <Text className="text-base text-text">Review Palace Locations</Text>
-            <Text className="text-sm text-text-muted">
-              Refresh your memory of {locationCount} locations
+            <Text className="text-base font-semibold text-slate-800">Review Palace Route</Text>
+            <Text className="text-sm text-slate-600">
+              Walk through {locationCount} locations before starting lessons.
             </Text>
           </View>
 
-          {/* Trailing icon */}
-          <MapPin size={16} color="#9ca3af" />
+          <ChevronRight size={18} color="#64748b" />
+        </View>
+
+        <View className="mt-3 flex-row items-center gap-2">
+          <MapPin size={14} color="#0f766e" />
+          <Text className="text-xs font-medium text-teal-700">{locationCount} stops to review</Text>
         </View>
       </AnimatedPressable>
     </View>

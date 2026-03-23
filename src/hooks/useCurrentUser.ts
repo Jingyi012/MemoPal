@@ -1,5 +1,7 @@
+import { AUTH_STORAGE_KEY } from '@/constants/auth';
 import { db } from '@/db/client';
 import type { User } from '@/types/users';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 
 export const CURRENT_USER_KEYS = {
@@ -11,7 +13,22 @@ export function useCurrentUser() {
     queryKey: CURRENT_USER_KEYS.all,
     queryFn: async (): Promise<User | null> => {
       const user = await db.query.users.findFirst();
-      if (!user) return null;
+      if (!user) {
+        const raw = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+        if (!raw) return null;
+
+        try {
+          const fromStorage = JSON.parse(raw) as User;
+          return {
+            ...fromStorage,
+            email: fromStorage.email ?? 'player@example.com',
+            level: Math.max(1, fromStorage.level ?? 1),
+            totalXp: Math.max(0, fromStorage.totalXp ?? 0),
+          };
+        } catch {
+          return null;
+        }
+      }
 
       const stats = await db.query.userStats.findFirst({
         where: (fields, { eq }) => eq(fields.userId, user.id),

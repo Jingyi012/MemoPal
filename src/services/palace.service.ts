@@ -1,8 +1,11 @@
 import { palaceApi } from '@/api/palace';
+import { locationApi } from '@/api/location';
+import { createLocationRepository } from '@/repositories/location.repo';
 import { createPalaceRepository } from '@/repositories/palace.repo';
-import { Palace } from '@/types/palace';
+import { Palace, PalaceDetails } from '@/types/palace';
 
 const repo = createPalaceRepository();
+const locationRepo = createLocationRepository();
 
 /**
  * Get all palaces with sync fallback
@@ -12,25 +15,32 @@ export async function getPalaces(): Promise<Palace[]> {
   try {
     // Attempt to fetch and sync from backend
     const remote = await palaceApi.getAll();
-    if (remote && remote.length > 0) {
-      await repo.upsertMany(remote);
-    }
+
+    await repo.upsertMany(remote ?? [], { pruneMissingOfficial: true });
   } catch (error) {
     console.warn('Failed to sync palaces from backend, using local data:', error);
   }
-
   return await repo.getAll();
 }
 
 /**
  * Get palace by ID with sync
  */
-export async function getPalaceById(id: string) {
+export async function getPalaceById(id: string): Promise<PalaceDetails | undefined> {
   try {
-    // Attempt backend sync
-    const remote = await palaceApi.getById(id);
-    if (remote) {
-      await repo.upsertMany([remote]);
+    // Sync palace + locations so review flow always has location data
+    const [remotePalace, remoteLocations] = await Promise.all([
+      palaceApi.getById(id),
+      locationApi.getByPalace(id),
+    ]);
+
+    if (remotePalace) {
+      // Single-item sync must not prune other palaces.
+      await repo.upsertMany([remotePalace], { pruneMissingOfficial: false });
+    }
+
+    if (remoteLocations?.length) {
+      await locationRepo.upsertMany(remoteLocations);
     }
   } catch (error) {
     console.warn('Failed to sync palace details, using local data:', error);

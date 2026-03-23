@@ -12,8 +12,9 @@ import {
   TrendingUp,
   Zap,
 } from 'lucide-react-native';
-import React, { useMemo } from 'react';
-import { Alert, FlatList, Text, TouchableOpacity, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -43,6 +44,8 @@ const TYPE_CONFIG = {
 const NotificationScreen = () => {
   const { data: notifications = [], isLoading, refetch, isRefetching } = useNotifications();
   const { markAsRead, dismiss, markAllAsRead } = useNotificationMutations();
+  const [pendingDismissId, setPendingDismissId] = useState<string | null>(null);
+  const [pendingDismissExpiry, setPendingDismissExpiry] = useState<number>(0);
 
   // Filter out dismissed notifications
   const activeNotifications = useMemo(
@@ -66,11 +69,37 @@ const NotificationScreen = () => {
     }
   };
 
-  const handleDismiss = (id: string) => {
-    Alert.alert('Delete Notification', 'Are you sure you want to remove this notification?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => dismiss.mutate(id) },
-    ]);
+  const handleDismiss = async (id: string) => {
+    const now = Date.now();
+    const canConfirmNow = pendingDismissId === id && now <= pendingDismissExpiry;
+
+    if (!canConfirmNow) {
+      setPendingDismissId(id);
+      setPendingDismissExpiry(now + 3000);
+      Toast.show({
+        type: 'info',
+        text1: 'Confirm delete',
+        text2: 'Tap delete again within 3 seconds.',
+      });
+      return;
+    }
+
+    try {
+      await dismiss.mutateAsync(id);
+      Toast.show({
+        type: 'success',
+        text1: 'Notification removed',
+      });
+    } catch {
+      Toast.show({
+        type: 'error',
+        text1: 'Delete failed',
+        text2: 'Unable to remove this notification right now.',
+      });
+    } finally {
+      setPendingDismissId(null);
+      setPendingDismissExpiry(0);
+    }
   };
 
   const handleMarkAllRead = () => {
@@ -156,7 +185,7 @@ const NotificationScreen = () => {
 
               {/* Inline Action to delete */}
               <TouchableOpacity
-                onPress={() => handleDismiss(item.id)}
+                onPress={() => void handleDismiss(item.id)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <Trash2 size={14} color={Colors.slate400} />
               </TouchableOpacity>
@@ -203,7 +232,7 @@ const NotificationScreen = () => {
             </View>
             <Text className="mt-4 text-xl font-bold text-slate-800">No notifications</Text>
             <Text className="mt-2 text-center text-slate-500">
-              We'll notify you when something important happens.
+              We&apos;ll notify you when something important happens.
             </Text>
           </View>
         }

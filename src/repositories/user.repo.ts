@@ -1,5 +1,6 @@
 import { db } from '@/db/client';
 import * as schema from '@/db/schema';
+import { User } from '@/types/users';
 import { eq } from 'drizzle-orm';
 
 interface UserRepository {
@@ -7,6 +8,8 @@ interface UserRepository {
   getProfileLocal(userId: string): Promise<{ id: string; displayName: string; email: string; avatarUrl?: string | null; totalXp: number; level: number; isPremium: boolean } | null>;
   setPremium(userId: string, isPremium: boolean): Promise<void>;
   updateProfileLocal(payload: { id: string; displayName?: string; email?: string; avatarUrl?: string | null }): Promise<void>;
+  upsertFromRemote(user: User): Promise<void>;
+  clearLocalAuthUser(): Promise<void>;
 }
 
 export function createUserRepository(): UserRepository {
@@ -48,6 +51,84 @@ export function createUserRepository(): UserRepository {
           updatedAt: new Date().toISOString(),
         })
         .where(eq(schema.users.id, payload.id));
+    },
+
+    async upsertFromRemote(user: User) {
+      const now = new Date().toISOString();
+
+      await db.transaction(async (tx) => {
+        await tx
+          .insert(schema.users)
+          .values({
+            id: user.id,
+            displayName: user.displayName,
+            email: user.email ?? null,
+            avatarUrl: user.avatarUrl ?? null,
+            totalXp: Math.max(0, user.totalXp ?? 0),
+            level: Math.max(1, user.level ?? 1),
+            isPremium: !!user.isPremium,
+            createdAt: now,
+            updatedAt: now,
+            lastSyncedAt: now,
+            isDeleted: false,
+            deletedAt: null,
+          })
+          .onConflictDoUpdate({
+            target: schema.users.id,
+            set: {
+              displayName: user.displayName,
+              email: user.email ?? null,
+              avatarUrl: user.avatarUrl ?? null,
+              totalXp: Math.max(0, user.totalXp ?? 0),
+              level: Math.max(1, user.level ?? 1),
+              isPremium: !!user.isPremium,
+              updatedAt: now,
+              lastSyncedAt: now,
+              isDeleted: false,
+              deletedAt: null,
+            },
+          });
+
+        const stats = user.stats;
+        if (!stats) return;
+
+        await tx
+          .insert(schema.userStats)
+          .values({
+            userId: user.id,
+            lessonsCompleted: Math.max(0, stats.lessonsCompleted ?? 0),
+            wordsLearned: Math.max(0, stats.wordsLearned ?? 0),
+            currentStreak: Math.max(0, stats.currentStreak ?? 0),
+            longestStreak: Math.max(0, stats.longestStreak ?? 0),
+            lastActiveDate: stats.lastActiveDate ?? null,
+            createdAt: now,
+            updatedAt: now,
+            lastSyncedAt: now,
+            isDeleted: false,
+            deletedAt: null,
+          })
+          .onConflictDoUpdate({
+            target: schema.userStats.userId,
+            set: {
+              lessonsCompleted: Math.max(0, stats.lessonsCompleted ?? 0),
+              wordsLearned: Math.max(0, stats.wordsLearned ?? 0),
+              currentStreak: Math.max(0, stats.currentStreak ?? 0),
+              longestStreak: Math.max(0, stats.longestStreak ?? 0),
+              lastActiveDate: stats.lastActiveDate ?? null,
+              updatedAt: now,
+              lastSyncedAt: now,
+              isDeleted: false,
+              deletedAt: null,
+            },
+          });
+      });
+    },
+
+    async clearLocalAuthUser() {
+      await db.transaction(async (tx) => {
+        await tx.delete(schema.userStats);
+        await tx.delete(schema.users);
+      });
     },
   };
 }

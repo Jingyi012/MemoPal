@@ -1,96 +1,203 @@
+import { referralApi } from '@/api/referral';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
-import type { ReferralData } from '@/types/referral';
-import data from '@/utils/mock/referral.json';
+import { createUserRepository } from '@/repositories/user.repo';
+import { syncEntitlementToLocal } from '@/services/subscription.service';
+import type { ReferralSummary } from '@/types/referral';
 import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { Check, Copy, Crown, MessageCircle, Share2, Sparkles, Users } from 'lucide-react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Check,
-  Copy,
-  Crown,
-  Gift,
-  MessageCircle,
-  Share2,
-  Sparkles,
-  Users,
-} from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-import { Alert, Linking, ScrollView, Share, Text, TouchableOpacity, View } from 'react-native';
+  Linking,
+  ScrollView,
+  Share,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Toast from 'react-native-toast-message';
 import { MilestoneRow } from './MilestoneRow';
 import { ReferralList } from './ReferralList';
 import { ShareIconBtn } from './ShareIconBtn';
 import { StatBox } from './StatBox';
 
-// --- API Mocking ---
-const fetchReferralData = (): Promise<ReferralData> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(data as ReferralData);
-    }, 300);
-  });
-};
-
 const ReferralScreen: React.FC = () => {
+  const userRepo = useMemo(() => createUserRepository(), []);
   const router = useRouter();
-  const [data, setData] = useState<ReferralData | null>(null);
+  const [summary, setSummary] = useState<ReferralSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [redeemCode, setRedeemCode] = useState('');
+  const [redeeming, setRedeeming] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchReferralData().then((res) => {
-      setData(res);
+  const loadSummary = useCallback(async (silent = false) => {
+    try {
+      if (silent) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      const data = await referralApi.getMySummary();
+      setSummary(data);
+      setLoadError(null);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        'Could not load referral data. Check your connection and try again.';
+      setLoadError(message);
+    } finally {
+      setRefreshing(false);
       setLoading(false);
-    });
+    }
   }, []);
 
+  useEffect(() => {
+    void loadSummary();
+  }, [loadSummary]);
+
+  const milestones = useMemo(
+    () =>
+      [...(summary?.milestones ?? [])]
+        .filter((item) => item.isActive)
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+    [summary?.milestones]
+  );
+
   const handleCopy = async () => {
-    if (!data) return;
-
-    await Clipboard.setStringAsync(`${data.referralCode}`);
-
+    if (!summary) return;
+    await Clipboard.setStringAsync(summary.referralCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  const handleShare = async (platform: 'whatsapp' | 'native') => {
-    if (!data) return;
-    const message = `Join me on MemoPal! Use my code ${data.referralCode} to unlock rewards: https://mindpal.app/join/${data.referralCode}`;
 
+  const handleShare = async (platform: 'whatsapp' | 'native') => {
+    if (!summary) return;
+
+    const message = `Join me on MemoPal and use my referral code ${summary.referralCode} to unlock rewards: https://mindpal.app/join/${summary.referralCode}`;
     if (platform === 'whatsapp') {
       const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
       Linking.openURL(url).catch(() =>
-        Alert.alert('Error', 'WhatsApp is not installed on this device')
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'WhatsApp is not installed on this device',
+        })
       );
-    } else {
-      // This opens the native iOS/Android share sheet
-      try {
-        await Share.share({
-          message: message,
-          title: 'Join MemoPal', // Android only title
-        });
-      } catch (error) {
-        Alert.alert('Error', 'Unable to share');
+      return;
+    }
+
+    try {
+      await Share.share({
+        message,
+        title: 'Join MemoPal',
+      });
+    } catch {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Unable to open share options.',
+      });
+    }
+  };
+
+  const handleRedeem = async () => {
+    if (!summary) return;
+    const normalized = redeemCode.trim().toUpperCase();
+    if (!normalized) {
+      Toast.show({
+        type: 'error',
+        text1: 'Referral code required',
+        text2: 'Enter a referral code before redeeming.',
+      });
+      return;
+    }
+
+    try {
+      setRedeeming(true);
+      const result = await referralApi.redeem(normalized);
+      setRedeemCode('');
+      const currentUser = await userRepo.getCurrent();
+      if (currentUser) {
+        await syncEntitlementToLocal(currentUser.id);
       }
+      await loadSummary(true);
+
+      const milestoneBonus = result.newlyAwardedMilestones.reduce(
+        (acc, item) => acc + item.rewardPremiumDays,
+        0
+      );
+
+      Toast.show({
+        type: 'success',
+        text1: 'Referral redeemed',
+        text2: `You earned ${result.inviteeAwardedXp} XP and ${result.inviteeAwardedPremiumDays} premium days.${milestoneBonus > 0 ? ' Your friend also unlocked milestone bonus rewards.' : ''}`,
+      });
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to redeem referral code.';
+      Toast.show({
+        type: 'error',
+        text1: 'Redeem failed',
+        text2: message,
+      });
+    } finally {
+      setRedeeming(false);
     }
   };
 
   if (loading) {
-    return <LoadingView description="Loading Rewards" />;
+    return <LoadingView description="Loading referral rewards" />;
+  }
+
+  if (!summary) {
+    return (
+      <View className="flex-1 bg-slate-50">
+        <CommonHeader
+          title="Refer & Earn"
+          description="Invite friends and unlock rewards"
+          backAction={() => router.back()}
+        />
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="mb-2 text-center text-base font-semibold text-slate-700">
+            Referral data is unavailable right now.
+          </Text>
+          <Text className="mb-4 text-center text-sm text-slate-500">
+            {loadError ?? 'Please try again in a moment.'}
+          </Text>
+          <TouchableOpacity
+            className="rounded-xl bg-indigo-500 px-4 py-3"
+            onPress={() => void loadSummary()}>
+            <Text className="font-semibold text-white">Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   }
 
   return (
     <View className="flex-1 bg-slate-50">
       <CommonHeader
         title="Refer & Earn"
-        description="Invite friends and unlock premium perks"
+        description="Invite friends and earn premium rewards"
         backAction={() => router.back()}
       />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
-        {/* Referral Code Section */}
+        {loadError ? (
+          <View className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
+            <Text className="text-sm font-semibold text-rose-700">Unable to refresh referral data</Text>
+            <Text className="mt-1 text-sm text-rose-600">{loadError}</Text>
+          </View>
+        ) : null}
+
         <View className="mb-8 rounded-[32px] border border-slate-100 bg-white p-6 shadow-sm">
           <Text className="text-center text-xs font-bold uppercase tracking-widest text-slate-400">
             Your Invite Code
@@ -99,7 +206,7 @@ const ReferralScreen: React.FC = () => {
             onPress={handleCopy}
             className="my-4 flex-row items-center justify-center rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/30 py-4">
             <Text className="mr-3 text-3xl font-black tracking-[4px] text-indigo-600">
-              {data?.referralCode}
+              {summary.referralCode}
             </Text>
             {copied ? (
               <Check size={20} color={Colors.teal500} />
@@ -112,64 +219,107 @@ const ReferralScreen: React.FC = () => {
             <ShareIconBtn
               icon={<MessageCircle size={20} color={Colors.green600} />}
               label="WhatsApp"
-              onPress={() => handleShare('whatsapp')}
+              onPress={() => void handleShare('whatsapp')}
             />
             <ShareIconBtn
               icon={<Share2 size={20} color={Colors.indigo500} />}
               label="Share Link"
-              onPress={() => handleShare('native')}
+              onPress={() => void handleShare('native')}
             />
           </View>
         </View>
 
-        {/* Stats Section */}
-        <View className="mb-8 flex-row gap-4">
+        <View className="mb-8 flex-row gap-3">
           <StatBox
             icon={<Users size={20} color={Colors.indigo500} />}
-            value={data?.referralsCount || 0}
+            value={summary.successfulReferrals}
             label="Friends Joined"
           />
           <StatBox
             icon={<Sparkles size={20} color={Colors.yellow500} />}
-            value={data?.totalRewardsEarned.xp || 0}
-            label="Total XP"
+            value={summary.totalXpEarned}
+            label="Total XP Earned"
+          />
+          <StatBox
+            icon={<Crown size={20} color={Colors.teal500} />}
+            value={summary.totalPremiumDaysEarned}
+            label="Premium Days"
           />
         </View>
 
-        {/* Rewards / Milestones */}
         <View className="mb-8 overflow-hidden rounded-3xl border border-slate-100 bg-white p-2">
           <View className="flex-row p-4">
             <Crown size={20} color={Colors.yellow600} />
             <Text className="ml-1 text-lg font-medium text-slate-800">Milestones</Text>
           </View>
-          {data?.milestones.map((milestone, index) => (
-            <MilestoneRow
-              key={milestone.id}
-              refs={milestone.referralsRequired}
-              reward={milestone.reward}
-              current={data?.referralsCount || 0}
-              isLast={index === data.milestones.length - 1}
-            />
-          ))}
+          {milestones.map((milestone, index) => {
+            const fallbackReward = `${milestone.rewardXp} XP + ${milestone.rewardPremiumDays} premium days`;
+            return (
+              <MilestoneRow
+                key={milestone.key}
+                title={milestone.title}
+                refs={milestone.referralsRequired}
+                rewardLabel={milestone.rewardLabel || fallbackReward}
+                current={summary.successfulReferrals}
+                isAwarded={milestone.isAwarded}
+                isLast={index === milestones.length - 1}
+              />
+            );
+          })}
         </View>
 
-        {/* Recent Referrals */}
-        {data?.referralsList && data.referralsList.length > 0 && (
-          <ReferralList referrals={data?.referralsList || []} />
-        )}
+        {summary.referrals.length > 0 && <ReferralList referrals={summary.referrals} />}
 
-        {/* CTA */}
+        <View className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          {summary.hasRedeemedCode ? (
+            <View>
+              <Text className="text-sm font-semibold text-slate-700">
+                Referral code already used
+              </Text>
+              <Text className="mt-1 text-sm text-slate-500">
+                You joined using {summary.referredByDisplayName || 'another user'}&apos;s referral
+                code.
+              </Text>
+            </View>
+          ) : (
+            <View>
+              <Text className="text-sm font-semibold text-slate-700">
+                Have a friend&apos;s code?
+              </Text>
+              <Text className="mt-1 text-sm text-slate-500">
+                Redeem once to receive instant XP and premium rewards.
+              </Text>
+              <TextInput
+                autoCapitalize="characters"
+                placeholder="Enter referral code"
+                value={redeemCode}
+                onChangeText={setRedeemCode}
+                className="mt-4 rounded-xl border border-slate-200 px-4 py-3 text-base text-slate-800"
+              />
+              <TouchableOpacity
+                className={`mt-3 rounded-xl px-4 py-3 ${redeeming ? 'bg-slate-400' : 'bg-indigo-500'}`}
+                disabled={redeeming}
+                onPress={() => void handleRedeem()}>
+                <Text className="text-center font-semibold text-white">
+                  {redeeming ? 'Redeeming...' : 'Redeem Code'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
         <TouchableOpacity
-          activeOpacity={0.8}
-          className="overflow-hidden rounded-2xl shadow-lg shadow-indigo-200">
+          activeOpacity={0.85}
+          className="mt-8 overflow-hidden rounded-2xl shadow-lg shadow-indigo-200"
+          onPress={() => void loadSummary(true)}
+          disabled={refreshing}>
           <LinearGradient
             colors={[Colors.teal500, Colors.blue500]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            className="flex-row items-center justify-center p-5">
-            <Gift className="mr-2" color={Colors.white} size={20} />
-            <Text className="ml-1 text-base font-medium text-white">
-              Have a Coupon Code? Redeem Here
+            className="flex-row items-center justify-center p-4">
+            <Text className="text-base font-medium text-white">
+              {refreshing ? 'Refreshing...' : 'Refresh Referral Data'}
             </Text>
           </LinearGradient>
         </TouchableOpacity>

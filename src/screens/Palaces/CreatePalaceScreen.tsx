@@ -8,7 +8,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { MinusCircle, PlusCircle } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
+import { ScrollView, Text, TextInput, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 type DraftLocation = { name: string; description: string; imageUrl: string };
 const MIN_LOCATIONS = 1;
@@ -24,7 +25,11 @@ const defaults = (): DraftLocation[] => Array.from({ length: 10 }, (_, i) => mak
 async function pickImage() {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permission.granted) {
-    Alert.alert('Permission needed', 'Please allow photo library access.');
+    Toast.show({
+      type: 'error',
+      text1: 'Permission needed',
+      text2: 'Please allow photo library access.',
+    });
     return null;
   }
   const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8, allowsEditing: true, aspect: [16, 9] });
@@ -75,19 +80,29 @@ export default function CreatePalaceScreen() {
 
   const onCreate = async () => {
     if (!canCreateCustomPalace) {
-      Alert.alert(
-        'Limit reached',
-        `You have reached your custom palace limit (${customPalacesCount}/${maxPalaces}).`
-      );
+      Toast.show({
+        type: 'info',
+        text1: 'Limit reached',
+        text2: `You have reached your custom palace limit (${customPalacesCount}/${maxPalaces}).`,
+      });
       return;
     }
 
-    if (!name.trim()) return Alert.alert('Missing name', 'Please enter a palace name.');
+    if (!name.trim()) {
+      Toast.show({
+        type: 'error',
+        text1: 'Missing name',
+        text2: 'Please enter a palace name.',
+      });
+      return;
+    }
+
     if (locations.length > maxLocations) {
-      Alert.alert(
-        'Too many locations',
-        `This plan allows up to ${maxLocations} locations per custom palace.`
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Too many locations',
+        text2: `This plan allows up to ${maxLocations} locations per custom palace.`,
+      });
       return;
     }
 
@@ -100,7 +115,7 @@ export default function CreatePalaceScreen() {
         thumbnail,
         locationsCount: locations.length,
         isLocked: false,
-        requiredXp: 0,
+        level: 1,
         isPremium: false,
         isCustom: true,
       });
@@ -122,7 +137,11 @@ export default function CreatePalaceScreen() {
       console.error('Failed to create custom palace:', error);
       const message =
         error instanceof Error ? error.message : 'Unable to create custom palace right now.';
-      Alert.alert('Create failed', message);
+      Toast.show({
+        type: 'error',
+        text1: 'Create failed',
+        text2: message,
+      });
     } finally {
       setSaving(false);
     }

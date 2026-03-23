@@ -24,7 +24,7 @@ export interface Palace extends Auditable, Syncable, SoftDeletable {
   thumbnail: string;
   isLocked: boolean;
   unlockedAt?: string | null;
-  requiredXp: number;
+  level: number;
   isPremium: boolean;
   isCustom: boolean;
   createdBy?: string;

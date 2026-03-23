@@ -17,7 +17,10 @@ interface PalaceRepository {
   unlockPalace(palaceId: string): Promise<void>;
   save(palace: Partial<Palace>): Promise<string>;
   delete(id: string): Promise<void>;
-  upsertMany(serverPalaces: Palace[]): Promise<void>;
+  upsertMany(
+    serverPalaces: Palace[],
+    options?: { pruneMissingOfficial?: boolean }
+  ): Promise<void>;
 }
 
 export function createPalaceRepository(): PalaceRepository {
@@ -44,7 +47,7 @@ export function createPalaceRepository(): PalaceRepository {
     async getAll(): Promise<Palace[]> {
       return (await db.query.palaces.findMany({
         where: eq(schema.palaces.isDeleted, false),
-        orderBy: [asc(schema.palaces.createdAt)],
+        orderBy: [asc(schema.palaces.level), asc(schema.palaces.createdAt)],
       })) as Palace[];
     },
 
@@ -172,41 +175,108 @@ export function createPalaceRepository(): PalaceRepository {
       });
     },
 
-    async upsertMany(serverPalaces: Palace[]): Promise<void> {
-      if (serverPalaces.length === 0) return;
-
+    async upsertMany(
+      serverPalaces: Palace[],
+      options?: { pruneMissingOfficial?: boolean }
+    ): Promise<void> {
       const ids = serverPalaces.map((p) => p.id);
       const now = new Date().toISOString();
+      const pruneMissingOfficial = options?.pruneMissingOfficial ?? false;
 
       await db.transaction(async (tx) => {
-        const localRecords = await tx.query.palaces.findMany({
-          where: inArray(schema.palaces.id, ids),
-        });
+        const localRecords =
+          ids.length > 0
+            ? await tx.query.palaces.findMany({
+                where: inArray(schema.palaces.id, ids),
+              })
+            : [];
         const localMap = new Map(localRecords.map((r) => [r.id, r]));
-        const dirtyIds = await SyncBase.getEntityDirtyIds(tx as any, ids, EntityType.PALACE);
+        const dirtyIds =
+          ids.length > 0
+            ? await SyncBase.getEntityDirtyIds(tx as any, ids, EntityType.PALACE)
+            : new Set<string>();
+
+        const dirtyQueueRows = await tx.query.syncQueue.findMany({
+          columns: { entityId: true },
+          where: eq(schema.syncQueue.entityType, EntityType.PALACE),
+        });
+        const dirtyPalaceIds = new Set(dirtyQueueRows.map((row) => row.entityId));
+        const currentUser = await tx.query.users.findFirst({ columns: { id: true } });
+        const currentUserId = currentUser?.id;
+        const canManageLocalPalace = (item: Palace | undefined) =>
+          Boolean(currentUserId && item?.isCustom && item.createdBy === currentUserId);
 
         for (const serverItem of serverPalaces) {
           const localItem = localMap.get(serverItem.id);
           const isDirty = dirtyIds.has(serverItem.id);
+          const canManageServerItem = canManageLocalPalace((localItem as Palace | undefined) ?? serverItem);
 
-          if (isDirty) continue;
+          if (isDirty) {
+            // Never sync unauthorized local edits for shared/admin-configured palaces.
+            if (!canManageServerItem) {
+              await SyncBase.removePendingSyncs(tx as any, serverItem.id);
+              dirtyPalaceIds.delete(serverItem.id);
+              await applyServerVersion(tx, serverItem, now);
+            }
+            continue;
+          }
 
           if (!localItem) {
             await applyServerVersion(tx, serverItem, now);
           } else {
+            // Server response includes user-computed fields (e.g. isLocked), so for shared/admin
+            // palaces we always trust and apply server snapshot even when updatedAt is unchanged.
+            if (!canManageServerItem) {
+              await applyServerVersion(tx, serverItem, now);
+              continue;
+            }
+
             const serverDate = new Date(serverItem.updatedAt).getTime();
             const localDate = new Date(localItem.updatedAt).getTime();
 
             if (serverDate > localDate) {
               await applyServerVersion(tx, serverItem, now);
             } else if (localDate > serverDate) {
-              await SyncBase.addToQueue(tx as any, {
-                entityType: EntityType.PALACE,
-                entityId: localItem.id,
-                action: 'update',
-                payload: { ...localItem },
-              });
+              if (canManageLocalPalace(localItem as Palace)) {
+                await SyncBase.addToQueue(tx as any, {
+                  entityType: EntityType.PALACE,
+                  entityId: localItem.id,
+                  action: 'update',
+                  payload: { ...localItem },
+                });
+              } else {
+                // Revert unauthorized local divergence to server truth.
+                await applyServerVersion(tx, serverItem, now);
+              }
             }
+          }
+        }
+
+        if (pruneMissingOfficial) {
+          const syncedOfficialPalaces = await tx.query.palaces.findMany({
+            columns: { id: true },
+            where: and(
+              eq(schema.palaces.isCustom, false),
+              eq(schema.palaces.isDeleted, false),
+              isNotNull(schema.palaces.lastSyncedAt)
+            ),
+          });
+
+          const serverIdSet = new Set(ids);
+          const staleIds = syncedOfficialPalaces
+            .map((row) => row.id)
+            .filter((id) => !serverIdSet.has(id) && !dirtyPalaceIds.has(id));
+
+          if (staleIds.length > 0) {
+            await tx
+              .update(schema.palaces)
+              .set({
+                isDeleted: true,
+                deletedAt: now,
+                updatedAt: now,
+                lastSyncedAt: now,
+              })
+              .where(inArray(schema.palaces.id, staleIds));
           }
         }
       });

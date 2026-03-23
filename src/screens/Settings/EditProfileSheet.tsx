@@ -4,7 +4,8 @@ import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import * as ImagePicker from 'expo-image-picker';
 import React, { forwardRef, useState } from 'react';
-import { Alert, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 interface Props {
   initialName?: string;
@@ -55,7 +56,11 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
             onPress={async () => {
               const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
               if (!permission.granted) {
-                Alert.alert('Permission needed', 'Please allow photo access.');
+                Toast.show({
+                  type: 'error',
+                  text1: 'Permission needed',
+                  text2: 'Please allow photo access.',
+                });
                 return;
               }
 
@@ -106,3 +111,5 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
     );
   }
 );
+
+EditProfileSheet.displayName = 'EditProfileSheet';

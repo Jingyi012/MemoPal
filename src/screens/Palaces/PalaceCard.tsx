@@ -8,15 +8,20 @@ import { Text, View } from 'react-native';
 interface PalaceCardProps {
   palace: Palace;
   isCompleted: boolean;
-  userXP: number;
+  isDisabled?: boolean;
   onPress: (palace: Palace) => void;
 }
 
-export const PalaceCard: React.FC<PalaceCardProps> = ({ palace, isCompleted, userXP, onPress }) => {
+export const PalaceCard: React.FC<PalaceCardProps> = ({
+  palace,
+  isCompleted,
+  isDisabled = false,
+  onPress,
+}) => {
   return (
     <AnimatedPressable
       onPress={() => onPress(palace)}
-      disabled={palace.isLocked && !palace.isPremium}
+      disabled={isDisabled}
       className="mb-4 w-full overflow-hidden rounded-2xl shadow-sm">
       <View className="relative h-44">
         <AppImage
@@ -60,7 +65,7 @@ export const PalaceCard: React.FC<PalaceCardProps> = ({ palace, isCompleted, use
                     ? `${palace.locationsCount} locations`
                     : 'Create your own'}
                 </Text>
-                <Text className="text-sm text-white/90">{`Requires ${palace.requiredXp} XP`}</Text>
+                <Text className="text-sm text-white/90">{`Requires Level ${palace.level}`}</Text>
               </>
             )}
           </View>

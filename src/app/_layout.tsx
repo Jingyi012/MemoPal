@@ -3,7 +3,6 @@ import { AuthProvider } from '@/contexts/AuthProvider';
 import { GamificationRewardProvider } from '@/contexts/GamificationRewardContext';
 import { UserStateProvider } from '@/contexts/UserStateContext';
 import { db } from '@/db/client';
-import { seedInitialData } from '@/db/seed';
 import { useNotificationObserver } from '@/hooks/useNotificationObserver';
 import { useSubscriptionEntitlementSync } from '@/hooks/useSubscriptionEntitlementSync';
 import { useSubscriptionGuard } from '@/hooks/useSubscriptionGuard';
@@ -16,7 +15,6 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import { useEffect, useState } from 'react';
 import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -27,31 +25,15 @@ import migrations from '../drizzle/migrations';
 function AppLayout() {
   const { colorScheme } = useColorScheme();
   const { success: migrationsSuccess, error: migrationError } = useMigrations(db, migrations);
-  const [isSeedFinished, setIsSeedFinished] = useState(false);
+  const isAppReady = migrationsSuccess;
 
-  useEffect(() => {
-    async function runSeed() {
-      if (migrationsSuccess) {
-        try {
-          await seedInitialData();
-        } catch (e) {
-          console.error('Seeding failed:', e);
-        } finally {
-          setIsSeedFinished(true);
-        }
-      }
-    }
-    runSeed();
-  }, [migrationsSuccess]);
-
-  // 4. Notification hook (called unconditionally)
-  useNotificationObserver();
+  // Start observers only after DB migrations are ready.
+  useNotificationObserver(isAppReady);
 
   if (migrationError) {
     console.error('Migration failed: ', migrationError);
   }
 
-  const isAppReady = migrationsSuccess && isSeedFinished;
   useGamificationBootstrap(isAppReady);
   useSyncManager(isAppReady);
   useSubscriptionGuard(isAppReady);
@@ -72,16 +54,19 @@ function AppLayout() {
           //style={palettes[colorScheme ?? 'light']}
         >
           <Stack
+            initialRouteName="index"
             screenOptions={{
               headerShown: false,
               contentStyle: {
                 backgroundColor: Colors.slate50,
               },
             }}>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="notifications" />
             <Stack.Screen name="palaces/[palaceId]/training" />
+            <Stack.Screen name="rewards-history" />
           </Stack>
         </SafeAreaView>
       </BottomSheetModalProvider>

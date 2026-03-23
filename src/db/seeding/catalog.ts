@@ -3,7 +3,7 @@ export type PalaceSeed = {
   name: string;
   description: string;
   theme: 'home' | 'market' | 'campus' | 'travel' | 'nature';
-  requiredXp: number;
+  level: number;
   isLocked: boolean;
   thumbnail: string;
 };
@@ -12,11 +12,11 @@ export type LessonWordSeed = { text: string; meaning: string };
 export type LessonSeed = { title: string; description: string; words: LessonWordSeed[] };
 
 export const PALACES: PalaceSeed[] = [
-  { id: 'home-haven', name: 'Home Haven Palace', description: 'Familiar home route for foundational memory training.', theme: 'home', requiredXp: 0, isLocked: false, thumbnail: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800' },
-  { id: 'market-route', name: 'Market Route Palace', description: 'Everyday shopping path with practical vocabulary.', theme: 'market', requiredXp: 250, isLocked: false, thumbnail: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800' },
-  { id: 'campus-trail', name: 'Campus Trail Palace', description: 'Academic journey for study and communication vocabulary.', theme: 'campus', requiredXp: 600, isLocked: true, thumbnail: 'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=800' },
-  { id: 'travel-circuit', name: 'Travel Circuit Palace', description: 'Airport-to-hotel scenarios for travel fluency.', theme: 'travel', requiredXp: 1000, isLocked: true, thumbnail: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800' },
-  { id: 'nature-sanctum', name: 'Nature Sanctum Palace', description: 'Outdoor-themed route with advanced descriptive language.', theme: 'nature', requiredXp: 1500, isLocked: true, thumbnail: 'https://images.unsplash.com/photo-1473773508845-188df298d2d1?w=800' },
+  { id: 'home-haven', name: 'Home Haven Palace', description: 'Familiar home route for foundational memory training.', theme: 'home', level: 1, isLocked: false, thumbnail: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800' },
+  { id: 'market-route', name: 'Market Route Palace', description: 'Everyday shopping path with practical vocabulary.', theme: 'market', level: 2, isLocked: false, thumbnail: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800' },
+  { id: 'campus-trail', name: 'Campus Trail Palace', description: 'Academic journey for study and communication vocabulary.', theme: 'campus', level: 4, isLocked: true, thumbnail: 'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=800' },
+  { id: 'travel-circuit', name: 'Travel Circuit Palace', description: 'Airport-to-hotel scenarios for travel fluency.', theme: 'travel', level: 6, isLocked: true, thumbnail: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800' },
+  { id: 'nature-sanctum', name: 'Nature Sanctum Palace', description: 'Outdoor-themed route with advanced descriptive language.', theme: 'nature', level: 8, isLocked: true, thumbnail: 'https://images.unsplash.com/photo-1473773508845-188df298d2d1?w=800' },
 ];
 
 export const LOCATION_NAMES_BY_THEME: Record<PalaceSeed['theme'], string[]> = {

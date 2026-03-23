@@ -1,6 +1,7 @@
 import { AppImage } from '@/components/AppImage';
 import LoadingView from '@/components/LoadingView';
 import { StepNavigationFooter } from '@/components/StepNavigationFooter';
+import { useGamificationRewards } from '@/contexts/GamificationRewardContext';
 import { SourceType } from '@/enums/sourceType';
 import { useLessonProgress, useSaveLessonProgress } from '@/hooks/useLessonProgress';
 import { useLessonDetail } from '@/hooks/useLessonsManager';
@@ -25,6 +26,7 @@ interface LearningFlowProps {
 
 export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
   const queryClient = useQueryClient();
+  const { showRewards } = useGamificationRewards();
   const { isLoading: detailLoading, data: lesson } = useLessonDetail(lessonId);
   const { isLoading: progressLoading, progress: lessonProgress } = useLessonProgress(lessonId);
   const { data: palaceDetails } = usePalace(lesson?.palaceId!);
@@ -88,12 +90,18 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
           };
           await saveProgressAsync(nextProgress);
 
-          await recordXpEventWithClientEventId(
+          const xpResult = await recordXpEventWithClientEventId(
             SourceType.LessonInitialCompletion,
             earnedXp,
             `lesson_initial_completion:${lessonId}`,
             lessonId
           );
+
+          showRewards({
+            levelUpTo: xpResult.levelUpTo,
+            milestones: xpResult.achievedMilestones,
+            badges: xpResult.earnedBadges,
+          });
 
           queryClient.invalidateQueries({ queryKey: XP_KEYS.all });
           queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
@@ -126,6 +134,7 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
     lessonProgress,
     queryClient,
     saveProgressAsync,
+    showRewards,
     xpConfig?.baseXp,
     xpConfig?.variableXp,
   ]);

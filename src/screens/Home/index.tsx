@@ -2,24 +2,19 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { PremiumUpdateCard } from '@/components/PremiumUpdateCard';
 import TutorialPromptCard from '@/components/PromptCard/TutorialPromptCard';
 import { useUserState } from '@/contexts/UserStateContext';
-import { useGamificationRewards } from '@/contexts/GamificationRewardContext';
-import { SourceType } from '@/enums/sourceType';
-import { BADGE_KEYS, useAllBadges } from '@/hooks/useBadges';
-import { CURRENT_USER_KEYS, useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useDueReviews } from '@/hooks/useDueReviews';
 import { useFeatureLimits } from '@/hooks/useFeatureLimits';
+import { useGamificationUiConfig } from '@/hooks/useGamificationUiConfig';
 import { useLevelByXp } from '@/hooks/useLevelConfigs';
-import { MILESTONE_KEYS, useMilestones } from '@/hooks/useMilestones';
-import { MISSION_KEYS, useMissions } from '@/hooks/useMissions';
+import { useMilestones } from '@/hooks/useMilestones';
+import { useMissions } from '@/hooks/useMissions';
 import { usePalaceList } from '@/hooks/usePalace';
-import { XP_KEYS, useTotalXp, useXpEvents } from '@/hooks/useXpEvents';
+import { useTotalXp } from '@/hooks/useXpEvents';
 import { HomeHeader } from '@/screens/Home/Header/HomeHeader';
-import { claimMissionReward, getMissionClaimSourceId } from '@/services/mission.service';
-import { MissionProgress } from '@/types/missions';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import React from 'react';
+import { ScrollView, Text, View } from 'react-native';
 import { DailyTip } from './DailyTip';
 import { ReviewDueBadge } from './ReviewDueBadge';
 
@@ -42,27 +37,20 @@ const HomeScreen = () => {
   const router = useRouter();
   const { user } = useCurrentUser();
   const { limits: featureLimits } = useFeatureLimits();
-  const queryClient = useQueryClient();
   const { totalXp } = useTotalXp();
-  const { events: xpEvents } = useXpEvents();
   const { levelInfo } = useLevelByXp(totalXp);
   const { milestones } = useMilestones();
-  const { badges } = useAllBadges();
   const { missions } = useMissions();
+  const { config: gamificationUiConfig } = useGamificationUiConfig();
   const { dueReviews } = useDueReviews();
   const { data: palaces = [] } = usePalaceList();
   const { userState, updateState } = useUserState();
-  const { showRewards } = useGamificationRewards();
-  const [claimingMissionKey, setClaimingMissionKey] = useState<string | null>(null);
 
   const showTutorialPrompt = !userState.ui.tutorialPromptDismissed;
   const canCreateCustomPalace = featureLimits.customPalaces > 0;
 
   const overdueCount = dueReviews.filter((r) => new Date(r.dueDate).getTime() < Date.now()).length;
   const dueCount = dueReviews.length;
-
-  const achievedMilestones = milestones.filter((m) => !!m.achievedAt).length;
-  const earnedBadges = badges.filter((b) => !!b.earnedAt).length;
 
   const headerUser = user
     ? {
@@ -109,44 +97,20 @@ const HomeScreen = () => {
 
   const activeMissions = missions
     .filter((mission) => mission.isActive)
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .slice(0, 3);
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const previewMissionCount = Math.max(0, gamificationUiConfig.homeMissionPreviewCount);
+  const missionPreview = activeMissions.slice(0, previewMissionCount);
+  const completedMissionCount = activeMissions.filter((mission) => mission.isCompleted).length;
 
-  const claimedMissionSourceIds = useMemo(() => {
-    return new Set(
-      xpEvents
-        .filter((event) => event.sourceType === SourceType.MissionComplete && !!event.sourceId && !event.isDeleted)
-        .map((event) => event.sourceId as string)
-    );
-  }, [xpEvents]);
-
-  const claimMissionMutation = useMutation({
-    mutationFn: async (mission: MissionProgress) => {
-      setClaimingMissionKey(mission.key);
-      return await claimMissionReward(mission);
-    },
-    onSuccess: (result) => {
-      if (!result.wasAlreadyClaimed) {
-        showRewards({
-          levelUpTo: result.levelUpTo,
-          milestones: result.achievedMilestones,
-          badges: result.earnedBadges,
-        });
-      }
-      queryClient.invalidateQueries({ queryKey: XP_KEYS.all });
-      queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
-      queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.all });
-      queryClient.invalidateQueries({ queryKey: BADGE_KEYS.all });
-      queryClient.invalidateQueries({ queryKey: MISSION_KEYS.all });
-    },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Unable to claim mission reward right now.';
-      Alert.alert('Claim failed', message);
-    },
-    onSettled: () => {
-      setClaimingMissionKey(null);
-    },
-  });
+  const currentLevelRequiredXp = levelInfo?.currentLevelConfig?.requiredXp ?? 0;
+  const nextLevelRequiredXp =
+    levelInfo?.nextLevelConfig?.requiredXp ??
+    currentLevelRequiredXp + Math.max(100, levelInfo?.xpToNextLevel ?? 100);
+  const levelSpan = Math.max(1, nextLevelRequiredXp - currentLevelRequiredXp);
+  const levelProgressPercent = Math.max(
+    0,
+    Math.min(100, Math.round(((totalXp - currentLevelRequiredXp) / levelSpan) * 100))
+  );
 
   return (
     <View className="flex-1 bg-slate-50">
@@ -155,7 +119,7 @@ const HomeScreen = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}>
-        <View className="p-4">
+        <View className="px-4 py-2">
           {/* {isFirstTime && <PalaceTrainingCard />} */}
 
           {showTutorialPrompt && (
@@ -185,7 +149,7 @@ const HomeScreen = () => {
             onPress={() => router.push('/(tabs)/palaces')}
           />
 
-          <View className="mt-4 rounded-2xl bg-teal-600 p-4">
+          <View className="mt-3 rounded-2xl bg-teal-600 p-4">
             <Text className="text-lg font-bold text-white">Daily Focus</Text>
             <Text className="mt-1 text-sm text-teal-100">
               {dueCount > 0
@@ -201,61 +165,60 @@ const HomeScreen = () => {
             </AnimatedPressable>
           </View>
 
-          {activeMissions.length > 0 ? (
-            <View className="mt-4 rounded-2xl bg-white p-4">
-              <Text className="text-base font-bold text-slate-900">Mission Board</Text>
-              <Text className="mt-1 text-sm text-slate-500">
-                Focus on these missions to improve retention and consistency.
-              </Text>
-              {activeMissions.map((mission) => (
-                <View key={mission.key} className="mt-3 rounded-xl bg-slate-50 p-3">
-                  <View className="flex-row items-center justify-between">
-                    <Text className="font-semibold text-slate-800">{mission.title}</Text>
-                    <Text className="text-xs font-semibold text-teal-700">+{mission.rewardXp} XP</Text>
-                  </View>
-                  {!!mission.description && (
-                    <Text className="mt-1 text-xs text-slate-500">{mission.description}</Text>
-                  )}
-                  <Text className="mt-1 text-xs text-slate-500">
-                    {mission.currentValue}/{mission.targetValue} completed
-                  </Text>
-                  <View className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
-                    <View className="h-full bg-teal-500" style={{ width: `${mission.progressPercent}%` }} />
-                  </View>
-                  {(() => {
-                    const sourceId = getMissionClaimSourceId(mission);
-                    const isClaimed = claimedMissionSourceIds.has(sourceId);
-                    const canClaim = mission.isCompleted && !isClaimed && mission.rewardXp > 0;
-                    const isClaiming = claimingMissionKey === mission.key && claimMissionMutation.isPending;
-
-                    if (canClaim) {
-                      return (
-                        <AnimatedPressable
-                          onPress={() => claimMissionMutation.mutate(mission)}
-                          className="mt-3 items-center rounded-lg bg-teal-600 px-3 py-2">
-                          <Text className="text-xs font-semibold text-white">
-                            {isClaiming ? 'Claiming...' : 'Claim Reward'}
-                          </Text>
-                        </AnimatedPressable>
-                      );
-                    }
-
-                    if (mission.isCompleted && isClaimed) {
-                      return (
-                        <Text className="mt-3 text-xs font-semibold text-emerald-700">
-                          Reward claimed
-                        </Text>
-                      );
-                    }
-
-                    return (
-                      <Text className="mt-3 text-xs text-slate-500">Complete mission to claim reward</Text>
-                    );
-                  })()}
-                </View>
-              ))}
+          <View className="mt-4 rounded-2xl bg-white p-4">
+            <Text className="text-base font-bold text-slate-900">
+              {gamificationUiConfig.homeMissionCardTitle}
+            </Text>
+            <Text className="mt-1 text-sm text-slate-500">
+              {gamificationUiConfig.homeMissionCardDescription}
+            </Text>
+            <View className="mt-3 flex-row gap-2">
+              <View className="flex-1 rounded-xl bg-slate-100 px-3 py-2">
+                <Text className="text-xs text-slate-500">Active Missions</Text>
+                <Text className="mt-1 text-lg font-bold text-slate-900">
+                  {activeMissions.length}
+                </Text>
+              </View>
+              <View className="flex-1 rounded-xl bg-emerald-50 px-3 py-2">
+                <Text className="text-xs text-emerald-700">Completed</Text>
+                <Text className="mt-1 text-lg font-bold text-emerald-700">
+                  {completedMissionCount}
+                </Text>
+              </View>
             </View>
-          ) : null}
+            {missionPreview.length > 0 ? (
+              <View className="mt-3 flex-row flex-wrap gap-2">
+                {missionPreview.map((mission) => (
+                  <View key={mission.key} className="rounded-full bg-slate-100 px-3 py-1">
+                    <Text className="text-xs font-medium text-slate-700">{mission.title}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text className="mt-3 text-xs text-slate-500">No active missions right now.</Text>
+            )}
+            <AnimatedPressable
+              onPress={() => router.push({ pathname: '/(tabs)/badges', params: { tab: 'missions' } })}
+              className="mt-3 items-center rounded-xl bg-teal-600 px-3 py-2">
+              <Text className="text-xs font-semibold text-white">Open Missions</Text>
+            </AnimatedPressable>
+          </View>
+
+          <View className="mt-4 rounded-2xl bg-white p-4">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-base font-bold text-slate-900">Level Progress</Text>
+              <Text className="text-xs font-semibold text-teal-700">Level {headerUser.level}</Text>
+            </View>
+            <Text className="mt-1 text-sm text-slate-500">
+              {levelInfo?.xpToNextLevel ?? 0} XP to Level {(headerUser.level ?? 1) + 1}
+            </Text>
+            <View className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+              <View className="h-full bg-teal-500" style={{ width: `${levelProgressPercent}%` }} />
+            </View>
+            <Text className="mt-2 text-right text-xs text-slate-500">
+              {totalXp}/{nextLevelRequiredXp} XP
+            </Text>
+          </View>
 
           <View className="mt-4 flex-row gap-2">
             <View className="flex-1 rounded-2xl bg-white p-3">
@@ -278,7 +241,7 @@ const HomeScreen = () => {
                 <Text className="mt-1 text-sm text-slate-500">{nextMilestone.description}</Text>
               )}
               <Text className="mt-1 text-xs text-slate-500">
-                {nextMilestone.current}/{nextMilestone.target} • {nextMilestone.remaining} to go
+                {nextMilestone.current}/{nextMilestone.target} - {nextMilestone.remaining} to go
               </Text>
               <View className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
                 <View
@@ -292,18 +255,6 @@ const HomeScreen = () => {
             </View>
           ) : null}
 
-          <View className="mt-4 rounded-2xl bg-white p-4">
-            <Text className="text-base font-bold text-slate-900">Achievements Snapshot</Text>
-            <Text className="mt-2 text-sm text-slate-600">
-              {earnedBadges} badges earned • {achievedMilestones} milestones unlocked
-            </Text>
-            <Text
-              onPress={() => router.push('/(tabs)/badges')}
-              className="mt-3 text-sm font-semibold text-teal-700">
-              View Achievements →
-            </Text>
-          </View>
-
           <View className="mt-4">
             <Text className="mb-2 text-base font-bold text-slate-800">Quick Actions</Text>
             <QuickAction
@@ -316,6 +267,11 @@ const HomeScreen = () => {
               subtitle="Practice due items and keep streak alive"
               onPress={() => router.push('/(tabs)/palaces')}
             />
+            <QuickAction
+              title="Missions"
+              subtitle="See all missions and claim XP rewards"
+              onPress={() => router.push({ pathname: '/(tabs)/badges', params: { tab: 'missions' } })}
+            />
             {canCreateCustomPalace ? (
               <QuickAction
                 title="Create Custom Palace"
@@ -327,7 +283,9 @@ const HomeScreen = () => {
 
           <DailyTip />
 
-          {!user?.isPremium && !canCreateCustomPalace ? <PremiumUpdateCard className="mt-4" /> : null}
+          {!user?.isPremium && !canCreateCustomPalace ? (
+            <PremiumUpdateCard className="mt-4" />
+          ) : null}
         </View>
       </ScrollView>
     </View>

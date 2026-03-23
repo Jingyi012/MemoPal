@@ -1,18 +1,19 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthProvider';
-import { useUserState } from '@/contexts/UserStateContext';
 import { getFacebookAccessToken, getGoogleAccessToken } from '@/services/socialAuth.service';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Brain } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
-import { Alert, Text, TextInput, View } from 'react-native';
+import { useState } from 'react';
+import { Text, TextInput, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export const LoginScreen: React.FC = () => {
   const router = useRouter();
   const { login, loginWithGoogle, loginWithFacebook } = useAuth();
-  const { userState } = useUserState();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,18 +29,15 @@ export const LoginScreen: React.FC = () => {
       await login({ email: email.trim(), password });
       router.replace('/(tabs)');
     } catch (error: any) {
-      Alert.alert('Login failed', error?.message || 'Please check your credentials and try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Login failed',
+        text2: error?.message || 'Please check your credentials and try again.',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-
-  useEffect(() => {
-    if (userState.isFirstTime) {
-      router.replace('/onboarding');
-    }
-  }, [router, userState.isFirstTime]);
 
   return (
     <View className="flex-1 bg-white">
@@ -86,41 +84,67 @@ export const LoginScreen: React.FC = () => {
 
         <AnimatedPressable
           onPress={async () => {
-            if (!socialEnabled) return Alert.alert('Coming soon', 'Google sign-in is temporarily disabled in local test mode.');
+            if (!socialEnabled) {
+              Toast.show({
+                type: 'info',
+                text1: 'Coming soon',
+                text2: 'Google sign-in is temporarily disabled in local test mode.',
+              });
+              return;
+            }
             try {
               setIsSubmitting(true);
               const token = await getGoogleAccessToken();
               await loginWithGoogle(token);
               router.replace('/(tabs)');
             } catch (error: any) {
-              Alert.alert('Google login failed', error?.message || 'Please try again.');
+              Toast.show({
+                type: 'error',
+                text1: 'Google login failed',
+                text2: error?.message || 'Please try again.',
+              });
             } finally {
               setIsSubmitting(false);
             }
           }}
           disabled={isSubmitting}
           className="mb-2 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-6 py-4">
-          <Text className="text-base">🟢</Text>
+          <Image
+            source={require('../../../assets/images/google-icon.png')}
+            style={{ width: 18, height: 18 }}
+            contentFit="contain"
+          />
           <Text className="font-medium text-slate-700">Continue with Google</Text>
         </AnimatedPressable>
 
         <AnimatedPressable
           onPress={async () => {
-            if (!socialEnabled) return Alert.alert('Coming soon', 'Facebook sign-in is temporarily disabled in local test mode.');
+            if (!socialEnabled) {
+              Toast.show({
+                type: 'info',
+                text1: 'Coming soon',
+                text2: 'Facebook sign-in is temporarily disabled in local test mode.',
+              });
+              return;
+            }
             try {
               setIsSubmitting(true);
               const token = await getFacebookAccessToken();
               await loginWithFacebook(token);
               router.replace('/(tabs)');
             } catch (error: any) {
-              Alert.alert('Facebook login failed', error?.message || 'Please try again.');
+              Toast.show({
+                type: 'error',
+                text1: 'Facebook login failed',
+                text2: error?.message || 'Please try again.',
+              });
             } finally {
               setIsSubmitting(false);
             }
           }}
           disabled={isSubmitting}
           className="mb-3 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-6 py-4">
-          <Text className="font-bold text-[#1877F2]">f</Text>
+          <Ionicons name="logo-facebook" size={18} color="#1877F2" />
           <Text className="font-medium text-slate-700">Continue with Facebook</Text>
         </AnimatedPressable>
 

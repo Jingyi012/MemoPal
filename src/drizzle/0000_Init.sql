@@ -118,7 +118,7 @@ CREATE TABLE `palaces` (
 	`thumbnail` text NOT NULL,
 	`is_locked` integer DEFAULT false NOT NULL,
 	`unlocked_at` text DEFAULT CURRENT_TIMESTAMP,
-	`required_xp` integer DEFAULT 0 NOT NULL,
+	`level` integer DEFAULT 1 NOT NULL,
 	`is_premium` integer DEFAULT false NOT NULL,
 	`is_custom` integer DEFAULT false NOT NULL,
 	`created_by` text,

@@ -1,4 +1,5 @@
 import { CommonHeader } from '@/components/CommonHeader';
+import { useAuth } from '@/contexts/AuthProvider';
 import LoadingView from '@/components/LoadingView';
 import { useFeatureLimits } from '@/hooks/useFeatureLimits';
 import { usePalaceList } from '@/hooks/usePalace';
@@ -12,25 +13,38 @@ import { PalaceCard } from './PalaceCard';
 
 export default function PalaceListScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const { limits } = useFeatureLimits();
   const { userState, updateState } = useUserState();
   const { data: palaces = [], isLoading, isRefetching, refetch } = usePalaceList();
-
+  console.log(palaces);
   const customPalaceLimit = limits.customPalaces;
   const canUseCustomPalaces = customPalaceLimit > 0;
   const view = canUseCustomPalaces ? userState.ui.palaceListTab : 'official';
-  const officialPalaces = useMemo(() => palaces.filter((p) => !p.isCustom), [palaces]);
-  const customPalaces = useMemo(() => palaces.filter((p) => p.isCustom), [palaces]);
+  const officialPalaces = useMemo(
+    () => palaces.filter((p) => !p.isCustom || p.createdBy !== user?.id),
+    [palaces, user?.id]
+  );
+  const customPalaces = useMemo(
+    () => palaces.filter((p) => p.isCustom && p.createdBy === user?.id),
+    [palaces, user?.id]
+  );
   const shownPalaces = view === 'official' ? officialPalaces : customPalaces;
   const canCreateMoreCustomPalaces = customPalaces.length < customPalaceLimit;
 
   const setView = (next: 'official' | 'custom') =>
     updateState({ ui: { ...userState.ui, palaceListTab: next } });
 
+  const isPremiumUpsellPalace = (palace: Palace) => palace.isLocked && palace.isPremium;
+  const isPalaceDisabled = (palace: Palace) => palace.isLocked && !isPremiumUpsellPalace(palace);
+
   const handlePalacePress = (palace: Palace) => {
     if (!palace) return;
-    if (palace.isLocked) {
-      if (palace.isPremium) router.push('/premium');
+    if (isPalaceDisabled(palace)) {
+      return;
+    }
+    if (isPremiumUpsellPalace(palace)) {
+      router.push('/premium');
       return;
     }
     router.push(`/palaces/${palace.id}`);
@@ -87,8 +101,8 @@ export default function PalaceListScreen() {
         renderItem={({ item }) => (
           <PalaceCard
             palace={item}
-            isCompleted={item.isLocked}
-            userXP={item.requiredXp}
+            isCompleted={!item.isLocked && Boolean(item.unlockedAt)}
+            isDisabled={isPalaceDisabled(item)}
             onPress={handlePalacePress}
           />
         )}

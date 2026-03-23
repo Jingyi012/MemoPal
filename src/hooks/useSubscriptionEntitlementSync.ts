@@ -12,7 +12,8 @@ export function useSubscriptionEntitlementSync(enabled: boolean) {
   useEffect(() => {
     if (!enabled || !isAuthenticated || !user?.id) return;
 
-    const isLocalDevMode = __DEV__ || process.env.EXPO_PUBLIC_LOCAL_DEV_MODE === 'true';
+    const isLocalDevMode =
+      String(process.env.EXPO_PUBLIC_LOCAL_DEV_MODE).trim().toLowerCase() === 'true';
     if (isLocalDevMode) return;
 
     const run = async () => {

@@ -36,7 +36,7 @@ export const palaces = sqliteTable('palaces', {
   thumbnail: text('thumbnail').notNull(),
   isLocked: integer('is_locked', { mode: 'boolean' }).default(false).notNull(),
   unlockedAt: text('unlocked_at').default(sql`CURRENT_TIMESTAMP`),
-  requiredXp: integer('required_xp').default(0).notNull(),
+  level: integer('level').default(1).notNull(),
   isPremium: integer('is_premium', { mode: 'boolean' }).default(false).notNull(),
   isCustom: integer('is_custom', { mode: 'boolean' }).default(false).notNull(),
   createdBy: text('created_by').references(() => users.id, { onDelete: 'cascade' }), // for custom palace

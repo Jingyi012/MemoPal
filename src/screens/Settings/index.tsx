@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthProvider';
-import { resetSeedData, seedInitialData } from '@/db/seed';
+import { resetSeedData } from '@/db/seed';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useXpIntegrityCheck } from '@/hooks/useDiagnostics';
 import { useUpdateProfile } from '@/hooks/useProfile';
@@ -33,6 +33,8 @@ export default function SettingsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
+  const isLocalDevMode =
+    String(process.env.EXPO_PUBLIC_LOCAL_DEV_MODE).trim().toLowerCase() === 'true';
   const { userState, updateState, updatePreferences } = useUserState();
   const xpIntegrityCheck = useXpIntegrityCheck();
   const updateProfileMutation = useUpdateProfile();
@@ -69,15 +71,23 @@ export default function SettingsScreen() {
 
   const reseedData = async () => {
     await resetSeedData();
-    await seedInitialData(true);
-    await queryClient.invalidateQueries();
+    queryClient.clear();
+    Toast.show({
+      type: 'success',
+      text1: 'Local SQLite data cleared',
+      text2: 'Restart app or refresh to sync from backend.',
+    });
   };
 
   const checkXpIntegrity = async () => {
     const result = await xpIntegrityCheck.mutateAsync();
 
     if (result.ok) {
-      Toast.show({ type: 'success', text1: 'XP integrity OK', text2: `users.totalXp = ${result.userXp}` });
+      Toast.show({
+        type: 'success',
+        text1: 'XP integrity OK',
+        text2: `users.totalXp = ${result.userXp}`,
+      });
       return;
     }
 
@@ -112,7 +122,6 @@ export default function SettingsScreen() {
     await queryClient.invalidateQueries();
   };
 
-  const skillLevelRef = useRef<BottomSheetModal>(null);
   const themeRef = useRef<BottomSheetModal>(null);
   const helpRef = useRef<BottomSheetModal>(null);
   const privacyRef = useRef<BottomSheetModal>(null);
@@ -175,26 +184,28 @@ export default function SettingsScreen() {
           </SettingsSection>
         ) : null}
 
-        <SettingsSection title="Developer Tools">
-          <SettingsRow
-            icon={<Shield size={20} color="#475569" />}
-            title="Reseed Offline Data"
-            subtitle="Reset DB and apply latest seed content"
-            onPress={reseedData}
-          />
-          <SettingsRow
-            icon={<Moon size={20} color="#475569" />}
-            title={`Toggle Premium (Current: ${user?.isPremium ? 'ON' : 'OFF'})`}
-            subtitle="Testing helper"
-            onPress={togglePremiumForTesting}
-          />
-          <SettingsRow
-            icon={<Shield size={20} color="#475569" />}
-            title="Check XP Integrity"
-            subtitle="Compare users.totalXp with xp_events sum"
-            onPress={checkXpIntegrity}
-          />
-        </SettingsSection>
+        {isLocalDevMode && (
+          <SettingsSection title="Developer Tools">
+            <SettingsRow
+              icon={<Shield size={20} color="#475569" />}
+              title="Clear Local SQLite Data"
+              subtitle="Delete all local tables and cached offline rows"
+              onPress={reseedData}
+            />
+            <SettingsRow
+              icon={<Moon size={20} color="#475569" />}
+              title={`Toggle Premium (Current: ${user?.isPremium ? 'ON' : 'OFF'})`}
+              subtitle="Testing helper"
+              onPress={togglePremiumForTesting}
+            />
+            <SettingsRow
+              icon={<Shield size={20} color="#475569" />}
+              title="Check XP Integrity"
+              subtitle="Compare users.totalXp with xp_events sum"
+              onPress={checkXpIntegrity}
+            />
+          </SettingsSection>
+        )}
 
         <SettingsSection title="Support">
           <SettingsRow
@@ -219,8 +230,6 @@ export default function SettingsScreen() {
             </AnimatedPressable>
           </SettingsSection>
         )}
-
-        <Text className="mt-6 text-center text-xs text-slate-400">MemoPal v1.0.0</Text>
       </ScrollView>
 
       {/* Bottom sheets */}

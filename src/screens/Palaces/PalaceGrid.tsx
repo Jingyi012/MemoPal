@@ -9,14 +9,16 @@ import { PalaceCard } from './PalaceCard';
 export const PalaceGrid: React.FC = () => {
   const router = useRouter();
   const { data: palaces = [], isLoading, isRefetching, refetch } = usePalaceList();
+  const isPremiumUpsellPalace = (palace: Palace) => palace.isLocked && palace.isPremium;
+  const isPalaceDisabled = (palace: Palace) => palace.isLocked && !isPremiumUpsellPalace(palace);
 
   const handlePalacePress = (palace: Palace) => {
     if (!palace) return;
-
-    if (palace.isLocked) {
-      if (palace.isPremium) {
-        router.push('/premium');
-      }
+    if (isPalaceDisabled(palace)) {
+      return;
+    }
+    if (isPremiumUpsellPalace(palace)) {
+      router.push('/premium');
       return;
     }
 
@@ -51,8 +53,8 @@ export const PalaceGrid: React.FC = () => {
       renderItem={({ item }) => (
         <PalaceCard
           palace={item}
-          isCompleted={item.isLocked}
-          userXP={item.requiredXp}
+          isCompleted={!item.isLocked && Boolean(item.unlockedAt)}
+          isDisabled={isPalaceDisabled(item)}
           onPress={handlePalacePress}
         />
       )}

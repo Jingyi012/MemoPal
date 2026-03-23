@@ -5,13 +5,14 @@ import { iconMap } from '@/utils/IconMap';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Lock, Star } from 'lucide-react-native';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 interface BadgeCardProps {
   badge: Badge & { isEarned: boolean };
+  onPress?: () => void;
 }
 
-export const BadgeCard: React.FC<BadgeCardProps> = ({ badge }) => {
+export const BadgeCard: React.FC<BadgeCardProps> = ({ badge, onPress }) => {
   const Icon = iconMap[badge.icon ?? 'brain'];
   const rarityConfig = BADGE_RARITY_CONFIG[badge.rarity ?? 'common'];
   const isLocked = !badge.isEarned;
@@ -19,7 +20,9 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ badge }) => {
 
   return (
     <View className="mb-3 w-[33.33%] px-1.5">
-      <View
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.85}
         className="h-[168] rounded-2xl bg-white p-6"
         style={
           !isLocked && rarityConfig.glow
@@ -55,13 +58,13 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ badge }) => {
 
         <Text
           numberOfLines={1}
-          className={`text-center font-medium ${isLocked ? 'text-slate-400' : 'text-slate-800'}`}>
+          className={`text-center text-sm font-medium ${isLocked ? 'text-slate-400' : 'text-slate-800'}`}>
           {badge.name}
         </Text>
-        <Text numberOfLines={2} className="text-center text-xs text-slate-400">
+        <Text numberOfLines={1} className="mt-1 text-center text-sm text-slate-400">
           {badge.description}
         </Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };

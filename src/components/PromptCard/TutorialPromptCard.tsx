@@ -1,7 +1,7 @@
 import { Colors } from '@/constants/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Brain } from 'lucide-react-native';
+import { Brain, ChevronRight } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 import AnimatedPressable from '../AnimatedPressable';
@@ -11,57 +11,56 @@ interface TutorialCardProps {
   onViewTutorial: () => void;
 }
 
-const TutorialPromptCard: React.FC<TutorialCardProps> = ({ dismissTutorialPrompt, onViewTutorial }) => {
+const TutorialPromptCard: React.FC<TutorialCardProps> = ({
+  dismissTutorialPrompt,
+  onViewTutorial,
+}) => {
   const router = useRouter();
+
+  const openTutorial = () => {
+    onViewTutorial();
+    router.push('/tutorial');
+  };
+
   return (
-    <LinearGradient
-      colors={[Colors.purple50, Colors.pink50]}
-      style={{
-        borderRadius: 10,
-      }}
-      className="border-2 border-purple-200 p-4 shadow-sm">
-      <View className="flex-row items-center gap-3">
-        {/* Icon */}
+    <View>
+      <AnimatedPressable onPress={openTutorial}>
         <LinearGradient
-          colors={[Colors.purple600, Colors.pink600]} // purple-600 → pink-600
+          colors={[Colors.purple50, Colors.pink50]}
           style={{
-            borderRadius: 30,
+            borderRadius: 10,
           }}
-          className="h-10 w-10 items-center justify-center">
-          <Brain size={20} color="white" />
-        </LinearGradient>
-
-        {/* Text */}
-        <View className="flex-1">
-          <Text className="mb-1 text-base font-medium text-text">🎓 New to Memory Palaces?</Text>
-          <Text className="text-sm text-text-muted">
-            Learn how to use this technique in just 2 minutes
-          </Text>
-        </View>
-
-        {/* Actions */}
-        <View className="gap-1">
-          <AnimatedPressable
-            onPress={() => {
-              onViewTutorial();
-              router.push('/tutorial');
-            }}>
+          className="border-2 border-purple-200 p-4 shadow-sm">
+          <View className="flex-row items-center gap-3">
             <LinearGradient
-              colors={['#9333ea', '#db2777']}
+              colors={[Colors.purple600, Colors.pink600]}
               style={{
-                borderRadius: 10,
+                borderRadius: 30,
               }}
-              className="px-3 py-1.5">
-              <Text className="text-xs font-medium text-white">View Tutorial</Text>
+              className="h-10 w-10 items-center justify-center">
+              <Brain size={20} color="white" />
             </LinearGradient>
-          </AnimatedPressable>
 
-          <AnimatedPressable onPress={dismissTutorialPrompt}>
-            <Text className="text-center text-xs text-text-muted">Dismiss</Text>
-          </AnimatedPressable>
-        </View>
+            <View className="flex-1">
+              <Text className="mb-1 text-base font-medium text-text">
+                New to Memory Palaces?
+              </Text>
+              <Text className="text-sm text-text-muted">
+                Learn the core technique with a quick guided tutorial.
+              </Text>
+            </View>
+
+            <ChevronRight size={20} color={Colors.slate400} />
+          </View>
+        </LinearGradient>
+      </AnimatedPressable>
+
+      <View className="mt-2 flex-row justify-end">
+        <AnimatedPressable onPress={dismissTutorialPrompt} className="px-1 py-0.5">
+          <Text className="text-xs text-text-muted">Dismiss</Text>
+        </AnimatedPressable>
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 

@@ -29,13 +29,13 @@ export const LevelProgressHeader: React.FC<Props> = ({ level }) => {
         </LinearGradient>
 
         <View className="ml-3">
-          <Text className="font-medium text-white">Level {level.currentLevel}</Text>
+          <Text className="text-base font-semibold text-white">Level {level.currentLevel}</Text>
           <Text className="text-sm font-normal text-teal-100">{level.title}</Text>
         </View>
 
         <View className="ml-auto items-end">
-          <Text className="text-white">{level.xp} xp</Text>
-          <Text className="text-xs text-teal-100">{level.xpToNextLevel} xp to next</Text>
+          <Text className="text-sm font-semibold text-white">{level.xp} xp</Text>
+          <Text className="text-sm text-teal-100">{level.xpToNextLevel} xp to next</Text>
         </View>
       </View>
 

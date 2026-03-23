@@ -16,6 +16,7 @@ export * from './mission';
 export * from './milestone';
 export * from './palace';
 export * from './review';
+export * from './referral';
 export * from './userStats';
 export * from './word';
 export * from './xpEvent';

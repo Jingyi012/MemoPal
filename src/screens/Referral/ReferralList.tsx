@@ -19,22 +19,25 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals }) => {
       </View>
 
       {referrals.map((user, i) => {
-        const isPremium = user.status.toLowerCase() === 'premium';
+        const isPremium = user.isPremium;
         const isLast = i === referrals.length - 1;
 
         return (
           <View
-            key={user.id}
+            key={user.referralId}
             className={`flex-row items-center justify-between p-3 ${
               !isLast ? 'border-b border-slate-50' : ''
             }`}>
             <View className="flex-row items-center">
               <View className="h-10 w-10 items-center justify-center rounded-full bg-indigo-50">
                 <Text className="font-bold text-indigo-600">
-                  {user.name.charAt(0).toUpperCase()}
+                  {user.displayName.charAt(0).toUpperCase()}
                 </Text>
               </View>
-              <Text className="ml-3 font-medium text-slate-700">{user.name}</Text>
+              <View className="ml-3">
+                <Text className="font-medium text-slate-700">{user.displayName}</Text>
+                <Text className="text-xs text-slate-400">{new Date(user.redeemedAt).toLocaleDateString()}</Text>
+              </View>
             </View>
 
             <View
@@ -43,7 +46,7 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals }) => {
                 className={`text-xs font-bold uppercase ${
                   isPremium ? 'text-amber-700' : 'text-slate-500'
                 }`}>
-                {user.status}
+                {isPremium ? 'premium' : 'active'}
               </Text>
             </View>
           </View>
