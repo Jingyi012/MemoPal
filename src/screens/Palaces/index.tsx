@@ -17,8 +17,9 @@ export default function PalaceListScreen() {
   const { limits } = useFeatureLimits();
   const { userState, updateState } = useUserState();
   const { data: palaces = [], isLoading, isRefetching, refetch } = usePalaceList();
-  console.log(palaces);
-  const customPalaceLimit = limits.customPalaces;
+
+  const limitTier = user?.isPremium ? 'premium' : 'free';
+  const customPalaceLimit = limits.customPalaces[limitTier];
   const canUseCustomPalaces = customPalaceLimit > 0;
   const view = canUseCustomPalaces ? userState.ui.palaceListTab : 'official';
   const officialPalaces = useMemo(

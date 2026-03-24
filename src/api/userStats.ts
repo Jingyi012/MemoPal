@@ -10,12 +10,17 @@ export interface UserStats {
   updatedAt?: string;
 }
 
+export interface FeatureLimitsTier {
+  free: number;
+  premium: number;
+}
+
 export interface FeatureLimits {
   isPremium: boolean;
-  customPalaces: number;
-  customLessonsPerPalace: number;
-  customLocationsPerPalace: number;
-  customWordsPerLesson: number;
+  customPalaces: FeatureLimitsTier;
+  customLessonsPerPalace: FeatureLimitsTier;
+  customLocationsPerPalace: FeatureLimitsTier;
+  customWordsPerLesson: FeatureLimitsTier;
 }
 
 /**
@@ -57,5 +62,4 @@ export const userStatsApi = {
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },
-
 };

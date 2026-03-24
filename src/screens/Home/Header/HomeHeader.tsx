@@ -8,6 +8,7 @@ import { CommonHeader } from '../../../components/CommonHeader';
 import { NotificationBell } from '../../../components/NotificationBell';
 import { LevelProgress } from './LevelProgress';
 import { StreakBadge } from './StreakBadge';
+import { useMemo } from 'react';
 
 interface HomeHeaderProps {
   userData: User;
@@ -17,13 +18,19 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
   const name = userData?.displayName ?? 'Welcome';
   const isPremium = userData?.isPremium ?? false;
   const avatar = userData?.avatarUrl;
-  const { levelInfo } = useLevelByXp(userData.totalXp);
+  const { levelInfo } = useLevelByXp(userData.totalXp, userData.level);
+
+  const displayLevelInfo = useMemo(() => {
+    if (!levelInfo) return { currentLevel: 1, xp: 0, xpToNextLevel: 0, title: 'Level 1' };
+    return {
+      currentLevel: levelInfo.currentLevel,
+      xp: levelInfo.xpInCurrentLevel,
+      xpToNextLevel: levelInfo.xpToNextLevel,
+      title: levelInfo.currentLevelConfig?.title || `Level ${levelInfo.currentLevel}`,
+    };
+  }, [levelInfo]);
 
   const level = levelInfo?.currentLevel ?? userData?.level ?? 1;
-  const xpToNextLevel = levelInfo?.xpToNextLevel ?? 0;
-  const xpInCurrent = levelInfo?.xpInCurrentLevel ?? userData.totalXp;
-  const xpProgressDenominator = Math.max(1, xpInCurrent + xpToNextLevel);
-  const xpProgress = Math.min(100, Math.max(0, (xpInCurrent / xpProgressDenominator) * 100));
 
   return (
     <CommonHeader
@@ -37,7 +44,7 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
             {isPremium && ' • 👑 Premium'}
           </Text>
         ) : (
-          <Text className="text-xs text-teal-100">New here? Let's get started 🚀</Text>
+          <Text className="text-xs text-teal-100">New here? Let&apos;s get started 🚀</Text>
         )
       }
       // Actions (right side icons)
@@ -64,12 +71,7 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
       // Additional content below header
       additionalContent={
         <>
-          <LevelProgress
-            userData={userData}
-            xpToNextLevel={xpToNextLevel}
-            xpInCurrentLevel={xpInCurrent}
-            xpProgress={xpProgress}
-          />
+          <LevelProgress userData={userData} level={displayLevelInfo} />
           <StreakBadge streak={userData.stats?.currentStreak ?? 0} />
         </>
       }

@@ -6,11 +6,10 @@ import { useGamificationUiConfig } from '@/hooks/useGamificationUiConfig';
 import { useLevelByXp } from '@/hooks/useLevelConfigs';
 import { useMilestones } from '@/hooks/useMilestones';
 import { useMissions } from '@/hooks/useMissions';
-import { useTotalXp } from '@/hooks/useXpEvents';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router'; // 1. Added useLocalSearchParams
 import { History } from 'lucide-react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView } from 'react-native';
+import React, { useCallback, useMemo, useState, useEffect } from 'react'; // 2. Added useEffect
+import { RefreshControl, ScrollView } from 'react-native';
 import { BadgeDetailsModal } from './BadgeDetailsModal';
 import { AchievementTab, AchievementTabSwitcher } from './AchievementTabSwitcher';
 import { BadgesTab } from './BadgesTab';
@@ -19,49 +18,52 @@ import { MilestonesTab } from './MilestonesTab';
 import { MissionsTab } from './MissionsTab';
 import { OverviewTab } from './OverviewTab';
 
-function isAchievementTab(value: string | string[] | undefined): value is AchievementTab {
-  if (Array.isArray(value)) {
-    return false;
-  }
-
-  return value === 'overview' || value === 'badges' || value === 'milestones' || value === 'missions';
-}
-
 const AchievementsScreen: React.FC = () => {
   const router = useRouter();
-  const params = useLocalSearchParams<{ tab?: string }>();
-  const { user, isLoading: userLoading } = useCurrentUser();
-  const { badges, isLoading: badgesLoading } = useAllBadges();
-  const { milestones, isLoading: milestonesLoading } = useMilestones();
-  const { missions, isLoading: missionsLoading, isError: missionsLoadError, refetch } = useMissions();
-  const { totalXp, isLoading: xpLoading } = useTotalXp();
-  const { levelInfo, isLoading: levelInfoLoading } = useLevelByXp(totalXp);
-  const { config: gamificationUiConfig } = useGamificationUiConfig();
+
+  const { tab } = useLocalSearchParams<{ tab?: AchievementTab }>();
+
+  // --- UI STATE ---
+  const [activeTab, setActiveTab] = useState<AchievementTab>(tab ?? 'overview');
   const [selectedBadgeId, setSelectedBadgeId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<AchievementTab>('overview');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    if (!isAchievementTab(params.tab)) {
-      return;
+    if (tab) {
+      setActiveTab(tab);
     }
+  }, [tab]);
 
-    setActiveTab(params.tab);
-  }, [params.tab]);
+  const handleTabChange = useCallback((newTab: AchievementTab) => {
+    setActiveTab(newTab);
+  }, []);
+
+  const { user, isLoading: userLoading, refetch: refetchCurrentUser } = useCurrentUser();
+  const { badges, isLoading: badgesLoading, refetch: refetchBadges } = useAllBadges();
+  const { milestones, isLoading: milestonesLoading, refetch: refetchMilestones } = useMilestones();
+  const {
+    missions,
+    isLoading: missionsLoading,
+    isError: missionsLoadError,
+    refetch: refetchMissions,
+  } = useMissions();
+
+  const totalXp = Math.max(0, user?.totalXp ?? 0);
+
+  const {
+    levelInfo,
+    isLoading: levelInfoLoading,
+    refetch: refetchLevelInfo,
+  } = useLevelByXp(totalXp, user?.level);
+
+  const { config: gamificationUiConfig, refetch: refetchGamificationUiConfig } =
+    useGamificationUiConfig();
 
   const isLoading =
-    badgesLoading ||
-    milestonesLoading ||
-    missionsLoading ||
-    userLoading ||
-    xpLoading ||
-    levelInfoLoading;
+    badgesLoading || milestonesLoading || missionsLoading || userLoading || levelInfoLoading;
 
   const enrichedBadges = useMemo(
-    () =>
-      badges.map((badge) => ({
-        ...badge,
-        isEarned: !!badge.earnedAt,
-      })),
+    () => badges.map((badge) => ({ ...badge, isEarned: !!badge.earnedAt })),
     [badges]
   );
 
@@ -72,10 +74,10 @@ const AchievementsScreen: React.FC = () => {
 
   const currentMetricValue = useCallback(
     (conditionType: string) => {
-      switch ((conditionType || '').toLowerCase()) {
+      const type = (conditionType || '').toLowerCase();
+      switch (type) {
         case 'level':
           return user?.level ?? levelInfo?.currentLevel ?? 1;
-        case 'total_xp':
         case 'xp_earned':
           return totalXp;
         case 'lessons_completed':
@@ -85,20 +87,12 @@ const AchievementsScreen: React.FC = () => {
         case 'streak_days':
           return user?.stats?.currentStreak ?? 0;
         case 'mastered_lessons':
-          return milestones.filter((milestone) => !!milestone.achievedAt).length;
+          return milestones.filter((m) => !!m.achievedAt).length;
         default:
           return 0;
       }
     },
-    [
-      levelInfo?.currentLevel,
-      milestones,
-      totalXp,
-      user?.level,
-      user?.stats?.currentStreak,
-      user?.stats?.lessonsCompleted,
-      user?.stats?.wordsLearned,
-    ]
+    [levelInfo, milestones, totalXp, user]
   );
 
   const enrichedMilestones = useMemo(() => {
@@ -107,11 +101,10 @@ const AchievementsScreen: React.FC = () => {
         const targetValue = Math.max(1, milestone.conditionValue ?? 1);
         const currentValue = currentMetricValue(milestone.conditionType);
         const progressPercent = Math.min(100, Math.round((currentValue / targetValue) * 100));
-        const isLocked = !milestone.achievedAt;
 
         return {
           ...milestone,
-          isLocked,
+          isLocked: !milestone.achievedAt,
           currentValue,
           targetValue,
           progressPercent,
@@ -126,63 +119,40 @@ const AchievementsScreen: React.FC = () => {
 
   const milestoneGroups = useMemo(() => {
     const groups: Record<string, typeof enrichedMilestones> = {};
-
     for (const milestone of enrichedMilestones) {
       const key = milestone.conditionType || 'other';
-      if (!groups[key]) {
-        groups[key] = [];
-      }
+      if (!groups[key]) groups[key] = [];
       groups[key].push(milestone);
     }
-
     return Object.entries(groups)
       .map(
-        ([conditionType, items]) =>
-          [conditionType, [...items].sort((a, b) => a.targetValue - b.targetValue)] as const
+        ([type, items]) => [type, [...items].sort((a, b) => a.targetValue - b.targetValue)] as const
       )
       .sort(([a], [b]) => a.localeCompare(b));
   }, [enrichedMilestones]);
 
-  const totalBadgeEarned = useMemo(() => badges.filter((badge) => !!badge.earnedAt).length, [badges]);
-  const totalMilestonesAchieved = useMemo(
-    () => milestones.filter((milestone) => !!milestone.achievedAt).length,
-    [milestones]
-  );
-  const activeMissions = useMemo(
-    () => missions.filter((mission) => mission.isActive).sort((a, b) => a.sortOrder - b.sortOrder),
-    [missions]
-  );
-  const completedMissions = useMemo(
-    () => activeMissions.filter((mission) => mission.isCompleted).length,
-    [activeMissions]
-  );
-  const recentBadges = useMemo(
-    () =>
-      [...enrichedBadges]
-        .filter((badge) => !!badge.earnedAt)
+  const summaryStats = useMemo(() => {
+    const activeMissions = missions
+      .filter((m) => m.isActive)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    return {
+      totalBadgeEarned: badges.filter((b) => !!b.earnedAt).length,
+      totalMilestonesAchieved: milestones.filter((m) => !!m.achievedAt).length,
+      activeMissions,
+      completedMissionsCount: activeMissions.filter((m) => m.isCompleted).length,
+      recentBadges: [...enrichedBadges]
+        .filter((b) => !!b.earnedAt)
         .sort((a, b) => new Date(b.earnedAt ?? 0).getTime() - new Date(a.earnedAt ?? 0).getTime())
         .slice(0, 3),
-    [enrichedBadges]
-  );
-  const upcomingMilestones = useMemo(
-    () =>
-      enrichedMilestones
-        .filter((milestone) => milestone.isLocked)
+      upcomingMilestones: enrichedMilestones
+        .filter((m) => m.isLocked)
         .sort((a, b) => a.remaining - b.remaining)
         .slice(0, 3),
-    [enrichedMilestones]
-  );
+    };
+  }, [badges, milestones, missions, enrichedBadges, enrichedMilestones]);
 
   const displayLevelInfo = useMemo(() => {
-    if (!levelInfo) {
-      return {
-        currentLevel: 1,
-        xp: 0,
-        xpToNextLevel: 0,
-        title: 'Level 1',
-      };
-    }
-
+    if (!levelInfo) return { currentLevel: 1, xp: 0, xpToNextLevel: 0, title: 'Level 1' };
     return {
       currentLevel: levelInfo.currentLevel,
       xp: levelInfo.xpInCurrentLevel,
@@ -191,9 +161,30 @@ const AchievementsScreen: React.FC = () => {
     };
   }, [levelInfo]);
 
-  if (isLoading) {
-    return <LoadingView />;
-  }
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.allSettled([
+        refetchCurrentUser(),
+        refetchBadges(),
+        refetchMilestones(),
+        refetchMissions(),
+        refetchLevelInfo(),
+        refetchGamificationUiConfig(),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [
+    refetchBadges,
+    refetchCurrentUser,
+    refetchGamificationUiConfig,
+    refetchLevelInfo,
+    refetchMilestones,
+    refetchMissions,
+  ]);
+
+  if (isLoading) return <LoadingView />;
 
   return (
     <>
@@ -202,55 +193,51 @@ const AchievementsScreen: React.FC = () => {
         description="Track your badges, milestones, and missions"
         hideBackButton
         showNotification
-        actions={[
-          {
-            icon: History,
-            onPress: () => router.push('/rewards-history'),
-          },
-        ]}
+        actions={[{ icon: History, onPress: () => router.push('/rewards-history') }]}
         additionalContent={<LevelProgressHeader level={displayLevelInfo} />}
       />
 
       <ScrollView
         className="flex-1 bg-gray-50 p-4"
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingBottom: 24 }}>
-        <AchievementTabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+        <AchievementTabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
 
-        {activeTab === 'overview' ? (
+        {activeTab === 'overview' && (
           <OverviewTab
-            totalBadgeEarned={totalBadgeEarned}
-            totalMilestonesAchieved={totalMilestonesAchieved}
-            completedMissions={completedMissions}
-            totalActiveMissions={activeMissions.length}
-            recentBadges={recentBadges}
-            upcomingMilestones={upcomingMilestones}
+            totalBadgeEarned={summaryStats.totalBadgeEarned}
+            totalMilestonesAchieved={summaryStats.totalMilestonesAchieved}
+            completedMissions={summaryStats.completedMissionsCount}
+            totalActiveMissions={summaryStats.activeMissions.length}
+            recentBadges={summaryStats.recentBadges}
+            upcomingMilestones={summaryStats.upcomingMilestones}
           />
-        ) : null}
+        )}
 
-        {activeTab === 'badges' ? (
+        {activeTab === 'badges' && (
           <BadgesTab
             badges={enrichedBadges}
             config={gamificationUiConfig}
             onSelectBadge={setSelectedBadgeId}
           />
-        ) : null}
+        )}
 
-        {activeTab === 'milestones' ? (
+        {activeTab === 'milestones' && (
           <MilestonesTab milestoneGroups={milestoneGroups} config={gamificationUiConfig} />
-        ) : null}
+        )}
 
-        {activeTab === 'missions' ? (
+        {activeTab === 'missions' && (
           <MissionsTab
-            missions={activeMissions}
+            missions={summaryStats.activeMissions}
             isError={missionsLoadError}
             onRetry={() => {
-              void refetch();
+              void refetchMissions();
             }}
             sectionTitle={gamificationUiConfig.missionSectionTitle}
             sectionDescription={gamificationUiConfig.missionSectionDescription}
           />
-        ) : null}
+        )}
       </ScrollView>
 
       <BadgeDetailsModal
@@ -263,4 +250,3 @@ const AchievementsScreen: React.FC = () => {
 };
 
 export default AchievementsScreen;
-

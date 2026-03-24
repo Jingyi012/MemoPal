@@ -8,6 +8,7 @@ interface LevelConfigRepository {
   getLevelByXp(totalXp: number): Promise<number>;
   getNextLevel(currentLevel: number): Promise<any | null>;
   getXpRequiredForLevel(level: number): Promise<number>;
+  replaceAll(configs: any[]): Promise<void>;
   upsertMany(configs: any[]): Promise<void>;
 }
 
@@ -53,6 +54,25 @@ export function createLevelConfigRepository(): LevelConfigRepository {
     async getXpRequiredForLevel(level: number): Promise<number> {
       const config = await this.getByLevel(level);
       return config?.requiredXp ?? 0;
+    },
+
+    async replaceAll(configs: any[]): Promise<void> {
+      const now = new Date().toISOString();
+      const normalized = configs.map((cfg) => ({
+        ...cfg,
+        createdAt: cfg.createdAt ?? now,
+        updatedAt: cfg.updatedAt ?? now,
+        isDeleted: Boolean(cfg.isDeleted),
+        deletedAt: cfg.deletedAt ?? null,
+        lastSyncedAt: now,
+      }));
+
+      await db.transaction(async (tx) => {
+        await tx.delete(schema.levelConfigs);
+        if (normalized.length > 0) {
+          await tx.insert(schema.levelConfigs).values(normalized);
+        }
+      });
     },
 
     async upsertMany(configs: any[]): Promise<void> {

@@ -1,6 +1,8 @@
+import { missionApi } from '@/api/mission';
 import { SourceType } from '@/enums/sourceType';
+import { createMissionRepository } from '@/repositories/mission.repo';
 import { XpEventCreateResult, createXpEventsRepository } from '@/repositories/xpEvents.repo';
-import { MissionProgress } from '@/types/missions';
+import { GamificationMobileUiConfig, MissionDashboard, MissionProgress } from '@/types/missions';
 import { recordXpEventWithClientEventId } from './xpEvents.service';
 
 export interface MissionClaimResult extends XpEventCreateResult {
@@ -10,6 +12,7 @@ export interface MissionClaimResult extends XpEventCreateResult {
 }
 
 const xpEventRepo = createXpEventsRepository();
+const missionRepo = createMissionRepository();
 
 function formatDate(value: Date): string {
   return value.toISOString().slice(0, 10);
@@ -77,3 +80,32 @@ export async function claimMissionReward(
   };
 }
 
+export async function getCurrentMissionDashboard(): Promise<MissionDashboard> {
+  try {
+    const remoteDashboard = await missionApi.getCurrent();
+    await missionRepo.upsertCurrent(remoteDashboard);
+  } catch (error) {
+    console.warn('Failed to sync missions from backend, using local data:', error);
+  }
+
+  const localDashboard = await missionRepo.getCurrent();
+  if (localDashboard) {
+    return localDashboard;
+  }
+
+  throw new Error('Unable to load missions right now.');
+}
+
+export async function getMobileGamificationUiConfig(
+  defaultConfig: GamificationMobileUiConfig
+): Promise<GamificationMobileUiConfig> {
+  try {
+    const remoteConfig = await missionApi.getMobileUiConfig();
+    await missionRepo.upsertMobileUiConfig(remoteConfig);
+  } catch (error) {
+    console.warn('Failed to sync gamification UI config from backend, using local data:', error);
+  }
+
+  const localConfig = await missionRepo.getMobileUiConfig();
+  return localConfig ?? defaultConfig;
+}

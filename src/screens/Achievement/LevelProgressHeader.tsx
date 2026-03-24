@@ -14,7 +14,11 @@ interface Props {
 }
 
 export const LevelProgressHeader: React.FC<Props> = ({ level }) => {
-  const progress = (level.xp / level.xpToNextLevel) * 100;
+  const levelWindowXp = Math.max(0, level.xp + level.xpToNextLevel);
+  const progress =
+    levelWindowXp <= 0
+      ? 100
+      : Math.max(0, Math.min(100, Math.round((level.xp / levelWindowXp) * 100)));
 
   return (
     <View className="mt-3 rounded-xl bg-gray-100/20 p-3">
@@ -34,8 +38,10 @@ export const LevelProgressHeader: React.FC<Props> = ({ level }) => {
         </View>
 
         <View className="ml-auto items-end">
-          <Text className="text-sm font-semibold text-white">{level.xp} xp</Text>
-          <Text className="text-sm text-teal-100">{level.xpToNextLevel} xp to next</Text>
+          <Text className="text-sm font-semibold text-white">
+            {level.xp}/{Math.max(level.xp, levelWindowXp)} XP
+          </Text>
+          <Text className="text-sm text-teal-100"></Text>
         </View>
       </View>
 
@@ -49,6 +55,7 @@ export const LevelProgressHeader: React.FC<Props> = ({ level }) => {
             style={{ width: `${progress}%` }}
           />
         </View>
+        <Text className="mt-1 text-right text-[11px] text-teal-100">{progress}%</Text>
       </View>
     </View>
   );

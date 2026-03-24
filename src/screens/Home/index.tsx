@@ -7,10 +7,7 @@ import { useDueReviews } from '@/hooks/useDueReviews';
 import { useFeatureLimits } from '@/hooks/useFeatureLimits';
 import { useGamificationUiConfig } from '@/hooks/useGamificationUiConfig';
 import { useLevelByXp } from '@/hooks/useLevelConfigs';
-import { useMilestones } from '@/hooks/useMilestones';
 import { useMissions } from '@/hooks/useMissions';
-import { usePalaceList } from '@/hooks/usePalace';
-import { useTotalXp } from '@/hooks/useXpEvents';
 import { HomeHeader } from '@/screens/Home/Header/HomeHeader';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -37,17 +34,16 @@ const HomeScreen = () => {
   const router = useRouter();
   const { user } = useCurrentUser();
   const { limits: featureLimits } = useFeatureLimits();
-  const { totalXp } = useTotalXp();
-  const { levelInfo } = useLevelByXp(totalXp);
-  const { milestones } = useMilestones();
+  const totalXp = Math.max(0, user?.totalXp ?? 0);
+  const { levelInfo } = useLevelByXp(totalXp, user?.level);
   const { missions } = useMissions();
   const { config: gamificationUiConfig } = useGamificationUiConfig();
   const { dueReviews } = useDueReviews();
-  const { data: palaces = [] } = usePalaceList();
   const { userState, updateState } = useUserState();
 
   const showTutorialPrompt = !userState.ui.tutorialPromptDismissed;
-  const canCreateCustomPalace = featureLimits.customPalaces > 0;
+  const limitTier = user?.isPremium ? 'premium' : 'free';
+  const canCreateCustomPalace = featureLimits.customPalaces[limitTier] > 0;
 
   const overdueCount = dueReviews.filter((r) => new Date(r.dueDate).getTime() < Date.now()).length;
   const dueCount = dueReviews.length;
@@ -67,50 +63,12 @@ const HomeScreen = () => {
         isPremium: false,
       };
 
-  const stats = headerUser.stats;
-  const metricValue = (conditionType?: string) => {
-    switch (conditionType) {
-      case 'level':
-        return headerUser.level;
-      case 'total_xp':
-        return totalXp;
-      case 'lessons_completed':
-        return stats?.lessonsCompleted ?? 0;
-      case 'words_learned':
-        return stats?.wordsLearned ?? 0;
-      case 'streak_days':
-        return stats?.currentStreak ?? 0;
-      default:
-        return 0;
-    }
-  };
-
-  const nextMilestone = milestones
-    .filter((m) => !m.achievedAt)
-    .map((m) => {
-      const current = metricValue(m.conditionType);
-      const target = m.conditionValue ?? 0;
-      const progress = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
-      return { ...m, current, target, progress, remaining: Math.max(0, target - current) };
-    })
-    .sort((a, b) => a.remaining - b.remaining)[0];
-
   const activeMissions = missions
     .filter((mission) => mission.isActive)
     .sort((a, b) => a.sortOrder - b.sortOrder);
   const previewMissionCount = Math.max(0, gamificationUiConfig.homeMissionPreviewCount);
   const missionPreview = activeMissions.slice(0, previewMissionCount);
   const completedMissionCount = activeMissions.filter((mission) => mission.isCompleted).length;
-
-  const currentLevelRequiredXp = levelInfo?.currentLevelConfig?.requiredXp ?? 0;
-  const nextLevelRequiredXp =
-    levelInfo?.nextLevelConfig?.requiredXp ??
-    currentLevelRequiredXp + Math.max(100, levelInfo?.xpToNextLevel ?? 100);
-  const levelSpan = Math.max(1, nextLevelRequiredXp - currentLevelRequiredXp);
-  const levelProgressPercent = Math.max(
-    0,
-    Math.min(100, Math.round(((totalXp - currentLevelRequiredXp) / levelSpan) * 100))
-  );
 
   return (
     <View className="flex-1 bg-slate-50">
@@ -198,62 +156,13 @@ const HomeScreen = () => {
               <Text className="mt-3 text-xs text-slate-500">No active missions right now.</Text>
             )}
             <AnimatedPressable
-              onPress={() => router.push({ pathname: '/(tabs)/badges', params: { tab: 'missions' } })}
+              onPress={() =>
+                router.push({ pathname: '/(tabs)/achievements', params: { tab: 'missions' } })
+              }
               className="mt-3 items-center rounded-xl bg-teal-600 px-3 py-2">
               <Text className="text-xs font-semibold text-white">Open Missions</Text>
             </AnimatedPressable>
           </View>
-
-          <View className="mt-4 rounded-2xl bg-white p-4">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-base font-bold text-slate-900">Level Progress</Text>
-              <Text className="text-xs font-semibold text-teal-700">Level {headerUser.level}</Text>
-            </View>
-            <Text className="mt-1 text-sm text-slate-500">
-              {levelInfo?.xpToNextLevel ?? 0} XP to Level {(headerUser.level ?? 1) + 1}
-            </Text>
-            <View className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-              <View className="h-full bg-teal-500" style={{ width: `${levelProgressPercent}%` }} />
-            </View>
-            <Text className="mt-2 text-right text-xs text-slate-500">
-              {totalXp}/{nextLevelRequiredXp} XP
-            </Text>
-          </View>
-
-          <View className="mt-4 flex-row gap-2">
-            <View className="flex-1 rounded-2xl bg-white p-3">
-              <Text className="text-xs text-slate-500">Current XP</Text>
-              <Text className="mt-1 text-lg font-bold text-slate-900">{totalXp}</Text>
-            </View>
-            <View className="flex-1 rounded-2xl bg-white p-3">
-              <Text className="text-xs text-slate-500">Palaces Available</Text>
-              <Text className="mt-1 text-lg font-bold text-slate-900">{palaces.length}</Text>
-            </View>
-          </View>
-
-          {nextMilestone ? (
-            <View className="mt-4 rounded-2xl bg-white p-4">
-              <Text className="text-base font-bold text-slate-900">Next Milestone</Text>
-              <Text className="mt-1 text-sm font-semibold text-slate-700">
-                {nextMilestone.title}
-              </Text>
-              {!!nextMilestone.description && (
-                <Text className="mt-1 text-sm text-slate-500">{nextMilestone.description}</Text>
-              )}
-              <Text className="mt-1 text-xs text-slate-500">
-                {nextMilestone.current}/{nextMilestone.target} - {nextMilestone.remaining} to go
-              </Text>
-              <View className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                <View
-                  className="h-full bg-teal-500"
-                  style={{ width: `${nextMilestone.progress}%` }}
-                />
-              </View>
-              <Text className="mt-2 text-right text-xs font-semibold text-slate-500">
-                {nextMilestone.progress}% complete
-              </Text>
-            </View>
-          ) : null}
 
           <View className="mt-4">
             <Text className="mb-2 text-base font-bold text-slate-800">Quick Actions</Text>
@@ -270,8 +179,11 @@ const HomeScreen = () => {
             <QuickAction
               title="Missions"
               subtitle="See all missions and claim XP rewards"
-              onPress={() => router.push({ pathname: '/(tabs)/badges', params: { tab: 'missions' } })}
+              onPress={() =>
+                router.push({ pathname: '/(tabs)/achievements', params: { tab: 'missions' } })
+              }
             />
+
             {canCreateCustomPalace ? (
               <QuickAction
                 title="Create Custom Palace"

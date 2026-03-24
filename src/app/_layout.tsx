@@ -24,6 +24,7 @@ import migrations from '../drizzle/migrations';
 
 function AppLayout() {
   const { colorScheme } = useColorScheme();
+
   const { success: migrationsSuccess, error: migrationError } = useMigrations(db, migrations);
   const isAppReady = migrationsSuccess;
 
@@ -43,8 +44,6 @@ function AppLayout() {
   if (!isAppReady) {
     return null;
   }
-
-  
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

@@ -12,8 +12,11 @@ async function clearAllLocalTables(tx: any) {
   await tx.delete(schema.lessons);
   await tx.delete(schema.locations);
   await tx.delete(schema.palaces);
+  await tx.delete(schema.missions);
+  await tx.delete(schema.missionUiConfigs);
   await tx.delete(schema.badges);
   await tx.delete(schema.milestones);
+  await tx.delete(schema.featureLimits);
   await tx.delete(schema.xpEvents);
   await tx.delete(schema.xpConfigs);
   await tx.delete(schema.levelConfigs);

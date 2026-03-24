@@ -1,4 +1,4 @@
-import { missionApi } from '@/api/mission';
+import { getMobileGamificationUiConfig } from '@/services/mission.service';
 import { GamificationMobileUiConfig } from '@/types/missions';
 import { useQuery } from '@tanstack/react-query';
 
@@ -16,11 +16,9 @@ export const DEFAULT_GAMIFICATION_UI_CONFIG: GamificationMobileUiConfig = {
     reviews_completed: 'Review Milestones',
     lessons_completed: 'Lesson Milestones',
     words_learned: 'Word Milestones',
-    xp_earned: 'XP Milestones',
     streak_days: 'Streak Milestones',
     mastered_lessons: 'Mastery Milestones',
     level: 'Level Milestones',
-    total_xp: 'XP Milestones',
   },
 };
 
@@ -29,22 +27,31 @@ export const GAMIFICATION_UI_KEYS = {
   mobile: () => [...GAMIFICATION_UI_KEYS.all, 'mobile'] as const,
 };
 
-function normalizeConfig(raw?: Partial<GamificationMobileUiConfig> | null): GamificationMobileUiConfig {
+function normalizeConfig(
+  raw?: Partial<GamificationMobileUiConfig> | null
+): GamificationMobileUiConfig {
   if (!raw) {
     return DEFAULT_GAMIFICATION_UI_CONFIG;
   }
 
   return {
-    homeMissionCardTitle: raw.homeMissionCardTitle?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.homeMissionCardTitle,
+    homeMissionCardTitle:
+      raw.homeMissionCardTitle?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.homeMissionCardTitle,
     homeMissionCardDescription:
-      raw.homeMissionCardDescription?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.homeMissionCardDescription,
-    missionScreenTitle: raw.missionScreenTitle?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.missionScreenTitle,
+      raw.homeMissionCardDescription?.trim() ||
+      DEFAULT_GAMIFICATION_UI_CONFIG.homeMissionCardDescription,
+    missionScreenTitle:
+      raw.missionScreenTitle?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.missionScreenTitle,
     missionScreenDescription:
-      raw.missionScreenDescription?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.missionScreenDescription,
-    missionSectionTitle: raw.missionSectionTitle?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.missionSectionTitle,
+      raw.missionScreenDescription?.trim() ||
+      DEFAULT_GAMIFICATION_UI_CONFIG.missionScreenDescription,
+    missionSectionTitle:
+      raw.missionSectionTitle?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.missionSectionTitle,
     missionSectionDescription:
-      raw.missionSectionDescription?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.missionSectionDescription,
-    badgeSectionTitle: raw.badgeSectionTitle?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.badgeSectionTitle,
+      raw.missionSectionDescription?.trim() ||
+      DEFAULT_GAMIFICATION_UI_CONFIG.missionSectionDescription,
+    badgeSectionTitle:
+      raw.badgeSectionTitle?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.badgeSectionTitle,
     milestoneSectionTitle:
       raw.milestoneSectionTitle?.trim() || DEFAULT_GAMIFICATION_UI_CONFIG.milestoneSectionTitle,
     homeMissionPreviewCount: Math.min(
@@ -66,13 +73,8 @@ function normalizeConfig(raw?: Partial<GamificationMobileUiConfig> | null): Gami
 export function useGamificationUiConfig() {
   const query = useQuery({
     queryKey: GAMIFICATION_UI_KEYS.mobile(),
-    queryFn: async () => {
-      try {
-        return normalizeConfig(await missionApi.getMobileUiConfig());
-      } catch {
-        return DEFAULT_GAMIFICATION_UI_CONFIG;
-      }
-    },
+    queryFn: async () =>
+      normalizeConfig(await getMobileGamificationUiConfig(DEFAULT_GAMIFICATION_UI_CONFIG)),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 15,
   });

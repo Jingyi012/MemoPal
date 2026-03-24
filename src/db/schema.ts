@@ -154,10 +154,33 @@ export const milestones = sqliteTable('milestones', {
   title: text('title').notNull(),
   description: text('description'),
   conditionType: text('condition_type')
-    .$type<'total_xp' | 'level' | 'lessons_completed' | 'words_learned' | 'streak_days'>()
+    .$type<'level' | 'lessons_completed' | 'words_learned' | 'streak_days'>()
     .notNull(),
   conditionValue: integer('condition_value').notNull(),
   achievedAt: text('achieved_at').default(sql`CURRENT_TIMESTAMP`),
+  ...commonColumns,
+});
+
+export const missions = sqliteTable('missions', {
+  key: text('key').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description'),
+  metricType: text('metric_type').notNull(),
+  period: text('period').notNull(),
+  currentValue: integer('current_value').default(0).notNull(),
+  targetValue: integer('target_value').default(0).notNull(),
+  rewardXp: integer('reward_xp').default(0).notNull(),
+  sortOrder: integer('sort_order').default(0).notNull(),
+  isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
+  isCompleted: integer('is_completed', { mode: 'boolean' }).default(false).notNull(),
+  progressPercent: integer('progress_percent').default(0).notNull(),
+  generatedAtUtc: text('generated_at_utc'),
+  ...commonColumns,
+});
+
+export const missionUiConfigs = sqliteTable('mission_ui_configs', {
+  id: text('id').primaryKey(),
+  payload: text('payload').notNull(),
   ...commonColumns,
 });
 
@@ -167,8 +190,22 @@ export const badges = sqliteTable('badges', {
   name: text('name').notNull(),
   description: text('description'),
   iconUrl: text('icon_url'),
-  icon: text('icon_url'),
+  icon: text('icon'),
   rarity: text('rarity').$type<'common' | 'rare' | 'epic' | 'legendary'>(),
+  conditionType: text('condition_type')
+    .$type<
+      | 'manual'
+      | 'level'
+      | 'lessons_completed'
+      | 'words_learned'
+      | 'streak_days'
+      | 'missions_completed'
+      | 'total_reviews'
+      | 'total_xp'
+    >()
+    .default('manual')
+    .notNull(),
+  conditionValue: integer('condition_value').default(0).notNull(),
   earnedAt: text('earned_at').default(sql`CURRENT_TIMESTAMP`),
   ...commonColumns,
 });
@@ -182,6 +219,16 @@ export const userStats = sqliteTable('user_stats', {
   currentStreak: integer('current_streak').default(0).notNull(),
   longestStreak: integer('longest_streak').default(0).notNull(),
   lastActiveDate: text('last_active_date'),
+  ...commonColumns,
+});
+
+export const featureLimits = sqliteTable('feature_limits', {
+  userId: text('user_id').primaryKey(),
+  isPremium: integer('is_premium', { mode: 'boolean' }).default(false).notNull(),
+  customPalaces: integer('custom_palaces').default(0).notNull(),
+  customLessonsPerPalace: integer('custom_lessons_per_palace').default(0).notNull(),
+  customLocationsPerPalace: integer('custom_locations_per_palace').default(0).notNull(),
+  customWordsPerLesson: integer('custom_words_per_lesson').default(0).notNull(),
   ...commonColumns,
 });
 

@@ -13,12 +13,7 @@ interface TutorialCardProps {
 const ReferrerPromptCard: React.FC<TutorialCardProps> = ({ router }) => {
   return (
     <AnimatedPressable onPress={() => router.push('/referral')}>
-      <LinearGradient
-        colors={[Colors.purple50, Colors.pink50]}
-        style={{
-          borderRadius: 10,
-        }}
-        className="border-2 border-purple-200 p-4 shadow-sm">
+      <View className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
         <View className="flex-row items-center gap-3">
           {/* Icon */}
           <LinearGradient
@@ -40,7 +35,7 @@ const ReferrerPromptCard: React.FC<TutorialCardProps> = ({ router }) => {
             <ChevronRight size={20} color={Colors.slate400} />
           </View>
         </View>
-      </LinearGradient>
+      </View>
     </AnimatedPressable>
   );
 };

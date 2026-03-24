@@ -79,7 +79,9 @@ export const LoginScreen: React.FC = () => {
           onPress={handleLogin}
           disabled={!canSubmit || isSubmitting}
           className={`mb-3 w-full max-w-sm items-center justify-center rounded-xl px-6 py-4 ${!canSubmit || isSubmitting ? 'bg-gray-300' : 'bg-teal-600'}`}>
-          <Text className="font-medium text-white">{isSubmitting ? 'Signing in...' : 'Sign In'}</Text>
+          <Text className="font-medium text-white">
+            {isSubmitting ? 'Signing in...' : 'Sign In'}
+          </Text>
         </AnimatedPressable>
 
         <AnimatedPressable

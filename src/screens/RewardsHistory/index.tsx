@@ -6,7 +6,7 @@ import { useXpEvents } from '@/hooks/useXpEvents';
 import { useRouter } from 'expo-router';
 import { Award, Flag, Sparkles } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 type RewardFilter = 'all' | 'xp' | 'badge' | 'milestone';
 
@@ -154,14 +154,19 @@ export default function RewardsHistoryScreen() {
               {FILTERS.map((item) => {
                 const isActive = item.key === filter;
                 return (
-                  <Text
+                  <TouchableOpacity
                     key={item.key}
                     onPress={() => setFilter(item.key)}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      isActive ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600'
+                    className={`min-w-[68px] items-center justify-center rounded-full px-3 py-1.5 ${
+                      isActive ? 'bg-teal-600' : 'bg-slate-100'
                     }`}>
-                    {item.label}
-                  </Text>
+                    <Text
+                      className={`text-center text-xs font-semibold ${
+                        isActive ? 'text-white' : 'text-slate-600'
+                      }`}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
                 );
               })}
             </View>

@@ -2,6 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useFeatureLimits } from '@/hooks/useFeatureLimits';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLocationMutations } from '@/hooks/useLocation';
 import { usePalaceList, usePalaceMutations } from '@/hooks/usePalace';
 import * as ImagePicker from 'expo-image-picker';
@@ -32,30 +33,46 @@ async function pickImage() {
     });
     return null;
   }
-  const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8, allowsEditing: true, aspect: [16, 9] });
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    quality: 0.8,
+    allowsEditing: true,
+    aspect: [16, 9],
+  });
   if (result.canceled || !result.assets?.length) return null;
   return result.assets[0].uri;
 }
 
 export default function CreatePalaceScreen() {
   const router = useRouter();
+  const { user } = useCurrentUser();
   const { data: palaces = [] } = usePalaceList();
   const { limits, isLoading: isLoadingLimits } = useFeatureLimits();
   const { createPalace } = usePalaceMutations();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [thumbnail, setThumbnail] = useState('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800');
+  const [thumbnail, setThumbnail] = useState(
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800'
+  );
   const [locations, setLocations] = useState<DraftLocation[]>(defaults());
   const [saving, setSaving] = useState(false);
 
-  const palaceId = useMemo(() => name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'), [name]);
+  const palaceId = useMemo(
+    () =>
+      name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-'),
+    [name]
+  );
   const { createLocation } = useLocationMutations(palaceId || 'temp-palace');
   const customPalacesCount = useMemo(
     () => palaces.filter((palace) => palace.isCustom && !palace.isDeleted).length,
     [palaces]
   );
-  const maxPalaces = limits.customPalaces;
-  const maxLocations = Math.max(MIN_LOCATIONS, limits.customLocationsPerPalace);
+  const limitTier = user?.isPremium ? 'premium' : 'free';
+  const maxPalaces = limits.customPalaces[limitTier];
+  const maxLocations = Math.max(MIN_LOCATIONS, limits.customLocationsPerPalace[limitTier]);
   const canCreateCustomPalace = customPalacesCount < maxPalaces;
 
   useEffect(() => {
@@ -150,7 +167,11 @@ export default function CreatePalaceScreen() {
   if (isLoadingLimits) {
     return (
       <View className="flex-1 bg-slate-50">
-        <CommonHeader title="Create Palace" hideBackButton={false} backAction={() => router.back()} />
+        <CommonHeader
+          title="Create Palace"
+          hideBackButton={false}
+          backAction={() => router.back()}
+        />
         <View className="p-5">
           <Text className="text-slate-700">Loading feature limits...</Text>
         </View>
@@ -161,7 +182,11 @@ export default function CreatePalaceScreen() {
   if (!canCreateCustomPalace) {
     return (
       <View className="flex-1 bg-slate-50">
-        <CommonHeader title="Create Palace" hideBackButton={false} backAction={() => router.back()} />
+        <CommonHeader
+          title="Create Palace"
+          hideBackButton={false}
+          backAction={() => router.back()}
+        />
         <View className="p-5">
           <Text className="text-amber-700">
             You have reached your custom palace limit ({customPalacesCount}/{maxPalaces}).
@@ -173,23 +198,45 @@ export default function CreatePalaceScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      <CommonHeader title="Create Custom Palace" description="Create locations with custom images" hideBackButton={false} backAction={() => router.back()} />
+      <CommonHeader
+        title="Create Custom Palace"
+        description="Create locations with custom images"
+        hideBackButton={false}
+        backAction={() => router.back()}
+      />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         <View className="rounded-2xl bg-white p-4">
-          <TextInput className="rounded-xl border border-slate-200 px-4 py-3" placeholder="Palace name" value={name} onChangeText={setName} />
-          <TextInput className="mt-3 rounded-xl border border-slate-200 px-4 py-3" placeholder="Description" value={description} onChangeText={setDescription} />
+          <TextInput
+            className="rounded-xl border border-slate-200 px-4 py-3"
+            placeholder="Palace name"
+            value={name}
+            onChangeText={setName}
+          />
+          <TextInput
+            className="mt-3 rounded-xl border border-slate-200 px-4 py-3"
+            placeholder="Description"
+            value={description}
+            onChangeText={setDescription}
+          />
 
           <Text className="mt-4 text-xs font-bold uppercase text-slate-500">Palace Thumbnail</Text>
-          <AnimatedPressable onPress={async () => { const uri = await pickImage(); if (uri) setThumbnail(uri); }} className="mt-2 overflow-hidden rounded-xl border border-slate-200">
+          <AnimatedPressable
+            onPress={async () => {
+              const uri = await pickImage();
+              if (uri) setThumbnail(uri);
+            }}
+            className="mt-2 overflow-hidden rounded-xl border border-slate-200">
             <View className="h-40 w-full">
-              <AppImage source={{ uri: thumbnail }} className="w-full h-full" contentFit="cover" />
+              <AppImage source={{ uri: thumbnail }} className="h-full w-full" contentFit="cover" />
             </View>
           </AnimatedPressable>
         </View>
 
         <View className="mt-4 rounded-2xl bg-white p-4">
           <View className="flex-row items-center justify-between">
-            <Text className="text-sm font-bold text-slate-800">Locations ({locations.length}/{maxLocations})</Text>
+            <Text className="text-sm font-bold text-slate-800">
+              Locations ({locations.length}/{maxLocations})
+            </Text>
             <AnimatedPressable
               onPress={addLocation}
               className={`flex-row items-center rounded-lg px-3 py-2 ${locations.length >= maxLocations ? 'bg-slate-100' : 'bg-teal-50'}`}>
@@ -206,24 +253,61 @@ export default function CreatePalaceScreen() {
             <View key={idx} className="rounded-2xl bg-white p-3">
               <View className="mb-2 flex-row items-center justify-between">
                 <Text className="text-xs font-semibold text-slate-500">Location {idx + 1}</Text>
-                <AnimatedPressable onPress={() => removeLocation(idx)} disabled={locations.length <= MIN_LOCATIONS}>
-                  <MinusCircle size={18} color={locations.length <= MIN_LOCATIONS ? '#94a3b8' : '#ef4444'} />
+                <AnimatedPressable
+                  onPress={() => removeLocation(idx)}
+                  disabled={locations.length <= MIN_LOCATIONS}>
+                  <MinusCircle
+                    size={18}
+                    color={locations.length <= MIN_LOCATIONS ? '#94a3b8' : '#ef4444'}
+                  />
                 </AnimatedPressable>
               </View>
 
-              <TextInput className="rounded-xl border border-slate-200 px-3 py-2" value={loc.name} onChangeText={(text) => setLocations((prev) => prev.map((x, i) => (i === idx ? { ...x, name: text } : x)))} placeholder="Location name" />
-              <TextInput className="mt-2 rounded-xl border border-slate-200 px-3 py-2" value={loc.description} onChangeText={(text) => setLocations((prev) => prev.map((x, i) => (i === idx ? { ...x, description: text } : x)))} placeholder="Location description" />
-              <AnimatedPressable onPress={async () => { const uri = await pickImage(); if (uri) setLocations((prev) => prev.map((x, i) => (i === idx ? { ...x, imageUrl: uri } : x))); }} className="mt-2 overflow-hidden rounded-xl border border-slate-200">
+              <TextInput
+                className="rounded-xl border border-slate-200 px-3 py-2"
+                value={loc.name}
+                onChangeText={(text) =>
+                  setLocations((prev) => prev.map((x, i) => (i === idx ? { ...x, name: text } : x)))
+                }
+                placeholder="Location name"
+              />
+              <TextInput
+                className="mt-2 rounded-xl border border-slate-200 px-3 py-2"
+                value={loc.description}
+                onChangeText={(text) =>
+                  setLocations((prev) =>
+                    prev.map((x, i) => (i === idx ? { ...x, description: text } : x))
+                  )
+                }
+                placeholder="Location description"
+              />
+              <AnimatedPressable
+                onPress={async () => {
+                  const uri = await pickImage();
+                  if (uri)
+                    setLocations((prev) =>
+                      prev.map((x, i) => (i === idx ? { ...x, imageUrl: uri } : x))
+                    );
+                }}
+                className="mt-2 overflow-hidden rounded-xl border border-slate-200">
                 <View className="h-28 w-full">
-                  <AppImage source={{ uri: loc.imageUrl }} className="w-full h-full" contentFit="cover" />
+                  <AppImage
+                    source={{ uri: loc.imageUrl }}
+                    className="h-full w-full"
+                    contentFit="cover"
+                  />
                 </View>
               </AnimatedPressable>
             </View>
           ))}
         </View>
 
-        <AnimatedPressable onPress={onCreate} className="mt-5 items-center rounded-xl bg-teal-600 py-4">
-          <Text className="font-semibold text-white">{saving ? 'Creating...' : `Create Palace (${locations.length} locations)`}</Text>
+        <AnimatedPressable
+          onPress={onCreate}
+          className="mt-5 items-center rounded-xl bg-teal-600 py-4">
+          <Text className="font-semibold text-white">
+            {saving ? 'Creating...' : `Create Palace (${locations.length} locations)`}
+          </Text>
         </AnimatedPressable>
       </ScrollView>
     </View>

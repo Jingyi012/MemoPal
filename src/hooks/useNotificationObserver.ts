@@ -1,11 +1,10 @@
 import { InAppNotificationSync } from '@/services/notification/inAppNotificationSync';
 import { PushNotificationService } from '@/services/notification/pushNotificationService';
 import * as Notifications from 'expo-notifications';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
 export const useNotificationObserver = (enabled: boolean = true) => {
-  const router = useRouter();
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
 
@@ -61,5 +60,5 @@ export const useNotificationObserver = (enabled: boolean = true) => {
       if (notificationListener.current) notificationListener.current.remove();
       if (responseListener.current) responseListener.current.remove();
     };
-  }, [enabled, router]);
+  }, [enabled]);
 };

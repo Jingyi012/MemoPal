@@ -1,7 +1,10 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthProvider';
+import { referralApi } from '@/api/referral';
+import { createUserRepository } from '@/repositories/user.repo';
 import { getFacebookAccessToken, getGoogleAccessToken } from '@/services/socialAuth.service';
+import { syncEntitlementToLocal } from '@/services/subscription.service';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +20,7 @@ export default function Register() {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canSubmit = displayName.trim().length > 1 && email.includes('@') && password.length >= 6;
@@ -32,6 +36,31 @@ export default function Register() {
         email: email.trim(),
         password,
       });
+
+      const normalizedReferralCode = referralCode.trim().toUpperCase();
+      if (normalizedReferralCode) {
+        try {
+          await referralApi.redeem(normalizedReferralCode);
+          const currentUser = await createUserRepository().getCurrent();
+          if (currentUser) {
+            await syncEntitlementToLocal(currentUser.id);
+          }
+          Toast.show({
+            type: 'success',
+            text1: 'Referral applied',
+            text2: 'Your referral rewards were added.',
+          });
+        } catch (referralError: any) {
+          Toast.show({
+            type: 'info',
+            text1: 'Account created',
+            text2:
+              referralError?.message ||
+              'We could not apply the referral code. You can redeem it later in Referral screen.',
+          });
+        }
+      }
+
       router.replace('/(tabs)');
     } catch (error: any) {
       Toast.show({
@@ -83,6 +112,13 @@ export default function Register() {
             onChangeText={setPassword}
             placeholder="Password (min 6 chars)"
             secureTextEntry
+            className="rounded-xl border-2 border-gray-200 px-4 py-3"
+          />
+          <TextInput
+            value={referralCode}
+            onChangeText={setReferralCode}
+            placeholder="Referral code (optional)"
+            autoCapitalize="characters"
             className="rounded-xl border-2 border-gray-200 px-4 py-3"
           />
         </View>

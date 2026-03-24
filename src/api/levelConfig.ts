@@ -1,6 +1,6 @@
 import api from '@/api/api';
 import { GeneralResponse } from '@/types/general';
-import { LevelConfigs } from '@/types/levelConfigs';
+import { LevelConfigs, LevelConfigVersion } from '@/types/levelConfigs';
 
 /**
  * API calls for level configurations
@@ -11,6 +11,15 @@ export const levelConfigApi = {
    */
   async getAll(): Promise<LevelConfigs[]> {
     const response = await api.get<GeneralResponse<LevelConfigs[]>>('/level-configs');
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
+
+  /**
+   * Get config snapshot version (for change detection)
+   */
+  async getVersion(): Promise<LevelConfigVersion> {
+    const response = await api.get<GeneralResponse<LevelConfigVersion>>('/level-configs/version');
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },

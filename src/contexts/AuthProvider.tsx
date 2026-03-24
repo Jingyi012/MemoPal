@@ -1,4 +1,4 @@
-import { authApi, RegisterRequest } from '@/api/auth';
+import { ApiClientError, authApi, RegisterRequest } from '@/api/auth';
 import { AUTH_STORAGE_KEY } from '@/constants/auth';
 import { CURRENT_USER_KEYS } from '@/hooks/useCurrentUser';
 import { createUserRepository } from '@/repositories/user.repo';
@@ -7,8 +7,16 @@ import { LoginRequest } from '@/types/auth';
 import { User } from '@/types/users';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
-import React, { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 export type AuthContextType = {
   user: User | null;
@@ -25,12 +33,53 @@ export type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const userRepo = useMemo(() => createUserRepository(), []);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const isAuthenticated = !!user;
+
+  const normalizeUser = useCallback((candidate: Partial<User> | null | undefined): User | null => {
+    if (!candidate?.id || !candidate.displayName) {
+      return null;
+    }
+
+    return {
+      ...candidate,
+      id: candidate.id,
+      displayName: candidate.displayName,
+      email: candidate.email ?? 'player@example.com',
+      avatarUrl: candidate.avatarUrl ?? undefined,
+      totalXp: Math.max(0, candidate.totalXp ?? 0),
+      level: Math.max(1, candidate.level ?? 1),
+      isPremium: !!candidate.isPremium,
+    };
+  }, []);
+
+  const loadCachedSessionUser = useCallback(async (): Promise<User | null> => {
+    const raw = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as Partial<User>;
+        const normalized = normalizeUser(parsed);
+        if (normalized) {
+          return normalized;
+        }
+      } catch {
+        // Ignore malformed cache and fallback to local db user.
+      }
+    }
+
+    const localCurrent = await userRepo.getCurrent();
+    if (!localCurrent) {
+      return null;
+    }
+
+    const localProfile = await userRepo.getProfileLocal(localCurrent.id);
+    return normalizeUser(localProfile ?? null);
+  }, [normalizeUser, userRepo]);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -42,6 +91,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
+        const cachedUser = await loadCachedSessionUser();
+        if (cachedUser) {
+          setUser(cachedUser);
+        }
+
         try {
           const remoteUser = await authApi.getCurrentProfile();
           await Promise.all([
@@ -50,11 +104,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           ]);
           setUser(remoteUser);
           await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
-        } catch {
-          await clearAccessToken();
-          await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-          await userRepo.clearLocalAuthUser();
-          await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
+        } catch (error) {
+          const statusCode = (error as ApiClientError | undefined)?.statusCode;
+          const shouldInvalidateSession = statusCode === 401 || statusCode === 403;
+
+          if (shouldInvalidateSession) {
+            await clearAccessToken();
+            await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+            await userRepo.clearLocalAuthUser();
+            await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
+            setUser(null);
+            return;
+          }
+
+          if (cachedUser) {
+            // Offline mode: keep last known authenticated user.
+            setUser(cachedUser);
+            return;
+          }
+
           setUser(null);
         }
       } finally {
@@ -63,7 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     void loadUser();
-  }, [queryClient, userRepo]);
+  }, [loadCachedSessionUser, queryClient, userRepo]);
 
   const setSession = async (sessionUser: User, token: string) => {
     await Promise.all([

@@ -25,12 +25,7 @@ const TutorialPromptCard: React.FC<TutorialCardProps> = ({
   return (
     <View>
       <AnimatedPressable onPress={openTutorial}>
-        <LinearGradient
-          colors={[Colors.purple50, Colors.pink50]}
-          style={{
-            borderRadius: 10,
-          }}
-          className="border-2 border-purple-200 p-4 shadow-sm">
+        <View className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
           <View className="flex-row items-center gap-3">
             <LinearGradient
               colors={[Colors.purple600, Colors.pink600]}
@@ -42,9 +37,7 @@ const TutorialPromptCard: React.FC<TutorialCardProps> = ({
             </LinearGradient>
 
             <View className="flex-1">
-              <Text className="mb-1 text-base font-medium text-text">
-                New to Memory Palaces?
-              </Text>
+              <Text className="mb-1 text-base font-medium text-text">New to Memory Palaces?</Text>
               <Text className="text-sm text-text-muted">
                 Learn the core technique with a quick guided tutorial.
               </Text>
@@ -52,7 +45,7 @@ const TutorialPromptCard: React.FC<TutorialCardProps> = ({
 
             <ChevronRight size={20} color={Colors.slate400} />
           </View>
-        </LinearGradient>
+        </View>
       </AnimatedPressable>
 
       <View className="mt-2 flex-row justify-end">

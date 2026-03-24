@@ -8,106 +8,10 @@ import { PushNotificationService } from '@/services/notification/pushNotificatio
 import { SyncBase } from '@/services/sync/sync.base';
 import { LessonProgress, ReviewSchedule } from '@/types/lesson';
 import { ReviewStats } from '@/types/review';
+import { isBadgeAchievementMet } from '@/utils/gamification/badgeRuleEvaluator';
 import { calculateNextDueDate, REVIEW_INTERVALS } from '@/utils/review';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
-
-function isBadgeEarnedByKey(
-  key: string,
-  metrics: {
-    completedLessons: number;
-    learnedWords: number;
-    level: number;
-    totalReviews: number;
-    totalXp: number;
-    currentStreak: number;
-    missionCompletions: number;
-  }
-) {
-  const normalized = key.trim().toLowerCase();
-
-  switch (normalized) {
-    case 'first_lesson':
-    case 'palace_pioneer':
-      return metrics.completedLessons >= 1;
-    case 'palace_complete':
-      return metrics.completedLessons >= 3;
-    case 'lesson_sprinter':
-      return metrics.completedLessons >= 5;
-    case 'memory_builder':
-      return metrics.completedLessons >= 10 && metrics.learnedWords >= 100;
-    case 'review_25':
-      return metrics.totalReviews >= 25;
-    case 'review_rhythm':
-      return metrics.totalReviews >= 10;
-    case 'review_streak_7':
-      return metrics.currentStreak >= 7;
-    case 'review_streak_30':
-      return metrics.currentStreak >= 30;
-    case 'level_5':
-    case 'level_climber_5':
-      return metrics.level >= 5;
-    case 'level_master_10':
-      return metrics.level >= 10;
-    case 'word_collector_300':
-      return metrics.learnedWords >= 300;
-    case 'mission_specialist':
-      return metrics.missionCompletions >= 5;
-    default:
-      break;
-  }
-
-  const metricMatch = normalized.match(
-    /^(level|reviews|lessons_completed|words_learned|total_xp|streak_days|missions_completed)_(\d+)$/
-  );
-
-  if (metricMatch) {
-    const [, metric, rawTarget] = metricMatch;
-    const target = Number(rawTarget);
-    if (Number.isNaN(target)) return false;
-
-    switch (metric) {
-      case 'level':
-        return metrics.level >= target;
-      case 'reviews':
-        return metrics.totalReviews >= target;
-      case 'lessons_completed':
-        return metrics.completedLessons >= target;
-      case 'words_learned':
-        return metrics.learnedWords >= target;
-      case 'total_xp':
-        return metrics.totalXp >= target;
-      case 'streak_days':
-        return metrics.currentStreak >= target;
-      case 'missions_completed':
-        return metrics.missionCompletions >= target;
-      default:
-        return false;
-    }
-  }
-
-  const reviewStreakMatch = normalized.match(/^review_streak_(\d+)$/);
-  if (reviewStreakMatch) {
-    return metrics.currentStreak >= Number(reviewStreakMatch[1]);
-  }
-
-  const levelClimberMatch = normalized.match(/^level_climber_(\d+)$/);
-  if (levelClimberMatch) {
-    return metrics.level >= Number(levelClimberMatch[1]);
-  }
-
-  const levelMasterMatch = normalized.match(/^level_master_(\d+)$/);
-  if (levelMasterMatch) {
-    return metrics.level >= Number(levelMasterMatch[1]);
-  }
-
-  const wordCollectorMatch = normalized.match(/^word_collector_(\d+)$/);
-  if (wordCollectorMatch) {
-    return metrics.learnedWords >= Number(wordCollectorMatch[1]);
-  }
-
-  return false;
-}
 
 export interface ReviewRepository {
   getReviewSchedule(lessonProgressId: string): Promise<ReviewSchedule[]>;
@@ -370,7 +274,6 @@ export function createReviewRepository(): ReviewRepository {
             (milestone.conditionType === 'lessons_completed' && completedLessons >= milestone.conditionValue) ||
             (milestone.conditionType === 'words_learned' && learnedWords >= milestone.conditionValue) ||
             (milestone.conditionType === 'level' && level >= milestone.conditionValue) ||
-            (milestone.conditionType === 'total_xp' && (latestUser?.totalXp ?? 0) >= milestone.conditionValue) ||
             (milestone.conditionType === 'streak_days' && (latestStats?.currentStreak ?? 0) >= milestone.conditionValue);
 
           if (pass) {
@@ -399,7 +302,7 @@ export function createReviewRepository(): ReviewRepository {
         const missionCompletions = Math.max(0, missionCompletionAggregate[0]?.total ?? 0);
 
         for (const badge of badgesToAward) {
-          const isEarned = isBadgeEarnedByKey(badge.key, {
+          const isEarned = isBadgeAchievementMet(badge, {
             completedLessons,
             learnedWords,
             level,

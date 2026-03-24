@@ -2,16 +2,20 @@ import { referralApi } from '@/api/referral';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
+import { NotificationType } from '@/enums/notificationType';
+import { useNotificationMutations, useNotifications } from '@/hooks/useNotifications';
 import { createUserRepository } from '@/repositories/user.repo';
 import { syncEntitlementToLocal } from '@/services/subscription.service';
+import type { Notification } from '@/types/notification';
 import type { ReferralSummary } from '@/types/referral';
 import * as Clipboard from 'expo-clipboard';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Check, Copy, Crown, MessageCircle, Share2, Sparkles, Users } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Linking,
+  Modal,
+  RefreshControl,
   ScrollView,
   Share,
   Text,
@@ -28,6 +32,8 @@ import { StatBox } from './StatBox';
 const ReferralScreen: React.FC = () => {
   const userRepo = useMemo(() => createUserRepository(), []);
   const router = useRouter();
+  const { data: notifications = [] } = useNotifications();
+  const { markAsRead } = useNotificationMutations();
   const [summary, setSummary] = useState<ReferralSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -35,6 +41,8 @@ const ReferralScreen: React.FC = () => {
   const [redeemCode, setRedeemCode] = useState('');
   const [redeeming, setRedeeming] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [rewardNotice, setRewardNotice] = useState<Notification | null>(null);
+  const [lastShownRewardNoticeId, setLastShownRewardNoticeId] = useState<string | null>(null);
 
   const loadSummary = useCallback(async (silent = false) => {
     try {
@@ -61,6 +69,43 @@ const ReferralScreen: React.FC = () => {
   useEffect(() => {
     void loadSummary();
   }, [loadSummary]);
+
+  useEffect(() => {
+    const latestUnreadReferralNotice = notifications.find(
+      (item) =>
+        !item.isRead &&
+        (item.type === NotificationType.REFERRAL ||
+          (item.referenceType ?? '').toLowerCase() === NotificationType.REFERRAL)
+    );
+
+    if (!latestUnreadReferralNotice) {
+      return;
+    }
+
+    if (latestUnreadReferralNotice.id === lastShownRewardNoticeId) {
+      return;
+    }
+
+    setRewardNotice(latestUnreadReferralNotice);
+    setLastShownRewardNoticeId(latestUnreadReferralNotice.id);
+  }, [lastShownRewardNoticeId, notifications]);
+
+  const onRefresh = useCallback(() => {
+    void loadSummary(true);
+  }, [loadSummary]);
+
+  const closeRewardPopup = useCallback(async () => {
+    const notificationId = rewardNotice?.id;
+    if (notificationId && !rewardNotice?.isRead) {
+      try {
+        await markAsRead.mutateAsync(notificationId);
+      } catch {
+        // keep this non-blocking; popup should still be dismissible
+      }
+    }
+
+    setRewardNotice(null);
+  }, [markAsRead, rewardNotice]);
 
   const milestones = useMemo(
     () =>
@@ -190,10 +235,13 @@ const ReferralScreen: React.FC = () => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
         {loadError ? (
           <View className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
-            <Text className="text-sm font-semibold text-rose-700">Unable to refresh referral data</Text>
+            <Text className="text-sm font-semibold text-rose-700">
+              Unable to refresh referral data
+            </Text>
             <Text className="mt-1 text-sm text-rose-600">{loadError}</Text>
           </View>
         ) : null}
@@ -268,9 +316,7 @@ const ReferralScreen: React.FC = () => {
           })}
         </View>
 
-        {summary.referrals.length > 0 && <ReferralList referrals={summary.referrals} />}
-
-        <View className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <View className="mb-8 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
           {summary.hasRedeemedCode ? (
             <View>
               <Text className="text-sm font-semibold text-slate-700">
@@ -308,22 +354,35 @@ const ReferralScreen: React.FC = () => {
           )}
         </View>
 
-        <TouchableOpacity
-          activeOpacity={0.85}
-          className="mt-8 overflow-hidden rounded-2xl shadow-lg shadow-indigo-200"
-          onPress={() => void loadSummary(true)}
-          disabled={refreshing}>
-          <LinearGradient
-            colors={[Colors.teal500, Colors.blue500]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="flex-row items-center justify-center p-4">
-            <Text className="text-base font-medium text-white">
-              {refreshing ? 'Refreshing...' : 'Refresh Referral Data'}
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        {summary.referrals.length > 0 ? (
+          <ReferralList referrals={summary.referrals} pageSize={10} />
+        ) : null}
       </ScrollView>
+
+      <Modal
+        visible={Boolean(rewardNotice)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => void closeRewardPopup()}>
+        <View className="flex-1 items-center justify-center bg-slate-900/45 px-6">
+          <View className="w-full max-w-md rounded-3xl bg-white p-6 shadow-lg">
+            <Text className="text-xs font-bold uppercase tracking-widest text-indigo-500">
+              Referral Reward
+            </Text>
+            <Text className="mt-2 text-xl font-bold text-slate-900">
+              {rewardNotice?.title ?? 'New referral activity'}
+            </Text>
+            <Text className="mt-3 text-base leading-6 text-slate-600">
+              {rewardNotice?.body}
+            </Text>
+            <TouchableOpacity
+              className="mt-6 rounded-xl bg-indigo-500 px-4 py-3"
+              onPress={() => void closeRewardPopup()}>
+              <Text className="text-center font-semibold text-white">Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

@@ -1,26 +1,43 @@
 import { Colors } from '@/constants/colors';
 import { ReferralUser } from '@/types/referral';
 import { Users } from 'lucide-react-native';
-import React from 'react';
-import { Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 interface ReferralListProps {
   referrals: ReferralUser[];
+  pageSize?: number;
 }
 
-export const ReferralList: React.FC<ReferralListProps> = ({ referrals }) => {
+export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize = 10 }) => {
+  const [visibleCount, setVisibleCount] = useState(pageSize);
+
+  useEffect(() => {
+    setVisibleCount(pageSize);
+  }, [pageSize, referrals.length]);
+
+  const visibleReferrals = useMemo(
+    () => referrals.slice(0, visibleCount),
+    [referrals, visibleCount]
+  );
+
+  const hasMore = visibleCount < referrals.length;
+
   if (!referrals || referrals.length === 0) return null;
 
   return (
     <View className="mb-8 rounded-3xl border border-slate-100 bg-white p-2 shadow-sm">
       <View className="flex-row p-3">
         <Users size={20} color={Colors.indigo500} />
-        <Text className="ml-1 text-lg font-medium text-slate-800">Your Referrals</Text>
+        <Text className="ml-1 text-lg font-medium text-slate-800">Referral Friends</Text>
       </View>
+      <Text className="px-3 pb-2 text-xs text-slate-500">
+        Showing {visibleReferrals.length} of {referrals.length}
+      </Text>
 
-      {referrals.map((user, i) => {
+      {visibleReferrals.map((user, i) => {
         const isPremium = user.isPremium;
-        const isLast = i === referrals.length - 1;
+        const isLast = i === visibleReferrals.length - 1;
 
         return (
           <View
@@ -52,6 +69,14 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals }) => {
           </View>
         );
       })}
+
+      {hasMore ? (
+        <TouchableOpacity
+          onPress={() => setVisibleCount((prev) => Math.min(prev + pageSize, referrals.length))}
+          className="m-3 items-center rounded-xl bg-slate-100 px-4 py-3">
+          <Text className="text-sm font-semibold text-slate-700">Load More</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 };

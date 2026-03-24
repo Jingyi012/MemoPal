@@ -3,6 +3,7 @@ import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SourceType } from '@/enums/sourceType';
 import { SyncBase } from '@/services/sync/sync.base';
+import { isBadgeAchievementMet } from '@/utils/gamification/badgeRuleEvaluator';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 
@@ -23,95 +24,10 @@ type BadgeMetrics = {
   missionCompletions: number;
 };
 
-function isBadgeEarnedByKey(key: string, metrics: BadgeMetrics): boolean {
-  const normalized = key.trim().toLowerCase();
-
-  switch (normalized) {
-    case 'first_lesson':
-    case 'palace_pioneer':
-      return metrics.completedLessons >= 1;
-    case 'palace_complete':
-      return metrics.completedLessons >= 3;
-    case 'lesson_sprinter':
-      return metrics.completedLessons >= 5;
-    case 'memory_builder':
-      return metrics.completedLessons >= 10 && metrics.learnedWords >= 100;
-    case 'review_25':
-      return metrics.totalReviews >= 25;
-    case 'review_rhythm':
-      return metrics.totalReviews >= 10;
-    case 'review_streak_7':
-      return metrics.currentStreak >= 7;
-    case 'review_streak_30':
-      return metrics.currentStreak >= 30;
-    case 'level_5':
-    case 'level_climber_5':
-      return metrics.level >= 5;
-    case 'level_master_10':
-      return metrics.level >= 10;
-    case 'word_collector_300':
-      return metrics.learnedWords >= 300;
-    case 'mission_specialist':
-      return metrics.missionCompletions >= 5;
-    default:
-      break;
-  }
-
-  const dynamicMetricMatch = normalized.match(
-    /^(level|reviews|lessons_completed|words_learned|total_xp|streak_days|missions_completed)_(\d+)$/
-  );
-
-  if (dynamicMetricMatch) {
-    const [, metric, rawTarget] = dynamicMetricMatch;
-    const target = Number(rawTarget);
-    if (Number.isNaN(target)) return false;
-
-    switch (metric) {
-      case 'level':
-        return metrics.level >= target;
-      case 'reviews':
-        return metrics.totalReviews >= target;
-      case 'lessons_completed':
-        return metrics.completedLessons >= target;
-      case 'words_learned':
-        return metrics.learnedWords >= target;
-      case 'total_xp':
-        return metrics.totalXp >= target;
-      case 'streak_days':
-        return metrics.currentStreak >= target;
-      case 'missions_completed':
-        return metrics.missionCompletions >= target;
-      default:
-        return false;
-    }
-  }
-
-  const reviewStreakMatch = normalized.match(/^review_streak_(\d+)$/);
-  if (reviewStreakMatch) {
-    return metrics.currentStreak >= Number(reviewStreakMatch[1]);
-  }
-
-  const levelClimberMatch = normalized.match(/^level_climber_(\d+)$/);
-  if (levelClimberMatch) {
-    return metrics.level >= Number(levelClimberMatch[1]);
-  }
-
-  const levelMasterMatch = normalized.match(/^level_master_(\d+)$/);
-  if (levelMasterMatch) {
-    return metrics.level >= Number(levelMasterMatch[1]);
-  }
-
-  const wordCollectorMatch = normalized.match(/^word_collector_(\d+)$/);
-  if (wordCollectorMatch) {
-    return metrics.learnedWords >= Number(wordCollectorMatch[1]);
-  }
-
-  return false;
-}
-
 interface XpEventsRepository {
   getAll(): Promise<any[]>;
   getTotalXp(): Promise<number>;
+  getHistoryXpTotal(): Promise<number>;
   getBySourceType(sourceType: string): Promise<any[]>;
   create(data: {
     sourceType: string;
@@ -132,15 +48,16 @@ export function createXpEventsRepository(): XpEventsRepository {
       });
     },
 
-    /**
-     * Efficiently calculates total XP using SQL sum
-     */
     async getTotalXp(): Promise<number> {
+      const user = await db.query.users.findFirst({ columns: { totalXp: true } });
+      return Math.max(0, user?.totalXp ?? 0);
+    },
+
+    async getHistoryXpTotal(): Promise<number> {
       const result = await db
         .select({ total: sql<number>`sum(${schema.xpEvents.xpAmount})` })
         .from(schema.xpEvents)
         .where(eq(schema.xpEvents.isDeleted, false));
-
       return result[0]?.total ?? 0;
     },
 
@@ -276,7 +193,6 @@ export function createXpEventsRepository(): XpEventsRepository {
             (milestone.conditionType === 'words_learned' &&
               metrics.learnedWords >= milestone.conditionValue) ||
             (milestone.conditionType === 'level' && metrics.level >= milestone.conditionValue) ||
-            (milestone.conditionType === 'total_xp' && metrics.totalXp >= milestone.conditionValue) ||
             (milestone.conditionType === 'streak_days' &&
               metrics.currentStreak >= milestone.conditionValue);
 
@@ -294,7 +210,7 @@ export function createXpEventsRepository(): XpEventsRepository {
         });
 
         for (const badge of badgesToAward) {
-          if (!isBadgeEarnedByKey(badge.key, metrics)) {
+          if (!isBadgeAchievementMet(badge, metrics)) {
             continue;
           }
 

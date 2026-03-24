@@ -25,7 +25,9 @@ export function createBadgeRepository(): BadgeRepository {
      * Get all available badges from local database
      */
     async getAll(): Promise<Badge[]> {
-      return await db.query.badges.findMany();
+      return await db.query.badges.findMany({
+        where: eq(schema.badges.isDeleted, false),
+      });
     },
 
     /**
@@ -33,7 +35,7 @@ export function createBadgeRepository(): BadgeRepository {
      */
     async getById(id: string): Promise<Badge | null | undefined> {
       return await db.query.badges.findFirst({
-        where: eq(schema.badges.id, id),
+        where: and(eq(schema.badges.id, id), eq(schema.badges.isDeleted, false)),
       });
     },
 
@@ -116,7 +118,13 @@ export function createBadgeRepository(): BadgeRepository {
                   name: serverBadge.name,
                   description: serverBadge.description,
                   icon: serverBadge.icon,
+                  iconUrl: serverBadge.iconUrl,
                   rarity: serverBadge.rarity,
+                  conditionType: serverBadge.conditionType,
+                  conditionValue: serverBadge.conditionValue,
+                  earnedAt: serverBadge.earnedAt,
+                  isDeleted: Boolean(serverBadge.isDeleted),
+                  deletedAt: serverBadge.deletedAt,
                   updatedAt: serverBadge.updatedAt,
                   lastSyncedAt: now,
                 },

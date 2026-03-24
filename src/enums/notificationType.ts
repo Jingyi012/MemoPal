@@ -3,6 +3,7 @@ export enum NotificationType {
   LESSON_REVIEW = 'lesson_review',
   BADGE = 'badge',
   MILESTONE = 'milestone',
+  REFERRAL = 'referral',
   PALACE = 'palace',
   XP = 'xp',
   LEVEL_UP = 'level_up',

@@ -1,8 +1,19 @@
-import { authApi } from '@/api/auth';
+import { ApiClientError, authApi } from '@/api/auth';
 import { createUserRepository } from '@/repositories/user.repo';
 import type { User } from '@/types/users';
 
 const userRepo = createUserRepository();
+
+function isLocalAvatarUri(value?: string | null): value is string {
+  if (!value) return false;
+  const normalized = value.trim().toLowerCase();
+  return (
+    normalized.startsWith('file://') ||
+    normalized.startsWith('content://') ||
+    normalized.startsWith('ph://') ||
+    normalized.startsWith('assets-library://')
+  );
+}
 
 export async function updateProfile(payload: {
   id: string;
@@ -13,10 +24,19 @@ export async function updateProfile(payload: {
   await userRepo.updateProfileLocal(payload);
 
   try {
+    let resolvedAvatarUrl = payload.avatarUrl ?? undefined;
+
+    // Local device URI must be uploaded first so backend stores a usable URL/path.
+    if (isLocalAvatarUri(payload.avatarUrl)) {
+      const fileName = payload.avatarUrl.split('/').pop() || 'avatar.jpg';
+      const uploadedProfile = await authApi.uploadAvatar(payload.avatarUrl, fileName);
+      resolvedAvatarUrl = uploadedProfile.avatarUrl ?? resolvedAvatarUrl;
+    }
+
     const remote = await authApi.updateProfile({
       displayName: payload.displayName,
       email: payload.email,
-      avatarUrl: payload.avatarUrl ?? undefined,
+      avatarUrl: resolvedAvatarUrl,
     });
 
     await userRepo.updateProfileLocal({
@@ -27,7 +47,12 @@ export async function updateProfile(payload: {
     });
 
     return remote;
-  } catch {
+  } catch (error) {
+    const apiError = error as ApiClientError | undefined;
+    if (apiError?.statusCode && !apiError.isNetworkError) {
+      throw error;
+    }
+
     const local = await userRepo.getProfileLocal(payload.id);
     return {
       id: local?.id ?? payload.id,

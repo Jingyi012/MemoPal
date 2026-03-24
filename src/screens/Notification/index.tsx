@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import {
   Award,
   Bell,
@@ -10,6 +10,7 @@ import {
   Star,
   Trash2,
   TrendingUp,
+  Users,
   Zap,
 } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
@@ -32,6 +33,7 @@ const TYPE_CONFIG = {
   },
   [NotificationType.MILESTONE]: { icon: Star, color: Colors.yellow500, bgColor: 'bg-yellow-50' },
   [NotificationType.BADGE]: { icon: Award, color: Colors.blue500, bgColor: 'bg-blue-50' },
+  [NotificationType.REFERRAL]: { icon: Users, color: Colors.indigo500, bgColor: 'bg-indigo-50' },
   [NotificationType.LESSON]: { icon: BookOpen, color: Colors.green500, bgColor: 'bg-green-50' },
   [NotificationType.LESSON_REVIEW]: {
     icon: BookOpen,
@@ -42,6 +44,7 @@ const TYPE_CONFIG = {
 };
 
 const NotificationScreen = () => {
+  const router = useRouter();
   const { data: notifications = [], isLoading, refetch, isRefetching } = useNotifications();
   const { markAsRead, dismiss, markAllAsRead } = useNotificationMutations();
   const [pendingDismissId, setPendingDismissId] = useState<string | null>(null);
@@ -123,6 +126,8 @@ const NotificationScreen = () => {
 
       case NotificationType.PALACE:
         return `/palaces/${referenceId}`;
+      case NotificationType.REFERRAL:
+        return '/referral';
 
       default:
         return null;
@@ -130,7 +135,8 @@ const NotificationScreen = () => {
   };
 
   const renderItem = ({ item }: { item: Notification }) => {
-    const config = TYPE_CONFIG[item.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.system;
+    const config =
+      TYPE_CONFIG[item.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG[NotificationType.SYSTEM];
     const Icon = config.icon;
 
     return (

@@ -13,7 +13,7 @@ export function useLevelConfigs() {
     queryFn: async () => {
       return await levelConfigService.getLevelConfigs();
     },
-    staleTime: Infinity, // Level configs don't change often
+    staleTime: 1000 * 60 * 5,
   });
 
   return {
@@ -24,25 +24,11 @@ export function useLevelConfigs() {
   };
 }
 
-export function useLevelByXp(totalXp: number) {
+export function useLevelByXp(totalXp: number, authoritativeLevel?: number) {
   const query = useQuery({
-    queryKey: LEVEL_CONFIG_KEYS.byXp(totalXp),
+    queryKey: [...LEVEL_CONFIG_KEYS.byXp(totalXp), authoritativeLevel ?? null],
     queryFn: async () => {
-      const currentLevel = await levelConfigService.getLevelByXp(totalXp);
-      const currentLevelConfig = await levelConfigService.getByLevel(currentLevel);
-      const nextLevelConfig = await levelConfigService.getNextLevel(currentLevel);
-
-      const currentLevelXp = currentLevelConfig?.requiredXp ?? 0;
-      const nextLevelXp = nextLevelConfig?.requiredXp ?? currentLevelXp + 1000;
-
-      return {
-        currentLevel,
-        currentLevelConfig,
-        nextLevelConfig,
-        xpInCurrentLevel: totalXp - currentLevelXp,
-        xpToNextLevel: Math.max(0, nextLevelXp - totalXp),
-        totalXp,
-      };
+      return await levelConfigService.getLevelProgress(totalXp, authoritativeLevel);
     },
     staleTime: 1000 * 60 * 5,
   });

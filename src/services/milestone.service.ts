@@ -4,11 +4,11 @@ import { Milestone } from '@/types/levelAndbadge';
 
 const repo = createMilestoneRepository();
 
-export async function getMilestones(params: {} = {}): Promise<Milestone[]> {
+export async function getMilestones(params: Record<string, never> = {}): Promise<Milestone[]> {
   try {
     const remote = await milestoneApi.getAll(params);
-    if (remote && remote.length > 0) {
-      await repo.upsertMany(remote);
+    if (remote) {
+      await repo.upsertMany(remote, { pruneMissing: true });
     }
   } catch (error) {
     console.warn('Failed to sync milestones from backend, using local data:', error);
@@ -21,7 +21,8 @@ export async function getMilestoneById(id: string) {
   try {
     const remote = await milestoneApi.getById(id);
     if (remote) {
-      await repo.upsertMany([remote]);
+      await repo.upsertMany([remote], { pruneMissing: false });
+      return remote;
     }
   } catch (error) {
     console.warn('Failed to sync milestone details, using local data:', error);

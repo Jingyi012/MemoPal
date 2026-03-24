@@ -46,7 +46,7 @@ export default function GamificationRewardModal({
             <View className="h-10 w-10 items-center justify-center rounded-full bg-teal-100">
               <Sparkles size={18} color="#0f766e" />
             </View>
-            <View className="ml-3">
+            <View className="ml-3 flex-1">
               <Text className="text-xl font-bold text-slate-900">Progress Unlocked</Text>
               <Text className="mt-0.5 text-sm text-slate-500">
                 Great work. Your latest session earned rewards.
@@ -57,8 +57,7 @@ export default function GamificationRewardModal({
           <ScrollView
             showsVerticalScrollIndicator={false}
             style={{ maxHeight: 320 }}
-            contentContainerStyle={{ paddingBottom: 4 }}
-          >
+            contentContainerStyle={{ paddingBottom: 4 }}>
             {levelUpTo ? (
               <View className="mt-4 rounded-xl border border-teal-200 bg-teal-50 p-3">
                 <View className="flex-row items-center">
@@ -79,8 +78,7 @@ export default function GamificationRewardModal({
 
           <AnimatedPressable
             onPress={onClose}
-            className="mt-5 flex-row items-center justify-center rounded-xl bg-slate-900 py-3"
-          >
+            className="mt-5 flex-row items-center justify-center rounded-xl bg-slate-900 py-3">
             <Trophy size={16} color="#ffffff" />
             <Text className="ml-2 font-semibold text-white">Continue</Text>
           </AnimatedPressable>
@@ -89,8 +87,7 @@ export default function GamificationRewardModal({
               onClose();
               router.push('/rewards-history');
             }}
-            className="mt-2 items-center rounded-xl bg-slate-100 py-3"
-          >
+            className="mt-2 items-center rounded-xl bg-slate-100 py-3">
             <Text className="font-semibold text-slate-700">View Reward History</Text>
           </AnimatedPressable>
         </View>

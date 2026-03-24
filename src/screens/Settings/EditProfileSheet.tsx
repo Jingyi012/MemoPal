@@ -3,15 +3,19 @@ import { AppImage } from '@/components/AppImage';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import * as ImagePicker from 'expo-image-picker';
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 interface Props {
   initialName?: string;
   initialEmail?: string;
-  initialAvatarUrl?: string;
-  onSave: (payload: { displayName: string; email: string; avatarUrl?: string }) => Promise<void>;
+  initialAvatarUrl?: string | null;
+  onSave: (payload: {
+    displayName: string;
+    email: string;
+    avatarUrl?: string | null;
+  }) => Promise<void>;
 }
 
 type Ref = BottomSheetModal;
@@ -22,6 +26,18 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
     const [email, setEmail] = useState(initialEmail);
     const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
     const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+      setDisplayName(initialName);
+    }, [initialName]);
+
+    useEffect(() => {
+      setEmail(initialEmail);
+    }, [initialEmail]);
+
+    useEffect(() => {
+      setAvatarUrl(initialAvatarUrl);
+    }, [initialAvatarUrl]);
 
     const close = () => {
       if (ref && 'current' in ref) {
@@ -43,13 +59,17 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
           />
 
           <TextInput
-            className="mt-3 rounded-xl border border-slate-200 px-4 py-3"
+            className="mt-3 rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500"
             placeholder="Email"
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
-            onChangeText={setEmail}
+            editable={false}
+            selectTextOnFocus={false}
           />
+          <Text className="mt-1 text-xs text-slate-500">
+            Email cannot be changed from mobile profile settings.
+          </Text>
 
           <Text className="mt-4 text-xs font-bold uppercase text-slate-500">Profile Picture</Text>
           <AnimatedPressable
@@ -98,6 +118,14 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
                 try {
                   await onSave({ displayName, email, avatarUrl });
                   close();
+                } catch (error) {
+                  const message =
+                    error instanceof Error ? error.message : 'Unable to update profile.';
+                  Toast.show({
+                    type: 'error',
+                    text1: 'Update failed',
+                    text2: message,
+                  });
                 } finally {
                   setSaving(false);
                 }

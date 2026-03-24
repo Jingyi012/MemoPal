@@ -6,7 +6,7 @@ const xpRepo = createXpEventsRepository();
 
 export async function getXpIntegrityStatus() {
   const user = await userRepo.getCurrent();
-  const xpEventsTotal = await xpRepo.getTotalXp();
+  const xpEventsTotal = await xpRepo.getHistoryXpTotal();
   const userXp = user?.totalXp ?? 0;
 
   return {

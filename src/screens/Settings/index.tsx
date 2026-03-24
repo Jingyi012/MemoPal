@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createUserRepository } from '@/repositories/user.repo';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { ActionSheet } from '@/components/ActionSheet';
@@ -18,7 +18,7 @@ import ReferrerPromptCard from '@/components/PromptCard/ReferrerPromptCard';
 import { Colors } from '@/constants/colors';
 import { useUserState } from '@/contexts/UserStateContext';
 import { PushNotificationService } from '@/services/notification/pushNotificationService';
-import { Bell, HelpCircle, LogOut, Moon, Shield } from 'lucide-react-native';
+import { Bell, Gift, HelpCircle, LogOut, Moon, Shield } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { EditProfileSheet } from './EditProfileSheet';
 import HelpSheet from './HelpSheet';
@@ -27,7 +27,6 @@ import ProfileCard from './ProfileCard';
 import { ReviewScheduleSheet } from './ReviewScheduleSheet';
 import { SettingsRow } from './SettingRow';
 import { SettingsSection } from './SettingSection';
-import ThemeSheet from './ThemeSheet';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -45,28 +44,54 @@ export default function SettingsScreen() {
     userState.notifications.dailyLearningReminder
   );
 
-  const saveDailyLearningReminder = async (enabled: boolean) => {
-    setDailyLearningEnabled(enabled);
-    const granted = await PushNotificationService.requestPermissions();
+  useEffect(() => {
+    setDailyLearningEnabled(userState.notifications.dailyLearningReminder);
+  }, [userState.notifications.dailyLearningReminder]);
 
-    if (!granted) {
-      setDailyLearningEnabled(false);
-      return;
-    }
-
-    if (enabled) {
-      await PushNotificationService.scheduleDailyLearning(userState.preferences.reviewTime);
-    } else {
-      await PushNotificationService.cancelDailyLearning();
-    }
-
+  const persistDailyLearningPreference = async (enabled: boolean) => {
     await updateState({
       notifications: {
         ...userState.notifications,
         dailyLearningReminder: enabled,
-        reviewReminders: enabled,
       },
     });
+  };
+
+  const saveDailyLearningReminder = async (enabled: boolean) => {
+    const previousValue = dailyLearningEnabled;
+    setDailyLearningEnabled(enabled);
+
+    try {
+      if (!enabled) {
+        await PushNotificationService.cancelDailyLearning();
+        await persistDailyLearningPreference(false);
+        return;
+      }
+
+      const granted = await PushNotificationService.requestPermissions();
+      if (!granted) {
+        setDailyLearningEnabled(false);
+        await persistDailyLearningPreference(false);
+        Toast.show({
+          type: 'error',
+          text1: 'Notifications disabled',
+          text2: 'Enable notification permission to use daily reminders.',
+        });
+        return;
+      }
+
+      await PushNotificationService.scheduleDailyLearning(userState.preferences.reviewTime);
+      await persistDailyLearningPreference(true);
+    } catch (error) {
+      setDailyLearningEnabled(previousValue);
+      await persistDailyLearningPreference(previousValue);
+      const message = error instanceof Error ? error.message : 'Unable to update daily reminder.';
+      Toast.show({
+        type: 'error',
+        text1: 'Reminder update failed',
+        text2: message,
+      });
+    }
   };
 
   const reseedData = async () => {
@@ -122,7 +147,6 @@ export default function SettingsScreen() {
     await queryClient.invalidateQueries();
   };
 
-  const themeRef = useRef<BottomSheetModal>(null);
   const helpRef = useRef<BottomSheetModal>(null);
   const privacyRef = useRef<BottomSheetModal>(null);
   const reviewScheduleRef = useRef<BottomSheetModal>(null);
@@ -165,17 +189,13 @@ export default function SettingsScreen() {
           />
         </SettingsSection>
 
-        <SettingsSection title="Appearance">
-          <SettingsRow
-            icon={<Moon size={20} color="#475569" />}
-            title="Theme"
-            subtitle="Light / Dark / Auto"
-            onPress={() => themeRef.current?.present()}
-          />
-        </SettingsSection>
-
         <SettingsSection title={'Rewards & Community'}>
-          <ReferrerPromptCard router={router} />
+          <SettingsRow
+            title="Refer Friends & Earn"
+            subtitle={`Get rewards for every referral`}
+            onPress={() => router.push('/referral')}
+            icon={<Gift size={20} color="#475569" />}
+          />
         </SettingsSection>
 
         {!user?.isPremium ? (
@@ -241,8 +261,18 @@ export default function SettingsScreen() {
           await updatePreferences(nextPreferences);
 
           if (userState.notifications.dailyLearningReminder) {
-            await PushNotificationService.requestPermissions();
-            await PushNotificationService.scheduleDailyLearning(time);
+            const granted = await PushNotificationService.requestPermissions();
+            if (!granted) {
+              setDailyLearningEnabled(false);
+              await persistDailyLearningPreference(false);
+              Toast.show({
+                type: 'error',
+                text1: 'Notifications disabled',
+                text2: 'Enable notification permission to keep daily reminders active.',
+              });
+            } else {
+              await PushNotificationService.scheduleDailyLearning(time);
+            }
           }
 
           reviewScheduleRef.current?.dismiss();
@@ -266,7 +296,6 @@ export default function SettingsScreen() {
         }}
       />
 
-      <ThemeSheet ref={themeRef} />
       <HelpSheet ref={helpRef} router={router} />
       <PrivacyPolicySheet ref={privacyRef} />
 

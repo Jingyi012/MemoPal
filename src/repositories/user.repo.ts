@@ -5,9 +5,24 @@ import { eq } from 'drizzle-orm';
 
 interface UserRepository {
   getCurrent(): Promise<{ id: string; totalXp: number; isPremium: boolean } | null>;
-  getProfileLocal(userId: string): Promise<{ id: string; displayName: string; email: string; avatarUrl?: string | null; totalXp: number; level: number; isPremium: boolean } | null>;
+  getProfileLocal(
+    userId: string
+  ): Promise<{
+    id: string;
+    displayName: string;
+    email: string;
+    avatarUrl?: string | null;
+    totalXp: number;
+    level: number;
+    isPremium: boolean;
+  } | null>;
   setPremium(userId: string, isPremium: boolean): Promise<void>;
-  updateProfileLocal(payload: { id: string; displayName?: string; email?: string; avatarUrl?: string | null }): Promise<void>;
+  updateProfileLocal(payload: {
+    id: string;
+    displayName?: string;
+    email?: string;
+    avatarUrl?: string | null;
+  }): Promise<void>;
   upsertFromRemote(user: User): Promise<void>;
   clearLocalAuthUser(): Promise<void>;
 }
@@ -21,12 +36,14 @@ export function createUserRepository(): UserRepository {
     },
 
     async getProfileLocal(userId: string) {
-      const user = await db.query.users.findFirst({ where: (fields, { eq }) => eq(fields.id, userId) });
+      const user = await db.query.users.findFirst({
+        where: (fields, { eq }) => eq(fields.id, userId),
+      });
       if (!user) return null;
       return {
         id: user.id,
         displayName: user.displayName,
-        email: user.email,
+        email: user.email!,
         avatarUrl: user.avatarUrl,
         totalXp: user.totalXp,
         level: user.level,
@@ -41,7 +58,12 @@ export function createUserRepository(): UserRepository {
         .where(eq(schema.users.id, userId));
     },
 
-    async updateProfileLocal(payload: { id: string; displayName?: string; email?: string; avatarUrl?: string | null }) {
+    async updateProfileLocal(payload: {
+      id: string;
+      displayName?: string;
+      email?: string;
+      avatarUrl?: string | null;
+    }) {
       await db
         .update(schema.users)
         .set({

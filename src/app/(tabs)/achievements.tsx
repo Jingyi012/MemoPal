@@ -1,4 +1,4 @@
-import AchievementsScreen from '@/screens/Badges/AchievementsScreen';
+import AchievementsScreen from '@/screens/Achievement/AchievementsScreen';
 import React from 'react';
 
 export default function AchievementsRoute() {
