@@ -13,6 +13,18 @@ public sealed record CreateBadgeDefinitionCommand(BadgeDefinitionUpsertRequest R
 
 public sealed class CreateBadgeDefinitionCommandHandler : IRequestHandler<CreateBadgeDefinitionCommand, ApiResponse<BadgeDefinitionDto>>
 {
+    private static readonly HashSet<string> AllowedConditionTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "manual",
+        "level",
+        "lessons_completed",
+        "words_learned",
+        "streak_days",
+        "missions_completed",
+        "total_reviews",
+        "total_xp"
+    };
+
     private readonly IAppDbContext _db;
 
     public CreateBadgeDefinitionCommandHandler(IAppDbContext db)
@@ -24,6 +36,16 @@ public sealed class CreateBadgeDefinitionCommandHandler : IRequestHandler<Create
     {
         if (string.IsNullOrWhiteSpace(request.Request.Key) || string.IsNullOrWhiteSpace(request.Request.Name))
             throw new ValidationAppException("key and name are required.");
+        if (string.IsNullOrWhiteSpace(request.Request.ConditionType))
+            throw new ValidationAppException("conditionType is required.");
+
+        var normalizedConditionType = request.Request.ConditionType.Trim().ToLowerInvariant();
+        if (!AllowedConditionTypes.Contains(normalizedConditionType))
+            throw new ValidationAppException($"Unsupported conditionType '{request.Request.ConditionType}'.");
+
+        var conditionValue = request.Request.ConditionValue ?? 0;
+        if (!string.Equals(normalizedConditionType, "manual", StringComparison.OrdinalIgnoreCase) && conditionValue <= 0)
+            throw new ValidationAppException("conditionValue must be greater than 0 for auto-achievement conditions.");
 
         var now = DateTime.UtcNow;
         var id = string.IsNullOrWhiteSpace(request.Request.Id) ? Guid.NewGuid().ToString("D") : request.Request.Id!;
@@ -45,6 +67,8 @@ public sealed class CreateBadgeDefinitionCommandHandler : IRequestHandler<Create
         entity.Icon = request.Request.Icon;
         entity.IconUrl = request.Request.IconUrl;
         entity.Rarity = request.Request.Rarity;
+        entity.ConditionType = normalizedConditionType;
+        entity.ConditionValue = conditionValue;
         entity.UpdatedAt = request.Request.UpdatedAt ?? now;
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;

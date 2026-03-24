@@ -1,9 +1,12 @@
 using MemoPal.Application.Common.Exceptions;
+using MemoPal.Application.Common.Settings;
+using MemoPal.Application.Features.Missions.DTOs;
 using MemoPal.Application.Features.XpEvents.Commands;
 using MemoPal.Application.Features.XpEvents.DTOs;
 using MemoPal.Domain.Entities;
 using MemoPal.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace MemoPal.UnitTests;
 
@@ -103,6 +106,108 @@ public class XpEventTests
         Assert.Equal(1, eventCount);
     }
 
+    [Fact]
+    public async Task CreateXpEventCommandHandler_Should_Create_UserMission_For_Completed_Mission_Claim()
+    {
+        await using var db = CreateDbContext();
+        var now = DateTime.UtcNow;
+        db.Users.Add(CreateUser("user-1"));
+        SeedLevelConfig(db, 1, 0, "Novice");
+        SeedMissionTemplateSetting(db, new MissionTemplateDto
+        {
+            Key = "daily_review_rhythm",
+            Title = "Daily Review Rhythm",
+            MetricType = MissionMetricTypes.ReviewsCompleted,
+            Period = MissionPeriods.Daily,
+            TargetValue = 1,
+            RewardXp = 20,
+            SortOrder = 1,
+            IsActive = true
+        });
+        db.ReviewSchedules.Add(new ReviewSchedule
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            UserId = "user-1",
+            LessonProgressId = "progress-1",
+            ReviewRound = 1,
+            DueDate = now.AddMinutes(-30),
+            Completed = true,
+            CompletedDate = now.AddMinutes(-5),
+            CreatedAt = now.AddMinutes(-30),
+            UpdatedAt = now.AddMinutes(-5)
+        });
+        await db.SaveChangesAsync();
+
+        var todayToken = $"day:{now:yyyy-MM-dd}";
+        var handler = new CreateXpEventCommandHandler(db);
+        var response = await handler.Handle(new CreateXpEventCommand("user-1", new XpEventUpsertRequest
+        {
+            SourceType = "mission_complete",
+            SourceId = $"daily_review_rhythm:{todayToken}",
+            ClientEventId = "mission-claim-1",
+            XpAmount = 20
+        }), default);
+
+        Assert.True(response.Success);
+        var userMission = await db.UserMissions.SingleAsync(x => x.UserId == "user-1");
+        Assert.Equal("daily_review_rhythm", userMission.MissionKey);
+        Assert.Equal(todayToken, userMission.PeriodToken);
+        Assert.Equal(20, userMission.RewardXp);
+        Assert.NotNull(userMission.RewardClaimedAt);
+    }
+
+    [Fact]
+    public async Task CreateXpEventCommandHandler_Should_Block_Duplicate_Mission_Claim_For_Same_Period()
+    {
+        await using var db = CreateDbContext();
+        var now = DateTime.UtcNow;
+        db.Users.Add(CreateUser("user-1"));
+        SeedLevelConfig(db, 1, 0, "Novice");
+        SeedMissionTemplateSetting(db, new MissionTemplateDto
+        {
+            Key = "daily_review_rhythm",
+            Title = "Daily Review Rhythm",
+            MetricType = MissionMetricTypes.ReviewsCompleted,
+            Period = MissionPeriods.Daily,
+            TargetValue = 1,
+            RewardXp = 20,
+            SortOrder = 1,
+            IsActive = true
+        });
+        db.ReviewSchedules.Add(new ReviewSchedule
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            UserId = "user-1",
+            LessonProgressId = "progress-1",
+            ReviewRound = 1,
+            DueDate = now.AddMinutes(-30),
+            Completed = true,
+            CompletedDate = now.AddMinutes(-5),
+            CreatedAt = now.AddMinutes(-30),
+            UpdatedAt = now.AddMinutes(-5)
+        });
+        await db.SaveChangesAsync();
+
+        var todayToken = $"day:{now:yyyy-MM-dd}";
+        var handler = new CreateXpEventCommandHandler(db);
+        await handler.Handle(new CreateXpEventCommand("user-1", new XpEventUpsertRequest
+        {
+            SourceType = "mission_complete",
+            SourceId = $"daily_review_rhythm:{todayToken}",
+            ClientEventId = "mission-claim-1",
+            XpAmount = 20
+        }), default);
+
+        await Assert.ThrowsAsync<ValidationAppException>(() =>
+            handler.Handle(new CreateXpEventCommand("user-1", new XpEventUpsertRequest
+            {
+                SourceType = "mission_complete",
+                SourceId = $"daily_review_rhythm:{todayToken}",
+                ClientEventId = "mission-claim-2",
+                XpAmount = 20
+            }), default));
+    }
+
     [Theory]
     [InlineData(null, "client-event-1", 5)]
     [InlineData("", "client-event-1", 5)]
@@ -160,6 +265,19 @@ public class XpEventTests
             Level = level,
             RequiredXp = requiredXp,
             Title = title,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+    }
+
+    private static void SeedMissionTemplateSetting(AppDbContext db, params MissionTemplateDto[] templates)
+    {
+        db.SystemSettings.Add(new SystemSetting
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Key = SystemSettingKeys.GamificationMissionTemplates,
+            Value = JsonSerializer.Serialize(templates),
+            Description = "Mission templates",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         });

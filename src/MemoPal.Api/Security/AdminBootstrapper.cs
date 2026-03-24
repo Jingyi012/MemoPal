@@ -243,15 +243,12 @@ public sealed class AdminBootstrapper
         }
 
         var existingBadgeById = _db.BadgeDefinitions.Local
-            .Where(x => !x.IsDeleted)
             .GroupBy(x => x.Id, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(x => x.Key, x => x.First(), StringComparer.OrdinalIgnoreCase);
         var existingBadgeByKey = _db.BadgeDefinitions.Local
-            .Where(x => !x.IsDeleted)
             .GroupBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(x => x.Key, x => x.First(), StringComparer.OrdinalIgnoreCase);
         var persistedBadges = await _db.BadgeDefinitions
-            .Where(x => !x.IsDeleted)
             .ToListAsync(cancellationToken);
         foreach (var entity in persistedBadges)
         {
@@ -261,16 +258,16 @@ public sealed class AdminBootstrapper
 
         var badgeSeed = new[]
         {
-            new BadgeDefinition { Id = "badge-review-rhythm", Key = "review_rhythm", Name = "Review Rhythm", Description = "Complete daily review goals consistently.", Icon = "clock", Rarity = "common", CreatedAt = now, UpdatedAt = now },
-            new BadgeDefinition { Id = "badge-review-streak-7", Key = "review_streak_7", Name = "Recall Runner", Description = "Maintain a 7-day review streak.", Icon = "bolt", Rarity = "rare", CreatedAt = now, UpdatedAt = now },
-            new BadgeDefinition { Id = "badge-review-streak-30", Key = "review_streak_30", Name = "Recall Guardian", Description = "Maintain a 30-day review streak.", Icon = "shield", Rarity = "epic", CreatedAt = now, UpdatedAt = now },
-            new BadgeDefinition { Id = "badge-lesson-sprinter", Key = "lesson_sprinter", Name = "Lesson Sprinter", Description = "Complete lessons consistently each week.", Icon = "rocket", Rarity = "rare", CreatedAt = now, UpdatedAt = now },
-            new BadgeDefinition { Id = "badge-palace-pioneer", Key = "palace_pioneer", Name = "Palace Pioneer", Description = "Complete your first memory palace route.", Icon = "map", Rarity = "common", CreatedAt = now, UpdatedAt = now },
-            new BadgeDefinition { Id = "badge-memory-builder", Key = "memory_builder", Name = "Memory Builder", Description = "Build a strong set of lessons and reviews.", Icon = "tool", Rarity = "rare", CreatedAt = now, UpdatedAt = now },
-            new BadgeDefinition { Id = "badge-word-collector", Key = "word_collector_300", Name = "Word Collector", Description = "Learn and retain 300 words.", Icon = "book", Rarity = "epic", CreatedAt = now, UpdatedAt = now },
-            new BadgeDefinition { Id = "badge-level-climber", Key = "level_climber_5", Name = "Level Climber", Description = "Reach level 5.", Icon = "mountain", Rarity = "rare", CreatedAt = now, UpdatedAt = now },
-            new BadgeDefinition { Id = "badge-level-master", Key = "level_master_10", Name = "Palace Sage", Description = "Reach level 10 mastery.", Icon = "crown", Rarity = "legendary", CreatedAt = now, UpdatedAt = now },
-            new BadgeDefinition { Id = "badge-mission-specialist", Key = "mission_specialist", Name = "Mission Specialist", Description = "Complete mission tracks consistently.", Icon = "target", Rarity = "epic", CreatedAt = now, UpdatedAt = now },
+            new BadgeDefinition { Id = "badge-review-rhythm", Key = "review_rhythm", Name = "Review Rhythm", Description = "Complete daily review goals consistently.", Icon = "clock", Rarity = "common", ConditionType = "total_reviews", ConditionValue = 10, CreatedAt = now, UpdatedAt = now },
+            new BadgeDefinition { Id = "badge-review-streak-7", Key = "review_streak_7", Name = "Recall Runner", Description = "Maintain a 7-day review streak.", Icon = "bolt", Rarity = "rare", ConditionType = "streak_days", ConditionValue = 7, CreatedAt = now, UpdatedAt = now },
+            new BadgeDefinition { Id = "badge-review-streak-30", Key = "review_streak_30", Name = "Recall Guardian", Description = "Maintain a 30-day review streak.", Icon = "shield", Rarity = "epic", ConditionType = "streak_days", ConditionValue = 30, CreatedAt = now, UpdatedAt = now },
+            new BadgeDefinition { Id = "badge-lesson-sprinter", Key = "lesson_sprinter", Name = "Lesson Sprinter", Description = "Complete lessons consistently each week.", Icon = "rocket", Rarity = "rare", ConditionType = "lessons_completed", ConditionValue = 5, CreatedAt = now, UpdatedAt = now },
+            new BadgeDefinition { Id = "badge-palace-pioneer", Key = "palace_pioneer", Name = "Palace Pioneer", Description = "Complete your first memory palace route.", Icon = "map", Rarity = "common", ConditionType = "lessons_completed", ConditionValue = 1, CreatedAt = now, UpdatedAt = now },
+            new BadgeDefinition { Id = "badge-memory-builder", Key = "memory_builder", Name = "Memory Builder", Description = "Build a strong set of lessons and reviews.", Icon = "tool", Rarity = "rare", ConditionType = "lessons_completed", ConditionValue = 10, CreatedAt = now, UpdatedAt = now },
+            new BadgeDefinition { Id = "badge-word-collector", Key = "word_collector_300", Name = "Word Collector", Description = "Learn and retain 300 words.", Icon = "book", Rarity = "epic", ConditionType = "words_learned", ConditionValue = 300, CreatedAt = now, UpdatedAt = now },
+            new BadgeDefinition { Id = "badge-level-climber", Key = "level_climber_5", Name = "Level Climber", Description = "Reach level 5.", Icon = "mountain", Rarity = "rare", ConditionType = "level", ConditionValue = 5, CreatedAt = now, UpdatedAt = now },
+            new BadgeDefinition { Id = "badge-level-master", Key = "level_master_10", Name = "Palace Sage", Description = "Reach level 10 mastery.", Icon = "crown", Rarity = "legendary", ConditionType = "level", ConditionValue = 10, CreatedAt = now, UpdatedAt = now },
+            new BadgeDefinition { Id = "badge-mission-specialist", Key = "mission_specialist", Name = "Mission Specialist", Description = "Complete mission tracks consistently.", Icon = "target", Rarity = "epic", ConditionType = "missions_completed", ConditionValue = 5, CreatedAt = now, UpdatedAt = now },
         };
 
         foreach (var seed in badgeSeed)
@@ -285,14 +282,62 @@ public sealed class AdminBootstrapper
                 continue;
             }
 
-            entity.Key = seed.Key;
-            entity.Name = seed.Name;
-            entity.Description = seed.Description;
-            entity.Icon = seed.Icon;
-            entity.Rarity = seed.Rarity;
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.UpdatedAt = now;
+            var shouldUpdate = false;
+
+            // Keep admin-managed values, but backfill defaults when fields are empty/missing.
+            if (string.IsNullOrWhiteSpace(entity.Key))
+            {
+                entity.Key = seed.Key;
+                shouldUpdate = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(entity.Name))
+            {
+                entity.Name = seed.Name;
+                shouldUpdate = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(entity.Description))
+            {
+                entity.Description = seed.Description;
+                shouldUpdate = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(entity.Icon))
+            {
+                entity.Icon = seed.Icon;
+                shouldUpdate = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(entity.Rarity))
+            {
+                entity.Rarity = seed.Rarity;
+                shouldUpdate = true;
+            }
+
+            // Backfill condition rules for legacy rows that were still in manual/0 default state.
+            if (string.IsNullOrWhiteSpace(entity.ConditionType) ||
+                (string.Equals(entity.ConditionType, "manual", StringComparison.OrdinalIgnoreCase) &&
+                 entity.ConditionValue <= 0))
+            {
+                entity.ConditionType = seed.ConditionType;
+                entity.ConditionValue = seed.ConditionValue;
+                shouldUpdate = true;
+            }
+
+            if (entity.IsDeleted)
+            {
+                entity.IsDeleted = false;
+                entity.DeletedAt = null;
+                shouldUpdate = true;
+            }
+
+            if (shouldUpdate)
+            {
+                entity.UpdatedAt = now;
+            }
+
+            existingBadgeById[entity.Id] = entity;
             existingBadgeByKey[entity.Key] = entity;
         }
 
@@ -330,10 +375,6 @@ public sealed class AdminBootstrapper
             new MilestoneDefinition { Id = "milestone-level-5", Key = "level_5", Title = "Level 5", Description = "Reach level 5.", ConditionType = "level", ConditionValue = 5, CreatedAt = now, UpdatedAt = now },
             new MilestoneDefinition { Id = "milestone-level-8", Key = "level_8", Title = "Level 8", Description = "Reach level 8.", ConditionType = "level", ConditionValue = 8, CreatedAt = now, UpdatedAt = now },
             new MilestoneDefinition { Id = "milestone-level-10", Key = "level_10", Title = "Level 10", Description = "Reach level 10.", ConditionType = "level", ConditionValue = 10, CreatedAt = now, UpdatedAt = now },
-            new MilestoneDefinition { Id = "milestone-xp-250", Key = "total_xp_250", Title = "XP 250", Description = "Reach 250 total XP.", ConditionType = "total_xp", ConditionValue = 250, CreatedAt = now, UpdatedAt = now },
-            new MilestoneDefinition { Id = "milestone-xp-750", Key = "total_xp_750", Title = "XP 750", Description = "Reach 750 total XP.", ConditionType = "total_xp", ConditionValue = 750, CreatedAt = now, UpdatedAt = now },
-            new MilestoneDefinition { Id = "milestone-xp-1500", Key = "total_xp_1500", Title = "XP 1500", Description = "Reach 1500 total XP.", ConditionType = "total_xp", ConditionValue = 1500, CreatedAt = now, UpdatedAt = now },
-            new MilestoneDefinition { Id = "milestone-xp-2500", Key = "total_xp_2500", Title = "XP 2500", Description = "Reach 2500 total XP.", ConditionType = "total_xp", ConditionValue = 2500, CreatedAt = now, UpdatedAt = now },
         };
 
         foreach (var seed in milestoneSeed)
@@ -358,6 +399,7 @@ public sealed class AdminBootstrapper
             entity.UpdatedAt = now;
             existingMilestoneByKey[entity.Key] = entity;
         }
+
     }
 
     private async Task<IReadOnlyList<User>> SeedMockUsersAsync(CancellationToken cancellationToken)

@@ -13,6 +13,7 @@ public sealed record CreateMilestoneDefinitionCommand(MilestoneDefinitionUpsertR
 
 public sealed class CreateMilestoneDefinitionCommandHandler : IRequestHandler<CreateMilestoneDefinitionCommand, ApiResponse<MilestoneDefinitionDto>>
 {
+    private const string UnsupportedXpConditionType = "total_xp";
     private readonly IAppDbContext _db;
 
     public CreateMilestoneDefinitionCommandHandler(IAppDbContext db)
@@ -24,6 +25,10 @@ public sealed class CreateMilestoneDefinitionCommandHandler : IRequestHandler<Cr
     {
         if (string.IsNullOrWhiteSpace(request.Request.Key) || string.IsNullOrWhiteSpace(request.Request.Title) || string.IsNullOrWhiteSpace(request.Request.ConditionType))
             throw new ValidationAppException("key, title, and conditionType are required.");
+
+        var normalizedConditionType = request.Request.ConditionType.Trim();
+        if (string.Equals(normalizedConditionType, UnsupportedXpConditionType, StringComparison.OrdinalIgnoreCase))
+            throw new ValidationAppException("conditionType 'total_xp' is not supported. Use level milestones instead.");
 
         var now = DateTime.UtcNow;
         var id = string.IsNullOrWhiteSpace(request.Request.Id) ? Guid.NewGuid().ToString("D") : request.Request.Id!;
@@ -42,7 +47,7 @@ public sealed class CreateMilestoneDefinitionCommandHandler : IRequestHandler<Cr
         entity.Key = request.Request.Key.Trim();
         entity.Title = request.Request.Title.Trim();
         entity.Description = request.Request.Description;
-        entity.ConditionType = request.Request.ConditionType.Trim();
+        entity.ConditionType = normalizedConditionType;
         entity.ConditionValue = request.Request.ConditionValue;
         entity.UpdatedAt = request.Request.UpdatedAt ?? now;
         entity.IsDeleted = request.Request.IsDeleted ?? false;

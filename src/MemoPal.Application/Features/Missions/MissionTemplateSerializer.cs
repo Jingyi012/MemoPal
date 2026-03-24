@@ -22,8 +22,9 @@ public static class MissionTemplateSerializer
 
         try
         {
-            var templates = JsonSerializer.Deserialize<List<MissionTemplateDto>>(rawValue, JsonOptions);
-            return Normalize(templates ?? []);
+            var config = JsonSerializer.Deserialize<MissionTemplatesConfigDto>(rawValue, JsonOptions);
+
+            return Normalize(config?.Templates ?? []);
         }
         catch (JsonException)
         {

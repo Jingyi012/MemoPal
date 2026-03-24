@@ -22,13 +22,42 @@ public sealed class GetMilestoneQueryHandler : IRequestHandler<GetMilestoneQuery
     public async Task<ApiResponse<MilestoneDto>> Handle(GetMilestoneQuery request, CancellationToken cancellationToken)
     {
         var definition = await _db.MilestoneDefinitions.FirstOrDefaultAsync(
-                x => x.Id == request.MilestoneId && !x.IsDeleted,
+                x => x.Id == request.MilestoneId &&
+                     !x.IsDeleted,
                 cancellationToken)
             ?? throw new NotFoundAppException("Milestone not found.");
 
         var achieved = await _db.UserMilestones.FirstOrDefaultAsync(
             x => x.UserId == request.UserId && x.MilestoneId == request.MilestoneId && !x.IsDeleted,
             cancellationToken);
+
+        if (achieved is null)
+        {
+            var user = await _db.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == request.UserId && !x.IsDeleted, cancellationToken);
+            var userStats = await _db.UserStats
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.UserId == request.UserId && !x.IsDeleted, cancellationToken);
+
+            if (user is not null && MilestoneAchievementEvaluator.IsAchieved(definition, user, userStats))
+            {
+                var now = DateTime.UtcNow;
+                achieved = new UserMilestone
+                {
+                    Id = Guid.NewGuid().ToString("D"),
+                    UserId = request.UserId,
+                    MilestoneId = definition.Id,
+                    AchievedAt = now,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    IsDeleted = false
+                };
+
+                _db.UserMilestones.Add(achieved);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
 
         return ApiResponse<MilestoneDto>.Ok(ToMilestoneDto(definition, achieved));
     }

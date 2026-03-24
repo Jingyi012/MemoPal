@@ -10,6 +10,12 @@ public sealed record LevelConfigDto(
     DateTime? DeletedAt
 );
 
+public sealed record LevelConfigVersionDto(
+    string Version,
+    DateTime? LatestUpdatedAt,
+    int ActiveCount
+);
+
 public sealed record XpConfigDto(
     string Id,
     string SourceType,

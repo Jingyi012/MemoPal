@@ -55,8 +55,7 @@ public static class GamificationMobileUiConfigSerializer
                 [MissionMetricTypes.XpEarned] = "XP Milestones",
                 [MissionMetricTypes.StreakDays] = "Streak Milestones",
                 [MissionMetricTypes.MasteredLessons] = "Mastery Milestones",
-                ["level"] = "Level Milestones",
-                ["total_xp"] = "XP Milestones"
+                ["level"] = "Level Milestones"
             }
         };
     }

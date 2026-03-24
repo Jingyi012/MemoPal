@@ -22,6 +22,13 @@ public sealed class LevelConfigsController : ApiControllerBase
         return Ok(data);
     }
 
+    [HttpGet("/level-configs/version")]
+    public async Task<IActionResult> GetVersion(CancellationToken cancellationToken)
+    {
+        var data = await Sender.Send(new GetLevelConfigVersionQuery(), cancellationToken);
+        return Ok(data);
+    }
+
     [HttpGet("/level-configs/{level:int}")]
     public async Task<IActionResult> GetByLevel(int level, CancellationToken cancellationToken)
     {

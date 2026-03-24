@@ -23,7 +23,10 @@ public sealed class GetMilestoneDefinitionQueryHandler : IRequestHandler<GetMile
     {
         var entity = await _db.MilestoneDefinitions
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == request.MilestoneId && !x.IsDeleted, cancellationToken)
+            .FirstOrDefaultAsync(
+                x => x.Id == request.MilestoneId &&
+                     !x.IsDeleted,
+                cancellationToken)
             ?? throw new NotFoundAppException("Milestone definition not found.");
 
         return ApiResponse<MilestoneDefinitionDto>.Ok(entity.Adapt<MilestoneDefinitionDto>());

@@ -10,6 +10,8 @@ public sealed class BadgeDefinition : AuditableBaseEntity
     public string? Icon { get; set; }
     public string? IconUrl { get; set; }
     public string? Rarity { get; set; }
+    public string ConditionType { get; set; } = "manual";
+    public int ConditionValue { get; set; }
 
     public ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
 }

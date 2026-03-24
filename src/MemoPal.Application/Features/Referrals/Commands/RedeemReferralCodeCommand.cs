@@ -152,10 +152,27 @@ public sealed class RedeemReferralCodeCommandHandler
             now,
             cancellationToken);
 
-        await _db.SaveChangesAsync(cancellationToken);
-
         var totalInviterAwardXp = inviterRewardXp + milestoneAwards.Sum(x => x.RewardXp);
         var totalInviterAwardPremiumDays = inviterRewardPremiumDays + milestoneAwards.Sum(x => x.RewardPremiumDays);
+
+        var rewardSummary = BuildRewardSummary(totalInviterAwardXp, totalInviterAwardPremiumDays);
+        _db.Notifications.Add(new Notification
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            UserId = referrer.Id,
+            Type = "referral",
+            Title = "New referral joined",
+            Body = $"{invitee.DisplayName} used your referral code. {rewardSummary}",
+            ReferenceType = "referral",
+            ReferenceId = referralRecord.Id,
+            IsRead = false,
+            IsDismissed = false,
+            CreatedAt = now,
+            UpdatedAt = now,
+            IsDeleted = false
+        });
+
+        await _db.SaveChangesAsync(cancellationToken);
 
         var response = new RedeemReferralResultDto(
             referralRecord.Id,
@@ -373,5 +390,26 @@ public sealed class RedeemReferralCodeCommandHandler
             .FirstOrDefaultAsync(cancellationToken);
 
         return level <= 0 ? 1 : level;
+    }
+
+    private static string BuildRewardSummary(int awardedXp, int awardedPremiumDays)
+    {
+        var rewards = new List<string>();
+        if (awardedXp > 0)
+        {
+            rewards.Add($"{awardedXp} XP");
+        }
+
+        if (awardedPremiumDays > 0)
+        {
+            rewards.Add($"{awardedPremiumDays} premium day{(awardedPremiumDays == 1 ? string.Empty : "s")}");
+        }
+
+        if (rewards.Count == 0)
+        {
+            return "No rewards were granted because your current referral reward cap has been reached.";
+        }
+
+        return $"You earned {string.Join(" and ", rewards)}.";
     }
 }

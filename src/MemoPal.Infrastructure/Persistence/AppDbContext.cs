@@ -30,6 +30,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<UserBadge> UserBadges => Set<UserBadge>();
     public DbSet<MilestoneDefinition> MilestoneDefinitions => Set<MilestoneDefinition>();
     public DbSet<UserMilestone> UserMilestones => Set<UserMilestone>();
+    public DbSet<UserMission> UserMissions => Set<UserMission>();
     public DbSet<XpConfig> XpConfigs => Set<XpConfig>();
     public DbSet<LevelConfig> LevelConfigs => Set<LevelConfig>();
     public DbSet<XpEvent> XpEvents => Set<XpEvent>();
@@ -143,6 +144,8 @@ public class AppDbContext : DbContext, IAppDbContext
         {
             b.HasKey(x => x.Id);
             b.HasIndex(x => x.Key).IsUnique();
+            b.Property(x => x.ConditionType).HasMaxLength(64).HasDefaultValue("manual");
+            b.Property(x => x.ConditionValue).HasDefaultValue(0);
         });
 
         modelBuilder.Entity<UserBadge>(b =>
@@ -169,6 +172,20 @@ public class AppDbContext : DbContext, IAppDbContext
                 .WithMany(x => x.UserMilestones)
                 .HasForeignKey(x => x.MilestoneId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserMission>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.UserId, x.MissionKey, x.PeriodToken }).IsUnique();
+            b.HasIndex(x => new { x.UserId, x.CompletedAt });
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.Property(x => x.MissionKey).HasMaxLength(128);
+            b.Property(x => x.Period).HasMaxLength(32);
+            b.Property(x => x.PeriodToken).HasMaxLength(64);
         });
 
         modelBuilder.Entity<XpConfig>(b =>

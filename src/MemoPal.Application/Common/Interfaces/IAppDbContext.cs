@@ -19,6 +19,7 @@ public interface IAppDbContext
     DbSet<UserBadge> UserBadges { get; }
     DbSet<MilestoneDefinition> MilestoneDefinitions { get; }
     DbSet<UserMilestone> UserMilestones { get; }
+    DbSet<UserMission> UserMissions { get; }
     DbSet<XpConfig> XpConfigs { get; }
     DbSet<LevelConfig> LevelConfigs { get; }
     DbSet<XpEvent> XpEvents { get; }

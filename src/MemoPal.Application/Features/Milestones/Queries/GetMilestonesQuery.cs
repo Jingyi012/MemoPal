@@ -24,10 +24,56 @@ public sealed class GetMilestonesQueryHandler : IRequestHandler<GetMilestonesQue
             .Where(x => !x.IsDeleted)
             .OrderBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
+        var user = await _db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == request.UserId && !x.IsDeleted, cancellationToken);
+        var userStats = await _db.UserStats
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.UserId == request.UserId && !x.IsDeleted, cancellationToken);
+
         var userMilestones = await _db.UserMilestones
             .Where(x => x.UserId == request.UserId && !x.IsDeleted)
             .ToListAsync(cancellationToken);
         var map = userMilestones.ToDictionary(x => x.MilestoneId, x => x);
+
+        if (user is not null)
+        {
+            var now = DateTime.UtcNow;
+            var hasNewAchievements = false;
+
+            foreach (var definition in defs)
+            {
+                if (map.ContainsKey(definition.Id))
+                {
+                    continue;
+                }
+
+                if (!MilestoneAchievementEvaluator.IsAchieved(definition, user, userStats))
+                {
+                    continue;
+                }
+
+                var entity = new UserMilestone
+                {
+                    Id = Guid.NewGuid().ToString("D"),
+                    UserId = request.UserId,
+                    MilestoneId = definition.Id,
+                    AchievedAt = now,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    IsDeleted = false
+                };
+
+                _db.UserMilestones.Add(entity);
+                map[definition.Id] = entity;
+                hasNewAchievements = true;
+            }
+
+            if (hasNewAchievements)
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
 
         var items = defs.Select(d =>
         {

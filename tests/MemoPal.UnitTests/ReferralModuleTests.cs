@@ -78,6 +78,13 @@ public sealed class ReferralModuleTests
         var subscriptionCount = await db.UserSubscriptions.CountAsync(x => x.Provider == "referral");
         Assert.True(subscriptionCount >= 2);
 
+        var referrerNotifications = await db.Notifications
+            .Where(x => x.UserId == referrer.Id && !x.IsDeleted)
+            .ToListAsync();
+        Assert.Single(referrerNotifications);
+        Assert.Equal("referral", referrerNotifications[0].Type);
+        Assert.Equal(referralRecord.Id, referrerNotifications[0].ReferenceId);
+
         await Assert.ThrowsAsync<ValidationAppException>(() =>
             handler.Handle(
                 new RedeemReferralCodeCommand(invitee.Id, new RedeemReferralRequest { Code = "REF12345" }),

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace MemoPal.Application.Features.Missions.DTOs;
 
 public static class MissionMetricTypes
@@ -33,6 +35,12 @@ public sealed class MissionTemplateDto
 public sealed class UpsertMissionTemplatesRequest
 {
     public IReadOnlyList<MissionTemplateDto> Templates { get; set; } = [];
+}
+
+public class MissionTemplatesConfigDto
+{
+    [JsonPropertyName("templates")]
+    public List<MissionTemplateDto> Templates { get; set; } = new();
 }
 
 public sealed record MissionProgressDto(

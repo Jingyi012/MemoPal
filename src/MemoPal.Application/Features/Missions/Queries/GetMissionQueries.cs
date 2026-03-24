@@ -94,6 +94,7 @@ public sealed class GetUserMissionDashboardQueryHandler
             .ToList();
 
         var now = DateTime.UtcNow;
+        var calculator = new MissionProgressCalculator(_db);
         var userStats = await _db.UserStats
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.UserId == request.UserId, cancellationToken);
@@ -112,6 +113,7 @@ public sealed class GetUserMissionDashboardQueryHandler
                     template.Period,
                     now,
                     userStats,
+                    calculator,
                     cancellationToken);
                 metricCache[cacheKey] = currentValue;
             }
@@ -144,91 +146,9 @@ public sealed class GetUserMissionDashboardQueryHandler
         string period,
         DateTime now,
         Domain.Entities.UserStats? userStats,
+        MissionProgressCalculator calculator,
         CancellationToken cancellationToken)
     {
-        var periodStart = GetPeriodStartUtc(period, now);
-
-        return metricType switch
-        {
-            MissionMetricTypes.ReviewsCompleted => await CountCompletedReviews(userId, periodStart, cancellationToken),
-            MissionMetricTypes.LessonsCompleted => await CountCompletedLessons(userId, periodStart, cancellationToken),
-            MissionMetricTypes.XpEarned => await SumXpEarned(userId, periodStart, cancellationToken),
-            MissionMetricTypes.StreakDays => Math.Max(0, userStats?.CurrentStreak ?? 0),
-            MissionMetricTypes.MasteredLessons => await CountMasteredLessons(userId, periodStart, cancellationToken),
-            MissionMetricTypes.WordsLearned => Math.Max(0, userStats?.WordsLearned ?? 0),
-            _ => 0
-        };
-    }
-
-    private static DateTime? GetPeriodStartUtc(string period, DateTime now)
-    {
-        var dayStart = now.Date;
-        return period switch
-        {
-            MissionPeriods.Daily => dayStart,
-            MissionPeriods.Weekly => dayStart.AddDays(-(((int)dayStart.DayOfWeek + 6) % 7)),
-            _ => null
-        };
-    }
-
-    private Task<int> CountCompletedReviews(string userId, DateTime? periodStart, CancellationToken cancellationToken)
-    {
-        var query = _db.ReviewSchedules
-            .AsNoTracking()
-            .Where(x => x.UserId == userId && !x.IsDeleted && x.Completed);
-
-        if (periodStart.HasValue)
-        {
-            var start = periodStart.Value;
-            query = query.Where(x => x.CompletedDate.HasValue && x.CompletedDate.Value >= start);
-        }
-
-        return query.CountAsync(cancellationToken);
-    }
-
-    private Task<int> CountCompletedLessons(string userId, DateTime? periodStart, CancellationToken cancellationToken)
-    {
-        var query = _db.LessonProgresses
-            .AsNoTracking()
-            .Where(x => x.UserId == userId && !x.IsDeleted && x.FirstCompletedDate.HasValue);
-
-        if (periodStart.HasValue)
-        {
-            var start = periodStart.Value;
-            query = query.Where(x => x.FirstCompletedDate!.Value >= start);
-        }
-
-        return query.CountAsync(cancellationToken);
-    }
-
-    private async Task<int> SumXpEarned(string userId, DateTime? periodStart, CancellationToken cancellationToken)
-    {
-        var query = _db.XpEvents
-            .AsNoTracking()
-            .Where(x => x.UserId == userId && !x.IsDeleted && x.SourceType != "mission_complete");
-
-        if (periodStart.HasValue)
-        {
-            var start = periodStart.Value;
-            query = query.Where(x => x.CreatedAt >= start);
-        }
-
-        var total = await query.SumAsync(x => (int?)x.XpAmount, cancellationToken);
-        return Math.Max(0, total ?? 0);
-    }
-
-    private Task<int> CountMasteredLessons(string userId, DateTime? periodStart, CancellationToken cancellationToken)
-    {
-        var query = _db.LessonProgresses
-            .AsNoTracking()
-            .Where(x => x.UserId == userId && !x.IsDeleted && x.MasteryLevel == "mastered");
-
-        if (periodStart.HasValue)
-        {
-            var start = periodStart.Value;
-            query = query.Where(x => x.LastReviewDate.HasValue && x.LastReviewDate.Value >= start);
-        }
-
-        return query.CountAsync(cancellationToken);
+        return await calculator.ResolveMetricAsync(userId, metricType, period, now, userStats, cancellationToken);
     }
 }

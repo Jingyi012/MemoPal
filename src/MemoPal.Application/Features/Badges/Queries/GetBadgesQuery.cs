@@ -47,6 +47,8 @@ public sealed class GetBadgesQueryHandler : IRequestHandler<GetBadgesQuery, ApiR
             definition.Icon,
             definition.IconUrl,
             definition.Rarity,
+            definition.ConditionType,
+            definition.ConditionValue,
             earned?.EarnedAt,
             definition.CreatedAt,
             definition.UpdatedAt,

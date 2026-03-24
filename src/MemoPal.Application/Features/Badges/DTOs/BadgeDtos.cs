@@ -8,6 +8,8 @@ public sealed record BadgeDto(
     string? Icon,
     string? IconUrl,
     string? Rarity,
+    string ConditionType,
+    int ConditionValue,
     DateTime? EarnedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt,
@@ -23,6 +25,8 @@ public sealed record BadgeDefinitionDto(
     string? Icon,
     string? IconUrl,
     string? Rarity,
+    string ConditionType,
+    int ConditionValue,
     DateTime CreatedAt,
     DateTime UpdatedAt,
     bool IsDeleted,
@@ -40,6 +44,8 @@ public sealed class BadgeDefinitionUpsertRequest
     public string? Icon { get; set; }
     public string? IconUrl { get; set; }
     public string? Rarity { get; set; }
+    public string? ConditionType { get; set; }
+    public int? ConditionValue { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool? IsDeleted { get; set; }

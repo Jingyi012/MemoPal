@@ -79,6 +79,8 @@ public static class MapsterRegistration
             .Map(dest => dest.Icon, src => src.Badge.Icon)
             .Map(dest => dest.IconUrl, src => src.Badge.IconUrl)
             .Map(dest => dest.Rarity, src => src.Badge.Rarity)
+            .Map(dest => dest.ConditionType, src => src.Badge.ConditionType)
+            .Map(dest => dest.ConditionValue, src => src.Badge.ConditionValue)
             .Map(dest => dest.EarnedAt, src => src.UserBadge == null ? null : src.UserBadge.EarnedAt)
             .Map(dest => dest.CreatedAt, src => src.Badge.CreatedAt)
             .Map(dest => dest.UpdatedAt, src => src.Badge.UpdatedAt)
