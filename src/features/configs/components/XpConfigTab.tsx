@@ -44,7 +44,13 @@ export function XpConfigTab() {
       }}
       toolBarRender={() => [<Button key='add' type='primary' icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>New XP Config</Button>]}
     />
-    <ModalForm open={createOpen} title='Create XP Config' onOpenChange={setCreateOpen} onFinish={async (v) => { await createMutation.mutateAsync(v as any); setCreateOpen(false); return true; }}>
+    <ModalForm
+      open={createOpen}
+      title='Create XP Config'
+      modalProps={{ destroyOnClose: true }}
+      onOpenChange={setCreateOpen}
+      onFinish={async (v) => { await createMutation.mutateAsync(v as any); setCreateOpen(false); return true; }}
+    >
       <ProFormText
         name='sourceType'
         label='Source Type'
@@ -65,7 +71,15 @@ export function XpConfigTab() {
       />
       <ProFormSwitch name='isActive' label='Active' initialValue />
     </ModalForm>
-    <ModalForm open={!!editing} title='Edit XP Config' initialValues={editing || {}} onOpenChange={(o) => !o && setEditing(null)} onFinish={async (v) => { if (!editing) return false; await updateMutation.mutateAsync({ id: editing.id, payload: v } as any); setEditing(null); return true; }}>
+    <ModalForm
+      key={editing?.id ?? 'edit-xp-config'}
+      open={!!editing}
+      title='Edit XP Config'
+      modalProps={{ destroyOnClose: true }}
+      initialValues={editing ? { ...editing } : undefined}
+      onOpenChange={(o) => !o && setEditing(null)}
+      onFinish={async (v) => { if (!editing) return false; await updateMutation.mutateAsync({ id: editing.id, payload: v } as any); setEditing(null); return true; }}
+    >
       <ProFormText
         name='sourceType'
         label='Source Type'

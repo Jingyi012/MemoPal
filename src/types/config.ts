@@ -32,6 +32,8 @@ export interface BadgeDefinitionDto {
   icon?: string | null;
   iconUrl?: string | null;
   rarity?: string | null;
+  conditionType: string;
+  conditionValue: number;
 }
 
 export interface BadgeDefinitionUpsertRequest {
@@ -41,6 +43,8 @@ export interface BadgeDefinitionUpsertRequest {
   icon?: string;
   iconUrl?: string;
   rarity?: string;
+  conditionType: string;
+  conditionValue: number;
 }
 
 export interface MilestoneDefinitionDto {

@@ -400,6 +400,7 @@ export default function LessonWordsPage() {
         <ModalForm<WordFormValues>
         title='Create Word'
         open={createOpen}
+        modalProps={{ destroyOnClose: true }}
         layout='horizontal'
         labelCol={{ span: 7 }}
         wrapperCol={{ span: 17 }}
@@ -442,6 +443,7 @@ export default function LessonWordsPage() {
         <ModalForm<BatchWordFormValues>
         title='Batch Add Words'
         open={batchOpen}
+        modalProps={{ destroyOnClose: true }}
         layout='horizontal'
         labelCol={{ span: 7 }}
         wrapperCol={{ span: 17 }}
@@ -471,8 +473,10 @@ export default function LessonWordsPage() {
       </ModalForm>
 
         <ModalForm<WordFormValues>
+        key={editingWord?.id ?? 'edit-word'}
         title='Edit Word'
         open={!!editingWord}
+        modalProps={{ destroyOnClose: true }}
         layout='horizontal'
         labelCol={{ span: 7 }}
         wrapperCol={{ span: 17 }}

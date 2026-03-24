@@ -62,6 +62,7 @@ export default function UsersPage() {
       <UserFormModal
         title="Create User"
         open={createOpen}
+        formKey="create-user"
         requirePassword
         initialValues={{ role: "User", level: 1, totalXp: 0 }}
         onOpenChange={setCreateOpen}
@@ -75,7 +76,8 @@ export default function UsersPage() {
       <UserFormModal
         title="Edit User"
         open={!!editing}
-        initialValues={editing || {}}
+        formKey={editing?.id ?? 'edit-user'}
+        initialValues={editing ? { ...editing } : undefined}
         onOpenChange={(open) => !open && setEditing(null)}
         onFinish={async (values) => {
           if (!editing) return false;

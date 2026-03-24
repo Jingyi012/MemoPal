@@ -115,6 +115,7 @@ export function LessonsSetupCard({ palaceId, lessons, loading, onChanged }: Less
       <ModalForm<LessonFormValues>
         title='Create Lesson'
         open={createLessonOpen}
+        modalProps={{ destroyOnClose: true }}
         {...formLayout}
         onOpenChange={setCreateLessonOpen}
         initialValues={{
@@ -160,8 +161,10 @@ export function LessonsSetupCard({ palaceId, lessons, loading, onChanged }: Less
       </ModalForm>
 
       <ModalForm<LessonFormValues>
+        key={editingLesson?.id ?? 'edit-lesson'}
         title='Edit Lesson'
         open={!!editingLesson}
+        modalProps={{ destroyOnClose: true }}
         {...formLayout}
         initialValues={
           editingLesson

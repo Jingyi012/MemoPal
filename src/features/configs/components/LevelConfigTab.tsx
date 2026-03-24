@@ -39,7 +39,13 @@ export function LevelConfigTab() {
       }}
       toolBarRender={() => [<Button key='add' type='primary' icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>New Level Config</Button>]}
     />
-    <ModalForm open={createOpen} title='Create Level Config' onOpenChange={setCreateOpen} onFinish={async (v: any) => { await createMutation.mutateAsync({ level: v.level, payload: { requiredXp: v.requiredXp, title: v.title } }); setCreateOpen(false); return true; }}>
+    <ModalForm
+      open={createOpen}
+      title='Create Level Config'
+      modalProps={{ destroyOnClose: true }}
+      onOpenChange={setCreateOpen}
+      onFinish={async (v: any) => { await createMutation.mutateAsync({ level: v.level, payload: { requiredXp: v.requiredXp, title: v.title } }); setCreateOpen(false); return true; }}
+    >
       <ProFormDigit
         name='level'
         label='Level'
@@ -56,7 +62,15 @@ export function LevelConfigTab() {
       />
       <ProFormText name='title' label='Title' fieldProps={{ placeholder: 'Enter level title (e.g., Navigator)' }} />
     </ModalForm>
-    <ModalForm open={!!editing} title='Edit Level Config' initialValues={editing || {}} onOpenChange={(o) => !o && setEditing(null)} onFinish={async (v: any) => { if (!editing) return false; await updateMutation.mutateAsync({ level: editing.level, payload: { requiredXp: v.requiredXp, title: v.title } }); setEditing(null); return true; }}>
+    <ModalForm
+      key={editing?.level ?? 'edit-level-config'}
+      open={!!editing}
+      title='Edit Level Config'
+      modalProps={{ destroyOnClose: true }}
+      initialValues={editing ? { ...editing } : undefined}
+      onOpenChange={(o) => !o && setEditing(null)}
+      onFinish={async (v: any) => { if (!editing) return false; await updateMutation.mutateAsync({ level: editing.level, payload: { requiredXp: v.requiredXp, title: v.title } }); setEditing(null); return true; }}
+    >
       <ProFormDigit
         name='requiredXp'
         label='Required XP'

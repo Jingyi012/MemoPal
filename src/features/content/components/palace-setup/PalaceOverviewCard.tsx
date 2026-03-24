@@ -56,6 +56,7 @@ export function PalaceOverviewCard({ palaceId, palace, onChanged }: PalaceOvervi
       <ModalForm<PalaceFormValues>
         title='Edit Palace'
         open={editingPalace}
+        modalProps={{ destroyOnClose: true }}
         onOpenChange={setEditingPalace}
         {...formLayout}
         initialValues={{

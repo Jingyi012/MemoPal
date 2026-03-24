@@ -48,9 +48,11 @@ export default function SubscriptionsPage() {
       />
 
       <ModalForm
+        key={editing?.id ?? 'edit-subscription'}
         title='Update Subscription'
         open={!!editing}
-        initialValues={editing || {}}
+        modalProps={{ destroyOnClose: true }}
+        initialValues={editing ? { ...editing } : undefined}
         onOpenChange={(open) => !open && setEditing(null)}
         onFinish={async (values) => {
           if (!editing) return false;

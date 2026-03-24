@@ -273,6 +273,7 @@ export default function ReferralConfigPage() {
       <ModalForm<MilestoneFormValues>
         title='Add Milestone Reward'
         open={createOpen}
+        modalProps={{ destroyOnClose: true }}
         onOpenChange={setCreateOpen}
         initialValues={{
           key: '',
@@ -339,14 +340,16 @@ export default function ReferralConfigPage() {
       </ModalForm>
 
       <ModalForm<MilestoneFormValues>
+        key={editing?.key ?? 'edit-referral-milestone'}
         title='Edit Milestone Reward'
         open={!!editing}
+        modalProps={{ destroyOnClose: true }}
         onOpenChange={(open) => {
           if (!open) {
             setEditing(null);
           }
         }}
-        initialValues={editing ?? undefined}
+        initialValues={editing ? { ...editing } : undefined}
         onFinish={async (values) => {
           if (!editing) return false;
           upsertMilestone(values, 'edit', editing.key);

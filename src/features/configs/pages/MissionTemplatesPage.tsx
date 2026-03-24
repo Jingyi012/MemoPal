@@ -17,7 +17,6 @@ import type { MissionTemplateDto } from '../../../types/config';
 const metricOptions = [
   'reviews_completed',
   'lessons_completed',
-  'xp_earned',
   'streak_days',
   'mastered_lessons',
   'words_learned',
@@ -140,6 +139,7 @@ export default function MissionTemplatesPage() {
         <ModalForm<MissionFormValues>
         title='Add Mission Template'
         open={createOpen}
+        modalProps={{ destroyOnClose: true }}
         onOpenChange={setCreateOpen}
         initialValues={{
           key: '',
@@ -219,12 +219,14 @@ export default function MissionTemplatesPage() {
       </ModalForm>
 
         <ModalForm<MissionFormValues>
+        key={editing?.key ?? 'edit-mission-template'}
         title='Edit Mission Template'
         open={!!editing}
+        modalProps={{ destroyOnClose: true }}
         onOpenChange={(open) => {
           if (!open) setEditing(null);
         }}
-        initialValues={editing ?? undefined}
+        initialValues={editing ? { ...editing } : undefined}
         onFinish={async (values) => {
           if (!editing) return false;
           upsertDraftRow({ ...values, key: editing.key }, 'edit');
@@ -285,4 +287,3 @@ export default function MissionTemplatesPage() {
     </PortalPageContainer>
   );
 }
-

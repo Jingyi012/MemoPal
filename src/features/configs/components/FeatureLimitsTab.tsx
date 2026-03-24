@@ -1,254 +1,254 @@
-import { ProForm, ProFormDigit } from '@ant-design/pro-components';
-import { useMutation } from '@tanstack/react-query';
-import { Alert, Card, Col, Divider, Row, Space, Tag, Typography, message } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
-import { adminSystemSettingsApi } from '../../../api/adminSystemSettingsApi';
+import React, { useEffect, useState } from "react";
+import { Card, Col, Divider, Row, Space, Tag, Typography, message } from "antd";
+import { useMutation } from "@tanstack/react-query";
+import { ProForm, ProFormDigit } from "@ant-design/pro-components";
+import { adminSystemSettingsApi } from "../../../api/adminSystemSettingsApi";
 
-type LimitFormValues = {
-  freeCustomPalaces: number;
-  premiumCustomPalaces: number;
-  freeCustomLessonsPerPalace: number;
-  premiumCustomLessonsPerPalace: number;
-  freeCustomLocationsPerPalace: number;
-  premiumCustomLocationsPerPalace: number;
-  freeCustomWordsPerLesson: number;
-  premiumCustomWordsPerLesson: number;
-};
-
-const DEFAULT_LIMITS: LimitFormValues = {
-  freeCustomPalaces: 0,
-  premiumCustomPalaces: 20,
-  freeCustomLessonsPerPalace: 5,
-  premiumCustomLessonsPerPalace: 50,
-  freeCustomLocationsPerPalace: 15,
-  premiumCustomLocationsPerPalace: 100,
-  freeCustomWordsPerLesson: 25,
-  premiumCustomWordsPerLesson: 200,
-};
-
-function parseLimit(value: string | undefined, fallback: number): number {
-  if (!value) return fallback;
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+interface FormValues {
+  customPalacesFree: number;
+  customPalacesPremium: number;
+  customLessonsPerPalaceFree: number;
+  customLessonsPerPalacePremium: number;
+  customLocationsPerPalaceFree: number;
+  customLocationsPerPalacePremium: number;
+  customWordsPerLessonFree: number;
+  customWordsPerLessonPremium: number;
 }
 
-const LIMIT_SETTINGS: Array<{
-  key: string;
-  field: keyof LimitFormValues;
-  description: string;
-}> = [
-  {
-    key: 'limits.custom_palaces.free',
-    field: 'freeCustomPalaces',
-    description: 'Maximum number of custom palaces allowed for free users.',
-  },
-  {
-    key: 'limits.custom_palaces.premium',
-    field: 'premiumCustomPalaces',
-    description: 'Maximum number of custom palaces allowed for premium users.',
-  },
-  {
-    key: 'limits.custom_lessons_per_palace.free',
-    field: 'freeCustomLessonsPerPalace',
-    description: 'Maximum custom lessons allowed per palace for free users.',
-  },
-  {
-    key: 'limits.custom_lessons_per_palace.premium',
-    field: 'premiumCustomLessonsPerPalace',
-    description: 'Maximum custom lessons allowed per palace for premium users.',
-  },
-  {
-    key: 'limits.custom_locations_per_palace.free',
-    field: 'freeCustomLocationsPerPalace',
-    description: 'Maximum custom locations allowed per palace for free users.',
-  },
-  {
-    key: 'limits.custom_locations_per_palace.premium',
-    field: 'premiumCustomLocationsPerPalace',
-    description: 'Maximum custom locations allowed per palace for premium users.',
-  },
-  {
-    key: 'limits.custom_words_per_lesson.free',
-    field: 'freeCustomWordsPerLesson',
-    description: 'Maximum custom words allowed per lesson for free users.',
-  },
-  {
-    key: 'limits.custom_words_per_lesson.premium',
-    field: 'premiumCustomWordsPerLesson',
-    description: 'Maximum custom words allowed per lesson for premium users.',
-  },
-];
+const DEFAULT_VALUES: FormValues = {
+  customPalacesFree: 0,
+  customPalacesPremium: 20,
+  customLessonsPerPalaceFree: 5,
+  customLessonsPerPalacePremium: 50,
+  customLocationsPerPalaceFree: 15,
+  customLocationsPerPalacePremium: 100,
+  customWordsPerLessonFree: 25,
+  customWordsPerLessonPremium: 200,
+};
 
 const LIMIT_GROUPS: Array<{
   id: string;
   title: string;
   description: string;
-  freeField: keyof LimitFormValues;
-  premiumField: keyof LimitFormValues;
-  freePlaceholder: string;
-  premiumPlaceholder: string;
+  freeField: keyof FormValues;
+  premiumField: keyof FormValues;
   unitLabel: string;
 }> = [
   {
-    id: 'palaces',
-    title: 'Custom Palaces',
-    description: 'Maximum number of custom palaces a user can create.',
-    freeField: 'freeCustomPalaces',
-    premiumField: 'premiumCustomPalaces',
-    freePlaceholder: 'e.g. 0',
-    premiumPlaceholder: 'e.g. 20',
-    unitLabel: 'palaces',
+    id: "palaces",
+    title: "Custom Palaces",
+    description: "Maximum number of custom palaces a user can create.",
+    freeField: "customPalacesFree",
+    premiumField: "customPalacesPremium",
+    unitLabel: "palaces",
   },
   {
-    id: 'lessons',
-    title: 'Lessons Per Palace',
-    description: 'Maximum custom lessons allowed in each custom palace.',
-    freeField: 'freeCustomLessonsPerPalace',
-    premiumField: 'premiumCustomLessonsPerPalace',
-    freePlaceholder: 'e.g. 5',
-    premiumPlaceholder: 'e.g. 50',
-    unitLabel: 'lessons',
+    id: "lessons",
+    title: "Lessons Per Palace",
+    description: "Maximum custom lessons allowed in each custom palace.",
+    freeField: "customLessonsPerPalaceFree",
+    premiumField: "customLessonsPerPalacePremium",
+    unitLabel: "lessons",
   },
   {
-    id: 'locations',
-    title: 'Locations Per Palace',
-    description: 'Maximum locations allowed in each custom palace.',
-    freeField: 'freeCustomLocationsPerPalace',
-    premiumField: 'premiumCustomLocationsPerPalace',
-    freePlaceholder: 'e.g. 15',
-    premiumPlaceholder: 'e.g. 100',
-    unitLabel: 'locations',
+    id: "locations",
+    title: "Locations Per Palace",
+    description: "Maximum locations allowed in each custom palace.",
+    freeField: "customLocationsPerPalaceFree",
+    premiumField: "customLocationsPerPalacePremium",
+    unitLabel: "locations",
   },
   {
-    id: 'words',
-    title: 'Words Per Lesson',
-    description: 'Maximum words allowed in each custom lesson.',
-    freeField: 'freeCustomWordsPerLesson',
-    premiumField: 'premiumCustomWordsPerLesson',
-    freePlaceholder: 'e.g. 25',
-    premiumPlaceholder: 'e.g. 200',
-    unitLabel: 'words',
+    id: "words",
+    title: "Words Per Lesson",
+    description: "Maximum words allowed in each custom lesson.",
+    freeField: "customWordsPerLessonFree",
+    premiumField: "customWordsPerLessonPremium",
+    unitLabel: "words",
   },
 ];
 
 export function FeatureLimitsTab() {
-  const [initialValues, setInitialValues] = useState<LimitFormValues>(DEFAULT_LIMITS);
+  const [initialValues, setInitialValues] =
+    useState<FormValues>(DEFAULT_VALUES);
   const [loading, setLoading] = useState(true);
+  const formRef = React.useRef<any>(null);
 
-  const loadLimits = useCallback(async () => {
+  const loadLimits = async () => {
     setLoading(true);
     try {
-      const result = await adminSystemSettingsApi.list(1, 100, 'limits.custom_');
-      const settings = new Map(result.data.map((item) => [item.key, item.value]));
+      const result = await adminSystemSettingsApi.list(
+        1,
+        100,
+        "feature_limits",
+      );
+      const setting = result.data.find((s) => s.key === "feature_limits");
 
-      const nextValues = { ...DEFAULT_LIMITS };
-      for (const item of LIMIT_SETTINGS) {
-        const fallback = DEFAULT_LIMITS[item.field];
-        nextValues[item.field] = parseLimit(settings.get(item.key), fallback);
+      if (setting && setting.value) {
+        const parsed = JSON.parse(setting.value);
+        // Convert nested structure to flat structure for form
+        const formValues: FormValues = {
+          customPalacesFree:
+            parsed.customPalaces?.free ?? DEFAULT_VALUES.customPalacesFree,
+          customPalacesPremium:
+            parsed.customPalaces?.premium ??
+            DEFAULT_VALUES.customPalacesPremium,
+          customLessonsPerPalaceFree:
+            parsed.customLessonsPerPalace?.free ??
+            DEFAULT_VALUES.customLessonsPerPalaceFree,
+          customLessonsPerPalacePremium:
+            parsed.customLessonsPerPalace?.premium ??
+            DEFAULT_VALUES.customLessonsPerPalacePremium,
+          customLocationsPerPalaceFree:
+            parsed.customLocationsPerPalace?.free ??
+            DEFAULT_VALUES.customLocationsPerPalaceFree,
+          customLocationsPerPalacePremium:
+            parsed.customLocationsPerPalace?.premium ??
+            DEFAULT_VALUES.customLocationsPerPalacePremium,
+          customWordsPerLessonFree:
+            parsed.customWordsPerLesson?.free ??
+            DEFAULT_VALUES.customWordsPerLessonFree,
+          customWordsPerLessonPremium:
+            parsed.customWordsPerLesson?.premium ??
+            DEFAULT_VALUES.customWordsPerLessonPremium,
+        };
+        setInitialValues(formValues);
       }
-      setInitialValues(nextValues);
-    } catch {
-      message.error('Failed to load feature limits.');
+    } catch (error) {
+      console.error("Failed to load feature limits:", error);
+      message.error("Failed to load feature limits.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     void loadLimits();
-  }, [loadLimits]);
+  }, []);
 
-  const upsertMutation = useMutation({
-    mutationFn: async (values: LimitFormValues) => {
-      await Promise.all(
-        LIMIT_SETTINGS.map((item) =>
-          adminSystemSettingsApi.upsert({
-            key: item.key,
-            value: String(values[item.field]),
-            description: item.description,
-          })
-        )
-      );
+  const saveMutation = useMutation({
+    mutationFn: async (values: FormValues) => {
+      // Convert flat structure to nested structure for storage
+      const nestedData = {
+        customPalaces: {
+          free: values.customPalacesFree,
+          premium: values.customPalacesPremium,
+        },
+        customLessonsPerPalace: {
+          free: values.customLessonsPerPalaceFree,
+          premium: values.customLessonsPerPalacePremium,
+        },
+        customLocationsPerPalace: {
+          free: values.customLocationsPerPalaceFree,
+          premium: values.customLocationsPerPalacePremium,
+        },
+        customWordsPerLesson: {
+          free: values.customWordsPerLessonFree,
+          premium: values.customWordsPerLessonPremium,
+        },
+      };
+
+      await adminSystemSettingsApi.upsert({
+        key: "feature_limits",
+        value: JSON.stringify(nestedData),
+        description: "Feature limits configuration for free and premium users",
+      });
     },
     onSuccess: () => {
-      message.success('Feature limits updated.');
+      message.success("Feature limits updated successfully!");
       void loadLimits();
     },
-    onError: () => {
-      message.error('Failed to update feature limits.');
+    onError: (error: any) => {
+      console.error("Error saving feature limits:", error);
+      message.error(error?.message || "Failed to save feature limits");
     },
   });
 
   return (
-    <Card loading={loading}>
-      <Space direction='vertical' size={16} style={{ width: '100%' }}>
-        <Alert
-          showIcon
-          type='info'
-          message='Plan limits are enforced by backend API during content creation.'
-          description='Set values for each capability below. Use 0 if a plan should not access that capability.'
-        />
-        <Alert
-          showIcon
-          type='success'
-          message='Recommended strategy'
-          description='Keep free limits sufficient for trial value and use premium limits to expand depth (not just unlock everything).'
-        />
+    <Card loading={loading} title="Feature Limits Configuration">
+      <Space direction="vertical" style={{ width: "100%" }} size="large">
+        <Typography.Paragraph type="secondary">
+          Configure the maximum resources allowed for free and premium users.
+          Changes apply immediately.
+        </Typography.Paragraph>
 
-        <ProForm<LimitFormValues>
-          key={JSON.stringify(initialValues)}
+        <ProForm<FormValues>
+          formRef={formRef}
+          layout="vertical"
           initialValues={initialValues}
+          key={JSON.stringify(initialValues)}
           submitter={{
             searchConfig: {
-              submitText: 'Save Limits',
-              resetText: 'Reload',
+              submitText: "Save Limits",
+              resetText: "Reset",
             },
             resetButtonProps: {
-              disabled: upsertMutation.isPending,
+              disabled: saveMutation.isPending,
             },
             submitButtonProps: {
-              loading: upsertMutation.isPending,
+              loading: saveMutation.isPending,
             },
           }}
           onReset={() => {
             void loadLimits();
           }}
-          onFinish={async (values) => {
-            await upsertMutation.mutateAsync(values);
+          onFinish={async (values: FormValues) => {
+            await saveMutation.mutateAsync(values);
             return true;
           }}
         >
-          <Row gutter={[16, 16]}>
+          <Row gutter={[24, 24]}>
             {LIMIT_GROUPS.map((group) => (
               <Col xs={24} lg={12} key={group.id}>
                 <Card
-                  size='small'
-                  title={group.title}
-                  extra={<Tag color='blue'>{group.unitLabel}</Tag>}
-                  styles={{ body: { paddingBottom: 8 } }}
+                  size="small"
+                  title={
+                    <span>
+                      {group.title}
+                      <Tag color="blue" style={{ marginLeft: 8 }}>
+                        {group.unitLabel}
+                      </Tag>
+                    </span>
+                  }
+                  styles={{ body: { padding: "16px" } }}
+                  bordered
                 >
-                  <Typography.Text type='secondary'>{group.description}</Typography.Text>
-                  <Divider style={{ margin: '12px 0' }} />
-                  <Row gutter={12}>
-                    <Col span={12}>
-                      <ProFormDigit
-                        name={group.freeField}
-                        label='Free Plan'
-                        min={0}
-                        rules={[{ required: true }]}
-                        fieldProps={{ placeholder: group.freePlaceholder }}
-                      />
-                    </Col>
-                    <Col span={12}>
-                      <ProFormDigit
-                        name={group.premiumField}
-                        label='Premium Plan'
-                        min={0}
-                        rules={[{ required: true }]}
-                        fieldProps={{ placeholder: group.premiumPlaceholder }}
-                      />
-                    </Col>
-                  </Row>
+                  <Typography.Text
+                    type="secondary"
+                    style={{ display: "block", marginBottom: 16 }}
+                  >
+                    {group.description}
+                  </Typography.Text>
+                  <Divider style={{ margin: "12px 0" }} />
+
+                  <Space
+                    direction="vertical"
+                    style={{ width: "100%" }}
+                    size="middle"
+                  >
+                    <ProFormDigit
+                      name={group.freeField}
+                      label="Free Plan"
+                      placeholder="Enter number"
+                      min={0}
+                      max={10000}
+                      rules={[{ required: true, message: "Required" }]}
+                      fieldProps={{
+                        controls: true,
+                      }}
+                    />
+                    <ProFormDigit
+                      name={group.premiumField}
+                      label="Premium Plan"
+                      placeholder="Enter number"
+                      min={0}
+                      max={10000}
+                      rules={[{ required: true, message: "Required" }]}
+                      fieldProps={{
+                        controls: true,
+                      }}
+                    />
+                  </Space>
                 </Card>
               </Col>
             ))}

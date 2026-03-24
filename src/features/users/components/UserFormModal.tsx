@@ -1,9 +1,11 @@
 import { ModalForm, ProFormDigit, ProFormSelect, ProFormText } from '@ant-design/pro-components';
+import type { Key } from 'react';
 import type { ManagedUserDto, ManagedUserUpsertRequest } from '../../../types/user';
 
 type Props = {
   title: string;
   open: boolean;
+  formKey?: Key;
   initialValues?: ManagedUserDto | Record<string, unknown>;
   requirePassword?: boolean;
   onOpenChange: (open: boolean) => void;
@@ -13,6 +15,7 @@ type Props = {
 export function UserFormModal({
   title,
   open,
+  formKey,
   initialValues,
   requirePassword = false,
   onOpenChange,
@@ -20,8 +23,10 @@ export function UserFormModal({
 }: Props) {
   return (
     <ModalForm<ManagedUserUpsertRequest>
+      key={formKey}
       title={title}
       open={open}
+      modalProps={{ destroyOnClose: true }}
       initialValues={initialValues}
       onOpenChange={onOpenChange}
       onFinish={onFinish}

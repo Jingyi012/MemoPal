@@ -127,6 +127,7 @@ export default function PalacesPage() {
       <ModalForm<PalaceFormValues>
         title='Create Palace'
         open={createOpen}
+        modalProps={{ destroyOnClose: true }}
         {...formLayout}
         onOpenChange={setCreateOpen}
         initialValues={{
@@ -168,8 +169,10 @@ export default function PalacesPage() {
       </ModalForm>
 
       <ModalForm<PalaceFormValues>
+        key={editing?.id ?? 'edit-palace'}
         title='Edit Palace'
         open={!!editing}
+        modalProps={{ destroyOnClose: true }}
         {...formLayout}
         initialValues={
           editing

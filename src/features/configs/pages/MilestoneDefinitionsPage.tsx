@@ -43,7 +43,7 @@ export default function MilestoneDefinitionsPage() {
               label='Condition Type'
               placeholder='Select condition type'
               rules={[{ required: true }]}
-              options={['total_xp', 'level', 'lessons_completed', 'words_learned', 'streak_days'].map(
+              options={['level', 'lessons_completed', 'words_learned', 'streak_days'].map(
                 (value) => ({ label: value, value })
               )}
             />

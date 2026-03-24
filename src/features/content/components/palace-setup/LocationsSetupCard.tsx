@@ -164,6 +164,7 @@ export function LocationsSetupCard({ palaceId, locations, loading, onChanged }: 
       <ModalForm<LocationFormValues>
         title='Create Location'
         open={createLocationOpen}
+        modalProps={{ destroyOnClose: true }}
         onOpenChange={setCreateLocationOpen}
         {...formLayout}
         onFinish={async (values) => {
@@ -196,8 +197,10 @@ export function LocationsSetupCard({ palaceId, locations, loading, onChanged }: 
       </ModalForm>
 
       <ModalForm<LocationFormValues>
+        key={editingLocation?.id ?? 'edit-location'}
         title='Edit Location'
         open={!!editingLocation}
+        modalProps={{ destroyOnClose: true }}
         {...formLayout}
         initialValues={
           editingLocation
