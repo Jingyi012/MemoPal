@@ -102,7 +102,7 @@ export async function syncPendingChanges(): Promise<void> {
   try {
     // Get all pending lesson changes
     const queue = await db.query.syncQueue.findMany({
-      where: eq(schema.syncQueue.entityType, EntityType.XP_EVENT),
+      where: eq(schema.syncQueue.entityType, EntityType.LESSON),
     });
 
     for (const item of queue) {

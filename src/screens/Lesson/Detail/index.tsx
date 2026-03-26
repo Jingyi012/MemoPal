@@ -5,6 +5,7 @@ import { ForgettingCurveCard } from '@/components/information/ForgettingCurve';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
 import { useLessonProgress } from '@/hooks/useLessonProgress';
+import { useLessonWords } from '@/hooks/useLessonWords';
 import { useLessonDetail } from '@/hooks/useLessonsManager';
 import { dateFormatter } from '@/utils/formatter';
 import { getNextReview, getRetentionRate, isReviewDueSoon, isReviewOverdue } from '@/utils/review';
@@ -41,12 +42,18 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
     refetch: lessonRefresh,
   } = useLessonDetail(lessonId);
 
-  const isLoading = progressLoading || detailLoading;
-  const isRefreshing = isProgressRefreshing || isLessonDetailRefreshing;
+  const {
+    words,
+    isLoading: wordsLoading,
+    isRefreshing: isWordsRefreshing,
+    refresh: wordsRefresh,
+  } = useLessonWords(lessonId);
+
+  const isLoading = progressLoading || detailLoading || wordsLoading;
+  const isRefreshing = isProgressRefreshing || isLessonDetailRefreshing || isWordsRefreshing;
 
   const onRefresh = async () => {
-    await progressRefresh();
-    lessonRefresh();
+    await Promise.all([progressRefresh(), lessonRefresh(), wordsRefresh()]);
   };
 
   const { hasStartedLearning, hasMastered, hasCompletedLearning } = useMemo(() => {
@@ -209,12 +216,12 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
         )}
 
         {/* WORD LIST SECTION */}
-        {!hasStartedLearning && <LessonWordList words={lesson.words} />}
+        {!hasStartedLearning && <LessonWordList words={words} />}
       </ScrollView>
 
       <CustomBottomSheet ref={bottomSheetRef}>
         <View className="p-4">
-          <LessonWordList words={lesson.words} />
+          <LessonWordList words={words} />
         </View>
       </CustomBottomSheet>
     </>
