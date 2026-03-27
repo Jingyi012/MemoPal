@@ -2,7 +2,6 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useFeatureLimits } from '@/hooks/useFeatureLimits';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLocationMutations } from '@/hooks/useLocation';
 import { usePalaceList, usePalaceMutations } from '@/hooks/usePalace';
 import * as ImagePicker from 'expo-image-picker';
@@ -45,7 +44,6 @@ async function pickImage() {
 
 export default function CreatePalaceScreen() {
   const router = useRouter();
-  const { user } = useCurrentUser();
   const { data: palaces = [] } = usePalaceList();
   const { limits, isLoading: isLoadingLimits } = useFeatureLimits();
   const { createPalace } = usePalaceMutations();
@@ -70,9 +68,8 @@ export default function CreatePalaceScreen() {
     () => palaces.filter((palace) => palace.isCustom && !palace.isDeleted).length,
     [palaces]
   );
-  const limitTier = user?.isPremium ? 'premium' : 'free';
-  const maxPalaces = limits.customPalaces[limitTier];
-  const maxLocations = Math.max(MIN_LOCATIONS, limits.customLocationsPerPalace[limitTier]);
+  const maxPalaces = limits.customPalaces;
+  const maxLocations = Math.max(MIN_LOCATIONS, limits.customLocationsPerPalace);
   const canCreateCustomPalace = customPalacesCount < maxPalaces;
 
   useEffect(() => {

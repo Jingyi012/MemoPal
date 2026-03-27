@@ -4,6 +4,7 @@ import { EntityType } from '@/enums/entityType';
 import { SourceType } from '@/enums/sourceType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { isBadgeAchievementMet } from '@/utils/gamification/badgeRuleEvaluator';
+import { resolveNextStreak } from '@/utils/gamification/streak';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 
@@ -34,7 +35,7 @@ interface XpEventsRepository {
     sourceId?: string;
     xpAmount: number;
     clientEventId: string;
-  }): Promise<XpEventCreateResult>;
+  }, options?: { trackActivity?: boolean }): Promise<XpEventCreateResult>;
   upsertMany(xpEvents: any[]): Promise<void>;
   delete(eventId: string): Promise<void>;
 }
@@ -75,8 +76,9 @@ export function createXpEventsRepository(): XpEventsRepository {
       sourceId?: string;
       xpAmount: number;
       clientEventId: string;
-    }): Promise<XpEventCreateResult> {
-      const now = new Date().toISOString();
+    }, options: { trackActivity?: boolean } = {}): Promise<XpEventCreateResult> {
+      const nowDate = new Date();
+      const now = nowDate.toISOString();
       const currentUser = await db.query.users.findFirst({ columns: { id: true } });
       if (!currentUser) {
         throw new Error('No local user found to apply XP event.');
@@ -125,6 +127,55 @@ export function createXpEventsRepository(): XpEventsRepository {
             updatedAt: now,
           })
           .where(eq(schema.users.id, currentUser.id));
+
+        if (options.trackActivity !== false) {
+          const currentStats = await tx.query.userStats.findFirst({
+            where: eq(schema.userStats.userId, currentUser.id),
+          });
+          const nextStreak = resolveNextStreak(
+            {
+              currentStreak: currentStats?.currentStreak ?? 0,
+              longestStreak: currentStats?.longestStreak ?? 0,
+              lastActiveDate: currentStats?.lastActiveDate ?? null,
+            },
+            nowDate
+          );
+
+          if (currentStats) {
+            await tx
+              .update(schema.userStats)
+              .set({
+                currentStreak: nextStreak.currentStreak,
+                longestStreak: nextStreak.longestStreak,
+                lastActiveDate: now,
+                updatedAt: now,
+              })
+              .where(eq(schema.userStats.userId, currentUser.id));
+          } else {
+            await tx.insert(schema.userStats).values({
+              userId: currentUser.id,
+              lessonsCompleted: 0,
+              wordsLearned: 0,
+              currentStreak: nextStreak.currentStreak,
+              longestStreak: nextStreak.longestStreak,
+              lastActiveDate: now,
+              createdAt: now,
+              updatedAt: now,
+            });
+          }
+
+          await SyncBase.addToQueue(tx as any, {
+            entityType: EntityType.USER_STATS,
+            entityId: currentUser.id,
+            action: 'update',
+            payload: {
+              currentStreak: nextStreak.currentStreak,
+              longestStreak: nextStreak.longestStreak,
+              lastActiveDate: now,
+              updatedAt: now,
+            },
+          });
+        }
 
         const userAfterXp = await tx.query.users.findFirst({
           where: eq(schema.users.id, currentUser.id),

@@ -9,7 +9,9 @@ export const missionApi = {
     return response.data.data;
   },
   async getMobileUiConfig(): Promise<GamificationMobileUiConfig> {
-    const response = await api.get<GeneralResponse<GamificationMobileUiConfig>>('/missions/ui-config');
+    const response = await api.get<GeneralResponse<GamificationMobileUiConfig>>(
+      '/system-settings/gamification/mobile-ui-config'
+    );
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },

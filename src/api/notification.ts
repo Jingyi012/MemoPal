@@ -1,6 +1,6 @@
 import api from '@/api/api';
 import { GeneralResponse } from '@/types/general';
-import { Notification } from '@/types/notification';
+import { Notification, NotificationUpsertRequest } from '@/types/notification';
 
 /**
  * API calls for notifications
@@ -49,9 +49,12 @@ export const notificationApi = {
   /**
    * Update notification
    */
-  async update(notification: Notification): Promise<Notification> {
+  async update(
+    notificationId: string,
+    notification: NotificationUpsertRequest
+  ): Promise<Notification> {
     const response = await api.put<GeneralResponse<Notification>>(
-      `/notifications/${notification.id}`,
+      `/notifications/${notificationId}`,
       notification
     );
     if (!response.data.success) throw new Error(response.data.message);
@@ -76,5 +79,4 @@ export const notificationApi = {
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },
-
 };

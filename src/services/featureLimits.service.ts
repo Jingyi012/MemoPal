@@ -5,18 +5,18 @@ const repo = createFeatureLimitsRepository();
 
 export const DEFAULT_FREE_LIMITS: FeatureLimits = {
   isPremium: false,
-  customPalaces: { free: 0, premium: 0 },
-  customLessonsPerPalace: { free: 5, premium: 5 },
-  customLocationsPerPalace: { free: 15, premium: 15 },
-  customWordsPerLesson: { free: 25, premium: 25 },
+  customPalaces: 0,
+  customLessonsPerPalace: 5,
+  customLocationsPerPalace: 15,
+  customWordsPerLesson: 25,
 };
 
 export const DEFAULT_PREMIUM_LIMITS: FeatureLimits = {
   isPremium: true,
-  customPalaces: { free: 0, premium: 20 },
-  customLessonsPerPalace: { free: 5, premium: 50 },
-  customLocationsPerPalace: { free: 15, premium: 100 },
-  customWordsPerLesson: { free: 25, premium: 200 },
+  customPalaces: 20,
+  customLessonsPerPalace: 50,
+  customLocationsPerPalace: 100,
+  customWordsPerLesson: 200,
 };
 
 export function getFeatureLimitsFallback(isPremium: boolean): FeatureLimits {

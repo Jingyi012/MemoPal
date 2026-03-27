@@ -7,10 +7,26 @@ import {
 } from '@/constants/config';
 import { SourceType } from '@/enums/sourceType';
 import { createReviewRepository } from '@/repositories/review.repo';
+import { recordXpEventWithClientEventId } from '@/services/xpEvents.service';
 import * as xpConfigService from '@/services/xpConfig.service';
 import { ReviewSchedule } from '@/types/lesson';
+import * as Crypto from 'expo-crypto';
 
 const reviewRepository = createReviewRepository();
+
+async function syncRemoteReviews(
+  fetchRemote: () => Promise<ReviewSchedule[]>,
+  warningMessage: string
+): Promise<void> {
+  try {
+    const remote = await fetchRemote();
+    if (remote?.length) {
+      await reviewRepository.upsertMany(remote);
+    }
+  } catch (error) {
+    console.warn(warningMessage, error);
+  }
+}
 
 export interface ReviewResult {
   correctCount: number;
@@ -36,14 +52,10 @@ export function calculateReviewResults(results: any[], totalSteps: number): Revi
  * Get review schedule for a lesson with sync
  */
 export async function getReviewSchedule(lessonProgressId: string): Promise<ReviewSchedule[]> {
-  try {
-    const remote = await reviewApi.getByProgressId(lessonProgressId);
-    if (remote?.length) {
-      await reviewRepository.upsertMany(remote);
-    }
-  } catch (error) {
-    console.warn('Failed to sync reviews from backend:', error);
-  }
+  await syncRemoteReviews(
+    () => reviewApi.getByProgressId(lessonProgressId),
+    'Failed to sync reviews from backend:'
+  );
 
   return reviewRepository.getReviewSchedule(lessonProgressId);
 }
@@ -52,14 +64,7 @@ export async function getReviewSchedule(lessonProgressId: string): Promise<Revie
  * Get all due reviews for user with sync
  */
 export async function getDueReviews(): Promise<ReviewSchedule[]> {
-  try {
-    const remote = await reviewApi.getDueReviews();
-    if (remote?.length) {
-      await reviewRepository.upsertMany(remote);
-    }
-  } catch (error) {
-    console.warn('Failed to sync due reviews:', error);
-  }
+  await syncRemoteReviews(() => reviewApi.getDueReviews(), 'Failed to sync due reviews:');
 
   return reviewRepository.getDueReviews();
 }
@@ -101,12 +106,35 @@ export async function completeReview(
   const score = Math.round(Math.min(100, accuracy * 80 + speedRatio * 20));
 
   // 2. Perform local update
-  const rewards = await reviewRepository.updateLessonProgressAfterReview(
+  await reviewRepository.updateLessonProgressAfterReview(
     lessonId,
     xpEarned,
     correctCount,
     totalCount
   );
+
+  // 3. Centralized XP + level + milestone/badge handling through xpEvents service
+  let rewards: { levelUpTo?: number; achievedMilestones: string[]; earnedBadges: string[] } = {
+    achievedMilestones: [],
+    earnedBadges: [],
+  };
+
+  if (xpEarned > 0) {
+    const clientEventId = Crypto.randomUUID();
+    const xpResult = await recordXpEventWithClientEventId(
+      SourceType.ReviewComplete,
+      xpEarned,
+      clientEventId,
+      lessonId,
+      { trackActivity: false }
+    );
+
+    rewards = {
+      levelUpTo: xpResult.levelUpTo,
+      achievedMilestones: xpResult.achievedMilestones,
+      earnedBadges: xpResult.earnedBadges,
+    };
+  }
 
   return { xpEarned, lessonId, ...rewards, score, speedBonusXp, elapsedSeconds: safeElapsedSeconds };
 }
@@ -117,7 +145,7 @@ export async function completeReview(
 export async function getReviewStats() {
   try {
     return await reviewApi.getStats();
-  } catch (error) {
+  } catch {
     console.warn('Using local stats fallback.');
     return reviewRepository.getReviewStats();
   }

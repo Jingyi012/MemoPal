@@ -2,13 +2,12 @@ import { MAX_REVIEW_ROUND, REVIEW_PASS_THRESHOLD } from '@/constants/config';
 import { db } from '@/db/client';
 import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
-import { SourceType } from '@/enums/sourceType';
 import { InAppNotificationSync } from '@/services/notification/inAppNotificationSync';
 import { PushNotificationService } from '@/services/notification/pushNotificationService';
 import { SyncBase } from '@/services/sync/sync.base';
 import { LessonProgress, ReviewSchedule } from '@/types/lesson';
 import { ReviewStats } from '@/types/review';
-import { isBadgeAchievementMet } from '@/utils/gamification/badgeRuleEvaluator';
+import { resolveNextStreak } from '@/utils/gamification/streak';
 import { calculateNextDueDate, REVIEW_INTERVALS } from '@/utils/review';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
@@ -38,13 +37,29 @@ export interface ReviewRepository {
     xpEarned: number,
     correctCount: number,
     totalCount: number
-  ): Promise<{ levelUpTo?: number; achievedMilestones: string[]; earnedBadges: string[] }>;
+  ): Promise<void>;
   delete(reviewScheduleId: string): Promise<void>;
   upsertMany(reviewSchedules: ReviewSchedule[]): Promise<void>;
   getReviewStats(): Promise<ReviewStats>;
 }
 
 export function createReviewRepository(): ReviewRepository {
+  const pendingReviewsWhere = (dueBeforeIso?: string) =>
+    dueBeforeIso
+      ? and(
+          eq(schema.reviewSchedules.completed, false),
+          eq(schema.reviewSchedules.isDeleted, false),
+          sql`${schema.reviewSchedules.dueDate} <= ${dueBeforeIso}`
+        )
+      : and(eq(schema.reviewSchedules.completed, false), eq(schema.reviewSchedules.isDeleted, false));
+
+  const getPendingReviews = async (dueBeforeIso?: string): Promise<ReviewSchedule[]> => {
+    return await db.query.reviewSchedules.findMany({
+      where: pendingReviewsWhere(dueBeforeIso),
+      orderBy: asc(schema.reviewSchedules.dueDate),
+    });
+  };
+
   return {
     async getReviewSchedule(lessonProgressId: string): Promise<ReviewSchedule[]> {
       return await db.query.reviewSchedules.findMany({
@@ -57,14 +72,7 @@ export function createReviewRepository(): ReviewRepository {
 
     async getDueReviews(): Promise<ReviewSchedule[]> {
       const now = new Date().toISOString();
-      return await db.query.reviewSchedules.findMany({
-        where: and(
-          eq(schema.reviewSchedules.completed, false),
-          eq(schema.reviewSchedules.isDeleted, false),
-          sql`${schema.reviewSchedules.dueDate} <= ${now}`
-        ),
-        orderBy: asc(schema.reviewSchedules.dueDate),
-      });
+      return await getPendingReviews(now);
     },
 
     async scheduleNextRound(tx: any, { progress, currentRound, completedDate }): Promise<void> {
@@ -146,11 +154,12 @@ export function createReviewRepository(): ReviewRepository {
       xpEarned: number,
       correctCount: number,
       totalCount: number
-    ): Promise<{ levelUpTo?: number; achievedMilestones: string[]; earnedBadges: string[] }> {
-      const nowIso = new Date().toISOString();
+    ): Promise<void> {
+      const nowDate = new Date();
+      const nowIso = nowDate.toISOString();
       const isPassed = correctCount / totalCount >= REVIEW_PASS_THRESHOLD;
 
-      const outcome = await db.transaction(async (tx) => {
+      await db.transaction(async (tx) => {
         const currentProgress = await tx.query.lessonProgress.findFirst({
           where: eq(schema.lessonProgress.lessonId, lessonId),
           with: {
@@ -162,11 +171,10 @@ export function createReviewRepository(): ReviewRepository {
           },
         });
 
-        if (!currentProgress) return { achievedMilestones: [], earnedBadges: [] };
+        if (!currentProgress) return;
 
-        const achievedMilestones: string[] = [];
-        const earnedBadges: string[] = [];
-        let levelUpTo: number | undefined;
+        const currentUser = await tx.query.users.findFirst();
+        if (!currentUser) return;
 
         const currentReview = currentProgress.reviewSchedules[0];
         const currentRound = currentReview?.reviewRound ?? 0;
@@ -195,131 +203,63 @@ export function createReviewRepository(): ReviewRepository {
           });
         }
 
-        // 3. Update User XP & Stats (single-user local profile)
-        await tx.update(schema.users).set({
-          totalXp: sql`${schema.users.totalXp} + ${xpEarned}`,
-          updatedAt: nowIso,
+        // 3. Update user lesson stats + activity streak (XP is handled by xpEvents service)
+        const currentStats = await tx.query.userStats.findFirst({
+          where: eq(schema.userStats.userId, currentUser.id),
         });
-
+        const nextStreak = resolveNextStreak(
+          {
+            currentStreak: currentStats?.currentStreak ?? 0,
+            longestStreak: currentStats?.longestStreak ?? 0,
+            lastActiveDate: currentStats?.lastActiveDate ?? null,
+          },
+          nowDate
+        );
         const wordsDelta = isPassed ? totalCount : 0;
-        await tx.update(schema.userStats).set({
-          lessonsCompleted: isPassed
-            ? sql`${schema.userStats.lessonsCompleted} + 1`
-            : schema.userStats.lessonsCompleted,
-          wordsLearned: isPassed
-            ? sql`${schema.userStats.wordsLearned} + ${wordsDelta}`
-            : schema.userStats.wordsLearned,
-          lastActiveDate: nowIso,
-          updatedAt: nowIso,
-        });
+        const lessonsCompleted = Math.max(
+          0,
+          (currentStats?.lessonsCompleted ?? 0) + (isPassed ? 1 : 0)
+        );
+        const wordsLearned = Math.max(0, (currentStats?.wordsLearned ?? 0) + wordsDelta);
 
-        // 3b. Recalculate level from total XP
-        const currentUser = await tx.query.users.findFirst();
-        const totalXpAfterUpdate = currentUser?.totalXp ?? 0;
-        const eligibleLevel = await tx.query.levelConfigs.findFirst({
-          where: sql`${schema.levelConfigs.requiredXp} <= ${totalXpAfterUpdate}`,
-          orderBy: (fields, { desc }) => [desc(fields.requiredXp)],
-        });
-
-        if (eligibleLevel && currentUser && eligibleLevel.level !== currentUser.level) {
+        if (currentStats) {
           await tx
-            .update(schema.users)
-            .set({ level: eligibleLevel.level, updatedAt: nowIso })
-            .where(eq(schema.users.id, currentUser.id));
-          levelUpTo = eligibleLevel.level;
-        }
-
-        // 4. Log XP event
-        if (xpEarned > 0) {
-          const xpEventId = Crypto.randomUUID();
-          await tx.insert(schema.xpEvents).values({
-            id: xpEventId,
-            xpAmount: xpEarned,
-            sourceType: SourceType.ReviewComplete,
-            sourceId: lessonId,
-            clientEventId: xpEventId,
+            .update(schema.userStats)
+            .set({
+              lessonsCompleted,
+              wordsLearned,
+              currentStreak: nextStreak.currentStreak,
+              longestStreak: nextStreak.longestStreak,
+              lastActiveDate: nowIso,
+              updatedAt: nowIso,
+            })
+            .where(eq(schema.userStats.userId, currentUser.id));
+        } else {
+          await tx.insert(schema.userStats).values({
+            userId: currentUser.id,
+            lessonsCompleted,
+            wordsLearned,
+            currentStreak: nextStreak.currentStreak,
+            longestStreak: nextStreak.longestStreak,
+            lastActiveDate: nowIso,
             createdAt: nowIso,
             updatedAt: nowIso,
           });
-
-          await SyncBase.addToQueue(tx as any, {
-            entityType: EntityType.XP_EVENT,
-            entityId: xpEventId,
-            action: 'create',
-            payload: {
-              id: xpEventId,
-              sourceType: SourceType.ReviewComplete,
-              sourceId: lessonId,
-              xpAmount: xpEarned,
-              clientEventId: xpEventId,
-              createdAt: nowIso,
-              updatedAt: nowIso,
-            },
-          });
         }
 
-        // 5. Milestone and badge evaluation (offline)
-        const latestUser = await tx.query.users.findFirst();
-        const latestStats = await tx.query.userStats.findFirst();
-        const completedLessons = latestStats?.lessonsCompleted ?? 0;
-        const learnedWords = latestStats?.wordsLearned ?? 0;
-        const level = latestUser?.level ?? 1;
-
-        const milestonesToAward = await tx.query.milestones.findMany({
-          where: and(eq(schema.milestones.isDeleted, false), sql`${schema.milestones.achievedAt} is null`),
+        await SyncBase.addToQueue(tx as any, {
+          entityType: EntityType.USER_STATS,
+          entityId: currentUser.id,
+          action: 'update',
+          payload: {
+            lessonsCompleted,
+            wordsLearned,
+            currentStreak: nextStreak.currentStreak,
+            longestStreak: nextStreak.longestStreak,
+            lastActiveDate: nowIso,
+            updatedAt: nowIso,
+          },
         });
-
-        for (const milestone of milestonesToAward) {
-          const pass =
-            (milestone.conditionType === 'lessons_completed' && completedLessons >= milestone.conditionValue) ||
-            (milestone.conditionType === 'words_learned' && learnedWords >= milestone.conditionValue) ||
-            (milestone.conditionType === 'level' && level >= milestone.conditionValue) ||
-            (milestone.conditionType === 'streak_days' && (latestStats?.currentStreak ?? 0) >= milestone.conditionValue);
-
-          if (pass) {
-            await tx
-              .update(schema.milestones)
-              .set({ achievedAt: nowIso, updatedAt: nowIso })
-              .where(eq(schema.milestones.id, milestone.id));
-            achievedMilestones.push(milestone.title);
-          }
-        }
-
-        const badgesToAward = await tx.query.badges.findMany({
-          where: and(eq(schema.badges.isDeleted, false), sql`${schema.badges.earnedAt} is null`),
-        });
-
-        const totalReviews = currentProgress.totalReviews + (isPassed ? 1 : 0);
-        const missionCompletionAggregate = await tx
-          .select({ total: sql<number>`count(*)` })
-          .from(schema.xpEvents)
-          .where(
-            and(
-              eq(schema.xpEvents.isDeleted, false),
-              eq(schema.xpEvents.sourceType, SourceType.MissionComplete)
-            )
-          );
-        const missionCompletions = Math.max(0, missionCompletionAggregate[0]?.total ?? 0);
-
-        for (const badge of badgesToAward) {
-          const isEarned = isBadgeAchievementMet(badge, {
-            completedLessons,
-            learnedWords,
-            level,
-            totalReviews,
-            totalXp: latestUser?.totalXp ?? 0,
-            currentStreak: latestStats?.currentStreak ?? 0,
-            missionCompletions,
-          });
-
-          if (isEarned) {
-            await tx
-              .update(schema.badges)
-              .set({ earnedAt: nowIso, updatedAt: nowIso })
-              .where(eq(schema.badges.id, badge.id));
-            earnedBadges.push(badge.name);
-          }
-        }
 
         const refreshedProgress = await tx.query.lessonProgress.findFirst({
           where: eq(schema.lessonProgress.id, currentProgress.id),
@@ -347,11 +287,7 @@ export function createReviewRepository(): ReviewRepository {
                 xpEarned: currentProgress.xpEarned + xpEarned,
               },
         });
-
-        return { levelUpTo, achievedMilestones, earnedBadges };
       });
-
-      return outcome ?? { achievedMilestones: [], earnedBadges: [] };
     },
 
     async delete(reviewScheduleId: string): Promise<void> {
@@ -433,17 +369,7 @@ export function createReviewRepository(): ReviewRepository {
       const endOfDayIso = endOfDay.toISOString();
 
       // 1. Get Due counts (Today vs Future)
-      const schedules = await db
-        .select({
-          dueDate: schema.reviewSchedules.dueDate,
-        })
-        .from(schema.reviewSchedules)
-        .where(
-          and(
-            eq(schema.reviewSchedules.completed, false),
-            eq(schema.reviewSchedules.isDeleted, false)
-          )
-        );
+      const schedules = await getPendingReviews();
 
       const dueTodayCount = schedules.filter((s) => s.dueDate <= endOfDayIso).length;
       const upcomingReviewsCount = schedules.filter((s) => s.dueDate > endOfDayIso).length;

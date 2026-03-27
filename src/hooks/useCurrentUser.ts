@@ -1,6 +1,7 @@
 import { AUTH_STORAGE_KEY } from '@/constants/auth';
 import { db } from '@/db/client';
 import type { User } from '@/types/users';
+import { getEffectiveCurrentStreak } from '@/utils/gamification/streak';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 
@@ -46,7 +47,7 @@ export function useCurrentUser() {
           ? {
               lessonsCompleted: stats.lessonsCompleted,
               wordsLearned: stats.wordsLearned,
-              currentStreak: stats.currentStreak,
+              currentStreak: getEffectiveCurrentStreak(stats.currentStreak, stats.lastActiveDate),
               longestStreak: stats.longestStreak,
               lastActiveDate: stats.lastActiveDate,
             }

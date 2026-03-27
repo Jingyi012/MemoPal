@@ -10,17 +10,12 @@ export interface UserStats {
   updatedAt?: string;
 }
 
-export interface FeatureLimitsTier {
-  free: number;
-  premium: number;
-}
-
 export interface FeatureLimits {
   isPremium: boolean;
-  customPalaces: FeatureLimitsTier;
-  customLessonsPerPalace: FeatureLimitsTier;
-  customLocationsPerPalace: FeatureLimitsTier;
-  customWordsPerLesson: FeatureLimitsTier;
+  customPalaces: number;
+  customLessonsPerPalace: number;
+  customLocationsPerPalace: number;
+  customWordsPerLesson: number;
 }
 
 /**

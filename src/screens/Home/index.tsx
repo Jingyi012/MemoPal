@@ -42,8 +42,7 @@ const HomeScreen = () => {
   const { userState, updateState } = useUserState();
 
   const showTutorialPrompt = !userState.ui.tutorialPromptDismissed;
-  const limitTier = user?.isPremium ? 'premium' : 'free';
-  const canCreateCustomPalace = featureLimits.customPalaces[limitTier] > 0;
+  const canCreateCustomPalace = featureLimits.customPalaces > 0;
 
   const overdueCount = dueReviews.filter((r) => new Date(r.dueDate).getTime() < Date.now()).length;
   const dueCount = dueReviews.length;

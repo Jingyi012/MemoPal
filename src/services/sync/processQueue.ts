@@ -9,6 +9,7 @@ import { locationApi } from '@/api/location';
 import { notificationApi } from '@/api/notification';
 import { palaceApi } from '@/api/palace';
 import { reviewApi } from '@/api/review';
+import { userStatsApi } from '@/api/userStats';
 import { xpEventApi } from '@/api/xpEvent';
 import { wordApi } from '@/api/word';
 import { SyncBase } from '@/services/sync/sync.base';
@@ -24,6 +25,7 @@ const tableMap: Record<string, any> = {
   [EntityType.LOCATION]: schema.locations,
   [EntityType.NOTIFICATION]: schema.notifications,
   [EntityType.XP_EVENT]: schema.xpEvents,
+  [EntityType.USER_STATS]: schema.userStats,
   [EntityType.BADGE]: schema.badges,
   [EntityType.MILESTONE]: schema.milestones,
   [EntityType.REVIEW_SCHEDULE]: schema.reviewSchedules,
@@ -93,8 +95,27 @@ export async function processQueue(db = defaultDb) {
 
     if (queueItems.length === 0) return;
 
-    const wordItems = queueItems.filter((item) => item.entityType === EntityType.WORD);
-    const otherItems = queueItems.filter((item) => item.entityType !== EntityType.WORD);
+    // 2. Sort by dependency order: Parent before Child
+    // Priority: PALACE (1) → LOCATION (2) → LESSON (3) → WORD (4), LESSON_PROGRESS (5) → Others (6)
+    const syncDependencyOrder: Record<string, number> = {
+      [EntityType.PALACE]: 1,
+      [EntityType.LOCATION]: 2,
+      [EntityType.LESSON]: 3,
+      [EntityType.WORD]: 4,
+      [EntityType.LESSON_PROGRESS]: 5,
+      // Others get default priority 6
+    };
+
+    const sortedItems = queueItems.sort((a, b) => {
+      const priorityA = syncDependencyOrder[a.entityType] ?? 6;
+      const priorityB = syncDependencyOrder[b.entityType] ?? 6;
+      if (priorityA !== priorityB) return priorityA - priorityB;
+      // Same priority: maintain original order
+      return a.createdAt.localeCompare(b.createdAt);
+    });
+
+    const wordItems = sortedItems.filter((item) => item.entityType === EntityType.WORD);
+    const otherItems = sortedItems.filter((item) => item.entityType !== EntityType.WORD);
 
     if (wordItems.length > 0) {
       try {
@@ -205,7 +226,7 @@ export async function processQueue(db = defaultDb) {
               continue;
             }
             if (item.action === 'create') await notificationApi.create(payload);
-            else if (item.action === 'update') await notificationApi.update(payload);
+            else if (item.action === 'update') await notificationApi.update(item.entityId, payload);
             else if (item.action === 'delete') await notificationApi.delete(item.entityId);
             else {
               console.warn('Unsupported action for NOTIFICATION', item.action);
@@ -234,9 +255,24 @@ export async function processQueue(db = defaultDb) {
               payload = localProgress;
             }
 
-            await lessonProgressApi.updateProgress(payload);
-            syncEntityId = payload.lessonId;
-            isSuccess = true;
+            try {
+              await lessonProgressApi.updateProgress(payload);
+              syncEntityId = payload.lessonId;
+              isSuccess = true;
+            } catch (error: any) {
+              // If lesson not found on backend, skip it (lesson might not be synced yet)
+              // It will be retried in next sync cycle after lesson is created
+              if (
+                error?.response?.status === 404 &&
+                error?.response?.data?.message?.includes('Lesson')
+              ) {
+                console.warn(
+                  `Skipping LESSON_PROGRESS for orphaned lesson ${payload.lessonId}, will retry in next cycle`
+                );
+                continue;
+              }
+              throw error;
+            }
             break;
 
           case EntityType.XP_EVENT:
@@ -250,6 +286,19 @@ export async function processQueue(db = defaultDb) {
               continue;
             }
             await xpEventApi.create(payload);
+            isSuccess = true;
+            break;
+
+          case EntityType.USER_STATS:
+            if (item.action !== 'update') {
+              console.warn('Unsupported action for USER_STATS', item.action);
+              continue;
+            }
+            if (!payload) {
+              console.warn('Missing payload for USER_STATS queue item', item.id);
+              continue;
+            }
+            await userStatsApi.updateStats(payload);
             isSuccess = true;
             break;
 
@@ -315,6 +364,11 @@ export async function processQueue(db = defaultDb) {
                       .update(targetTable)
                       .set({ lastSyncedAt: new Date().toISOString() })
                       .where(eq(schema.lessonProgress.lessonId, syncEntityId));
+                  } else if (item.entityType === EntityType.USER_STATS) {
+                    await tx
+                      .update(targetTable)
+                      .set({ lastSyncedAt: new Date().toISOString() })
+                      .where(eq(schema.userStats.userId, syncEntityId));
                   } else {
                     await tx
                       .update(targetTable)
