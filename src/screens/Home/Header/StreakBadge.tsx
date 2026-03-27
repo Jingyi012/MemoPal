@@ -11,10 +11,8 @@ export function StreakBadge({ streak }: StreakBadgeProps) {
     <View
       className="mt-3 flex-row items-center gap-2 rounded-xl bg-white/10 px-3 py-1.5"
       style={{ alignSelf: 'flex-start' }}>
-      <Flame size={16} color={Colors.orange500} />
-      <Text className="text-sm text-white">
-        {streak} day streak! {streak >= 7 ? <Flame size={16} fill={Colors.orange400} /> : ''}
-      </Text>
+      <Flame size={16} color={Colors.orange500} fill={Colors.orange400} />
+      <Text className="text-sm text-white">{streak} day streak!</Text>
     </View>
   );
 }

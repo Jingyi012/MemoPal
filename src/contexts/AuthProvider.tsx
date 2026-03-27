@@ -25,7 +25,7 @@ export type AuthContextType = {
 
   login: (req: LoginRequest) => Promise<void>;
   register: (req: RegisterRequest) => Promise<void>;
-  loginWithGoogle: (accessToken: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   loginWithFacebook: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -153,8 +153,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await setSession(auth.user, auth.token);
   };
 
-  const loginWithGoogle = async (accessToken: string) => {
-    const auth = await authApi.googleLogin(accessToken);
+  const loginWithGoogle = async (idToken: string) => {
+    const auth = await authApi.googleLogin(idToken);
     await setSession(auth.user, auth.token);
   };
 

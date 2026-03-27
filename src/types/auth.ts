@@ -5,6 +5,12 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface LoginMethods {
+  emailPassword: boolean;
+  google: boolean;
+  facebook: boolean;
+}
+
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
@@ -13,7 +19,7 @@ export interface AuthState {
 
 export interface AuthActions {
   login: (req: LoginRequest) => Promise<void>;
-  loginWithGoogle: (accessToken: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   loginWithFacebook: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
 }

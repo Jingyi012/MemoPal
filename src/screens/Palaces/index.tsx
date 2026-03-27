@@ -18,10 +18,8 @@ export default function PalaceListScreen() {
   const { userState, updateState } = useUserState();
   const { data: palaces = [], isLoading, isRefetching, refetch } = usePalaceList();
 
-  const limitTier = user?.isPremium ? 'premium' : 'free';
-  const customPalaceLimit = limits.customPalaces[limitTier];
-  const canUseCustomPalaces = customPalaceLimit > 0;
-  const view = canUseCustomPalaces ? userState.ui.palaceListTab : 'official';
+  const canUseCustomPalaces = user?.isPremium;
+  const view = user?.isPremium ? userState.ui.palaceListTab : 'official';
   const officialPalaces = useMemo(
     () => palaces.filter((p) => !p.isCustom || p.createdBy !== user?.id),
     [palaces, user?.id]
@@ -31,7 +29,7 @@ export default function PalaceListScreen() {
     [palaces, user?.id]
   );
   const shownPalaces = view === 'official' ? officialPalaces : customPalaces;
-  const canCreateMoreCustomPalaces = customPalaces.length < customPalaceLimit;
+  const canCreateMoreCustomPalaces = customPalaces.length < limits.customPalaces;
 
   const setView = (next: 'official' | 'custom') =>
     updateState({ ui: { ...userState.ui, palaceListTab: next } });

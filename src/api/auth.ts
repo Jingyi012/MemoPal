@@ -1,5 +1,5 @@
 import api from '@/api/api';
-import { AuthResponse, LoginRequest } from '@/types/auth';
+import { AuthResponse, LoginMethods, LoginRequest } from '@/types/auth';
 import { GeneralResponse } from '@/types/general';
 import { User } from '@/types/users';
 import { isAxiosError } from 'axios';
@@ -49,16 +49,7 @@ function extractMessageFromPayload(payload: unknown): string | null {
   }
 
   const data = payload as Record<string, unknown>;
-  const prioritizedKeys = [
-    'message',
-    'Message',
-    'detail',
-    'Detail',
-    'error',
-    'Error',
-    'title',
-    'Title',
-  ] as const;
+  const prioritizedKeys = ['message', 'detail', 'error', 'title'] as const;
 
   for (const key of prioritizedKeys) {
     const value = firstStringValue(data[key]);
@@ -67,7 +58,7 @@ function extractMessageFromPayload(payload: unknown): string | null {
     }
   }
 
-  const errors = data.errors ?? data.Errors;
+  const errors = data.errors;
   if (errors && typeof errors === 'object') {
     const value = firstStringValue(Object.values(errors as Record<string, unknown>));
     if (value) {
@@ -78,32 +69,12 @@ function extractMessageFromPayload(payload: unknown): string | null {
   return null;
 }
 
-function readBoolean(value: unknown): boolean | null {
-  return typeof value === 'boolean' ? value : null;
-}
-
-function normalizeEnvelope<T>(payload: unknown): {
-  success: boolean;
-  data: T | null;
-  message: string | null;
-} {
-  const record = (payload && typeof payload === 'object' ? payload : {}) as Record<string, unknown>;
-  const success = readBoolean(record.success) ?? readBoolean(record.Success) ?? false;
-  const data = (record.data ?? record.Data ?? null) as T | null;
-  const message = extractMessageFromPayload(record);
-
-  return { success, data, message };
-}
-
-function unwrapApiResponse<T>(payload: unknown, fallbackMessage: string): T {
-  const { success, data, message } = normalizeEnvelope<T>(payload);
-  if (!success) {
-    throw new Error(message ?? fallbackMessage);
+function getApiDataOrThrow<T>(payload: GeneralResponse<T>, fallbackMessage: string): T {
+  if (!payload.success || payload.data === null || payload.data === undefined) {
+    throw new Error(payload.message ?? fallbackMessage);
   }
-  if (data === null || data === undefined) {
-    throw new Error(message ?? fallbackMessage);
-  }
-  return data;
+
+  return payload.data;
 }
 
 function getApiErrorMessage(error: unknown, fallback = 'Request failed.') {
@@ -132,7 +103,7 @@ export const authApi = {
   async register(data: RegisterRequest): Promise<AuthResponse> {
     try {
       const response = await api.post<GeneralResponse<AuthResponse>>('/auth/register', data);
-      return unwrapApiResponse<AuthResponse>(response.data, 'Registration failed.');
+      return getApiDataOrThrow<AuthResponse>(response.data, 'Registration failed.');
     } catch (error) {
       throw createApiClientError(error, 'Registration failed.');
     }
@@ -141,16 +112,16 @@ export const authApi = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
       const response = await api.post<GeneralResponse<AuthResponse>>('/auth/login', credentials);
-      return unwrapApiResponse<AuthResponse>(response.data, 'Login failed.');
+      return getApiDataOrThrow<AuthResponse>(response.data, 'Login failed.');
     } catch (error) {
       throw createApiClientError(error, 'Login failed.');
     }
   },
 
-  async googleLogin(accessToken: string): Promise<AuthResponse> {
+  async googleLogin(idToken: string): Promise<AuthResponse> {
     try {
-      const response = await api.post<GeneralResponse<AuthResponse>>('/auth/google', { accessToken });
-      return unwrapApiResponse<AuthResponse>(response.data, 'Google login failed.');
+      const response = await api.post<GeneralResponse<AuthResponse>>('/auth/google', { idToken });
+      return getApiDataOrThrow<AuthResponse>(response.data, 'Google login failed.');
     } catch (error) {
       throw createApiClientError(error, 'Google login failed.');
     }
@@ -158,17 +129,28 @@ export const authApi = {
 
   async facebookLogin(accessToken: string): Promise<AuthResponse> {
     try {
-      const response = await api.post<GeneralResponse<AuthResponse>>('/auth/facebook', { accessToken });
-      return unwrapApiResponse<AuthResponse>(response.data, 'Facebook login failed.');
+      const response = await api.post<GeneralResponse<AuthResponse>>('/auth/facebook', {
+        accessToken,
+      });
+      return getApiDataOrThrow<AuthResponse>(response.data, 'Facebook login failed.');
     } catch (error) {
       throw createApiClientError(error, 'Facebook login failed.');
+    }
+  },
+
+  async getLoginMethods(): Promise<LoginMethods> {
+    try {
+      const response = await api.get<GeneralResponse<LoginMethods>>('/auth/login-methods');
+      return getApiDataOrThrow<LoginMethods>(response.data, 'Failed to load login methods.');
+    } catch (error) {
+      throw createApiClientError(error, 'Failed to load login methods.');
     }
   },
 
   async getCurrentProfile(): Promise<User> {
     try {
       const response = await api.get<GeneralResponse<User>>('/auth/me');
-      return unwrapApiResponse<User>(response.data, 'Failed to load profile.');
+      return getApiDataOrThrow<User>(response.data, 'Failed to load profile.');
     } catch (error) {
       throw createApiClientError(error, 'Failed to load profile.');
     }
@@ -177,7 +159,7 @@ export const authApi = {
   async updateProfile(data: Partial<User>): Promise<User> {
     try {
       const response = await api.patch<GeneralResponse<User>>('/auth/profile', data);
-      return unwrapApiResponse<User>(response.data, 'Failed to update profile.');
+      return getApiDataOrThrow<User>(response.data, 'Failed to update profile.');
     } catch (error) {
       throw createApiClientError(error, 'Failed to update profile.');
     }
@@ -206,7 +188,7 @@ export const authApi = {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      return unwrapApiResponse<User>(response.data, 'Failed to upload avatar.');
+      return getApiDataOrThrow<User>(response.data, 'Failed to upload avatar.');
     } catch (error) {
       throw createApiClientError(error, 'Failed to upload avatar.');
     }

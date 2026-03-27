@@ -9,10 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.memopal.app"
     },
     "android": {
-      "package": "com.memopal.preview",
+      "package": "com.memopal.app",
       "adaptiveIcon": {
         "backgroundColor": "#12B8A6",
         "foregroundImage": "./assets/images/icon-foreground.png"
@@ -49,7 +50,13 @@
           "enableBackgroundRemoteNotifications": false
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.458572178451-q0toa23kaimdebtrhihst5hroo9eqnab"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
