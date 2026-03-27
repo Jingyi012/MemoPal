@@ -17,6 +17,7 @@ public class AppDbContext : DbContext, IAppDbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<UserAuthIdentity> UserAuthIdentities => Set<UserAuthIdentity>();
     public DbSet<UserStats> UserStats => Set<UserStats>();
     public DbSet<Palace> Palaces => Set<Palace>();
     public DbSet<UserPalace> UserPalaces => Set<UserPalace>();
@@ -54,6 +55,21 @@ public class AppDbContext : DbContext, IAppDbContext
                 .WithOne(x => x.User)
                 .HasForeignKey<UserStats>(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.AuthIdentities)
+                .WithOne(x => x.User)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserAuthIdentity>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.Provider).HasMaxLength(32);
+            b.Property(x => x.ProviderUserId).HasMaxLength(256);
+            b.Property(x => x.ProviderEmail).HasMaxLength(320);
+            b.HasIndex(x => new { x.Provider, x.ProviderUserId }).IsUnique();
+            b.HasIndex(x => new { x.UserId, x.Provider }).IsUnique();
         });
 
         modelBuilder.Entity<UserStats>(b =>

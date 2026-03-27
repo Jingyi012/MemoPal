@@ -48,7 +48,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
-        services.AddHttpClient<IGoogleTokenValidator, GoogleTokenValidator>();
+        services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
         services.AddHttpClient<IFacebookTokenValidator, FacebookTokenValidator>();
 
         return services;

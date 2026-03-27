@@ -20,6 +20,14 @@ public sealed class AuthController : ApiControllerBase
     }
 
     [AllowAnonymous]
+    [HttpGet("login-methods")]
+    public async Task<IActionResult> GetLoginMethods(CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new GetLoginMethodsQuery(), cancellationToken);
+        return Ok(result);
+    }
+
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
@@ -49,7 +57,11 @@ public sealed class AuthController : ApiControllerBase
     [HttpPost("google")]
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request, CancellationToken cancellationToken)
     {
-        var token = string.IsNullOrWhiteSpace(request.GoogleAccessToken) ? request.AccessToken : request.GoogleAccessToken;
+        var token = FirstNonEmpty(
+            request.GoogleIdToken,
+            request.IdToken,
+            request.GoogleAccessToken,
+            request.AccessToken);
         var result = await Sender.Send(new GoogleLoginCommand(token ?? string.Empty), cancellationToken);
         if (!result.Success || result.Data is null)
         {
@@ -165,6 +177,8 @@ public sealed class AuthController : ApiControllerBase
 
     public sealed class GoogleLoginRequest
     {
+        public string? IdToken { get; set; }
+        public string? GoogleIdToken { get; set; }
         public string? AccessToken { get; set; }
         public string? GoogleAccessToken { get; set; }
     }
@@ -173,6 +187,19 @@ public sealed class AuthController : ApiControllerBase
     {
         public string? AccessToken { get; set; }
         public string? FacebookAccessToken { get; set; }
+    }
+
+    private static string? FirstNonEmpty(params string?[] values)
+    {
+        foreach (var value in values)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        return null;
     }
 }
 

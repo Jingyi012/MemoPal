@@ -15,5 +15,5 @@ public sealed class User : AuditableBaseEntity
     public string? ReferredByUserId { get; set; }
 
     public UserStats? Stats { get; set; }
+    public ICollection<UserAuthIdentity> AuthIdentities { get; set; } = [];
 }
-

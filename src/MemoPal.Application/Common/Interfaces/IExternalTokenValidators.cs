@@ -9,7 +9,7 @@ public sealed record ExternalAuthUserInfo(
 
 public interface IGoogleTokenValidator
 {
-    Task<ExternalAuthUserInfo> ValidateAccessTokenAsync(string accessToken, CancellationToken cancellationToken = default);
+    Task<ExternalAuthUserInfo> ValidateIdTokenAsync(string idToken, CancellationToken cancellationToken = default);
 }
 
 public interface IFacebookTokenValidator

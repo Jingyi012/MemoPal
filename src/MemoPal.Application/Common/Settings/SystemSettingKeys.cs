@@ -13,6 +13,7 @@ public static class SystemSettingKeys
     public const string GamificationMissionTemplates = "gamification.missions.templates";
     public const string GamificationMobileUiConfig = "gamification.mobile.ui_config";
     public const string GrowthReferralProgramConfig = "growth.referral.program_config";
+    public const string AuthLoginMethods = "auth.login_methods";
 }
 
 public static class SystemSettingDefaults

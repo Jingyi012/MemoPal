@@ -788,6 +788,62 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.UserAuthIdentity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("LastSignInAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ProviderEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("ProviderUserId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Provider", "ProviderUserId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Provider")
+                        .IsUnique();
+
+                    b.ToTable("UserAuthIdentities");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.UserBadge", b =>
                 {
                     b.Property<string>("Id")
@@ -1283,6 +1339,17 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Navigation("LessonProgress");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.UserAuthIdentity", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.User", "User")
+                        .WithMany("AuthIdentities")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.UserBadge", b =>
                 {
                     b.HasOne("MemoPal.Domain.Entities.BadgeDefinition", "Badge")
@@ -1388,6 +1455,8 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MemoPal.Domain.Entities.User", b =>
                 {
+                    b.Navigation("AuthIdentities");
+
                     b.Navigation("Stats");
                 });
 #pragma warning restore 612, 618

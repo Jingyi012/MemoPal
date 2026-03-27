@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Auth.DTOs;
 using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
@@ -27,6 +28,12 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
 
     public async Task<ApiResponse<AuthResponseDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
+        var loginMethods = await _db.GetAuthLoginMethodsAsync(cancellationToken);
+        if (!loginMethods.EmailPassword)
+        {
+            throw new ValidationAppException("Email and password registration is currently disabled.");
+        }
+
         if (string.IsNullOrWhiteSpace(request.DisplayName) ||
             string.IsNullOrWhiteSpace(request.Email) ||
             string.IsNullOrWhiteSpace(request.Password))
@@ -35,8 +42,23 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
         }
 
         var email = request.Email.Trim().ToLowerInvariant();
-        if (await _db.Users.AnyAsync(x => x.Email == email, cancellationToken))
+        var existingUser = await _db.Users
+            .FirstOrDefaultAsync(x => x.Email == email && !x.IsDeleted, cancellationToken);
+
+        if (existingUser is not null)
         {
+            var linkedProviders = await _db.UserAuthIdentities
+                .AsNoTracking()
+                .Where(x => x.UserId == existingUser.Id && !x.IsDeleted)
+                .Select(x => x.Provider)
+                .ToListAsync(cancellationToken);
+
+            if (linkedProviders.Contains(AuthProviders.Google, StringComparer.Ordinal) ||
+                linkedProviders.Contains(AuthProviders.Facebook, StringComparer.Ordinal))
+            {
+                throw new ConflictAppException("An account with this email already exists. Sign in with the linked provider and link password from account settings.");
+            }
+
             throw new ConflictAppException("Email already exists.");
         }
 
@@ -61,10 +83,23 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
         };
 
         await _db.Users.AddAsync(user, cancellationToken);
+        await _db.UserAuthIdentities.AddAsync(
+            new UserAuthIdentity
+            {
+                Id = Guid.NewGuid().ToString("D"),
+                UserId = user.Id,
+                Provider = AuthProviders.Password,
+                ProviderUserId = user.Id,
+                ProviderEmail = user.Email,
+                LastSignInAt = now,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            cancellationToken);
         await _db.UserStats.AddAsync(stats, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
         var token = _tokenGenerator.GenerateToken(user.Id, user.Email, user.Role);
-        return ApiResponse < AuthResponseDto > .Ok(new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>()));
+        return ApiResponse<AuthResponseDto>.Ok(new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>()));
     }
 }

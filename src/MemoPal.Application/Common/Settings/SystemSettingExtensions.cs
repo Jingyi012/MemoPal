@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using MemoPal.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,6 +7,11 @@ namespace MemoPal.Application.Common.Settings;
 
 public static class SystemSettingExtensions
 {
+    private static readonly JsonSerializerOptions AuthLoginMethodsJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     public static async Task<int> GetIntSettingAsync(
         this IAppDbContext db,
         string key,
@@ -73,4 +79,60 @@ public static class SystemSettingExtensions
             isPremium ? SystemSettingDefaults.CustomWordsPerLessonPremium : SystemSettingDefaults.CustomWordsPerLessonFree,
             cancellationToken);
     }
+
+    public static async Task<AuthLoginMethodsConfig> GetAuthLoginMethodsAsync(
+        this IAppDbContext db,
+        CancellationToken cancellationToken = default)
+    {
+        var setting = await db.SystemSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => !x.IsDeleted && x.Key == SystemSettingKeys.AuthLoginMethods,
+                cancellationToken);
+
+        if (setting is null || string.IsNullOrWhiteSpace(setting.Value))
+        {
+            return AuthLoginMethodsConfig.Default;
+        }
+
+        try
+        {
+            var payload = JsonSerializer.Deserialize<AuthLoginMethodsPayload>(
+                setting.Value,
+                AuthLoginMethodsJsonOptions);
+
+            if (payload is null)
+            {
+                return AuthLoginMethodsConfig.Default;
+            }
+
+            var defaults = AuthLoginMethodsConfig.Default;
+            return new AuthLoginMethodsConfig(
+                EmailPassword: payload.EmailPassword ?? defaults.EmailPassword,
+                Google: payload.Google ?? defaults.Google,
+                Facebook: payload.Facebook ?? defaults.Facebook);
+        }
+        catch (JsonException)
+        {
+            return AuthLoginMethodsConfig.Default;
+        }
+    }
+}
+
+public sealed record AuthLoginMethodsConfig(
+    bool EmailPassword,
+    bool Google,
+    bool Facebook)
+{
+    public static AuthLoginMethodsConfig Default { get; } = new(
+        EmailPassword: true,
+        Google: true,
+        Facebook: false);
+}
+
+internal sealed class AuthLoginMethodsPayload
+{
+    public bool? EmailPassword { get; init; }
+    public bool? Google { get; init; }
+    public bool? Facebook { get; init; }
 }
