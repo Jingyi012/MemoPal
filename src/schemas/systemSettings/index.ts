@@ -14,17 +14,22 @@ import {
   REFERRAL_PROGRAM_CONFIG_SCHEMA,
   REFERRAL_PROGRAM_CONFIG_DEFAULT,
 } from "./referralProgramConfigSchema";
+import {
+  AUTH_LOGIN_METHODS_SCHEMA,
+  AUTH_LOGIN_METHODS_DEFAULT,
+} from "./authLoginMethodsSchema";
 
 export * from "./gamificationUiConfigSchema";
 export * from "./featureLimitsSchema";
 export * from "./referralProgramConfigSchema";
 export * from "./missionTemplatesSchema";
+export * from "./authLoginMethodsSchema";
 
 export interface ConfigSchema {
   key: string;
   title: string;
-  schema: any;
-  default: any;
+  schema: Record<string, unknown>;
+  default: unknown;
 }
 
 export const ALL_CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
@@ -51,5 +56,11 @@ export const ALL_CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
     title: "Mission Templates",
     schema: MISSION_TEMPLATES_CONFIG_SCHEMA,
     default: MISSION_TEMPLATES_CONFIG_DEFAULT,
+  },
+  auth_login_methods: {
+    key: "auth.login_methods",
+    title: "Authentication Login Methods",
+    schema: AUTH_LOGIN_METHODS_SCHEMA,
+    default: AUTH_LOGIN_METHODS_DEFAULT,
   },
 };

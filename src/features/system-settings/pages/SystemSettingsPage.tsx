@@ -5,11 +5,15 @@ import { Button, Tabs, message } from "antd";
 import { useRef, useState } from "react";
 import { adminSystemSettingsApi } from "../../../api/adminSystemSettingsApi";
 import { PortalPageContainer } from "../../../components/PortalPageContainer";
-import type { SystemSettingDto } from "../../../types/systemSetting";
+import type {
+  SystemSettingDto,
+  UpsertSystemSettingRequest,
+} from "../../../types/systemSetting";
 import GamificationUiConfigTab from "../../configs/components/GamificationUiConfigTab";
 import FeatureLimitsConfigTab from "../../configs/components/FeatureLimitsConfigTab";
 import MissionTemplatesConfigTab from "../../configs/components/MissionTemplatesConfigTab";
 import ReferralProgramConfigTab from "../../configs/components/ReferralProgramConfigTab";
+import AuthLoginMethodsConfigTab from "../../configs/components/AuthLoginMethodsConfigTab";
 
 export default function SystemSettingsPage() {
   const actionRef = useRef<ActionType | null>(null);
@@ -34,6 +38,11 @@ export default function SystemSettingsPage() {
   return (
     <PortalPageContainer>
       <Tabs
+        tabPosition="left"
+        tabBarStyle={{
+          backgroundColor: "white",
+          borderRadius: 12,
+        }}
         items={[
           {
             key: "gamification",
@@ -54,6 +63,11 @@ export default function SystemSettingsPage() {
             key: "referral-program",
             label: "Referral Program",
             children: <ReferralProgramConfigTab />,
+          },
+          {
+            key: "auth-login-methods",
+            label: "Auth Login Methods",
+            children: <AuthLoginMethodsConfigTab />,
           },
           {
             key: "advanced",
@@ -87,13 +101,13 @@ export default function SystemSettingsPage() {
                   }}
                 />
 
-                <ModalForm
+                <ModalForm<UpsertSystemSettingRequest>
                   title="Upsert System Setting"
                   open={open}
                   modalProps={{ destroyOnClose: true }}
                   onOpenChange={setOpen}
                   onFinish={async (values) => {
-                    await upsertMutation.mutateAsync(values as any);
+                    await upsertMutation.mutateAsync(values);
                     return true;
                   }}
                 >

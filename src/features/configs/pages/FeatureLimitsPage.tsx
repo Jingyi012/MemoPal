@@ -1,5 +1,5 @@
-import { FeatureLimitsTab } from '../components/FeatureLimitsTab';
-import { PortalPageContainer } from '../../../components/PortalPageContainer';
+import { PortalPageContainer } from "../../../components/PortalPageContainer";
+import FeatureLimitsTab from "../components/FeatureLimitsConfigTab";
 
 export default function FeatureLimitsPage() {
   return (
@@ -8,4 +8,3 @@ export default function FeatureLimitsPage() {
     </PortalPageContainer>
   );
 }
-

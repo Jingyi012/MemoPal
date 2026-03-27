@@ -88,23 +88,24 @@ const ArrayFieldTemplate = (props: any) => {
 };
 
 const ObjectFieldTemplate = (props: any) => {
-  const { properties, title, description, idSchema, schema } = props;
-  const isRoot = idSchema?.$id === "root";
-  const depth = (idSchema?.$id?.match(/_/g) || []).length;
-  console.log(props);
+  const { properties, title, description, name } = props;
+
+  const shouldWrap = !!title;
+  const depth = name ? name.split(".").length : 0;
+
   return (
     <div
       style={{
-        marginBottom: isRoot ? 0 : 12,
-        padding: isRoot ? 0 : "8px 12px",
-        border: isRoot ? "none" : "1px solid #f0f0f0",
+        marginBottom: shouldWrap ? 12 : 0,
+        padding: shouldWrap ? "8px 12px" : 0,
+        border: shouldWrap ? "1px solid #f0f0f0" : "none",
         borderRadius: 6,
-        background: isRoot ? "transparent" : "#fafafa",
+        background: shouldWrap ? "white" : "transparent",
       }}
     >
-      {title && !isRoot && (
+      {title && (
         <div style={{ marginBottom: 8 }}>
-          <Typography.Text strong style={{ fontSize: depth === 1 ? 15 : 13 }}>
+          <Typography.Text strong style={{ fontSize: depth <= 1 ? 15 : 13 }}>
             {title}
           </Typography.Text>
           {description && (
@@ -127,26 +128,6 @@ const ObjectFieldTemplate = (props: any) => {
       >
         {properties.map((prop: any) => {
           if (prop.hidden) return null;
-
-          // ✅ FIX: Check if this is an additional property (dynamic key)
-          // RJSF attaches a special property to these called 'onKeyChange'
-          const isAdditionalProperty = !!prop.content.props.onKeyChange;
-
-          if (isAdditionalProperty) {
-            return (
-              <div key={prop.name} style={{ marginBottom: 8 }}>
-                {/* Show the key as a non-editable label instead of an input */}
-                <Typography.Text
-                  type="secondary"
-                  style={{ fontSize: 12, display: "block", marginBottom: 2 }}
-                >
-                  Type: <strong>{prop.name}</strong>
-                </Typography.Text>
-                {/* Render only the Value input (which is the prop.content) */}
-                {prop.content}
-              </div>
-            );
-          }
 
           return (
             <div key={prop.name} style={{ width: "100%" }}>
@@ -190,58 +171,50 @@ export const ConfigEditorForm: React.FC<ConfigEditorFormProps> = ({
       }}
     >
       <Spin spinning={loading || isSubmitting}>
-        <ProCard
-          title={title || (schema as any).title}
-          bordered
-          headerBordered
-          style={{ maxWidth: 1000, margin: "0 auto" }}
-          bodyStyle={{ padding: "24px" }}
+        <Form
+          schema={schema as any}
+          formData={formData}
+          validator={Validator}
+          onSubmit={handleSubmit}
+          liveValidate
+          showErrorList={false}
+          templates={{
+            ArrayFieldTemplate,
+            ObjectFieldTemplate,
+            ButtonTemplates: {
+              AddButton: () => <React.Fragment />,
+              RemoveButton: () => <React.Fragment />,
+              MoveUpButton: () => <React.Fragment />,
+              MoveDownButton: () => <React.Fragment />,
+              SubmitButton: () => <React.Fragment />,
+            },
+          }}
         >
-          <Form
-            schema={schema as any}
-            formData={formData}
-            validator={Validator}
-            onSubmit={handleSubmit}
-            liveValidate
-            showErrorList={false}
-            templates={{
-              ArrayFieldTemplate,
-              ObjectFieldTemplate,
-              ButtonTemplates: {
-                AddButton: () => <React.Fragment />,
-                RemoveButton: () => <React.Fragment />,
-                MoveUpButton: () => <React.Fragment />,
-                MoveDownButton: () => <React.Fragment />,
-                SubmitButton: () => <React.Fragment />,
-              },
+          <div
+            style={{
+              marginTop: 40,
+              display: "flex",
+              justifyContent: "flex-end",
             }}
           >
-            <div
-              style={{
-                marginTop: 40,
-                display: "flex",
-                justifyContent: "flex-end",
-              }}
-            >
-              <Space size="middle">
-                {onCancel && (
-                  <Button onClick={onCancel} size="large">
-                    Cancel
-                  </Button>
-                )}
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={isSubmitting}
-                  size="large"
-                  style={{ minWidth: 150 }}
-                >
-                  Save Changes
+            <Space size="middle">
+              {onCancel && (
+                <Button onClick={onCancel} size="large">
+                  Cancel
                 </Button>
-              </Space>
-            </div>
-          </Form>
-        </ProCard>
+              )}
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isSubmitting}
+                size="large"
+                style={{ minWidth: 150 }}
+              >
+                Save Changes
+              </Button>
+            </Space>
+          </div>
+        </Form>
       </Spin>
     </ConfigProvider>
   );
