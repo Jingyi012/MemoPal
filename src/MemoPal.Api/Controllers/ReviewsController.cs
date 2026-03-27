@@ -54,6 +54,11 @@ public sealed class ReviewsController : ApiControllerBase
         var result = await Sender.Send(new GetReviewStatsQuery(GetUserIdOrThrow()), cancellationToken); return Ok(result);
     }
 
+    [HttpDelete("/reviews/{reviewId}")]
+    public async Task<IActionResult> Delete(string reviewId, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new DeleteReviewCommand(GetUserIdOrThrow(), reviewId), cancellationToken);
+        return Ok(result);
+    }
+
 }
-
-
