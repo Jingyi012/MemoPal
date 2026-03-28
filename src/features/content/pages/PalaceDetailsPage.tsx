@@ -1,11 +1,8 @@
-import { ArrowLeftOutlined } from '@ant-design/icons';
-import { Alert, Breadcrumb, Button, Card, Space, Tabs } from 'antd';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Alert, Card } from 'antd';
+import { useNavigate, useParams } from 'react-router-dom';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
 import { adminPaths } from '../../../navigation/adminPaths';
-import { LessonsSetupCard } from '../components/palace-setup/LessonsSetupCard';
-import { LocationsSetupCard } from '../components/palace-setup/LocationsSetupCard';
-import { PalaceOverviewCard } from '../components/palace-setup/PalaceOverviewCard';
+import { PalaceDetailsWorkspace } from '../components/palace-setup/PalaceDetailsWorkspace';
 import { usePalaceSetupData } from '../hooks/usePalaceSetupData';
 
 export default function PalaceDetailsPage() {
@@ -27,54 +24,19 @@ export default function PalaceDetailsPage() {
 
   return (
     <PortalPageContainer>
-      <Space direction='vertical' size={16} style={{ width: '100%' }}>
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(adminPaths.palaces)}
-          style={{ width: 'fit-content' }}
-        >
-          Back to Palaces
-        </Button>
-
-        <Breadcrumb
-          items={[
-            { title: <Link to={adminPaths.palaces}>Palaces</Link> },
-            { title: palaceQuery.data.name },
-          ]}
-        />
-
-        <PalaceOverviewCard palaceId={palaceId} palace={palaceQuery.data} onChanged={refreshAll} />
-
-        <Tabs
-          defaultActiveKey='locations'
-          items={[
-            {
-              key: 'locations',
-              label: `Locations (${locationsQuery.data?.length ?? 0})`,
-              children: (
-                <LocationsSetupCard
-                  palaceId={palaceId}
-                  locations={locationsQuery.data ?? []}
-                  loading={locationsQuery.isLoading}
-                  onChanged={refreshAll}
-                />
-              ),
-            },
-            {
-              key: 'lessons',
-              label: `Lessons (${lessonsQuery.data?.length ?? 0})`,
-              children: (
-                <LessonsSetupCard
-                  palaceId={palaceId}
-                  lessons={lessonsQuery.data ?? []}
-                  loading={lessonsQuery.isLoading}
-                  onChanged={refreshAll}
-                />
-              ),
-            },
-          ]}
-        />
-      </Space>
+      <PalaceDetailsWorkspace
+        palaceId={palaceId}
+        palace={palaceQuery.data}
+        locations={locationsQuery.data ?? []}
+        lessons={lessonsQuery.data ?? []}
+        locationsLoading={locationsQuery.isLoading}
+        lessonsLoading={lessonsQuery.isLoading}
+        onChanged={refreshAll}
+        onBack={() => navigate(adminPaths.palaces)}
+        backLabel='Back to Palaces'
+        breadcrumbRootPath={adminPaths.palaces}
+        breadcrumbRootLabel='Palaces'
+      />
     </PortalPageContainer>
   );
 }

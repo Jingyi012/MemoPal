@@ -112,7 +112,7 @@ export default function SystemSettingsPage() {
                     rules={[{ required: true }]}
                     fieldProps={{
                       placeholder:
-                        "Enter setting key (e.g., limits.custom_palaces.free)",
+                        "Enter setting key (e.g., feature.limits)",
                     }}
                   />
                   <ProFormText

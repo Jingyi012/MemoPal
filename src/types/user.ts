@@ -45,10 +45,31 @@ export interface ManagedUserPalaceDataDto {
   level: number;
   isPremium: boolean;
   isCustom: boolean;
+  isOwner?: boolean;
+  isUnlocked?: boolean;
+  unlockedAt?: string | null;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
   locations: ManagedUserLocationDataDto[];
+  userLessonCount?: number;
+}
+
+export interface ManagedUserPalaceListItemDto {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+  isPremium: boolean;
+  isCustom: boolean;
+  isOwner?: boolean;
+  isUnlocked?: boolean;
+  unlockedAt?: string | null;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  locationsCount: number;
+  userLessonCount: number;
 }
 
 export interface ManagedUserWordDataDto {
@@ -69,9 +90,15 @@ export interface ManagedUserLessonDataDto {
   description?: string | null;
   wordCount: number;
   category?: string | null;
+  tag?: string[] | null;
   isCustom?: boolean | null;
+  isLocked?: boolean | null;
+  completed?: boolean | null;
   isPremium?: boolean | null;
+  privacy: string;
+  createdBy?: string | null;
   isDeleted: boolean;
+  deletedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   words: ManagedUserWordDataDto[];
@@ -179,6 +206,25 @@ export interface UserStatsDataDto {
   longestStreak: number;
   lastActiveDate?: string | null;
   updatedAt: string;
+}
+
+export interface ManagedUserDataCountsDto {
+  palaceCount: number;
+  lessonCount: number;
+  wordCount: number;
+  progressCount: number;
+  reviewScheduleCount: number;
+  xpEventCount: number;
+  badgeCount: number;
+  milestoneCount: number;
+  notificationCount: number;
+  subscriptionCount: number;
+}
+
+export interface ManagedUserDataOverviewDto {
+  user: ManagedUserDto;
+  stats?: UserStatsDataDto | null;
+  counts: ManagedUserDataCountsDto;
 }
 
 export interface ManagedUserDataDto {

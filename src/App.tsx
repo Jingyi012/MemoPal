@@ -12,6 +12,7 @@ import PalacesPage from './pages/PalacesPage';
 import ReferralConfigPage from './pages/ReferralConfigPage';
 import ReferralUsersPage from './pages/ReferralUsersPage';
 import UserDataPage from './pages/UserDataPage';
+import UserLessonWordsPage from './pages/UserLessonWordsPage';
 import UsersPage from './pages/UsersPage';
 import SubscriptionsPage from './pages/SubscriptionsPage';
 import SystemSettingsPage from './pages/SystemSettingsPage';
@@ -32,6 +33,10 @@ export default function App() {
             <Route index element={<Navigate to="users" replace />} />
             <Route path="users" element={<UsersPage />} />
             <Route path={`users/:userId/data`} element={<UserDataPage />} />
+            <Route
+              path={`users/:userId/data/palaces/${adminRouteParams.palaceId}/lessons/${adminRouteParams.lessonId}`}
+              element={<UserLessonWordsPage />}
+            />
             <Route path="content">
               <Route index element={<Navigate to="palaces" replace />} />
               <Route path="palaces" element={<PalacesPage />} />

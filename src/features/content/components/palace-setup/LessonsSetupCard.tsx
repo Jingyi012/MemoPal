@@ -21,9 +21,18 @@ interface LessonsSetupCardProps {
   lessons: LessonDto[];
   loading?: boolean;
   onChanged: () => Promise<void> | void;
+  canCreate?: boolean;
+  onConfigureWords?: (lessonId: string) => void;
 }
 
-export function LessonsSetupCard({ palaceId, lessons, loading, onChanged }: LessonsSetupCardProps) {
+export function LessonsSetupCard({
+  palaceId,
+  lessons,
+  loading,
+  onChanged,
+  canCreate = true,
+  onConfigureWords,
+}: LessonsSetupCardProps) {
   const navigate = useNavigate();
   const [editingLesson, setEditingLesson] = useState<LessonDto | null>(null);
   const [createLessonOpen, setCreateLessonOpen] = useState(false);
@@ -75,7 +84,13 @@ export function LessonsSetupCard({ palaceId, lessons, loading, onChanged }: Less
             key='configure'
             size='small'
             icon={<SettingOutlined />}
-            onClick={() => navigate(adminPaths.lessonWords(palaceId, row.id))}
+            onClick={() => {
+              if (onConfigureWords) {
+                onConfigureWords(row.id);
+                return;
+              }
+              navigate(adminPaths.lessonWords(palaceId, row.id));
+            }}
           >
             Configure Words
           </Button>,
@@ -96,11 +111,11 @@ export function LessonsSetupCard({ palaceId, lessons, loading, onChanged }: Less
   return (
     <Card
       title='Lessons'
-      extra={
+      extra={canCreate ? (
         <Button type='primary' icon={<PlusOutlined />} onClick={() => setCreateLessonOpen(true)}>
           New Lesson
         </Button>
-      }
+      ) : undefined}
     >
       <ProTable<LessonDto>
         rowKey='id'
@@ -114,7 +129,7 @@ export function LessonsSetupCard({ palaceId, lessons, loading, onChanged }: Less
 
       <ModalForm<LessonFormValues>
         title='Create Lesson'
-        open={createLessonOpen}
+        open={canCreate && createLessonOpen}
         modalProps={{ destroyOnClose: true }}
         {...formLayout}
         onOpenChange={setCreateLessonOpen}

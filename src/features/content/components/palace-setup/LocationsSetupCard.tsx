@@ -3,6 +3,7 @@ import {
   DragSortTable,
   ModalForm,
   ProForm,
+  ProTable,
   ProFormText,
 } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -20,9 +21,10 @@ interface LocationsSetupCardProps {
   locations: LocationDto[];
   loading?: boolean;
   onChanged: () => Promise<void> | void;
+  editable?: boolean;
 }
 
-export function LocationsSetupCard({ palaceId, locations, loading, onChanged }: LocationsSetupCardProps) {
+export function LocationsSetupCard({ palaceId, locations, loading, onChanged, editable = true }: LocationsSetupCardProps) {
   const [editingLocation, setEditingLocation] = useState<LocationDto | null>(null);
   const [createLocationOpen, setCreateLocationOpen] = useState(false);
   const [reorderDraft, setReorderDraft] = useState<LocationDto[] | null>(null);
@@ -119,51 +121,70 @@ export function LocationsSetupCard({ palaceId, locations, loading, onChanged }: 
     [deleteLocationMutation]
   );
 
+  const readOnlyColumns: ProColumns<LocationDto>[] = useMemo(
+    () => columns.filter((column) => column.dataIndex !== 'sort' && column.valueType !== 'option'),
+    [columns]
+  );
+
   return (
     <Card
       title='Locations'
       extra={
-        <Space>
-          {hasOrderChanges ? (
-            <>
-              <Button onClick={() => setReorderDraft(null)}>Reset Order</Button>
-              <Button
-                type='primary'
-                icon={<SaveOutlined />}
-                loading={saveOrderMutation.isPending}
-                onClick={() => saveOrderMutation.mutate()}
-              >
-                Save Order
-              </Button>
-            </>
-          ) : null}
-          <Button type='primary' icon={<PlusOutlined />} onClick={() => setCreateLocationOpen(true)}>
-            New Location
-          </Button>
-        </Space>
+        editable ? (
+          <Space>
+            {hasOrderChanges ? (
+              <>
+                <Button onClick={() => setReorderDraft(null)}>Reset Order</Button>
+                <Button
+                  type='primary'
+                  icon={<SaveOutlined />}
+                  loading={saveOrderMutation.isPending}
+                  onClick={() => saveOrderMutation.mutate()}
+                >
+                  Save Order
+                </Button>
+              </>
+            ) : null}
+            <Button type='primary' icon={<PlusOutlined />} onClick={() => setCreateLocationOpen(true)}>
+              New Location
+            </Button>
+          </Space>
+        ) : undefined
       }
     >
-      <DragSortTable<LocationDto>
-        rowKey='id'
-        search={false}
-        options={false}
-        pagination={false}
-        loading={loading}
-        dataSource={displayedRows}
-        columns={columns}
-        dragSortKey='sort'
-        onDragSortEnd={(_, __, newDataSource) => {
-          const reordered = (newDataSource as LocationDto[]).map((location, index) => ({
-            ...location,
-            position: index + 1,
-          }));
-          setReorderDraft(reordered);
-        }}
-      />
+      {editable ? (
+        <DragSortTable<LocationDto>
+          rowKey='id'
+          search={false}
+          options={false}
+          pagination={false}
+          loading={loading}
+          dataSource={displayedRows}
+          columns={columns}
+          dragSortKey='sort'
+          onDragSortEnd={(_, __, newDataSource) => {
+            const reordered = (newDataSource as LocationDto[]).map((location, index) => ({
+              ...location,
+              position: index + 1,
+            }));
+            setReorderDraft(reordered);
+          }}
+        />
+      ) : (
+        <ProTable<LocationDto>
+          rowKey='id'
+          search={false}
+          options={false}
+          pagination={false}
+          loading={loading}
+          dataSource={locations}
+          columns={readOnlyColumns}
+        />
+      )}
 
       <ModalForm<LocationFormValues>
         title='Create Location'
-        open={createLocationOpen}
+        open={editable && createLocationOpen}
         modalProps={{ destroyOnClose: true }}
         onOpenChange={setCreateLocationOpen}
         {...formLayout}
@@ -199,7 +220,7 @@ export function LocationsSetupCard({ palaceId, locations, loading, onChanged }: 
       <ModalForm<LocationFormValues>
         key={editingLocation?.id ?? 'edit-location'}
         title='Edit Location'
-        open={!!editingLocation}
+        open={editable && !!editingLocation}
         modalProps={{ destroyOnClose: true }}
         {...formLayout}
         initialValues={

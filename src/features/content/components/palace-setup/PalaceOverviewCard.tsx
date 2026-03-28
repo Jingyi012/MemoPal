@@ -13,9 +13,10 @@ interface PalaceOverviewCardProps {
   palaceId: string;
   palace: PalaceDto;
   onChanged: () => Promise<void> | void;
+  editable?: boolean;
 }
 
-export function PalaceOverviewCard({ palaceId, palace, onChanged }: PalaceOverviewCardProps) {
+export function PalaceOverviewCard({ palaceId, palace, onChanged, editable = true }: PalaceOverviewCardProps) {
   const [editingPalace, setEditingPalace] = useState(false);
   const formLayout = { layout: 'horizontal' as const, labelCol: { span: 8 }, wrapperCol: { span: 16 } };
 
@@ -33,11 +34,11 @@ export function PalaceOverviewCard({ palaceId, palace, onChanged }: PalaceOvervi
   return (
     <Card
       title='Palace Details'
-      extra={
+      extra={editable ? (
         <Button icon={<EditOutlined />} onClick={() => setEditingPalace(true)}>
           Edit Palace
         </Button>
-      }
+      ) : undefined}
     >
       <Descriptions column={1} size='small' labelStyle={{ width: 140 }}>
         <Descriptions.Item label='Name'>{palace.name}</Descriptions.Item>
@@ -55,7 +56,7 @@ export function PalaceOverviewCard({ palaceId, palace, onChanged }: PalaceOvervi
 
       <ModalForm<PalaceFormValues>
         title='Edit Palace'
-        open={editingPalace}
+        open={editable && editingPalace}
         modalProps={{ destroyOnClose: true }}
         onOpenChange={setEditingPalace}
         {...formLayout}

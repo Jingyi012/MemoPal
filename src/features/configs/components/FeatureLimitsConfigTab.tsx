@@ -15,7 +15,7 @@ import {
 export const FeatureLimitsTab: React.FC = () => {
   const { config, isLoading, error, saveConfig } =
     useConfigEditor({
-      configKey: "feature_limits",
+      configKey: "feature.limits",
       defaultValue: FEATURE_LIMITS_DEFAULT as unknown as Record<
         string,
         unknown

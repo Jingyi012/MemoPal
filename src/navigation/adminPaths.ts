@@ -5,6 +5,8 @@ export const adminPaths = {
 
   users: '/admin/users',
   userData: (userId: string) => `/admin/users/${userId}/data`,
+  userDataLessonWords: (userId: string, palaceId: string, lessonId: string) =>
+    `/admin/users/${userId}/data/palaces/${palaceId}/lessons/${lessonId}`,
 
   contentRoot: '/admin/content',
   palaces: '/admin/content/palaces',
