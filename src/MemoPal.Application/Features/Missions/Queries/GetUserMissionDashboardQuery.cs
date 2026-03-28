@@ -53,6 +53,25 @@ public sealed class GetUserMissionDashboardQueryHandler
         var userStats = await _db.UserStats
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.UserId == request.UserId, cancellationToken);
+        var periodTokenByMissionKey = templates.ToDictionary(
+            template => template.Key,
+            template => MissionProgressCalculator.BuildPeriodToken(template.Period, now),
+            StringComparer.OrdinalIgnoreCase);
+        var missionKeys = periodTokenByMissionKey.Keys.ToList();
+        var missionPeriodTokens = periodTokenByMissionKey.Values.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var claimedMissionKeys = await _db.UserMissions
+            .AsNoTracking()
+            .Where(x =>
+                x.UserId == request.UserId &&
+                !x.IsDeleted &&
+                x.RewardClaimedAt.HasValue &&
+                missionKeys.Contains(x.MissionKey) &&
+                missionPeriodTokens.Contains(x.PeriodToken))
+            .Select(x => new { x.MissionKey, x.PeriodToken })
+            .ToListAsync(cancellationToken);
+        var claimedMissionLookup = claimedMissionKeys
+            .Select(x => $"{x.MissionKey}|{x.PeriodToken}")
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var metricCache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         var missions = new List<MissionProgressDto>(templates.Count);
@@ -76,6 +95,8 @@ public sealed class GetUserMissionDashboardQueryHandler
             var target = Math.Max(1, template.TargetValue);
             var isCompleted = currentValue >= target;
             var percent = Math.Clamp((int)Math.Round(currentValue * 100d / target), 0, 100);
+            var periodToken = periodTokenByMissionKey[template.Key];
+            var isClaimed = claimedMissionLookup.Contains($"{template.Key}|{periodToken}");
 
             missions.Add(new MissionProgressDto(
                 template.Key,
@@ -89,7 +110,8 @@ public sealed class GetUserMissionDashboardQueryHandler
                 template.SortOrder,
                 template.IsActive,
                 isCompleted,
-                percent));
+                percent,
+                isClaimed));
         }
 
         return ApiResponse<UserMissionDashboardDto>.Ok(new UserMissionDashboardDto(now, missions));
@@ -107,4 +129,3 @@ public sealed class GetUserMissionDashboardQueryHandler
         return await calculator.ResolveMetricAsync(userId, metricType, period, now, userStats, cancellationToken);
     }
 }
-

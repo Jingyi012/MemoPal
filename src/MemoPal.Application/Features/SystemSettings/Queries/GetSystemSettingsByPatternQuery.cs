@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MemoPal.Application.Features.SystemSettings.Queries;
 
 /// <summary>
-/// Get system settings by key pattern (e.g., "limits.*")
+/// Get system settings by key pattern (e.g., "feature.*")
 /// </summary>
 public sealed record GetSystemSettingsByPatternQuery(string Pattern) : IRequest<ApiResponse<List<SystemSettingDto>>>;
 
@@ -24,7 +24,7 @@ public sealed class GetSystemSettingsByPatternQueryHandler
 
     public async Task<ApiResponse<List<SystemSettingDto>>> Handle(GetSystemSettingsByPatternQuery request, CancellationToken cancellationToken)
     {
-        // Convert pattern to regex: "limits.*" -> "^limits\..*$"
+        // Convert pattern to regex: "feature.*" -> "^feature\..*$"
         var pattern = "^" + request.Pattern.Replace(".", @"\.").Replace("*", ".*") + "$";
 
         var allSettings = await _db.SystemSettings
@@ -41,4 +41,3 @@ public sealed class GetSystemSettingsByPatternQueryHandler
         return ApiResponse<List<SystemSettingDto>>.Ok(filtered);
     }
 }
-

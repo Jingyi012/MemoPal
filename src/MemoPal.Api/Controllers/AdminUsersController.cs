@@ -64,6 +64,128 @@ public sealed class AdminUsersController : ApiControllerBase
         return Ok(ApiResponse<ManagedUserDataDto>.Ok(MapMediaUrls(result.Data), result.Message));
     }
 
+    [HttpGet("{userId}/data/overview")]
+    public async Task<IActionResult> GetUserDataOverview(string userId, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new GetManagedUserDataOverviewQuery(userId), cancellationToken);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(result);
+        }
+
+        var mapped = result.Data with
+        {
+            User = MapMediaUrls(result.Data.User)
+        };
+
+        return Ok(ApiResponse<ManagedUserDataOverviewDto>.Ok(mapped, result.Message));
+    }
+
+    [HttpGet("{userId}/data/palaces")]
+    public async Task<IActionResult> GetUserDataPalaces(string userId, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new GetManagedUserPalacesQuery(userId), cancellationToken);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(result);
+        }
+
+        return Ok(ApiResponse<IReadOnlyList<ManagedUserPalaceDataDto>>.Ok(MapMediaUrls(result.Data), result.Message));
+    }
+
+    [HttpGet("{userId}/data/palaces/paged")]
+    public async Task<IActionResult> GetUserDataPalacesPaged(
+        string userId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] bool? isCustom = null,
+        [FromQuery] bool requireUserLessons = false,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await Sender.Send(
+            new GetManagedUserPalacesPagedQuery(userId, pageNumber, pageSize, isCustom, requireUserLessons),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{userId}/data/lessons")]
+    public async Task<IActionResult> GetUserDataLessons(
+        string userId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? palaceId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await Sender.Send(new GetManagedUserLessonsQuery(userId, pageNumber, pageSize, palaceId), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{userId}/data/progresses")]
+    public async Task<IActionResult> GetUserDataProgresses(
+        string userId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await Sender.Send(new GetManagedUserProgressesQuery(userId, pageNumber, pageSize), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{userId}/data/xp-events")]
+    public async Task<IActionResult> GetUserDataXpEvents(
+        string userId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await Sender.Send(new GetManagedUserXpEventsQuery(userId, pageNumber, pageSize), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{userId}/data/badges")]
+    public async Task<IActionResult> GetUserDataBadges(
+        string userId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await Sender.Send(new GetManagedUserBadgesQuery(userId, pageNumber, pageSize), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{userId}/data/milestones")]
+    public async Task<IActionResult> GetUserDataMilestones(
+        string userId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await Sender.Send(new GetManagedUserMilestonesQuery(userId, pageNumber, pageSize), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{userId}/data/notifications")]
+    public async Task<IActionResult> GetUserDataNotifications(
+        string userId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await Sender.Send(new GetManagedUserNotificationsQuery(userId, pageNumber, pageSize), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{userId}/data/subscriptions")]
+    public async Task<IActionResult> GetUserDataSubscriptions(
+        string userId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await Sender.Send(new GetManagedUserSubscriptionsQuery(userId, pageNumber, pageSize), cancellationToken);
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
     {

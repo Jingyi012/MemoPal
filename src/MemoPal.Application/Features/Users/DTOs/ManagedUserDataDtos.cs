@@ -25,7 +25,25 @@ public sealed record ManagedUserPalaceDataDto(
     bool IsDeleted,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    IReadOnlyList<ManagedUserLocationDataDto> Locations
+    IReadOnlyList<ManagedUserLocationDataDto> Locations,
+    int UserLessonCount = 0
+);
+
+public sealed record ManagedUserPalaceListItemDto(
+    string Id,
+    string Name,
+    string Description,
+    int Level,
+    bool IsPremium,
+    bool IsCustom,
+    bool IsOwner,
+    bool IsUnlocked,
+    DateTime? UnlockedAt,
+    bool IsDeleted,
+    DateTime CreatedAt,
+    DateTime UpdatedAt,
+    int LocationsCount,
+    int UserLessonCount
 );
 
 public sealed record ManagedUserWordDataDto(
@@ -46,9 +64,15 @@ public sealed record ManagedUserLessonDataDto(
     string? Description,
     int WordCount,
     string? Category,
+    string[]? Tag,
     bool? IsCustom,
+    bool? IsLocked,
+    bool? Completed,
     bool? IsPremium,
+    string Privacy,
+    string? CreatedBy,
     bool IsDeleted,
+    DateTime? DeletedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt,
     IReadOnlyList<ManagedUserWordDataDto> Words
@@ -147,6 +171,25 @@ public sealed record ManagedUserSubscriptionDataDto(
     bool IsDeleted,
     DateTime CreatedAt,
     DateTime UpdatedAt
+);
+
+public sealed record ManagedUserDataCountsDto(
+    int PalaceCount,
+    int LessonCount,
+    int WordCount,
+    int ProgressCount,
+    int ReviewScheduleCount,
+    int XpEventCount,
+    int BadgeCount,
+    int MilestoneCount,
+    int NotificationCount,
+    int SubscriptionCount
+);
+
+public sealed record ManagedUserDataOverviewDto(
+    ManagedUserDto User,
+    UserStatsDto? Stats,
+    ManagedUserDataCountsDto Counts
 );
 
 public sealed record ManagedUserDataDto(

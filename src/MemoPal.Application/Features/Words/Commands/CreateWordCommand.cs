@@ -81,10 +81,10 @@ public sealed class CreateWordCommandHandler : IRequestHandler<CreateWordCommand
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;
 
-        lesson.WordCount = await _db.Words.CountAsync(x => x.LessonId == lesson.Id && !x.IsDeleted, cancellationToken);
-        lesson.UpdatedAt = now;
-
         await _db.SaveChangesAsync(cancellationToken);
+        await WordCountSyncHelper.RecalculateLessonWordCountsAsync(_db, [lesson.Id], now, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
         var result = entity.Adapt<WordDto>();
         return ApiResponse<WordDto>.Ok(result);
     }

@@ -40,7 +40,9 @@ public sealed class SystemSettingsController : ApiControllerBase
     [HttpGet("feature-limits")]
     public async Task<IActionResult> GetFeatureLimits(CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetSystemSettingsByPatternQuery("limits.*"), cancellationToken);
+        var result = await Sender.Send(
+            new GetSystemSettingsByKeyQuery(SystemSettingKeys.FeatureLimits),
+            cancellationToken);
         return Ok(result);
     }
 

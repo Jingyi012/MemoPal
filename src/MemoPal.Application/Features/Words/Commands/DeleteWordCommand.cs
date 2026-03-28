@@ -32,10 +32,11 @@ public sealed class DeleteWordCommandHandler : IRequestHandler<DeleteWordCommand
         entity.DeletedAt = DateTime.UtcNow;
         entity.UpdatedAt = DateTime.UtcNow;
 
-        lesson.WordCount = await _db.Words.CountAsync(x => x.LessonId == lesson.Id && !x.IsDeleted, cancellationToken);
-        lesson.UpdatedAt = DateTime.UtcNow;
-
+        var now = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
+        await WordCountSyncHelper.RecalculateLessonWordCountsAsync(_db, [lesson.Id], now, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
         return ApiResponse<bool>.Ok(true);
     }
 }

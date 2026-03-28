@@ -55,7 +55,8 @@ public sealed record MissionProgressDto(
     int SortOrder,
     bool IsActive,
     bool IsCompleted,
-    int ProgressPercent
+    int ProgressPercent,
+    bool IsClaimed
 );
 
 public sealed record UserMissionDashboardDto(

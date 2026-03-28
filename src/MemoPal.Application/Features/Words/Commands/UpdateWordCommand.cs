@@ -47,7 +47,11 @@ public sealed class UpdateWordCommandHandler : IRequestHandler<UpdateWordCommand
         entity.IsDeleted = request.Request.IsDeleted ?? entity.IsDeleted;
         entity.DeletedAt = request.Request.DeletedAt ?? entity.DeletedAt;
 
+        var now = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
+        await WordCountSyncHelper.RecalculateLessonWordCountsAsync(_db, [lesson.Id], now, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
         var result = entity.Adapt<WordDto>();
         return ApiResponse<WordDto>.Ok(result);
     }

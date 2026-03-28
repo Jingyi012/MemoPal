@@ -5,6 +5,7 @@ using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Users.DTOs;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace MemoPal.Application.Features.Users.Queries;
 
@@ -225,9 +226,15 @@ public sealed class GetManagedUserDataQueryHandler : IRequestHandler<GetManagedU
                 x.Description,
                 x.WordCount,
                 x.Category,
+                string.IsNullOrWhiteSpace(x.TagJson) ? null : JsonSerializer.Deserialize<string[]>(x.TagJson),
                 x.IsCustom,
+                x.IsLocked,
+                x.Completed,
                 x.IsPremium,
+                x.Privacy,
+                x.CreatedBy,
                 x.IsDeleted,
+                x.DeletedAt,
                 x.CreatedAt,
                 x.UpdatedAt,
                 wordsByLessonId.GetValueOrDefault(x.Id) ?? []))

@@ -2,14 +2,7 @@ namespace MemoPal.Application.Common.Settings;
 
 public static class SystemSettingKeys
 {
-    public const string CustomPalacesFree = "limits.custom_palaces.free";
-    public const string CustomPalacesPremium = "limits.custom_palaces.premium";
-    public const string CustomLessonsPerPalaceFree = "limits.custom_lessons_per_palace.free";
-    public const string CustomLessonsPerPalacePremium = "limits.custom_lessons_per_palace.premium";
-    public const string CustomLocationsPerPalaceFree = "limits.custom_locations_per_palace.free";
-    public const string CustomLocationsPerPalacePremium = "limits.custom_locations_per_palace.premium";
-    public const string CustomWordsPerLessonFree = "limits.custom_words_per_lesson.free";
-    public const string CustomWordsPerLessonPremium = "limits.custom_words_per_lesson.premium";
+    public const string FeatureLimits = "feature.limits";
     public const string GamificationMissionTemplates = "gamification.missions.templates";
     public const string GamificationMobileUiConfig = "gamification.mobile.ui_config";
     public const string XpConfigs = "xp.configs";

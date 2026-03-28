@@ -26,6 +26,7 @@ public sealed class UpdateWordsBatchCommandHandler : IRequestHandler<UpdateWords
 
         var output = new List<WordDto>(request.Requests.Count);
         var now = DateTime.UtcNow;
+        var affectedLessonIds = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var item in request.Requests)
         {
@@ -69,9 +70,7 @@ public sealed class UpdateWordsBatchCommandHandler : IRequestHandler<UpdateWords
                     DeletedAt = item.DeletedAt
                 };
                 await _db.Words.AddAsync(entity, cancellationToken);
-
-                lesson.WordCount = await _db.Words.CountAsync(x => x.LessonId == lesson.Id && !x.IsDeleted, cancellationToken);
-                lesson.UpdatedAt = now;
+                affectedLessonIds.Add(lesson.Id);
             }
             else
             {
@@ -101,12 +100,16 @@ public sealed class UpdateWordsBatchCommandHandler : IRequestHandler<UpdateWords
                 entity.UpdatedAt = item.UpdatedAt ?? now;
                 entity.IsDeleted = item.IsDeleted ?? entity.IsDeleted;
                 entity.DeletedAt = item.DeletedAt ?? entity.DeletedAt;
+                affectedLessonIds.Add(lesson.Id);
             }
 
             output.Add(entity.Adapt<WordDto>());
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+        await WordCountSyncHelper.RecalculateLessonWordCountsAsync(_db, affectedLessonIds, now, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
         return ApiResponse<IReadOnlyList<WordDto>>.Ok(output);
     }
 }

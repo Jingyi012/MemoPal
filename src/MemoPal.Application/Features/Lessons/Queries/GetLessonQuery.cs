@@ -47,10 +47,15 @@ public sealed class GetLessonQueryHandler : IRequestHandler<GetLessonQuery, ApiR
             progressDto = (progress, (IReadOnlyList<ReviewScheduleDto>)reviewDtos).Adapt<LessonProgressDto>();
         }
 
-        var words = await _db.Words
-            .Where(x => x.LessonId == lesson.Id && !x.IsDeleted)
-            .OrderBy(x => x.CreatedAt)
-            .ToListAsync(cancellationToken);
+        var words = await (
+            from word in _db.Words
+            where word.LessonId == lesson.Id && !word.IsDeleted
+            join location in _db.Locations.Where(x => !x.IsDeleted)
+                on word.LocationId equals location.Id into locationJoin
+            from location in locationJoin.DefaultIfEmpty()
+            orderby (location == null ? int.MaxValue : location.Position), word.CreatedAt
+            select word
+        ).ToListAsync(cancellationToken);
         var wordDtos = words.Select(x => x.Adapt<WordDto>()).ToList();
 
         var lessonDto = lesson.Adapt<LessonDto>() with

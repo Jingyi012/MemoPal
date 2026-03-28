@@ -28,6 +28,7 @@ public sealed class CreateWordsBatchCommandHandler : IRequestHandler<CreateWords
         var output = new List<WordDto>(request.Requests.Count);
         var now = DateTime.UtcNow;
         var currentCustomWordCountByLesson = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var affectedLessonIds = new HashSet<string>(StringComparer.Ordinal);
         int? allowedCustomWordsPerLesson = null;
         bool? isPremiumUser = null;
 
@@ -100,14 +101,15 @@ public sealed class CreateWordsBatchCommandHandler : IRequestHandler<CreateWords
             entity.UpdatedAt = item.UpdatedAt ?? now;
             entity.IsDeleted = item.IsDeleted ?? false;
             entity.DeletedAt = item.DeletedAt;
-
-            lesson.WordCount = await _db.Words.CountAsync(x => x.LessonId == lesson.Id && !x.IsDeleted, cancellationToken);
-            lesson.UpdatedAt = now;
+            affectedLessonIds.Add(lesson.Id);
 
             output.Add(entity.Adapt<WordDto>());
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+        await WordCountSyncHelper.RecalculateLessonWordCountsAsync(_db, affectedLessonIds, now, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
         return ApiResponse<IReadOnlyList<WordDto>>.Ok(output);
     }
 }

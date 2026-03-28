@@ -24,6 +24,7 @@ public sealed class DeleteWordsBatchCommandHandler : IRequestHandler<DeleteWords
 
         var deleted = 0;
         var now = DateTime.UtcNow;
+        var affectedLessonIds = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var wordId in request.WordIds)
         {
@@ -40,15 +41,15 @@ public sealed class DeleteWordsBatchCommandHandler : IRequestHandler<DeleteWords
             entity.IsDeleted = true;
             entity.DeletedAt = now;
             entity.UpdatedAt = now;
-
-            lesson.WordCount = await _db.Words.CountAsync(x => x.LessonId == lesson.Id && !x.IsDeleted, cancellationToken);
-            lesson.UpdatedAt = now;
+            affectedLessonIds.Add(lesson.Id);
 
             deleted++;
         }
 
         if (deleted > 0)
         {
+            await _db.SaveChangesAsync(cancellationToken);
+            await WordCountSyncHelper.RecalculateLessonWordCountsAsync(_db, affectedLessonIds, now, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
         }
 

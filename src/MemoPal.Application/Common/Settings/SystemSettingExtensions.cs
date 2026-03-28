@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.Json;
 using MemoPal.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -16,28 +15,161 @@ public static class SystemSettingExtensions
         PropertyNameCaseInsensitive = true
     };
 
-    public static async Task<int> GetIntSettingAsync(
+    private readonly record struct FeatureLimitTier(int Free, int Premium);
+
+    private readonly record struct FeatureLimitsConfig(
+        FeatureLimitTier CustomPalaces,
+        FeatureLimitTier CustomLessonsPerPalace,
+        FeatureLimitTier CustomLocationsPerPalace,
+        FeatureLimitTier CustomWordsPerLesson)
+    {
+        public static FeatureLimitsConfig Default => new(
+            CustomPalaces: new FeatureLimitTier(
+                SystemSettingDefaults.CustomPalacesFree,
+                SystemSettingDefaults.CustomPalacesPremium),
+            CustomLessonsPerPalace: new FeatureLimitTier(
+                SystemSettingDefaults.CustomLessonsPerPalaceFree,
+                SystemSettingDefaults.CustomLessonsPerPalacePremium),
+            CustomLocationsPerPalace: new FeatureLimitTier(
+                SystemSettingDefaults.CustomLocationsPerPalaceFree,
+                SystemSettingDefaults.CustomLocationsPerPalacePremium),
+            CustomWordsPerLesson: new FeatureLimitTier(
+                SystemSettingDefaults.CustomWordsPerLessonFree,
+                SystemSettingDefaults.CustomWordsPerLessonPremium));
+    }
+
+    private static bool TryGetPropertyInsensitive(JsonElement element, string propertyName, out JsonElement value)
+    {
+        foreach (var property in element.EnumerateObject())
+        {
+            if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = property.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
+    }
+
+    private static int ParseTierValue(JsonElement tierElement, string key, int fallback)
+    {
+        if (!TryGetPropertyInsensitive(tierElement, key, out var valueElement))
+        {
+            return fallback;
+        }
+
+        if (valueElement.ValueKind == JsonValueKind.Number && valueElement.TryGetInt32(out var intValue))
+        {
+            return Math.Max(0, intValue);
+        }
+
+        if (valueElement.ValueKind == JsonValueKind.String &&
+            int.TryParse(valueElement.GetString(), out var stringValue))
+        {
+            return Math.Max(0, stringValue);
+        }
+
+        return fallback;
+    }
+
+    private static FeatureLimitTier ParseTier(
+        JsonElement root,
+        string camelKey,
+        string snakeKey,
+        FeatureLimitTier fallback)
+    {
+        if (!TryGetPropertyInsensitive(root, camelKey, out var tierElement) &&
+            !TryGetPropertyInsensitive(root, snakeKey, out tierElement))
+        {
+            return fallback;
+        }
+
+        if (tierElement.ValueKind != JsonValueKind.Object)
+        {
+            return fallback;
+        }
+
+        var free = ParseTierValue(tierElement, "free", fallback.Free);
+        var premium = ParseTierValue(tierElement, "premium", fallback.Premium);
+        return new FeatureLimitTier(free, premium);
+    }
+
+    private static FeatureLimitsConfig ParseFeatureLimitsConfigFromElement(JsonElement root)
+    {
+        var fallback = FeatureLimitsConfig.Default;
+        if (root.ValueKind != JsonValueKind.Object)
+        {
+            return fallback;
+        }
+
+        return new FeatureLimitsConfig(
+            CustomPalaces: ParseTier(root, "customPalaces", "custom_palaces", fallback.CustomPalaces),
+            CustomLessonsPerPalace: ParseTier(
+                root,
+                "customLessonsPerPalace",
+                "custom_lessons_per_palace",
+                fallback.CustomLessonsPerPalace),
+            CustomLocationsPerPalace: ParseTier(
+                root,
+                "customLocationsPerPalace",
+                "custom_locations_per_palace",
+                fallback.CustomLocationsPerPalace),
+            CustomWordsPerLesson: ParseTier(
+                root,
+                "customWordsPerLesson",
+                "custom_words_per_lesson",
+                fallback.CustomWordsPerLesson));
+    }
+
+    private static FeatureLimitsConfig ParseFeatureLimitsConfig(string rawJson)
+    {
+        var fallback = FeatureLimitsConfig.Default;
+
+        if (string.IsNullOrWhiteSpace(rawJson))
+        {
+            return fallback;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(rawJson);
+
+            var root = doc.RootElement;
+            if (root.ValueKind == JsonValueKind.String)
+            {
+                var nested = root.GetString();
+                if (string.IsNullOrWhiteSpace(nested))
+                {
+                    return fallback;
+                }
+
+                using var nestedDoc = JsonDocument.Parse(nested);
+                return ParseFeatureLimitsConfigFromElement(nestedDoc.RootElement);
+            }
+
+            return ParseFeatureLimitsConfigFromElement(root);
+        }
+        catch (JsonException)
+        {
+            return fallback;
+        }
+    }
+
+    private static async Task<FeatureLimitsConfig> GetFeatureLimitsConfigAsync(
         this IAppDbContext db,
-        string key,
-        int defaultValue,
         CancellationToken cancellationToken = default)
     {
-        var normalizedKey = key.Trim();
         var setting = await db.SystemSettings
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => !x.IsDeleted && x.Key == normalizedKey, cancellationToken);
+            .FirstOrDefaultAsync(
+                x => !x.IsDeleted && x.Key == SystemSettingKeys.FeatureLimits,
+                cancellationToken);
 
-        if (setting is null)
-        {
-            return defaultValue;
-        }
-
-        if (!int.TryParse(setting.Value?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
-        {
-            return defaultValue;
-        }
-
-        return Math.Max(0, value);
+        return setting is null
+            ? FeatureLimitsConfig.Default
+            : ParseFeatureLimitsConfig(setting.Value);
     }
 
     public static Task<int> GetCustomPalaceLimitAsync(
@@ -45,9 +177,10 @@ public static class SystemSettingExtensions
         bool isPremium,
         CancellationToken cancellationToken = default)
     {
-        return db.GetIntSettingAsync(
-            isPremium ? SystemSettingKeys.CustomPalacesPremium : SystemSettingKeys.CustomPalacesFree,
-            isPremium ? SystemSettingDefaults.CustomPalacesPremium : SystemSettingDefaults.CustomPalacesFree,
+        return ResolveLimitAsync(
+            db,
+            isPremium,
+            config => config.CustomPalaces,
             cancellationToken);
     }
 
@@ -56,9 +189,10 @@ public static class SystemSettingExtensions
         bool isPremium,
         CancellationToken cancellationToken = default)
     {
-        return db.GetIntSettingAsync(
-            isPremium ? SystemSettingKeys.CustomLessonsPerPalacePremium : SystemSettingKeys.CustomLessonsPerPalaceFree,
-            isPremium ? SystemSettingDefaults.CustomLessonsPerPalacePremium : SystemSettingDefaults.CustomLessonsPerPalaceFree,
+        return ResolveLimitAsync(
+            db,
+            isPremium,
+            config => config.CustomLessonsPerPalace,
             cancellationToken);
     }
 
@@ -67,9 +201,10 @@ public static class SystemSettingExtensions
         bool isPremium,
         CancellationToken cancellationToken = default)
     {
-        return db.GetIntSettingAsync(
-            isPremium ? SystemSettingKeys.CustomLocationsPerPalacePremium : SystemSettingKeys.CustomLocationsPerPalaceFree,
-            isPremium ? SystemSettingDefaults.CustomLocationsPerPalacePremium : SystemSettingDefaults.CustomLocationsPerPalaceFree,
+        return ResolveLimitAsync(
+            db,
+            isPremium,
+            config => config.CustomLocationsPerPalace,
             cancellationToken);
     }
 
@@ -78,10 +213,22 @@ public static class SystemSettingExtensions
         bool isPremium,
         CancellationToken cancellationToken = default)
     {
-        return db.GetIntSettingAsync(
-            isPremium ? SystemSettingKeys.CustomWordsPerLessonPremium : SystemSettingKeys.CustomWordsPerLessonFree,
-            isPremium ? SystemSettingDefaults.CustomWordsPerLessonPremium : SystemSettingDefaults.CustomWordsPerLessonFree,
+        return ResolveLimitAsync(
+            db,
+            isPremium,
+            config => config.CustomWordsPerLesson,
             cancellationToken);
+    }
+
+    private static async Task<int> ResolveLimitAsync(
+        IAppDbContext db,
+        bool isPremium,
+        Func<FeatureLimitsConfig, FeatureLimitTier> selector,
+        CancellationToken cancellationToken)
+    {
+        var config = await db.GetFeatureLimitsConfigAsync(cancellationToken);
+        var tier = selector(config);
+        return isPremium ? tier.Premium : tier.Free;
     }
 
     public static async Task<AuthLoginMethodsConfig> GetAuthLoginMethodsAsync(

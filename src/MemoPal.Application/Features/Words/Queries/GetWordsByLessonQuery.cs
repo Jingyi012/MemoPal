@@ -28,10 +28,14 @@ public sealed class GetWordsByLessonQueryHandler : IRequestHandler<GetWordsByLes
             cancellationToken);
         if (lesson is null) throw new NotFoundAppException("Lesson not found.");
 
-        var query = _db.Words
-            .Where(x => x.LessonId == request.LessonId && !x.IsDeleted)
-            .OrderBy(x => x.CreatedAt)
-            .AsQueryable();
+        var query =
+            from word in _db.Words
+            where word.LessonId == request.LessonId && !word.IsDeleted
+            join location in _db.Locations.Where(x => !x.IsDeleted)
+                on word.LocationId equals location.Id into locationJoin
+            from location in locationJoin.DefaultIfEmpty()
+            orderby (location == null ? int.MaxValue : location.Position), word.CreatedAt
+            select word;
 
         var usePagination = request.PageNumber.HasValue && request.PageSize.HasValue;
         if (!usePagination)
