@@ -53,5 +53,13 @@ export function usePalaceMutations() {
     },
   });
 
-  return { createPalace };
+  const deletePalace = useMutation({
+    mutationFn: (palaceId: string) => palaceService.deletePalace(palaceId),
+    onSuccess: (_, palaceId) => {
+      queryClient.removeQueries({ queryKey: PALACE_KEYS.detail(palaceId) });
+      queryClient.invalidateQueries({ queryKey: PALACE_KEYS.all });
+    },
+  });
+
+  return { createPalace, deletePalace };
 }

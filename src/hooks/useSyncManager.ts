@@ -6,6 +6,7 @@ import { processQueue } from '../services/sync/processQueue';
 
 export function useSyncManager(enabled: boolean = true) {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const periodicTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -28,6 +29,11 @@ export function useSyncManager(enabled: boolean = true) {
       }
     });
 
+    // Retry periodically so backend restarts recover without requiring app/network events.
+    periodicTimer.current = setInterval(() => {
+      debouncedProcessQueue();
+    }, 15000);
+
     debouncedProcessQueue();
 
     return () => {
@@ -35,6 +41,9 @@ export function useSyncManager(enabled: boolean = true) {
       unsubscribeNet();
       if (debounceTimer.current) {
         clearTimeout(debounceTimer.current);
+      }
+      if (periodicTimer.current) {
+        clearInterval(periodicTimer.current);
       }
     };
   }, [enabled]);

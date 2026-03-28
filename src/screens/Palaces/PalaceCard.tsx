@@ -10,6 +10,8 @@ interface PalaceCardProps {
   isCompleted: boolean;
   isDisabled?: boolean;
   onPress: (palace: Palace) => void;
+  deletable?: boolean;
+  onDelete?: (palace: Palace) => void;
 }
 
 export const PalaceCard: React.FC<PalaceCardProps> = ({
@@ -17,10 +19,18 @@ export const PalaceCard: React.FC<PalaceCardProps> = ({
   isCompleted,
   isDisabled = false,
   onPress,
+  deletable = false,
+  onDelete,
 }) => {
   return (
     <AnimatedPressable
       onPress={() => onPress(palace)}
+      onLongPress={() => {
+        if (deletable && onDelete) {
+          onDelete(palace);
+        }
+      }}
+      delayLongPress={450}
       disabled={isDisabled}
       className="mb-4 w-full overflow-hidden rounded-2xl shadow-sm">
       <View className="relative h-44">

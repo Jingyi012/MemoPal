@@ -26,7 +26,7 @@ import { calculateDetailedProgress } from '@/utils/progressBarCalculation';
 
 interface LessonCardProps {
   lesson: Lesson;
-  progress?: LessonProgress;
+  progress?: LessonProgress | null;
   palaceTrainingCompleted?: boolean;
   onViewLessonDetail: (lessonId: string) => void;
   onDeleteLesson?: (lesson: Lesson) => void;

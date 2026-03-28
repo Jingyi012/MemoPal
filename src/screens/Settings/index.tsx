@@ -14,10 +14,10 @@ import { ActionSheet } from '@/components/ActionSheet';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { PremiumUpdateCard } from '@/components/PremiumUpdateCard';
-import ReferrerPromptCard from '@/components/PromptCard/ReferrerPromptCard';
 import { Colors } from '@/constants/colors';
 import { useUserState } from '@/contexts/UserStateContext';
 import { PushNotificationService } from '@/services/notification/pushNotificationService';
+import { clearSyncQueueForDevelopment } from '@/services/sync/processQueue';
 import { Bell, Gift, HelpCircle, LogOut, Moon, Shield } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { EditProfileSheet } from './EditProfileSheet';
@@ -102,6 +102,27 @@ export default function SettingsScreen() {
       text1: 'Local SQLite data cleared',
       text2: 'Restart app or refresh to sync from backend.',
     });
+  };
+
+  const clearSyncQueue = async () => {
+    try {
+      const removedCount = await clearSyncQueueForDevelopment();
+      Toast.show({
+        type: 'success',
+        text1: 'Sync queue cleared',
+        text2:
+          removedCount > 0
+            ? `Removed ${removedCount} pending sync item(s).`
+            : 'No pending sync items found.',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to clear sync queue.';
+      Toast.show({
+        type: 'error',
+        text1: 'Unable to clear sync queue',
+        text2: message,
+      });
+    }
   };
 
   const checkXpIntegrity = async () => {
@@ -211,6 +232,12 @@ export default function SettingsScreen() {
               title="Clear Local SQLite Data"
               subtitle="Delete all local tables and cached offline rows"
               onPress={clearLocalData}
+            />
+            <SettingsRow
+              icon={<Shield size={20} color="#475569" />}
+              title="Clear Sync Queue"
+              subtitle="Delete all pending offline sync actions"
+              onPress={clearSyncQueue}
             />
             <SettingsRow
               icon={<Moon size={20} color="#475569" />}

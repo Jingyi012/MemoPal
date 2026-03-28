@@ -34,6 +34,15 @@ export const locationApi = {
   },
 
   /**
+   * Batch create locations
+   */
+  async createBatch(locations: Partial<Location>[]): Promise<Location[]> {
+    const response = await api.post<GeneralResponse<Location[]>>('/locations/batch', locations);
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
+
+  /**
    * Update an existing location
    */
   async update(location: Location): Promise<Location> {
@@ -46,10 +55,27 @@ export const locationApi = {
   },
 
   /**
+   * Batch update locations
+   */
+  async updateBatch(locations: Partial<Location>[]): Promise<Location[]> {
+    const response = await api.patch<GeneralResponse<Location[]>>('/locations/batch', locations);
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
+
+  /**
    * Delete a location
    */
   async delete(id: string): Promise<void> {
     const response = await api.delete<GeneralResponse<null>>(`/locations/${id}`);
+    if (!response.data.success) throw new Error(response.data.message);
+  },
+
+  /**
+   * Batch delete locations
+   */
+  async deleteBatch(ids: string[]): Promise<void> {
+    const response = await api.post<GeneralResponse<null>>('/locations/batch/delete', { ids });
     if (!response.data.success) throw new Error(response.data.message);
   },
 

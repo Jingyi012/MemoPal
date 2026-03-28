@@ -31,6 +31,8 @@ const PalaceDetailScreen: React.FC<PalaceViewProps> = ({ palaceId }) => {
     isRefetching: isLessonDetailRefetching,
     refetch,
   } = useLessonList(palaceId);
+  const customLessons = useMemo(() => lessons.filter((l) => l.isCustom), [lessons]);
+  const wordLessons = useMemo(() => lessons.filter((l) => !l.isCustom), [lessons]);
 
   if (palaceLoading || lessonsLoading || !palaceData) {
     return <LoadingView />;
@@ -42,9 +44,6 @@ const PalaceDetailScreen: React.FC<PalaceViewProps> = ({ palaceId }) => {
     await palaceRefetch();
     await refetch();
   };
-
-  const customLessons = useMemo(() => lessons.filter((l) => l.isCustom), [lessons]);
-  const wordLessons = useMemo(() => lessons.filter((l) => !l.isCustom), [lessons]);
 
   return (
     <>
@@ -83,7 +82,7 @@ const PalaceDetailScreen: React.FC<PalaceViewProps> = ({ palaceId }) => {
           onStartPalaceTraining={() => router.push(`/palaces/${palaceId}/training`)}
         />
         <CustomLessonList palaceId={palaceId} lessons={customLessons} />
-        <WordLessonList lessons={wordLessons} />
+        {!palaceData.isCustom && <WordLessonList lessons={wordLessons} />}
       </ScrollView>
     </>
   );

@@ -95,12 +95,25 @@ export function createPalaceRepository(): PalaceRepository {
     },
 
     async save(palace: Partial<Palace>): Promise<string> {
-      const isNew = !palace.id;
-      const id = palace.id || Crypto.randomUUID();
+      const inputId = palace.id;
+      const id = inputId || Crypto.randomUUID();
       const now = new Date().toISOString();
-      const action = isNew ? 'create' : 'update';
+      let action: 'create' | 'update' = 'create';
 
       await db.transaction(async (tx) => {
+        if (inputId) {
+          const existing = await tx.query.palaces.findFirst({
+            columns: { id: true },
+            where: eq(schema.palaces.id, inputId),
+          });
+          action = existing ? 'update' : 'create';
+        }
+
+        const currentUser = await tx.query.users.findFirst({ columns: { id: true } });
+        const ownerId = palace.isCustom
+          ? palace.createdBy || currentUser?.id || null
+          : palace.createdBy || null;
+
         await tx
           .insert(schema.palaces)
           .values({
@@ -112,6 +125,7 @@ export function createPalaceRepository(): PalaceRepository {
             isLocked: palace.isLocked ?? false,
             isPremium: palace.isPremium ?? false,
             isCustom: palace.isCustom ?? false,
+            createdBy: ownerId,
             unlockedAt: palace.unlockedAt || (palace.isCustom ? now : null),
             createdAt: palace.createdAt || now,
             updatedAt: now,
@@ -127,6 +141,7 @@ export function createPalaceRepository(): PalaceRepository {
               thumbnail: palace.thumbnail,
               isLocked: palace.isLocked,
               isPremium: palace.isPremium,
+              createdBy: ownerId,
               unlockedAt: palace.unlockedAt,
               updatedAt: now,
             },
@@ -136,7 +151,7 @@ export function createPalaceRepository(): PalaceRepository {
           entityType: EntityType.PALACE,
           entityId: id,
           action,
-          payload: { ...palace, id, updatedAt: now },
+          payload: { ...palace, id, createdBy: ownerId, updatedAt: now },
         });
       });
 

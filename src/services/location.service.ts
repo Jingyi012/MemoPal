@@ -1,10 +1,19 @@
 import { locationApi } from '@/api/location';
 import { createLocationRepository } from '@/repositories/location.repo';
+import { createPalaceRepository } from '@/repositories/palace.repo';
 import { Location } from '@/types/palace';
 
 const repo = createLocationRepository();
+const palaceRepo = createPalaceRepository();
 
 export async function getLocationsByPalace(palaceId: string): Promise<Location[]> {
+  const localPalace = await palaceRepo.getById(palaceId);
+  const isUnsyncedCustomPalace = localPalace?.isCustom === true && !localPalace.lastSyncedAt;
+
+  if (isUnsyncedCustomPalace) {
+    return await repo.getByPalace(palaceId);
+  }
+
   try {
     const remote = await locationApi.getByPalace(palaceId);
     if (remote && remote.length > 0) {

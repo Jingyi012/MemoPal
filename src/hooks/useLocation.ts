@@ -39,27 +39,31 @@ export const useLocationsByPalace = (palaceId: string) => {
   };
 };
 
-export const useLocationMutations = (palaceId: string) => {
+export const useLocationMutations = (palaceId?: string) => {
   const queryClient = useQueryClient();
+  const invalidatePalaceLocations = (id?: string) => {
+    if (!id) return;
+    queryClient.invalidateQueries({ queryKey: LOCATION_KEYS.byPalace(id) });
+  };
 
   const createLocation = useMutation({
     mutationFn: (location: any) => locationService.createLocation(location),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: LOCATION_KEYS.byPalace(palaceId) });
+    onSuccess: (_, variables) => {
+      invalidatePalaceLocations(variables?.palaceId ?? palaceId);
     },
   });
 
   const updateLocation = useMutation({
     mutationFn: ({ id, ...location }: any) => locationService.updateLocation(id, location),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: LOCATION_KEYS.byPalace(palaceId) });
+    onSuccess: (_, variables) => {
+      invalidatePalaceLocations(variables?.palaceId ?? palaceId);
     },
   });
 
   const deleteLocation = useMutation({
     mutationFn: (id: string) => locationService.deleteLocation(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: LOCATION_KEYS.byPalace(palaceId) });
+      invalidatePalaceLocations(palaceId);
     },
   });
 

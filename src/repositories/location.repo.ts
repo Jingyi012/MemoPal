@@ -3,7 +3,7 @@ import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { Location } from '@/types/palace';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 
 interface LocationRepository {
@@ -15,6 +15,19 @@ interface LocationRepository {
 }
 
 export function createLocationRepository(): LocationRepository {
+  const refreshPalaceLocationCount = async (tx: any, palaceId: string, now: string) => {
+    const result = await tx
+      .select({ count: sql<number>`count(*)` })
+      .from(schema.locations)
+      .where(and(eq(schema.locations.palaceId, palaceId), eq(schema.locations.isDeleted, false)));
+
+    const count = result[0]?.count ?? 0;
+    await tx
+      .update(schema.palaces)
+      .set({ locationsCount: count, updatedAt: now })
+      .where(eq(schema.palaces.id, palaceId));
+  };
+
   return {
     async getByPalace(palaceId: string): Promise<Location[]> {
       return (await db.query.locations.findMany({
@@ -30,12 +43,20 @@ export function createLocationRepository(): LocationRepository {
     },
 
     async save(location: Partial<Location>): Promise<string> {
-      const isNew = !location.id;
-      const id = location.id || Crypto.randomUUID();
+      const inputId = location.id;
+      const id = inputId || Crypto.randomUUID();
       const now = new Date().toISOString();
-      const action = isNew ? 'create' : 'update';
+      let action: 'create' | 'update' = 'create';
 
       await db.transaction(async (tx) => {
+        if (inputId) {
+          const existing = await tx.query.locations.findFirst({
+            columns: { id: true },
+            where: eq(schema.locations.id, inputId),
+          });
+          action = existing ? 'update' : 'create';
+        }
+
         await tx
           .insert(schema.locations)
           .values({
@@ -67,6 +88,15 @@ export function createLocationRepository(): LocationRepository {
           action: action,
           payload: { ...location, id, updatedAt: now },
         });
+
+        const storedLocation = await tx.query.locations.findFirst({
+          columns: { palaceId: true },
+          where: eq(schema.locations.id, id),
+        });
+
+        if (storedLocation?.palaceId) {
+          await refreshPalaceLocationCount(tx, storedLocation.palaceId, now);
+        }
       });
 
       return id;
@@ -75,7 +105,7 @@ export function createLocationRepository(): LocationRepository {
     async delete(id: string): Promise<void> {
       await db.transaction(async (tx) => {
         const record = await tx.query.locations.findFirst({
-          columns: { lastSyncedAt: true },
+          columns: { lastSyncedAt: true, palaceId: true },
           where: eq(schema.locations.id, id),
         });
 
@@ -93,8 +123,12 @@ export function createLocationRepository(): LocationRepository {
 
         await tx
           .update(schema.locations)
-          .set({ isDeleted: true })
+          .set({ isDeleted: true, deletedAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
           .where(eq(schema.locations.id, id));
+
+        if (record.palaceId) {
+          await refreshPalaceLocationCount(tx, record.palaceId, new Date().toISOString());
+        }
       });
     },
 
@@ -146,6 +180,13 @@ export function createLocationRepository(): LocationRepository {
               });
             }
           }
+        }
+
+        const affectedPalaceIds = Array.from(
+          new Set(serverLocations.map((location) => location.palaceId).filter(Boolean))
+        ) as string[];
+        for (const palaceId of affectedPalaceIds) {
+          await refreshPalaceLocationCount(tx, palaceId, now);
         }
       });
     },

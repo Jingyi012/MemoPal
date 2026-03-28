@@ -27,6 +27,13 @@ export async function getPalaces(): Promise<Palace[]> {
  * Get palace by ID with sync
  */
 export async function getPalaceById(id: string): Promise<PalaceDetails | undefined> {
+  const localPalace = await repo.getById(id);
+  const isUnsyncedCustomPalace = localPalace?.isCustom === true && !localPalace.lastSyncedAt;
+
+  if (isUnsyncedCustomPalace) {
+    return localPalace;
+  }
+
   try {
     // Sync palace + locations so review flow always has location data
     const [remotePalace, remoteLocations] = await Promise.all([

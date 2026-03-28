@@ -4,6 +4,7 @@ import { EntityType } from '@/enums/entityType';
 import { badgeApi } from '@/api/badge';
 import { lessonApi } from '@/api/lesson';
 import { lessonProgressApi } from '@/api/lessonProgress';
+import { mediaApi } from '@/api/media';
 import { milestoneApi } from '@/api/milestone';
 import { locationApi } from '@/api/location';
 import { notificationApi } from '@/api/notification';
@@ -42,6 +43,127 @@ function parseSyncPayload(raw: string | null | undefined) {
     console.warn('Invalid sync payload', error);
     return null;
   }
+}
+
+function isLocalDeviceUri(value?: string | null): value is string {
+  if (!value) return false;
+
+  const normalized = value.trim().toLowerCase();
+  return (
+    normalized.startsWith('file://') ||
+    normalized.startsWith('content://') ||
+    normalized.startsWith('ph://') ||
+    normalized.startsWith('assets-library://')
+  );
+}
+
+function getFileNameFromUri(uri: string, fallback: string) {
+  const [pathPart] = uri.split('?');
+  const fileName = pathPart.split('/').filter(Boolean).pop();
+  return fileName || fallback;
+}
+
+async function hydratePalacePayload(db: typeof defaultDb, item: any, payload: any) {
+  const localPalace = await db.query.palaces.findFirst({
+    where: (palace, { eq }) => eq(palace.id, item.entityId),
+  });
+
+  if (!localPalace) return payload;
+
+  return {
+    id: localPalace.id,
+    name: payload?.name ?? localPalace.name,
+    description: payload?.description ?? localPalace.description,
+    locationsCount: payload?.locationsCount ?? localPalace.locationsCount,
+    thumbnail: payload?.thumbnail ?? localPalace.thumbnail,
+    isLocked: payload?.isLocked ?? localPalace.isLocked,
+    unlockedAt: payload?.unlockedAt ?? localPalace.unlockedAt,
+    level: payload?.level ?? localPalace.level,
+    isPremium: payload?.isPremium ?? localPalace.isPremium,
+    isCustom: payload?.isCustom ?? localPalace.isCustom,
+    createdBy: payload?.createdBy ?? localPalace.createdBy,
+    createdAt: payload?.createdAt ?? localPalace.createdAt,
+    updatedAt: payload?.updatedAt ?? localPalace.updatedAt,
+    isDeleted: payload?.isDeleted ?? localPalace.isDeleted,
+    deletedAt: payload?.deletedAt ?? localPalace.deletedAt,
+  };
+}
+
+async function hydrateLocationPayload(db: typeof defaultDb, item: any, payload: any) {
+  const localLocation = await db.query.locations.findFirst({
+    where: (location, { eq }) => eq(location.id, item.entityId),
+  });
+
+  if (!localLocation) return payload;
+
+  return {
+    id: localLocation.id,
+    palaceId: payload?.palaceId ?? localLocation.palaceId,
+    position: payload?.position ?? localLocation.position,
+    name: payload?.name ?? localLocation.name,
+    description: payload?.description ?? localLocation.description,
+    imageUrl: payload?.imageUrl ?? localLocation.imageUrl,
+    createdAt: payload?.createdAt ?? localLocation.createdAt,
+    updatedAt: payload?.updatedAt ?? localLocation.updatedAt,
+    isDeleted: payload?.isDeleted ?? localLocation.isDeleted,
+    deletedAt: payload?.deletedAt ?? localLocation.deletedAt,
+  };
+}
+
+async function resolvePalaceThumbnailUpload(db: typeof defaultDb, item: any, payload: any) {
+  const thumbnail = payload?.thumbnail;
+  if (!isLocalDeviceUri(thumbnail)) {
+    return payload;
+  }
+
+  const uploadedUrl = await mediaApi.uploadImage(
+    thumbnail,
+    getFileNameFromUri(thumbnail, `${item.entityId}-thumbnail.jpg`),
+    'palaces'
+  );
+  const updatedPayload = { ...payload, thumbnail: uploadedUrl };
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(schema.palaces)
+      .set({ thumbnail: uploadedUrl, updatedAt: new Date().toISOString() })
+      .where(eq(schema.palaces.id, item.entityId));
+
+    await tx
+      .update(schema.syncQueue)
+      .set({ payload: JSON.stringify(updatedPayload) })
+      .where(eq(schema.syncQueue.id, item.id));
+  });
+
+  return updatedPayload;
+}
+
+async function resolveLocationImageUpload(db: typeof defaultDb, item: any, payload: any) {
+  const imageUrl = payload?.imageUrl;
+  if (!isLocalDeviceUri(imageUrl)) {
+    return payload;
+  }
+
+  const uploadedUrl = await mediaApi.uploadImage(
+    imageUrl,
+    getFileNameFromUri(imageUrl, `${item.entityId}.jpg`),
+    'locations'
+  );
+  const updatedPayload = { ...payload, imageUrl: uploadedUrl };
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(schema.locations)
+      .set({ imageUrl: uploadedUrl, updatedAt: new Date().toISOString() })
+      .where(eq(schema.locations.id, item.entityId));
+
+    await tx
+      .update(schema.syncQueue)
+      .set({ payload: JSON.stringify(updatedPayload) })
+      .where(eq(schema.syncQueue.id, item.id));
+  });
+
+  return updatedPayload;
 }
 
 async function hydrateXpEventPayload(db: typeof defaultDb, item: any, payload: any) {
@@ -93,6 +215,17 @@ export async function processQueue(db = defaultDb) {
       orderBy: (q, { asc }) => [asc(q.createdAt)],
     });
 
+    if (__DEV__) {
+      const preview = queueItems.slice(0, 20).map((item) => ({
+        id: item.id,
+        entityType: item.entityType,
+        entityId: item.entityId,
+        action: item.action,
+        createdAt: item.createdAt,
+      }));
+      console.log('[SyncQueue] Pending items:', queueItems.length, preview);
+    }
+
     if (queueItems.length === 0) return;
 
     // 2. Sort by dependency order: Parent before Child
@@ -114,8 +247,75 @@ export async function processQueue(db = defaultDb) {
       return a.createdAt.localeCompare(b.createdAt);
     });
 
+    const locationItems = sortedItems.filter((item) => item.entityType === EntityType.LOCATION);
     const wordItems = sortedItems.filter((item) => item.entityType === EntityType.WORD);
-    const otherItems = sortedItems.filter((item) => item.entityType !== EntityType.WORD);
+    const otherItems = sortedItems.filter(
+      (item) => item.entityType !== EntityType.WORD && item.entityType !== EntityType.LOCATION
+    );
+
+    const processLocationQueue = async () => {
+      if (locationItems.length === 0) return true;
+
+      try {
+        const createItems = locationItems.filter((item) => item.action === 'create');
+        const updateItems = locationItems.filter((item) => item.action === 'update');
+        const deleteItems = locationItems.filter((item) => item.action === 'delete');
+
+        if (createItems.length > 0) {
+          const payloads: any[] = [];
+          for (const item of createItems) {
+            let payload = parseSyncPayload(item.payload);
+            if (!payload) continue;
+            payload = await hydrateLocationPayload(db, item, payload);
+            payload = await resolveLocationImageUpload(db, item, payload);
+            payloads.push(payload);
+          }
+
+          if (payloads.length > 0) {
+            await locationApi.createBatch(payloads);
+          }
+        }
+
+        if (updateItems.length > 0) {
+          const payloads: any[] = [];
+          for (const item of updateItems) {
+            let payload = parseSyncPayload(item.payload);
+            if (!payload) continue;
+            payload = await hydrateLocationPayload(db, item, payload);
+            payload = await resolveLocationImageUpload(db, item, payload);
+            payloads.push(payload);
+          }
+
+          if (payloads.length > 0) {
+            await locationApi.updateBatch(payloads);
+          }
+        }
+
+        if (deleteItems.length > 0) {
+          await locationApi.deleteBatch(deleteItems.map((item) => item.entityId));
+        }
+
+        for (const item of locationItems) {
+          await db.transaction(async (tx) => {
+            if (item.action !== 'delete') {
+              const stillDirty = await SyncBase.isDirty(tx, item.entityId);
+              if (!stillDirty) {
+                await tx
+                  .update(schema.locations)
+                  .set({ lastSyncedAt: new Date().toISOString() })
+                  .where(eq(schema.locations.id, item.entityId));
+              }
+            }
+            await tx.delete(schema.syncQueue).where(eq(schema.syncQueue.id, item.id));
+          });
+        }
+
+        return true;
+      } catch (error) {
+        console.error('Location batch sync failed:', error);
+        return false;
+      }
+    };
 
     const processWordQueue = async () => {
       if (wordItems.length === 0) return;
@@ -184,8 +384,23 @@ export async function processQueue(db = defaultDb) {
               console.warn('Missing payload for PALACE queue item', item.id);
               continue;
             }
+            if (item.action !== 'delete') {
+              payload = await hydratePalacePayload(db, item, payload);
+              payload = await resolvePalaceThumbnailUpload(db, item, payload);
+            }
             if (item.action === 'create') await palaceApi.create(payload);
-            else if (item.action === 'update') await palaceApi.update(payload);
+            else if (item.action === 'update') {
+              try {
+                await palaceApi.update(payload);
+              } catch (error: any) {
+                if (error?.response?.status === 404 && payload) {
+                  // Recovery path for legacy queue rows wrongly tagged as update for new entities.
+                  await palaceApi.create(payload);
+                } else {
+                  throw error;
+                }
+              }
+            }
             else if (item.action === 'delete') await palaceApi.delete(item.entityId);
             else {
               console.warn('Unsupported action for PALACE', item.action);
@@ -214,8 +429,23 @@ export async function processQueue(db = defaultDb) {
               console.warn('Missing payload for LOCATION queue item', item.id);
               continue;
             }
+            if (item.action !== 'delete') {
+              payload = await hydrateLocationPayload(db, item, payload);
+              payload = await resolveLocationImageUpload(db, item, payload);
+            }
             if (item.action === 'create') await locationApi.create(payload);
-            else if (item.action === 'update') await locationApi.update(payload);
+            else if (item.action === 'update') {
+              try {
+                await locationApi.update(payload);
+              } catch (error: any) {
+                if (error?.response?.status === 404 && payload) {
+                  // Recovery path for legacy queue rows wrongly tagged as update for new entities.
+                  await locationApi.create(payload);
+                } else {
+                  throw error;
+                }
+              }
+            }
             else if (item.action === 'delete') await locationApi.delete(item.entityId);
             else {
               console.warn('Unsupported action for LOCATION', item.action);
@@ -399,12 +629,34 @@ export async function processQueue(db = defaultDb) {
       }
     }
 
-    // Sync words only after dependent entities (palaces, locations, lessons)
+    // Sync locations and words only after dependent entities (palaces, lessons)
     // have been processed in this cycle.
     if (canProcessWordQueue) {
-      await processWordQueue();
+      const locationBatchOk = await processLocationQueue();
+      if (locationBatchOk) {
+        await processWordQueue();
+      }
     }
   } finally {
     isProcessing = false;
   }
+}
+
+export async function clearSyncQueueForDevelopment(db = defaultDb) {
+  if (!__DEV__) {
+    throw new Error('clearSyncQueueForDevelopment is only available in development.');
+  }
+
+  const pendingItems = await db.query.syncQueue.findMany({
+    columns: { id: true },
+  });
+
+  if (pendingItems.length === 0) {
+    return 0;
+  }
+
+  await db.delete(schema.syncQueue);
+  console.log(`[SyncQueue] Cleared ${pendingItems.length} pending item(s) in development.`);
+
+  return pendingItems.length;
 }

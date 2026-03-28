@@ -3,16 +3,25 @@ import { db } from '@/db/client';
 import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { createLessonRepository } from '@/repositories/lesson.repo';
+import { createPalaceRepository } from '@/repositories/palace.repo';
 import { Lesson, LessonDetails } from '@/types/lesson';
 import { eq } from 'drizzle-orm';
 
 const repo = createLessonRepository();
+const palaceRepo = createPalaceRepository();
 
 /**
  * Get lessons by palace with two-way sync
  * Strategy: Download remote updates, merge with local using conflict resolution
  */
 export async function getLessonsByPalace(palaceId: string): Promise<Lesson[]> {
+  const localPalace = await palaceRepo.getById(palaceId);
+  const isUnsyncedCustomPalace = localPalace?.isCustom === true && !localPalace.lastSyncedAt;
+
+  if (isUnsyncedCustomPalace) {
+    return await repo.getAllByPalace(palaceId);
+  }
+
   try {
     // Attempt to fetch lessons for this palace from backend
     const remoteLessons = await lessonApi.getByPalaceId(palaceId);
