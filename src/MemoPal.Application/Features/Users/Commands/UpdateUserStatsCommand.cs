@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Users.DTOs;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -46,12 +47,7 @@ public sealed class UpdateUserStatsCommandHandler : IRequestHandler<UpdateUserSt
         stats.IsDeleted = false;
         stats.DeletedAt = null;
 
-        user.Level = await _db.LevelConfigs
-            .Where(x => !x.IsDeleted && x.RequiredXp <= user.TotalXp)
-            .OrderByDescending(x => x.Level)
-            .Select(x => x.Level)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (user.Level <= 0) user.Level = 1;
+        user.Level = await _db.ResolveLevelByXpAsync(user.TotalXp, cancellationToken);
         user.UpdatedAt = now;
 
         await _db.SaveChangesAsync(cancellationToken);

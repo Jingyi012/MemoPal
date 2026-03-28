@@ -1,5 +1,5 @@
 using MediatR;
-using MemoPal.Application.Features.Missions.Queries;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.SystemSettings.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +17,9 @@ public sealed class SystemSettingsController : ApiControllerBase
     [HttpGet("gamification/mobile-ui-config")]
     public async Task<IActionResult> GetGamificationMobileUiConfig(CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetGamificationMobileUiConfigQuery(), cancellationToken);
+        var result = await Sender.Send(
+            new GetSystemSettingsByKeyQuery(SystemSettingKeys.GamificationMobileUiConfig),
+            cancellationToken);
         return Ok(result);
     }
 
@@ -43,22 +45,12 @@ public sealed class SystemSettingsController : ApiControllerBase
     }
 
     /// <summary>
-    /// Fetch mission templates
-    /// </summary>
-    [HttpGet("mission-templates")]
-    public async Task<IActionResult> GetMissionTemplates(CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new GetSystemSettingsByKeyQuery("gamification.missions.templates"), cancellationToken);
-        return Ok(result);
-    }
-
-    /// <summary>
     /// Fetch XP configurations
     /// </summary>
     [HttpGet("xp-configs")]
     public async Task<IActionResult> GetXpConfigs(CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetSystemSettingsByPatternQuery("xp.*"), cancellationToken);
+        var result = await Sender.Send(new GetSystemSettingsByKeyQuery(SystemSettingKeys.XpConfigs), cancellationToken);
         return Ok(result);
     }
 
@@ -68,7 +60,7 @@ public sealed class SystemSettingsController : ApiControllerBase
     [HttpGet("level-configs")]
     public async Task<IActionResult> GetLevelConfigs(CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetSystemSettingsByPatternQuery("level.*"), cancellationToken);
+        var result = await Sender.Send(new GetSystemSettingsByKeyQuery(SystemSettingKeys.LevelConfigs), cancellationToken);
         return Ok(result);
     }
 }

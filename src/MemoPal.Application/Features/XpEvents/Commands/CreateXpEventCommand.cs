@@ -73,16 +73,7 @@ public sealed class CreateXpEventCommandHandler : IRequestHandler<CreateXpEventC
         };
 
         user.TotalXp += entity.XpAmount;
-        user.Level = await _db.LevelConfigs
-            .Where(x => !x.IsDeleted && x.RequiredXp <= user.TotalXp)
-            .OrderByDescending(x => x.RequiredXp)
-            .ThenByDescending(x => x.Level)
-            .Select(x => x.Level)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (user.Level <= 0)
-        {
-            user.Level = 1;
-        }
+        user.Level = await _db.ResolveLevelByXpAsync(user.TotalXp, cancellationToken);
         user.UpdatedAt = now;
 
         if (missionClaimRecord is not null)
@@ -107,14 +98,13 @@ public sealed class CreateXpEventCommandHandler : IRequestHandler<CreateXpEventC
             throw new ValidationAppException("Invalid mission sourceId format.");
         }
 
-        var missionTemplatesSetting = await _db.SystemSettings
+        var missionTemplate = await _db.MissionTemplates
             .AsNoTracking()
             .FirstOrDefaultAsync(
-                x => !x.IsDeleted && x.Key == SystemSettingKeys.GamificationMissionTemplates,
-                cancellationToken);
-
-        var missionTemplate = MissionTemplateSerializer.ParseOrDefault(missionTemplatesSetting?.Value)
-            .FirstOrDefault(x => x.IsActive && string.Equals(x.Key, missionKey, StringComparison.OrdinalIgnoreCase))
+                x => !x.IsDeleted &&
+                     x.IsActive &&
+                     x.Key == missionKey,
+                cancellationToken)
             ?? throw new ValidationAppException("Mission template not found.");
 
         var expectedPeriodToken = MissionProgressCalculator.BuildPeriodToken(missionTemplate.Period, now);

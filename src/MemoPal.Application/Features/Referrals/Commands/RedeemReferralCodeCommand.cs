@@ -381,15 +381,7 @@ public sealed class RedeemReferralCodeCommandHandler
 
     private async Task<int> ResolveLevelAsync(int totalXp, CancellationToken cancellationToken)
     {
-        var level = await _db.LevelConfigs
-            .AsNoTracking()
-            .Where(x => !x.IsDeleted && x.RequiredXp <= totalXp)
-            .OrderByDescending(x => x.RequiredXp)
-            .ThenByDescending(x => x.Level)
-            .Select(x => x.Level)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        return level <= 0 ? 1 : level;
+        return await _db.ResolveLevelByXpAsync(totalXp, cancellationToken);
     }
 
     private static string BuildRewardSummary(int awardedXp, int awardedPremiumDays)

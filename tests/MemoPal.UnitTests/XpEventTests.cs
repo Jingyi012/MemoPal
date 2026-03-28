@@ -260,14 +260,54 @@ public class XpEventTests
 
     private static void SeedLevelConfig(AppDbContext db, int level, int requiredXp, string title)
     {
-        db.LevelConfigs.Add(new LevelConfig
+        var now = DateTime.UtcNow;
+        var existing = db.SystemSettings.Local.FirstOrDefault(x => x.Key == SystemSettingKeys.LevelConfigs)
+            ?? db.SystemSettings.FirstOrDefault(x => x.Key == SystemSettingKeys.LevelConfigs);
+
+        List<LevelConfigSeedItem> configs;
+        if (existing is null || string.IsNullOrWhiteSpace(existing.Value))
+        {
+            configs = [];
+        }
+        else
+        {
+            try
+            {
+                configs = JsonSerializer.Deserialize<List<LevelConfigSeedItem>>(existing.Value) ?? [];
+            }
+            catch (JsonException)
+            {
+                configs = [];
+            }
+        }
+
+        configs.RemoveAll(item => item.Level == level);
+        configs.Add(new LevelConfigSeedItem
         {
             Level = level,
             RequiredXp = requiredXp,
             Title = title,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = now,
+            UpdatedAt = now
         });
+        var value = JsonSerializer.Serialize(configs.OrderBy(item => item.Level).ToList());
+
+        if (existing is null)
+        {
+            db.SystemSettings.Add(new SystemSetting
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Key = SystemSettingKeys.LevelConfigs,
+                Value = value,
+                Description = "Level configs",
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+            return;
+        }
+
+        existing.Value = value;
+        existing.UpdatedAt = now;
     }
 
     private static void SeedMissionTemplateSetting(AppDbContext db, params MissionTemplateDto[] templates)
@@ -281,5 +321,14 @@ public class XpEventTests
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         });
+    }
+
+    private sealed class LevelConfigSeedItem
+    {
+        public int Level { get; init; }
+        public int RequiredXp { get; init; }
+        public string? Title { get; init; }
+        public DateTime? CreatedAt { get; init; }
+        public DateTime? UpdatedAt { get; init; }
     }
 }

@@ -3,9 +3,6 @@ using MemoPal.Application.Common;
 using MemoPal.Application.Features.Badges.Commands;
 using MemoPal.Application.Features.Badges.DTOs;
 using MemoPal.Application.Features.Badges.Queries;
-using MemoPal.Application.Features.Configs.Commands;
-using MemoPal.Application.Features.Configs.DTOs;
-using MemoPal.Application.Features.Configs.Queries;
 using MemoPal.Application.Features.Milestones.Commands;
 using MemoPal.Application.Features.Milestones.DTOs;
 using MemoPal.Application.Features.Milestones.Queries;
@@ -24,79 +21,6 @@ public sealed class AdminConfigsController : ApiControllerBase
 {
     public AdminConfigsController(ISender sender) : base(sender)
     {
-    }
-
-    [HttpGet("xp-configs")]
-    public async Task<IActionResult> GetXpConfigs(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await Sender.Send(new GetPagedXpConfigsQuery(pageNumber, pageSize), cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpGet("xp-configs/{sourceType}")]
-    public async Task<IActionResult> GetXpConfigBySourceType(string sourceType, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new GetXpConfigBySourceTypeQuery(sourceType), cancellationToken); return Ok(result);
-    }
-
-    [HttpPost("xp-configs")]
-    public async Task<IActionResult> CreateXpConfig([FromBody] XpConfigUpsertRequest request, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new CreateXpConfigCommand(request), cancellationToken); return Ok(result);
-    }
-
-    [HttpPatch("xp-configs/{id}")]
-    public async Task<IActionResult> UpdateXpConfig(string id, [FromBody] XpConfigUpsertRequest request, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new UpdateXpConfigCommand(id, request), cancellationToken); return Ok(result);
-    }
-
-    [HttpDelete("xp-configs/{id}")]
-    public async Task<IActionResult> DeleteXpConfig(string id, CancellationToken cancellationToken)
-    {
-        await Sender.Send(new DeleteXpConfigCommand(id), cancellationToken);
-        return Ok(ApiResponse<object?>.Ok(null));
-    }
-
-    [HttpGet("level-configs")]
-    public async Task<IActionResult> GetLevelConfigs(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await Sender.Send(new GetPagedLevelConfigsQuery(pageNumber, pageSize), cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpGet("level-configs/{level:int}")]
-    public async Task<IActionResult> GetLevelConfig(int level, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new GetLevelConfigQuery(level), cancellationToken); 
-        return Ok(result);
-    }
-
-    [HttpPost("level-configs")]
-    public async Task<IActionResult> CreateLevelConfig([FromBody] LevelConfigUpsertRequest request, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new CreateLevelConfigCommand(request), cancellationToken); 
-        return Ok(result);
-    }
-
-    [HttpPut("level-configs/{level:int}")]
-    public async Task<IActionResult> UpdateLevelConfig(int level, [FromBody] LevelConfigUpsertRequest request, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new UpdateLevelConfigCommand(level, request), cancellationToken); 
-        return Ok(result);
-    }
-
-    [HttpDelete("level-configs/{level:int}")]
-    public async Task<IActionResult> DeleteLevelConfig(int level, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new DeleteLevelConfigCommand(level), cancellationToken);
-        return Ok(result);
     }
 
     [HttpGet("badge-definitions")]

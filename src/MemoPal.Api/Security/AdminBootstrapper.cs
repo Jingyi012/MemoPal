@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Common.Settings;
@@ -25,6 +26,17 @@ public sealed class AdminBootstrapper
         (8, 1680, "Mind Architect"),
         (9, 2080, "Memory Master"),
         (10, 2520, "Palace Sage"),
+    ];
+
+    private static readonly (string Id, string SourceType, int BaseXp, int VariableXp, bool IsActive)[] XpSeed =
+    [
+        ("xp-review-complete", "review_complete", 15, 5, true),
+        ("xp-lesson-initial-completion", "lesson_initial_completion", 25, 10, true),
+        ("xp-lesson-complete", "lesson_complete", 40, 15, true),
+        ("xp-word-mastered", "word_mastered", 8, 2, true),
+        ("xp-streak-bonus", "streak_bonus", 12, 0, true),
+        ("xp-mission-complete", "mission_complete", 35, 0, true),
+        ("xp-manual-adjustment", "manual_adjustment", 50, 0, true),
     ];
 
     private static readonly string[] ActionWords =
@@ -64,6 +76,7 @@ public sealed class AdminBootstrapper
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         await EnsureMissionTemplatesAsync(cancellationToken);
+        await EnsureXpAndLevelConfigSettingsAsync(cancellationToken);
 
         User? seededAdmin = null;
         if (_options.Enabled &&
@@ -130,117 +143,127 @@ public sealed class AdminBootstrapper
 
     private async Task EnsureMissionTemplatesAsync(CancellationToken cancellationToken)
     {
-        var missionSetting = _db.SystemSettings.Local.FirstOrDefault(x => x.Key == SystemSettingKeys.GamificationMissionTemplates) ??
-                             await _db.SystemSettings
-                                 .FirstOrDefaultAsync(x => x.Key == SystemSettingKeys.GamificationMissionTemplates, cancellationToken);
-        if (missionSetting is not null && !missionSetting.IsDeleted && !string.IsNullOrWhiteSpace(missionSetting.Value))
+        var hasTemplates = _db.MissionTemplates.Local.Any(x => !x.IsDeleted) ||
+                           await _db.MissionTemplates
+                               .AsNoTracking()
+                               .AnyAsync(x => !x.IsDeleted, cancellationToken);
+        if (hasTemplates)
         {
             return;
         }
 
         var now = DateTime.UtcNow;
-        var serialized = MissionTemplateSerializer.Serialize(MissionTemplateSerializer.GetDefaultTemplates());
-
-        if (missionSetting is null)
+        var defaults = MissionTemplateSerializer.GetDefaultTemplates();
+        foreach (var template in defaults)
         {
-            _db.SystemSettings.Add(new SystemSetting
+            _db.MissionTemplates.Add(new MissionTemplate
             {
-                Id = Guid.NewGuid().ToString("N"),
-                Key = SystemSettingKeys.GamificationMissionTemplates,
-                Value = serialized,
-                Description = "Mission templates for gamification dashboard.",
+                Id = Guid.NewGuid().ToString("D"),
+                Key = template.Key,
+                Title = template.Title,
+                Description = template.Description,
+                MetricType = template.MetricType,
+                Period = template.Period,
+                TargetValue = template.TargetValue,
+                RewardXp = template.RewardXp,
+                SortOrder = template.SortOrder,
+                IsActive = template.IsActive,
+                Version = 1,
                 CreatedAt = now,
                 UpdatedAt = now,
                 IsDeleted = false
             });
-            return;
+        }
+    }
+
+    private async Task EnsureXpAndLevelConfigSettingsAsync(CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+
+        var xpSetting = _db.SystemSettings.Local.FirstOrDefault(x => x.Key == SystemSettingKeys.XpConfigs) ??
+                        await _db.SystemSettings.FirstOrDefaultAsync(
+                            x => x.Key == SystemSettingKeys.XpConfigs,
+                            cancellationToken);
+        if (xpSetting is null || xpSetting.IsDeleted || string.IsNullOrWhiteSpace(xpSetting.Value))
+        {
+            var serializedXp = JsonSerializer.Serialize(
+                XpSeed.Select(x => new
+                {
+                    id = x.Id,
+                    sourceType = x.SourceType,
+                    baseXp = x.BaseXp,
+                    variableXp = x.VariableXp,
+                    isActive = x.IsActive,
+                    createdAt = now,
+                    updatedAt = now
+                }).ToArray());
+
+            if (xpSetting is null)
+            {
+                _db.SystemSettings.Add(new SystemSetting
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    Key = SystemSettingKeys.XpConfigs,
+                    Value = serializedXp,
+                    Description = "XP configuration entries for activity reward calculations.",
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    IsDeleted = false
+                });
+            }
+            else
+            {
+                xpSetting.Value = serializedXp;
+                xpSetting.Description = "XP configuration entries for activity reward calculations.";
+                xpSetting.IsDeleted = false;
+                xpSetting.DeletedAt = null;
+                xpSetting.UpdatedAt = now;
+            }
         }
 
-        missionSetting.Value = serialized;
-        missionSetting.Description = "Mission templates for gamification dashboard.";
-        missionSetting.IsDeleted = false;
-        missionSetting.DeletedAt = null;
-        missionSetting.UpdatedAt = now;
+        var levelSetting = _db.SystemSettings.Local.FirstOrDefault(x => x.Key == SystemSettingKeys.LevelConfigs) ??
+                           await _db.SystemSettings.FirstOrDefaultAsync(
+                               x => x.Key == SystemSettingKeys.LevelConfigs,
+                               cancellationToken);
+        if (levelSetting is null || levelSetting.IsDeleted || string.IsNullOrWhiteSpace(levelSetting.Value))
+        {
+            var serializedLevels = JsonSerializer.Serialize(
+                LevelSeed.Select(x => new
+                {
+                    level = x.Level,
+                    requiredXp = x.RequiredXp,
+                    title = x.Title,
+                    createdAt = now,
+                    updatedAt = now
+                }).ToArray());
+
+            if (levelSetting is null)
+            {
+                _db.SystemSettings.Add(new SystemSetting
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    Key = SystemSettingKeys.LevelConfigs,
+                    Value = serializedLevels,
+                    Description = "Level thresholds used to map total XP to player level.",
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    IsDeleted = false
+                });
+            }
+            else
+            {
+                levelSetting.Value = serializedLevels;
+                levelSetting.Description = "Level thresholds used to map total XP to player level.";
+                levelSetting.IsDeleted = false;
+                levelSetting.DeletedAt = null;
+                levelSetting.UpdatedAt = now;
+            }
+        }
     }
 
     private async Task SeedGamificationCatalogAsync(CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-
-        foreach (var seed in LevelSeed)
-        {
-            var level = _db.LevelConfigs.Local.FirstOrDefault(x => x.Level == seed.Level) ??
-                        await _db.LevelConfigs.FirstOrDefaultAsync(x => x.Level == seed.Level, cancellationToken);
-            if (level is null)
-            {
-                _db.LevelConfigs.Add(new LevelConfig
-                {
-                    Level = seed.Level,
-                    RequiredXp = seed.RequiredXp,
-                    Title = seed.Title,
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                    IsDeleted = false
-                });
-                continue;
-            }
-
-            level.RequiredXp = seed.RequiredXp;
-            level.Title = seed.Title;
-            level.IsDeleted = false;
-            level.DeletedAt = null;
-            level.UpdatedAt = now;
-        }
-
-        var existingXpById = _db.XpConfigs.Local
-            .Where(x => !x.IsDeleted)
-            .GroupBy(x => x.Id, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(x => x.Key, x => x.First(), StringComparer.OrdinalIgnoreCase);
-        var existingXpBySource = _db.XpConfigs.Local
-            .Where(x => !x.IsDeleted)
-            .GroupBy(x => x.SourceType, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(x => x.Key, x => x.First(), StringComparer.OrdinalIgnoreCase);
-        var persistedXpConfigs = await _db.XpConfigs
-            .Where(x => !x.IsDeleted)
-            .ToListAsync(cancellationToken);
-        foreach (var entity in persistedXpConfigs)
-        {
-            existingXpById.TryAdd(entity.Id, entity);
-            existingXpBySource.TryAdd(entity.SourceType, entity);
-        }
-
-        var xpSeed = new[]
-        {
-            new XpConfig { Id = "xp-review-complete", SourceType = "review_complete", BaseXp = 15, VariableXp = 5, IsActive = true, CreatedAt = now, UpdatedAt = now },
-            new XpConfig { Id = "xp-lesson-initial-completion", SourceType = "lesson_initial_completion", BaseXp = 25, VariableXp = 10, IsActive = true, CreatedAt = now, UpdatedAt = now },
-            new XpConfig { Id = "xp-lesson-complete", SourceType = "lesson_complete", BaseXp = 40, VariableXp = 15, IsActive = true, CreatedAt = now, UpdatedAt = now },
-            new XpConfig { Id = "xp-word-mastered", SourceType = "word_mastered", BaseXp = 8, VariableXp = 2, IsActive = true, CreatedAt = now, UpdatedAt = now },
-            new XpConfig { Id = "xp-streak-bonus", SourceType = "streak_bonus", BaseXp = 12, VariableXp = 0, IsActive = true, CreatedAt = now, UpdatedAt = now },
-            new XpConfig { Id = "xp-mission-complete", SourceType = "mission_complete", BaseXp = 35, VariableXp = 0, IsActive = true, CreatedAt = now, UpdatedAt = now },
-            new XpConfig { Id = "xp-manual-adjustment", SourceType = "manual_adjustment", BaseXp = 50, VariableXp = 0, IsActive = true, CreatedAt = now, UpdatedAt = now },
-        };
-
-        foreach (var seed in xpSeed)
-        {
-            XpConfig? entity = null;
-            if (!existingXpById.TryGetValue(seed.Id, out entity) &&
-                !existingXpBySource.TryGetValue(seed.SourceType, out entity))
-            {
-                _db.XpConfigs.Add(seed);
-                existingXpById[seed.Id] = seed;
-                existingXpBySource[seed.SourceType] = seed;
-                continue;
-            }
-
-            entity.SourceType = seed.SourceType;
-            entity.BaseXp = seed.BaseXp;
-            entity.VariableXp = seed.VariableXp;
-            entity.IsActive = seed.IsActive;
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.UpdatedAt = now;
-            existingXpBySource[entity.SourceType] = entity;
-        }
 
         var existingBadgeById = _db.BadgeDefinitions.Local
             .GroupBy(x => x.Id, StringComparer.OrdinalIgnoreCase)

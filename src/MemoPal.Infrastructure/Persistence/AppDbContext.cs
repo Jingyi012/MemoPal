@@ -32,8 +32,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<MilestoneDefinition> MilestoneDefinitions => Set<MilestoneDefinition>();
     public DbSet<UserMilestone> UserMilestones => Set<UserMilestone>();
     public DbSet<UserMission> UserMissions => Set<UserMission>();
-    public DbSet<XpConfig> XpConfigs => Set<XpConfig>();
-    public DbSet<LevelConfig> LevelConfigs => Set<LevelConfig>();
+    public DbSet<MissionTemplate> MissionTemplates => Set<MissionTemplate>();
     public DbSet<XpEvent> XpEvents => Set<XpEvent>();
     public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
@@ -204,15 +203,18 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.PeriodToken).HasMaxLength(64);
         });
 
-        modelBuilder.Entity<XpConfig>(b =>
+        modelBuilder.Entity<MissionTemplate>(b =>
         {
             b.HasKey(x => x.Id);
-            b.HasIndex(x => x.SourceType).IsUnique();
-        });
-
-        modelBuilder.Entity<LevelConfig>(b =>
-        {
-            b.HasKey(x => x.Level);
+            b.HasIndex(x => x.Key).IsUnique();
+            b.Property(x => x.Key).HasMaxLength(128);
+            b.Property(x => x.Title).HasMaxLength(200);
+            b.Property(x => x.Description).HasMaxLength(500);
+            b.Property(x => x.MetricType).HasMaxLength(64);
+            b.Property(x => x.Period).HasMaxLength(32);
+            b.Property(x => x.SortOrder).HasDefaultValue(0);
+            b.Property(x => x.IsActive).HasDefaultValue(true);
+            b.Property(x => x.Version).HasDefaultValue(1);
         });
 
         modelBuilder.Entity<XpEvent>(b =>
@@ -339,7 +341,6 @@ public class AppDbContext : DbContext, IAppDbContext
         }
 
         ApplyTimestampFallback(ChangeTracker.Entries<UserStats>(), now);
-        ApplyTimestampFallback(ChangeTracker.Entries<LevelConfig>(), now);
     }
 
     private static void ApplyTimestampFallback<T>(IEnumerable<EntityEntry<T>> entries, DateTime now) where T : class

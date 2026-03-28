@@ -1,4 +1,5 @@
 using MemoPal.Application.Common.Exceptions;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Referrals.Commands;
 using MemoPal.Application.Features.Referrals.DTOs;
 using MemoPal.Application.Features.Referrals.Queries;
@@ -6,6 +7,7 @@ using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
 using MemoPal.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace MemoPal.UnitTests;
 
@@ -36,14 +38,7 @@ public sealed class ReferralModuleTests
         var referrer = CreateUser("referrer-1", "referrer@example.com", "Referrer");
         var invitee = CreateUser("invitee-1", "invitee@example.com", "Invitee");
         db.Users.AddRange(referrer, invitee);
-        db.LevelConfigs.Add(new LevelConfig
-        {
-            Level = 1,
-            RequiredXp = 0,
-            Title = "Novice",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        });
+        SeedLevelConfigsSetting(db, (1, 0, "Novice"));
         db.ReferralProfiles.Add(new ReferralProfile
         {
             Id = "profile-referrer",
@@ -97,14 +92,7 @@ public sealed class ReferralModuleTests
         await using var db = CreateDbContext();
         var user = CreateUser("user-1", "user1@example.com", "User One");
         db.Users.Add(user);
-        db.LevelConfigs.Add(new LevelConfig
-        {
-            Level = 1,
-            RequiredXp = 0,
-            Title = "Novice",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        });
+        SeedLevelConfigsSetting(db, (1, 0, "Novice"));
         db.ReferralProfiles.Add(new ReferralProfile
         {
             Id = "profile-user",
@@ -147,5 +135,28 @@ public sealed class ReferralModuleTests
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+    }
+
+    private static void SeedLevelConfigsSetting(AppDbContext db, params (int Level, int RequiredXp, string Title)[] items)
+    {
+        var now = DateTime.UtcNow;
+        var payload = items.Select(item => new
+        {
+            level = item.Level,
+            requiredXp = item.RequiredXp,
+            title = item.Title,
+            createdAt = now,
+            updatedAt = now
+        });
+
+        db.SystemSettings.Add(new SystemSetting
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Key = SystemSettingKeys.LevelConfigs,
+            Value = JsonSerializer.Serialize(payload),
+            Description = "Level configs",
+            CreatedAt = now,
+            UpdatedAt = now
+        });
     }
 }

@@ -2,63 +2,10 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
-using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Missions.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Missions.Queries;
-
-public sealed record GetMissionTemplatesQuery() : IRequest<ApiResponse<IReadOnlyList<MissionTemplateDto>>>;
-
-public sealed class GetMissionTemplatesQueryHandler
-    : IRequestHandler<GetMissionTemplatesQuery, ApiResponse<IReadOnlyList<MissionTemplateDto>>>
-{
-    private readonly IAppDbContext _db;
-
-    public GetMissionTemplatesQueryHandler(IAppDbContext db)
-    {
-        _db = db;
-    }
-
-    public async Task<ApiResponse<IReadOnlyList<MissionTemplateDto>>> Handle(GetMissionTemplatesQuery request, CancellationToken cancellationToken)
-    {
-        var setting = await _db.SystemSettings
-            .AsNoTracking()
-            .FirstOrDefaultAsync(
-                x => !x.IsDeleted && x.Key == SystemSettingKeys.GamificationMissionTemplates,
-                cancellationToken);
-
-        var templates = MissionTemplateSerializer.ParseOrDefault(setting?.Value);
-        return ApiResponse<IReadOnlyList<MissionTemplateDto>>.Ok(templates);
-    }
-}
-
-public sealed record GetGamificationMobileUiConfigQuery() : IRequest<ApiResponse<GamificationMobileUiConfigDto>>;
-
-public sealed class GetGamificationMobileUiConfigQueryHandler
-    : IRequestHandler<GetGamificationMobileUiConfigQuery, ApiResponse<GamificationMobileUiConfigDto>>
-{
-    private readonly IAppDbContext _db;
-
-    public GetGamificationMobileUiConfigQueryHandler(IAppDbContext db)
-    {
-        _db = db;
-    }
-
-    public async Task<ApiResponse<GamificationMobileUiConfigDto>> Handle(
-        GetGamificationMobileUiConfigQuery request,
-        CancellationToken cancellationToken)
-    {
-        var setting = await _db.SystemSettings
-            .AsNoTracking()
-            .FirstOrDefaultAsync(
-                x => !x.IsDeleted && x.Key == SystemSettingKeys.GamificationMobileUiConfig,
-                cancellationToken);
-
-        var config = GamificationMobileUiConfigSerializer.ParseOrDefault(setting?.Value);
-        return ApiResponse<GamificationMobileUiConfigDto>.Ok(config);
-    }
-}
 
 public sealed record GetUserMissionDashboardQuery(string UserId) : IRequest<ApiResponse<UserMissionDashboardDto>>;
 
@@ -82,16 +29,24 @@ public sealed class GetUserMissionDashboardQueryHandler
             throw new NotFoundAppException("User not found.");
         }
 
-        var setting = await _db.SystemSettings
+        var templates = await _db.MissionTemplates
             .AsNoTracking()
-            .FirstOrDefaultAsync(
-                x => !x.IsDeleted && x.Key == SystemSettingKeys.GamificationMissionTemplates,
-                cancellationToken);
-
-        var templates = MissionTemplateSerializer.ParseOrDefault(setting?.Value)
-            .Where(x => x.IsActive)
+            .Where(x => !x.IsDeleted && x.IsActive)
             .OrderBy(x => x.SortOrder)
-            .ToList();
+            .ThenBy(x => x.Key)
+            .Select(x => new MissionTemplateDto
+            {
+                Key = x.Key,
+                Title = x.Title,
+                Description = x.Description,
+                MetricType = x.MetricType,
+                Period = x.Period,
+                TargetValue = x.TargetValue,
+                RewardXp = x.RewardXp,
+                SortOrder = x.SortOrder,
+                IsActive = x.IsActive
+            })
+            .ToListAsync(cancellationToken);
 
         var now = DateTime.UtcNow;
         var calculator = new MissionProgressCalculator(_db);
@@ -140,7 +95,7 @@ public sealed class GetUserMissionDashboardQueryHandler
         return ApiResponse<UserMissionDashboardDto>.Ok(new UserMissionDashboardDto(now, missions));
     }
 
-    private async Task<int> ResolveMetricAsync(
+    private static async Task<int> ResolveMetricAsync(
         string userId,
         string metricType,
         string period,
@@ -152,3 +107,4 @@ public sealed class GetUserMissionDashboardQueryHandler
         return await calculator.ResolveMetricAsync(userId, metricType, period, now, userStats, cancellationToken);
     }
 }
+

@@ -12,6 +12,8 @@ public static class SystemSettingKeys
     public const string CustomWordsPerLessonPremium = "limits.custom_words_per_lesson.premium";
     public const string GamificationMissionTemplates = "gamification.missions.templates";
     public const string GamificationMobileUiConfig = "gamification.mobile.ui_config";
+    public const string XpConfigs = "xp.configs";
+    public const string LevelConfigs = "level.configs";
     public const string GrowthReferralProgramConfig = "growth.referral.program_config";
     public const string AuthLoginMethods = "auth.login_methods";
 }

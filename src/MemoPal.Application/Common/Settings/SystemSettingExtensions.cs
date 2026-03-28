@@ -11,6 +11,10 @@ public static class SystemSettingExtensions
     {
         PropertyNameCaseInsensitive = true
     };
+    private static readonly JsonSerializerOptions GenericJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 
     public static async Task<int> GetIntSettingAsync(
         this IAppDbContext db,
@@ -117,6 +121,74 @@ public static class SystemSettingExtensions
             return AuthLoginMethodsConfig.Default;
         }
     }
+
+    public static async Task<IReadOnlyList<LevelConfigSettingItem>> GetLevelConfigsAsync(
+        this IAppDbContext db,
+        CancellationToken cancellationToken = default)
+    {
+        var setting = await db.SystemSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => !x.IsDeleted && x.Key == SystemSettingKeys.LevelConfigs,
+                cancellationToken);
+
+        if (setting is null || string.IsNullOrWhiteSpace(setting.Value))
+        {
+            return [];
+        }
+
+        try
+        {
+            var payload = JsonSerializer.Deserialize<List<LevelConfigSettingItem>>(
+                setting.Value,
+                GenericJsonOptions);
+
+            if (payload is not null && payload.Count > 0)
+            {
+                return payload
+                    .Where(x => x.Level > 0)
+                    .OrderBy(x => x.RequiredXp)
+                    .ThenBy(x => x.Level)
+                    .ToList();
+            }
+
+            var wrapped = JsonSerializer.Deserialize<LevelConfigSettingPayload>(
+                setting.Value,
+                GenericJsonOptions);
+
+            var items = wrapped?.Levels ?? wrapped?.Configs ?? [];
+            return items
+                .Where(x => x.Level > 0)
+                .OrderBy(x => x.RequiredXp)
+                .ThenBy(x => x.Level)
+                .ToList();
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    public static async Task<int> ResolveLevelByXpAsync(
+        this IAppDbContext db,
+        int totalXp,
+        CancellationToken cancellationToken = default)
+    {
+        var configs = await db.GetLevelConfigsAsync(cancellationToken);
+        if (configs.Count == 0)
+        {
+            return 1;
+        }
+
+        var resolved = configs
+            .Where(x => x.RequiredXp <= totalXp)
+            .OrderByDescending(x => x.RequiredXp)
+            .ThenByDescending(x => x.Level)
+            .Select(x => x.Level)
+            .FirstOrDefault();
+
+        return resolved <= 0 ? 1 : resolved;
+    }
 }
 
 public sealed record AuthLoginMethodsConfig(
@@ -135,4 +207,19 @@ internal sealed class AuthLoginMethodsPayload
     public bool? EmailPassword { get; init; }
     public bool? Google { get; init; }
     public bool? Facebook { get; init; }
+}
+
+public sealed class LevelConfigSettingItem
+{
+    public int Level { get; init; }
+    public int RequiredXp { get; init; }
+    public string? Title { get; init; }
+    public DateTime? CreatedAt { get; init; }
+    public DateTime? UpdatedAt { get; init; }
+}
+
+internal sealed class LevelConfigSettingPayload
+{
+    public List<LevelConfigSettingItem>? Levels { get; init; }
+    public List<LevelConfigSettingItem>? Configs { get; init; }
 }

@@ -1,7 +1,6 @@
 using Mapster;
 using MemoPal.Application.Features.Auth.DTOs;
 using MemoPal.Application.Features.Badges.DTOs;
-using MemoPal.Application.Features.Configs.DTOs;
 using MemoPal.Application.Features.LessonProgress.DTOs;
 using MemoPal.Application.Features.Lessons.DTOs;
 using MemoPal.Application.Features.Locations.DTOs;
@@ -27,8 +26,6 @@ public static class MapsterRegistration
         config.NewConfig<Word, WordDto>();
         config.NewConfig<ReviewSchedule, ReviewScheduleDto>();
         config.NewConfig<Notification, NotificationDto>();
-        config.NewConfig<XpConfig, XpConfigDto>();
-        config.NewConfig<LevelConfig, LevelConfigDto>();
         config.NewConfig<BadgeDefinition, BadgeDefinitionDto>();
         config.NewConfig<MilestoneDefinition, MilestoneDefinitionDto>();
         config.NewConfig<User, ManagedUserApiDto>();

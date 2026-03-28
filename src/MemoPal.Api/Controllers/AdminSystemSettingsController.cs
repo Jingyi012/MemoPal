@@ -28,6 +28,16 @@ public sealed class AdminSystemSettingsController : ApiControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{key}")]
+    public async Task<IActionResult> GetByKey(
+        [FromRoute] string key,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await Sender.Send(new GetSystemSettingsByKeyQuery(key), cancellationToken);
+        if (!result.Success) return NotFound(result);
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Upsert(
         [FromBody] UpsertSystemSettingRequest request,

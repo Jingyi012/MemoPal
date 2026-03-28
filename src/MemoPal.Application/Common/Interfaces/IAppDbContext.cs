@@ -21,8 +21,7 @@ public interface IAppDbContext
     DbSet<MilestoneDefinition> MilestoneDefinitions { get; }
     DbSet<UserMilestone> UserMilestones { get; }
     DbSet<UserMission> UserMissions { get; }
-    DbSet<XpConfig> XpConfigs { get; }
-    DbSet<LevelConfig> LevelConfigs { get; }
+    DbSet<MissionTemplate> MissionTemplates { get; }
     DbSet<XpEvent> XpEvents { get; }
     DbSet<UserSubscription> UserSubscriptions { get; }
     DbSet<SystemSetting> SystemSettings { get; }
