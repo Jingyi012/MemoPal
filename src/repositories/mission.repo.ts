@@ -1,23 +1,11 @@
 import { db } from '@/db/client';
 import * as schema from '@/db/schema';
-import { GamificationMobileUiConfig, MissionDashboard } from '@/types/missions';
+import { MissionDashboard } from '@/types/missions';
 import { and, asc, eq, notInArray } from 'drizzle-orm';
-
-const MOBILE_UI_CONFIG_ID = 'mobile';
 
 interface MissionRepository {
   getCurrent(): Promise<MissionDashboard | null>;
   upsertCurrent(dashboard: MissionDashboard): Promise<void>;
-  getMobileUiConfig(): Promise<GamificationMobileUiConfig | null>;
-  upsertMobileUiConfig(config: GamificationMobileUiConfig): Promise<void>;
-}
-
-function safeParseUiConfig(payload: string): GamificationMobileUiConfig | null {
-  try {
-    return JSON.parse(payload) as GamificationMobileUiConfig;
-  } catch {
-    return null;
-  }
 }
 
 export function createMissionRepository(): MissionRepository {
@@ -130,47 +118,6 @@ export function createMissionRepository(): MissionRepository {
             .where(eq(schema.missions.isDeleted, false));
         }
       });
-    },
-
-    async getMobileUiConfig(): Promise<GamificationMobileUiConfig | null> {
-      const local = await db.query.missionUiConfigs.findFirst({
-        where: and(
-          eq(schema.missionUiConfigs.id, MOBILE_UI_CONFIG_ID),
-          eq(schema.missionUiConfigs.isDeleted, false)
-        ),
-      });
-
-      if (!local?.payload) {
-        return null;
-      }
-
-      return safeParseUiConfig(local.payload);
-    },
-
-    async upsertMobileUiConfig(config: GamificationMobileUiConfig): Promise<void> {
-      const now = new Date().toISOString();
-      const payload = JSON.stringify(config);
-
-      await db
-        .insert(schema.missionUiConfigs)
-        .values({
-          id: MOBILE_UI_CONFIG_ID,
-          payload,
-          updatedAt: now,
-          lastSyncedAt: now,
-          isDeleted: false,
-          deletedAt: null,
-        })
-        .onConflictDoUpdate({
-          target: schema.missionUiConfigs.id,
-          set: {
-            payload,
-            updatedAt: now,
-            lastSyncedAt: now,
-            isDeleted: false,
-            deletedAt: null,
-          },
-        });
     },
   };
 }

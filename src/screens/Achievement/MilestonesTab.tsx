@@ -1,4 +1,4 @@
-import { GamificationMobileUiConfig } from '@/types/missions';
+import { GamificationMobileUiConfig } from '@/types/gamificationUiConfig';
 import { Milestone } from '@/types/levelAndbadge';
 import React, { useState } from 'react';
 import { LayoutAnimation, Text, View } from 'react-native';

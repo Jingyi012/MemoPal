@@ -4,144 +4,47 @@ import * as schema from './schema';
 
 const expoDb = openDatabaseSync('memopal.db');
 
-type TableInfoRow = { name: string };
-type SqliteMasterRow = { name: string };
+type UserVersionRow = { user_version: number };
+type TableNameRow = { name: string };
 
-const tableExists = (tableName: string) => {
-  const rows = expoDb.getAllSync<SqliteMasterRow>(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name = ?",
-    [tableName]
-  );
-  return rows.length > 0;
+// One-time forced reset to recover from legacy runtime schema patches.
+// Increase this marker to trigger another one-time full reset when needed.
+const HARD_RESET_DB_MARKER = 2026032801;
+
+const getUserVersion = () => {
+  const row = expoDb.getAllSync<UserVersionRow>('PRAGMA user_version;')[0];
+  return Number(row?.user_version ?? 0);
 };
 
-const getTableColumns = (tableName: string) => {
-  if (!tableExists(tableName)) return [];
-  return expoDb.getAllSync<TableInfoRow>(`PRAGMA table_info('${tableName}')`);
+const setUserVersion = (value: number) => {
+  expoDb.execSync(`PRAGMA user_version = ${Math.max(0, Math.trunc(value))};`);
 };
 
-const ensurePalaceLevelColumn = () => {
+const dropAllTablesOnceForMigrationRecovery = () => {
+  const currentVersion = getUserVersion();
+  if (currentVersion >= HARD_RESET_DB_MARKER) return;
+
   try {
-    const palaceColumns = getTableColumns('palaces');
-    if (palaceColumns.length === 0) return;
+    const tables = expoDb.getAllSync<TableNameRow>(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';"
+    );
 
-    const hasLevel = palaceColumns.some((column) => column.name === 'level');
-    if (!hasLevel) {
-      expoDb.execSync('ALTER TABLE `palaces` ADD COLUMN `level` integer NOT NULL DEFAULT 1;');
+    expoDb.execSync('PRAGMA foreign_keys = OFF;');
+    for (const table of tables) {
+      if (!table?.name) continue;
+      const safeName = table.name.replace(/"/g, '""');
+      expoDb.execSync(`DROP TABLE IF EXISTS "${safeName}";`);
     }
+    expoDb.execSync('PRAGMA foreign_keys = ON;');
 
-    const hasRequiredXp = palaceColumns.some((column) => column.name === 'required_xp');
-    if (!hasRequiredXp) return;
-
-    if (tableExists('level_configs')) {
-      expoDb.execSync(`
-        UPDATE \`palaces\`
-        SET \`level\` = COALESCE(
-          (
-            SELECT MAX(\`level_configs\`.\`level\`)
-            FROM \`level_configs\`
-            WHERE IFNULL(\`level_configs\`.\`is_deleted\`, 0) = 0
-              AND \`level_configs\`.\`required_xp\` <= \`palaces\`.\`required_xp\`
-          ),
-          1
-        )
-        WHERE \`level\` <= 0;
-      `);
-    } else {
-      expoDb.execSync('UPDATE `palaces` SET `level` = 1 WHERE `level` <= 0;');
-    }
+    setUserVersion(HARD_RESET_DB_MARKER);
+    console.warn(`[DB] One-time hard reset complete. Dropped ${tables.length} tables.`);
   } catch (error) {
-    console.warn('Schema compatibility patch skipped:', error);
+    console.error('[DB] Failed to hard reset local database:', error);
+    throw error;
   }
 };
 
-const ensureMissionCacheTables = () => {
-  try {
-    expoDb.execSync(`
-      CREATE TABLE IF NOT EXISTS \`missions\` (
-        \`key\` text PRIMARY KEY NOT NULL,
-        \`title\` text NOT NULL,
-        \`description\` text,
-        \`metric_type\` text NOT NULL,
-        \`period\` text NOT NULL,
-        \`current_value\` integer DEFAULT 0 NOT NULL,
-        \`target_value\` integer DEFAULT 0 NOT NULL,
-        \`reward_xp\` integer DEFAULT 0 NOT NULL,
-        \`sort_order\` integer DEFAULT 0 NOT NULL,
-        \`is_active\` integer DEFAULT true NOT NULL,
-        \`is_completed\` integer DEFAULT false NOT NULL,
-        \`progress_percent\` integer DEFAULT 0 NOT NULL,
-        \`generated_at_utc\` text,
-        \`created_at\` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        \`updated_at\` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        \`last_synced_at\` text,
-        \`is_deleted\` integer DEFAULT false NOT NULL,
-        \`deleted_at\` text
-      );
-    `);
-
-    expoDb.execSync(`
-      CREATE TABLE IF NOT EXISTS \`mission_ui_configs\` (
-        \`id\` text PRIMARY KEY NOT NULL,
-        \`payload\` text NOT NULL,
-        \`created_at\` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        \`updated_at\` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        \`last_synced_at\` text,
-        \`is_deleted\` integer DEFAULT false NOT NULL,
-        \`deleted_at\` text
-      );
-    `);
-  } catch (error) {
-    console.warn('Mission cache table compatibility patch skipped:', error);
-  }
-};
-
-const ensureFeatureLimitTables = () => {
-  try {
-    expoDb.execSync(`
-      CREATE TABLE IF NOT EXISTS \`feature_limits\` (
-        \`user_id\` text PRIMARY KEY NOT NULL,
-        \`is_premium\` integer DEFAULT false NOT NULL,
-        \`custom_palaces\` integer DEFAULT 0 NOT NULL,
-        \`custom_lessons_per_palace\` integer DEFAULT 0 NOT NULL,
-        \`custom_locations_per_palace\` integer DEFAULT 0 NOT NULL,
-        \`custom_words_per_lesson\` integer DEFAULT 0 NOT NULL,
-        \`created_at\` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        \`updated_at\` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        \`last_synced_at\` text,
-        \`is_deleted\` integer DEFAULT false NOT NULL,
-        \`deleted_at\` text
-      );
-    `);
-  } catch (error) {
-    console.warn('Feature limits table compatibility patch skipped:', error);
-  }
-};
-
-const ensureBadgeConditionColumns = () => {
-  try {
-    const badgeColumns = getTableColumns('badges');
-    if (badgeColumns.length === 0) return;
-
-    const hasConditionType = badgeColumns.some((column) => column.name === 'condition_type');
-    if (!hasConditionType) {
-      expoDb.execSync(
-        "ALTER TABLE `badges` ADD COLUMN `condition_type` text NOT NULL DEFAULT 'manual';"
-      );
-    }
-
-    const hasConditionValue = badgeColumns.some((column) => column.name === 'condition_value');
-    if (!hasConditionValue) {
-      expoDb.execSync('ALTER TABLE `badges` ADD COLUMN `condition_value` integer NOT NULL DEFAULT 0;');
-    }
-  } catch (error) {
-    console.warn('Badge condition schema compatibility patch skipped:', error);
-  }
-};
-
-ensurePalaceLevelColumn();
-ensureMissionCacheTables();
-ensureFeatureLimitTables();
-ensureBadgeConditionColumns();
+dropAllTablesOnceForMigrationRecovery();
 
 export const db = drizzle(expoDb, { schema });

@@ -40,7 +40,7 @@ function AppLayout() {
   useSubscriptionGuard(isAppReady);
   useSubscriptionEntitlementSync(isAppReady);
 
-  // 5. Wait for BOTH migrations and seeding
+  // Wait for DB migrations to complete before rendering app features.
   if (!isAppReady) {
     return null;
   }

@@ -15,6 +15,13 @@
       "when": 1774372347913,
       "tag": "0001_AddFeatureLimit",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774683250748,
+      "tag": "0002_AddSystemConfig",
+      "breakpoints": true
     }
   ]
 }

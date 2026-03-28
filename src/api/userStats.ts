@@ -50,7 +50,7 @@ export const userStatsApi = {
   },
 
   /**
-   * Get current user's effective feature limits (free/premium resolved by backend)
+   * Get current user's effective feature limits
    */
   async getFeatureLimits(): Promise<FeatureLimits> {
     const response = await api.get<GeneralResponse<FeatureLimits>>(`/users/feature-limits`);

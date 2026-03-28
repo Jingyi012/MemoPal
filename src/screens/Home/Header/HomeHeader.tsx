@@ -21,10 +21,10 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
   const { levelInfo } = useLevelByXp(userData.totalXp, userData.level);
 
   const displayLevelInfo = useMemo(() => {
-    if (!levelInfo) return { currentLevel: 1, xp: 0, xpToNextLevel: 0, title: 'Level 1' };
+    if (!levelInfo) return { currentLevel: 1, xpInCurrentLevel: 0, xpToNextLevel: 0, title: 'Level 1' };
     return {
       currentLevel: levelInfo.currentLevel,
-      xp: levelInfo.xpInCurrentLevel,
+      xpInCurrentLevel: levelInfo.xpInCurrentLevel,
       xpToNextLevel: levelInfo.xpToNextLevel,
       title: levelInfo.currentLevelConfig?.title || `Level ${levelInfo.currentLevel}`,
     };
@@ -71,7 +71,7 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
       // Additional content below header
       additionalContent={
         <>
-          <LevelProgress userData={userData} level={displayLevelInfo} />
+          <LevelProgress level={displayLevelInfo} />
           <StreakBadge streak={userData.stats?.currentStreak ?? 0} />
         </>
       }

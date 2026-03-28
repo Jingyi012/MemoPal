@@ -1,4 +1,5 @@
 import { db } from '@/db/client';
+import { SYSTEM_SETTING_KEYS } from '@/constants/systemSettingKeys';
 import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SourceType } from '@/enums/sourceType';
@@ -7,6 +8,37 @@ import { isBadgeAchievementMet } from '@/utils/gamification/badgeRuleEvaluator';
 import { resolveNextStreak } from '@/utils/gamification/streak';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
+
+type ResolvedLevelConfig = {
+  level: number;
+  requiredXp: number;
+};
+
+function parseLevelConfigs(rawValue: string | null | undefined): ResolvedLevelConfig[] {
+  if (!rawValue) return [];
+
+  try {
+    const parsed = JSON.parse(rawValue);
+    const source = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(parsed?.levels)
+        ? parsed.levels
+        : Array.isArray(parsed?.configs)
+          ? parsed.configs
+          : [];
+
+    return source
+      .filter((item: any) => item && typeof item === 'object')
+      .map((item: any) => ({
+        level: Number(item.level ?? 0),
+        requiredXp: Number(item.requiredXp ?? 0),
+      }))
+      .filter((item) => item.level > 0)
+      .sort((a, b) => a.requiredXp - b.requiredXp || a.level - b.level);
+  } catch {
+    return [];
+  }
+}
 
 export interface XpEventCreateResult {
   id: string;
@@ -181,10 +213,16 @@ export function createXpEventsRepository(): XpEventsRepository {
           where: eq(schema.users.id, currentUser.id),
         });
         if (userAfterXp) {
-          const eligibleLevel = await tx.query.levelConfigs.findFirst({
-            where: sql`${schema.levelConfigs.requiredXp} <= ${userAfterXp.totalXp}`,
-            orderBy: (fields, { desc }) => [desc(fields.requiredXp), desc(fields.level)],
+          const levelSetting = await tx.query.systemSettings.findFirst({
+            where: and(
+              eq(schema.systemSettings.key, SYSTEM_SETTING_KEYS.LEVEL_CONFIGS),
+              eq(schema.systemSettings.isDeleted, false)
+            ),
           });
+          const resolvedConfigs = parseLevelConfigs(levelSetting?.value);
+          const eligibleLevel = resolvedConfigs
+            .filter((item) => item.requiredXp <= userAfterXp.totalXp)
+            .at(-1);
           const resolvedLevel = Math.max(1, eligibleLevel?.level ?? 1);
 
           if (resolvedLevel !== userAfterXp.level) {

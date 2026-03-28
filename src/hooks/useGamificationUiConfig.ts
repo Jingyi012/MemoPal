@@ -1,5 +1,5 @@
-import { getMobileGamificationUiConfig } from '@/services/mission.service';
-import { GamificationMobileUiConfig } from '@/types/missions';
+import { getGamificationUiConfig } from '@/services/systemSettings.service';
+import { GamificationMobileUiConfig } from '@/types/gamificationUiConfig';
 import { useQuery } from '@tanstack/react-query';
 
 export const DEFAULT_GAMIFICATION_UI_CONFIG: GamificationMobileUiConfig = {
@@ -73,8 +73,7 @@ function normalizeConfig(
 export function useGamificationUiConfig() {
   const query = useQuery({
     queryKey: GAMIFICATION_UI_KEYS.mobile(),
-    queryFn: async () =>
-      normalizeConfig(await getMobileGamificationUiConfig(DEFAULT_GAMIFICATION_UI_CONFIG)),
+    queryFn: async () => normalizeConfig(await getGamificationUiConfig()),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 15,
   });

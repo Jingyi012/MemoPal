@@ -10,7 +10,6 @@
 export * from './badge';
 export * from './lesson';
 export * from './lessonProgress';
-export * from './levelConfig';
 export * from './location';
 export * from './mission';
 export * from './milestone';
@@ -20,4 +19,3 @@ export * from './referral';
 export * from './userStats';
 export * from './word';
 export * from './xpEvent';
-export * from './xpConfig';

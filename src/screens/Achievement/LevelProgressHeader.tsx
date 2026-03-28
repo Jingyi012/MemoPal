@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/colors';
+import { LevelXpProgressBar, getLevelProgressMetrics } from '@/components/LevelXpProgressBar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Trophy } from 'lucide-react-native';
 import React from 'react';
@@ -7,18 +8,18 @@ import { Text, View } from 'react-native';
 interface Props {
   level: {
     currentLevel: number;
-    xp: number;
+    xpInCurrentLevel: number;
     xpToNextLevel: number;
+    totalXp: number;
     title: string;
   };
 }
 
 export const LevelProgressHeader: React.FC<Props> = ({ level }) => {
-  const levelWindowXp = Math.max(0, level.xp + level.xpToNextLevel);
-  const progress =
-    levelWindowXp <= 0
-      ? 100
-      : Math.max(0, Math.min(100, Math.round((level.xp / levelWindowXp) * 100)));
+  const { levelWindowXp, isMaxLevel } = getLevelProgressMetrics(
+    level.xpInCurrentLevel,
+    level.xpToNextLevel
+  );
 
   return (
     <View className="mt-3 rounded-xl bg-gray-100/20 p-3">
@@ -39,23 +40,22 @@ export const LevelProgressHeader: React.FC<Props> = ({ level }) => {
 
         <View className="ml-auto items-end">
           <Text className="text-sm font-semibold text-white">
-            {level.xp}/{Math.max(level.xp, levelWindowXp)} XP
+            {isMaxLevel ? 'MAX LEVEL' : `${level.xpInCurrentLevel}/${levelWindowXp} XP`}
           </Text>
-          <Text className="text-sm text-teal-100"></Text>
+          <Text className="text-sm text-teal-100">
+            {isMaxLevel
+              ? `Total ${level.totalXp} XP`
+              : `${level.xpToNextLevel} XP to next level`}
+          </Text>
         </View>
       </View>
 
       <View className="mt-3">
-        <View className="h-2 overflow-hidden rounded-full bg-white/20">
-          <LinearGradient
-            colors={[Colors.yellow300, Colors.orange500]}
-            start={[0, 0]}
-            end={[1, 0]}
-            className="h-full rounded-full"
-            style={{ width: `${progress}%` }}
-          />
-        </View>
-        <Text className="mt-1 text-right text-[11px] text-teal-100">{progress}%</Text>
+        <LevelXpProgressBar
+          xpInCurrentLevel={level.xpInCurrentLevel}
+          xpToNextLevel={level.xpToNextLevel}
+          showPercent
+        />
       </View>
     </View>
   );

@@ -2,7 +2,7 @@ import { missionApi } from '@/api/mission';
 import { SourceType } from '@/enums/sourceType';
 import { createMissionRepository } from '@/repositories/mission.repo';
 import { XpEventCreateResult, createXpEventsRepository } from '@/repositories/xpEvents.repo';
-import { GamificationMobileUiConfig, MissionDashboard, MissionProgress } from '@/types/missions';
+import { MissionDashboard, MissionProgress } from '@/types/missions';
 import { recordXpEventWithClientEventId } from './xpEvents.service';
 
 export interface MissionClaimResult extends XpEventCreateResult {
@@ -94,18 +94,4 @@ export async function getCurrentMissionDashboard(): Promise<MissionDashboard> {
   }
 
   throw new Error('Unable to load missions right now.');
-}
-
-export async function getMobileGamificationUiConfig(
-  defaultConfig: GamificationMobileUiConfig
-): Promise<GamificationMobileUiConfig> {
-  try {
-    const remoteConfig = await missionApi.getMobileUiConfig();
-    await missionRepo.upsertMobileUiConfig(remoteConfig);
-  } catch (error) {
-    console.warn('Failed to sync gamification UI config from backend, using local data:', error);
-  }
-
-  const localConfig = await missionRepo.getMobileUiConfig();
-  return localConfig ?? defaultConfig;
 }

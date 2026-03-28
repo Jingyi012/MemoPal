@@ -1,32 +1,43 @@
-import { xpConfigApi } from '@/api/xpConfig';
-import { SourceType } from '@/enums/sourceType';
-import { createXpConfigRepository } from '@/repositories/xpConfig.repo';
+import { systemSettingsApi } from '@/api/systemSettings';
+import { createSystemSettingsRepository } from '@/repositories/systemSettings.repo';
 import { XpConfig } from '@/types/xpConfigs';
 
-const repo = createXpConfigRepository();
+const repo = createSystemSettingsRepository();
+const SYNC_COOLDOWN_MS = 60 * 60 * 1000;
+let lastSyncAt = 0;
+let inFlightSync: Promise<void> | null = null;
 
-export async function getXpConfigs(): Promise<XpConfig[]> {
-  try {
-    const remote = await xpConfigApi.getAll();
-    if (remote && remote.length > 0) {
-      await repo.upsertMany(remote);
+async function syncXpConfigsFromRemote(force = false): Promise<void> {
+  if (inFlightSync) return inFlightSync;
+
+  const shouldSync = force || Date.now() - lastSyncAt >= SYNC_COOLDOWN_MS;
+  if (!shouldSync) return;
+
+  inFlightSync = (async () => {
+    try {
+      const remote = await systemSettingsApi.getXpConfigs();
+      if (remote) {
+        await repo.syncSetting(remote);
+      }
+      lastSyncAt = Date.now();
+    } catch (error) {
+      console.warn('Failed to sync XP config from backend, using local data:', error);
     }
-  } catch (error) {
-    console.warn('Failed to sync XP configs from backend, using local data:', error);
-  }
+  })();
 
-  return await repo.getAll();
+  try {
+    await inFlightSync;
+  } finally {
+    inFlightSync = null;
+  }
 }
 
-export async function getXpConfigBySourceType(sourceType: string) {
-  try {
-    const remote = await xpConfigApi.getBySourceType(sourceType);
-    if (remote) {
-      await repo.upsertMany([remote]);
-    }
-  } catch (error) {
-    console.warn('Failed to sync XP config, using local data:', error);
-  }
+export async function getXpConfigs(options?: { forceRemote?: boolean }): Promise<XpConfig[]> {
+  await syncXpConfigsFromRemote(options?.forceRemote ?? false);
+  return await repo.getXpConfigs();
+}
 
-  return await repo.getBySourceType(sourceType as SourceType);
+export async function getXpConfigBySourceType(sourceType: string): Promise<XpConfig | null> {
+  const allConfigs = await getXpConfigs();
+  return allConfigs.find((c) => c.sourceType === sourceType) ?? null;
 }

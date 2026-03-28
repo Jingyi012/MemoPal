@@ -152,14 +152,27 @@ const AchievementsScreen: React.FC = () => {
   }, [badges, milestones, missions, enrichedBadges, enrichedMilestones]);
 
   const displayLevelInfo = useMemo(() => {
-    if (!levelInfo) return { currentLevel: 1, xp: 0, xpToNextLevel: 0, title: 'Level 1' };
+    if (!levelInfo) {
+      return {
+        currentLevel: 1,
+        xpInCurrentLevel: 0,
+        xpToNextLevel: 0,
+        totalXp,
+        title: 'Level 1',
+      };
+    }
+
+    const xpInCurrentLevel = Math.max(0, levelInfo.xpInCurrentLevel);
+    const xpToNextLevel = Math.max(0, levelInfo.xpToNextLevel);
+
     return {
       currentLevel: levelInfo.currentLevel,
-      xp: levelInfo.xpInCurrentLevel,
-      xpToNextLevel: levelInfo.xpToNextLevel,
+      xpInCurrentLevel,
+      xpToNextLevel,
+      totalXp,
       title: levelInfo.currentLevelConfig?.title || `Level ${levelInfo.currentLevel}`,
     };
-  }, [levelInfo]);
+  }, [levelInfo, totalXp]);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);

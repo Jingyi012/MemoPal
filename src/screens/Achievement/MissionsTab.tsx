@@ -109,7 +109,7 @@ function MissionCard({
             {meta.label}
           </Text>
         </View>
-        <Text className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <Text className="text-xs font-semibold uppercase text-slate-500">
           {formatPeriod(mission.period)}
         </Text>
       </View>

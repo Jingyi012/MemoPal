@@ -131,23 +131,6 @@ export const xpEvents = sqliteTable('xp_events', {
   ...commonColumns,
 });
 
-export const xpConfigs = sqliteTable('xp_configs', {
-  id: text('id').primaryKey(),
-  sourceType: text('source_type').$type<SourceType>().notNull(),
-  baseXp: integer('base_xp').notNull(),
-  variableXp: integer('variable_xp').default(0).notNull(),
-
-  isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
-  ...commonColumns,
-});
-
-export const levelConfigs = sqliteTable('level_configs', {
-  level: integer('level').primaryKey(),
-  requiredXp: integer('required_xp').notNull(),
-  title: text('title'),
-  ...commonColumns,
-});
-
 export const milestones = sqliteTable('milestones', {
   id: text('id').primaryKey(),
   key: text('key').notNull().unique(), // e.g. first_lesson_completed
@@ -175,12 +158,6 @@ export const missions = sqliteTable('missions', {
   isCompleted: integer('is_completed', { mode: 'boolean' }).default(false).notNull(),
   progressPercent: integer('progress_percent').default(0).notNull(),
   generatedAtUtc: text('generated_at_utc'),
-  ...commonColumns,
-});
-
-export const missionUiConfigs = sqliteTable('mission_ui_configs', {
-  id: text('id').primaryKey(),
-  payload: text('payload').notNull(),
   ...commonColumns,
 });
 
@@ -259,6 +236,13 @@ export const syncQueue = sqliteTable('sync_queue', {
   action: text('action').$type<'create' | 'update' | 'delete'>().notNull(),
   payload: text('payload'),
   createdAt: text('created_at').notNull(),
+});
+
+export const systemSettings = sqliteTable('system_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(), // JSON or plain text
+  description: text('description'),
+  ...commonColumns,
 });
 
 // ============================

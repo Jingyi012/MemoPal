@@ -1,4 +1,4 @@
-import { GamificationMobileUiConfig } from '@/types/missions';
+import { GamificationMobileUiConfig } from '@/types/gamificationUiConfig';
 import { Badge } from '@/types/levelAndbadge';
 import React, { useMemo } from 'react';
 import { Text, View } from 'react-native';

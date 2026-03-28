@@ -94,7 +94,7 @@ export default function SettingsScreen() {
     }
   };
 
-  const reseedData = async () => {
+  const clearLocalData = async () => {
     await resetSeedData();
     queryClient.clear();
     Toast.show({
@@ -210,7 +210,7 @@ export default function SettingsScreen() {
               icon={<Shield size={20} color="#475569" />}
               title="Clear Local SQLite Data"
               subtitle="Delete all local tables and cached offline rows"
-              onPress={reseedData}
+              onPress={clearLocalData}
             />
             <SettingsRow
               icon={<Moon size={20} color="#475569" />}
