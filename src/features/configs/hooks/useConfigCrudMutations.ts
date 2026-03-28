@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { message } from 'antd';
+import { App } from 'antd';
 
 export function useConfigCrudMutations<TCreate, TUpdateArg>(options: {
   create: (payload: TCreate) => Promise<unknown>;
@@ -8,6 +8,8 @@ export function useConfigCrudMutations<TCreate, TUpdateArg>(options: {
   onDone: () => void;
   labels?: { create?: string; update?: string; remove?: string };
 }) {
+  const { message } = App.useApp();
+
   const createMutation = useMutation({
     mutationFn: options.create,
     onSuccess: () => {

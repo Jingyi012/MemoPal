@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Tabs, Space, Alert, Button, Drawer } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import GamificationUiPreview from "./GamificationUiPreview";
@@ -17,7 +17,7 @@ import {
  * Provides both form-based and advanced JSON editing modes with live preview
  */
 export const GamificationUiConfigTab: React.FC = () => {
-  const { config, isLoading, error, saveConfig, refreshConfig } =
+  const { config, isLoading, error, saveConfig } =
     useConfigEditor({
       configKey: "gamification.mobile.ui_config",
       defaultValue: GAMIFICATION_UI_CONFIG_DEFAULT as unknown as Record<
@@ -27,10 +27,6 @@ export const GamificationUiConfigTab: React.FC = () => {
     });
 
   const [previewOpen, setPreviewOpen] = useState(false);
-
-  useEffect(() => {
-    refreshConfig();
-  }, [refreshConfig]);
 
   const handleFormSubmit = async (data: Record<string, unknown>) => {
     await saveConfig(data);

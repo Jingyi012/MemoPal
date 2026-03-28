@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import Editor from "@monaco-editor/react";
-import { Button, Card, Space, message, Spin, Alert } from "antd";
+import { App, Button, Card, Space, Spin, Alert } from "antd";
 import Ajv from "ajv";
 
 interface AdvancedJsonEditorProps {
@@ -26,6 +26,7 @@ export const AdvancedJsonEditor: React.FC<AdvancedJsonEditorProps> = ({
   loading = false,
   height = "400px",
 }) => {
+  const { message } = App.useApp();
   const [editorValue, setEditorValue] = React.useState(
     JSON.stringify(value, null, 2),
   );
@@ -130,7 +131,9 @@ export const AdvancedJsonEditor: React.FC<AdvancedJsonEditorProps> = ({
           }}
         />
 
-        <Space style={{ marginTop: 16 }}>
+        <Space
+          style={{ marginTop: 16, display: "flex", justifyContent: "end" }}
+        >
           <Button
             type="primary"
             onClick={handleSubmit}

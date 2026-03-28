@@ -1,29 +1,3 @@
-export interface XpConfigDto {
-  id: string;
-  sourceType: string;
-  baseXp: number;
-  variableXp: number;
-  isActive: boolean;
-}
-
-export interface XpConfigUpsertRequest {
-  sourceType: string;
-  baseXp: number;
-  variableXp: number;
-  isActive: boolean;
-}
-
-export interface LevelConfigDto {
-  level: number;
-  requiredXp: number;
-  title?: string | null;
-}
-
-export interface LevelConfigUpsertRequest {
-  requiredXp: number;
-  title?: string;
-}
-
 export interface BadgeDefinitionDto {
   id: string;
   key: string;

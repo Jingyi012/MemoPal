@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Tabs, Space, Alert } from "antd";
 import AdvancedJsonEditor from "../../../components/AdvancedJsonEditor";
 import ConfigEditorForm from "../../../components/ConfigEditorForm";
@@ -9,7 +9,7 @@ import {
 } from "../../../schemas/systemSettings";
 
 export const AuthLoginMethodsConfigTab: React.FC = () => {
-  const { config, isLoading, error, saveConfig, refreshConfig } =
+  const { config, isLoading, error, saveConfig } =
     useConfigEditor({
       configKey: "auth.login_methods",
       defaultValue: AUTH_LOGIN_METHODS_DEFAULT as unknown as Record<
@@ -17,10 +17,6 @@ export const AuthLoginMethodsConfigTab: React.FC = () => {
         unknown
       >,
     });
-
-  useEffect(() => {
-    refreshConfig();
-  }, [refreshConfig]);
 
   const handleFormSubmit = async (data: Record<string, unknown>) => {
     await saveConfig(data);

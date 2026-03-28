@@ -1,7 +1,7 @@
 import { ModalForm, ProFormText, ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { useMutation } from "@tanstack/react-query";
-import { Button, Tabs, message } from "antd";
+import { App, Button, Tabs } from "antd";
 import { useRef, useState } from "react";
 import { adminSystemSettingsApi } from "../../../api/adminSystemSettingsApi";
 import { PortalPageContainer } from "../../../components/PortalPageContainer";
@@ -11,11 +11,11 @@ import type {
 } from "../../../types/systemSetting";
 import GamificationUiConfigTab from "../../configs/components/GamificationUiConfigTab";
 import FeatureLimitsConfigTab from "../../configs/components/FeatureLimitsConfigTab";
-import MissionTemplatesConfigTab from "../../configs/components/MissionTemplatesConfigTab";
 import ReferralProgramConfigTab from "../../configs/components/ReferralProgramConfigTab";
 import AuthLoginMethodsConfigTab from "../../configs/components/AuthLoginMethodsConfigTab";
 
 export default function SystemSettingsPage() {
+  const { message } = App.useApp();
   const actionRef = useRef<ActionType | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -53,11 +53,6 @@ export default function SystemSettingsPage() {
             key: "feature-limits",
             label: "Feature Limits",
             children: <FeatureLimitsConfigTab />,
-          },
-          {
-            key: "mission-templates",
-            label: "Mission Templates",
-            children: <MissionTemplatesConfigTab />,
           },
           {
             key: "referral-program",

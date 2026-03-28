@@ -1,84 +1,72 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
-import { ModalForm, ProFormDigit, ProFormText, ProTable } from '@ant-design/pro-components';
-import type { ActionType, ProColumns } from '@ant-design/pro-components';
-import { Button, Popconfirm } from 'antd';
-import { useRef, useState } from 'react';
-import { adminConfigsApi } from '../../../api/adminConfigsApi';
-import type { LevelConfigDto } from '../../../types/config';
-import { useConfigCrudMutations } from '../hooks/useConfigCrudMutations';
+import { Alert, Space, Tabs } from "antd";
+import AdvancedJsonEditor from "../../../components/AdvancedJsonEditor";
+import ConfigEditorForm from "../../../components/ConfigEditorForm";
+import { useConfigEditor } from "../../../hooks/useConfigEditor";
+import {
+  LEVEL_CONFIGS_DEFAULT,
+  LEVEL_CONFIGS_SCHEMA,
+} from "../../../schemas/systemSettings";
 
 export function LevelConfigTab() {
-  const actionRef = useRef<ActionType | null>(null);
-  const [editing, setEditing] = useState<LevelConfigDto | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
-  const refresh = () => actionRef.current?.reload();
-
-  const { createMutation, updateMutation, deleteMutation } = useConfigCrudMutations({
-    create: ({ level, payload }: { level: number; payload: any }) => adminConfigsApi.createLevelConfig(level, payload),
-    update: ({ level, payload }: { level: number; payload: any }) => adminConfigsApi.updateLevelConfig(level, payload),
-    remove: (level) => adminConfigsApi.deleteLevelConfig(Number(level)),
-    onDone: refresh,
+  const { config, isLoading, error, saveConfig } = useConfigEditor({
+    configKey: "level.configs",
+    defaultValue: LEVEL_CONFIGS_DEFAULT as unknown as Record<string, unknown>,
   });
 
-  const columns: ProColumns<LevelConfigDto>[] = [
-    { title: 'Level', dataIndex: 'level' },
-    { title: 'Required XP', dataIndex: 'requiredXp' },
-    { title: 'Title', dataIndex: 'title' },
-    { title: 'Actions', valueType: 'option', render: (_, row) => [
-      <Button key='e' icon={<EditOutlined />} size='small' onClick={() => setEditing(row)} />,
-      <Popconfirm key='d' title='Delete?' onConfirm={() => deleteMutation.mutate(row.level)}><Button danger size='small' icon={<DeleteOutlined />} /></Popconfirm>,
-    ]},
-  ];
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    await saveConfig(data);
+  };
 
-  return <>
-    <ProTable<LevelConfigDto>
-      rowKey='level' actionRef={actionRef} columns={columns} search={false}
-      request={async (params) => {
-        const res = await adminConfigsApi.listLevelConfigs(params.current || 1, params.pageSize || 20);
-        return { data: res.data, success: res.success, total: res.pagination.totalCount };
-      }}
-      toolBarRender={() => [<Button key='add' type='primary' icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>New Level Config</Button>]}
-    />
-    <ModalForm
-      open={createOpen}
-      title='Create Level Config'
-      modalProps={{ destroyOnClose: true }}
-      onOpenChange={setCreateOpen}
-      onFinish={async (v: any) => { await createMutation.mutateAsync({ level: v.level, payload: { requiredXp: v.requiredXp, title: v.title } }); setCreateOpen(false); return true; }}
-    >
-      <ProFormDigit
-        name='level'
-        label='Level'
-        rules={[{ required: true }]}
-        min={1}
-        fieldProps={{ placeholder: 'Enter level number' }}
+  return (
+    <Space direction="vertical" style={{ width: "100%" }}>
+      {error && (
+        <Alert
+          type="error"
+          message="Error"
+          description={error}
+          showIcon
+          closable
+        />
+      )}
+
+      <Alert
+        type="info"
+        message="Level Configurations"
+        description="Configure level thresholds used to map total XP to player level."
+        showIcon
+        style={{ marginBottom: 16 }}
       />
-      <ProFormDigit
-        name='requiredXp'
-        label='Required XP'
-        rules={[{ required: true }]}
-        min={0}
-        fieldProps={{ placeholder: 'Enter XP required for this level' }}
+
+      <Tabs
+        items={[
+          {
+            key: "form",
+            label: "Form Editor",
+            children: (
+              <ConfigEditorForm
+                schema={LEVEL_CONFIGS_SCHEMA}
+                formData={config}
+                onSubmit={handleSubmit}
+                title="Level Configurations"
+                loading={isLoading}
+              />
+            ),
+          },
+          {
+            key: "advanced",
+            label: "Advanced (JSON)",
+            children: (
+              <AdvancedJsonEditor
+                value={config}
+                schema={LEVEL_CONFIGS_SCHEMA}
+                onSubmit={handleSubmit}
+                title="Advanced Level Configurations"
+                loading={isLoading}
+              />
+            ),
+          },
+        ]}
       />
-      <ProFormText name='title' label='Title' fieldProps={{ placeholder: 'Enter level title (e.g., Navigator)' }} />
-    </ModalForm>
-    <ModalForm
-      key={editing?.level ?? 'edit-level-config'}
-      open={!!editing}
-      title='Edit Level Config'
-      modalProps={{ destroyOnClose: true }}
-      initialValues={editing ? { ...editing } : undefined}
-      onOpenChange={(o) => !o && setEditing(null)}
-      onFinish={async (v: any) => { if (!editing) return false; await updateMutation.mutateAsync({ level: editing.level, payload: { requiredXp: v.requiredXp, title: v.title } }); setEditing(null); return true; }}
-    >
-      <ProFormDigit
-        name='requiredXp'
-        label='Required XP'
-        rules={[{ required: true }]}
-        min={0}
-        fieldProps={{ placeholder: 'Enter XP required for this level' }}
-      />
-      <ProFormText name='title' label='Title' fieldProps={{ placeholder: 'Enter level title (e.g., Navigator)' }} />
-    </ModalForm>
-  </>;
+    </Space>
+  );
 }

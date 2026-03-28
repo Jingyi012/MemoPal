@@ -3,9 +3,9 @@ import { withTheme } from "@rjsf/core";
 import { Theme as AntdTheme } from "@rjsf/antd";
 import Validator from "@rjsf/validator-ajv8";
 import {
+  App,
   Button,
   Space,
-  message,
   Spin,
   Collapse,
   Typography,
@@ -13,7 +13,6 @@ import {
   ConfigProvider,
   theme,
 } from "antd";
-import { ProCard } from "@ant-design/pro-components";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const Form = withTheme(AntdTheme);
@@ -28,7 +27,73 @@ interface ConfigEditorFormProps {
 }
 
 const ArrayFieldTemplate = (props: any) => {
-  const { items, onAddClick, title, canAdd, description } = props;
+  const { items, onAddClick, onDropIndexClick, title, canAdd, description } =
+    props;
+
+  const resolveItemLabel = (
+    data: Record<string, unknown>,
+    fallbackTitle: string,
+    index: number,
+  ): string => {
+    const levelValue = Number(data.level);
+    if (Number.isFinite(levelValue) && levelValue > 0) {
+      return `Level ${levelValue}`;
+    }
+
+    if (typeof data.key === "string" && data.key.trim().length > 0) {
+      return data.key.trim();
+    }
+
+    if (typeof data.id === "string" && data.id.trim().length > 0) {
+      return data.id.trim();
+    }
+
+    if (typeof data.name === "string" && data.name.trim().length > 0) {
+      return data.name.trim();
+    }
+
+    if (typeof data.title === "string" && data.title.trim().length > 0) {
+      return data.title.trim();
+    }
+
+    return `${fallbackTitle} ${index + 1}`;
+  };
+
+  const handleDeleteClick = (
+    item: any,
+    itemProps: any,
+    index: number,
+    e: React.MouseEvent<HTMLElement>,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const resolvedIndex =
+      typeof itemProps?.index === "number"
+        ? itemProps.index
+        : typeof item?.index === "number"
+          ? item.index
+          : index;
+
+    // rjsf ArrayFieldItem signature: handleRemoveItem(event, index)
+    if (typeof itemProps?.handleRemoveItem === "function") {
+      itemProps.handleRemoveItem(e, resolvedIndex);
+      return;
+    }
+
+    if (typeof item?.props?.handleRemoveItem === "function") {
+      item.props.handleRemoveItem(e, resolvedIndex);
+      return;
+    }
+
+    // Fallback template API: onDropIndexClick(index)(event)
+    if (typeof onDropIndexClick === "function") {
+      const remove = onDropIndexClick(resolvedIndex);
+      if (typeof remove === "function") {
+        remove(e);
+      }
+    }
+  };
 
   return (
     <div style={{ marginBottom: 16 }}>
@@ -48,21 +113,19 @@ const ArrayFieldTemplate = (props: any) => {
         style={{ background: "#fafafa", borderRadius: 6 }}
         items={(items || []).map((item: any, index: number) => {
           const itemProps = item.props || {};
-          const data = itemProps.itemData || {};
-          const label =
-            data.title || data.key || data.name || `${title} ${index + 1}`;
+          const data = (itemProps.itemData || {}) as Record<string, unknown>;
+          const label = resolveItemLabel(data, title, index);
+          const canDelete = item?.hasRemove ?? itemProps?.hasRemove ?? true;
 
           return {
             key: itemProps.itemKey || `item-${index}`,
             label: <Typography.Text strong>{label}</Typography.Text>,
             extra: (
               <DeleteOutlined
-                style={{ color: "#ff4d4f" }}
+                style={{ color: canDelete ? "#ff4d4f" : "#bfbfbf" }}
                 onClick={(e) => {
-                  e.stopPropagation();
-                  if (itemProps.handleRemoveItem) {
-                    itemProps.handleRemoveItem(itemProps.index)(e);
-                  }
+                  if (!canDelete) return;
+                  handleDeleteClick(item, itemProps, index, e);
                 }}
               />
             ),
@@ -89,6 +152,12 @@ const ArrayFieldTemplate = (props: any) => {
 
 const ObjectFieldTemplate = (props: any) => {
   const { properties, title, description, name } = props;
+  const hiddenSystemFields = new Set([
+    "createdAt",
+    "updatedAt",
+    "deletedAt",
+    "lastSyncedAt",
+  ]);
 
   const shouldWrap = !!title;
   const depth = name ? name.split(".").length : 0;
@@ -127,7 +196,14 @@ const ObjectFieldTemplate = (props: any) => {
         }}
       >
         {properties.map((prop: any) => {
-          if (prop.hidden) return null;
+          const fieldName = typeof prop?.name === "string" ? prop.name : "";
+          if (
+            prop.hidden ||
+            hiddenSystemFields.has(fieldName) ||
+            hiddenSystemFields.has(fieldName.split(".").at(-1) ?? "")
+          ) {
+            return null;
+          }
 
           return (
             <div key={prop.name} style={{ width: "100%" }}>
@@ -145,9 +221,9 @@ export const ConfigEditorForm: React.FC<ConfigEditorFormProps> = ({
   formData,
   onSubmit,
   onCancel,
-  title,
   loading = false,
 }) => {
+  const { message } = App.useApp();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleSubmit = async ({ formData }: any) => {

@@ -8,7 +8,7 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, Card, Popconfirm, Space, Table, Tag, message } from 'antd';
+import { App, Button, Card, Popconfirm, Space, Table, Tag } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { adminConfigsApi } from '../../../api/adminConfigsApi';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
@@ -27,6 +27,7 @@ const periodOptions = ['daily', 'weekly', 'all_time'].map((value) => ({ label: v
 type MissionFormValues = MissionTemplateDto;
 
 export default function MissionTemplatesPage() {
+  const { message } = App.useApp();
   const [draft, setDraft] = useState<MissionTemplateDto[]>([]);
   const [editing, setEditing] = useState<MissionTemplateDto | null>(null);
   const [createOpen, setCreateOpen] = useState(false);

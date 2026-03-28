@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Tabs, Space, Alert } from "antd";
 import AdvancedJsonEditor from "../../../components/AdvancedJsonEditor";
 import ConfigEditorForm from "../../../components/ConfigEditorForm";
@@ -13,7 +13,7 @@ import {
  * Allows admins to set resource limits for free and premium users
  */
 export const FeatureLimitsTab: React.FC = () => {
-  const { config, isLoading, error, saveConfig, refreshConfig } =
+  const { config, isLoading, error, saveConfig } =
     useConfigEditor({
       configKey: "feature_limits",
       defaultValue: FEATURE_LIMITS_DEFAULT as unknown as Record<
@@ -21,10 +21,6 @@ export const FeatureLimitsTab: React.FC = () => {
         unknown
       >,
     });
-
-  useEffect(() => {
-    refreshConfig();
-  }, [refreshConfig]);
 
   const handleFormSubmit = async (data: Record<string, unknown>) => {
     await saveConfig(data);

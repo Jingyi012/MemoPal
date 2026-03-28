@@ -10,6 +10,11 @@ export const adminSystemSettingsApi = {
       })
       .then((r) => r.data);
   },
+  getByKey(key: string) {
+    return apiClient
+      .get<ApiResponse<SystemSettingDto>>(`/admin/system-settings/${encodeURIComponent(key)}`)
+      .then((r) => r.data.data);
+  },
   upsert(payload: UpsertSystemSettingRequest) {
     return apiClient.post<ApiResponse<SystemSettingDto>>('/admin/system-settings', payload).then((r) => r.data.data);
   },

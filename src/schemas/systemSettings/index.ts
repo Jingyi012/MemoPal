@@ -7,10 +7,6 @@ import {
   GAMIFICATION_UI_CONFIG_DEFAULT,
 } from "./gamificationUiConfigSchema";
 import {
-  MISSION_TEMPLATES_CONFIG_SCHEMA,
-  MISSION_TEMPLATES_CONFIG_DEFAULT,
-} from "./missionTemplatesSchema";
-import {
   REFERRAL_PROGRAM_CONFIG_SCHEMA,
   REFERRAL_PROGRAM_CONFIG_DEFAULT,
 } from "./referralProgramConfigSchema";
@@ -18,12 +14,18 @@ import {
   AUTH_LOGIN_METHODS_SCHEMA,
   AUTH_LOGIN_METHODS_DEFAULT,
 } from "./authLoginMethodsSchema";
+import { XP_CONFIGS_DEFAULT, XP_CONFIGS_SCHEMA } from "./xpConfigsSchema";
+import {
+  LEVEL_CONFIGS_DEFAULT,
+  LEVEL_CONFIGS_SCHEMA,
+} from "./levelConfigsSchema";
 
 export * from "./gamificationUiConfigSchema";
 export * from "./featureLimitsSchema";
 export * from "./referralProgramConfigSchema";
-export * from "./missionTemplatesSchema";
 export * from "./authLoginMethodsSchema";
+export * from "./xpConfigsSchema";
+export * from "./levelConfigsSchema";
 
 export interface ConfigSchema {
   key: string;
@@ -40,7 +42,7 @@ export const ALL_CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
     default: GAMIFICATION_UI_CONFIG_DEFAULT,
   },
   feature_limits: {
-    key: "feature_limits",
+    key: "feature.limits",
     title: "Feature Limits",
     schema: FEATURE_LIMITS_SCHEMA,
     default: FEATURE_LIMITS_DEFAULT,
@@ -51,16 +53,22 @@ export const ALL_CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
     schema: REFERRAL_PROGRAM_CONFIG_SCHEMA,
     default: REFERRAL_PROGRAM_CONFIG_DEFAULT,
   },
-  mission_templates: {
-    key: "gamification.missions.templates",
-    title: "Mission Templates",
-    schema: MISSION_TEMPLATES_CONFIG_SCHEMA,
-    default: MISSION_TEMPLATES_CONFIG_DEFAULT,
-  },
   auth_login_methods: {
     key: "auth.login_methods",
     title: "Authentication Login Methods",
     schema: AUTH_LOGIN_METHODS_SCHEMA,
     default: AUTH_LOGIN_METHODS_DEFAULT,
+  },
+  xp_configs: {
+    key: "xp.configs",
+    title: "XP Configurations",
+    schema: XP_CONFIGS_SCHEMA,
+    default: XP_CONFIGS_DEFAULT,
+  },
+  level_configs: {
+    key: "level.configs",
+    title: "Level Configurations",
+    schema: LEVEL_CONFIGS_SCHEMA,
+    default: LEVEL_CONFIGS_DEFAULT,
   },
 };
