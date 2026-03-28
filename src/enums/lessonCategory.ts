@@ -1,4 +1,5 @@
 export enum LessonCategory {
+  GENERAL = 'general',
   LANGUAGE_LEARNING = 'language-learning',
   VOCABULARY = 'vocabulary',
   MEDICAL = 'medical',
@@ -6,5 +7,4 @@ export enum LessonCategory {
   HISTORY = 'history',
   BUSINESS = 'business',
   TEST_PREP = 'test-prep',
-  GENERAL = 'general',
 }

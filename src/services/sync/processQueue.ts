@@ -15,7 +15,7 @@ import { xpEventApi } from '@/api/xpEvent';
 import { wordApi } from '@/api/word';
 import { SyncBase } from '@/services/sync/sync.base';
 import NetInfo from '@react-native-community/netinfo';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 
 // Map EntityType strings to Drizzle Table Schemas
 const tableMap: Record<string, any> = {
@@ -61,6 +61,63 @@ function getFileNameFromUri(uri: string, fallback: string) {
   const [pathPart] = uri.split('?');
   const fileName = pathPart.split('/').filter(Boolean).pop();
   return fileName || fallback;
+}
+
+function getHttpStatus(error: any): number | null {
+  const status = error?.response?.status;
+  return typeof status === 'number' ? status : null;
+}
+
+function isNonRetriableSyncError(error: any): boolean {
+  const status = getHttpStatus(error);
+  return status !== null && [400, 403, 404, 409, 422].includes(status);
+}
+
+function getSyncErrorMessage(error: any): string {
+  return (
+    error?.response?.data?.message ??
+    error?.response?.data?.title ??
+    error?.message ??
+    'Unknown error'
+  );
+}
+
+async function rollbackFailedLessonCreate(db: typeof defaultDb, lessonId: string) {
+  await db.transaction(async (tx) => {
+    const localWords = await tx.query.words.findMany({
+      columns: { id: true },
+      where: eq(schema.words.lessonId, lessonId),
+    });
+
+    if (localWords.length > 0) {
+      const wordIds = localWords.map((entry) => entry.id);
+      await tx
+        .delete(schema.syncQueue)
+        .where(
+          and(
+            eq(schema.syncQueue.entityType, EntityType.WORD),
+            inArray(schema.syncQueue.entityId, wordIds)
+          )
+        );
+    }
+
+    await tx
+      .delete(schema.syncQueue)
+      .where(
+        and(
+          eq(schema.syncQueue.entityType, EntityType.LESSON_PROGRESS),
+          eq(schema.syncQueue.entityId, lessonId)
+        )
+      );
+
+    await tx
+      .delete(schema.syncQueue)
+      .where(
+        and(eq(schema.syncQueue.entityType, EntityType.LESSON), eq(schema.syncQueue.entityId, lessonId))
+      );
+
+    await tx.delete(schema.lessons).where(eq(schema.lessons.id, lessonId));
+  });
 }
 
 async function hydratePalacePayload(db: typeof defaultDb, item: any, payload: any) {
@@ -620,6 +677,20 @@ export async function processQueue(db = defaultDb) {
       } catch (error: any) {
         if (item.action === 'delete' && error?.response?.status === 404) {
           await db.delete(schema.syncQueue).where(eq(schema.syncQueue.id, item.id));
+          continue;
+        }
+
+        if (isNonRetriableSyncError(error)) {
+          const message = getSyncErrorMessage(error);
+          console.warn(
+            `[SyncQueue] Dropping non-retriable item ${item.id} (${item.entityType}:${item.action}) - ${message}`
+          );
+
+          if (item.entityType === EntityType.LESSON && item.action === 'create') {
+            await rollbackFailedLessonCreate(db, item.entityId);
+          } else {
+            await db.delete(schema.syncQueue).where(eq(schema.syncQueue.id, item.id));
+          }
           continue;
         }
 

@@ -1,15 +1,28 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { Colors } from '@/constants/colors';
+import { LessonCategory as LessonCategoryEnum } from '@/enums/lessonCategory';
 import { LessonCategory } from '@/types/lesson';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+const CATEGORY_META: Record<LessonCategory, { label: string; icon: string }> = {
+  general: { label: 'General', icon: '✨' },
+  'language-learning': { label: 'Language', icon: '🌍' },
+  vocabulary: { label: 'Vocabulary', icon: '📚' },
+  medical: { label: 'Medical', icon: '⚕️' },
+  science: { label: 'Science', icon: '🔬' },
+  history: { label: 'History', icon: '🏛️' },
+  business: { label: 'Business', icon: '💼' },
+  'test-prep': { label: 'Test Prep', icon: '📝' },
+};
+
 const CATEGORIES: { category: LessonCategory | 'all'; label: string; icon: string }[] = [
   { category: 'all', label: 'All', icon: '✨' },
-  { category: 'language-learning', label: 'Language', icon: '🌍' },
-  { category: 'vocabulary', label: 'Vocabulary', icon: '📚' },
-  { category: 'medical', label: 'Medical', icon: '⚕️' },
-  { category: 'business', label: 'Business', icon: '💼' },
+  ...(Object.values(LessonCategoryEnum) as LessonCategory[]).map((category) => ({
+    category,
+    label: CATEGORY_META[category].label,
+    icon: CATEGORY_META[category].icon,
+  })),
 ];
 
 interface Props {

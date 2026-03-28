@@ -1,27 +1,24 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useMyCommunityLessons } from '@/hooks/useCommunityLibrary';
 import { CommunityLesson } from '@/types/community';
-import data from '@/utils/mock/community-lessons.json';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
-import { BookOpen, Crown, Download, Star, TrendingUp } from 'lucide-react-native';
+import { BookOpen, Crown } from 'lucide-react-native';
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { Text, View } from 'react-native';
 
 type Ref = BottomSheetModal;
 
 const ContributionBottomSheet = forwardRef<Ref>((_, ref) => {
-  const { user } = useAuth();
   const router = useRouter();
+  const { data, isLoading } = useMyCommunityLessons({ pageNumber: 1, pageSize: 100 });
 
   const bottomSheetRef = useRef<BottomSheetModal>(null);
 
   useImperativeHandle(ref, () => bottomSheetRef.current!, []);
 
-  const lessons: CommunityLesson[] = (data as CommunityLesson[]).filter(
-    (x) => x.creator.id === user?.id
-  );
+  const lessons: CommunityLesson[] = data?.items ?? [];
 
   return (
     <CustomBottomSheetModal ref={bottomSheetRef} snapPoints={['95%']} enableDynamicSizing={false}>
@@ -29,9 +26,7 @@ const ContributionBottomSheet = forwardRef<Ref>((_, ref) => {
         {/* Header */}
         <View className="border-b border-slate-200 bg-white px-6 pb-4 pt-3">
           <Text className="text-2xl font-extrabold text-slate-900">My Contributions</Text>
-          <Text className="mt-1 text-sm text-slate-500">
-            Track your shared lessons and their performance
-          </Text>
+          <Text className="mt-1 text-sm text-slate-500">Manage your shared lessons.</Text>
         </View>
 
         {/* Content */}
@@ -41,7 +36,11 @@ const ContributionBottomSheet = forwardRef<Ref>((_, ref) => {
             paddingBottom: 40,
           }}
           showsVerticalScrollIndicator={false}>
-          {lessons.length > 0 ? (
+          {isLoading ? (
+            <View className="items-center justify-center py-16">
+              <Text className="text-sm text-slate-500">Loading your shared lessons...</Text>
+            </View>
+          ) : lessons.length > 0 ? (
             lessons.map((lesson) => (
               <View
                 key={lesson.id}
@@ -75,29 +74,6 @@ const ContributionBottomSheet = forwardRef<Ref>((_, ref) => {
                   </View>
                 </View>
 
-                {/* Performance */}
-                <View className="mt-4 rounded-xl bg-white p-3">
-                  <Text className="mb-2 text-sm font-semibold text-slate-700">Performance</Text>
-
-                  <View className="flex-row justify-between">
-                    <Stat
-                      icon={<Download size={14} color="#0d9488" />}
-                      value={lesson.stats.usageCount.toLocaleString()}
-                      label="Imports"
-                    />
-                    <Stat
-                      icon={<Star size={14} color="#eab308" fill="#eab308" />}
-                      value={lesson.stats.rating}
-                      label="Rating"
-                    />
-                    <Stat
-                      icon={<TrendingUp size={14} color="#16a34a" />}
-                      value={lesson.stats.reviewCount}
-                      label="Reviews"
-                    />
-                  </View>
-                </View>
-
                 {/* Actions */}
                 <View className="mt-3 flex-row gap-2">
                   <AnimatedPressable
@@ -127,7 +103,7 @@ const ContributionBottomSheet = forwardRef<Ref>((_, ref) => {
               </View>
               <Text className="text-lg font-bold text-slate-800">No contributions yet</Text>
               <Text className="mt-2 text-center text-sm text-slate-500">
-                You haven't shared any lessons with the community.
+                You haven&apos;t shared any lessons with the community.
               </Text>
             </View>
           )}
@@ -137,25 +113,6 @@ const ContributionBottomSheet = forwardRef<Ref>((_, ref) => {
   );
 });
 
-export default ContributionBottomSheet;
+ContributionBottomSheet.displayName = 'ContributionBottomSheet';
 
-/* Small stat component */
-function Stat({
-  icon,
-  value,
-  label,
-}: {
-  icon: React.ReactNode;
-  value: string | number;
-  label: string;
-}) {
-  return (
-    <View className="flex-1 items-center">
-      <View className="mb-1 flex-row items-center gap-1">
-        {icon}
-        <Text className="text-sm font-bold text-slate-900">{value}</Text>
-      </View>
-      <Text className="text-xs text-slate-500">{label}</Text>
-    </View>
-  );
-}
+export default ContributionBottomSheet;

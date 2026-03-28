@@ -3,11 +3,12 @@ import { AppImage } from '@/components/AppImage';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { Colors } from '@/constants/colors';
 import { CommunityLesson } from '@/types/community';
-import { dateFormatter } from '@/utils/formatter';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { BadgeCheck, BookOpen, Calendar, Copy, Crown, Download, Star } from 'lucide-react-native';
+import * as Clipboard from 'expo-clipboard';
+import { BadgeCheck, BookOpen, Copy, Crown, Download } from 'lucide-react-native';
 import React, { forwardRef } from 'react';
 import { Text, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 interface Props {
   selectedLesson: CommunityLesson | null;
@@ -52,25 +53,23 @@ const PreviewBottomSheet = forwardRef<Ref, Props>(
 
                   {/* Creator Info */}
                   <View className="mt-4 flex-row items-center rounded-2xl border border-slate-100 bg-slate-50 p-3">
-                    {selectedLesson.creator.avatarUrl ? (
-                      <AppImage
-                        source={{ uri: selectedLesson.creator.avatarUrl }}
-                        className="h-10 w-10"
-                        style={{ borderRadius: 30 }}
-                      />
-                    ) : (
-                      <View className="h-10 w-10 items-center justify-center rounded-full bg-blue-500">
-                        <Text className="font-bold text-white">
-                          {selectedLesson.creator.name.charAt(0)}
-                        </Text>
-                      </View>
-                    )}
-                    <View className="ml-3 flex-1">
+                    <View className="h-10 w-10 overflow-hidden rounded-full">
+                      {selectedLesson.creator.avatarUrl ? (
+                        <AppImage source={{ uri: selectedLesson.creator.avatarUrl }} className="h-10 w-10" />
+                      ) : (
+                        <View className="h-10 w-10 items-center justify-center rounded-full bg-blue-500">
+                          <Text className="font-bold text-white">
+                            {selectedLesson.creator.name.charAt(0)}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <View className="ml-3 flex-1" style={{ minWidth: 0 }}>
                       <Text className="text-[10px] font-bold uppercase text-slate-400">
                         Creator
                       </Text>
                       <View className="flex-row items-center">
-                        <Text className="font-semibold text-slate-900">
+                        <Text className="flex-1 font-semibold text-slate-900" numberOfLines={1}>
                           {selectedLesson.creator.name}
                         </Text>
                         {selectedLesson.creator.isVerified && (
@@ -82,39 +81,8 @@ const PreviewBottomSheet = forwardRef<Ref, Props>(
                     </View>
                   </View>
 
-                  {/* Stats Grid */}
-                  <View className="mt-6 flex-row justify-between border-y border-slate-100 py-4">
-                    <View className="flex-1 items-center border-r border-slate-100">
-                      <View className="flex-row items-center">
-                        <Star size={16} color={Colors.yellow500} fill={Colors.yellow500} />
-                        <Text className="ml-1 font-bold text-slate-900">
-                          {selectedLesson.stats.rating}
-                        </Text>
-                      </View>
-                      <Text className="mt-1 text-xs uppercase text-slate-500">Rating</Text>
-                    </View>
-                    <View className="flex-1 items-center border-r border-slate-100">
-                      <View className="flex-row items-center">
-                        <Download size={16} color={Colors.slate400} />
-                        <Text className="ml-1 font-bold text-slate-900">
-                          {selectedLesson.stats.usageCount}
-                        </Text>
-                      </View>
-                      <Text className="mt-1 text-xs uppercase text-slate-500">Users</Text>
-                    </View>
-                    <View className="flex-1 items-center">
-                      <View className="flex-row items-center">
-                        <Calendar size={16} color={Colors.slate400} />
-                        <Text className="ml-1 font-bold text-slate-900">
-                          {dateFormatter(selectedLesson.stats.updatedAt)}
-                        </Text>
-                      </View>
-                      <Text className="mt-1 text-xs uppercase text-slate-500">Updated</Text>
-                    </View>
-                  </View>
-
                   {/* Description */}
-                  <View className="mt-6">
+                  <View className="mt-5">
                     <Text className="text-sm font-semibold uppercase tracking-widest text-slate-900">
                       About Lesson
                     </Text>
@@ -144,7 +112,16 @@ const PreviewBottomSheet = forwardRef<Ref, Props>(
                         {selectedLesson.shareCode}
                       </Text>
                     </View>
-                    <AnimatedPressable className="rounded-lg bg-slate-500 p-2">
+                    <AnimatedPressable
+                      onPress={async () => {
+                        await Clipboard.setStringAsync(selectedLesson.shareCode);
+                        Toast.show({
+                          type: 'success',
+                          text1: 'Share code copied',
+                          text2: selectedLesson.shareCode,
+                        });
+                      }}
+                      className="rounded-lg bg-slate-500 p-2">
                       <Copy size={20} color="white" />
                     </AnimatedPressable>
                   </View>
@@ -173,9 +150,13 @@ const PreviewBottomSheet = forwardRef<Ref, Props>(
                               <Text className="text-xs font-bold text-slate-600">{index + 1}</Text>
                             </View>
                             <View className="flex-1">
-                              <Text className="text-base font-bold leading-5 text-slate-900">{w.word}</Text>
+                              <Text className="text-base font-bold leading-5 text-slate-900">
+                                {w.word}
+                              </Text>
                               {!!w.meaning && (
-                                <Text className="mt-1 text-sm leading-5 text-slate-500">{w.meaning}</Text>
+                                <Text className="mt-1 text-sm leading-5 text-slate-500">
+                                  {w.meaning}
+                                </Text>
                               )}
                             </View>
                           </View>
@@ -216,5 +197,7 @@ const PreviewBottomSheet = forwardRef<Ref, Props>(
     );
   }
 );
+
+PreviewBottomSheet.displayName = 'PreviewBottomSheet';
 
 export default PreviewBottomSheet;

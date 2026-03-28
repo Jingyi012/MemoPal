@@ -8,6 +8,7 @@
  * - Each module has entity-specific API calls
  */
 export * from './badge';
+export * from './community';
 export * from './lesson';
 export * from './lessonProgress';
 export * from './location';
