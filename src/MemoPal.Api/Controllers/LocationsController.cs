@@ -62,6 +62,20 @@ public sealed class LocationsController : ApiControllerBase
         return Ok(ApiResponse<LocationDto>.Ok(MapMediaUrls(result.Data), result.Message));
     }
 
+    [HttpPost("/locations/batch")]
+    public async Task<IActionResult> CreateBatch([FromBody] IReadOnlyList<LocationUpsertRequest> requests, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new CreateLocationsBatchCommand(GetUserIdOrThrow(), requests, IsAdmin()),
+            cancellationToken);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(ApiResponse<IReadOnlyList<LocationDto>>.Fail(result.Message ?? "Failed to create locations batch."));
+        }
+
+        return Ok(ApiResponse<IReadOnlyList<LocationDto>>.Ok(MapMediaUrls(result.Data), result.Message));
+    }
+
     [HttpPut("/locations/{locationId}")]
     public async Task<IActionResult> Update(string locationId, [FromBody] LocationUpsertRequest request, CancellationToken cancellationToken)
     {
@@ -72,6 +86,20 @@ public sealed class LocationsController : ApiControllerBase
         }
 
         return Ok(ApiResponse<LocationDto>.Ok(MapMediaUrls(result.Data), result.Message));
+    }
+
+    [HttpPatch("/locations/batch")]
+    public async Task<IActionResult> UpdateBatch([FromBody] IReadOnlyList<LocationUpsertRequest> requests, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new UpdateLocationsBatchCommand(GetUserIdOrThrow(), requests, IsAdmin()),
+            cancellationToken);
+        if (!result.Success || result.Data is null)
+        {
+            return Ok(ApiResponse<IReadOnlyList<LocationDto>>.Fail(result.Message ?? "Failed to update locations batch."));
+        }
+
+        return Ok(ApiResponse<IReadOnlyList<LocationDto>>.Ok(MapMediaUrls(result.Data), result.Message));
     }
 
     [HttpPost("/palaces/{palaceId}/locations/reorder")]
@@ -86,6 +114,19 @@ public sealed class LocationsController : ApiControllerBase
     {
         var data = await Sender.Send(new DeleteLocationCommand(GetUserIdOrThrow(), locationId, IsAdmin()), cancellationToken);
         return Ok(data);
+    }
+
+    [HttpPost("/locations/batch/delete")]
+    public async Task<IActionResult> DeleteBatch([FromBody] BatchDeleteLocationsRequest request, CancellationToken cancellationToken)
+    {
+        await Sender.Send(new DeleteLocationsBatchCommand(GetUserIdOrThrow(), request.Ids, IsAdmin()), cancellationToken);
+
+        return Ok(ApiResponse<object?>.Ok(null));
+    }
+
+    public sealed class BatchDeleteLocationsRequest
+    {
+        public IReadOnlyList<string> Ids { get; set; } = [];
     }
 }
 

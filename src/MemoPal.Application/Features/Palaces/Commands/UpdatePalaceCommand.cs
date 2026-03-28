@@ -6,6 +6,7 @@ using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Common.Media;
 using MemoPal.Application.Common.Security;
 using MemoPal.Application.Features.Palaces.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Palaces.Commands;
 
@@ -34,7 +35,9 @@ public sealed class UpdatePalaceCommandHandler : IRequestHandler<UpdatePalaceCom
         if (!string.IsNullOrWhiteSpace(request.Request.Description)) entity.Description = request.Request.Description.Trim();
         if (!string.IsNullOrWhiteSpace(request.Request.Thumbnail)) entity.Thumbnail = MediaPathNormalizer.Normalize(request.Request.Thumbnail);
 
-        entity.LocationsCount = request.Request.LocationsCount;
+        entity.LocationsCount = await _db.Locations.CountAsync(
+            x => x.PalaceId == entity.Id && !x.IsDeleted,
+            cancellationToken);
         entity.IsLocked = request.Request.IsLocked;
         entity.UnlockedAt = request.Request.UnlockedAt;
         entity.Level = Math.Max(1, request.Request.Level);

@@ -77,7 +77,8 @@ public sealed class CreatePalaceCommandHandler : IRequestHandler<CreatePalaceCom
         entity.Name = request.Request.Name.Trim();
         entity.Description = request.Request.Description.Trim();
         entity.Thumbnail = MediaPathNormalizer.Normalize(request.Request.Thumbnail);
-        entity.LocationsCount = request.Request.LocationsCount;
+        // On palace creation, locations may not be created yet. Trust the request snapshot.
+        entity.LocationsCount = Math.Max(0, request.Request.LocationsCount);
         entity.IsLocked = request.Request.IsLocked;
         entity.UnlockedAt = request.Request.UnlockedAt;
         entity.Level = Math.Max(1, request.Request.Level);
