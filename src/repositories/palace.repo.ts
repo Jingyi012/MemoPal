@@ -17,10 +17,7 @@ interface PalaceRepository {
   unlockPalace(palaceId: string): Promise<void>;
   save(palace: Partial<Palace>): Promise<string>;
   delete(id: string): Promise<void>;
-  upsertMany(
-    serverPalaces: Palace[],
-    options?: { pruneMissingOfficial?: boolean }
-  ): Promise<void>;
+  upsertMany(serverPalaces: Palace[], options?: { pruneMissingOfficial?: boolean }): Promise<void>;
 }
 
 export function createPalaceRepository(): PalaceRepository {
@@ -95,63 +92,132 @@ export function createPalaceRepository(): PalaceRepository {
     },
 
     async save(palace: Partial<Palace>): Promise<string> {
-      const inputId = palace.id;
-      const id = inputId || Crypto.randomUUID();
+      const requestedId = palace.id;
+      const id = requestedId || Crypto.randomUUID();
       const now = new Date().toISOString();
-      let action: 'create' | 'update' = 'create';
 
       await db.transaction(async (tx) => {
-        if (inputId) {
-          const existing = await tx.query.palaces.findFirst({
-            columns: { id: true },
-            where: eq(schema.palaces.id, inputId),
-          });
-          action = existing ? 'update' : 'create';
-        }
+        const existing = requestedId
+          ? await tx.query.palaces.findFirst({
+              where: eq(schema.palaces.id, requestedId),
+            })
+          : null;
 
         const currentUser = await tx.query.users.findFirst({ columns: { id: true } });
-        const ownerId = palace.isCustom
+
+        if (existing) {
+          const mergedPalace: Partial<Palace> = {
+            ...(existing as Palace),
+            ...palace,
+            id: existing.id,
+            createdAt: existing.createdAt,
+            updatedAt: now,
+            lastSyncedAt: null,
+          };
+
+          if (!mergedPalace.name || !mergedPalace.description || !mergedPalace.thumbnail) {
+            throw new Error('Palace name, description and thumbnail are required.');
+          }
+
+          const ownerId = mergedPalace.isCustom
+            ? mergedPalace.createdBy || currentUser?.id || null
+            : mergedPalace.createdBy || null;
+
+          await tx
+            .update(schema.palaces)
+            .set({
+              name: mergedPalace.name,
+              description: mergedPalace.description,
+              locationsCount: mergedPalace.locationsCount ?? 0,
+              thumbnail: mergedPalace.thumbnail,
+              isLocked: mergedPalace.isLocked ?? false,
+              isPremium: mergedPalace.isPremium ?? false,
+              isCustom: mergedPalace.isCustom ?? false,
+              level: mergedPalace.level ?? 1,
+              createdBy: ownerId,
+              unlockedAt: Object.prototype.hasOwnProperty.call(mergedPalace, 'unlockedAt')
+                ? (mergedPalace.unlockedAt ?? null)
+                : existing.unlockedAt,
+              isDeleted: mergedPalace.isDeleted ?? false,
+              deletedAt: Object.prototype.hasOwnProperty.call(mergedPalace, 'deletedAt')
+                ? (mergedPalace.deletedAt ?? null)
+                : existing.deletedAt,
+              updatedAt: now,
+              lastSyncedAt: null,
+            })
+            .where(eq(schema.palaces.id, existing.id));
+
+          await SyncBase.addToQueue(tx as any, {
+            entityType: EntityType.PALACE,
+            entityId: existing.id,
+            action: 'update',
+            payload: {
+              ...mergedPalace,
+              id: existing.id,
+              createdBy: ownerId,
+              updatedAt: now,
+              lastSyncedAt: null,
+            },
+          });
+          return;
+        }
+
+        if (!palace.name || !palace.description || !palace.thumbnail) {
+          throw new Error('Palace name, description and thumbnail are required.');
+        }
+
+        const isCustom = palace.isCustom ?? false;
+        const ownerId = isCustom
           ? palace.createdBy || currentUser?.id || null
           : palace.createdBy || null;
 
-        await tx
-          .insert(schema.palaces)
-          .values({
-            id,
-            name: palace.name!,
-            description: palace.description!,
-            locationsCount: palace.locationsCount ?? 0,
-            thumbnail: palace.thumbnail!,
-            isLocked: palace.isLocked ?? false,
-            isPremium: palace.isPremium ?? false,
-            isCustom: palace.isCustom ?? false,
-            createdBy: ownerId,
-            unlockedAt: palace.unlockedAt || (palace.isCustom ? now : null),
-            createdAt: palace.createdAt || now,
-            updatedAt: now,
-            lastSyncedAt: null,
-            isDeleted: false,
-          })
-          .onConflictDoUpdate({
-            target: schema.palaces.id,
-            set: {
-              name: palace.name,
-              description: palace.description,
-              locationsCount: palace.locationsCount,
-              thumbnail: palace.thumbnail,
-              isLocked: palace.isLocked,
-              isPremium: palace.isPremium,
-              createdBy: ownerId,
-              unlockedAt: palace.unlockedAt,
-              updatedAt: now,
-            },
-          });
+        const createPayload: Partial<Palace> = {
+          id,
+          name: palace.name,
+          description: palace.description,
+          locationsCount: palace.locationsCount ?? 0,
+          thumbnail: palace.thumbnail,
+          isLocked: palace.isLocked ?? false,
+          isPremium: palace.isPremium ?? false,
+          isCustom,
+          level: palace.level ?? 1,
+          createdBy: ownerId ?? undefined,
+          unlockedAt: Object.prototype.hasOwnProperty.call(palace, 'unlockedAt')
+            ? (palace.unlockedAt ?? null)
+            : isCustom
+              ? now
+              : null,
+          createdAt: palace.createdAt || now,
+          updatedAt: now,
+          lastSyncedAt: null,
+          isDeleted: false,
+          deletedAt: null,
+        };
+
+        await tx.insert(schema.palaces).values({
+          id,
+          name: createPayload.name!,
+          description: createPayload.description!,
+          locationsCount: createPayload.locationsCount ?? 0,
+          thumbnail: createPayload.thumbnail!,
+          isLocked: createPayload.isLocked ?? false,
+          isPremium: createPayload.isPremium ?? false,
+          isCustom: createPayload.isCustom ?? false,
+          level: createPayload.level ?? 1,
+          createdBy: ownerId,
+          unlockedAt: createPayload.unlockedAt ?? null,
+          createdAt: createPayload.createdAt || now,
+          updatedAt: now,
+          lastSyncedAt: null,
+          isDeleted: false,
+          deletedAt: null,
+        });
 
         await SyncBase.addToQueue(tx as any, {
           entityType: EntityType.PALACE,
           entityId: id,
-          action,
-          payload: { ...palace, id, createdBy: ownerId, updatedAt: now },
+          action: 'create',
+          payload: { ...createPayload, id, createdBy: ownerId ?? undefined },
         });
       });
 
@@ -224,7 +290,9 @@ export function createPalaceRepository(): PalaceRepository {
         for (const serverItem of serverPalaces) {
           const localItem = localMap.get(serverItem.id);
           const isDirty = dirtyIds.has(serverItem.id);
-          const canManageServerItem = canManageLocalPalace((localItem as Palace | undefined) ?? serverItem);
+          const canManageServerItem = canManageLocalPalace(
+            (localItem as Palace | undefined) ?? serverItem
+          );
 
           if (isDirty) {
             // Never sync unauthorized local edits for shared/admin-configured palaces.

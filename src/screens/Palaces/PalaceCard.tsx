@@ -7,7 +7,6 @@ import { Text, View } from 'react-native';
 
 interface PalaceCardProps {
   palace: Palace;
-  isCompleted: boolean;
   isDisabled?: boolean;
   onPress: (palace: Palace) => void;
   deletable?: boolean;
@@ -16,7 +15,6 @@ interface PalaceCardProps {
 
 export const PalaceCard: React.FC<PalaceCardProps> = ({
   palace,
-  isCompleted,
   isDisabled = false,
   onPress,
   deletable = false,
@@ -39,13 +37,6 @@ export const PalaceCard: React.FC<PalaceCardProps> = ({
           className={`h-full w-full ${palace.isLocked ? 'brightness-75' : ''}`}
           contentFit="cover"
         />
-
-        {/* Completed Badge */}
-        {isCompleted && !palace.isLocked && (
-          <View className="absolute right-3 top-3 rounded-full bg-green-500 p-2">
-            <CheckCircle2 size={20} color="white" />
-          </View>
-        )}
 
         {/* Info */}
         {!palace.isLocked && (

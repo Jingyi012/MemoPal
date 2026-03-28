@@ -3,7 +3,7 @@ import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { Location } from '@/types/palace';
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 
 interface LocationRepository {
@@ -11,7 +11,10 @@ interface LocationRepository {
   getById(id: string): Promise<Location | null>;
   save(location: Partial<Location>): Promise<string>;
   delete(id: string): Promise<void>;
-  upsertMany(serverLocations: Location[]): Promise<void>;
+  upsertMany(
+    serverLocations: Location[],
+    options?: { pruneMissingSynced?: boolean; palaceId?: string }
+  ): Promise<void>;
 }
 
 export function createLocationRepository(): LocationRepository {
@@ -43,60 +46,100 @@ export function createLocationRepository(): LocationRepository {
     },
 
     async save(location: Partial<Location>): Promise<string> {
-      const inputId = location.id;
-      const id = inputId || Crypto.randomUUID();
+      const requestedId = location.id;
+      const id = requestedId || Crypto.randomUUID();
       const now = new Date().toISOString();
-      let action: 'create' | 'update' = 'create';
 
       await db.transaction(async (tx) => {
-        if (inputId) {
-          const existing = await tx.query.locations.findFirst({
-            columns: { id: true },
-            where: eq(schema.locations.id, inputId),
+        const existing = requestedId
+          ? await tx.query.locations.findFirst({
+              where: eq(schema.locations.id, requestedId),
+            })
+          : null;
+
+        if (existing) {
+          const merged: Partial<Location> = {
+            ...(existing as Location),
+            ...location,
+            id: existing.id,
+            createdAt: existing.createdAt,
+            updatedAt: now,
+            lastSyncedAt: null,
+          };
+
+          if (!merged.palaceId || !merged.name || !merged.description || !merged.imageUrl) {
+            throw new Error('Location palaceId, name, description and imageUrl are required.');
+          }
+
+          await tx
+            .update(schema.locations)
+            .set({
+              palaceId: merged.palaceId,
+              position: merged.position ?? 0,
+              name: merged.name,
+              description: merged.description,
+              imageUrl: merged.imageUrl,
+              isDeleted: merged.isDeleted ?? false,
+              deletedAt:
+                Object.prototype.hasOwnProperty.call(merged, 'deletedAt')
+                  ? (merged.deletedAt ?? null)
+                  : existing.deletedAt,
+              updatedAt: now,
+              lastSyncedAt: null,
+            })
+            .where(eq(schema.locations.id, existing.id));
+
+          await SyncBase.addToQueue(tx as any, {
+            entityType: EntityType.LOCATION,
+            entityId: existing.id,
+            action: 'update',
+            payload: { ...merged, id: existing.id, updatedAt: now, lastSyncedAt: null },
           });
-          action = existing ? 'update' : 'create';
+
+          await refreshPalaceLocationCount(tx, merged.palaceId, now);
+          return;
         }
 
-        await tx
-          .insert(schema.locations)
-          .values({
-            id,
-            palaceId: location.palaceId!,
-            position: location.position ?? 0,
-            name: location.name!,
-            description: location.description!,
-            imageUrl: location.imageUrl!,
-            createdAt: location.createdAt || now,
-            updatedAt: now,
-            lastSyncedAt: location.lastSyncedAt || null,
-            isDeleted: false,
-          })
-          .onConflictDoUpdate({
-            target: schema.locations.id,
-            set: {
-              position: location.position,
-              name: location.name,
-              description: location.description,
-              imageUrl: location.imageUrl,
-              updatedAt: now,
-            },
-          });
+        if (!location.palaceId || !location.name || !location.description || !location.imageUrl) {
+          throw new Error('Location palaceId, name, description and imageUrl are required.');
+        }
+
+        const createPayload: Partial<Location> = {
+          id,
+          palaceId: location.palaceId,
+          position: location.position ?? 0,
+          name: location.name,
+          description: location.description,
+          imageUrl: location.imageUrl,
+          createdAt: location.createdAt || now,
+          updatedAt: now,
+          lastSyncedAt: null,
+          isDeleted: false,
+          deletedAt: null,
+        };
+
+        await tx.insert(schema.locations).values({
+          id,
+          palaceId: createPayload.palaceId!,
+          position: createPayload.position ?? 0,
+          name: createPayload.name!,
+          description: createPayload.description!,
+          imageUrl: createPayload.imageUrl!,
+          createdAt: createPayload.createdAt || now,
+          updatedAt: now,
+          lastSyncedAt: null,
+          isDeleted: false,
+          deletedAt: null,
+        });
 
         await SyncBase.addToQueue(tx as any, {
           entityType: EntityType.LOCATION,
           entityId: id,
-          action: action,
-          payload: { ...location, id, updatedAt: now },
+          action: 'create',
+          payload: { ...createPayload, id },
         });
 
-        const storedLocation = await tx.query.locations.findFirst({
-          columns: { palaceId: true },
-          where: eq(schema.locations.id, id),
-        });
-
-        if (storedLocation?.palaceId) {
-          await refreshPalaceLocationCount(tx, storedLocation.palaceId, now);
-        }
+        await refreshPalaceLocationCount(tx, createPayload.palaceId!, now);
       });
 
       return id;
@@ -132,20 +175,28 @@ export function createLocationRepository(): LocationRepository {
       });
     },
 
-    async upsertMany(serverLocations: Location[]): Promise<void> {
-      if (serverLocations.length === 0) return;
-
+    async upsertMany(
+      serverLocations: Location[],
+      options?: { pruneMissingSynced?: boolean; palaceId?: string }
+    ): Promise<void> {
       const ids = serverLocations.map((l) => l.id);
+      const now = new Date().toISOString();
+      const pruneMissingSynced = options?.pruneMissingSynced ?? false;
+      const prunePalaceId = options?.palaceId;
 
       await db.transaction(async (tx) => {
-        const localRecords = await tx.query.locations.findMany({
-          where: inArray(schema.locations.id, ids),
-        });
+        const localRecords =
+          ids.length > 0
+            ? await tx.query.locations.findMany({
+                where: inArray(schema.locations.id, ids),
+              })
+            : [];
         const localMap = new Map(localRecords.map((r) => [r.id, r]));
 
-        const dirtyIds = await SyncBase.getEntityDirtyIds(tx as any, ids, EntityType.LOCATION);
-
-        const now = new Date().toISOString();
+        const dirtyIds =
+          ids.length > 0
+            ? await SyncBase.getEntityDirtyIds(tx as any, ids, EntityType.LOCATION)
+            : new Set<string>();
 
         for (const serverItem of serverLocations) {
           const localItem = localMap.get(serverItem.id);
@@ -180,6 +231,42 @@ export function createLocationRepository(): LocationRepository {
               });
             }
           }
+        }
+
+        if (pruneMissingSynced && prunePalaceId) {
+          const dirtyQueueRows = await tx.query.syncQueue.findMany({
+            columns: { entityId: true },
+            where: eq(schema.syncQueue.entityType, EntityType.LOCATION),
+          });
+          const dirtyLocationIds = new Set(dirtyQueueRows.map((row) => row.entityId));
+
+          const syncedLocationsInPalace = await tx.query.locations.findMany({
+            columns: { id: true },
+            where: and(
+              eq(schema.locations.palaceId, prunePalaceId),
+              eq(schema.locations.isDeleted, false),
+              isNotNull(schema.locations.lastSyncedAt)
+            ),
+          });
+
+          const serverIdSet = new Set(ids);
+          const staleIds = syncedLocationsInPalace
+            .map((row) => row.id)
+            .filter((id) => !serverIdSet.has(id) && !dirtyLocationIds.has(id));
+
+          if (staleIds.length > 0) {
+            await tx
+              .update(schema.locations)
+              .set({
+                isDeleted: true,
+                deletedAt: now,
+                updatedAt: now,
+                lastSyncedAt: now,
+              })
+              .where(inArray(schema.locations.id, staleIds));
+          }
+
+          await refreshPalaceLocationCount(tx, prunePalaceId, now);
         }
 
         const affectedPalaceIds = Array.from(

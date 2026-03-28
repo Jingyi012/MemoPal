@@ -48,16 +48,6 @@ function mapXpEventTitle(sourceType: string): string {
   }
 }
 
-function mapXpEventSubtitle(sourceId?: string): string | undefined {
-  if (!sourceId) return undefined;
-  const missionMatch = sourceId.match(/^([^:]+):(day:[^:]+|week:[^:]+|all-time)$/i);
-  if (missionMatch) {
-    const missionKey = missionMatch[1].replaceAll('_', ' ');
-    return `Mission: ${missionKey}`;
-  }
-  return sourceId;
-}
-
 function getDayLabel(dateIso: string): string {
   const date = new Date(dateIso);
   const now = new Date();
@@ -72,7 +62,8 @@ function getDayLabel(dateIso: string): string {
 
 export default function RewardsHistoryScreen() {
   const router = useRouter();
-  const { events: xpEvents, isLoading: isLoadingXp } = useXpEvents();
+  const historyWindowDays = 30;
+  const { events: xpEvents, isLoading: isLoadingXp } = useXpEvents({ recentDays: historyWindowDays });
   const { badges, isLoading: isLoadingBadges } = useAllBadges();
   const { milestones, isLoading: isLoadingMilestones } = useMilestones();
   const [filter, setFilter] = useState<RewardFilter>('all');
@@ -80,19 +71,27 @@ export default function RewardsHistoryScreen() {
   const isLoading = isLoadingXp || isLoadingBadges || isLoadingMilestones;
 
   const timeline = useMemo<TimelineEntry[]>(() => {
+    const cutoffTime = Date.now() - historyWindowDays * 24 * 60 * 60 * 1000;
+    const isWithinWindow = (iso: string | null | undefined) => {
+      if (!iso) return false;
+      const timestamp = new Date(iso).getTime();
+      if (!Number.isFinite(timestamp)) return false;
+      return timestamp >= cutoffTime;
+    };
+
     const xpEntries: TimelineEntry[] = xpEvents
       .filter((event) => !event.isDeleted)
       .map((event) => ({
         id: `xp-${event.id}`,
         type: 'xp',
         title: mapXpEventTitle(event.sourceType),
-        subtitle: mapXpEventSubtitle(event.sourceId ?? undefined),
+        //subtitle: mapXpEventSubtitle(event.sourceId ?? undefined),
         points: event.xpAmount,
         occurredAt: event.createdAt,
       }));
 
     const badgeEntries: TimelineEntry[] = badges
-      .filter((badge) => !!badge.earnedAt && !badge.isDeleted)
+      .filter((badge) => !!badge.earnedAt && !badge.isDeleted && isWithinWindow(badge.earnedAt))
       .map((badge) => ({
         id: `badge-${badge.id}`,
         type: 'badge',
@@ -102,7 +101,10 @@ export default function RewardsHistoryScreen() {
       }));
 
     const milestoneEntries: TimelineEntry[] = milestones
-      .filter((milestone) => !!milestone.achievedAt && !milestone.isDeleted)
+      .filter(
+        (milestone) =>
+          !!milestone.achievedAt && !milestone.isDeleted && isWithinWindow(milestone.achievedAt)
+      )
       .map((milestone) => ({
         id: `milestone-${milestone.id}`,
         type: 'milestone',
@@ -146,7 +148,9 @@ export default function RewardsHistoryScreen() {
         backAction={() => router.back()}
       />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}>
         <View className="p-4">
           <View className="rounded-2xl bg-white p-4">
             <Text className="text-sm font-semibold text-slate-800">Filter</Text>
@@ -170,6 +174,9 @@ export default function RewardsHistoryScreen() {
                 );
               })}
             </View>
+            <Text className="mt-3 text-xs text-slate-500">
+              Showing only rewards from the latest {historyWindowDays} days.
+            </Text>
           </View>
 
           {groupedTimeline.length === 0 ? (
@@ -191,11 +198,7 @@ export default function RewardsHistoryScreen() {
                         <View className="flex-row items-center">
                           <View
                             className={`h-9 w-9 items-center justify-center rounded-full ${
-                              isXp
-                                ? 'bg-teal-100'
-                                : isBadge
-                                  ? 'bg-amber-100'
-                                  : 'bg-indigo-100'
+                              isXp ? 'bg-teal-100' : isBadge ? 'bg-amber-100' : 'bg-indigo-100'
                             }`}>
                             {isXp ? (
                               <Sparkles size={16} color="#0f766e" />
@@ -212,7 +215,9 @@ export default function RewardsHistoryScreen() {
                             )}
                           </View>
                           {typeof item.points === 'number' ? (
-                            <Text className="text-xs font-semibold text-teal-700">+{item.points} XP</Text>
+                            <Text className="text-xs font-semibold text-teal-700">
+                              +{item.points} XP
+                            </Text>
                           ) : null}
                         </View>
                         <Text className="mt-2 text-xs text-slate-400">

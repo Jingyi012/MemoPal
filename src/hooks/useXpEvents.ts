@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 export const XP_KEYS = {
   all: ['xpEvents'] as const,
   total: () => [...XP_KEYS.all, 'total'] as const,
-  events: () => [...XP_KEYS.all, 'events'] as const,
+  events: (recentDays?: number) =>
+    [...XP_KEYS.all, 'events', recentDays ? `recent:${recentDays}` : 'all'] as const,
 };
 
 export function useTotalXp() {
@@ -26,12 +27,16 @@ export function useTotalXp() {
   };
 }
 
-export function useXpEvents() {
+export function useXpEvents(options?: { recentDays?: number }) {
   const repo = createXpEventsRepository();
+  const recentDays = options?.recentDays;
 
   const query = useQuery({
-    queryKey: XP_KEYS.events(),
+    queryKey: XP_KEYS.events(recentDays),
     queryFn: async () => {
+      if (recentDays && recentDays > 0) {
+        return await repo.getRecent(recentDays);
+      }
       return await repo.getAll();
     },
     staleTime: 1000 * 60 * 5,

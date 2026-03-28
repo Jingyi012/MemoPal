@@ -16,9 +16,10 @@ export async function getLocationsByPalace(palaceId: string): Promise<Location[]
 
   try {
     const remote = await locationApi.getByPalace(palaceId);
-    if (remote && remote.length > 0) {
-      await repo.upsertMany(remote);
-    }
+    await repo.upsertMany(remote ?? [], {
+      pruneMissingSynced: true,
+      palaceId,
+    });
   } catch (error) {
     console.warn('Failed to sync locations from backend, using local data:', error);
   }

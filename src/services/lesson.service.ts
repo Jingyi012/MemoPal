@@ -25,11 +25,11 @@ export async function getLessonsByPalace(palaceId: string): Promise<Lesson[]> {
   try {
     // Attempt to fetch lessons for this palace from backend
     const remoteLessons = await lessonApi.getByPalaceId(palaceId);
-
-    if (remoteLessons && remoteLessons.length > 0) {
-      // Merge remote data with local (respects dirty state)
-      await repo.upsertMany(remoteLessons);
-    }
+    // Merge remote data with local (respects dirty state) and prune stale official lessons.
+    await repo.upsertMany(remoteLessons ?? [], {
+      pruneMissingOfficial: true,
+      palaceId,
+    });
   } catch (error) {
     console.warn(`Failed to sync lessons for palace ${palaceId}, using local data:`, error);
   }
@@ -118,11 +118,11 @@ export async function syncPendingChanges(): Promise<void> {
       try {
         if (item.action === 'create') {
           const payload = item.payload ? JSON.parse(item.payload) : {};
-          const response = await lessonApi.create(payload as Lesson);
+          await lessonApi.create(payload as Lesson);
           // On success, sync processor removes from queue and marks as synced
         } else if (item.action === 'update') {
           const payload = item.payload ? JSON.parse(item.payload) : {};
-          const response = await lessonApi.update(payload as Lesson);
+          await lessonApi.update(payload as Lesson);
           // On success, sync processor removes from queue and marks as synced
         } else if (item.action === 'delete') {
           await lessonApi.delete(item.entityId);

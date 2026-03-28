@@ -1,5 +1,5 @@
 import GamificationRewardModal from '@/components/GamificationRewardModal';
-import React, { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useMemo, useRef, useState } from 'react';
 
 type RewardPayload = { levelUpTo?: number; milestones: string[]; badges: string[] };
 
@@ -14,13 +14,44 @@ const GamificationRewardContext = createContext<GamificationRewardContextType | 
 export function GamificationRewardProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
   const [payload, setPayload] = useState<RewardPayload>({ milestones: [], badges: [] });
+  const shownRewardKeys = useRef<Set<string>>(new Set());
 
   const value = useMemo<GamificationRewardContextType>(
     () => ({
       showRewards: (nextPayload) => {
-        const hasContent = !!nextPayload.levelUpTo || nextPayload.milestones.length > 0 || nextPayload.badges.length > 0;
+        const newMilestones = nextPayload.milestones.filter((title) => {
+          const key = `milestone:${title}`;
+          if (shownRewardKeys.current.has(key)) return false;
+          shownRewardKeys.current.add(key);
+          return true;
+        });
+
+        const newBadges = nextPayload.badges.filter((name) => {
+          const key = `badge:${name}`;
+          if (shownRewardKeys.current.has(key)) return false;
+          shownRewardKeys.current.add(key);
+          return true;
+        });
+
+        const levelRewardKey = nextPayload.levelUpTo ? `level:${nextPayload.levelUpTo}` : null;
+        const shouldShowLevel = Boolean(
+          levelRewardKey && !shownRewardKeys.current.has(levelRewardKey)
+        );
+        if (levelRewardKey && shouldShowLevel) {
+          shownRewardKeys.current.add(levelRewardKey);
+        }
+
+        const normalizedPayload: RewardPayload = {
+          levelUpTo: shouldShowLevel ? nextPayload.levelUpTo : undefined,
+          milestones: newMilestones,
+          badges: newBadges,
+        };
+        const hasContent =
+          !!normalizedPayload.levelUpTo ||
+          normalizedPayload.milestones.length > 0 ||
+          normalizedPayload.badges.length > 0;
         if (!hasContent) return;
-        setPayload(nextPayload);
+        setPayload(normalizedPayload);
         setVisible(true);
       },
     }),

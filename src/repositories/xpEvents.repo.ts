@@ -6,8 +6,9 @@ import { SourceType } from '@/enums/sourceType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { isBadgeAchievementMet } from '@/utils/gamification/badgeRuleEvaluator';
 import { resolveNextStreak } from '@/utils/gamification/streak';
-import { and, asc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, gte, isNull, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
+import { XpEvents } from '@/types/xpEvents';
 
 type ResolvedLevelConfig = {
   level: number;
@@ -33,8 +34,11 @@ function parseLevelConfigs(rawValue: string | null | undefined): ResolvedLevelCo
         level: Number(item.level ?? 0),
         requiredXp: Number(item.requiredXp ?? 0),
       }))
-      .filter((item) => item.level > 0)
-      .sort((a, b) => a.requiredXp - b.requiredXp || a.level - b.level);
+      .filter((item: { level: number }) => item.level > 0)
+      .sort(
+        (a: { requiredXp: number; level: number }, b: { requiredXp: number; level: number }) =>
+          a.requiredXp - b.requiredXp || a.level - b.level
+      );
   } catch {
     return [];
   }
@@ -58,25 +62,39 @@ type BadgeMetrics = {
 };
 
 interface XpEventsRepository {
-  getAll(): Promise<any[]>;
+  getAll(): Promise<XpEvents[]>;
+  getRecent(days: number): Promise<XpEvents[]>;
   getTotalXp(): Promise<number>;
   getHistoryXpTotal(): Promise<number>;
   getBySourceType(sourceType: string): Promise<any[]>;
-  create(data: {
-    sourceType: string;
-    sourceId?: string;
-    xpAmount: number;
-    clientEventId: string;
-  }, options?: { trackActivity?: boolean }): Promise<XpEventCreateResult>;
+  create(
+    data: {
+      sourceType: string;
+      sourceId?: string;
+      xpAmount: number;
+      clientEventId: string;
+    },
+    options?: { trackActivity?: boolean }
+  ): Promise<XpEventCreateResult>;
   upsertMany(xpEvents: any[]): Promise<void>;
   delete(eventId: string): Promise<void>;
 }
 
 export function createXpEventsRepository(): XpEventsRepository {
   return {
-    async getAll(): Promise<any[]> {
+    async getAll(): Promise<XpEvents[]> {
       return await db.query.xpEvents.findMany({
         where: eq(schema.xpEvents.isDeleted, false),
+        orderBy: [asc(schema.xpEvents.createdAt)],
+      });
+    },
+
+    async getRecent(days: number): Promise<XpEvents[]> {
+      const safeDays = Number.isFinite(days) && days > 0 ? Math.floor(days) : 30;
+      const cutoff = new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000).toISOString();
+
+      return await db.query.xpEvents.findMany({
+        where: and(eq(schema.xpEvents.isDeleted, false), gte(schema.xpEvents.createdAt, cutoff)),
         orderBy: [asc(schema.xpEvents.createdAt)],
       });
     },
@@ -103,12 +121,15 @@ export function createXpEventsRepository(): XpEventsRepository {
       });
     },
 
-    async create(data: {
-      sourceType: string;
-      sourceId?: string;
-      xpAmount: number;
-      clientEventId: string;
-    }, options: { trackActivity?: boolean } = {}): Promise<XpEventCreateResult> {
+    async create(
+      data: {
+        sourceType: string;
+        sourceId?: string;
+        xpAmount: number;
+        clientEventId: string;
+      },
+      options: { trackActivity?: boolean } = {}
+    ): Promise<XpEventCreateResult> {
       const nowDate = new Date();
       const now = nowDate.toISOString();
       const currentUser = await db.query.users.findFirst({ columns: { id: true } });
@@ -291,6 +312,13 @@ export function createXpEventsRepository(): XpEventsRepository {
               .set({ achievedAt: now, updatedAt: now })
               .where(eq(schema.milestones.id, milestone.id));
             achievedMilestones.push(milestone.title);
+
+            await SyncBase.addToQueue(tx as any, {
+              entityType: EntityType.MILESTONE,
+              entityId: milestone.id,
+              action: 'update',
+              payload: { id: milestone.id, achievedAt: now, updatedAt: now },
+            });
           }
         }
 
@@ -308,6 +336,13 @@ export function createXpEventsRepository(): XpEventsRepository {
             .set({ earnedAt: now, updatedAt: now })
             .where(eq(schema.badges.id, badge.id));
           earnedBadges.push(badge.name);
+
+          await SyncBase.addToQueue(tx as any, {
+            entityType: EntityType.BADGE,
+            entityId: badge.id,
+            action: 'update',
+            payload: { id: badge.id, earnedAt: now, updatedAt: now },
+          });
         }
 
         await SyncBase.addToQueue(tx as any, {

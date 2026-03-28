@@ -4,7 +4,7 @@ import { SourceType } from '@/enums/sourceType';
 export interface XpEvents extends Auditable, Syncable, SoftDeletable {
   id: string;
   sourceType: SourceType;
-  sourceId?: string;
+  sourceId?: string | null;
   xpAmount: number;
   clientEventId: string;
 }

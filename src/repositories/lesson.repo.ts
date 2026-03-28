@@ -3,7 +3,7 @@ import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { Lesson, LessonDetails } from '@/types/lesson';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 
 /**
@@ -16,7 +16,10 @@ interface LessonRepository {
   getDetails(lessonId: string): Promise<LessonDetails | null>;
   getById(id: string): Promise<Lesson | null>;
   save(lesson: Partial<Lesson>): Promise<string>;
-  upsertMany(serverLessons: Lesson[]): Promise<void>;
+  upsertMany(
+    serverLessons: Lesson[],
+    options?: { pruneMissingOfficial?: boolean; palaceId?: string }
+  ): Promise<void>;
   delete(id: string): Promise<void>;
 }
 
@@ -80,14 +83,12 @@ export function createLessonRepository(): LessonRepository {
             id: existing.id,
             palaceId: lesson.palaceId ?? existing.palaceId,
             title: lesson.title ?? existing.title,
-            description:
-              Object.prototype.hasOwnProperty.call(lesson, 'description')
-                ? lesson.description
-                : existing.description,
-            category:
-              Object.prototype.hasOwnProperty.call(lesson, 'category')
-                ? lesson.category
-                : existing.category,
+            description: Object.prototype.hasOwnProperty.call(lesson, 'description')
+              ? lesson.description
+              : existing.description,
+            category: Object.prototype.hasOwnProperty.call(lesson, 'category')
+              ? lesson.category
+              : existing.category,
             privacy: lesson.privacy ?? existing.privacy,
             wordCount:
               typeof lesson.wordCount === 'number' ? lesson.wordCount : (existing.wordCount ?? 0),
@@ -100,11 +101,12 @@ export function createLessonRepository(): LessonRepository {
             isLocked:
               typeof lesson.isLocked === 'boolean' ? lesson.isLocked : Boolean(existing.isLocked),
             isDeleted:
-              typeof lesson.isDeleted === 'boolean' ? lesson.isDeleted : Boolean(existing.isDeleted),
-            deletedAt:
-              Object.prototype.hasOwnProperty.call(lesson, 'deletedAt')
-                ? lesson.deletedAt
-                : existing.deletedAt,
+              typeof lesson.isDeleted === 'boolean'
+                ? lesson.isDeleted
+                : Boolean(existing.isDeleted),
+            deletedAt: Object.prototype.hasOwnProperty.call(lesson, 'deletedAt')
+              ? lesson.deletedAt
+              : existing.deletedAt,
             createdAt: existing.createdAt,
             updatedAt: now,
             lastSyncedAt: null,
@@ -207,21 +209,30 @@ export function createLessonRepository(): LessonRepository {
      * Uses last-write-wins strategy based on updatedAt timestamp
      * Skips dirty (locally modified) items to prevent overwriting local changes
      */
-    async upsertMany(serverLessons: Lesson[]): Promise<void> {
-      if (serverLessons.length === 0) return;
-
+    async upsertMany(
+      serverLessons: Lesson[],
+      options?: { pruneMissingOfficial?: boolean; palaceId?: string }
+    ): Promise<void> {
       const ids = serverLessons.map((l) => l.id);
       const now = new Date().toISOString();
+      const pruneMissingOfficial = options?.pruneMissingOfficial ?? false;
+      const prunePalaceId = options?.palaceId;
 
       await db.transaction(async (tx) => {
         // Get local records for conflict resolution
-        const localRecords = await tx.query.lessons.findMany({
-          where: inArray(schema.lessons.id, ids),
-        });
+        const localRecords =
+          ids.length > 0
+            ? await tx.query.lessons.findMany({
+                where: inArray(schema.lessons.id, ids),
+              })
+            : [];
         const localMap = new Map(localRecords.map((r) => [r.id, r]));
 
         // Get dirty IDs (locally modified, queued for sync)
-        const dirtyIds = await SyncBase.getEntityDirtyIds(tx as any, ids, EntityType.LESSON);
+        const dirtyIds =
+          ids.length > 0
+            ? await SyncBase.getEntityDirtyIds(tx as any, ids, EntityType.LESSON)
+            : new Set<string>();
 
         for (const serverItem of serverLessons) {
           const localItem = localMap.get(serverItem.id);
@@ -261,6 +272,41 @@ export function createLessonRepository(): LessonRepository {
               action: 'update',
               payload: { ...localItem },
             });
+          }
+        }
+
+        if (pruneMissingOfficial && prunePalaceId) {
+          const dirtyQueueRows = await tx.query.syncQueue.findMany({
+            columns: { entityId: true },
+            where: eq(schema.syncQueue.entityType, EntityType.LESSON),
+          });
+          const dirtyLessonIds = new Set(dirtyQueueRows.map((row) => row.entityId));
+
+          const syncedOfficialLessons = await tx.query.lessons.findMany({
+            columns: { id: true },
+            where: and(
+              eq(schema.lessons.palaceId, prunePalaceId),
+              //eq(schema.lessons.isCustom, false),
+              eq(schema.lessons.isDeleted, false),
+              isNotNull(schema.lessons.lastSyncedAt)
+            ),
+          });
+
+          const serverIdSet = new Set(ids);
+          const staleIds = syncedOfficialLessons
+            .map((row) => row.id)
+            .filter((id) => !serverIdSet.has(id) && !dirtyLessonIds.has(id));
+
+          if (staleIds.length > 0) {
+            await tx
+              .update(schema.lessons)
+              .set({
+                isDeleted: true,
+                deletedAt: now,
+                updatedAt: now,
+                lastSyncedAt: now,
+              })
+              .where(inArray(schema.lessons.id, staleIds));
           }
         }
       });

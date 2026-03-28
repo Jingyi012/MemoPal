@@ -13,6 +13,11 @@ interface Props {
   lessonId: string;
   stepsCount: number;
   earnedXp: number;
+  rewards?: {
+    levelUpTo?: number;
+    milestones: string[];
+    badges: string[];
+  };
 }
 
 export const LearningCompletion: React.FC<Props> = ({
@@ -20,8 +25,11 @@ export const LearningCompletion: React.FC<Props> = ({
   lessonId,
   stepsCount,
   earnedXp,
+  rewards,
 }) => {
   const router = useRouter();
+  const hasRewardHighlights =
+    !!rewards?.levelUpTo || (rewards?.milestones?.length ?? 0) > 0 || (rewards?.badges?.length ?? 0) > 0;
 
   return (
     <LinearGradient
@@ -51,7 +59,7 @@ export const LearningCompletion: React.FC<Props> = ({
             Memory Secured!
           </Text>
           <Text className="mt-2 text-center font-medium text-slate-500">
-            You've successfully mapped {stepsCount} new words in your mind palace.
+            You have successfully mapped {stepsCount} new words in your mind palace.
           </Text>
         </View>
 
@@ -74,6 +82,27 @@ export const LearningCompletion: React.FC<Props> = ({
         ) : (
           <View className="my-3 w-full flex-row justify-between"></View>
         )}
+
+        {hasRewardHighlights ? (
+          <View className="mb-6 w-full rounded-2xl bg-amber-50 p-4">
+            <Text className="text-sm font-bold text-amber-800">Rewards Unlocked</Text>
+            {rewards?.levelUpTo ? (
+              <Text className="mt-2 text-xs font-semibold text-amber-700">
+                Level Up: Level {rewards.levelUpTo}
+              </Text>
+            ) : null}
+            {rewards?.milestones?.slice(0, 2).map((item) => (
+              <Text key={`milestone-${item}`} className="mt-1 text-xs text-amber-700">
+                Milestone: {item}
+              </Text>
+            ))}
+            {rewards?.badges?.slice(0, 2).map((item) => (
+              <Text key={`badge-${item}`} className="mt-1 text-xs text-amber-700">
+                Badge: {item}
+              </Text>
+            ))}
+          </View>
+        ) : null}
 
         {/* Action Buttons */}
         <Animated.View entering={FadeInDown.delay(800)} className="w-full space-y-3">

@@ -10,10 +10,11 @@ export async function getWordsByLesson(lessonId: string): Promise<Word[]> {
   try {
     // Attempt to fetch words from backend
     const remoteWords = await wordApi.getByLessonId(lessonId);
-    if (remoteWords && remoteWords.length > 0) {
-      // Merge remote data with local (respects dirty state)
-      await repo.upsertMany(remoteWords);
-    }
+    // Merge remote data with local (respects dirty state) and prune stale synced words.
+    await repo.upsertMany(remoteWords ?? [], {
+      pruneMissingSynced: true,
+      lessonId,
+    });
   } catch (error) {
     console.warn(`Failed to sync words for lesson ${lessonId}, using local data:`, error);
   }

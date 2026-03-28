@@ -1,10 +1,18 @@
 import { db } from '@/db/client';
 import * as schema from '@/db/schema';
+import * as levelConfigService from '@/services/levelConfig.service';
 import { User } from '@/types/users';
 import { eq } from 'drizzle-orm';
 
+export type LocalUserAccess = {
+  userId?: string;
+  level: number;
+  isPremium: boolean;
+};
+
 interface UserRepository {
   getCurrent(): Promise<{ id: string; totalXp: number; isPremium: boolean } | null>;
+  getLocalUserAccess(): Promise<LocalUserAccess>;
   getProfileLocal(
     userId: string
   ): Promise<{
@@ -33,6 +41,28 @@ export function createUserRepository(): UserRepository {
       const user = await db.query.users.findFirst();
       if (!user) return null;
       return { id: user.id, totalXp: user.totalXp, isPremium: user.isPremium };
+    },
+
+    async getLocalUserAccess() {
+      const user = await db.query.users.findFirst({
+        columns: { id: true, totalXp: true, level: true, isPremium: true },
+      });
+      if (!user) {
+        return { level: 1, isPremium: false };
+      }
+
+      let level = Math.max(1, user.level ?? 1);
+      try {
+        level = await levelConfigService.getLevelByXp(Math.max(0, user.totalXp), user.level);
+      } catch {
+        level = Math.max(1, user.level ?? 1);
+      }
+
+      return {
+        userId: user.id,
+        level: Math.max(1, level),
+        isPremium: Boolean(user.isPremium),
+      };
     },
 
     async getProfileLocal(userId: string) {

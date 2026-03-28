@@ -2,10 +2,34 @@ import { palaceApi } from '@/api/palace';
 import { locationApi } from '@/api/location';
 import { createLocationRepository } from '@/repositories/location.repo';
 import { createPalaceRepository } from '@/repositories/palace.repo';
+import { createUserRepository, LocalUserAccess } from '@/repositories/user.repo';
 import { Palace, PalaceDetails } from '@/types/palace';
 
 const repo = createPalaceRepository();
 const locationRepo = createLocationRepository();
+const userRepo = createUserRepository();
+
+function applyOfflineLockState<T extends Palace | PalaceDetails>(
+  palace: T,
+  access: LocalUserAccess
+): T {
+  const requiredLevel = Math.max(1, palace.level ?? 1);
+  const isOwnedCustom = Boolean(
+    palace.isCustom && (!palace.createdBy || (access.userId && palace.createdBy === access.userId))
+  );
+  const isCustomLocked = Boolean(palace.isCustom && !isOwnedCustom);
+  const isPremiumLocked = Boolean(!palace.isCustom && palace.isPremium && !access.isPremium);
+  const isLevelLocked = Boolean(
+    !palace.isCustom && !palace.isPremium && access.level < requiredLevel
+  );
+  const effectiveLocked = isCustomLocked || isPremiumLocked || isLevelLocked;
+
+  return {
+    ...palace,
+    isLocked: effectiveLocked,
+    unlockedAt: effectiveLocked ? null : (palace.unlockedAt ?? new Date().toISOString()),
+  } as T;
+}
 
 /**
  * Get all palaces with sync fallback
@@ -20,18 +44,21 @@ export async function getPalaces(): Promise<Palace[]> {
   } catch (error) {
     console.warn('Failed to sync palaces from backend, using local data:', error);
   }
-  return await repo.getAll();
+  const localPalaces = await repo.getAll();
+  const localUserAccess = await userRepo.getLocalUserAccess();
+  return localPalaces.map((palace) => applyOfflineLockState(palace, localUserAccess));
 }
 
 /**
  * Get palace by ID with sync
  */
 export async function getPalaceById(id: string): Promise<PalaceDetails | undefined> {
+  const localUserAccess = await userRepo.getLocalUserAccess();
   const localPalace = await repo.getById(id);
   const isUnsyncedCustomPalace = localPalace?.isCustom === true && !localPalace.lastSyncedAt;
 
   if (isUnsyncedCustomPalace) {
-    return localPalace;
+    return applyOfflineLockState(localPalace, localUserAccess);
   }
 
   try {
@@ -46,14 +73,17 @@ export async function getPalaceById(id: string): Promise<PalaceDetails | undefin
       await repo.upsertMany([remotePalace], { pruneMissingOfficial: false });
     }
 
-    if (remoteLocations?.length) {
-      await locationRepo.upsertMany(remoteLocations);
-    }
+    await locationRepo.upsertMany(remoteLocations ?? [], {
+      pruneMissingSynced: true,
+      palaceId: id,
+    });
   } catch (error) {
     console.warn('Failed to sync palace details, using local data:', error);
   }
 
-  return await repo.getById(id);
+  const resolvedPalace = await repo.getById(id);
+  if (!resolvedPalace) return undefined;
+  return applyOfflineLockState(resolvedPalace, localUserAccess);
 }
 
 /**

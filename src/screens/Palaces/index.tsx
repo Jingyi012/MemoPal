@@ -25,17 +25,11 @@ export default function PalaceListScreen() {
   const isOwnedCustomPalace = (palace: Palace) =>
     palace.isCustom && (!palace.createdBy || palace.createdBy === currentUserId);
   const officialPalaces = useMemo(
-    () =>
-      palaces.filter(
-        (p) => !(p.isCustom && (!p.createdBy || p.createdBy === currentUserId))
-      ),
+    () => palaces.filter((p) => !(p.isCustom && (!p.createdBy || p.createdBy === currentUserId))),
     [palaces, currentUserId]
   );
   const customPalaces = useMemo(
-    () =>
-      palaces.filter(
-        (p) => p.isCustom && (!p.createdBy || p.createdBy === currentUserId)
-      ),
+    () => palaces.filter((p) => p.isCustom && (!p.createdBy || p.createdBy === currentUserId)),
     [palaces, currentUserId]
   );
 
@@ -136,7 +130,6 @@ export default function PalaceListScreen() {
           renderItem={({ item }) => (
             <PalaceCard
               palace={item}
-              isCompleted={!item.isLocked && Boolean(item.unlockedAt)}
               isDisabled={isPalaceDisabled(item)}
               deletable={view === 'custom' && isOwnedCustomPalace(item)}
               onDelete={(palace) => setDeleteTarget(palace)}

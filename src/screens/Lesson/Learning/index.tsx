@@ -1,7 +1,6 @@
 import { AppImage } from '@/components/AppImage';
 import LoadingView from '@/components/LoadingView';
 import { StepNavigationFooter } from '@/components/StepNavigationFooter';
-import { useGamificationRewards } from '@/contexts/GamificationRewardContext';
 import { SourceType } from '@/enums/sourceType';
 import { useLessonProgress, useSaveLessonProgress } from '@/hooks/useLessonProgress';
 import { useLessonWords } from '@/hooks/useLessonWords';
@@ -27,7 +26,6 @@ interface LearningFlowProps {
 
 export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
   const queryClient = useQueryClient();
-  const { showRewards } = useGamificationRewards();
   const { isLoading: detailLoading, data: lesson } = useLessonDetail(lessonId);
   const { words, isLoading: wordsLoading } = useLessonWords(lessonId);
   const { isLoading: progressLoading, progress: lessonProgress } = useLessonProgress(lessonId);
@@ -37,6 +35,11 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [completionXp, setCompletionXp] = useState(0);
+  const [completionRewards, setCompletionRewards] = useState<{
+    levelUpTo?: number;
+    milestones: string[];
+    badges: string[];
+  }>({ milestones: [], badges: [] });
   const [isFinalizingCompletion, setIsFinalizingCompletion] = useState(false);
   const [hasFinalizedCompletion, setHasFinalizedCompletion] = useState(false);
 
@@ -98,7 +101,7 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
             lessonId
           );
 
-          showRewards({
+          setCompletionRewards({
             levelUpTo: xpResult.levelUpTo,
             milestones: xpResult.achievedMilestones,
             badges: xpResult.earnedBadges,
@@ -136,7 +139,6 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
     lessonProgress,
     queryClient,
     saveProgressAsync,
-    showRewards,
     xpConfig?.baseXp,
     xpConfig?.variableXp,
   ]);
@@ -164,6 +166,7 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
         lessonId={lessonId}
         palaceId={lesson.palaceId}
         earnedXp={completionXp}
+        rewards={completionRewards}
       />
     );
   }
