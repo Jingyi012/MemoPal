@@ -1,6 +1,7 @@
 using Mapster;
 using MemoPal.Application.Features.Auth.DTOs;
 using MemoPal.Application.Features.Badges.DTOs;
+using MemoPal.Application.Features.Community.DTOs;
 using MemoPal.Application.Features.Locations.DTOs;
 using MemoPal.Application.Features.Palaces.DTOs;
 using MemoPal.Application.Features.Users.DTOs;
@@ -44,9 +45,13 @@ public static class MediaUrlMapsterConfigFactory
         config.NewConfig<ManagedUserLocationDataDto, ManagedUserLocationDataDto>()
             .Map(dest => dest.ImageUrl, src => ToAbsoluteMediaUrl(src.ImageUrl, mediaBaseUrl));
 
+        config.NewConfig<CommunityCreatorDto, CommunityCreatorDto>()
+            .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.AvatarUrl, mediaBaseUrl));
+
         config.NewConfig<AuthResponseDto, AuthResponseDto>();
         config.NewConfig<ManagedUserPalaceDataDto, ManagedUserPalaceDataDto>();
         config.NewConfig<ManagedUserDataDto, ManagedUserDataDto>();
+        config.NewConfig<CommunityLessonDto, CommunityLessonDto>();
 
         return config;
     }
