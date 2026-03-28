@@ -16,12 +16,12 @@ export const systemSettingsApi = {
   /**
    * Fetch feature limits (user-specific or global)
    */
-  async getFeatureLimits(): Promise<SystemSettingDto[]> {
-    const response = await api.get<GeneralResponse<SystemSettingDto[]>>(
+  async getFeatureLimits(): Promise<SystemSettingDto | null> {
+    const response = await api.get<GeneralResponse<SystemSettingDto>>(
       '/system-settings/feature-limits'
     );
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data || [];
+    if (!response.data.success || !response.data.data) return null;
+    return response.data.data;
   },
 
   async getXpConfigs(): Promise<SystemSettingDto | null> {

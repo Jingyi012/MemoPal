@@ -18,6 +18,64 @@ function isSystemSettingDto(value: unknown): value is SystemSettingDto {
   );
 }
 
+type FeatureLimitsTier = {
+  free?: number;
+  premium?: number;
+};
+
+type FeatureLimitsSettingPayload = {
+  customPalaces?: FeatureLimitsTier;
+  customLessonsPerPalace?: FeatureLimitsTier;
+  customLocationsPerPalace?: FeatureLimitsTier;
+  customWordsPerLesson?: FeatureLimitsTier;
+  custom_palaces?: FeatureLimitsTier;
+  custom_lessons_per_palace?: FeatureLimitsTier;
+  custom_locations_per_palace?: FeatureLimitsTier;
+  custom_words_per_lesson?: FeatureLimitsTier;
+};
+
+function normalizeFeatureLimitsPayload(value: unknown): FeatureLimitsSettingPayload | null {
+  if (!value) return null;
+
+  if (typeof value === 'string') {
+    try {
+      return normalizeFeatureLimitsPayload(JSON.parse(value));
+    } catch {
+      return null;
+    }
+  }
+
+  if (typeof value !== 'object') return null;
+  return value as FeatureLimitsSettingPayload;
+}
+
+function toNonNegativeInt(value: unknown, fallback: number): number {
+  const parsed =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string'
+        ? Number.parseInt(value, 10)
+        : Number.NaN;
+
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(0, Math.trunc(parsed));
+}
+
+function resolveTier(
+  payload: FeatureLimitsSettingPayload,
+  camelKey: keyof FeatureLimitsSettingPayload,
+  snakeKey: keyof FeatureLimitsSettingPayload,
+  fallback: { free: number; premium: number }
+) {
+  const tier = (payload[camelKey] ?? payload[snakeKey]) as FeatureLimitsTier | undefined;
+  if (!tier) return fallback;
+
+  return {
+    free: toNonNegativeInt(tier.free, fallback.free),
+    premium: toNonNegativeInt(tier.premium, fallback.premium),
+  };
+}
+
 /**
  * Initialize system settings cache on app startup
  * Called during app initialization or login
@@ -87,39 +145,51 @@ export async function refreshSettingsGroup(pattern: string): Promise<void> {
  */
 export async function getFeatureLimits(isPremium: boolean = false) {
   try {
-    // Get all limits
-    const allSettings = await repo.getByPattern('limits.*');
+    const remote = await systemSettingsApi.getFeatureLimits();
+    if (remote) {
+      await repo.syncSetting(remote);
+    }
+  } catch (error) {
+    console.warn('[SystemSettings] Failed to sync feature limits from backend:', error);
+  }
 
-    if (allSettings.length === 0) {
+  try {
+    const rawPayload = await repo.getJson<FeatureLimitsSettingPayload | string>(
+      SYSTEM_SETTING_KEYS.FEATURE_LIMITS
+    );
+    const payload = normalizeFeatureLimitsPayload(rawPayload);
+    if (!payload) {
       console.warn('[SystemSettings] No feature limits found in cache');
-      return getSilentFallbackLimits();
+      return getSilentFallbackLimits(isPremium);
     }
 
-    // Parse and organize by category and tier
-    const limits: Record<string, { free: number; premium: number }> = {};
-
-    for (const setting of allSettings) {
-      const match = setting.key.match(/^limits\.(.+)\.(free|premium)$/);
-      if (!match) continue;
-
-      const [, category, tier] = match;
-      if (!limits[category]) {
-        limits[category] = { free: 0, premium: 0 };
-      }
-
-      try {
-        limits[category][tier as 'free' | 'premium'] = parseInt(setting.value, 10) || 0;
-      } catch {
-        console.warn(`[SystemSettings] Failed to parse limit ${setting.key}: ${setting.value}`);
-      }
-    }
+    const fallback = getSilentFallbackLimits(isPremium);
+    const customPalaces = resolveTier(payload, 'customPalaces', 'custom_palaces', fallback.customPalaces);
+    const customLessonsPerPalace = resolveTier(
+      payload,
+      'customLessonsPerPalace',
+      'custom_lessons_per_palace',
+      fallback.customLessonsPerPalace
+    );
+    const customLocationsPerPalace = resolveTier(
+      payload,
+      'customLocationsPerPalace',
+      'custom_locations_per_palace',
+      fallback.customLocationsPerPalace
+    );
+    const customWordsPerLesson = resolveTier(
+      payload,
+      'customWordsPerLesson',
+      'custom_words_per_lesson',
+      fallback.customWordsPerLesson
+    );
 
     return {
       isPremium,
-      customPalaces: limits['custom_palaces'] || { free: 0, premium: 20 },
-      customLessonsPerPalace: limits['custom_lessons_per_palace'] || { free: 5, premium: 50 },
-      customLocationsPerPalace: limits['custom_locations_per_palace'] || { free: 15, premium: 100 },
-      customWordsPerLesson: limits['custom_words_per_lesson'] || { free: 25, premium: 200 },
+      customPalaces,
+      customLessonsPerPalace,
+      customLocationsPerPalace,
+      customWordsPerLesson,
     };
   } catch (error) {
     console.error('[SystemSettings] Error getting feature limits:', error);
@@ -158,8 +228,8 @@ function getSilentFallbackLimits(isPremium: boolean = false) {
   return {
     isPremium,
     customPalaces: { free: 0, premium: 20 },
-    customLessonsPerPalace: { free: 5, premium: 10 },
-    customLocationsPerPalace: { free: 10, premium: 100 },
-    customWordsPerLesson: { free: 10, premium: 100 },
+    customLessonsPerPalace: { free: 5, premium: 50 },
+    customLocationsPerPalace: { free: 15, premium: 100 },
+    customWordsPerLesson: { free: 25, premium: 200 },
   };
 }

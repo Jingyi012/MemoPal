@@ -156,6 +156,7 @@ export const missions = sqliteTable('missions', {
   sortOrder: integer('sort_order').default(0).notNull(),
   isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
   isCompleted: integer('is_completed', { mode: 'boolean' }).default(false).notNull(),
+  isClaimed: integer('is_claimed', { mode: 'boolean' }).default(false).notNull(),
   progressPercent: integer('progress_percent').default(0).notNull(),
   generatedAtUtc: text('generated_at_utc'),
   ...commonColumns,

@@ -180,7 +180,10 @@ export function MissionsTab({
   const missionViewModels = useMemo(() => {
     return missions.map((mission) => {
       const sourceId = getMissionClaimSourceId(mission);
-      const isClaimed = claimedMissionSourceIds.has(sourceId);
+      const isClaimed =
+        typeof mission.isClaimed === 'boolean'
+          ? mission.isClaimed
+          : claimedMissionSourceIds.has(sourceId);
       const status = resolveMissionStatus(mission, isClaimed);
       return { mission, sourceId, isClaimed, status };
     });

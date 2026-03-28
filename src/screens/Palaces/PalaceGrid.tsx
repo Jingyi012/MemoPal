@@ -61,7 +61,7 @@ export const PalaceGrid: React.FC = () => {
       ListHeaderComponent={
         <View className="mb-3 rounded-2xl bg-teal-50 p-4">
           <Text className="text-sm font-semibold text-teal-800">
-            Official palaces come first. Premium users can create custom palaces with custom location images.
+            Official palaces come first. Custom palace creation is available based on your feature limits.
           </Text>
         </View>
       }

@@ -1,0 +1,1 @@
+ALTER TABLE `missions` ADD `is_claimed` integer DEFAULT false NOT NULL;

@@ -117,7 +117,9 @@ export async function processQueue(db = defaultDb) {
     const wordItems = sortedItems.filter((item) => item.entityType === EntityType.WORD);
     const otherItems = sortedItems.filter((item) => item.entityType !== EntityType.WORD);
 
-    if (wordItems.length > 0) {
+    const processWordQueue = async () => {
+      if (wordItems.length === 0) return;
+
       try {
         const createItems = wordItems.filter((w) => w.action === 'create');
         const updateItems = wordItems.filter((w) => w.action === 'update');
@@ -165,7 +167,9 @@ export async function processQueue(db = defaultDb) {
       } catch (error) {
         console.error('Word batch sync failed:', error);
       }
-    }
+    };
+
+    let canProcessWordQueue = true;
 
     for (const item of otherItems) {
       try {
@@ -390,8 +394,15 @@ export async function processQueue(db = defaultDb) {
         }
 
         console.error(`Sync failed for item ${item.id}:`, error);
+        canProcessWordQueue = false;
         break; // Stop queue processing on network error
       }
+    }
+
+    // Sync words only after dependent entities (palaces, locations, lessons)
+    // have been processed in this cycle.
+    if (canProcessWordQueue) {
+      await processWordQueue();
     }
   } finally {
     isProcessing = false;

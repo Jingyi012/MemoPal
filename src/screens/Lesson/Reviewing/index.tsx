@@ -26,6 +26,7 @@ import LoadingView from '@/components/LoadingView';
 import { useGamificationRewards } from '@/contexts/GamificationRewardContext';
 import { REVIEW_TARGET_SECONDS_PER_WORD } from '@/constants/config';
 import { Colors } from '@/constants/colors';
+import { useLessonWords } from '@/hooks/useLessonWords';
 import { useLessonDetail } from '@/hooks/useLessonsManager';
 import { useLocation } from '@/hooks/useLocation';
 import { useReviewCompletion } from '@/hooks/useReviewCompletion';
@@ -44,9 +45,9 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
   const router = useRouter();
   const inputRef = useRef<TextInput>(null);
 
-  // Fetch lesson with words
+  // Fetch lesson metadata + ordered words
   const { data: lesson, isLoading: lessonLoading } = useLessonDetail(lessonId);
-  const steps = useMemo(() => lesson?.words || [], [lesson?.words]);
+  const { words: steps, isLoading: wordsLoading } = useLessonWords(lessonId);
   const totalSteps = steps.length;
 
   // Track current step
@@ -205,7 +206,7 @@ export const ReviewTest: React.FC<ReviewTestProps> = ({ lessonId, isLearningMode
     }
   };
 
-  if (lessonLoading || locationLoading) {
+  if (lessonLoading || wordsLoading || locationLoading) {
     return <LoadingView />;
   }
 

@@ -11,6 +11,7 @@ export interface MissionProgress {
   isActive: boolean;
   isCompleted: boolean;
   progressPercent: number;
+  isClaimed?: boolean;
 }
 
 export interface MissionDashboard {

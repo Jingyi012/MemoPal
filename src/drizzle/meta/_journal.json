@@ -22,6 +22,13 @@
       "when": 1774683250748,
       "tag": "0002_AddSystemConfig",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1774690167765,
+      "tag": "0003_AddMissionClaimedFlag",
+      "breakpoints": true
     }
   ]
 }

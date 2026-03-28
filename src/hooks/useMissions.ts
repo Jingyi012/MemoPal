@@ -1,6 +1,7 @@
 import { BADGE_KEYS } from '@/hooks/useBadges';
 import { CURRENT_USER_KEYS } from '@/hooks/useCurrentUser';
 import { MILESTONE_KEYS } from '@/hooks/useMilestones';
+import { PALACE_KEYS } from '@/hooks/usePalace';
 import {
   claimMissionReward,
   getCurrentMissionDashboard,
@@ -42,6 +43,9 @@ export function useClaimMissionReward() {
       queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
       queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.all });
       queryClient.invalidateQueries({ queryKey: BADGE_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: PALACE_KEYS.all });
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: MISSION_KEYS.all });
     },
   });

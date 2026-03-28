@@ -38,10 +38,14 @@ export function createWordRepository(): WordRepository {
 
   return {
     async getAllByLesson(lessonId: string): Promise<Word[]> {
-      return (await db.query.words.findMany({
-        where: and(eq(schema.words.lessonId, lessonId), eq(schema.words.isDeleted, false)),
-        orderBy: [asc(schema.words.text)],
-      })) as Word[];
+      const rows = await db
+        .select({ word: schema.words })
+        .from(schema.words)
+        .leftJoin(schema.locations, eq(schema.locations.id, schema.words.locationId))
+        .where(and(eq(schema.words.lessonId, lessonId), eq(schema.words.isDeleted, false)))
+        .orderBy(asc(schema.locations.position), asc(schema.words.createdAt));
+
+      return rows.map((row) => row.word) as Word[];
     },
 
     async syncLessonWords(lessonId: string, incomingWords: Partial<Word>[]): Promise<void> {

@@ -196,22 +196,51 @@ export function createSystemSettingsRepository() {
     },
 
     async getFeatureLimits(): Promise<Record<string, { free: number; premium: number }>> {
-      const settings = await this.getByPattern('limits.*.*');
-      const limits: Record<string, { free: number; premium: number }> = {};
+      const setting = await this.get(SYSTEM_SETTING_KEYS.FEATURE_LIMITS);
+      if (!setting?.value) return {};
 
-      for (const setting of settings) {
-        const match = setting.key.match(/^limits\.(.+)\.(free|premium)$/);
-        if (!match) continue;
+      try {
+        const initial = JSON.parse(setting.value) as unknown;
+        const parsed =
+          typeof initial === 'string'
+            ? (JSON.parse(initial) as Record<string, { free?: number; premium?: number }>)
+            : (initial as Record<string, { free?: number; premium?: number }>);
 
-        const [, category, tier] = match;
-        if (!limits[category]) {
-          limits[category] = { free: 0, premium: 0 };
-        }
+        const toValue = (value: unknown) =>
+          Number.isFinite(Number(value)) ? Math.max(0, Math.trunc(Number(value))) : 0;
 
-        limits[category][tier as 'free' | 'premium'] = parseInt(setting.value, 10) || 0;
+        return {
+          customPalaces: {
+            free: toValue(parsed.customPalaces?.free ?? parsed.custom_palaces?.free),
+            premium: toValue(parsed.customPalaces?.premium ?? parsed.custom_palaces?.premium),
+          },
+          customLessonsPerPalace: {
+            free: toValue(
+              parsed.customLessonsPerPalace?.free ?? parsed.custom_lessons_per_palace?.free
+            ),
+            premium: toValue(
+              parsed.customLessonsPerPalace?.premium ?? parsed.custom_lessons_per_palace?.premium
+            ),
+          },
+          customLocationsPerPalace: {
+            free: toValue(
+              parsed.customLocationsPerPalace?.free ?? parsed.custom_locations_per_palace?.free
+            ),
+            premium: toValue(
+              parsed.customLocationsPerPalace?.premium ??
+                parsed.custom_locations_per_palace?.premium
+            ),
+          },
+          customWordsPerLesson: {
+            free: toValue(parsed.customWordsPerLesson?.free ?? parsed.custom_words_per_lesson?.free),
+            premium: toValue(
+              parsed.customWordsPerLesson?.premium ?? parsed.custom_words_per_lesson?.premium
+            ),
+          },
+        };
+      } catch {
+        return {};
       }
-
-      return limits;
     },
   };
 }

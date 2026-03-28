@@ -4,9 +4,10 @@ import { StepNavigationFooter } from '@/components/StepNavigationFooter';
 import { useGamificationRewards } from '@/contexts/GamificationRewardContext';
 import { SourceType } from '@/enums/sourceType';
 import { useLessonProgress, useSaveLessonProgress } from '@/hooks/useLessonProgress';
+import { useLessonWords } from '@/hooks/useLessonWords';
 import { useLessonDetail } from '@/hooks/useLessonsManager';
 import { MISSION_KEYS } from '@/hooks/useMissions';
-import { usePalace } from '@/hooks/usePalace';
+import { PALACE_KEYS, usePalace } from '@/hooks/usePalace';
 import { BADGE_KEYS } from '@/hooks/useBadges';
 import { CURRENT_USER_KEYS } from '@/hooks/useCurrentUser';
 import { MILESTONE_KEYS } from '@/hooks/useMilestones';
@@ -15,7 +16,7 @@ import { useXpConfigBySource } from '@/hooks/useXpConfig';
 import { recordXpEventWithClientEventId } from '@/services/xpEvents.service';
 import { useQueryClient } from '@tanstack/react-query';
 import { Sparkles } from 'lucide-react-native';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { LearningCompletion } from './LearningCompletion';
@@ -28,6 +29,7 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
   const queryClient = useQueryClient();
   const { showRewards } = useGamificationRewards();
   const { isLoading: detailLoading, data: lesson } = useLessonDetail(lessonId);
+  const { words, isLoading: wordsLoading } = useLessonWords(lessonId);
   const { isLoading: progressLoading, progress: lessonProgress } = useLessonProgress(lessonId);
   const { data: palaceDetails } = usePalace(lesson?.palaceId!);
   const locations = palaceDetails?.locations;
@@ -38,7 +40,6 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
   const [isFinalizingCompletion, setIsFinalizingCompletion] = useState(false);
   const [hasFinalizedCompletion, setHasFinalizedCompletion] = useState(false);
 
-  const words = useMemo(() => lesson?.words ?? [], [lesson?.words]);
   const safeWordCount = Math.max(words.length, 1);
 
   const progress = ((currentStep + 1) / safeWordCount) * 100;
@@ -108,6 +109,7 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
           queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.all });
           queryClient.invalidateQueries({ queryKey: BADGE_KEYS.all });
           queryClient.invalidateQueries({ queryKey: MISSION_KEYS.all });
+          queryClient.invalidateQueries({ queryKey: PALACE_KEYS.all });
         }
 
         if (!isMounted) return;
@@ -139,7 +141,7 @@ export function LearnLessonScreen({ lessonId }: LearningFlowProps) {
     xpConfig?.variableXp,
   ]);
 
-  if (detailLoading || progressLoading) {
+  if (detailLoading || progressLoading || wordsLoading) {
     return <LoadingView />;
   }
 

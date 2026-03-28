@@ -17,8 +17,12 @@ export function useFeatureLimits() {
     queryKey: FEATURE_LIMIT_KEYS.current(user?.id, isPremium),
     enabled: !!user,
     queryFn: () => getFeatureLimits(user!.id, isPremium),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
     gcTime: 1000 * 60 * 15,
+    refetchOnMount: 'always',
+    refetchOnReconnect: true,
+    refetchInterval: 1000 * 60 * 2,
+    refetchIntervalInBackground: false,
   });
 
   return {

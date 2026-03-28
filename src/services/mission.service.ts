@@ -48,6 +48,10 @@ export function getMissionClaimClientEventId(mission: MissionProgress, now = new
 }
 
 export async function hasClaimedMissionReward(mission: MissionProgress, now = new Date()): Promise<boolean> {
+  if (mission.isClaimed) {
+    return true;
+  }
+
   const sourceId = getMissionClaimSourceId(mission, now);
   const events = await xpEventRepo.getBySourceType(SourceType.MissionComplete);
   return events.some((item) => item.sourceId === sourceId && !item.isDeleted);

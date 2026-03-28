@@ -37,6 +37,7 @@ export function createMissionRepository(): MissionRepository {
           sortOrder: mission.sortOrder,
           isActive: mission.isActive,
           isCompleted: mission.isCompleted,
+          isClaimed: mission.isClaimed,
           progressPercent: mission.progressPercent,
         })),
       };
@@ -63,6 +64,7 @@ export function createMissionRepository(): MissionRepository {
               sortOrder: mission.sortOrder,
               isActive: mission.isActive,
               isCompleted: mission.isCompleted,
+              isClaimed: mission.isClaimed ?? false,
               progressPercent: mission.progressPercent,
               generatedAtUtc: dashboard.generatedAtUtc,
               updatedAt: now,
@@ -83,6 +85,7 @@ export function createMissionRepository(): MissionRepository {
                 sortOrder: mission.sortOrder,
                 isActive: mission.isActive,
                 isCompleted: mission.isCompleted,
+                isClaimed: mission.isClaimed ?? false,
                 progressPercent: mission.progressPercent,
                 generatedAtUtc: dashboard.generatedAtUtc,
                 updatedAt: now,
