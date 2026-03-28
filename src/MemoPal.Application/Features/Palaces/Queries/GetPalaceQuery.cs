@@ -2,6 +2,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Common.Security;
 using MemoPal.Application.Features.Palaces.DTOs;
 using Microsoft.EntityFrameworkCore;
@@ -63,9 +64,9 @@ public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, ApiR
         var userAccess = await _db.Users
             .AsNoTracking()
             .Where(x => x.Id == request.UserId && !x.IsDeleted)
-            .Select(x => new { x.Level, x.IsPremium })
+            .Select(x => new { x.TotalXp, x.IsPremium })
             .FirstOrDefaultAsync(cancellationToken);
-        var userLevel = Math.Max(1, userAccess?.Level ?? 1);
+        var userLevel = await _db.ResolveLevelByXpAsync(Math.Max(0, userAccess?.TotalXp ?? 0), cancellationToken);
         var userIsPremium = userAccess?.IsPremium ?? false;
 
         var requiredLevel = Math.Max(1, palace.Level);
@@ -77,7 +78,7 @@ public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, ApiR
             && palace.IsPremium
             && !userIsPremium
             && !unlockedByUser;
-        var effectiveLocked = palace.IsLocked || isCustomLocked || levelLocked || premiumLocked;
+        var effectiveLocked = isCustomLocked || levelLocked || premiumLocked;
 
         return ApiResponse<PalaceDto>.Ok(new PalaceDto(
             palace.Id,

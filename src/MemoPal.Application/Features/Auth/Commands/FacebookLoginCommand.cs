@@ -47,6 +47,7 @@ public sealed class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginC
 
         var profile = await _facebookTokenValidator.ValidateAccessTokenAsync(request.FacebookAccessToken, cancellationToken);
         var user = await ResolveUserAsync(profile, cancellationToken);
+        var levelAdjusted = await _db.EnsureUserLevelMatchesXpAsync(user, cancellationToken);
 
         var stats = await _db.UserStats.FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
         if (stats is null)
@@ -57,6 +58,10 @@ public sealed class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginC
                 LastActiveDate = DateTime.UtcNow
             };
             await _db.UserStats.AddAsync(stats, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        else if (levelAdjusted)
+        {
             await _db.SaveChangesAsync(cancellationToken);
         }
 

@@ -2,6 +2,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Users.DTOs;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +23,13 @@ public sealed class GetUserLevelQueryHandler : IRequestHandler<GetUserLevelQuery
     {
         var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("User not found.");
+
+        var levelAdjusted = await _db.EnsureUserLevelMatchesXpAsync(user, cancellationToken);
+        if (levelAdjusted)
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
         return ApiResponse<UserLevelDto>.Ok(new UserLevelDto(user.Level, user.TotalXp));
     }
 }

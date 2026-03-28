@@ -29,7 +29,7 @@ public sealed class GetManagedUserLessonsQueryHandler
 
         var query = _db.Lessons
             .AsNoTracking()
-            .Where(x => x.CreatedBy == request.UserId);
+            .Where(x => x.CreatedBy == request.UserId && !x.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(request.PalaceId))
         {

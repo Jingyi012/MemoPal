@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Users.DTOs;
 using MemoPal.Domain.Common;
 using Microsoft.EntityFrameworkCore;
@@ -49,10 +50,7 @@ public sealed class UpdateManagedUserCommandHandler : IRequestHandler<UpdateMana
             user.Role = NormalizeRole(request.Request.Role);
 
         if (request.Request.TotalXp.HasValue)
-            user.TotalXp = request.Request.TotalXp.Value;
-
-        if (request.Request.Level.HasValue && request.Request.Level.Value > 0)
-            user.Level = request.Request.Level.Value;
+            user.TotalXp = Math.Max(0, request.Request.TotalXp.Value);
 
         if (request.Request.IsPremium.HasValue)
             user.IsPremium = request.Request.IsPremium.Value;
@@ -63,6 +61,7 @@ public sealed class UpdateManagedUserCommandHandler : IRequestHandler<UpdateMana
             user.DeletedAt = user.IsDeleted ? DateTime.UtcNow : null;
         }
 
+        await _db.EnsureUserLevelMatchesXpAsync(user, cancellationToken);
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
 

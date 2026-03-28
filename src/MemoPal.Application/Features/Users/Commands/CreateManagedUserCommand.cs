@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Auth.DTOs;
 using MemoPal.Application.Features.Users.DTOs;
 using MemoPal.Domain.Common;
@@ -39,6 +40,8 @@ public sealed class CreateManagedUserCommandHandler : IRequestHandler<CreateMana
             throw new ConflictAppException("Email already exists.");
         }
 
+        var totalXp = Math.Max(0, request.Request.TotalXp ?? 0);
+        var resolvedLevel = await _db.ResolveLevelByXpAsync(totalXp, cancellationToken);
         var now = DateTime.UtcNow;
         var user = new User
         {
@@ -48,8 +51,8 @@ public sealed class CreateManagedUserCommandHandler : IRequestHandler<CreateMana
             PasswordHash = _passwordHasher.Hash(request.Request.Password),
             AvatarUrl = request.Request.AvatarUrl,
             Role = NormalizeRole(request.Request.Role),
-            TotalXp = request.Request.TotalXp ?? 0,
-            Level = request.Request.Level ?? 1,
+            TotalXp = totalXp,
+            Level = resolvedLevel,
             IsPremium = request.Request.IsPremium ?? false,
             IsDeleted = request.Request.IsDeleted ?? false,
             CreatedAt = now,

@@ -3,6 +3,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Auth.DTOs;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +24,11 @@ public sealed class GetMeQueryHandler : IRequestHandler<GetMeQuery, ApiResponse<
     {
         var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("User not found.");
+        var levelAdjusted = await _db.EnsureUserLevelMatchesXpAsync(user, cancellationToken);
+        if (levelAdjusted)
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
         var stats = await _db.UserStats.FirstOrDefaultAsync(x => x.UserId == request.UserId, cancellationToken);
         return ApiResponse<UserWithStatDto>.Ok((user, stats).Adapt<UserWithStatDto>());
     }

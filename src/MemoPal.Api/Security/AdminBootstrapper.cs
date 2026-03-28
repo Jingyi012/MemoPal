@@ -104,6 +104,12 @@ public sealed class AdminBootstrapper
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+
+        var adjustedUsers = await _db.RecalculateAllUserLevelsAsync(cancellationToken);
+        if (adjustedUsers > 0)
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
     }
 
     private async Task<User> EnsureAdminUserAsync(CancellationToken cancellationToken)
@@ -228,14 +234,17 @@ public sealed class AdminBootstrapper
         if (levelSetting is null || levelSetting.IsDeleted || string.IsNullOrWhiteSpace(levelSetting.Value))
         {
             var serializedLevels = JsonSerializer.Serialize(
-                LevelSeed.Select(x => new
+                new
                 {
-                    level = x.Level,
-                    requiredXp = x.RequiredXp,
-                    title = x.Title,
-                    createdAt = now,
-                    updatedAt = now
-                }).ToArray());
+                    levels = LevelSeed.Select(x => new
+                    {
+                        level = x.Level,
+                        requiredXp = x.RequiredXp,
+                        title = x.Title,
+                        createdAt = now,
+                        updatedAt = now
+                    }).ToArray()
+                });
 
             if (levelSetting is null)
             {

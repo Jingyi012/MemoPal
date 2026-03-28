@@ -81,6 +81,7 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, ApiRespo
 
         passwordIdentity.LastSignInAt = DateTime.UtcNow;
         passwordIdentity.ProviderEmail = user.Email;
+        await _db.EnsureUserLevelMatchesXpAsync(user, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
         var stats = await _db.UserStats.FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);

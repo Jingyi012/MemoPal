@@ -47,6 +47,7 @@ public sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginComma
 
         var profile = await _googleTokenValidator.ValidateIdTokenAsync(request.GoogleIdToken, cancellationToken);
         var user = await ResolveUserAsync(profile, cancellationToken);
+        var levelAdjusted = await _db.EnsureUserLevelMatchesXpAsync(user, cancellationToken);
 
         var stats = await _db.UserStats.FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
         if (stats is null)
@@ -57,6 +58,10 @@ public sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginComma
                 LastActiveDate = DateTime.UtcNow
             };
             await _db.UserStats.AddAsync(stats, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        else if (levelAdjusted)
+        {
             await _db.SaveChangesAsync(cancellationToken);
         }
 

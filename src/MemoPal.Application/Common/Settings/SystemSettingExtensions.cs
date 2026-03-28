@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Common.Settings;
@@ -284,36 +285,93 @@ public static class SystemSettingExtensions
             return [];
         }
 
+        var normalizedJson = UnwrapNestedJsonString(setting.Value);
+        return ParseLevelConfigsFromJson(normalizedJson);
+    }
+
+    private static string UnwrapNestedJsonString(string rawJson)
+    {
+        var current = rawJson;
+        for (var depth = 0; depth < 3; depth++)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(current);
+                if (doc.RootElement.ValueKind != JsonValueKind.String)
+                {
+                    break;
+                }
+
+                var nested = doc.RootElement.GetString();
+                if (string.IsNullOrWhiteSpace(nested))
+                {
+                    break;
+                }
+
+                current = nested;
+            }
+            catch (JsonException)
+            {
+                break;
+            }
+        }
+
+        return current;
+    }
+
+    private static IReadOnlyList<LevelConfigSettingItem> ParseLevelConfigsFromJson(string rawJson)
+    {
+        if (string.IsNullOrWhiteSpace(rawJson))
+        {
+            return [];
+        }
+
         try
         {
-            var payload = JsonSerializer.Deserialize<List<LevelConfigSettingItem>>(
-                setting.Value,
-                GenericJsonOptions);
+            using var doc = JsonDocument.Parse(rawJson);
+            var root = doc.RootElement;
 
-            if (payload is not null && payload.Count > 0)
+            if (root.ValueKind == JsonValueKind.Array)
             {
-                return payload
-                    .Where(x => x.Level > 0)
-                    .OrderBy(x => x.RequiredXp)
-                    .ThenBy(x => x.Level)
-                    .ToList();
+                var items = JsonSerializer.Deserialize<List<LevelConfigSettingItem>>(rawJson, GenericJsonOptions) ?? [];
+                return NormalizeLevelConfigItems(items);
             }
 
-            var wrapped = JsonSerializer.Deserialize<LevelConfigSettingPayload>(
-                setting.Value,
-                GenericJsonOptions);
+            if (root.ValueKind == JsonValueKind.Object)
+            {
+                var wrapped = JsonSerializer.Deserialize<LevelConfigSettingPayload>(rawJson, GenericJsonOptions);
+                var wrappedItems = wrapped?.Levels ?? wrapped?.Configs;
+                if (wrappedItems is { Count: > 0 })
+                {
+                    return NormalizeLevelConfigItems(wrappedItems);
+                }
 
-            var items = wrapped?.Levels ?? wrapped?.Configs ?? [];
-            return items
-                .Where(x => x.Level > 0)
-                .OrderBy(x => x.RequiredXp)
-                .ThenBy(x => x.Level)
-                .ToList();
+                if (TryGetPropertyInsensitive(root, "items", out var itemsElement) &&
+                    itemsElement.ValueKind == JsonValueKind.Array)
+                {
+                    var items = JsonSerializer.Deserialize<List<LevelConfigSettingItem>>(
+                        itemsElement.GetRawText(),
+                        GenericJsonOptions) ?? [];
+                    return NormalizeLevelConfigItems(items);
+                }
+            }
+
+            return [];
         }
         catch (JsonException)
         {
             return [];
         }
+    }
+
+    private static IReadOnlyList<LevelConfigSettingItem> NormalizeLevelConfigItems(
+        IEnumerable<LevelConfigSettingItem> items)
+    {
+        return items
+            .Where(x => x.Level > 0)
+            .OrderBy(x => x.RequiredXp)
+            .ThenBy(x => x.Level)
+            .ToList();
     }
 
     public static async Task<int> ResolveLevelByXpAsync(
@@ -322,13 +380,67 @@ public static class SystemSettingExtensions
         CancellationToken cancellationToken = default)
     {
         var configs = await db.GetLevelConfigsAsync(cancellationToken);
+        return ResolveLevelByXp(configs, totalXp);
+    }
+
+    public static async Task<bool> EnsureUserLevelMatchesXpAsync(
+        this IAppDbContext db,
+        User user,
+        CancellationToken cancellationToken = default)
+    {
+        var resolvedLevel = await db.ResolveLevelByXpAsync(Math.Max(0, user.TotalXp), cancellationToken);
+        if (user.Level == resolvedLevel)
+        {
+            return false;
+        }
+
+        user.Level = resolvedLevel;
+        user.UpdatedAt = DateTime.UtcNow;
+        return true;
+    }
+
+    public static async Task<int> RecalculateAllUserLevelsAsync(
+        this IAppDbContext db,
+        CancellationToken cancellationToken = default)
+    {
+        var configs = await db.GetLevelConfigsAsync(cancellationToken);
+        var users = await db.Users
+            .Where(x => !x.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        if (users.Count == 0)
+        {
+            return 0;
+        }
+
+        var now = DateTime.UtcNow;
+        var updatedCount = 0;
+        foreach (var user in users)
+        {
+            var resolvedLevel = ResolveLevelByXp(configs, Math.Max(0, user.TotalXp));
+            if (user.Level == resolvedLevel)
+            {
+                continue;
+            }
+
+            user.Level = resolvedLevel;
+            user.UpdatedAt = now;
+            updatedCount++;
+        }
+
+        return updatedCount;
+    }
+
+    private static int ResolveLevelByXp(IReadOnlyList<LevelConfigSettingItem> configs, int totalXp)
+    {
         if (configs.Count == 0)
         {
             return 1;
         }
 
+        var safeXp = Math.Max(0, totalXp);
         var resolved = configs
-            .Where(x => x.RequiredXp <= totalXp)
+            .Where(x => x.RequiredXp <= safeXp)
             .OrderByDescending(x => x.RequiredXp)
             .ThenByDescending(x => x.Level)
             .Select(x => x.Level)
