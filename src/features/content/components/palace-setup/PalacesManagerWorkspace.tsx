@@ -1,4 +1,9 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined, SettingOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 import {
   ModalForm,
   ProForm,
@@ -6,24 +11,30 @@ import {
   ProFormSwitch,
   ProFormText,
   ProTable,
-} from '@ant-design/pro-components';
-import type { ActionType, ProColumns } from '@ant-design/pro-components';
-import { useMutation } from '@tanstack/react-query';
-import { Button, Popconfirm, message } from 'antd';
-import { useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
-import { adminContentApi } from '../../../../api/adminContentApi';
-import type { PaginatedResponse } from '../../../../types/api';
-import type { PalaceDto, PalaceUpsertRequest } from '../../../../types/content';
-import { ImageUploadField } from '../ImageUploadField';
-import { MediaThumbnail } from '../MediaThumbnail';
-import { buildPalacePayload, type PalaceFormValues } from './forms';
+} from "@ant-design/pro-components";
+import type { ActionType, ProColumns } from "@ant-design/pro-components";
+import { useMutation } from "@tanstack/react-query";
+import { Button, Popconfirm, message } from "antd";
+import { useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { adminContentApi } from "../../../../api/adminContentApi";
+import type { PaginatedResponse } from "../../../../types/api";
+import type { PalaceDto, PalaceUpsertRequest } from "../../../../types/content";
+import { ImageUploadField } from "../ImageUploadField";
+import { MediaThumbnail } from "../MediaThumbnail";
+import { buildPalacePayload, type PalaceFormValues } from "./forms";
 
 interface PalacesManagerWorkspaceProps {
   onConfigure: (palaceId: string) => void;
-  listPalaces?: (pageNumber: number, pageSize: number) => Promise<PaginatedResponse<PalaceDto>>;
+  listPalaces?: (
+    pageNumber: number,
+    pageSize: number,
+  ) => Promise<PaginatedResponse<PalaceDto>>;
   createPalace?: (payload: PalaceUpsertRequest) => Promise<PalaceDto>;
-  updatePalace?: (id: string, payload: PalaceUpsertRequest) => Promise<PalaceDto>;
+  updatePalace?: (
+    id: string,
+    payload: PalaceUpsertRequest,
+  ) => Promise<PalaceDto>;
   deletePalace?: (id: string) => Promise<boolean>;
   allowCreate?: boolean;
   allowEdit?: boolean;
@@ -43,64 +54,92 @@ export function PalacesManagerWorkspace({
   const actionRef = useRef<ActionType | null>(null);
   const [editing, setEditing] = useState<PalaceDto | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const formLayout = { layout: 'horizontal' as const, labelCol: { span: 7 }, wrapperCol: { span: 17 } };
+  const formLayout = {
+    layout: "horizontal" as const,
+    labelCol: { span: 7 },
+    wrapperCol: { span: 17 },
+  };
 
   const refresh = () => actionRef.current?.reload();
 
   const createMutation = useMutation({
     mutationFn: (payload: PalaceUpsertRequest) => createPalace(payload),
     onSuccess: () => {
-      message.success('Palace created.');
+      message.success("Palace created.");
       setCreateOpen(false);
       refresh();
     },
-    onError: () => message.error('Failed to create palace.'),
+    onError: () => message.error("Failed to create palace."),
   });
 
   const updateMutation = useMutation({
-    mutationFn: (args: { id: string; payload: PalaceUpsertRequest }) => updatePalace(args.id, args.payload),
+    mutationFn: (args: { id: string; payload: PalaceUpsertRequest }) =>
+      updatePalace(args.id, args.payload),
     onSuccess: () => {
-      message.success('Palace updated.');
+      message.success("Palace updated.");
       setEditing(null);
       refresh();
     },
-    onError: () => message.error('Failed to update palace.'),
+    onError: () => message.error("Failed to update palace."),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deletePalace(id),
     onSuccess: () => {
-      message.success('Palace deleted.');
+      message.success("Palace deleted.");
       refresh();
     },
-    onError: () => message.error('Failed to delete palace.'),
+    onError: () => message.error("Failed to delete palace."),
   });
 
   const columns: ProColumns<PalaceDto>[] = useMemo(
     () => [
-      { title: 'Name', dataIndex: 'name' },
-      { title: 'Description', dataIndex: 'description', ellipsis: true },
+      { title: "Name", dataIndex: "name" },
       {
-        title: 'Thumbnail',
-        dataIndex: 'thumbnail',
-        width: 120,
+        title: "Description",
+        dataIndex: "description",
+        ellipsis: true,
+      },
+      {
+        title: "Thumbnail",
+        dataIndex: "thumbnail",
+        width: 100,
         render: (_, row) => (
-          <MediaThumbnail path={row.thumbnail} alt={`${row.name} thumbnail`} width={84} height={50} />
+          <MediaThumbnail
+            path={row.thumbnail}
+            alt={`${row.name} thumbnail`}
+            width={84}
+            height={50}
+          />
         ),
       },
-      { title: 'Locations', dataIndex: 'locationsCount', width: 100 },
-      { title: 'Unlock Level', dataIndex: 'level', width: 110 },
-      { title: 'Premium', dataIndex: 'isPremium', valueType: 'switch', width: 90 },
-      { title: 'Custom', dataIndex: 'isCustom', valueType: 'switch', width: 90 },
       {
-        title: 'Actions',
-        valueType: 'option',
-        width: 260,
+        title: "Locations",
+        dataIndex: "locationsCount",
+        align: "center",
+        width: 100,
+      },
+      { title: "Unlock Level", dataIndex: "level", width: 100 },
+      {
+        title: "Premium",
+        dataIndex: "isPremium",
+        valueType: "switch",
+        width: 100,
+      },
+      {
+        title: "Custom",
+        dataIndex: "isCustom",
+        valueType: "switch",
+        width: 100,
+      },
+      {
+        title: "Actions",
+        valueType: "option",
         render: (_, row) => {
           const actions: ReactNode[] = [
             <Button
-              key='configure'
-              size='small'
+              key="configure"
+              size="small"
               icon={<SettingOutlined />}
               onClick={() => onConfigure(row.id)}
             >
@@ -110,19 +149,24 @@ export function PalacesManagerWorkspace({
 
           if (allowEdit) {
             actions.push(
-              <Button key='edit' size='small' icon={<EditOutlined />} onClick={() => setEditing(row)} />
+              <Button
+                key="edit"
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => setEditing(row)}
+              />,
             );
           }
 
           if (allowDelete) {
             actions.push(
               <Popconfirm
-                key='delete'
-                title='Delete this palace?'
+                key="delete"
+                title="Delete this palace?"
                 onConfirm={() => deleteMutation.mutate(row.id)}
               >
-                <Button size='small' danger icon={<DeleteOutlined />} />
-              </Popconfirm>
+                <Button size="small" danger icon={<DeleteOutlined />} />
+              </Popconfirm>,
             );
           }
 
@@ -130,28 +174,37 @@ export function PalacesManagerWorkspace({
         },
       },
     ],
-    [allowDelete, allowEdit, deleteMutation, onConfigure]
+    [allowDelete, allowEdit, deleteMutation, onConfigure],
   );
 
   return (
     <>
       <ProTable<PalaceDto>
-        rowKey='id'
+        rowKey="id"
         actionRef={actionRef}
         columns={columns}
         search={false}
         request={async (params) => {
-          const data = await listPalaces(params.current || 1, params.pageSize || 20);
+          const data = await listPalaces(
+            params.current || 1,
+            params.pageSize || 20,
+          );
           return {
             data: data.data,
             success: data.success,
             total: data.pagination.totalCount,
           };
         }}
+        scroll={{ x: 800 }}
         toolBarRender={
           allowCreate
             ? () => [
-                <Button key='add' type='primary' icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+                <Button
+                  key="add"
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setCreateOpen(true)}
+                >
                   New Palace
                 </Button>,
               ]
@@ -160,7 +213,7 @@ export function PalacesManagerWorkspace({
       />
 
       <ModalForm<PalaceFormValues>
-        title='Create Palace'
+        title="Create Palace"
         open={allowCreate && createOpen}
         modalProps={{ destroyOnClose: true }}
         {...formLayout}
@@ -177,35 +230,39 @@ export function PalacesManagerWorkspace({
         }}
       >
         <ProFormText
-          name='name'
-          label='Name'
+          name="name"
+          label="Name"
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter palace name' }}
+          fieldProps={{ placeholder: "Enter palace name" }}
         />
         <ProFormText
-          name='description'
-          label='Description'
+          name="description"
+          label="Description"
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter short palace description' }}
+          fieldProps={{ placeholder: "Enter short palace description" }}
         />
-        <ProForm.Item name='thumbnail' label='Thumbnail' rules={[{ required: true }]}>
-          <ImageUploadField category='palace' />
+        <ProForm.Item
+          name="thumbnail"
+          label="Thumbnail"
+          rules={[{ required: true }]}
+        >
+          <ImageUploadField category="palace" />
         </ProForm.Item>
         <ProFormDigit
-          name='level'
-          label='Unlock Level'
+          name="level"
+          label="Unlock Level"
           min={1}
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter required user level' }}
+          fieldProps={{ placeholder: "Enter required user level" }}
         />
-        <ProFormSwitch name='isPremium' label='Premium' />
-        <ProFormSwitch name='isCustom' label='Custom' />
-        <ProFormSwitch name='isLocked' label='Locked' />
+        <ProFormSwitch name="isPremium" label="Premium" />
+        <ProFormSwitch name="isCustom" label="Custom" />
+        <ProFormSwitch name="isLocked" label="Locked" />
       </ModalForm>
 
       <ModalForm<PalaceFormValues>
-        key={editing?.id ?? 'edit-palace'}
-        title='Edit Palace'
+        key={editing?.id ?? "edit-palace"}
+        title="Edit Palace"
         open={allowEdit && !!editing}
         modalProps={{ destroyOnClose: true }}
         {...formLayout}
@@ -235,30 +292,34 @@ export function PalacesManagerWorkspace({
         }}
       >
         <ProFormText
-          name='name'
-          label='Name'
+          name="name"
+          label="Name"
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter palace name' }}
+          fieldProps={{ placeholder: "Enter palace name" }}
         />
         <ProFormText
-          name='description'
-          label='Description'
+          name="description"
+          label="Description"
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter short palace description' }}
+          fieldProps={{ placeholder: "Enter short palace description" }}
         />
-        <ProForm.Item name='thumbnail' label='Thumbnail' rules={[{ required: true }]}>
-          <ImageUploadField category='palace' />
+        <ProForm.Item
+          name="thumbnail"
+          label="Thumbnail"
+          rules={[{ required: true }]}
+        >
+          <ImageUploadField category="palace" />
         </ProForm.Item>
         <ProFormDigit
-          name='level'
-          label='Unlock Level'
+          name="level"
+          label="Unlock Level"
           min={1}
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter required user level' }}
+          fieldProps={{ placeholder: "Enter required user level" }}
         />
-        <ProFormSwitch name='isPremium' label='Premium' />
-        <ProFormSwitch name='isCustom' label='Custom' />
-        <ProFormSwitch name='isLocked' label='Locked' />
+        <ProFormSwitch name="isPremium" label="Premium" />
+        <ProFormSwitch name="isCustom" label="Custom" />
+        <ProFormSwitch name="isLocked" label="Locked" />
       </ModalForm>
     </>
   );

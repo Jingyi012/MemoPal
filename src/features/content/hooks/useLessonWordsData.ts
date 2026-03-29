@@ -4,28 +4,30 @@ import { adminContentApi } from '../../../api/adminContentApi';
 
 export function useLessonWordsData(palaceId: string | undefined, lessonId: string | undefined) {
   const queryClient = useQueryClient();
+  const contentScope = { adminCreatedOnly: true } as const;
+  const scopedSuffix = 'admin-created-only';
 
   const palaceQuery = useQuery({
-    queryKey: ['admin-content', 'palace', palaceId],
-    queryFn: () => adminContentApi.getPalaceById(palaceId!),
+    queryKey: ['admin-content', 'palace', palaceId, scopedSuffix],
+    queryFn: () => adminContentApi.getPalaceById(palaceId!, contentScope),
     enabled: !!palaceId,
   });
 
   const lessonQuery = useQuery({
-    queryKey: ['admin-content', 'lesson', lessonId],
-    queryFn: () => adminContentApi.getLessonById(lessonId!),
+    queryKey: ['admin-content', 'lesson', lessonId, scopedSuffix],
+    queryFn: () => adminContentApi.getLessonById(lessonId!, contentScope),
     enabled: !!lessonId,
   });
 
   const locationsQuery = useQuery({
-    queryKey: ['admin-content', 'locations', palaceId],
-    queryFn: () => adminContentApi.listLocationsByPalace(palaceId!),
+    queryKey: ['admin-content', 'locations', palaceId, scopedSuffix],
+    queryFn: () => adminContentApi.listLocationsByPalace(palaceId!, contentScope),
     enabled: !!palaceId,
   });
 
   const wordsQuery = useQuery({
-    queryKey: ['admin-content', 'words', lessonId],
-    queryFn: () => adminContentApi.listWordsByLesson(lessonId!),
+    queryKey: ['admin-content', 'words', lessonId, scopedSuffix],
+    queryFn: () => adminContentApi.listWordsByLesson(lessonId!, contentScope),
     enabled: !!lessonId,
   });
 
@@ -36,9 +38,9 @@ export function useLessonWordsData(palaceId: string | undefined, lessonId: strin
 
   const refreshWords = async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['admin-content', 'words', lessonId] }),
-      queryClient.invalidateQueries({ queryKey: ['admin-content', 'lesson', lessonId] }),
-      queryClient.invalidateQueries({ queryKey: ['admin-content', 'lessons', palaceId] }),
+      queryClient.invalidateQueries({ queryKey: ['admin-content', 'words', lessonId, scopedSuffix] }),
+      queryClient.invalidateQueries({ queryKey: ['admin-content', 'lesson', lessonId, scopedSuffix] }),
+      queryClient.invalidateQueries({ queryKey: ['admin-content', 'lessons', palaceId, scopedSuffix] }),
     ]);
   };
 

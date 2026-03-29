@@ -1,4 +1,9 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined, SettingOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  SettingOutlined,
+} from '@ant-design/icons';
 import {
   ModalForm,
   ProFormSelect,
@@ -36,7 +41,11 @@ export function LessonsSetupCard({
   const navigate = useNavigate();
   const [editingLesson, setEditingLesson] = useState<LessonDto | null>(null);
   const [createLessonOpen, setCreateLessonOpen] = useState(false);
-  const formLayout = { layout: 'horizontal' as const, labelCol: { span: 7 }, wrapperCol: { span: 17 } };
+  const formLayout = {
+    layout: 'horizontal' as const,
+    labelCol: { span: 7 },
+    wrapperCol: { span: 17 },
+  };
 
   const createLessonMutation = useMutation({
     mutationFn: (values: LessonFormValues) =>
@@ -51,7 +60,10 @@ export function LessonsSetupCard({
 
   const updateLessonMutation = useMutation({
     mutationFn: (args: { id: string; values: LessonFormValues }) =>
-      adminContentApi.updateLesson(args.id, buildLessonPayload(palaceId, args.values, editingLesson ?? undefined)),
+      adminContentApi.updateLesson(
+        args.id,
+        buildLessonPayload(palaceId, args.values, editingLesson ?? undefined),
+      ),
     onSuccess: async () => {
       message.success('Lesson updated.');
       setEditingLesson(null);
@@ -76,6 +88,12 @@ export function LessonsSetupCard({
       { title: 'Privacy', dataIndex: 'privacy', width: 100 },
       { title: 'Words', dataIndex: 'wordCount', width: 90 },
       {
+        title: 'Is Locked',
+        dataIndex: 'isLocked',
+        width: 90,
+        render: (_, record: LessonDto) => (record.isLocked ? 'Yes' : 'No'),
+      },
+      {
         title: 'Actions',
         valueType: 'option',
         width: 240,
@@ -94,7 +112,12 @@ export function LessonsSetupCard({
           >
             Configure Words
           </Button>,
-          <Button key='edit' size='small' icon={<EditOutlined />} onClick={() => setEditingLesson(row)} />,
+          <Button
+            key='edit'
+            size='small'
+            icon={<EditOutlined />}
+            onClick={() => setEditingLesson(row)}
+          />,
           <Popconfirm
             key='delete'
             title='Delete this lesson?'
@@ -105,17 +128,23 @@ export function LessonsSetupCard({
         ],
       },
     ],
-    [deleteLessonMutation, navigate, palaceId]
+    [deleteLessonMutation, navigate, palaceId],
   );
 
   return (
     <Card
       title='Lessons'
-      extra={canCreate ? (
-        <Button type='primary' icon={<PlusOutlined />} onClick={() => setCreateLessonOpen(true)}>
-          New Lesson
-        </Button>
-      ) : undefined}
+      extra={
+        canCreate ? (
+          <Button
+            type='primary'
+            icon={<PlusOutlined />}
+            onClick={() => setCreateLessonOpen(true)}
+          >
+            New Lesson
+          </Button>
+        ) : undefined
+      }
     >
       <ProTable<LessonDto>
         rowKey='id'
@@ -158,7 +187,9 @@ export function LessonsSetupCard({
         <ProFormText
           name='category'
           label='Category'
-          fieldProps={{ placeholder: 'Enter category (e.g., anchors, actions)' }}
+          fieldProps={{
+            placeholder: 'Enter category (e.g., anchors, actions)',
+          }}
         />
         <ProFormSelect
           name='privacy'
@@ -199,7 +230,10 @@ export function LessonsSetupCard({
         }}
         onFinish={async (values) => {
           if (!editingLesson) return false;
-          await updateLessonMutation.mutateAsync({ id: editingLesson.id, values });
+          await updateLessonMutation.mutateAsync({
+            id: editingLesson.id,
+            values,
+          });
           return true;
         }}
       >
@@ -217,7 +251,9 @@ export function LessonsSetupCard({
         <ProFormText
           name='category'
           label='Category'
-          fieldProps={{ placeholder: 'Enter category (e.g., anchors, actions)' }}
+          fieldProps={{
+            placeholder: 'Enter category (e.g., anchors, actions)',
+          }}
         />
         <ProFormSelect
           name='privacy'

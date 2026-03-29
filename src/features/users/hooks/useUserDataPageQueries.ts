@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { adminUsersApi } from '../../../api/adminUsersApi';
 
 export type UserDataTabKey = 'overview' | 'content' | 'learning' | 'gamification' | 'system';
@@ -71,17 +71,6 @@ export function useUserDataPageQueries(userId: string | undefined, activeTab: Us
     placeholderData: keepPreviousData,
   });
 
-  const reviewSchedules = useMemo(
-    () =>
-      (progressesQuery.data?.data ?? []).flatMap((progress) =>
-        progress.reviewSchedules.map((schedule) => ({
-          ...schedule,
-          lessonTitle: progress.lessonTitle,
-        }))
-      ),
-    [progressesQuery.data?.data]
-  );
-
   return {
     overviewQuery,
     progressesQuery,
@@ -90,7 +79,6 @@ export function useUserDataPageQueries(userId: string | undefined, activeTab: Us
     milestonesQuery,
     subscriptionsQuery,
     notificationsQuery,
-    reviewSchedules,
     progressesPage,
     progressesPageSize,
     setProgressesPage,

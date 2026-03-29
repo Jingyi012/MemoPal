@@ -12,26 +12,33 @@ import type {
   WordUpsertRequest,
 } from '../types/content';
 
-async function listPalacesPage(pageNumber: number, pageSize: number) {
+interface ContentQueryScope {
+  adminCreatedOnly?: boolean;
+}
+
+const buildScopeParams = (scope?: ContentQueryScope) =>
+  scope?.adminCreatedOnly ? { adminCreatedOnly: true } : undefined;
+
+async function listPalacesPage(pageNumber: number, pageSize: number, scope?: ContentQueryScope) {
   const response = await apiClient.get<PaginatedResponse<PalaceDto>>('/palaces', {
-    params: { pageNumber, pageSize },
+    params: { pageNumber, pageSize, ...buildScopeParams(scope) },
   });
   return response.data;
 }
 
 export const adminContentApi = {
-  listPalaces(pageNumber = 1, pageSize = 20) {
-    return listPalacesPage(pageNumber, pageSize);
+  listPalaces(pageNumber = 1, pageSize = 20, scope?: ContentQueryScope) {
+    return listPalacesPage(pageNumber, pageSize, scope);
   },
 
-  async listAllPalaces() {
+  async listAllPalaces(scope?: ContentQueryScope) {
     const pageSize = 100;
     let pageNumber = 1;
     let totalCount = Number.MAX_SAFE_INTEGER;
     const all: PalaceDto[] = [];
 
     while (all.length < totalCount) {
-      const page = await listPalacesPage(pageNumber, pageSize);
+      const page = await listPalacesPage(pageNumber, pageSize, scope);
       all.push(...page.data);
       totalCount = page.pagination.totalCount;
       if (page.data.length === 0) break;
@@ -59,15 +66,19 @@ export const adminContentApi = {
       .then((response) => response.data.data);
   },
 
-  listLocationsByPalace(palaceId: string) {
+  listLocationsByPalace(palaceId: string, scope?: ContentQueryScope) {
     return apiClient
-      .get<ApiResponse<LocationDto[]>>(`/palaces/${palaceId}/locations`)
+      .get<ApiResponse<LocationDto[]>>(`/palaces/${palaceId}/locations`, {
+        params: buildScopeParams(scope),
+      })
       .then((response) => response.data.data);
   },
 
-  getPalaceById(palaceId: string) {
+  getPalaceById(palaceId: string, scope?: ContentQueryScope) {
     return apiClient
-      .get<ApiResponse<PalaceDto>>(`/palaces/${palaceId}`)
+      .get<ApiResponse<PalaceDto>>(`/palaces/${palaceId}`, {
+        params: buildScopeParams(scope),
+      })
       .then((response) => response.data.data);
   },
 
@@ -95,21 +106,27 @@ export const adminContentApi = {
       .then((response) => response.data.data);
   },
 
-  listLessons() {
+  listLessons(scope?: ContentQueryScope) {
     return apiClient
-      .get<ApiResponse<LessonDto[]>>('/lessons')
+      .get<ApiResponse<LessonDto[]>>('/lessons', {
+        params: buildScopeParams(scope),
+      })
       .then((response) => response.data.data);
   },
 
-  listLessonsByPalace(palaceId: string) {
+  listLessonsByPalace(palaceId: string, scope?: ContentQueryScope) {
     return apiClient
-      .get<ApiResponse<LessonDto[]>>(`/palaces/${palaceId}/lessons`)
+      .get<ApiResponse<LessonDto[]>>(`/palaces/${palaceId}/lessons`, {
+        params: buildScopeParams(scope),
+      })
       .then((response) => response.data.data);
   },
 
-  getLessonById(lessonId: string) {
+  getLessonById(lessonId: string, scope?: ContentQueryScope) {
     return apiClient
-      .get<ApiResponse<LessonDto>>(`/lessons/${lessonId}`)
+      .get<ApiResponse<LessonDto>>(`/lessons/${lessonId}`, {
+        params: buildScopeParams(scope),
+      })
       .then((response) => response.data.data);
   },
 
@@ -131,9 +148,11 @@ export const adminContentApi = {
       .then((response) => response.data.data);
   },
 
-  listWordsByLesson(lessonId: string) {
+  listWordsByLesson(lessonId: string, scope?: ContentQueryScope) {
     return apiClient
-      .get<ApiResponse<WordDto[]>>('/words', { params: { lessonId } })
+      .get<ApiResponse<WordDto[]>>('/words', {
+        params: { lessonId, ...buildScopeParams(scope) },
+      })
       .then((response) => response.data.data);
   },
 

@@ -1,13 +1,19 @@
-import { EditOutlined } from '@ant-design/icons';
-import { ModalForm, ProForm, ProFormDigit, ProFormSwitch, ProFormText } from '@ant-design/pro-components';
-import { useMutation } from '@tanstack/react-query';
-import { Button, Card, Descriptions, message } from 'antd';
-import { useState } from 'react';
-import { adminContentApi } from '../../../../api/adminContentApi';
-import type { PalaceDto } from '../../../../types/content';
-import { ImageUploadField } from '../ImageUploadField';
-import { MediaThumbnail } from '../MediaThumbnail';
-import { buildPalacePayload, type PalaceFormValues } from './forms';
+import { EditOutlined } from "@ant-design/icons";
+import {
+  ModalForm,
+  ProForm,
+  ProFormDigit,
+  ProFormSwitch,
+  ProFormText,
+} from "@ant-design/pro-components";
+import { useMutation } from "@tanstack/react-query";
+import { Button, Card, Col, Descriptions, message, Row } from "antd";
+import { useState } from "react";
+import { adminContentApi } from "../../../../api/adminContentApi";
+import type { PalaceDto } from "../../../../types/content";
+import { ImageUploadField } from "../ImageUploadField";
+import { MediaThumbnail } from "../MediaThumbnail";
+import { buildPalacePayload, type PalaceFormValues } from "./forms";
 
 interface PalaceOverviewCardProps {
   palaceId: string;
@@ -16,46 +22,80 @@ interface PalaceOverviewCardProps {
   editable?: boolean;
 }
 
-export function PalaceOverviewCard({ palaceId, palace, onChanged, editable = true }: PalaceOverviewCardProps) {
+export function PalaceOverviewCard({
+  palaceId,
+  palace,
+  onChanged,
+  editable = true,
+}: PalaceOverviewCardProps) {
   const [editingPalace, setEditingPalace] = useState(false);
-  const formLayout = { layout: 'horizontal' as const, labelCol: { span: 8 }, wrapperCol: { span: 16 } };
+  const formLayout = {
+    layout: "horizontal" as const,
+    labelCol: { span: 8 },
+    wrapperCol: { span: 16 },
+  };
 
   const palaceMutation = useMutation({
     mutationFn: (values: PalaceFormValues) =>
-      adminContentApi.updatePalace(palaceId, buildPalacePayload(values, palace)),
+      adminContentApi.updatePalace(
+        palaceId,
+        buildPalacePayload(values, palace),
+      ),
     onSuccess: async () => {
-      message.success('Palace updated.');
+      message.success("Palace updated.");
       setEditingPalace(false);
       await onChanged();
     },
-    onError: () => message.error('Failed to update palace.'),
+    onError: () => message.error("Failed to update palace."),
   });
 
   return (
     <Card
-      title='Palace Details'
-      extra={editable ? (
-        <Button icon={<EditOutlined />} onClick={() => setEditingPalace(true)}>
-          Edit Palace
-        </Button>
-      ) : undefined}
+      title="Palace Details"
+      extra={
+        editable ? (
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => setEditingPalace(true)}
+          >
+            Edit Palace
+          </Button>
+        ) : undefined
+      }
     >
-      <Descriptions column={1} size='small' labelStyle={{ width: 140 }}>
-        <Descriptions.Item label='Name'>{palace.name}</Descriptions.Item>
-        <Descriptions.Item label='Description'>{palace.description}</Descriptions.Item>
-        <Descriptions.Item label='Unlock Level'>{palace.level}</Descriptions.Item>
-        <Descriptions.Item label='Thumbnail'>
-          <MediaThumbnail
-            path={palace.thumbnail}
-            alt={`${palace.name} thumbnail`}
-            width={220}
-            height={132}
-          />
-        </Descriptions.Item>
-      </Descriptions>
+      <Row gutter={16}>
+        {/* LEFT SIDE */}
+        <Col span={16}>
+          <Descriptions column={1} size="small" labelStyle={{ width: 140 }}>
+            <Descriptions.Item label="Name">{palace.name}</Descriptions.Item>
+            <Descriptions.Item label="Description">
+              {palace.description}
+            </Descriptions.Item>
+            <Descriptions.Item label="Unlock Level">
+              {palace.level}
+            </Descriptions.Item>
+          </Descriptions>
+        </Col>
+
+        {/* RIGHT SIDE (IMAGE) */}
+        <Col span={8}>
+          <Descriptions column={1} size="small">
+            <Descriptions.Item
+              style={{ display: "flex", justifyContent: "end" }}
+            >
+              <MediaThumbnail
+                path={palace.thumbnail}
+                alt={`${palace.name} thumbnail`}
+                width={220}
+                height={132}
+              />
+            </Descriptions.Item>
+          </Descriptions>
+        </Col>
+      </Row>
 
       <ModalForm<PalaceFormValues>
-        title='Edit Palace'
+        title="Edit Palace"
         open={editable && editingPalace}
         modalProps={{ destroyOnClose: true }}
         onOpenChange={setEditingPalace}
@@ -75,30 +115,34 @@ export function PalaceOverviewCard({ palaceId, palace, onChanged, editable = tru
         }}
       >
         <ProFormText
-          name='name'
-          label='Name'
+          name="name"
+          label="Name"
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter palace name' }}
+          fieldProps={{ placeholder: "Enter palace name" }}
         />
         <ProFormText
-          name='description'
-          label='Description'
+          name="description"
+          label="Description"
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter short palace description' }}
+          fieldProps={{ placeholder: "Enter short palace description" }}
         />
-        <ProForm.Item name='thumbnail' label='Thumbnail' rules={[{ required: true }]}>
-          <ImageUploadField category='palace' />
+        <ProForm.Item
+          name="thumbnail"
+          label="Thumbnail"
+          rules={[{ required: true }]}
+        >
+          <ImageUploadField category="palace" />
         </ProForm.Item>
         <ProFormDigit
-          name='level'
-          label='Unlock Level'
+          name="level"
+          label="Unlock Level"
           min={1}
           rules={[{ required: true }]}
-          fieldProps={{ placeholder: 'Enter required user level' }}
+          fieldProps={{ placeholder: "Enter required user level" }}
         />
-        <ProFormSwitch name='isPremium' label='Premium' />
-        <ProFormSwitch name='isCustom' label='Custom' />
-        <ProFormSwitch name='isLocked' label='Locked' />
+        <ProFormSwitch name="isPremium" label="Premium" />
+        <ProFormSwitch name="isCustom" label="Custom" />
+        <ProFormSwitch name="isLocked" label="Locked" />
       </ModalForm>
     </Card>
   );

@@ -1,6 +1,6 @@
-import { EyeOutlined } from '@ant-design/icons';
-import { Button, Card, Table, Tag } from 'antd';
-import type { TablePaginationConfig } from 'antd/es/table';
+import { EyeOutlined } from "@ant-design/icons";
+import { Button, Card, Table, Tag } from "antd";
+import type { TablePaginationConfig } from "antd/es/table";
 
 export interface PalaceSelectionItem {
   id: string;
@@ -22,7 +22,7 @@ interface PalaceSelectionListCardProps {
     current: number;
     pageSize: number;
     total: number;
-    onChange: NonNullable<TablePaginationConfig['onChange']>;
+    onChange: NonNullable<TablePaginationConfig["onChange"]>;
   };
 }
 
@@ -38,8 +38,8 @@ export function PalaceSelectionListCard({
   return (
     <Card title={title}>
       <Table<PalaceSelectionItem>
-        rowKey='id'
-        size='small'
+        rowKey="id"
+        size="small"
         loading={loading}
         dataSource={palaces}
         locale={{ emptyText }}
@@ -56,23 +56,24 @@ export function PalaceSelectionListCard({
             : false
         }
         columns={[
-          { title: 'Name', dataIndex: 'name' },
-          { title: 'Level', dataIndex: 'level', width: 78 },
-          { title: 'Locations', dataIndex: 'locationsCount', width: 88 },
-          { title: 'Lessons', dataIndex: 'lessonsCount', width: 80 },
+          { title: "Name", dataIndex: "name" },
+          { title: "Level", dataIndex: "level" },
+          { title: "Locations", dataIndex: "locationsCount" },
+          { title: "Lessons", dataIndex: "lessonsCount" },
           {
-            title: 'Type',
+            title: "Type",
             width: 94,
-            render: (_, row) => (row.isCustom ? <Tag color='gold'>Custom</Tag> : <Tag>System</Tag>),
+            render: (_, row) =>
+              row.isCustom ? <Tag color="gold">Custom</Tag> : <Tag>System</Tag>,
           },
           {
-            title: 'Actions',
+            title: "Actions",
             width: 96,
             render: (_, row) => (
               <Button
-                size='small'
+                size="small"
                 icon={<EyeOutlined />}
-                type={selectedPalaceId === row.id ? 'primary' : 'default'}
+                type={selectedPalaceId === row.id ? "primary" : "default"}
                 onClick={() => onViewPalace(row.id)}
               >
                 View

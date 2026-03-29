@@ -120,6 +120,10 @@ export interface ManagedUserLessonProgressDataDto {
   id: string;
   lessonId: string;
   lessonTitle: string;
+  palaceId: string;
+  palaceName: string;
+  palaceIsCustom: boolean;
+  lessonIsCustom: boolean;
   firstCompletedDate?: string | null;
   totalReviews: number;
   masteryLevel: string;

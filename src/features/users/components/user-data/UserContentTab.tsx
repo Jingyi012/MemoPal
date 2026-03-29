@@ -1,16 +1,24 @@
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Space, Spin, Tabs } from 'antd';
+import { useEffect } from 'react';
 import { ContentPalaceDetails } from './ContentPalaceDetails';
 import { useUserContentTabData } from '../../hooks/useUserContentTabData';
 import type { ContentSubTabKey } from '../../hooks/useUserContentTabData';
 import { PalaceSelectionListCard } from '../../../content/components/palace-setup/PalaceSelectionListCard';
 
+export interface UserContentFocusRequest {
+  palaceId: string;
+  subTab: ContentSubTabKey;
+  requestId: number;
+}
+
 interface UserContentTabProps {
   userId: string;
   active: boolean;
+  focusRequest?: UserContentFocusRequest | null;
 }
 
-export function UserContentTab({ userId, active }: UserContentTabProps) {
+export function UserContentTab({ userId, active, focusRequest }: UserContentTabProps) {
   const {
     activeSubTab,
     setActiveSubTab,
@@ -33,6 +41,21 @@ export function UserContentTab({ userId, active }: UserContentTabProps) {
     setPredefinedPage,
     setPredefinedPageSize,
   } = useUserContentTabData({ userId, active });
+
+  useEffect(() => {
+    if (!focusRequest) {
+      return;
+    }
+
+    setActiveSubTab(focusRequest.subTab);
+
+    if (focusRequest.subTab === 'custom-palaces') {
+      viewCustomPalace(focusRequest.palaceId);
+      return;
+    }
+
+    viewPredefinedPalace(focusRequest.palaceId);
+  }, [focusRequest, setActiveSubTab, viewCustomPalace, viewPredefinedPalace]);
 
   const activeListQuery = activeSubTab === 'custom-palaces' ? customPalacesQuery : predefinedPalacesQuery;
   const activeSelectedPalaceId = activeSubTab === 'custom-palaces' ? selectedCustomPalaceId : selectedPredefinedPalaceId;

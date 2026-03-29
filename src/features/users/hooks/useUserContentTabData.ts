@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { adminUsersApi } from '../../../api/adminUsersApi';
 
 export type ContentSubTabKey = 'custom-palaces' | 'predefined-palaces';
@@ -11,13 +11,21 @@ interface UseUserContentTabDataArgs {
 
 export function useUserContentTabData({ userId, active }: UseUserContentTabDataArgs) {
   const [activeSubTab, setActiveSubTab] = useState<ContentSubTabKey>('custom-palaces');
-  const [customPage, setCustomPage] = useState(1);
-  const [customPageSize, setCustomPageSize] = useState(10);
-  const [predefinedPage, setPredefinedPage] = useState(1);
-  const [predefinedPageSize, setPredefinedPageSize] = useState(10);
+  const [customPageByUser, setCustomPageByUser] = useState<Record<string, number>>({});
+  const [customPageSizeByUser, setCustomPageSizeByUser] = useState<Record<string, number>>({});
+  const [predefinedPageByUser, setPredefinedPageByUser] = useState<Record<string, number>>({});
+  const [predefinedPageSizeByUser, setPredefinedPageSizeByUser] = useState<Record<string, number>>({});
 
-  const [selectedCustomPalaceId, setSelectedCustomPalaceId] = useState<string>();
-  const [selectedPredefinedPalaceId, setSelectedPredefinedPalaceId] = useState<string>();
+  const [selectedCustomPalaceByUser, setSelectedCustomPalaceByUser] = useState<Record<string, string | undefined>>({});
+  const [selectedPredefinedPalaceByUser, setSelectedPredefinedPalaceByUser] = useState<Record<string, string | undefined>>({});
+
+  const customPage = customPageByUser[userId] ?? 1;
+  const customPageSize = customPageSizeByUser[userId] ?? 10;
+  const predefinedPage = predefinedPageByUser[userId] ?? 1;
+  const predefinedPageSize = predefinedPageSizeByUser[userId] ?? 10;
+
+  const selectedCustomPalaceId = selectedCustomPalaceByUser[userId];
+  const selectedPredefinedPalaceId = selectedPredefinedPalaceByUser[userId];
 
   const customPalacesQuery = useQuery({
     queryKey: ['admin-user-data-palaces-paged', userId, 'custom', customPage, customPageSize],
@@ -40,28 +48,38 @@ export function useUserContentTabData({ userId, active }: UseUserContentTabDataA
   const customPalaces = customPalacesQuery.data?.data ?? [];
   const predefinedPalaces = predefinedPalacesQuery.data?.data ?? [];
 
-  useEffect(() => {
-    setSelectedCustomPalaceId(undefined);
-    setSelectedPredefinedPalaceId(undefined);
-    setCustomPage(1);
-    setPredefinedPage(1);
+  const viewCustomPalace = useCallback((palaceId: string) => {
+    setSelectedCustomPalaceByUser((prev) => ({ ...prev, [userId]: palaceId }));
   }, [userId]);
 
-  const viewCustomPalace = (palaceId: string) => {
-    setSelectedCustomPalaceId(palaceId);
-  };
+  const viewPredefinedPalace = useCallback((palaceId: string) => {
+    setSelectedPredefinedPalaceByUser((prev) => ({ ...prev, [userId]: palaceId }));
+  }, [userId]);
 
-  const viewPredefinedPalace = (palaceId: string) => {
-    setSelectedPredefinedPalaceId(palaceId);
-  };
+  const backToCustomList = useCallback(() => {
+    setSelectedCustomPalaceByUser((prev) => ({ ...prev, [userId]: undefined }));
+  }, [userId]);
 
-  const backToCustomList = () => {
-    setSelectedCustomPalaceId(undefined);
-  };
+  const backToPredefinedList = useCallback(() => {
+    setSelectedPredefinedPalaceByUser((prev) => ({ ...prev, [userId]: undefined }));
+  }, [userId]);
 
-  const backToPredefinedList = () => {
-    setSelectedPredefinedPalaceId(undefined);
-  };
+  const setCustomPage = useCallback(
+    (value: number) => setCustomPageByUser((prev) => ({ ...prev, [userId]: value })),
+    [userId]
+  );
+  const setCustomPageSize = useCallback(
+    (value: number) => setCustomPageSizeByUser((prev) => ({ ...prev, [userId]: value })),
+    [userId]
+  );
+  const setPredefinedPage = useCallback(
+    (value: number) => setPredefinedPageByUser((prev) => ({ ...prev, [userId]: value })),
+    [userId]
+  );
+  const setPredefinedPageSize = useCallback(
+    (value: number) => setPredefinedPageSizeByUser((prev) => ({ ...prev, [userId]: value })),
+    [userId]
+  );
 
   return {
     activeSubTab,
