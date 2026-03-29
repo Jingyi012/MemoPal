@@ -89,9 +89,10 @@ public sealed class AdminBootstrapper
             seededAdmin = await EnsureAdminUserAsync(cancellationToken);
         }
 
+        await SeedGamificationCatalogAsync(cancellationToken);
+        
         if (_options.SeedGamificationMockData)
         {
-            await SeedGamificationCatalogAsync(cancellationToken);
             await SeedPalaceContentFromFolderAsync(cancellationToken);
 
             var mockUsers = await SeedMockUsersAsync(cancellationToken);
