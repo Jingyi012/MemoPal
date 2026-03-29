@@ -71,6 +71,18 @@ public sealed class SystemSettingsController : ApiControllerBase
     }
 
     /// <summary>
+    /// Fetch premium subscription page configuration.
+    /// </summary>
+    [HttpGet("premium-subscription")]
+    public async Task<IActionResult> GetPremiumSubscription(CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new GetSystemSettingsByKeyQuery(SystemSettingKeys.PremiumSubscription),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Fetch XP configurations
     /// </summary>
     [HttpGet("xp-configs")]

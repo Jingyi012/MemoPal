@@ -79,6 +79,7 @@ public sealed class AdminBootstrapper
         await EnsureXpAndLevelConfigSettingsAsync(cancellationToken);
         await EnsureSupportHelpFaqSettingAsync(cancellationToken);
         await EnsureSupportPrivacyPolicySettingAsync(cancellationToken);
+        await EnsurePremiumSubscriptionSettingAsync(cancellationToken);
 
         User? seededAdmin = null;
         if (_options.Enabled &&
@@ -435,6 +436,182 @@ public sealed class AdminBootstrapper
         privacyPolicySetting.IsDeleted = false;
         privacyPolicySetting.DeletedAt = null;
         privacyPolicySetting.UpdatedAt = now;
+    }
+
+    private async Task EnsurePremiumSubscriptionSettingAsync(CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var premiumSetting = _db.SystemSettings.Local.FirstOrDefault(x => x.Key == SystemSettingKeys.PremiumSubscription) ??
+                             await _db.SystemSettings.FirstOrDefaultAsync(
+                                 x => x.Key == SystemSettingKeys.PremiumSubscription,
+                                 cancellationToken);
+
+        if (premiumSetting is not null && !premiumSetting.IsDeleted && !string.IsNullOrWhiteSpace(premiumSetting.Value))
+        {
+            return;
+        }
+
+        var serializedPremiumConfig = JsonSerializer.Serialize(new
+        {
+            hero = new
+            {
+                title = "Go Premium",
+                subtitle = "Unlock your full memory potential"
+            },
+            sections = new
+            {
+                includedTitle = "What's Included"
+            },
+            plans = new[]
+            {
+                new
+                {
+                    key = "annual",
+                    name = "Annual Plan",
+                    price = "$39.99",
+                    label = "/year",
+                    savings = "Save 33%",
+                    subtext = "Just $3.33/month",
+                    isBestValue = true,
+                    isActive = true,
+                    sortOrder = 1
+                },
+                new
+                {
+                    key = "monthly",
+                    name = "Monthly Plan",
+                    price = "$4.99",
+                    label = "/month",
+                    savings = string.Empty,
+                    subtext = "Cancel anytime",
+                    isBestValue = false,
+                    isActive = true,
+                    sortOrder = 2
+                }
+            },
+            features = new[]
+            {
+                new
+                {
+                    key = "custom-palaces",
+                    title = "Custom Memory Palaces",
+                    description = "Create unlimited custom palaces with your own locations",
+                    isActive = true,
+                    sortOrder = 1
+                },
+                new
+                {
+                    key = "edit-default-palaces",
+                    title = "Edit Default Palaces",
+                    description = "Customize pre-built palaces to match your preferences",
+                    isActive = true,
+                    sortOrder = 2
+                },
+                new
+                {
+                    key = "upload-custom-images",
+                    title = "Upload Custom Images",
+                    description = "Use your own photos for more personal memory locations",
+                    isActive = true,
+                    sortOrder = 3
+                },
+                new
+                {
+                    key = "advanced-analytics",
+                    title = "Advanced Analytics",
+                    description = "Detailed insights into your performance",
+                    isActive = true,
+                    sortOrder = 4
+                },
+                new
+                {
+                    key = "cloud-sync",
+                    title = "Cloud Sync",
+                    description = "Seamlessly sync across all your devices",
+                    isActive = true,
+                    sortOrder = 5
+                },
+                new
+                {
+                    key = "ad-free",
+                    title = "Ad-Free Experience",
+                    description = "Focus on learning without interruptions",
+                    isActive = true,
+                    sortOrder = 6
+                }
+            },
+            subscribeButton = new
+            {
+                enabled = false,
+                label = "Start 7-Day Free Trial",
+                disabledLabel = "Coming Soon",
+                pendingMessage = "Subscription checkout is not available yet."
+            },
+            footer = new
+            {
+                finePrint = "Recurring billing. Cancel anytime in App Store."
+            },
+            terms = new
+            {
+                buttonLabel = "Terms & Conditions",
+                title = "Terms & Conditions",
+                closeButtonLabel = "Close",
+                sections = new[]
+                {
+                    new
+                    {
+                        title = "Subscription Terms",
+                        body = "By subscribing to MemoPal Premium, you agree to pay the subscription fee for the selected plan. Your subscription will automatically renew unless cancelled at least 24 hours before the end of the current period."
+                    },
+                    new
+                    {
+                        title = "Free Trial",
+                        body = "New subscribers are eligible for a 7-day free trial. You will not be charged during the trial period. If you do not cancel before the trial ends, your payment method will be charged the subscription fee."
+                    },
+                    new
+                    {
+                        title = "Cancellation",
+                        body = "You can cancel your subscription at any time from the Settings page. Cancellation takes effect at the end of your current billing period. No refunds will be provided for partial subscription periods."
+                    },
+                    new
+                    {
+                        title = "Premium Features",
+                        body = "Premium features include unlimited custom palaces, custom images, advanced analytics, cloud sync, and an ad-free experience. Features may be updated or modified at our discretion."
+                    },
+                    new
+                    {
+                        title = "Data & Privacy",
+                        body = "Your learning data will be stored securely and used only to provide the service. Cloud sync requires Google login and stores your data on secure servers. We will never share your data with third parties."
+                    },
+                    new
+                    {
+                        title = "Changes to Terms",
+                        body = "We reserve the right to modify these terms at any time. You will be notified of significant changes. Continued use of the service after changes constitutes acceptance of the new terms."
+                    }
+                }
+            }
+        });
+
+        if (premiumSetting is null)
+        {
+            _db.SystemSettings.Add(new SystemSetting
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Key = SystemSettingKeys.PremiumSubscription,
+                Value = serializedPremiumConfig,
+                Description = "Premium subscription page and terms configuration for mobile app.",
+                CreatedAt = now,
+                UpdatedAt = now,
+                IsDeleted = false
+            });
+            return;
+        }
+
+        premiumSetting.Value = serializedPremiumConfig;
+        premiumSetting.Description = "Premium subscription page and terms configuration for mobile app.";
+        premiumSetting.IsDeleted = false;
+        premiumSetting.DeletedAt = null;
+        premiumSetting.UpdatedAt = now;
     }
 
     private async Task SeedGamificationCatalogAsync(CancellationToken cancellationToken)
