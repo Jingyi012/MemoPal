@@ -35,17 +35,7 @@ public sealed class GetLessonProgressQueryHandler : IRequestHandler<GetLessonPro
 
         if (progress is null)
         {
-            progress = new Domain.Entities.LessonProgress
-            {
-                UserId = request.UserId,
-                LessonId = request.LessonId,
-                MasteryLevel = "new",
-                TotalReviews = 0,
-                XpEarned = 0,
-            };
-
-            await _db.LessonProgresses.AddAsync(progress, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
+            throw new NotFoundAppException("Lesson progress not found.");
         }
 
         var schedules = await _db.ReviewSchedules

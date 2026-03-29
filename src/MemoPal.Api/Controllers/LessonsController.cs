@@ -16,23 +16,41 @@ public sealed class LessonsController : ApiControllerBase
     }
 
     [HttpGet("/lessons")]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] bool adminCreatedOnly = false,
+        CancellationToken cancellationToken = default)
     {
-        var data = await Sender.Send(new GetAllLessonsQuery(GetUserIdOrThrow(), IsAdmin: IsAdmin()), cancellationToken);
+        var data = await Sender.Send(
+            new GetAllLessonsQuery(GetUserIdOrThrow(), IsAdmin: IsAdmin(), AdminCreatedOnly: adminCreatedOnly),
+            cancellationToken);
         return Ok(data);
     }
 
     [HttpGet("/lessons/{lessonId}")]
-    public async Task<IActionResult> GetById(string lessonId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetById(
+        string lessonId,
+        [FromQuery] bool adminCreatedOnly = false,
+        CancellationToken cancellationToken = default)
     {
-        var result = await Sender.Send(new GetLessonQuery(GetUserIdOrThrow(), lessonId, IsAdmin()), cancellationToken);
+        var result = await Sender.Send(
+            new GetLessonQuery(GetUserIdOrThrow(), lessonId, IsAdmin(), adminCreatedOnly),
+            cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("/palaces/{palaceId}/lessons")]
-    public async Task<IActionResult> GetByPalace(string palaceId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetByPalace(
+        string palaceId,
+        [FromQuery] bool adminCreatedOnly = false,
+        CancellationToken cancellationToken = default)
     {
-        var data = await Sender.Send(new GetLessonsByPalaceQuery(GetUserIdOrThrow(), palaceId, IsAdmin: IsAdmin()), cancellationToken);
+        var data = await Sender.Send(
+            new GetLessonsByPalaceQuery(
+                GetUserIdOrThrow(),
+                palaceId,
+                IsAdmin: IsAdmin(),
+                AdminCreatedOnly: adminCreatedOnly),
+            cancellationToken);
         return Ok(data);
     }
 

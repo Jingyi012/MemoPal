@@ -36,6 +36,13 @@ public sealed class ReviewsController : ApiControllerBase
         return Ok(data);
     }
 
+    [HttpPost("/reviews")]
+    public async Task<IActionResult> Create([FromBody] ReviewScheduleUpsertRequest request, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new CreateReviewCommand(GetUserIdOrThrow(), request), cancellationToken);
+        return Ok(result);
+    }
+
     [HttpPatch("/reviews/{reviewId}")]
     public async Task<IActionResult> Update(string reviewId, [FromBody] ReviewScheduleUpsertRequest request, CancellationToken cancellationToken)
     {

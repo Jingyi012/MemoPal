@@ -17,6 +17,7 @@ public sealed class ReviewScheduleUpsertRequest
 {
     public string? Id { get; set; }
     public string? LessonProgressId { get; set; }
+    public string? LessonId { get; set; }
     public int ReviewRound { get; set; }
     public DateTime DueDate { get; set; }
     public bool Completed { get; set; }

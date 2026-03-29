@@ -8,7 +8,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Palaces.Queries;
 
-public sealed record GetPalacesQuery(string UserId, int? PageNumber = null, int? PageSize = null, bool IsAdmin = false)
+public sealed record GetPalacesQuery(
+    string UserId,
+    int? PageNumber = null,
+    int? PageSize = null,
+    bool IsAdmin = false,
+    bool AdminCreatedOnly = false)
     : IRequest<ApiResponse<IReadOnlyList<PalaceDto>>>;
 
 public sealed class GetPalacesQueryHandler : IRequestHandler<GetPalacesQuery, ApiResponse<IReadOnlyList<PalaceDto>>>
@@ -25,6 +30,18 @@ public sealed class GetPalacesQueryHandler : IRequestHandler<GetPalacesQuery, Ap
         var baseQuery = _db.Palaces
             .Where(x => !x.IsDeleted)
             .AsQueryable();
+
+        if (request.IsAdmin && request.AdminCreatedOnly)
+        {
+            var adminUserIds = _db.Users
+                .AsNoTracking()
+                .Where(x => x.Role == UserRoles.Admin && !x.IsDeleted)
+                .Select(x => x.Id);
+
+            baseQuery = baseQuery.Where(x =>
+                (x.CreatedBy != null && adminUserIds.Contains(x.CreatedBy)) ||
+                ((x.CreatedBy == null || x.CreatedBy == string.Empty) && !x.IsCustom));
+        }
 
         var palaces = await baseQuery.ToListAsync(cancellationToken);
         var userPalacesByPalaceId = request.IsAdmin

@@ -4,12 +4,17 @@ using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Common.Security;
+using MemoPal.Domain.Common;
 using MemoPal.Application.Features.Palaces.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Palaces.Queries;
 
-public sealed record GetPalaceQuery(string UserId, string PalaceId, bool IsAdmin = false) : IRequest<ApiResponse<PalaceDto>>;
+public sealed record GetPalaceQuery(
+    string UserId,
+    string PalaceId,
+    bool IsAdmin = false,
+    bool AdminCreatedOnly = false) : IRequest<ApiResponse<PalaceDto>>;
 
 public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, ApiResponse<PalaceDto>>
 {
@@ -29,6 +34,23 @@ public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, ApiR
                 request.IsAdmin,
                 cancellationToken)
             ?? throw new NotFoundAppException("Palace not found.");
+
+        if (request.IsAdmin && request.AdminCreatedOnly)
+        {
+            var isLegacyOfficial = string.IsNullOrWhiteSpace(palace.CreatedBy) && !palace.IsCustom;
+            var isAdminCreated = !string.IsNullOrWhiteSpace(palace.CreatedBy) && await _db.Users
+                .AsNoTracking()
+                .AnyAsync(
+                    x => x.Id == palace.CreatedBy &&
+                         x.Role == UserRoles.Admin &&
+                         !x.IsDeleted,
+                    cancellationToken);
+
+            if (!isLegacyOfficial && !isAdminCreated)
+            {
+                throw new NotFoundAppException("Palace not found.");
+            }
+        }
 
         if (request.IsAdmin)
         {

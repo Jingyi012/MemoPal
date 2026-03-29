@@ -98,12 +98,38 @@ public sealed class GetManagedUserDataQueryHandler : IRequestHandler<GetManagedU
                 .ToListAsync(cancellationToken);
 
         var progressLessonIds = progresses.Select(x => x.LessonId).Distinct().ToList();
-        var lessonTitles = progressLessonIds.Count == 0
-            ? new Dictionary<string, string>(StringComparer.Ordinal)
+        var progressLessonRows = progressLessonIds.Count == 0
+            ? []
             : await _db.Lessons
                 .AsNoTracking()
                 .Where(x => progressLessonIds.Contains(x.Id))
-                .ToDictionaryAsync(x => x.Id, x => x.Title, cancellationToken);
+                .Select(x => new { x.Id, x.Title, x.PalaceId, x.IsCustom })
+                .ToListAsync(cancellationToken);
+        var progressPalaceIds = progressLessonRows.Select(x => x.PalaceId).Distinct().ToList();
+        var progressPalaceRows = progressPalaceIds.Count == 0
+            ? []
+            : await _db.Palaces
+                .AsNoTracking()
+                .Where(x => progressPalaceIds.Contains(x.Id))
+                .Select(x => new { x.Id, x.Name, x.IsCustom })
+                .ToListAsync(cancellationToken);
+
+        var progressPalaceById = progressPalaceRows.ToDictionary(x => x.Id, x => x, StringComparer.Ordinal);
+        var progressLessonMetaById = progressLessonRows.ToDictionary(
+            x => x.Id,
+            x =>
+            {
+                var palace = progressPalaceById.GetValueOrDefault(x.PalaceId);
+                return new
+                {
+                    x.Title,
+                    x.PalaceId,
+                    PalaceName = palace?.Name ?? x.PalaceId,
+                    PalaceIsCustom = palace?.IsCustom ?? false,
+                    LessonIsCustom = x.IsCustom ?? false,
+                };
+            },
+            StringComparer.Ordinal);
 
         var badgeRows = await (
             from userBadge in _db.UserBadges.AsNoTracking()
@@ -244,7 +270,11 @@ public sealed class GetManagedUserDataQueryHandler : IRequestHandler<GetManagedU
             .Select(x => new ManagedUserLessonProgressDataDto(
                 x.Id,
                 x.LessonId,
-                lessonTitles.GetValueOrDefault(x.LessonId) ?? x.LessonId,
+                progressLessonMetaById.GetValueOrDefault(x.LessonId)?.Title ?? x.LessonId,
+                progressLessonMetaById.GetValueOrDefault(x.LessonId)?.PalaceId ?? string.Empty,
+                progressLessonMetaById.GetValueOrDefault(x.LessonId)?.PalaceName ?? string.Empty,
+                progressLessonMetaById.GetValueOrDefault(x.LessonId)?.PalaceIsCustom ?? false,
+                progressLessonMetaById.GetValueOrDefault(x.LessonId)?.LessonIsCustom ?? false,
                 x.FirstCompletedDate,
                 x.TotalReviews,
                 x.MasteryLevel,

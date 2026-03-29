@@ -640,7 +640,7 @@ public sealed class AdminBootstrapper
             lesson.Category = lessonSeed.Category;
             lesson.TagJson = null;
             lesson.IsCustom = false;
-            lesson.IsLocked = level > 1;
+            lesson.IsLocked = false;
             lesson.Completed = false;
             lesson.IsPremium = false;
             lesson.Privacy = "public";

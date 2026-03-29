@@ -3,12 +3,19 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Domain.Common;
 using MemoPal.Application.Features.Words.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Words.Queries;
 
-public sealed record GetWordsByLessonQuery(string UserId, string LessonId, int? PageNumber = null, int? PageSize = null, bool IsAdmin = false) : IRequest<ApiResponse<IReadOnlyList<WordDto>>>;
+public sealed record GetWordsByLessonQuery(
+    string UserId,
+    string LessonId,
+    int? PageNumber = null,
+    int? PageSize = null,
+    bool IsAdmin = false,
+    bool AdminCreatedOnly = false) : IRequest<ApiResponse<IReadOnlyList<WordDto>>>;
 
 public sealed class GetWordsByLessonQueryHandler : IRequestHandler<GetWordsByLessonQuery, ApiResponse<IReadOnlyList<WordDto>>>
 {
@@ -28,9 +35,43 @@ public sealed class GetWordsByLessonQueryHandler : IRequestHandler<GetWordsByLes
             cancellationToken);
         if (lesson is null) throw new NotFoundAppException("Lesson not found.");
 
+        if (request.IsAdmin && request.AdminCreatedOnly)
+        {
+            var isLegacyOfficial = string.IsNullOrWhiteSpace(lesson.CreatedBy) && lesson.IsCustom != true;
+            var isAdminCreatedLesson = !string.IsNullOrWhiteSpace(lesson.CreatedBy) && await _db.Users
+                .AsNoTracking()
+                .AnyAsync(
+                    x => x.Id == lesson.CreatedBy &&
+                         x.Role == UserRoles.Admin &&
+                         !x.IsDeleted,
+                    cancellationToken);
+
+            if (!isLegacyOfficial && !isAdminCreatedLesson)
+            {
+                throw new NotFoundAppException("Lesson not found.");
+            }
+        }
+
+        var wordsByLessonQuery = _db.Words
+            .AsNoTracking()
+            .Where(word => word.LessonId == request.LessonId && !word.IsDeleted)
+            .AsQueryable();
+
+        if (request.IsAdmin && request.AdminCreatedOnly)
+        {
+            var adminUserIds = _db.Users
+                .AsNoTracking()
+                .Where(x => x.Role == UserRoles.Admin && !x.IsDeleted)
+                .Select(x => x.Id);
+
+            wordsByLessonQuery = wordsByLessonQuery.Where(word =>
+                (word.CreatedBy != null && adminUserIds.Contains(word.CreatedBy)) ||
+                word.CreatedBy == null ||
+                word.CreatedBy == string.Empty);
+        }
+
         var query =
-            from word in _db.Words
-            where word.LessonId == request.LessonId && !word.IsDeleted
+            from word in wordsByLessonQuery
             join location in _db.Locations.Where(x => !x.IsDeleted)
                 on word.LocationId equals location.Id into locationJoin
             from location in locationJoin.DefaultIfEmpty()

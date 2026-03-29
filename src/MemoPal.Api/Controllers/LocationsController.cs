@@ -16,9 +16,18 @@ public sealed class LocationsController : ApiControllerBase
     }
 
     [HttpGet("/palaces/{palaceId}/locations")]
-    public async Task<IActionResult> GetByPalace(string palaceId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetByPalace(
+        string palaceId,
+        [FromQuery] bool adminCreatedOnly = false,
+        CancellationToken cancellationToken = default)
     {
-        var data = await Sender.Send(new GetLocationsByPalaceQuery(GetUserIdOrThrow(), palaceId, IsAdmin: IsAdmin()), cancellationToken);
+        var data = await Sender.Send(
+            new GetLocationsByPalaceQuery(
+                GetUserIdOrThrow(),
+                palaceId,
+                IsAdmin: IsAdmin(),
+                AdminCreatedOnly: adminCreatedOnly),
+            cancellationToken);
         if (!data.Success || data.Data is null)
         {
             return Ok(data);

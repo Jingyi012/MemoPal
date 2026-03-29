@@ -20,9 +20,12 @@ public sealed class PalacesController : ApiControllerBase
     public async Task<IActionResult> GetAll(
         [FromQuery] int? pageNumber = null,
         [FromQuery] int? pageSize = null,
+        [FromQuery] bool adminCreatedOnly = false,
         CancellationToken cancellationToken = default)
     {
-        var result = await Sender.Send(new GetPalacesQuery(GetUserIdOrThrow(), pageNumber, pageSize, IsAdmin()), cancellationToken);
+        var result = await Sender.Send(
+            new GetPalacesQuery(GetUserIdOrThrow(), pageNumber, pageSize, IsAdmin(), adminCreatedOnly),
+            cancellationToken);
         if (!result.Success || result.Data is null)
         {
             return Ok(result);
@@ -43,9 +46,14 @@ public sealed class PalacesController : ApiControllerBase
     }
 
     [HttpGet("{palaceId}")]
-    public async Task<IActionResult> GetById(string palaceId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetById(
+        string palaceId,
+        [FromQuery] bool adminCreatedOnly = false,
+        CancellationToken cancellationToken = default)
     {
-        var result = await Sender.Send(new GetPalaceQuery(GetUserIdOrThrow(), palaceId, IsAdmin()), cancellationToken);
+        var result = await Sender.Send(
+            new GetPalaceQuery(GetUserIdOrThrow(), palaceId, IsAdmin(), adminCreatedOnly),
+            cancellationToken);
         if (!result.Success || result.Data is null)
         {
             return Ok(result);
