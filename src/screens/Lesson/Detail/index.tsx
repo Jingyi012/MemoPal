@@ -4,9 +4,11 @@ import CustomBottomSheet from '@/components/CustomBottomSheet';
 import { ForgettingCurveCard } from '@/components/information/ForgettingCurve';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
-import { useLessonProgress } from '@/hooks/useLessonProgress';
-import { useLessonWords } from '@/hooks/useLessonWords';
-import { useLessonDetail } from '@/hooks/useLessonsManager';
+import { PROGRESS_KEYS, useLessonProgress } from '@/hooks/useLessonProgress';
+import { useLessonWords, WORD_KEYS } from '@/hooks/useLessonWords';
+import { LESSON_KEYS, useLessonDetail } from '@/hooks/useLessonsManager';
+import { useFocusEffect } from '@react-navigation/native';
+import { useQueryClient } from '@tanstack/react-query';
 import { dateFormatter } from '@/utils/formatter';
 import { getNextReview, getRetentionRate, isReviewDueSoon, isReviewOverdue } from '@/utils/review';
 import BottomSheet from '@gorhom/bottom-sheet';
@@ -28,6 +30,7 @@ interface Props {
 
 const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const {
     progress,
     isLoading: progressLoading,
@@ -56,11 +59,18 @@ const LessonDetailScreen: React.FC<Props> = ({ lessonId }) => {
     await Promise.all([progressRefresh(), lessonRefresh(), wordsRefresh()]);
   };
 
-  const { hasStartedLearning, hasMastered, hasCompletedLearning } = useMemo(() => {
+  useFocusEffect(
+    useCallback(() => {
+      void queryClient.invalidateQueries({ queryKey: PROGRESS_KEYS.detail(lessonId) });
+      void queryClient.invalidateQueries({ queryKey: LESSON_KEYS.detail(lessonId) });
+      void queryClient.invalidateQueries({ queryKey: WORD_KEYS.byLesson(lessonId) });
+    }, [lessonId, queryClient])
+  );
+
+  const { hasStartedLearning, hasMastered } = useMemo(() => {
     return {
-      hasStartedLearning: progress?.masteryLevel != 'new',
+      hasStartedLearning: progress?.masteryLevel !== 'new',
       hasMastered: progress?.masteryLevel === 'mastered',
-      hasCompletedLearning: !!progress?.firstCompletedDate,
     };
   }, [progress]);
 

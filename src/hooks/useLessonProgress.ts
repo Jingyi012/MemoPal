@@ -17,6 +17,8 @@ export function useLessonProgress(lessonId: string) {
   const query = useQuery({
     queryKey: PROGRESS_KEYS.detail(lessonId),
     enabled: !!lessonId,
+    staleTime: 0,
+    refetchOnMount: 'always',
     queryFn: async () => {
       // Always ensure local progress exists as soon as lesson page is opened.
       let progress = await lessonProgressService.initLessonProgress(lessonId);
@@ -60,6 +62,7 @@ export function useSaveLessonProgress() {
       await lessonProgressService.saveProgress(progress);
     },
     onSuccess: (_, progress) => {
+      queryClient.setQueryData(PROGRESS_KEYS.detail(progress.lessonId), progress);
       // Keep queries fresh
       queryClient.invalidateQueries({ queryKey: PROGRESS_KEYS.detail(progress.lessonId) });
     },

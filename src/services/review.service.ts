@@ -87,6 +87,7 @@ export async function completeReview(
   // 1. Calculate XP (Logic stays in service or moved to a utility)
   const xpConfig = await xpConfigService.getXpConfigBySourceType(SourceType.ReviewComplete);
   const accuracy = totalCount > 0 ? correctCount / totalCount : 0;
+  const isPassed = accuracy >= REVIEW_PASS_THRESHOLD;
 
   const minExpectedSeconds = Math.max(totalCount * REVIEW_MIN_SECONDS_PER_WORD, 1);
   const targetSeconds = Math.max(totalCount * REVIEW_TARGET_SECONDS_PER_WORD, minExpectedSeconds);
@@ -99,8 +100,10 @@ export async function completeReview(
   const speedRatio = Math.max(0, Math.min(1, (targetSeconds - safeElapsedSeconds) / (targetSeconds - minExpectedSeconds || 1)));
 
   const baseXp = Math.floor((xpConfig?.baseXp ?? 10) + (xpConfig?.variableXp ?? 1) * accuracy);
-  const speedBonusXp = Math.round(REVIEW_SPEED_BONUS_CAP * speedRatio * accuracy);
-  const xpEarned = Math.max(0, baseXp + speedBonusXp);
+  const computedSpeedBonusXp = Math.round(REVIEW_SPEED_BONUS_CAP * speedRatio * accuracy);
+  const computedXpEarned = Math.max(0, baseXp + computedSpeedBonusXp);
+  const speedBonusXp = isPassed ? computedSpeedBonusXp : 0;
+  const xpEarned = isPassed ? computedXpEarned : 0;
 
   // 100-point weighted score: 80% accuracy + 20% speed
   const score = Math.round(Math.min(100, accuracy * 80 + speedRatio * 20));
@@ -119,7 +122,7 @@ export async function completeReview(
     earnedBadges: [],
   };
 
-  if (xpEarned > 0) {
+  if (isPassed && xpEarned > 0) {
     const clientEventId = Crypto.randomUUID();
     const xpResult = await recordXpEventWithClientEventId(
       SourceType.ReviewComplete,
