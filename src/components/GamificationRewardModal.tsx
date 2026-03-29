@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { BaseCard } from '@/components/BaseCard';
 import { Sparkles, Star, Trophy } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -16,14 +17,14 @@ const SectionList = ({ title, items }: { title: string; items: string[] }) => {
   if (items.length === 0) return null;
 
   return (
-    <View className="mt-4 rounded-xl bg-slate-50 p-3">
+    <BaseCard className="mt-4 bg-slate-50" padding="sm" radius="xl" shadow="none" bordered={false}>
       <Text className="text-sm font-semibold text-slate-800">{title}</Text>
       {items.map((item) => (
         <Text key={item} className="mt-2 text-sm text-slate-600">
           - {item}
         </Text>
       ))}
-    </View>
+    </BaseCard>
   );
 };
 
@@ -41,7 +42,7 @@ export default function GamificationRewardModal({
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       <View className="flex-1 items-center justify-center bg-black/45 px-6">
-        <View className="w-full max-w-md rounded-2xl bg-white p-5">
+        <BaseCard className="w-full max-w-md" padding="lg" radius="2xl" shadow="md" bordered={false}>
           <View className="flex-row items-center">
             <View className="h-10 w-10 items-center justify-center rounded-full bg-teal-100">
               <Sparkles size={18} color="#0f766e" />
@@ -90,7 +91,7 @@ export default function GamificationRewardModal({
             className="mt-2 items-center rounded-xl bg-slate-100 py-3">
             <Text className="font-semibold text-slate-700">View Reward History</Text>
           </AnimatedPressable>
-        </View>
+        </BaseCard>
       </View>
     </Modal>
   );

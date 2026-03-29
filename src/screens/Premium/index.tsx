@@ -1,6 +1,8 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { BaseCard, getBaseCardClassName } from '@/components/BaseCard';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
+import { cn } from '@/utils/cn';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -108,9 +110,9 @@ const PremiumScreen: React.FC = () => {
 
         {/* Feature List */}
         <View className="-mt-8 px-6">
-          <View className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <BaseCard radius="3xl" padding="lg" shadow="sm">
             <Text className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">
-              What's Included
+              What&apos;s Included
             </Text>
             <View className="gap-y-4">
               {data?.features.map((feature) => (
@@ -125,7 +127,7 @@ const PremiumScreen: React.FC = () => {
                 </View>
               ))}
             </View>
-          </View>
+          </BaseCard>
 
           {/* Pricing Selector */}
           <View className="mt-8 gap-4">
@@ -134,11 +136,16 @@ const PremiumScreen: React.FC = () => {
                 key={plan.id}
                 activeOpacity={0.8}
                 onPress={() => setSelectedPlanId(plan.id)}
-                className={`relative rounded-3xl border-2 p-5 ${
-                  selectedPlanId === plan.id
-                    ? 'border-orange-500 bg-orange-50/30'
-                    : 'border-slate-200 bg-white'
-                }`}>
+                className={getBaseCardClassName({
+                  padding: 'lg',
+                  radius: '3xl',
+                  className: cn(
+                    'relative border-2',
+                    selectedPlanId === plan.id
+                      ? 'border-orange-500 bg-orange-50/30'
+                      : 'border-slate-200'
+                  ),
+                })}>
                 {plan.isBestValue && (
                   <View className="absolute -top-3 right-6">
                     <LinearGradient

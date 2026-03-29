@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
+import { BaseCard } from '@/components/BaseCard';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { Colors } from '@/constants/colors';
 import { CommunityLesson } from '@/types/community';
@@ -140,7 +141,7 @@ const PreviewBottomSheet = forwardRef<Ref, Props>(
                       </Text>
                     </View>
 
-                    <View className="overflow-hidden rounded-3xl border border-slate-100 bg-white">
+                    <BaseCard className="overflow-hidden rounded-3xl" padding="none">
                       {selectedLesson.words.map((w, index) => (
                         <View
                           key={index}
@@ -162,7 +163,7 @@ const PreviewBottomSheet = forwardRef<Ref, Props>(
                           </View>
                         </View>
                       ))}
-                    </View>
+                    </BaseCard>
                   </View>
                 </>
               )}

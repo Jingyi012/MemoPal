@@ -5,6 +5,7 @@ import { ChevronRight, Gift } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 import AnimatedPressable from '../AnimatedPressable';
+import { getBaseCardClassName } from '../BaseCard';
 
 interface TutorialCardProps {
   router: Router;
@@ -13,7 +14,7 @@ interface TutorialCardProps {
 const ReferrerPromptCard: React.FC<TutorialCardProps> = ({ router }) => {
   return (
     <AnimatedPressable onPress={() => router.push('/referral')}>
-      <View className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+      <View className={getBaseCardClassName({ padding: 'md', radius: '2xl', shadow: 'sm' })}>
         <View className="flex-row items-center gap-3">
           {/* Icon */}
           <LinearGradient

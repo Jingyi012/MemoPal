@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { getBaseCardClassName } from '@/components/BaseCard';
 import { ChevronRight, Compass, MapPin } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -16,7 +17,10 @@ export const ReviewPalaceButton: React.FC<Props> = ({
     <View className="mt-4">
       <AnimatedPressable
         onPress={onStartPalaceTraining}
-        className="w-full overflow-hidden rounded-2xl border border-teal-100 bg-white p-4 shadow-sm">
+        className={getBaseCardClassName({
+          className: 'w-full overflow-hidden border-teal-100 p-4',
+          padding: 'none',
+        })}>
         <View className="flex-row items-center gap-3">
           <View className="h-10 w-10 items-center justify-center rounded-full bg-teal-100">
             <Compass size={20} color="#0f766e" />

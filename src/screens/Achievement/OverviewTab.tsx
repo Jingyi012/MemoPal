@@ -1,3 +1,4 @@
+import { BaseCard } from '@/components/BaseCard';
 import { Colors } from '@/constants/colors';
 import { Award, Flag, Sparkles, Target } from 'lucide-react-native';
 import React from 'react';
@@ -41,7 +42,7 @@ function SummaryCard({
   iconBgClass: string;
 }) {
   return (
-    <View className="flex-1 flex-col rounded-2xl border border-slate-100 bg-white p-3">
+    <BaseCard className="flex-1 flex-col p-3" padding="none">
       <View className="flex-col items-center justify-between">
         <View className={`mb-3 rounded-full p-2 ${iconBgClass}`}>
           <Icon size={14} color={iconColor} />
@@ -52,7 +53,7 @@ function SummaryCard({
       </View>
       <Text className="mt-3 text-center text-2xl font-bold text-slate-900">{value}</Text>
       <Text className="mt-1 text-center text-xs text-slate-500">{subtitle}</Text>
-    </View>
+    </BaseCard>
   );
 }
 
@@ -71,7 +72,7 @@ export function OverviewTab({
 
   return (
     <View className="gap-3">
-      <View className="rounded-2xl bg-white p-4">
+      <BaseCard className="p-4" padding="none">
         <Text className="text-base font-bold text-slate-900">Overview</Text>
         <Text className="mt-1 text-sm text-slate-500">
           Quick view of your current progress and nearest wins.
@@ -103,9 +104,9 @@ export function OverviewTab({
             iconBgClass="bg-teal-100"
           />
         </View>
-      </View>
+      </BaseCard>
 
-      <View className="rounded-2xl bg-white p-4">
+      <BaseCard className="p-4" padding="none">
         <View className="flex-row items-center justify-between">
           <Text className="text-sm font-semibold text-slate-800">Recent Badges</Text>
           <View className="rounded-full bg-amber-100 p-2">
@@ -125,9 +126,9 @@ export function OverviewTab({
             ))}
           </View>
         )}
-      </View>
+      </BaseCard>
 
-      <View className="rounded-2xl bg-white p-4">
+      <BaseCard className="p-4" padding="none">
         <View className="flex-row items-center justify-between">
           <Text className="text-sm font-semibold text-slate-800">Upcoming Milestones</Text>
           <Text className="text-xs text-slate-500">Closest first</Text>
@@ -167,7 +168,7 @@ export function OverviewTab({
             })}
           </View>
         )}
-      </View>
+      </BaseCard>
     </View>
   );
 }

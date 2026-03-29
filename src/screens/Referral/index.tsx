@@ -1,4 +1,5 @@
 import { referralApi } from '@/api/referral';
+import { BaseCard } from '@/components/BaseCard';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
@@ -246,7 +247,7 @@ const ReferralScreen: React.FC = () => {
           </View>
         ) : null}
 
-        <View className="mb-8 rounded-[32px] border border-slate-100 bg-white p-6 shadow-sm">
+        <BaseCard className="mb-8 rounded-[32px] p-6">
           <Text className="text-center text-xs font-bold uppercase tracking-widest text-slate-400">
             Your Invite Code
           </Text>
@@ -275,7 +276,7 @@ const ReferralScreen: React.FC = () => {
               onPress={() => void handleShare('native')}
             />
           </View>
-        </View>
+        </BaseCard>
 
         <View className="mb-8 flex-row gap-3">
           <StatBox
@@ -295,7 +296,7 @@ const ReferralScreen: React.FC = () => {
           />
         </View>
 
-        <View className="mb-8 overflow-hidden rounded-3xl border border-slate-100 bg-white p-2">
+        <BaseCard className="mb-8 overflow-hidden rounded-3xl p-2">
           <View className="flex-row p-4">
             <Crown size={20} color={Colors.yellow600} />
             <Text className="ml-1 text-lg font-medium text-slate-800">Milestones</Text>
@@ -314,9 +315,9 @@ const ReferralScreen: React.FC = () => {
               />
             );
           })}
-        </View>
+        </BaseCard>
 
-        <View className="mb-8 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <BaseCard className="mb-8 p-5">
           {summary.hasRedeemedCode ? (
             <View>
               <Text className="text-sm font-semibold text-slate-700">
@@ -352,7 +353,7 @@ const ReferralScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
           )}
-        </View>
+        </BaseCard>
 
         {summary.referrals.length > 0 ? (
           <ReferralList referrals={summary.referrals} pageSize={10} />
@@ -365,7 +366,7 @@ const ReferralScreen: React.FC = () => {
         animationType="fade"
         onRequestClose={() => void closeRewardPopup()}>
         <View className="flex-1 items-center justify-center bg-slate-900/45 px-6">
-          <View className="w-full max-w-md rounded-3xl bg-white p-6 shadow-lg">
+          <BaseCard className="w-full max-w-md p-6" radius="3xl" shadow="md" bordered={false}>
             <Text className="text-xs font-bold uppercase tracking-widest text-indigo-500">
               Referral Reward
             </Text>
@@ -380,7 +381,7 @@ const ReferralScreen: React.FC = () => {
               onPress={() => void closeRewardPopup()}>
               <Text className="text-center font-semibold text-white">Got it</Text>
             </TouchableOpacity>
-          </View>
+          </BaseCard>
         </View>
       </Modal>
     </View>

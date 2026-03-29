@@ -1,3 +1,4 @@
+import { BaseCard } from '@/components/BaseCard';
 import { StepNavigationFooter } from '@/components/StepNavigationFooter';
 import { GradientColors } from '@/types/colors';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,7 +30,7 @@ const tutorialSteps: TutorialStep[] = [
     colors: ['#a855f7', '#4f46e5'],
     content:
       "A Memory Palace is a mental journey through a familiar place. Each location becomes an anchor for memories. This ancient technique, used by memory champions, leverages your brain's natural ability to remember spaces.",
-    example: 'Imagine your home: front door → living room → kitchen. Each location holds a memory.',
+    example: 'Imagine your home: front door -> living room -> kitchen. Each location holds a memory.',
   },
   {
     id: 2,
@@ -128,7 +129,6 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
 
   return (
     <View className="flex-1">
-      {/* Header */}
       <LinearGradient
         colors={step.colors}
         start={{ x: 0, y: 0 }}
@@ -143,7 +143,6 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
           <Text className="ml-4 text-lg font-bold text-white">Tutorial</Text>
         </View>
 
-        {/* Progress */}
         <View className="mb-6 flex-row items-center justify-center gap-2">
           {tutorialSteps.map((_, index) => (
             <View
@@ -159,7 +158,6 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
           ))}
         </View>
 
-        {/* Icon */}
         <View className="mb-4 items-center">
           <View className="h-24 w-24 items-center justify-center rounded-full bg-white shadow-xl">
             <Icon size={48} color="#374151" />
@@ -171,28 +169,35 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
         </Text>
       </LinearGradient>
 
-      {/* Content */}
       <Animated.ScrollView
         className="flex-1 px-6 pt-6"
         showsVerticalScrollIndicator={false}
         style={animatedContentStyle}>
         <View className="space-y-6 pb-10">
-          <View className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+          <BaseCard className="border-gray-100" radius="3xl" padding="lg" shadow="sm">
             <Text className="text-base leading-6 text-slate-600">{step.content}</Text>
-          </View>
+          </BaseCard>
 
-          <View className="mt-3 flex-row rounded-3xl border border-purple-100 bg-purple-50 p-5">
+          <BaseCard
+            className="mt-3 flex-row border-purple-100 bg-purple-50"
+            radius="3xl"
+            padding="lg"
+            shadow="none">
             <View className="mr-4 h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
-              <Text className="text-lg">💡</Text>
+              <Text className="text-lg">i</Text>
             </View>
             <View className="flex-1">
               <Text className="mb-1 font-bold text-purple-900">Example</Text>
               <Text className="text-sm leading-5 text-purple-800">{step.example}</Text>
             </View>
-          </View>
+          </BaseCard>
 
           {currentStep === 1 && (
-            <View className="mt-3 rounded-3xl border border-teal-100 bg-teal-50 p-5">
+            <BaseCard
+              className="mt-3 border-teal-100 bg-teal-50"
+              radius="3xl"
+              padding="lg"
+              shadow="none">
               <Text className="mb-3 font-bold text-teal-900">Visualization Tips</Text>
               {[
                 'Make it exaggerated',
@@ -201,18 +206,22 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
                 'Engage emotions',
               ].map((tip, i) => (
                 <Text key={i} className="text-sm text-teal-800">
-                  • {tip}
+                  - {tip}
                 </Text>
               ))}
-            </View>
+            </BaseCard>
           )}
 
           {currentStep === 3 && (
-            <View className="mt-3 rounded-3xl border border-orange-100 bg-orange-50 p-5">
-              <Text className="mb-2 font-bold text-orange-900">📊 The Forgetting Curve</Text>
-              <Text className="text-sm text-orange-800">• After 24h: 70% forgotten</Text>
-              <Text className="text-sm text-orange-800">• After 7 days: 90% forgotten</Text>
-            </View>
+            <BaseCard
+              className="mt-3 border-orange-100 bg-orange-50"
+              radius="3xl"
+              padding="lg"
+              shadow="none">
+              <Text className="mb-2 font-bold text-orange-900">Forgetting Curve</Text>
+              <Text className="text-sm text-orange-800">- After 24h: 70% forgotten</Text>
+              <Text className="text-sm text-orange-800">- After 7 days: 90% forgotten</Text>
+            </BaseCard>
           )}
         </View>
       </Animated.ScrollView>
@@ -225,3 +234,4 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
     </View>
   );
 }
+

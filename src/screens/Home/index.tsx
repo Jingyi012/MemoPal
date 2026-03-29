@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { BaseCard, getBaseCardClassName } from '@/components/BaseCard';
 import { PremiumUpdateCard } from '@/components/PremiumUpdateCard';
 import TutorialPromptCard from '@/components/PromptCard/TutorialPromptCard';
 import { useUserState } from '@/contexts/UserStateContext';
@@ -24,7 +25,12 @@ const QuickAction = ({
   subtitle: string;
   onPress: () => void;
 }) => (
-  <AnimatedPressable onPress={onPress} className="mb-2 rounded-2xl bg-white p-4">
+  <AnimatedPressable
+    onPress={onPress}
+    className={getBaseCardClassName({
+      className: 'mb-2 p-4',
+      padding: 'none',
+    })}>
     <Text className="font-bold text-slate-800">{title}</Text>
     <Text className="mt-0.5 text-xs text-slate-500">{subtitle}</Text>
   </AnimatedPressable>
@@ -106,7 +112,7 @@ const HomeScreen = () => {
             onPress={() => router.push('/(tabs)/palaces')}
           />
 
-          <View className="mt-3 rounded-2xl bg-teal-600 p-4">
+          <BaseCard className="mt-3 bg-teal-600 p-4" padding="none" shadow="sm" bordered={false}>
             <Text className="text-lg font-bold text-white">Daily Focus</Text>
             <Text className="mt-1 text-sm text-teal-100">
               {dueCount > 0
@@ -120,9 +126,9 @@ const HomeScreen = () => {
                 {dueCount > 0 ? 'Review Now' : 'Browse Palaces'}
               </Text>
             </AnimatedPressable>
-          </View>
+          </BaseCard>
 
-          <View className="mt-4 rounded-2xl bg-white p-4">
+          <BaseCard className="mt-4 p-4" padding="none">
             <Text className="text-base font-bold text-slate-900">
               {gamificationUiConfig.homeMissionCardTitle}
             </Text>
@@ -161,7 +167,7 @@ const HomeScreen = () => {
               className="mt-3 items-center rounded-xl bg-teal-600 px-3 py-2">
               <Text className="text-xs font-semibold text-white">Open Missions</Text>
             </AnimatedPressable>
-          </View>
+          </BaseCard>
 
           <View className="mt-4">
             <Text className="mb-2 text-base font-bold text-slate-800">Quick Actions</Text>

@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
+import { BaseCard } from '@/components/BaseCard';
 import { CommunityLesson } from '@/types/community';
 import { BookOpen, Check, Crown, Download } from 'lucide-react-native';
 import React from 'react';
@@ -13,7 +14,7 @@ interface Props {
 }
 
 export const LessonCard = ({ lesson, isImported, onImport, onPreview }: Props) => (
-  <View className="mb-4 rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+  <BaseCard className="mb-4 rounded-3xl p-4" padding="none">
     <View className="mb-3 flex-row items-start">
       <View className="h-11 w-11 items-center justify-center rounded-xl bg-teal-500">
         <BookOpen size={20} color="white" />
@@ -87,5 +88,5 @@ export const LessonCard = ({ lesson, isImported, onImport, onPreview }: Props) =
         )}
       </AnimatedPressable>
     </View>
-  </View>
+  </BaseCard>
 );

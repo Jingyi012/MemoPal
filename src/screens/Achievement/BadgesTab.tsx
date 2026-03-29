@@ -1,3 +1,4 @@
+import { BaseCard } from '@/components/BaseCard';
 import { GamificationMobileUiConfig } from '@/types/gamificationUiConfig';
 import { Badge } from '@/types/levelAndbadge';
 import React, { useMemo } from 'react';
@@ -29,7 +30,7 @@ export function BadgesTab({ badges, config, onSelectBadge }: BadgesTabProps) {
   const lockedCount = Math.max(0, orderedBadges.length - earnedCount);
 
   return (
-    <View className="rounded-2xl bg-white p-4">
+    <BaseCard className="p-4" padding="none">
       <View className="flex-row items-center justify-between">
         <View className="flex-1 pr-3">
           <Text className="text-base font-bold text-slate-900">{config.badgeSectionTitle}</Text>
@@ -55,6 +56,6 @@ export function BadgesTab({ badges, config, onSelectBadge }: BadgesTabProps) {
           <BadgeCard key={badge.id} badge={badge} onPress={() => onSelectBadge(badge.id)} />
         ))}
       </View>
-    </View>
+    </BaseCard>
   );
 }

@@ -1,3 +1,4 @@
+import { BaseCard } from '@/components/BaseCard';
 import { GamificationMobileUiConfig } from '@/types/gamificationUiConfig';
 import { Milestone } from '@/types/levelAndbadge';
 import React, { useState } from 'react';
@@ -34,7 +35,7 @@ export function MilestonesTab({ milestoneGroups, config }: MilestonesTabProps) {
   };
 
   return (
-    <View className="rounded-2xl bg-white p-4">
+    <BaseCard className="p-4" padding="none">
       <View className="mb-4">
         <Text className="text-base font-bold text-slate-900">{config.milestoneSectionTitle}</Text>
         <Text className="mt-1 text-sm text-slate-500">
@@ -88,6 +89,6 @@ export function MilestonesTab({ milestoneGroups, config }: MilestonesTabProps) {
           );
         })}
       </View>
-    </View>
+    </BaseCard>
   );
 }

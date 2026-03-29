@@ -1,3 +1,4 @@
+import { getBaseCardClassName } from '@/components/BaseCard';
 import { Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Lightbulb } from 'lucide-react-native';
@@ -56,7 +57,10 @@ export const DailyTip: React.FC<DailyTipProps> = ({ dayOfMonth }) => {
   return (
     <Animated.View
       entering={FadeInDown.delay(300)}
-      className="mt-2 rounded-2xl bg-indigo-50 p-4 shadow-sm">
+      className={getBaseCardClassName({
+        className: 'mt-2 bg-indigo-50 p-4',
+        padding: 'none',
+      })}>
       <View className="flex-row gap-3">
         <View className="items-center justify-start pt-1">
           <Text className="text-3xl">{tip.emoji}</Text>

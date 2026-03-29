@@ -1,3 +1,4 @@
+import { getBaseCardClassName } from '@/components/BaseCard';
 import { Colors } from '@/constants/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Brain } from 'lucide-react-native';
@@ -22,7 +23,11 @@ export const WhyThisWorkCard: React.FC = () => {
       style={{
         borderRadius: 10,
       }}
-      className="mt-6 border-2 border-purple-200 p-4 shadow-sm">
+      className={getBaseCardClassName({
+        className: 'mt-6 border-2 border-purple-200 bg-transparent p-4',
+        padding: 'none',
+        bordered: false,
+      })}>
       {/* Header */}
       <View className="mb-3 flex-row items-center gap-2">
         <Brain size={20} color="#9333ea" />

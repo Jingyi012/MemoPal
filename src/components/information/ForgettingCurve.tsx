@@ -1,3 +1,4 @@
+import { BaseCard } from '@/components/BaseCard';
 import { cn } from '@/utils/cn';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -34,8 +35,11 @@ const RetentionRow = ({
 
 export const ForgettingCurveCard: React.FC<Props> = ({ className }) => {
   return (
-    <View
-      className={cn('rounded-3xl border border-teal-100 bg-white p-6 shadow-sm', className)}
+    <BaseCard
+      className={cn('border-teal-100 p-6', className)}
+      radius="3xl"
+      shadow="sm"
+      padding="none"
       style={{
         shadowOpacity: 0.05,
         shadowRadius: 10,
@@ -69,6 +73,6 @@ export const ForgettingCurveCard: React.FC<Props> = ({ className }) => {
           keeping your memories permanent.
         </Text>
       </View>
-    </View>
+    </BaseCard>
   );
 };

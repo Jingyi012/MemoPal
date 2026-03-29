@@ -1,3 +1,4 @@
+import { BaseCard } from '@/components/BaseCard';
 import { Colors } from '@/constants/colors';
 import { Step } from '@/types/application';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,7 +13,10 @@ export const StepCard: React.FC<StepCardProps> = ({ step }) => {
   const progressPercent = step.progress ? (step.progress.current / step.progress.total) * 100 : 0;
 
   return (
-    <View className={`mt-3 rounded-2xl bg-white p-4 shadow-lg ${isLocked ? 'opacity-60' : ''}`}>
+    <BaseCard
+      className={`mt-3 p-4 ${isLocked ? 'opacity-60' : ''}`}
+      padding="none"
+      shadow="md">
       <View className="flex-row items-start gap-4">
         {/* Circle */}
         {isLocked ? (
@@ -63,6 +67,6 @@ export const StepCard: React.FC<StepCardProps> = ({ step }) => {
           )}
         </View>
       </View>
-    </View>
+    </BaseCard>
   );
 };

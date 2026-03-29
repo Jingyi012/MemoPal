@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Text, TouchableWithoutFeedback, View } from 'react-native';
 import AnimatedPressable from './AnimatedPressable';
+import { BaseCard } from './BaseCard';
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -30,7 +31,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <View className="flex-1 items-center justify-center bg-black/40 px-10">
           {/* Card */}
           <TouchableWithoutFeedback>
-            <View className="w-full rounded-2xl bg-white p-5">
+            <BaseCard className="w-full" padding="lg" radius="2xl" bordered={false} shadow="sm">
               <Text className="text-center text-lg font-semibold text-neutral-900">{title}</Text>
 
               {description && (
@@ -53,7 +54,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                   <Text className="text-base font-medium text-white">{confirmText}</Text>
                 </AnimatedPressable>
               </View>
-            </View>
+            </BaseCard>
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>

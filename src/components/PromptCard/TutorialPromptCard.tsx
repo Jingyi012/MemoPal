@@ -5,6 +5,7 @@ import { Brain, ChevronRight } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 import AnimatedPressable from '../AnimatedPressable';
+import { getBaseCardClassName } from '../BaseCard';
 
 interface TutorialCardProps {
   dismissTutorialPrompt: () => void;
@@ -25,7 +26,7 @@ const TutorialPromptCard: React.FC<TutorialCardProps> = ({
   return (
     <View>
       <AnimatedPressable onPress={openTutorial}>
-        <View className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+        <View className={getBaseCardClassName({ padding: 'md', radius: '2xl', shadow: 'sm' })}>
           <View className="flex-row items-center gap-3">
             <LinearGradient
               colors={[Colors.purple600, Colors.pink600]}

@@ -1,3 +1,4 @@
+import { getBaseCardClassName } from '@/components/BaseCard';
 import { AppImage } from '@/components/AppImage';
 import { BADGE_RARITY_CONFIG, LOCKED_BADGE_GRADIENT } from '@/constants/badgeRarityConfig';
 import { GradientColors } from '@/types/colors';
@@ -28,7 +29,10 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ badge, onPress }) => {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
-      className="mb-3 rounded-2xl border border-slate-100 bg-white p-4"
+      className={getBaseCardClassName({
+        className: 'mb-3 p-4',
+        padding: 'none',
+      })}
       style={
         !isLocked && rarityConfig.glow
           ? {

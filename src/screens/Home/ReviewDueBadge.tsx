@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { getBaseCardClassName } from '@/components/BaseCard';
 import { Text, View } from 'react-native';
 import { Clock, AlertCircle } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -28,7 +28,11 @@ export const ReviewDueBadge: React.FC<ReviewDueBadgeProps> = ({
   return (
     <Animated.View
       entering={FadeInDown.delay(100)}
-      className={`mb-4 overflow-hidden rounded-2xl ${bgColor}`}>
+      className={getBaseCardClassName({
+        className: `mb-4 overflow-hidden ${bgColor}`,
+        padding: 'none',
+        bordered: false,
+      })}>
       <View
         onTouchEnd={onPress}
         className={`flex-row items-center justify-between border-l-4 ${borderColor} px-4 py-3`}>

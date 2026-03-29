@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { BaseCard } from '@/components/BaseCard';
 import { Colors } from '@/constants/colors';
 import { useGamificationRewards } from '@/contexts/GamificationRewardContext';
 import { SourceType } from '@/enums/sourceType';
@@ -84,7 +85,7 @@ function MissionCard({
   const StatusIcon = meta.icon;
 
   return (
-    <View className="rounded-2xl border border-slate-100 bg-white p-4">
+    <BaseCard className="p-4" padding="none">
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-3">
           <View className="mb-1 flex-row items-center gap-2">
@@ -142,7 +143,7 @@ function MissionCard({
       ) : (
         <Text className="mt-3 text-sm text-slate-500">Complete this mission to claim reward</Text>
       )}
-    </View>
+    </BaseCard>
   );
 }
 
@@ -221,7 +222,7 @@ export function MissionsTab({
   );
 
   return (
-    <View className="rounded-2xl bg-white p-4">
+    <BaseCard className="p-4" padding="none">
       <Text className="text-base font-bold text-slate-900">{sectionTitle}</Text>
       <Text className="mt-1 text-sm text-slate-500">{sectionDescription}</Text>
 
@@ -310,6 +311,6 @@ export function MissionsTab({
           <Text className="text-sm text-slate-500">Syncing mission rewards...</Text>
         </View>
       ) : null}
-    </View>
+    </BaseCard>
   );
 }

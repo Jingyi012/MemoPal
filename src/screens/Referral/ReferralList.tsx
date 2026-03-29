@@ -1,3 +1,4 @@
+import { BaseCard } from '@/components/BaseCard';
 import { Colors } from '@/constants/colors';
 import { ReferralUser } from '@/types/referral';
 import { Users } from 'lucide-react-native';
@@ -26,7 +27,7 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
   if (!referrals || referrals.length === 0) return null;
 
   return (
-    <View className="mb-8 rounded-3xl border border-slate-100 bg-white p-2 shadow-sm">
+    <BaseCard className="mb-8 rounded-3xl p-2">
       <View className="flex-row p-3">
         <Users size={20} color={Colors.indigo500} />
         <Text className="ml-1 text-lg font-medium text-slate-800">Referral Friends</Text>
@@ -77,6 +78,6 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
           <Text className="text-sm font-semibold text-slate-700">Load More</Text>
         </TouchableOpacity>
       ) : null}
-    </View>
+    </BaseCard>
   );
 };

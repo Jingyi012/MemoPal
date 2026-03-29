@@ -15,6 +15,7 @@ import { StyleProp, Text, View, ViewStyle } from 'react-native';
 
 import { ActionSheet } from '@/components/ActionSheet';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { getBaseCardClassName } from '@/components/BaseCard';
 import { ProgressBar } from '@/components/ProgressBar';
 import { Colors } from '@/constants/colors';
 import { cn } from '@/utils/cn';
@@ -112,8 +113,8 @@ export const LessonCard = ({
     };
   }, [progress, lesson.isLocked, lesson.isPremium]);
 
-  const { progressPercentage, completedReviews } = useMemo(() => {
-    if (!progress) return { progressPercentage: 0, completedReviews: 0 };
+  const { progressPercentage } = useMemo(() => {
+    if (!progress) return { progressPercentage: 0 };
 
     const totalReviews = progress.totalReviews ?? 0;
     const level = progress.masteryLevel;
@@ -123,7 +124,6 @@ export const LessonCard = ({
 
     return {
       progressPercentage: percentage,
-      completedReviews: totalReviews,
     };
   }, [progress]);
   const nextReviewDate = progress ? getNextReview(progress.reviewSchedules)?.dueDate : null;
@@ -135,7 +135,10 @@ export const LessonCard = ({
         onPress={() => onViewLessonDetail(lesson.id)}
         onLongPress={() => onDeleteLesson && setDeleteSheetVisible(true)}
         className={cn(
-          'mb-4 overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm',
+          getBaseCardClassName({
+            padding: 'none',
+            className: 'mb-4 overflow-hidden rounded-[28px]',
+          }),
           !canStart && 'opacity-60',
           className
         )}>

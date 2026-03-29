@@ -1,5 +1,6 @@
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
+import { BaseCard } from '@/components/BaseCard';
 import { useAllBadges } from '@/hooks/useBadges';
 import { useMilestones } from '@/hooks/useMilestones';
 import { useXpEvents } from '@/hooks/useXpEvents';
@@ -152,7 +153,7 @@ export default function RewardsHistoryScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}>
         <View className="p-4">
-          <View className="rounded-2xl bg-white p-4">
+          <BaseCard className="p-4" padding="none">
             <Text className="text-sm font-semibold text-slate-800">Filter</Text>
             <View className="mt-3 flex-row flex-wrap gap-2">
               {FILTERS.map((item) => {
@@ -177,12 +178,12 @@ export default function RewardsHistoryScreen() {
             <Text className="mt-3 text-xs text-slate-500">
               Showing only rewards from the latest {historyWindowDays} days.
             </Text>
-          </View>
+          </BaseCard>
 
           {groupedTimeline.length === 0 ? (
-            <View className="mt-4 rounded-2xl bg-white p-5">
+            <BaseCard className="mt-4 p-5" padding="none">
               <Text className="text-sm text-slate-500">No rewards recorded yet.</Text>
-            </View>
+            </BaseCard>
           ) : (
             groupedTimeline.map(([dayLabel, items]) => (
               <View key={dayLabel} className="mt-4">
@@ -194,7 +195,7 @@ export default function RewardsHistoryScreen() {
                     const isXp = item.type === 'xp';
                     const isBadge = item.type === 'badge';
                     return (
-                      <View key={item.id} className="rounded-2xl bg-white p-4">
+                      <BaseCard key={item.id} className="p-4" padding="none">
                         <View className="flex-row items-center">
                           <View
                             className={`h-9 w-9 items-center justify-center rounded-full ${
@@ -223,7 +224,7 @@ export default function RewardsHistoryScreen() {
                         <Text className="mt-2 text-xs text-slate-400">
                           {new Date(item.occurredAt).toLocaleTimeString()}
                         </Text>
-                      </View>
+                      </BaseCard>
                     );
                   })}
                 </View>

@@ -1,3 +1,4 @@
+import { getBaseCardClassName } from '@/components/BaseCard';
 import React from 'react';
 import { Text, View } from 'react-native';
 import AnimatedPressable from './AnimatedPressable';
@@ -16,7 +17,10 @@ export const StatCard: React.FC<StatCardProps> = ({ label, value, icon, bgClass,
   return (
     <AnimatedPressable
       aria-disabled={!isClickable}
-      className={`flex-1 items-center rounded-xl bg-white p-3`}
+      className={getBaseCardClassName({
+        className: 'flex-1 items-center rounded-xl p-3',
+        padding: 'none',
+      })}
       onPress={navigate}
       disabled={!isClickable}>
       <View className={`mb-2 h-8 w-8 items-center justify-center rounded-full ${bgClass}`}>
