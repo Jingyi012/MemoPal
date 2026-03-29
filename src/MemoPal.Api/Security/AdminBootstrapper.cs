@@ -77,6 +77,8 @@ public sealed class AdminBootstrapper
     {
         await EnsureMissionTemplatesAsync(cancellationToken);
         await EnsureXpAndLevelConfigSettingsAsync(cancellationToken);
+        await EnsureSupportHelpFaqSettingAsync(cancellationToken);
+        await EnsureSupportPrivacyPolicySettingAsync(cancellationToken);
 
         User? seededAdmin = null;
         if (_options.Enabled &&
@@ -268,6 +270,171 @@ public sealed class AdminBootstrapper
                 levelSetting.UpdatedAt = now;
             }
         }
+    }
+
+    private async Task EnsureSupportHelpFaqSettingAsync(CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var helpFaqSetting = _db.SystemSettings.Local.FirstOrDefault(x => x.Key == SystemSettingKeys.SupportHelpFaq) ??
+                             await _db.SystemSettings.FirstOrDefaultAsync(
+                                 x => x.Key == SystemSettingKeys.SupportHelpFaq,
+                                 cancellationToken);
+        if (helpFaqSetting is not null && !helpFaqSetting.IsDeleted && !string.IsNullOrWhiteSpace(helpFaqSetting.Value))
+        {
+            return;
+        }
+
+        var serializedHelpFaq = JsonSerializer.Serialize(new
+        {
+            faqItems = new[]
+            {
+                new
+                {
+                    question = "What is the Memory Palace technique?",
+                    answer = "The Memory Palace (or Method of Loci) helps you memorize by placing information along familiar locations you can mentally revisit."
+                },
+                new
+                {
+                    question = "How does spaced repetition work?",
+                    answer = "MemoPal schedules review at increasing intervals so difficult items appear more often while easier items are spaced further apart."
+                },
+                new
+                {
+                    question = "How many palaces can I create?",
+                    answer = "Your palace, lesson, location, and word limits depend on your plan and the configured feature limits."
+                },
+                new
+                {
+                    question = "What happens if I miss a review?",
+                    answer = "Missed reviews can still be completed later, but you may receive reduced XP compared with on-time completion."
+                },
+                new
+                {
+                    question = "How do I earn badges and XP?",
+                    answer = "Complete learning activities, reviews, missions, and streak goals to accumulate XP and unlock badges."
+                }
+            },
+            support = new
+            {
+                showEmailSupport = false,
+                email = "support@mindpal.app",
+                emailButtonTitle = "Email Support",
+                emailSubtitle = "Contact the MemoPal support team"
+            }
+        });
+
+        if (helpFaqSetting is null)
+        {
+            _db.SystemSettings.Add(new SystemSetting
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Key = SystemSettingKeys.SupportHelpFaq,
+                Value = serializedHelpFaq,
+                Description = "Help and FAQ content shown in mobile settings support section.",
+                CreatedAt = now,
+                UpdatedAt = now,
+                IsDeleted = false
+            });
+            return;
+        }
+
+        helpFaqSetting.Value = serializedHelpFaq;
+        helpFaqSetting.Description = "Help and FAQ content shown in mobile settings support section.";
+        helpFaqSetting.IsDeleted = false;
+        helpFaqSetting.DeletedAt = null;
+        helpFaqSetting.UpdatedAt = now;
+    }
+
+    private async Task EnsureSupportPrivacyPolicySettingAsync(CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var privacyPolicySetting = _db.SystemSettings.Local.FirstOrDefault(x => x.Key == SystemSettingKeys.SupportPrivacyPolicy) ??
+                                   await _db.SystemSettings.FirstOrDefaultAsync(
+                                       x => x.Key == SystemSettingKeys.SupportPrivacyPolicy,
+                                       cancellationToken);
+        if (privacyPolicySetting is not null && !privacyPolicySetting.IsDeleted && !string.IsNullOrWhiteSpace(privacyPolicySetting.Value))
+        {
+            return;
+        }
+
+        var serializedPrivacyPolicy = JsonSerializer.Serialize(new
+        {
+            title = "Privacy Policy",
+            sections = new[]
+            {
+                new
+                {
+                    heading = "1. Information We Collect",
+                    body = "We collect information you provide directly to us, including your name, email address, and profile photo. We also collect learning progress data, including completed palaces, review history, XP, levels, and badges earned."
+                },
+                new
+                {
+                    heading = "2. How We Use Your Information",
+                    body = "We use the information we collect to provide, maintain, and improve MemoPal's services, including tracking your learning progress, scheduling review reminders, and personalizing your experience. We also use your data to communicate with you about updates and features."
+                },
+                new
+                {
+                    heading = "3. Data Storage & Security",
+                    body = "Your data is stored securely on encrypted servers. Premium users with cloud sync enabled will have their data stored on secure cloud infrastructure. We use industry-standard security measures to protect your information."
+                },
+                new
+                {
+                    heading = "4. Data Sharing",
+                    body = "We do not sell, trade, or share your personal information with third parties for marketing purposes. We may share anonymized, aggregated data for research and analytics purposes."
+                },
+                new
+                {
+                    heading = "5. Google Login & Cloud Sync",
+                    body = "If you sign in with Google, we receive your basic profile information (name, email, profile photo) from Google. Cloud sync stores your learning data securely and syncs across your devices."
+                },
+                new
+                {
+                    heading = "6. Your Rights",
+                    body = "You have the right to access, update, or delete your personal data at any time. You can export your learning data or request complete account deletion from the Settings page."
+                },
+                new
+                {
+                    heading = "7. Children's Privacy",
+                    body = "MemoPal is not intended for children under 13. We do not knowingly collect personal information from children under 13. If you believe we have collected such information, please contact us."
+                },
+                new
+                {
+                    heading = "8. Analytics & Cookies",
+                    body = "We use analytics tools to understand how users interact with MemoPal. We use cookies and similar technologies to maintain your session and remember your preferences."
+                },
+                new
+                {
+                    heading = "9. Changes to This Policy",
+                    body = "We may update this Privacy Policy from time to time. We will notify you of significant changes. Continued use after changes constitutes acceptance."
+                },
+                new
+                {
+                    heading = "10. Contact Us",
+                    body = "If you have questions about this Privacy Policy or your data, please contact us at privacy@mindpal.app or through the Help & FAQ section."
+                }
+            }
+        });
+
+        if (privacyPolicySetting is null)
+        {
+            _db.SystemSettings.Add(new SystemSetting
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Key = SystemSettingKeys.SupportPrivacyPolicy,
+                Value = serializedPrivacyPolicy,
+                Description = "Privacy policy content shown in mobile settings support section.",
+                CreatedAt = now,
+                UpdatedAt = now,
+                IsDeleted = false
+            });
+            return;
+        }
+
+        privacyPolicySetting.Value = serializedPrivacyPolicy;
+        privacyPolicySetting.Description = "Privacy policy content shown in mobile settings support section.";
+        privacyPolicySetting.IsDeleted = false;
+        privacyPolicySetting.DeletedAt = null;
+        privacyPolicySetting.UpdatedAt = now;
     }
 
     private async Task SeedGamificationCatalogAsync(CancellationToken cancellationToken)

@@ -3,6 +3,8 @@ namespace MemoPal.Application.Common.Settings;
 public static class SystemSettingKeys
 {
     public const string FeatureLimits = "feature.limits";
+    public const string SupportHelpFaq = "support.help_faq";
+    public const string SupportPrivacyPolicy = "support.privacy_policy";
     public const string GamificationMissionTemplates = "gamification.missions.templates";
     public const string GamificationMobileUiConfig = "gamification.mobile.ui_config";
     public const string XpConfigs = "xp.configs";

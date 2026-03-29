@@ -47,6 +47,30 @@ public sealed class SystemSettingsController : ApiControllerBase
     }
 
     /// <summary>
+    /// Fetch help and FAQ settings.
+    /// </summary>
+    [HttpGet("help-faq")]
+    public async Task<IActionResult> GetHelpFaq(CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new GetSystemSettingsByKeyQuery(SystemSettingKeys.SupportHelpFaq),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Fetch privacy policy settings.
+    /// </summary>
+    [HttpGet("privacy-policy")]
+    public async Task<IActionResult> GetPrivacyPolicy(CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new GetSystemSettingsByKeyQuery(SystemSettingKeys.SupportPrivacyPolicy),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Fetch XP configurations
     /// </summary>
     [HttpGet("xp-configs")]
