@@ -21,13 +21,24 @@ public sealed class GetDueReviewsQueryHandler : IRequestHandler<GetDueReviewsQue
     public async Task<ApiResponse<IReadOnlyList<ReviewScheduleDto>>> Handle(GetDueReviewsQuery request, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var data = await _db.ReviewSchedules
-            .Where(x => x.UserId == request.UserId && !x.IsDeleted && !x.Completed && x.DueDate <= now)
-            .OrderBy(x => x.DueDate)
+        var data = await (
+            from schedule in _db.ReviewSchedules
+            join progress in _db.LessonProgresses
+                on schedule.LessonProgressId equals progress.Id
+            join lesson in _db.Lessons
+                on progress.LessonId equals lesson.Id
+            where schedule.UserId == request.UserId &&
+                  !schedule.IsDeleted &&
+                  !schedule.Completed &&
+                  schedule.DueDate <= now &&
+                  progress.UserId == request.UserId &&
+                  !progress.IsDeleted &&
+                  !lesson.IsDeleted
+            orderby schedule.DueDate
+            select schedule)
             .ToListAsync(cancellationToken);
 
         var items = data.Select(x => x.Adapt<ReviewScheduleDto>()).ToList();
         return ApiResponse<IReadOnlyList<ReviewScheduleDto>>.Ok(items);
     }
 }
-

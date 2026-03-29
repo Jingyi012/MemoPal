@@ -20,7 +20,19 @@ public sealed class GetReviewStatsQueryHandler : IRequestHandler<GetReviewStatsQ
     public async Task<ApiResponse<ReviewStatsDto>> Handle(GetReviewStatsQuery request, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var query = _db.ReviewSchedules.Where(x => x.UserId == request.UserId && !x.IsDeleted);
+        var query =
+            from schedule in _db.ReviewSchedules
+            join progress in _db.LessonProgresses
+                on schedule.LessonProgressId equals progress.Id
+            join lesson in _db.Lessons
+                on progress.LessonId equals lesson.Id
+            where schedule.UserId == request.UserId &&
+                  !schedule.IsDeleted &&
+                  progress.UserId == request.UserId &&
+                  !progress.IsDeleted &&
+                  !lesson.IsDeleted
+            select schedule;
+
         var total = await query.CountAsync(cancellationToken);
         var completed = await query.CountAsync(x => x.Completed, cancellationToken);
         var pending = await query.CountAsync(x => !x.Completed, cancellationToken);

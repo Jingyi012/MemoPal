@@ -20,8 +20,15 @@ public sealed class GetAllLessonsQueryHandler : IRequestHandler<GetAllLessonsQue
 
     public async Task<ApiResponse<IReadOnlyList<LessonDto>>> Handle(GetAllLessonsQuery request, CancellationToken cancellationToken)
     {
+        var activePalaceIds = _db.Palaces
+            .Where(x => !x.IsDeleted)
+            .Select(x => x.Id);
+
         var baseQuery = _db.Lessons
-            .Where(x => !x.IsDeleted && (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId))
+            .Where(x =>
+                !x.IsDeleted &&
+                activePalaceIds.Contains(x.PalaceId) &&
+                (request.IsAdmin || x.IsCustom != true || x.CreatedBy == request.UserId))
             .OrderBy(x => x.CreatedAt)
             .AsQueryable();
 
