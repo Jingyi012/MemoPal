@@ -124,6 +124,7 @@ jobs:
           cd "${DEPLOY_PATH}"
 
           test -f ./.env || { echo "Missing ${DEPLOY_PATH}/.env. Copy from .env.example and fill values."; exit 1; }
+          sed -i 's/\r$//' ./.env
           set -a
           . ./.env
           set +a
