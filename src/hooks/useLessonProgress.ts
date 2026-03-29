@@ -18,12 +18,13 @@ export function useLessonProgress(lessonId: string) {
     queryKey: PROGRESS_KEYS.detail(lessonId),
     enabled: !!lessonId,
     queryFn: async () => {
-      // Service handles sync and returns local data
-      let progress = await lessonProgressService.getProgress(lessonId);
+      // Always ensure local progress exists as soon as lesson page is opened.
+      let progress = await lessonProgressService.initLessonProgress(lessonId);
 
-      // Initialize if doesn't exist
-      if (!progress) {
-        progress = await lessonProgressService.initLessonProgress(lessonId);
+      // Then sync with backend and refresh local snapshot if server has newer data.
+      const syncedProgress = await lessonProgressService.getProgress(lessonId);
+      if (syncedProgress) {
+        progress = syncedProgress;
       }
 
       // Ensure learning mode is properly initialized

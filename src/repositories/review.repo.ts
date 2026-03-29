@@ -39,7 +39,10 @@ export interface ReviewRepository {
     totalCount: number
   ): Promise<void>;
   delete(reviewScheduleId: string): Promise<void>;
-  upsertMany(reviewSchedules: ReviewSchedule[]): Promise<void>;
+  upsertMany(
+    reviewSchedules: ReviewSchedule[],
+    options?: { pruneByProgressId?: string }
+  ): Promise<void>;
   getReviewStats(): Promise<ReviewStats>;
 }
 
@@ -108,6 +111,25 @@ export function createReviewRepository(): ReviewRepository {
           })
           .onConflictDoNothing();
 
+        await SyncBase.addToQueue(tx as any, {
+          entityType: EntityType.REVIEW_SCHEDULE,
+          entityId: reviewId,
+          action: 'create',
+          payload: {
+            id: reviewId,
+            lessonProgressId: progress.id,
+            lessonId,
+            reviewRound: nextRound,
+            dueDate: nextDueDate.toISOString(),
+            completed: false,
+            completedDate: null,
+            createdAt: now,
+            updatedAt: now,
+            isDeleted: false,
+            deletedAt: null,
+          },
+        });
+
         await PushNotificationService.scheduleReview({
           reviewId: reviewId,
           lessonId: lessonId,
@@ -161,10 +183,16 @@ export function createReviewRepository(): ReviewRepository {
 
       await db.transaction(async (tx) => {
         const currentProgress = await tx.query.lessonProgress.findFirst({
-          where: eq(schema.lessonProgress.lessonId, lessonId),
+          where: and(
+            eq(schema.lessonProgress.lessonId, lessonId),
+            eq(schema.lessonProgress.isDeleted, false)
+          ),
           with: {
             reviewSchedules: {
-              where: eq(schema.reviewSchedules.completed, false),
+              where: and(
+                eq(schema.reviewSchedules.completed, false),
+                eq(schema.reviewSchedules.isDeleted, false)
+              ),
               orderBy: asc(schema.reviewSchedules.dueDate),
               limit: 1,
             },
@@ -262,9 +290,13 @@ export function createReviewRepository(): ReviewRepository {
         });
 
         const refreshedProgress = await tx.query.lessonProgress.findFirst({
-          where: eq(schema.lessonProgress.id, currentProgress.id),
+          where: and(
+            eq(schema.lessonProgress.id, currentProgress.id),
+            eq(schema.lessonProgress.isDeleted, false)
+          ),
           with: {
             reviewSchedules: {
+              where: eq(schema.reviewSchedules.isDeleted, false),
               orderBy: asc(schema.reviewSchedules.reviewRound),
             },
           },
@@ -317,15 +349,20 @@ export function createReviewRepository(): ReviewRepository {
       });
     },
 
-    async upsertMany(reviewSchedules: ReviewSchedule[]): Promise<void> {
-      if (reviewSchedules.length === 0) return;
+    async upsertMany(
+      reviewSchedules: ReviewSchedule[],
+      options?: { pruneByProgressId?: string }
+    ): Promise<void> {
       const now = new Date().toISOString();
       const ids = reviewSchedules.map((r) => r.id);
 
       await db.transaction(async (tx) => {
-        const localRecords = await tx.query.reviewSchedules.findMany({
-          where: inArray(schema.reviewSchedules.id, ids),
-        });
+        const localRecords =
+          ids.length > 0
+            ? await tx.query.reviewSchedules.findMany({
+                where: inArray(schema.reviewSchedules.id, ids),
+              })
+            : [];
         const localMap = new Map(localRecords.map((r) => [r.id, r]));
         const dirtyIds = await SyncBase.getEntityDirtyIds(
           tx as any,
@@ -359,6 +396,42 @@ export function createReviewRepository(): ReviewRepository {
           }
         }
 
+        if (options?.pruneByProgressId) {
+          const activeProgressReviews = await tx.query.reviewSchedules.findMany({
+            columns: { id: true },
+            where: and(
+              eq(schema.reviewSchedules.lessonProgressId, options.pruneByProgressId),
+              eq(schema.reviewSchedules.isDeleted, false)
+            ),
+          });
+
+          const remoteIds = new Set(reviewSchedules.map((review) => review.id));
+          const candidateIds = activeProgressReviews
+            .map((row) => row.id)
+            .filter((id) => !remoteIds.has(id));
+
+          if (candidateIds.length > 0) {
+            const dirtyCandidateIds = await SyncBase.getEntityDirtyIds(
+              tx as any,
+              candidateIds,
+              EntityType.REVIEW_SCHEDULE
+            );
+
+            const pruneIds = candidateIds.filter((id) => !dirtyCandidateIds.has(id));
+            if (pruneIds.length > 0) {
+              await tx
+                .update(schema.reviewSchedules)
+                .set({
+                  isDeleted: true,
+                  deletedAt: now,
+                  updatedAt: now,
+                  lastSyncedAt: now,
+                })
+                .where(inArray(schema.reviewSchedules.id, pruneIds));
+            }
+          }
+        }
+
         await InAppNotificationSync.syncAllUpcoming();
       });
     },
@@ -381,7 +454,8 @@ export function createReviewRepository(): ReviewRepository {
           totalReviews: sql<number>`sum(${schema.lessonProgress.totalReviews})`,
           // Assuming accuracy is handled by a different metric or average XP if needed
         })
-        .from(schema.lessonProgress);
+        .from(schema.lessonProgress)
+        .where(eq(schema.lessonProgress.isDeleted, false));
 
       return {
         totalLessonsMastered: Number(progressStats[0]?.masteredCount ?? 0),

@@ -17,9 +17,13 @@ export async function getProgress(lessonId: string): Promise<LessonProgress | nu
     if (remoteProgress) {
       await repo.upsertMany([remoteProgress]);
     }
-  } catch (error) {
+  } catch (error: any) {
+    // "Not started yet" is expected; keep local flow in control.
+    if (error?.response?.status !== 404) {
+      // Network error or offline: fall through to local data
+      console.warn('Failed to sync progress from backend:', error);
+    }
     // Network error or offline: fall through to local data
-    console.warn('Failed to sync progress from backend:', error);
   }
 
   // Always return local data as source of truth (offline-first)

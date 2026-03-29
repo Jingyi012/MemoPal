@@ -113,7 +113,10 @@ async function rollbackFailedLessonCreate(db: typeof defaultDb, lessonId: string
     await tx
       .delete(schema.syncQueue)
       .where(
-        and(eq(schema.syncQueue.entityType, EntityType.LESSON), eq(schema.syncQueue.entityId, lessonId))
+        and(
+          eq(schema.syncQueue.entityType, EntityType.LESSON),
+          eq(schema.syncQueue.entityId, lessonId)
+        )
       );
 
     await tx.delete(schema.lessons).where(eq(schema.lessons.id, lessonId));
@@ -457,8 +460,7 @@ export async function processQueue(db = defaultDb) {
                   throw error;
                 }
               }
-            }
-            else if (item.action === 'delete') await palaceApi.delete(item.entityId);
+            } else if (item.action === 'delete') await palaceApi.delete(item.entityId);
             else {
               console.warn('Unsupported action for PALACE', item.action);
               continue;
@@ -502,8 +504,7 @@ export async function processQueue(db = defaultDb) {
                   throw error;
                 }
               }
-            }
-            else if (item.action === 'delete') await locationApi.delete(item.entityId);
+            } else if (item.action === 'delete') await locationApi.delete(item.entityId);
             else {
               console.warn('Unsupported action for LOCATION', item.action);
               continue;
@@ -547,8 +548,9 @@ export async function processQueue(db = defaultDb) {
             }
 
             try {
-              await lessonProgressApi.updateProgress(payload);
-              syncEntityId = payload.lessonId;
+              const syncedProgress = await lessonProgressApi.updateProgress(payload);
+              syncEntityId = syncedProgress.lessonId;
+
               isSuccess = true;
             } catch (error: any) {
               // If lesson not found on backend, skip it (lesson might not be synced yet)
@@ -612,25 +614,68 @@ export async function processQueue(db = defaultDb) {
             break;
 
           case EntityType.REVIEW_SCHEDULE:
-            if (item.action === 'create' || item.action === 'delete') {
-              console.warn('No backend create/delete endpoint for REVIEW_SCHEDULE', item.action);
-              await db.delete(schema.syncQueue).where(eq(schema.syncQueue.id, item.id));
-              continue;
+            if (item.action === 'create') {
+              if (!payload) {
+                console.warn('Missing payload for REVIEW_SCHEDULE queue item', item.id);
+                continue;
+              }
+
+              try {
+                await reviewApi.create({ ...payload, id: item.entityId });
+                isSuccess = true;
+              } catch (error: any) {
+                if (
+                  error?.response?.status === 404 &&
+                  error?.response?.data?.message?.includes('Lesson progress')
+                ) {
+                  console.warn(
+                    `Skipping REVIEW_SCHEDULE create for orphaned lesson progress ${payload.lessonProgressId}, will retry in next cycle`
+                  );
+                  continue;
+                }
+
+                throw error;
+              }
+              break;
             }
 
-            if (!payload) {
-              console.warn('Missing payload for REVIEW_SCHEDULE queue item', item.id);
-              continue;
+            if (item.action === 'update') {
+              if (!payload) {
+                console.warn('Missing payload for REVIEW_SCHEDULE queue item', item.id);
+                continue;
+              }
+
+              try {
+                if (payload.completed === true) {
+                  await reviewApi.complete(item.entityId, payload.correctCount, payload.totalCount);
+                } else {
+                  await reviewApi.update({ ...payload, id: item.entityId });
+                }
+                isSuccess = true;
+              } catch (error: any) {
+                if (
+                  error?.response?.status === 404 &&
+                  error?.response?.data?.message?.includes('Review schedule')
+                ) {
+                  console.warn(
+                    `Skipping REVIEW_SCHEDULE update for missing review ${item.entityId}, will retry in next cycle`
+                  );
+                  continue;
+                }
+
+                throw error;
+              }
+              break;
             }
 
-            if (payload.completed === true) {
-              await reviewApi.complete(item.entityId, payload.correctCount, payload.totalCount);
-            } else {
-              await reviewApi.update({ ...payload, id: item.entityId });
+            if (item.action === 'delete') {
+              await reviewApi.delete(item.entityId);
+              isSuccess = true;
+              break;
             }
 
-            isSuccess = true;
-            break;
+            console.warn('Unsupported action for REVIEW_SCHEDULE', item.action);
+            continue;
 
           default:
             console.warn('Unknown entityType', item.entityType);

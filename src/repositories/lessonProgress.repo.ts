@@ -3,7 +3,7 @@ import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { LessonProgress } from '@/types/lesson';
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 import { createReviewRepository } from './review.repo';
 
@@ -89,9 +89,13 @@ export function createLessonProgressRepository(): LessonProgressRepository {
     async getLessonProgress(lessonId: string): Promise<LessonProgress | null> {
       try {
         const result = await db.query.lessonProgress.findFirst({
-          where: eq(schema.lessonProgress.lessonId, lessonId),
+          where: and(
+            eq(schema.lessonProgress.lessonId, lessonId),
+            eq(schema.lessonProgress.isDeleted, false)
+          ),
           with: {
             reviewSchedules: {
+              where: eq(schema.reviewSchedules.isDeleted, false),
               orderBy: (entries, { asc }) => [asc(entries.reviewRound)],
             },
           },
@@ -110,9 +114,8 @@ export function createLessonProgressRepository(): LessonProgressRepository {
 
     async initLessonProgress(lessonId: string): Promise<LessonProgress> {
       const now = new Date().toISOString();
-      const id = Crypto.randomUUID();
-      const progress: LessonProgress = {
-        id,
+      let progress: LessonProgress = {
+        id: Crypto.randomUUID(),
         lessonId,
         firstCompletedDate: null,
         masteryLevel: 'new',
@@ -125,7 +128,85 @@ export function createLessonProgressRepository(): LessonProgressRepository {
         reviewSchedules: [],
       };
 
-      await db.insert(schema.lessonProgress).values(progress).onConflictDoNothing();
+      await db.transaction(async (tx) => {
+        const existing = await tx.query.lessonProgress.findFirst({
+          where: eq(schema.lessonProgress.lessonId, lessonId),
+          with: {
+            reviewSchedules: {
+              where: eq(schema.reviewSchedules.isDeleted, false),
+              orderBy: (entries, { asc }) => [asc(entries.reviewRound)],
+            },
+          },
+        });
+
+        if (existing && !existing.isDeleted) {
+          progress = existing as LessonProgress;
+          return;
+        }
+
+        if (existing && existing.isDeleted) {
+          await tx
+            .update(schema.lessonProgress)
+            .set({
+              firstCompletedDate: null,
+              masteryLevel: 'new',
+              lastReviewDate: null,
+              xpEarned: 0,
+              totalReviews: 0,
+              updatedAt: now,
+              lastSyncedAt: null,
+              isDeleted: false,
+              deletedAt: null,
+            })
+            .where(eq(schema.lessonProgress.id, existing.id));
+
+          await tx
+            .update(schema.reviewSchedules)
+            .set({
+              isDeleted: true,
+              deletedAt: now,
+              updatedAt: now,
+              lastSyncedAt: null,
+            })
+            .where(
+              and(
+                eq(schema.reviewSchedules.lessonProgressId, existing.id),
+                eq(schema.reviewSchedules.isDeleted, false)
+              )
+            );
+
+          progress = {
+            ...existing,
+            firstCompletedDate: null,
+            masteryLevel: 'new',
+            lastReviewDate: null,
+            xpEarned: 0,
+            totalReviews: 0,
+            updatedAt: now,
+            lastSyncedAt: null,
+            isDeleted: false,
+            deletedAt: null,
+            reviewSchedules: [],
+          } as LessonProgress;
+
+          await SyncBase.addToQueue(tx as any, {
+            entityType: EntityType.LESSON_PROGRESS,
+            entityId: lessonId,
+            action: 'update',
+            payload: { ...progress },
+          });
+          return;
+        }
+
+        await tx.insert(schema.lessonProgress).values(progress);
+
+        await SyncBase.addToQueue(tx as any, {
+          entityType: EntityType.LESSON_PROGRESS,
+          entityId: lessonId,
+          action: 'update',
+          payload: { ...progress },
+        });
+      });
 
       return progress;
     },

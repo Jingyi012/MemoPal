@@ -16,13 +16,12 @@ const reviewRepository = createReviewRepository();
 
 async function syncRemoteReviews(
   fetchRemote: () => Promise<ReviewSchedule[]>,
-  warningMessage: string
+  warningMessage: string,
+  options?: { pruneByProgressId?: string }
 ): Promise<void> {
   try {
-    const remote = await fetchRemote();
-    if (remote?.length) {
-      await reviewRepository.upsertMany(remote);
-    }
+    const remote = (await fetchRemote()) ?? [];
+    await reviewRepository.upsertMany(remote, options);
   } catch (error) {
     console.warn(warningMessage, error);
   }
@@ -54,7 +53,8 @@ export function calculateReviewResults(results: any[], totalSteps: number): Revi
 export async function getReviewSchedule(lessonProgressId: string): Promise<ReviewSchedule[]> {
   await syncRemoteReviews(
     () => reviewApi.getByProgressId(lessonProgressId),
-    'Failed to sync reviews from backend:'
+    'Failed to sync reviews from backend:',
+    { pruneByProgressId: lessonProgressId }
   );
 
   return reviewRepository.getReviewSchedule(lessonProgressId);

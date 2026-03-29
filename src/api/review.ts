@@ -7,6 +7,15 @@ import { ReviewSchedule } from '@/types/lesson';
  */
 export const reviewApi = {
   /**
+   * Create review schedule
+   */
+  async create(review: ReviewSchedule): Promise<ReviewSchedule> {
+    const response = await api.post<GeneralResponse<ReviewSchedule>>('/reviews', review);
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
+
+  /**
    * Fetch all pending reviews for user
    */
   async getPendingReviews(): Promise<ReviewSchedule[]> {
@@ -59,6 +68,15 @@ export const reviewApi = {
       `/reviews/${reviewId}/complete`,
       { correctCount, totalCount }
     );
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
+
+  /**
+   * Delete review schedule
+   */
+  async delete(reviewId: string): Promise<string> {
+    const response = await api.delete<GeneralResponse<string>>(`/reviews/${reviewId}`);
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },
