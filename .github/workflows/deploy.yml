@@ -1,0 +1,132 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - uat
+          - prod
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-backend-${{ github.event_name == 'workflow_dispatch' && inputs.target_env || 'uat' }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target_env || 'uat' }}
+    env:
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      IMAGE_OWNER: ${{ vars.IMAGE_OWNER }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          if [ -z "${DEPLOY_PATH}" ]; then
+            echo "DEPLOY_PATH is required. Set it in GitHub Environment variables."
+            exit 1
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ vars.IMAGE_OWNER != '' && vars.IMAGE_OWNER || github.repository_owner }}/memopal-backend:latest
+            ghcr.io/${{ vars.IMAGE_OWNER != '' && vars.IMAGE_OWNER || github.repository_owner }}/memopal-backend:${{ github.sha }}
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build EF migration bundle
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.*
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+          dotnet restore src/MemoPal.Api/MemoPal.Api.csproj
+          dotnet ef migrations bundle \
+            --project src/MemoPal.Infrastructure \
+            --startup-project src/MemoPal.Api \
+            --configuration Release \
+            --self-contained \
+            -r linux-x64 \
+            -o efbundle
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.VPS_PORT }}" -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload deploy manifests
+        run: |
+          ssh -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "mkdir -p ${DEPLOY_PATH}/deploy/nginx ${DEPLOY_PATH}/bin"
+          scp -P "${{ secrets.VPS_PORT }}" ./deploy/docker-compose.yml \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${DEPLOY_PATH}/docker-compose.yml"
+          scp -P "${{ secrets.VPS_PORT }}" ./deploy/nginx/default.conf \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${DEPLOY_PATH}/deploy/nginx/default.conf"
+          scp -P "${{ secrets.VPS_PORT }}" ./deploy/.env.example \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${DEPLOY_PATH}/.env.example"
+
+      - name: Upload migration bundle
+        run: |
+          scp -P "${{ secrets.VPS_PORT }}" ./efbundle \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${DEPLOY_PATH}/bin/efbundle"
+
+      - name: Deploy backend and run migrations
+        run: |
+          RESOLVED_IMAGE_OWNER="${IMAGE_OWNER:-${{ github.repository_owner }}}"
+          ssh -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" 'bash -s' -- "${DEPLOY_PATH}" "${RESOLVED_IMAGE_OWNER}" <<'EOF'
+          set -euo pipefail
+          DEPLOY_PATH="$1"
+          IMAGE_OWNER="$2"
+          cd "${DEPLOY_PATH}"
+
+          test -f ./.env || { echo "Missing ${DEPLOY_PATH}/.env. Copy from .env.example and fill values."; exit 1; }
+          set -a
+          . ./.env
+          set +a
+          UPLOADS_VOLUME_NAME="${UPLOADS_VOLUME_NAME:-memopal_uploads}"
+          docker volume create "${UPLOADS_VOLUME_NAME}" >/dev/null
+
+          IMAGE_OWNER="${IMAGE_OWNER}" docker compose up -d db
+          until docker compose exec -T db pg_isready -U memopal -d memopal >/dev/null 2>&1; do
+            sleep 2
+          done
+
+          chmod +x ./bin/efbundle
+          ./bin/efbundle --connection "Host=127.0.0.1;Port=5432;Database=memopal;Username=memopal;Password=$POSTGRES_PASSWORD"
+
+          IMAGE_OWNER="${IMAGE_OWNER}" BACKEND_IMAGE_TAG=${{ github.sha }} docker compose pull api
+          IMAGE_OWNER="${IMAGE_OWNER}" BACKEND_IMAGE_TAG=${{ github.sha }} docker compose up -d api
+
+          docker compose ps
+          EOF
