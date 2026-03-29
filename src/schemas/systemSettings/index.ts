@@ -27,6 +27,10 @@ import {
   PRIVACY_POLICY_CONFIG_DEFAULT,
   PRIVACY_POLICY_CONFIG_SCHEMA,
 } from "./privacyPolicyConfigSchema";
+import {
+  PREMIUM_SUBSCRIPTION_CONFIG_DEFAULT,
+  PREMIUM_SUBSCRIPTION_CONFIG_SCHEMA,
+} from "./premiumSubscriptionConfigSchema";
 
 export * from "./gamificationUiConfigSchema";
 export * from "./featureLimitsSchema";
@@ -36,6 +40,7 @@ export * from "./xpConfigsSchema";
 export * from "./levelConfigsSchema";
 export * from "./helpFaqConfigSchema";
 export * from "./privacyPolicyConfigSchema";
+export * from "./premiumSubscriptionConfigSchema";
 
 export interface ConfigSchema {
   key: string;
@@ -92,5 +97,11 @@ export const ALL_CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
     title: "Privacy Policy Configuration",
     schema: PRIVACY_POLICY_CONFIG_SCHEMA,
     default: PRIVACY_POLICY_CONFIG_DEFAULT,
+  },
+  premium_subscription: {
+    key: "premium.subscription",
+    title: "Premium Subscription Configuration",
+    schema: PREMIUM_SUBSCRIPTION_CONFIG_SCHEMA,
+    default: PREMIUM_SUBSCRIPTION_CONFIG_DEFAULT,
   },
 };

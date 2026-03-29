@@ -15,6 +15,7 @@ import ReferralProgramConfigTab from "../../configs/components/ReferralProgramCo
 import AuthLoginMethodsConfigTab from "../../configs/components/AuthLoginMethodsConfigTab";
 import HelpFaqConfigTab from "../../configs/components/HelpFaqConfigTab";
 import PrivacyPolicyConfigTab from "../../configs/components/PrivacyPolicyConfigTab";
+import PremiumSubscriptionConfigTab from "../../configs/components/PremiumSubscriptionConfigTab";
 
 export default function SystemSettingsPage() {
   const { message } = App.useApp();
@@ -75,6 +76,11 @@ export default function SystemSettingsPage() {
             key: "privacy-policy",
             label: "Privacy Policy",
             children: <PrivacyPolicyConfigTab />,
+          },
+          {
+            key: "premium-subscription",
+            label: "Premium Subscription",
+            children: <PremiumSubscriptionConfigTab />,
           },
           {
             key: "advanced",
