@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
+import { useHelpFaqConfig } from '@/hooks/useHelpFaqConfig';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -8,10 +9,23 @@ import Toast from 'react-native-toast-message';
 
 export default function Support() {
   const router = useRouter();
+  const { config } = useHelpFaqConfig();
   const [subject, setSubject] = useState('MemoPal Support Request');
   const [message, setMessage] = useState('');
+  const supportEmail = config.support.email;
+  const supportEnabled = config.support.showEmailSupport;
+  const supportButtonTitle = config.support.emailButtonTitle || 'Contact Support';
 
   const handleSend = async () => {
+    if (!supportEnabled) {
+      Toast.show({
+        type: 'info',
+        text1: 'Email support unavailable',
+        text2: 'Email support is currently disabled.',
+      });
+      return;
+    }
+
     if (!message.trim()) {
       Toast.show({
         type: 'error',
@@ -21,14 +35,14 @@ export default function Support() {
       return;
     }
 
-    const mailto = `mailto:support@memopal.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    const mailto = `mailto:${supportEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
     const canOpen = await Linking.canOpenURL(mailto);
 
     if (!canOpen) {
       Toast.show({
         type: 'error',
         text1: 'No email app found',
-        text2: 'Please email support@memopal.com manually.',
+        text2: `Please email ${supportEmail} manually.`,
       });
       return;
     }
@@ -41,7 +55,11 @@ export default function Support() {
       <CommonHeader title="Support" description={undefined} backAction={() => router.back()} />
 
       <View className="gap-4 p-5">
-        <Text className="text-slate-600">Need help? Send us a message and we’ll get back to you.</Text>
+        <Text className="text-slate-600">
+          {supportEnabled
+            ? `Need help? Send us a message and we'll get back to you at ${supportEmail}.`
+            : 'Email support is currently disabled.'}
+        </Text>
 
         <TextInput
           value={subject}
@@ -60,8 +78,11 @@ export default function Support() {
           className="rounded-xl border border-slate-200 bg-white px-4 py-3"
         />
 
-        <AnimatedPressable onPress={handleSend} className="items-center rounded-xl bg-teal-600 py-4">
-          <Text className="font-semibold text-white">Contact Support</Text>
+        <AnimatedPressable
+          onPress={handleSend}
+          disabled={!supportEnabled}
+          className={`items-center rounded-xl py-4 ${supportEnabled ? 'bg-teal-600' : 'bg-slate-300'}`}>
+          <Text className="font-semibold text-white">{supportButtonTitle}</Text>
         </AnimatedPressable>
       </View>
     </View>

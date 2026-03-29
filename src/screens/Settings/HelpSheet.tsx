@@ -1,6 +1,8 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { Colors } from '@/constants/colors';
+import { useHelpFaqConfig } from '@/hooks/useHelpFaqConfig';
+import { HelpFaqItem } from '@/types/helpFaqConfig';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Router } from 'expo-router';
 import { Book, ChevronRight, Mail } from 'lucide-react-native';
@@ -19,37 +21,12 @@ interface HelpSheetProps {
   router: Router;
 }
 
-const faqItems = [
-  {
-    question: 'What is the Memory Palace technique?',
-    answer:
-      'The Memory Palace (or Method of Loci) is an ancient technique where you visualize a familiar place and associate items you want to remember with specific locations in that place.',
-  },
-  {
-    question: 'How does spaced repetition work?',
-    answer:
-      'Spaced repetition schedules reviews at optimal intervals (24h, 3d, 7d, 30d) to combat the forgetting curve and move information into long-term memory.',
-  },
-  {
-    question: 'How many palaces can I create?',
-    answer:
-      'Creation limits are based on your current plan. Palace, lesson, location, and word limits are configured from the server and may differ between free and premium plans.',
-  },
-  {
-    question: 'What happens if I miss a review?',
-    answer:
-      "You'll still earn XP for completing late reviews, but you'll earn 50% less than completing them on time. Your streak won't be affected.",
-  },
-  {
-    question: 'How do I earn badges and XP?',
-    answer:
-      'Complete lessons, maintain streaks, finish reviews on time, and master palaces to earn XP and unlock badges.',
-  },
-];
-
 const HelpSheet = forwardRef<Ref, HelpSheetProps>(({ router }, ref) => {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const { config } = useHelpFaqConfig();
+  const faqItems = config.faqItems;
+  const support = config.support;
 
   useImperativeHandle(ref, () => bottomSheetRef.current!, []);
 
@@ -106,21 +83,23 @@ const HelpSheet = forwardRef<Ref, HelpSheetProps>(({ router }, ref) => {
           <ChevronRight className="h-5 w-5" color={Colors.slate400} />
         </AnimatedPressable> */}
 
-        <AnimatedPressable
-          onPress={() => {
-            bottomSheetRef.current?.dismiss();
-            router.push('/support');
-          }}
-          className="mb-6 flex-row items-center gap-3 rounded-xl bg-gray-50 p-4">
-          <View className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-            <Mail className="h-5 w-5" color={Colors.blue600} />
-          </View>
-          <View className="flex-1">
-            <Text className="font-medium text-slate-900">Email Support</Text>
-            <Text className="text-sm text-slate-600">support@mindpal.app</Text>
-          </View>
-          <ChevronRight className="h-5 w-5" color={Colors.slate400} />
-        </AnimatedPressable>
+        {support.showEmailSupport ? (
+          <AnimatedPressable
+            onPress={() => {
+              bottomSheetRef.current?.dismiss();
+              router.push('/support');
+            }}
+            className="mb-6 flex-row items-center gap-3 rounded-xl bg-gray-50 p-4">
+            <View className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+              <Mail className="h-5 w-5" color={Colors.blue600} />
+            </View>
+            <View className="flex-1">
+              <Text className="font-medium text-slate-900">{support.emailButtonTitle}</Text>
+              <Text className="text-sm text-slate-600">{support.emailSubtitle || support.email}</Text>
+            </View>
+            <ChevronRight className="h-5 w-5" color={Colors.slate400} />
+          </AnimatedPressable>
+        ) : null}
       </BottomSheetScrollView>
     </CustomBottomSheetModal>
   );
@@ -133,7 +112,7 @@ const AccordionItem = ({
   isExpanded,
   onPress,
 }: {
-  item: (typeof faqItems)[0];
+  item: HelpFaqItem;
   isExpanded: boolean;
   onPress: () => void;
 }) => {

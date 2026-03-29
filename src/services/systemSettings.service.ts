@@ -2,6 +2,8 @@ import { systemSettingsApi } from '@/api/systemSettings';
 import { SYSTEM_SETTING_KEYS } from '@/constants/systemSettingKeys';
 import { createSystemSettingsRepository } from '@/repositories/systemSettings.repo';
 import { GamificationMobileUiConfig } from '@/types/gamificationUiConfig';
+import { HelpFaqConfig } from '@/types/helpFaqConfig';
+import { PrivacyPolicyConfig } from '@/types/privacyPolicyConfig';
 import { SystemSettingDto } from '@/types/systemSettings';
 
 const repo = createSystemSettingsRepository();
@@ -164,7 +166,12 @@ export async function getFeatureLimits(isPremium: boolean = false) {
     }
 
     const fallback = getSilentFallbackLimits(isPremium);
-    const customPalaces = resolveTier(payload, 'customPalaces', 'custom_palaces', fallback.customPalaces);
+    const customPalaces = resolveTier(
+      payload,
+      'customPalaces',
+      'custom_palaces',
+      fallback.customPalaces
+    );
     const customLessonsPerPalace = resolveTier(
       payload,
       'customLessonsPerPalace',
@@ -208,10 +215,7 @@ export async function getGamificationUiConfig(): Promise<Partial<GamificationMob
       await repo.syncSetting(remote);
     } else if (remote) {
       // Backward-compat fallback: some backend versions may return raw config payload.
-      await repo.upsert(
-        SYSTEM_SETTING_KEYS.GAMIFICATION_MOBILE_UI_CONFIG,
-        JSON.stringify(remote)
-      );
+      await repo.upsert(SYSTEM_SETTING_KEYS.GAMIFICATION_MOBILE_UI_CONFIG, JSON.stringify(remote));
     }
   } catch (error) {
     console.warn('[SystemSettings] Failed to sync gamification UI config from backend:', error);
@@ -219,6 +223,45 @@ export async function getGamificationUiConfig(): Promise<Partial<GamificationMob
 
   return await repo.getJson<Partial<GamificationMobileUiConfig>>(
     SYSTEM_SETTING_KEYS.GAMIFICATION_MOBILE_UI_CONFIG
+  );
+}
+/**
+ * Get help/FAQ raw config from system settings.
+ * Fallback and normalization are handled in the consuming hook.
+ */
+export async function getHelpFaqConfig(): Promise<Partial<HelpFaqConfig> | null> {
+  try {
+    const remote = await systemSettingsApi.getHelpFaqConfig();
+    if (isSystemSettingDto(remote)) {
+      await repo.syncSetting(remote);
+    } else if (remote) {
+      await repo.upsert(SYSTEM_SETTING_KEYS.SUPPORT_HELP_FAQ, JSON.stringify(remote));
+    }
+  } catch (error) {
+    console.warn('[SystemSettings] Failed to sync help/faq config from backend:', error);
+  }
+
+  return await repo.getJson<Partial<HelpFaqConfig>>(SYSTEM_SETTING_KEYS.SUPPORT_HELP_FAQ);
+}
+
+/**
+ * Get privacy policy raw config from system settings.
+ * Fallback and normalization are handled in the consuming hook.
+ */
+export async function getPrivacyPolicyConfig(): Promise<Partial<PrivacyPolicyConfig> | null> {
+  try {
+    const remote = await systemSettingsApi.getPrivacyPolicyConfig();
+    if (isSystemSettingDto(remote)) {
+      await repo.syncSetting(remote);
+    } else if (remote) {
+      await repo.upsert(SYSTEM_SETTING_KEYS.SUPPORT_PRIVACY_POLICY, JSON.stringify(remote));
+    }
+  } catch (error) {
+    console.warn('[SystemSettings] Failed to sync privacy policy config from backend:', error);
+  }
+
+  return await repo.getJson<Partial<PrivacyPolicyConfig>>(
+    SYSTEM_SETTING_KEYS.SUPPORT_PRIVACY_POLICY
   );
 }
 

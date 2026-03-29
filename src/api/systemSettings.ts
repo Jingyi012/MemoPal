@@ -47,4 +47,18 @@ export const systemSettingsApi = {
     if (!response.data.success || !response.data.data) return null;
     return response.data.data;
   },
+
+  async getHelpFaqConfig(): Promise<SystemSettingDto | null> {
+    const response = await api.get<GeneralResponse<SystemSettingDto>>('/system-settings/help-faq');
+    if (!response.data.success || !response.data.data) return null;
+    return response.data.data;
+  },
+
+  async getPrivacyPolicyConfig(): Promise<SystemSettingDto | null> {
+    const response = await api.get<GeneralResponse<SystemSettingDto>>(
+      '/system-settings/privacy-policy'
+    );
+    if (!response.data.success || !response.data.data) return null;
+    return response.data.data;
+  },
 };
