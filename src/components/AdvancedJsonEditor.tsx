@@ -27,8 +27,9 @@ export const AdvancedJsonEditor: React.FC<AdvancedJsonEditorProps> = ({
   height = "400px",
 }) => {
   const { message } = App.useApp();
+  const incomingValue = useMemo(() => JSON.stringify(value, null, 2), [value]);
   const [editorValue, setEditorValue] = React.useState(
-    JSON.stringify(value, null, 2),
+    incomingValue,
   );
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [validationError, setValidationError] = React.useState<string | null>(
@@ -36,6 +37,11 @@ export const AdvancedJsonEditor: React.FC<AdvancedJsonEditorProps> = ({
   );
 
   const ajv = useMemo(() => new Ajv(), []);
+
+  React.useEffect(() => {
+    setEditorValue(incomingValue);
+    setValidationError(null);
+  }, [incomingValue]);
 
   const validateJson = useCallback(
     (jsonString: string): Record<string, unknown> | null => {

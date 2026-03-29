@@ -160,8 +160,9 @@ export function useConfigEditor({
       });
       return normalized;
     },
-    onSuccess: (savedConfig) => {
+    onSuccess: async (savedConfig) => {
       queryClient.setQueryData(queryKey, savedConfig);
+      await queryClient.invalidateQueries({ queryKey, exact: true });
     },
   });
 
@@ -194,4 +195,3 @@ export function useConfigEditor({
 
   return { config, isLoading, error, saveConfig, refreshConfig };
 }
-

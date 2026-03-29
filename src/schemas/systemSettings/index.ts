@@ -19,6 +19,14 @@ import {
   LEVEL_CONFIGS_DEFAULT,
   LEVEL_CONFIGS_SCHEMA,
 } from "./levelConfigsSchema";
+import {
+  HELP_FAQ_CONFIG_DEFAULT,
+  HELP_FAQ_CONFIG_SCHEMA,
+} from "./helpFaqConfigSchema";
+import {
+  PRIVACY_POLICY_CONFIG_DEFAULT,
+  PRIVACY_POLICY_CONFIG_SCHEMA,
+} from "./privacyPolicyConfigSchema";
 
 export * from "./gamificationUiConfigSchema";
 export * from "./featureLimitsSchema";
@@ -26,6 +34,8 @@ export * from "./referralProgramConfigSchema";
 export * from "./authLoginMethodsSchema";
 export * from "./xpConfigsSchema";
 export * from "./levelConfigsSchema";
+export * from "./helpFaqConfigSchema";
+export * from "./privacyPolicyConfigSchema";
 
 export interface ConfigSchema {
   key: string;
@@ -70,5 +80,17 @@ export const ALL_CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
     title: "Level Configurations",
     schema: LEVEL_CONFIGS_SCHEMA,
     default: LEVEL_CONFIGS_DEFAULT,
+  },
+  help_faq: {
+    key: "support.help_faq",
+    title: "Help & FAQ Configuration",
+    schema: HELP_FAQ_CONFIG_SCHEMA,
+    default: HELP_FAQ_CONFIG_DEFAULT,
+  },
+  privacy_policy: {
+    key: "support.privacy_policy",
+    title: "Privacy Policy Configuration",
+    schema: PRIVACY_POLICY_CONFIG_SCHEMA,
+    default: PRIVACY_POLICY_CONFIG_DEFAULT,
   },
 };

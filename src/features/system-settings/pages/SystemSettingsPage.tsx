@@ -13,6 +13,8 @@ import GamificationUiConfigTab from "../../configs/components/GamificationUiConf
 import FeatureLimitsConfigTab from "../../configs/components/FeatureLimitsConfigTab";
 import ReferralProgramConfigTab from "../../configs/components/ReferralProgramConfigTab";
 import AuthLoginMethodsConfigTab from "../../configs/components/AuthLoginMethodsConfigTab";
+import HelpFaqConfigTab from "../../configs/components/HelpFaqConfigTab";
+import PrivacyPolicyConfigTab from "../../configs/components/PrivacyPolicyConfigTab";
 
 export default function SystemSettingsPage() {
   const { message } = App.useApp();
@@ -63,6 +65,16 @@ export default function SystemSettingsPage() {
             key: "auth-login-methods",
             label: "Auth Login Methods",
             children: <AuthLoginMethodsConfigTab />,
+          },
+          {
+            key: "help-faq",
+            label: "Help & FAQ",
+            children: <HelpFaqConfigTab />,
+          },
+          {
+            key: "privacy-policy",
+            label: "Privacy Policy",
+            children: <PrivacyPolicyConfigTab />,
           },
           {
             key: "advanced",
