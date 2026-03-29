@@ -62,7 +62,9 @@ export function createPalaceRepository(): PalaceRepository {
       return (await db.query.palaces.findFirst({
         where: and(eq(schema.palaces.id, id), eq(schema.palaces.isDeleted, false)),
         with: {
-          locations: true,
+          locations: {
+            where: eq(schema.locations.isDeleted, false),
+          },
         },
       })) as PalaceDetails | undefined;
     },

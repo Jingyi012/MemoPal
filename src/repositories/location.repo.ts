@@ -3,7 +3,7 @@ import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { Location } from '@/types/palace';
-import { and, asc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 
 interface LocationRepository {
@@ -244,8 +244,7 @@ export function createLocationRepository(): LocationRepository {
             columns: { id: true },
             where: and(
               eq(schema.locations.palaceId, prunePalaceId),
-              eq(schema.locations.isDeleted, false),
-              isNotNull(schema.locations.lastSyncedAt)
+              eq(schema.locations.isDeleted, false)
             ),
           });
 

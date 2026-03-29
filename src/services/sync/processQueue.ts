@@ -380,6 +380,56 @@ export async function processQueue(db = defaultDb) {
     const processWordQueue = async () => {
       if (wordItems.length === 0) return;
 
+      const finalizeWordItem = async (item: any) => {
+        await db.transaction(async (tx) => {
+          if (item.action !== 'delete') {
+            const stillDirty = await SyncBase.isDirty(tx, item.entityId);
+            if (!stillDirty) {
+              await tx
+                .update(schema.words)
+                .set({ lastSyncedAt: new Date().toISOString() })
+                .where(eq(schema.words.id, item.entityId));
+            }
+          }
+          await tx.delete(schema.syncQueue).where(eq(schema.syncQueue.id, item.id));
+        });
+      };
+
+      const dropWordItem = async (item: any, message: string) => {
+        console.warn(
+          `[SyncQueue] Dropping non-retriable WORD item ${item.id} (${item.action}) - ${message}`
+        );
+
+        await db.delete(schema.syncQueue).where(eq(schema.syncQueue.id, item.id));
+      };
+
+      const syncWordItem = async (item: any) => {
+        const payload = parseSyncPayload(item.payload);
+
+        if (item.action === 'create') {
+          if (!payload) {
+            throw new Error('Missing payload for WORD create queue item');
+          }
+          await wordApi.create(payload as any);
+          return;
+        }
+
+        if (item.action === 'update') {
+          if (!payload) {
+            throw new Error('Missing payload for WORD update queue item');
+          }
+          await wordApi.update(payload as any);
+          return;
+        }
+
+        if (item.action === 'delete') {
+          await wordApi.delete(item.entityId);
+          return;
+        }
+
+        throw new Error(`Unsupported action for WORD queue item: ${item.action}`);
+      };
+
       try {
         const createItems = wordItems.filter((w) => w.action === 'create');
         const updateItems = wordItems.filter((w) => w.action === 'update');
@@ -409,23 +459,36 @@ export async function processQueue(db = defaultDb) {
           const ids = deleteItems.map((item) => item.entityId);
           await wordApi.deleteBatch(ids);
         }
+
         // Post-process Words: apply the "dirty" check for each item in the batch
         for (const item of wordItems) {
-          await db.transaction(async (tx) => {
-            if (item.action !== 'delete') {
-              const stillDirty = await SyncBase.isDirty(tx, item.entityId);
-              if (!stillDirty) {
-                await tx
-                  .update(schema.words)
-                  .set({ lastSyncedAt: new Date().toISOString() })
-                  .where(eq(schema.words.id, item.entityId));
-              }
-            }
-            await tx.delete(schema.syncQueue).where(eq(schema.syncQueue.id, item.id));
-          });
+          await finalizeWordItem(item);
         }
       } catch (error) {
         console.error('Word batch sync failed:', error);
+
+        // Fallback to item-by-item sync so one bad payload doesn't block the entire WORD queue.
+        for (const item of wordItems) {
+          try {
+            await syncWordItem(item);
+            await finalizeWordItem(item);
+          } catch (itemError: any) {
+            if (
+              item.action === 'delete' &&
+              itemError?.response?.status === 404
+            ) {
+              await db.delete(schema.syncQueue).where(eq(schema.syncQueue.id, item.id));
+              continue;
+            }
+
+            if (isNonRetriableSyncError(itemError)) {
+              await dropWordItem(item, getSyncErrorMessage(itemError));
+              continue;
+            }
+
+            throw itemError;
+          }
+        }
       }
     };
 
