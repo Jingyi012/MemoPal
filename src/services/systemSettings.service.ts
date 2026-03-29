@@ -7,6 +7,7 @@ import { PrivacyPolicyConfig } from '@/types/privacyPolicyConfig';
 import { SystemSettingDto } from '@/types/systemSettings';
 
 const repo = createSystemSettingsRepository();
+const NETWORK_ONLY_SYSTEM_SETTING_KEYS = new Set<string>([SYSTEM_SETTING_KEYS.PREMIUM_SUBSCRIPTION]);
 
 function isSystemSettingDto(value: unknown): value is SystemSettingDto {
   if (!value || typeof value !== 'object') return false;
@@ -96,11 +97,13 @@ export async function initializeSystemSettings(): Promise<void> {
 
     // Store all settings in local database
     await repo.upsertMany(
-      settings.map((s) => ({
-        key: s.key,
-        value: s.value,
-        description: s.description,
-      }))
+      settings
+        .filter((s) => !NETWORK_ONLY_SYSTEM_SETTING_KEYS.has(s.key))
+        .map((s) => ({
+          key: s.key,
+          value: s.value,
+          description: s.description,
+        }))
     );
 
     console.log(`[SystemSettings] Successfully cached ${settings.length} system settings`);
@@ -124,7 +127,9 @@ export async function refreshSettingsGroup(pattern: string): Promise<void> {
 
     // Filter to pattern and update
     const regex = new RegExp(`^${pattern.replace(/\*/g, '.*')}$`);
-    const filtered = settings.filter((s) => regex.test(s.key));
+    const filtered = settings.filter(
+      (s) => regex.test(s.key) && !NETWORK_ONLY_SYSTEM_SETTING_KEYS.has(s.key)
+    );
 
     if (filtered.length > 0) {
       await repo.upsertMany(

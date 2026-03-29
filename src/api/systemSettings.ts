@@ -61,4 +61,12 @@ export const systemSettingsApi = {
     if (!response.data.success || !response.data.data) return null;
     return response.data.data;
   },
+
+  async getPremiumSubscriptionConfig(): Promise<SystemSettingDto | null> {
+    const response = await api.get<GeneralResponse<SystemSettingDto>>(
+      '/system-settings/premium-subscription'
+    );
+    if (!response.data.success || !response.data.data) return null;
+    return response.data.data;
+  },
 };
