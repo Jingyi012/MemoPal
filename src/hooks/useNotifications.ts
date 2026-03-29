@@ -1,4 +1,5 @@
 import { InAppNotificationService } from '@/services/notification.service';
+import { Notification } from '@/types/notification';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const NOTIFICATION_KEYS = {
@@ -32,9 +33,36 @@ export const useUnreadNotifications = () => {
 export const useNotificationMutations = () => {
   const queryClient = useQueryClient();
 
+  const setUnreadCount = (updater: (count: number) => number) => {
+    queryClient.setQueryData<number>(NOTIFICATION_KEYS.unread(), (previous = 0) =>
+      Math.max(0, updater(previous))
+    );
+  };
+
+  const setNotificationList = (updater: (list: Notification[]) => Notification[]) => {
+    queryClient.setQueryData<Notification[]>(NOTIFICATION_KEYS.lists(), (previous = []) =>
+      updater(previous)
+    );
+  };
+
   const markAsRead = useMutation({
     mutationFn: (notificationId: string) => InAppNotificationService.markAsRead(notificationId),
-    onSuccess: () => {
+    onSuccess: (_, notificationId) => {
+      let didTransitionFromUnread = false;
+      setNotificationList((list) =>
+        list.map((item) => {
+          if (item.id !== notificationId) return item;
+          didTransitionFromUnread = !item.isRead;
+          return item.isRead
+            ? item
+            : { ...item, isRead: true, readAt: new Date().toISOString() };
+        })
+      );
+
+      if (didTransitionFromUnread) {
+        setUnreadCount((count) => count - 1);
+      }
+
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.unread() });
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
     },
@@ -43,6 +71,14 @@ export const useNotificationMutations = () => {
   const markAllAsRead = useMutation({
     mutationFn: () => InAppNotificationService.markAllAsRead(),
     onSuccess: () => {
+      setNotificationList((list) => {
+        const now = new Date().toISOString();
+        return list.map((item) =>
+          item.isRead ? item : { ...item, isRead: true, readAt: now }
+        );
+      });
+      queryClient.setQueryData<number>(NOTIFICATION_KEYS.unread(), 0);
+
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.unread() });
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
     },
@@ -50,7 +86,20 @@ export const useNotificationMutations = () => {
 
   const dismiss = useMutation({
     mutationFn: (notificationId: string) => InAppNotificationService.dismiss(notificationId),
-    onSuccess: () => {
+    onSuccess: (_, notificationId) => {
+      let removedUnread = false;
+      setNotificationList((list) =>
+        list.map((item) => {
+          if (item.id !== notificationId) return item;
+          removedUnread = !item.isRead && !item.isDismissed;
+          return item.isDismissed ? item : { ...item, isDismissed: true };
+        })
+      );
+
+      if (removedUnread) {
+        setUnreadCount((count) => count - 1);
+      }
+
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.unread() });
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
     },
@@ -59,8 +108,13 @@ export const useNotificationMutations = () => {
   const createNotification = useMutation({
     mutationFn: (notification: any) =>
       InAppNotificationService.createInAppNotification(notification),
-    onSuccess: () => {
+    onSuccess: (created) => {
+      setNotificationList((list) => [created, ...list]);
+      if (!created.isRead && !created.isDismissed) {
+        setUnreadCount((count) => count + 1);
+      }
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.unread() });
     },
   });
 
