@@ -86,10 +86,18 @@ jobs:
 
       - name: Configure SSH
         run: |
+          if [ -z "${{ secrets.VPS_HOST }}" ] || [ -z "${{ secrets.VPS_PORT }}" ] || [ -z "${{ secrets.VPS_USER }}" ] || [ -z "${{ secrets.VPS_SSH_KEY }}" ]; then
+            echo "Missing one or more required VPS secrets: VPS_HOST, VPS_PORT, VPS_USER, VPS_SSH_KEY"
+            exit 1
+          fi
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "${{ secrets.VPS_PORT }}" -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+          if ! ssh-keyscan -T 10 -p "${{ secrets.VPS_PORT }}" -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/tmp/ssh-keyscan.err; then
+            echo "ssh-keyscan failed for host=${{ secrets.VPS_HOST }} port=${{ secrets.VPS_PORT }}"
+            cat /tmp/ssh-keyscan.err || true
+            exit 1
+          fi
 
       - name: Upload deploy manifests
         run: |
