@@ -9,7 +9,7 @@ COPY src/MemoPal.Application/MemoPal.Application.csproj src/MemoPal.Application/
 COPY src/MemoPal.Domain/MemoPal.Domain.csproj src/MemoPal.Domain/
 COPY src/MemoPal.Infrastructure/MemoPal.Infrastructure.csproj src/MemoPal.Infrastructure/
 
-RUN dotnet restore MemoPal.sln
+RUN dotnet restore src/MemoPal.Api/MemoPal.Api.csproj
 
 # Copy everything else and publish
 COPY . .
