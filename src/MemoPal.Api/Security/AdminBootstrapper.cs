@@ -893,7 +893,7 @@ public sealed class AdminBootstrapper
 
             palace.Name = $"Level {palaceSeed.Level:00} - {palaceSeed.Name}";
             palace.Description = palaceSeed.Description;
-            palace.Thumbnail = CopySeedImageToPublicPath(palaceSeed.ThumbnailImagePath, palaceSeed.FolderName);
+            palace.Thumbnail = CopySeedImageToRelativePath(palaceSeed.ThumbnailImagePath, "palace", palaceSeed.FolderName);
             palace.Level = palaceSeed.Level;
             // IsLocked is a global admin lock switch, not progression state.
             palace.IsLocked = false;
@@ -924,7 +924,7 @@ public sealed class AdminBootstrapper
                 location.Position = locationSeed.Position;
                 location.Name = locationSeed.Name;
                 location.Description = $"Memory anchor for {locationSeed.Name} in level {palaceSeed.Level:00}.";
-                location.ImageUrl = CopySeedImageToPublicPath(locationSeed.ImagePath, palaceSeed.FolderName);
+                location.ImageUrl = CopySeedImageToRelativePath(locationSeed.ImagePath, "location", palaceSeed.FolderName);
                 location.IsDeleted = false;
                 location.DeletedAt = null;
                 location.UpdatedAt = now;
@@ -1247,10 +1247,10 @@ public sealed class AdminBootstrapper
         return ToTitleCase(namePart);
     }
 
-    private string CopySeedImageToPublicPath(string sourcePath, string folderName)
+    private string CopySeedImageToRelativePath(string sourcePath, string category, string folderName)
     {
         var storageRoot = Path.GetFullPath(_fileStorageOptions.RootPath);
-        var relativeFolder = Path.Combine("content", "palace-data", folderName);
+        var relativeFolder = Path.Combine("content", category, folderName);
         var targetFolder = Path.Combine(storageRoot, relativeFolder);
         Directory.CreateDirectory(targetFolder);
 
@@ -1261,9 +1261,8 @@ public sealed class AdminBootstrapper
             File.Copy(sourcePath, targetPath, overwrite: false);
         }
 
-        var publicBase = _fileStorageOptions.PublicBasePath.TrimEnd('/');
-        var relativePublicPath = relativeFolder.Replace('\\', '/');
-        return $"{publicBase}/{relativePublicPath}/{fileName}";
+        var relativePublicPath = relativeFolder.Replace('\\', '/').Trim('/');
+        return $"/{relativePublicPath}/{fileName}";
     }
 
     private static string ToTitleCase(string raw)

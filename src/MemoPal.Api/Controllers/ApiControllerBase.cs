@@ -4,6 +4,7 @@ using MediatR;
 using MemoPal.Api.Options;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Domain.Common;
+using MemoPal.Infrastructure.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
@@ -42,13 +43,13 @@ public abstract class ApiControllerBase : ControllerBase
 
     protected T MapMediaUrls<T>(T value)
     {
-        var config = MediaUrlMapsterConfigFactory.Get(GetMediaBaseUrl());
+        var config = MediaUrlMapsterConfigFactory.Get(GetMediaBaseUrl(), GetMediaPublicBasePath());
         return value.Adapt<T>(config);
     }
 
     protected IReadOnlyList<T> MapMediaUrls<T>(IReadOnlyList<T> value)
     {
-        var config = MediaUrlMapsterConfigFactory.Get(GetMediaBaseUrl());
+        var config = MediaUrlMapsterConfigFactory.Get(GetMediaBaseUrl(), GetMediaPublicBasePath());
         return value.Adapt<List<T>>(config);
     }
 
@@ -75,6 +76,14 @@ public abstract class ApiControllerBase : ControllerBase
             normalized = "/" + normalized.TrimStart('/');
         }
 
+        var normalizedPublicBasePath = NormalizePublicBasePath(GetMediaPublicBasePath());
+        if (!string.IsNullOrWhiteSpace(normalizedPublicBasePath) &&
+            !normalized.Equals(normalizedPublicBasePath, StringComparison.OrdinalIgnoreCase) &&
+            !normalized.StartsWith($"{normalizedPublicBasePath}/", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = $"{normalizedPublicBasePath}{normalized}";
+        }
+
         return $"{GetMediaBaseUrl()}{normalized}";
     }
 
@@ -98,5 +107,32 @@ public abstract class ApiControllerBase : ControllerBase
         }
 
         return $"{Request.Scheme}://{Request.Host}{Request.PathBase}".TrimEnd('/');
+    }
+
+    private string GetMediaPublicBasePath()
+    {
+        var configuredPublicBasePath = HttpContext?.RequestServices
+            .GetService<IOptions<FileStorageOptions>>()?
+            .Value
+            .PublicBasePath;
+
+        return NormalizePublicBasePath(configuredPublicBasePath);
+    }
+
+    private static string NormalizePublicBasePath(string? publicBasePath)
+    {
+        if (string.IsNullOrWhiteSpace(publicBasePath))
+        {
+            return string.Empty;
+        }
+
+        var normalized = publicBasePath.Trim().Replace('\\', '/');
+        if (!normalized.StartsWith("/", StringComparison.Ordinal))
+        {
+            normalized = "/" + normalized;
+        }
+
+        normalized = normalized.TrimEnd('/');
+        return normalized == "/" ? string.Empty : normalized;
     }
 }

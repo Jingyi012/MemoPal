@@ -37,8 +37,13 @@ public sealed class LocalFileStorageService : IFileStorageService
             await content.CopyToAsync(fs, cancellationToken);
         }
 
-        var publicBase = _options.PublicBasePath.TrimEnd('/');
-        return $"{publicBase}/{safeFolder}/{fileName}";
+        if (string.IsNullOrWhiteSpace(safeFolder))
+        {
+            return $"/{fileName}";
+        }
+
+        var normalizedFolder = safeFolder.Replace('\\', '/').Trim('/');
+        return $"/{normalizedFolder}/{fileName}";
     }
 
     private static string BuildCompactPrefix(string rawPrefix)

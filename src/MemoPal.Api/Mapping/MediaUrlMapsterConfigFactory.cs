@@ -11,42 +11,43 @@ namespace MemoPal.Api.Mapping;
 
 public static class MediaUrlMapsterConfigFactory
 {
-    private static readonly ConcurrentDictionary<string, TypeAdapterConfig> Cache = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<(string BaseUrl, string PublicBasePath), TypeAdapterConfig> Cache = new();
 
-    public static TypeAdapterConfig Get(string mediaBaseUrl)
+    public static TypeAdapterConfig Get(string mediaBaseUrl, string mediaPublicBasePath)
     {
         var normalizedBaseUrl = NormalizeBaseUrl(mediaBaseUrl);
-        return Cache.GetOrAdd(normalizedBaseUrl, Build);
+        var normalizedPublicBasePath = NormalizePublicBasePath(mediaPublicBasePath);
+        return Cache.GetOrAdd((normalizedBaseUrl, normalizedPublicBasePath), key => Build(key.BaseUrl, key.PublicBasePath));
     }
 
-    private static TypeAdapterConfig Build(string mediaBaseUrl)
+    private static TypeAdapterConfig Build(string mediaBaseUrl, string mediaPublicBasePath)
     {
         var config = new TypeAdapterConfig();
         config.Default.ShallowCopyForSameType(false);
 
         config.NewConfig<PalaceDto, PalaceDto>()
-            .Map(dest => dest.Thumbnail, src => ToAbsoluteMediaUrl(src.Thumbnail, mediaBaseUrl));
+            .Map(dest => dest.Thumbnail, src => ToAbsoluteMediaUrl(src.Thumbnail, mediaBaseUrl, mediaPublicBasePath));
 
         config.NewConfig<LocationDto, LocationDto>()
-            .Map(dest => dest.ImageUrl, src => ToAbsoluteMediaUrl(src.ImageUrl, mediaBaseUrl));
+            .Map(dest => dest.ImageUrl, src => ToAbsoluteMediaUrl(src.ImageUrl, mediaBaseUrl, mediaPublicBasePath));
 
         config.NewConfig<BadgeDto, BadgeDto>()
-            .Map(dest => dest.IconUrl, src => ToAbsoluteMediaUrlOrNull(src.IconUrl, mediaBaseUrl));
+            .Map(dest => dest.IconUrl, src => ToAbsoluteMediaUrlOrNull(src.IconUrl, mediaBaseUrl, mediaPublicBasePath));
 
         config.NewConfig<BadgeDefinitionDto, BadgeDefinitionDto>()
-            .Map(dest => dest.IconUrl, src => ToAbsoluteMediaUrlOrNull(src.IconUrl, mediaBaseUrl));
+            .Map(dest => dest.IconUrl, src => ToAbsoluteMediaUrlOrNull(src.IconUrl, mediaBaseUrl, mediaPublicBasePath));
 
         config.NewConfig<UserWithStatDto, UserWithStatDto>()
-            .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.AvatarUrl, mediaBaseUrl));
+            .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.AvatarUrl, mediaBaseUrl, mediaPublicBasePath));
 
         config.NewConfig<ManagedUserDto, ManagedUserDto>()
-            .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.AvatarUrl, mediaBaseUrl));
+            .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.AvatarUrl, mediaBaseUrl, mediaPublicBasePath));
 
         config.NewConfig<ManagedUserLocationDataDto, ManagedUserLocationDataDto>()
-            .Map(dest => dest.ImageUrl, src => ToAbsoluteMediaUrl(src.ImageUrl, mediaBaseUrl));
+            .Map(dest => dest.ImageUrl, src => ToAbsoluteMediaUrl(src.ImageUrl, mediaBaseUrl, mediaPublicBasePath));
 
         config.NewConfig<CommunityCreatorDto, CommunityCreatorDto>()
-            .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.AvatarUrl, mediaBaseUrl));
+            .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.AvatarUrl, mediaBaseUrl, mediaPublicBasePath));
 
         config.NewConfig<AuthResponseDto, AuthResponseDto>();
         config.NewConfig<ManagedUserPalaceDataDto, ManagedUserPalaceDataDto>();
@@ -56,7 +57,7 @@ public static class MediaUrlMapsterConfigFactory
         return config;
     }
 
-    private static string ToAbsoluteMediaUrl(string? value, string mediaBaseUrl)
+    private static string ToAbsoluteMediaUrl(string? value, string mediaBaseUrl, string mediaPublicBasePath)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -79,12 +80,19 @@ public static class MediaUrlMapsterConfigFactory
             normalized = "/" + normalized.TrimStart('/');
         }
 
+        if (!string.IsNullOrWhiteSpace(mediaPublicBasePath) &&
+            !normalized.Equals(mediaPublicBasePath, StringComparison.OrdinalIgnoreCase) &&
+            !normalized.StartsWith($"{mediaPublicBasePath}/", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = $"{mediaPublicBasePath}{normalized}";
+        }
+
         return $"{mediaBaseUrl}{normalized}";
     }
 
-    private static string? ToAbsoluteMediaUrlOrNull(string? value, string mediaBaseUrl)
+    private static string? ToAbsoluteMediaUrlOrNull(string? value, string mediaBaseUrl, string mediaPublicBasePath)
     {
-        return string.IsNullOrWhiteSpace(value) ? null : ToAbsoluteMediaUrl(value, mediaBaseUrl);
+        return string.IsNullOrWhiteSpace(value) ? null : ToAbsoluteMediaUrl(value, mediaBaseUrl, mediaPublicBasePath);
     }
 
     private static string NormalizeBaseUrl(string? mediaBaseUrl)
@@ -100,5 +108,22 @@ public static class MediaUrlMapsterConfigFactory
         }
 
         return $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath.TrimEnd('/')}";
+    }
+
+    private static string NormalizePublicBasePath(string? publicBasePath)
+    {
+        if (string.IsNullOrWhiteSpace(publicBasePath))
+        {
+            return string.Empty;
+        }
+
+        var normalized = publicBasePath.Trim().Replace('\\', '/');
+        if (!normalized.StartsWith("/", StringComparison.Ordinal))
+        {
+            normalized = "/" + normalized;
+        }
+
+        normalized = normalized.TrimEnd('/');
+        return normalized == "/" ? string.Empty : normalized;
     }
 }
