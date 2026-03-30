@@ -2,6 +2,8 @@ import api from '@/api/api';
 import { GeneralResponse } from '@/types/general';
 import { isAxiosError } from 'axios';
 
+export type ImageCategory = 'content' | 'palace' | 'location' | 'general';
+
 function getApiDataOrThrow<T>(payload: GeneralResponse<T>, fallbackMessage: string): T {
   if (!payload.success || payload.data === null || payload.data === undefined) {
     throw new Error(payload.message ?? fallbackMessage);
@@ -24,7 +26,7 @@ export const mediaApi = {
   async uploadImage(
     fileUri: string,
     fileName = 'image.jpg',
-    category = 'content'
+    category: ImageCategory = 'content'
   ): Promise<string> {
     try {
       const normalizedName = fileName || fileUri.split('/').pop() || 'image.jpg';
@@ -55,4 +57,3 @@ export const mediaApi = {
     }
   },
 };
-

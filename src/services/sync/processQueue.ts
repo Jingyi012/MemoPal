@@ -179,7 +179,7 @@ async function resolvePalaceThumbnailUpload(db: typeof defaultDb, item: any, pay
   const uploadedUrl = await mediaApi.uploadImage(
     thumbnail,
     getFileNameFromUri(thumbnail, `${item.entityId}-thumbnail.jpg`),
-    'palaces'
+    'palace'
   );
   const updatedPayload = { ...payload, thumbnail: uploadedUrl };
 
@@ -207,7 +207,7 @@ async function resolveLocationImageUpload(db: typeof defaultDb, item: any, paylo
   const uploadedUrl = await mediaApi.uploadImage(
     imageUrl,
     getFileNameFromUri(imageUrl, `${item.entityId}.jpg`),
-    'locations'
+    'location'
   );
   const updatedPayload = { ...payload, imageUrl: uploadedUrl };
 
