@@ -28,7 +28,8 @@ public sealed class LocalFileStorageService : IFileStorageService
         var targetFolder = Path.Combine(root, safeFolder);
         Directory.CreateDirectory(targetFolder);
 
-        var fileName = $"{compactPrefix}_{Guid.NewGuid():N[..16]}{safeExt}";
+        var shortGuid = Guid.NewGuid().ToString("N")[..16];
+        var fileName = $"{compactPrefix}_{shortGuid}{safeExt}";
         var targetPath = Path.Combine(targetFolder, fileName);
 
         await using (var fs = File.Create(targetPath))
