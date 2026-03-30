@@ -1,3 +1,4 @@
+using Mapster;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
@@ -139,7 +140,7 @@ public sealed class GetCommunityLessonsQueryHandler
                 ShareCode: CommunityLessonHelpers.BuildShareCode(lesson.Id),
                 IsPublic: true,
                 IsPremium: lesson.IsPremium ?? false);
-        }).ToList();
+        }).ToList().Adapt<List<CommunityLessonDto>>();
 
         return PaginatedResponse<CommunityLessonDto>.Ok(items, pageNumber, pageSize, totalCount);
     }

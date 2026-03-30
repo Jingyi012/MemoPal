@@ -32,12 +32,7 @@ public sealed class AuthController : ApiControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new RegisterCommand(request.DisplayName, request.Email, request.Password), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<AuthResponseDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [AllowAnonymous]
@@ -45,12 +40,7 @@ public sealed class AuthController : ApiControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new LoginCommand(request.Email, request.Password), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<AuthResponseDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [AllowAnonymous]
@@ -63,12 +53,7 @@ public sealed class AuthController : ApiControllerBase
             request.GoogleAccessToken,
             request.AccessToken);
         var result = await Sender.Send(new GoogleLoginCommand(token ?? string.Empty), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<AuthResponseDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [AllowAnonymous]
@@ -77,12 +62,7 @@ public sealed class AuthController : ApiControllerBase
     {
         var token = string.IsNullOrWhiteSpace(request.FacebookAccessToken) ? request.AccessToken : request.FacebookAccessToken;
         var result = await Sender.Send(new FacebookLoginCommand(token ?? string.Empty), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<AuthResponseDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [Authorize]
@@ -90,12 +70,7 @@ public sealed class AuthController : ApiControllerBase
     public async Task<IActionResult> GetMe(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetMeQuery(GetUserIdOrThrow()), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<UserWithStatDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [Authorize]
@@ -105,12 +80,7 @@ public sealed class AuthController : ApiControllerBase
         var result = await Sender.Send(
             new UpdateProfileCommand(GetUserIdOrThrow(), request.DisplayName, request.AvatarUrl, request.Email),
             cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<UserWithStatDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [Authorize]
@@ -141,13 +111,7 @@ public sealed class AuthController : ApiControllerBase
         var data = await Sender.Send(
             new UpdateProfileCommand(userId, null, avatarUrl, null),
             cancellationToken);
-
-        if (!data.Success || data.Data is null)
-        {
-            return Ok(data);
-        }
-
-        return Ok(ApiResponse<UserWithStatDto>.Ok(MapMediaUrls(data.Data), data.Message));
+        return Ok(data);
     }
 
     public sealed class RegisterRequest

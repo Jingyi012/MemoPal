@@ -1,3 +1,4 @@
+using Mapster;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
@@ -131,7 +132,7 @@ public sealed class GetPalacesQueryHandler : IRequestHandler<GetPalacesQuery, Ap
                     palace.DeletedAt);
 
                 return new PalaceProjection(
-                    dto,
+                    dto.Adapt<PalaceDto>(),
                     isEffectiveCustom ? int.MaxValue : requiredLevel,
                     palace.CreatedAt);
             })

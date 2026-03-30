@@ -1,5 +1,4 @@
 using MediatR;
-using MemoPal.Application.Common;
 using MemoPal.Application.Features.Community.DTOs;
 using MemoPal.Application.Features.Community.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -32,18 +31,7 @@ public sealed class CommunityController : ApiControllerBase
                 PageSize: pageSize,
                 MineOnly: false),
             cancellationToken);
-
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(PaginatedResponse<CommunityLessonDto>.Ok(
-            MapMediaUrls(result.Data),
-            result.Pagination.PageNumber,
-            result.Pagination.PageSize,
-            result.Pagination.TotalCount,
-            result.Message));
+        return Ok(result);
     }
 
     [HttpGet("lessons/mine")]
@@ -63,18 +51,7 @@ public sealed class CommunityController : ApiControllerBase
                 PageSize: pageSize,
                 MineOnly: true),
             cancellationToken);
-
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(PaginatedResponse<CommunityLessonDto>.Ok(
-            MapMediaUrls(result.Data),
-            result.Pagination.PageNumber,
-            result.Pagination.PageSize,
-            result.Pagination.TotalCount,
-            result.Message));
+        return Ok(result);
     }
 
     [HttpGet("lessons/by-code/{shareCode}")]
@@ -85,14 +62,6 @@ public sealed class CommunityController : ApiControllerBase
         var result = await Sender.Send(
             new GetCommunityLessonByShareCodeQuery(GetUserIdOrThrow(), shareCode),
             cancellationToken);
-
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<CommunityLessonDto>.Ok(
-            MapMediaUrls(result.Data),
-            result.Message));
+        return Ok(result);
     }
 }

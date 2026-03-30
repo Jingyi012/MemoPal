@@ -1,3 +1,4 @@
+using Mapster;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
@@ -32,7 +33,7 @@ public sealed class GetBadgeQueryHandler : IRequestHandler<GetBadgeQuery, ApiRes
 
     private static BadgeDto ToBadgeDto(BadgeDefinition definition, UserBadge? earned)
     {
-        return new BadgeDto(
+        var dto = new BadgeDto(
             definition.Id,
             definition.Key,
             definition.Name,
@@ -47,6 +48,8 @@ public sealed class GetBadgeQueryHandler : IRequestHandler<GetBadgeQuery, ApiRes
             definition.UpdatedAt,
             definition.IsDeleted,
             definition.DeletedAt);
+
+        return dto.Adapt<BadgeDto>();
     }
 }
 

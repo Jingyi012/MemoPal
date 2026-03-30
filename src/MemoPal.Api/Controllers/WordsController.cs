@@ -1,5 +1,4 @@
 using MediatR;
-using MemoPal.Application.Common;
 using MemoPal.Application.Features.Words.Commands;
 using MemoPal.Application.Features.Words.DTOs;
 using MemoPal.Application.Features.Words.Queries;
@@ -46,7 +45,8 @@ public sealed class WordsController : ApiControllerBase
     [HttpPost("/words")]
     public async Task<IActionResult> Create([FromBody] WordUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new CreateWordCommand(GetUserIdOrThrow(), request, IsAdmin()), cancellationToken); return Ok(result);
+        var result = await Sender.Send(new CreateWordCommand(GetUserIdOrThrow(), request, IsAdmin()), cancellationToken);
+        return Ok(result);
     }
 
     [HttpPost("/words/batch")]
@@ -59,7 +59,8 @@ public sealed class WordsController : ApiControllerBase
     [HttpPatch("/words/{wordId}")]
     public async Task<IActionResult> Update(string wordId, [FromBody] WordUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UpdateWordCommand(GetUserIdOrThrow(), wordId, request, IsAdmin()), cancellationToken); return Ok(result);
+        var result = await Sender.Send(new UpdateWordCommand(GetUserIdOrThrow(), wordId, request, IsAdmin()), cancellationToken);
+        return Ok(result);
     }
 
     [HttpPatch("/words/batch")]
@@ -72,15 +73,15 @@ public sealed class WordsController : ApiControllerBase
     [HttpDelete("/words/{wordId}")]
     public async Task<IActionResult> Delete(string wordId, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteWordCommand(GetUserIdOrThrow(), wordId, IsAdmin()), cancellationToken);
-        return Ok(ApiResponse<object?>.Ok(null));
+        var result = await Sender.Send(new DeleteWordCommand(GetUserIdOrThrow(), wordId, IsAdmin()), cancellationToken);
+        return Ok(result);
     }
 
     [HttpPost("/words/batch/delete")]
     public async Task<IActionResult> DeleteBatch([FromBody] BatchDeleteWordsRequest request, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteWordsBatchCommand(GetUserIdOrThrow(), request.Ids, IsAdmin()), cancellationToken);
-        return Ok(ApiResponse<object?>.Ok(null));
+        var result = await Sender.Send(new DeleteWordsBatchCommand(GetUserIdOrThrow(), request.Ids, IsAdmin()), cancellationToken);
+        return Ok(result);
     }
 
 }

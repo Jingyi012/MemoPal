@@ -1,3 +1,4 @@
+using Mapster;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
@@ -94,6 +95,6 @@ public sealed class GetCommunityLessonByShareCodeQueryHandler
             IsPublic: true,
             IsPremium: lessonEntity.IsPremium ?? false);
 
-        return ApiResponse<CommunityLessonDto>.Ok(dto);
+        return ApiResponse<CommunityLessonDto>.Ok(dto.Adapt<CommunityLessonDto>());
     }
 }

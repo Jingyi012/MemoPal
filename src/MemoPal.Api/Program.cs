@@ -119,6 +119,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
 builder.Services.Configure<BillingWebhookOptions>(builder.Configuration.GetSection(BillingWebhookOptions.SectionName));
 builder.Services.Configure<MediaUrlOptions>(builder.Configuration.GetSection(MediaUrlOptions.SectionName));
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("MemoPalCors", policy =>
@@ -141,7 +142,7 @@ var adminBootstrapOptions = builder.Configuration.GetSection(AdminBootstrapOptio
 builder.Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(adminBootstrapOptions));
 builder.Services.AddScoped<AdminBootstrapper>();
 
-builder.Services.AddApplication();
+builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();

@@ -1,5 +1,4 @@
 using MediatR;
-using MemoPal.Application.Common;
 using MemoPal.Application.Features.Lessons.Commands;
 using MemoPal.Application.Features.Lessons.DTOs;
 using MemoPal.Application.Features.Lessons.Queries;
@@ -71,8 +70,8 @@ public sealed class LessonsController : ApiControllerBase
     [HttpDelete("/lessons/{lessonId}")]
     public async Task<IActionResult> Delete(string lessonId, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteLessonCommand(GetUserIdOrThrow(), lessonId, IsAdmin()), cancellationToken);
-        return Ok(ApiResponse<object?>.Ok(null));
+        var result = await Sender.Send(new DeleteLessonCommand(GetUserIdOrThrow(), lessonId, IsAdmin()), cancellationToken);
+        return Ok(result);
     }
 
 }

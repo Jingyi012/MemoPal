@@ -379,6 +379,6 @@ public sealed class GetManagedUserDataQueryHandler : IRequestHandler<GetManagedU
             notificationDtos,
             subscriptionDtos);
 
-        return ApiResponse<ManagedUserDataDto>.Ok(data);
+        return ApiResponse<ManagedUserDataDto>.Ok(data.Adapt<ManagedUserDataDto>());
     }
 }

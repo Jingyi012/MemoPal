@@ -1,5 +1,4 @@
 using MediatR;
-using MemoPal.Application.Common;
 using MemoPal.Application.Features.Badges.Commands;
 using MemoPal.Application.Features.Badges.DTOs;
 using MemoPal.Application.Features.Badges.Queries;
@@ -19,25 +18,14 @@ public sealed class BadgesController : ApiControllerBase
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetBadgesQuery(GetUserIdOrThrow()), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        var mapped = MapMediaUrls(result.Data);
-        return Ok(ApiResponse<IReadOnlyList<BadgeDto>>.Ok(mapped, result.Message));
+        return Ok(result);
     }
 
     [HttpGet("/badges/{badgeId}")]
     public async Task<IActionResult> GetById(string badgeId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetBadgeQuery(GetUserIdOrThrow(), badgeId), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<BadgeDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [HttpPost("/badges/{badgeId}/award")]

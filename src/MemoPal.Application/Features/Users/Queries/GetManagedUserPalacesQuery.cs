@@ -1,3 +1,4 @@
+using Mapster;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
@@ -113,6 +114,6 @@ public sealed class GetManagedUserPalacesQueryHandler
             })
             .ToList();
 
-        return ApiResponse<IReadOnlyList<ManagedUserPalaceDataDto>>.Ok(palaceDtos);
+        return ApiResponse<IReadOnlyList<ManagedUserPalaceDataDto>>.Ok(palaceDtos.Adapt<List<ManagedUserPalaceDataDto>>());
     }
 }

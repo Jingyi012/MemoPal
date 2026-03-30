@@ -1,3 +1,4 @@
+using Mapster;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
@@ -54,7 +55,7 @@ public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, ApiR
 
         if (request.IsAdmin)
         {
-            return ApiResponse<PalaceDto>.Ok(new PalaceDto(
+            var dto = new PalaceDto(
                 palace.Id,
                 palace.Name,
                 palace.Description,
@@ -69,7 +70,9 @@ public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, ApiR
                 palace.CreatedAt,
                 palace.UpdatedAt,
                 palace.IsDeleted,
-                palace.DeletedAt));
+                palace.DeletedAt);
+
+            return ApiResponse<PalaceDto>.Ok(dto.Adapt<PalaceDto>());
         }
 
         var relation = await _db.UserPalaces
@@ -102,7 +105,7 @@ public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, ApiR
             && !unlockedByUser;
         var effectiveLocked = isCustomLocked || levelLocked || premiumLocked;
 
-        return ApiResponse<PalaceDto>.Ok(new PalaceDto(
+        var result = new PalaceDto(
             palace.Id,
             palace.Name,
             palace.Description,
@@ -117,6 +120,8 @@ public sealed class GetPalaceQueryHandler : IRequestHandler<GetPalaceQuery, ApiR
             palace.CreatedAt,
             palace.UpdatedAt,
             palace.IsDeleted,
-            palace.DeletedAt));
+            palace.DeletedAt);
+
+        return ApiResponse<PalaceDto>.Ok(result.Adapt<PalaceDto>());
     }
 }

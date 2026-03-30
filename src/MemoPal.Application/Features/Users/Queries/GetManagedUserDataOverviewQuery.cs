@@ -83,6 +83,6 @@ public sealed class GetManagedUserDataOverviewQueryHandler : IRequestHandler<Get
                 notificationCount,
                 subscriptionCount));
 
-        return ApiResponse<ManagedUserDataOverviewDto>.Ok(data);
+        return ApiResponse<ManagedUserDataOverviewDto>.Ok(data.Adapt<ManagedUserDataOverviewDto>());
     }
 }

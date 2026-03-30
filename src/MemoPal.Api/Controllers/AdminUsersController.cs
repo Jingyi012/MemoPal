@@ -1,5 +1,4 @@
 using MediatR;
-using MemoPal.Application.Common;
 using MemoPal.Application.Features.Users.Commands;
 using MemoPal.Application.Features.Users.DTOs;
 using MemoPal.Application.Features.Users.Queries;
@@ -26,71 +25,35 @@ public sealed class AdminUsersController : ApiControllerBase
         CancellationToken cancellationToken = default)
     {
         var result = await Sender.Send(new GetPagedManagedUsersQuery(pageNumber, pageSize, search, includeDeleted), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        var mapped = MapMediaUrls(result.Data);
-        return Ok(PaginatedResponse<ManagedUserDto>.Ok(
-            mapped,
-            result.Pagination.PageNumber,
-            result.Pagination.PageSize,
-            result.Pagination.TotalCount,
-            result.Message));
+        return Ok(result);
     }
 
     [HttpGet("{userId}")]
     public async Task<IActionResult> GetUser(string userId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetManagedUserQuery(userId), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<ManagedUserDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [HttpGet("{userId}/data")]
     public async Task<IActionResult> GetUserData(string userId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetManagedUserDataQuery(userId), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<ManagedUserDataDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [HttpGet("{userId}/data/overview")]
     public async Task<IActionResult> GetUserDataOverview(string userId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetManagedUserDataOverviewQuery(userId), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        var mapped = result.Data with
-        {
-            User = MapMediaUrls(result.Data.User)
-        };
-
-        return Ok(ApiResponse<ManagedUserDataOverviewDto>.Ok(mapped, result.Message));
+        return Ok(result);
     }
 
     [HttpGet("{userId}/data/palaces")]
     public async Task<IActionResult> GetUserDataPalaces(string userId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetManagedUserPalacesQuery(userId), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<IReadOnlyList<ManagedUserPalaceDataDto>>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [HttpGet("{userId}/data/palaces/paged")]
@@ -190,24 +153,14 @@ public sealed class AdminUsersController : ApiControllerBase
     public async Task<IActionResult> CreateUser([FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new CreateManagedUserCommand(request), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<ManagedUserDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [HttpPut("{userId}")]
     public async Task<IActionResult> UpdateUser(string userId, [FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new UpdateManagedUserCommand(userId, request), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<ManagedUserDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [HttpDelete("{userId}")]

@@ -1,5 +1,4 @@
 using MediatR;
-using MemoPal.Application.Common;
 using MemoPal.Application.Features.Notifications.Commands;
 using MemoPal.Application.Features.Notifications.DTOs;
 using MemoPal.Application.Features.Notifications.Queries;
@@ -53,8 +52,8 @@ public sealed class NotificationsController : ApiControllerBase
     [HttpDelete("/notifications/{notificationId}")]
     public async Task<IActionResult> Delete(string notificationId, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteNotificationCommand(GetUserIdOrThrow(), notificationId), cancellationToken);
-        return Ok(ApiResponse<object?>.Ok(null));
+        var result = await Sender.Send(new DeleteNotificationCommand(GetUserIdOrThrow(), notificationId), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("/notifications/unread")]

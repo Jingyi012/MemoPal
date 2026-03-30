@@ -1,5 +1,4 @@
 using MediatR;
-using MemoPal.Application.Common;
 using MemoPal.Application.Features.Badges.Commands;
 using MemoPal.Application.Features.Badges.DTOs;
 using MemoPal.Application.Features.Badges.Queries;
@@ -31,54 +30,28 @@ public sealed class AdminConfigsController : ApiControllerBase
         CancellationToken cancellationToken = default)
     {
         var result = await Sender.Send(new GetPagedBadgeDefinitionsQuery(pageNumber, pageSize, search), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        var mapped = MapMediaUrls(result.Data);
-        return Ok(PaginatedResponse<BadgeDefinitionDto>.Ok(
-            mapped,
-            result.Pagination.PageNumber,
-            result.Pagination.PageSize,
-            result.Pagination.TotalCount,
-            result.Message));
+        return Ok(result);
     }
 
     [HttpGet("badge-definitions/{badgeId}")]
     public async Task<IActionResult> GetBadgeDefinition(string badgeId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new GetBadgeDefinitionQuery(badgeId), cancellationToken); 
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<BadgeDefinitionDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        var result = await Sender.Send(new GetBadgeDefinitionQuery(badgeId), cancellationToken);
+        return Ok(result);
     }
 
     [HttpPost("badge-definitions")]
     public async Task<IActionResult> CreateBadgeDefinition([FromBody] BadgeDefinitionUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new CreateBadgeDefinitionCommand(request), cancellationToken); 
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<BadgeDefinitionDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        var result = await Sender.Send(new CreateBadgeDefinitionCommand(request), cancellationToken);
+        return Ok(result);
     }
 
     [HttpPut("badge-definitions/{badgeId}")]
     public async Task<IActionResult> UpdateBadgeDefinition(string badgeId, [FromBody] BadgeDefinitionUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UpdateBadgeDefinitionCommand(badgeId, request), cancellationToken); 
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<BadgeDefinitionDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        var result = await Sender.Send(new UpdateBadgeDefinitionCommand(badgeId, request), cancellationToken);
+        return Ok(result);
     }
 
     [HttpDelete("badge-definitions/{badgeId}")]
@@ -123,8 +96,8 @@ public sealed class AdminConfigsController : ApiControllerBase
     [HttpDelete("milestone-definitions/{milestoneId}")]
     public async Task<IActionResult> DeleteMilestoneDefinition(string milestoneId, CancellationToken cancellationToken)
     {
-        await Sender.Send(new DeleteMilestoneDefinitionCommand(milestoneId), cancellationToken);
-        return Ok(ApiResponse<object?>.Ok(null));
+        var result = await Sender.Send(new DeleteMilestoneDefinitionCommand(milestoneId), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("mission-templates")]

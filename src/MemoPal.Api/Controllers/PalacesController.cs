@@ -1,5 +1,4 @@
 using MediatR;
-using MemoPal.Application.Common;
 using MemoPal.Application.Features.Palaces.Commands;
 using MemoPal.Application.Features.Palaces.DTOs;
 using MemoPal.Application.Features.Palaces.Queries;
@@ -26,23 +25,7 @@ public sealed class PalacesController : ApiControllerBase
         var result = await Sender.Send(
             new GetPalacesQuery(GetUserIdOrThrow(), pageNumber, pageSize, IsAdmin(), adminCreatedOnly),
             cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        var mapped = MapMediaUrls(result.Data);
-        if (result is PaginatedResponse<PalaceDto> paged)
-        {
-            return Ok(PaginatedResponse<PalaceDto>.Ok(
-                mapped,
-                paged.Pagination.PageNumber,
-                paged.Pagination.PageSize,
-                paged.Pagination.TotalCount,
-                paged.Message));
-        }
-
-        return Ok(ApiResponse<IReadOnlyList<PalaceDto>>.Ok(mapped, result.Message));
+        return Ok(result);
     }
 
     [HttpGet("{palaceId}")]
@@ -54,36 +37,21 @@ public sealed class PalacesController : ApiControllerBase
         var result = await Sender.Send(
             new GetPalaceQuery(GetUserIdOrThrow(), palaceId, IsAdmin(), adminCreatedOnly),
             cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<PalaceDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PalaceUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new CreatePalaceCommand(GetUserIdOrThrow(), request, IsAdmin()), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<PalaceDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [HttpPut("{palaceId}")]
     public async Task<IActionResult> Update(string palaceId, [FromBody] PalaceUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new UpdatePalaceCommand(GetUserIdOrThrow(), palaceId, request, IsAdmin()), cancellationToken);
-        if (!result.Success || result.Data is null)
-        {
-            return Ok(result);
-        }
-
-        return Ok(ApiResponse<PalaceDto>.Ok(MapMediaUrls(result.Data), result.Message));
+        return Ok(result);
     }
 
     [HttpDelete("{palaceId}")]
