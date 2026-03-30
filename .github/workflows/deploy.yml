@@ -43,6 +43,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Resolve image owner (lowercase)
+        run: |
+          RESOLVED_IMAGE_OWNER="${IMAGE_OWNER:-${{ github.repository_owner }}}"
+          RESOLVED_IMAGE_OWNER="$(echo "${RESOLVED_IMAGE_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          echo "RESOLVED_IMAGE_OWNER=${RESOLVED_IMAGE_OWNER}" >> "$GITHUB_ENV"
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -59,27 +65,52 @@ jobs:
           build-args: |
             VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
           tags: |
-            ghcr.io/${{ vars.IMAGE_OWNER != '' && vars.IMAGE_OWNER || github.repository_owner }}/memopal-admin:latest
-            ghcr.io/${{ vars.IMAGE_OWNER != '' && vars.IMAGE_OWNER || github.repository_owner }}/memopal-admin:${{ github.sha }}
+            ghcr.io/${{ env.RESOLVED_IMAGE_OWNER }}/memopal-admin:latest
+            ghcr.io/${{ env.RESOLVED_IMAGE_OWNER }}/memopal-admin:${{ github.sha }}
 
       - name: Configure SSH
         run: |
+          if [ -z "${{ secrets.VPS_HOST }}" ] || [ -z "${{ secrets.VPS_PORT }}" ] || [ -z "${{ secrets.VPS_USER }}" ] || [ -z "${{ secrets.VPS_SSH_KEY }}" ]; then
+            echo "Missing one or more required VPS secrets: VPS_HOST, VPS_PORT, VPS_USER, VPS_SSH_KEY"
+            exit 1
+          fi
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "${{ secrets.VPS_PORT }}" -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+          if ! ssh-keyscan -T 10 -p "${{ secrets.VPS_PORT }}" -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/tmp/ssh-keyscan.err; then
+            echo "ssh-keyscan failed for host=${{ secrets.VPS_HOST }} port=${{ secrets.VPS_PORT }}"
+            cat /tmp/ssh-keyscan.err || true
+            exit 1
+          fi
 
       - name: Deploy admin
         run: |
-          RESOLVED_IMAGE_OWNER="${IMAGE_OWNER:-${{ github.repository_owner }}}"
           ssh -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" 'bash -s' -- "${DEPLOY_PATH}" "${RESOLVED_IMAGE_OWNER}" <<'EOF'
           set -euo pipefail
           DEPLOY_PATH="$1"
           IMAGE_OWNER="$2"
           cd "${DEPLOY_PATH}"
+          test -f ./.env || { echo "Missing ${DEPLOY_PATH}/.env. Copy from .env.example and fill values."; exit 1; }
+          sed -i 's/\r$//' ./.env
+          set -a; . ./.env; set +a
 
-          IMAGE_OWNER="${IMAGE_OWNER}" ADMIN_IMAGE_TAG=${{ github.sha }} docker compose pull admin
-          IMAGE_OWNER="${IMAGE_OWNER}" ADMIN_IMAGE_TAG=${{ github.sha }} docker compose up -d admin
+          IMAGE_OWNER="${IMAGE_OWNER}" ADMIN_IMAGE_TAG=latest docker compose pull admin
+          IMAGE_OWNER="${IMAGE_OWNER}" ADMIN_IMAGE_TAG=latest docker compose up -d admin
+
+          admin_container_id="$(docker compose ps -q admin)"
+          if [ -z "${admin_container_id}" ]; then
+            echo "Admin container was not created."
+            docker compose ps -a || true
+            exit 1
+          fi
+
+          admin_status="$(docker inspect -f '{{.State.Status}}' "${admin_container_id}" 2>/dev/null || echo unknown)"
+          if [ "${admin_status}" != "running" ]; then
+            echo "Admin container is not running. status=${admin_status}"
+            docker compose ps -a || true
+            docker compose logs admin --tail 200 || true
+            exit 1
+          fi
 
           docker compose ps
           EOF
