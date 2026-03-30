@@ -6,7 +6,10 @@ using MemoPal.Application.Common.Exceptions;
 using MemoPal.Domain.Common;
 using MemoPal.Infrastructure.Storage;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Collections;
+using System.Reflection;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -43,14 +46,38 @@ public abstract class ApiControllerBase : ControllerBase
 
     protected T MapMediaUrls<T>(T value)
     {
-        var config = MediaUrlMapsterConfigFactory.Get(GetMediaBaseUrl(), GetMediaPublicBasePath());
-        return value.Adapt<T>(config);
+        var mediaBaseUrl = GetMediaBaseUrl();
+        var mediaPublicBasePath = GetMediaPublicBasePath();
+        var config = MediaUrlMapsterConfigFactory.Get(mediaBaseUrl, mediaPublicBasePath);
+        var mapped = value.Adapt<T>(config);
+
+        LogMediaMappingDiagnostics(
+            phase: "single",
+            mediaBaseUrl: mediaBaseUrl,
+            mediaPublicBasePath: mediaPublicBasePath,
+            sampleBefore: ExtractMediaPathSample(value),
+            sampleAfter: ExtractMediaPathSample(mapped),
+            count: 1);
+
+        return mapped;
     }
 
     protected IReadOnlyList<T> MapMediaUrls<T>(IReadOnlyList<T> value)
     {
-        var config = MediaUrlMapsterConfigFactory.Get(GetMediaBaseUrl(), GetMediaPublicBasePath());
-        return value.Adapt<List<T>>(config);
+        var mediaBaseUrl = GetMediaBaseUrl();
+        var mediaPublicBasePath = GetMediaPublicBasePath();
+        var config = MediaUrlMapsterConfigFactory.Get(mediaBaseUrl, mediaPublicBasePath);
+        var mapped = value.Adapt<List<T>>(config);
+
+        LogMediaMappingDiagnostics(
+            phase: "list",
+            mediaBaseUrl: mediaBaseUrl,
+            mediaPublicBasePath: mediaPublicBasePath,
+            sampleBefore: ExtractMediaPathSample(value),
+            sampleAfter: ExtractMediaPathSample(mapped),
+            count: value.Count);
+
+        return mapped;
     }
 
     protected string ToAbsoluteMediaUrl(string? value)
@@ -94,11 +121,8 @@ public abstract class ApiControllerBase : ControllerBase
 
     private string GetMediaBaseUrl()
     {
-        var configuredMediaBaseUrl = HttpContext?.RequestServices
-            .GetService<IOptions<MediaUrlOptions>>()?
-            .Value
-            .BaseUrl?
-            .Trim();
+        var mediaOptions = GetMediaOptions();
+        var configuredMediaBaseUrl = mediaOptions.BaseUrl?.Trim();
 
         if (!string.IsNullOrWhiteSpace(configuredMediaBaseUrl) &&
             Uri.TryCreate(configuredMediaBaseUrl, UriKind.Absolute, out var configuredUri))
@@ -134,5 +158,101 @@ public abstract class ApiControllerBase : ControllerBase
 
         normalized = normalized.TrimEnd('/');
         return normalized == "/" ? string.Empty : normalized;
+    }
+
+    private MediaUrlOptions GetMediaOptions()
+    {
+        return HttpContext?.RequestServices
+                   .GetService<IOptions<MediaUrlOptions>>()?
+                   .Value
+               ?? new MediaUrlOptions();
+    }
+
+    private bool IsMediaDiagnosticsEnabled()
+    {
+        return GetMediaOptions().DiagnosticsEnabled;
+    }
+
+    private ILogger? GetMediaDiagnosticsLogger()
+    {
+        return HttpContext?.RequestServices
+            .GetService<ILoggerFactory>()?
+            .CreateLogger("MemoPal.MediaUrlDiagnostics");
+    }
+
+    private void LogMediaMappingDiagnostics(
+        string phase,
+        string mediaBaseUrl,
+        string mediaPublicBasePath,
+        string? sampleBefore,
+        string? sampleAfter,
+        int count)
+    {
+        if (!IsMediaDiagnosticsEnabled())
+        {
+            return;
+        }
+
+        var logger = GetMediaDiagnosticsLogger();
+        if (logger is null)
+        {
+            return;
+        }
+
+        logger.LogInformation(
+            "Media mapping phase={Phase} path={RequestPath} baseUrl={BaseUrl} publicBasePath={PublicBasePath} count={Count} sampleBefore={SampleBefore} sampleAfter={SampleAfter}",
+            phase,
+            Request.Path.Value ?? string.Empty,
+            mediaBaseUrl,
+            mediaPublicBasePath,
+            count,
+            sampleBefore ?? string.Empty,
+            sampleAfter ?? string.Empty);
+    }
+
+    private static string? ExtractMediaPathSample(object? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (value is string strValue)
+        {
+            return string.IsNullOrWhiteSpace(strValue) ? null : strValue.Trim();
+        }
+
+        if (value is IEnumerable enumerable && value is not string)
+        {
+            foreach (var item in enumerable)
+            {
+                var sampleFromItem = ExtractMediaPathSample(item);
+                if (!string.IsNullOrWhiteSpace(sampleFromItem))
+                {
+                    return sampleFromItem;
+                }
+            }
+
+            return null;
+        }
+
+        var properties = value.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        var candidates = new[] { "Thumbnail", "ImageUrl", "IconUrl", "AvatarUrl" };
+
+        foreach (var candidate in candidates)
+        {
+            var property = properties.FirstOrDefault(p => string.Equals(p.Name, candidate, StringComparison.Ordinal));
+            if (property?.PropertyType != typeof(string))
+            {
+                continue;
+            }
+
+            if (property.GetValue(value) is string propValue && !string.IsNullOrWhiteSpace(propValue))
+            {
+                return propValue.Trim();
+            }
+        }
+
+        return null;
     }
 }
