@@ -69,7 +69,7 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: "10.0.x"
 
       - name: Build EF migration bundle
         run: |
@@ -137,7 +137,8 @@ jobs:
           done
 
           chmod +x ./bin/efbundle
-          ./bin/efbundle --connection "Host=127.0.0.1;Port=5432;Database=memopal;Username=memopal;Password=$POSTGRES_PASSWORD"
+          DB_HOST_PORT="${DB_HOST_PORT:-5432}"
+          ./bin/efbundle --connection "Host=127.0.0.1;Port=${DB_HOST_PORT};Database=memopal;Username=memopal;Password=$POSTGRES_PASSWORD"
 
           IMAGE_OWNER="${IMAGE_OWNER}" BACKEND_IMAGE_TAG=${{ github.sha }} docker compose pull api
           IMAGE_OWNER="${IMAGE_OWNER}" BACKEND_IMAGE_TAG=${{ github.sha }} docker compose up -d api
