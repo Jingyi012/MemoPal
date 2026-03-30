@@ -143,5 +143,17 @@ jobs:
           IMAGE_OWNER="${IMAGE_OWNER}" BACKEND_IMAGE_TAG=${{ github.sha }} docker compose pull api
           IMAGE_OWNER="${IMAGE_OWNER}" BACKEND_IMAGE_TAG=${{ github.sha }} docker compose up -d api
 
+          if ! docker compose ps -a api | grep -q 'api'; then
+            echo "API container was not created."
+            docker compose ps -a
+            exit 1
+          fi
+
+          if ! docker compose ps --status running api | grep -q 'api'; then
+            echo "API container is not running."
+            docker compose logs api --tail 200 || true
+            exit 1
+          fi
+
           docker compose ps
           EOF
