@@ -1,14 +1,8 @@
 import { apiClient } from '../lib/apiClient';
+import { resolveMediaUrl } from '../lib/mediaUrl';
 import type { ApiResponse } from '../types/api';
 
 export type AdminImageCategory = 'palace' | 'location' | 'general';
-
-function joinBaseUrl(baseUrl: string | undefined, relativePath: string) {
-  if (!baseUrl) return relativePath;
-  const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-  const normalizedPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
-  return `${normalizedBase}${normalizedPath}`;
-}
 
 export const adminMediaApi = {
   async uploadImage(file: File, category: AdminImageCategory): Promise<string> {
@@ -24,8 +18,6 @@ export const adminMediaApi = {
   },
 
   resolveMediaUrl(path: string): string {
-    if (!path) return path;
-    if (/^https?:\/\//i.test(path)) return path;
-    return joinBaseUrl(apiClient.defaults.baseURL, path);
+    return resolveMediaUrl(path, apiClient.defaults.baseURL);
   },
 };
