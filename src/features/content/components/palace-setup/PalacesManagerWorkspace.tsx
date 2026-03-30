@@ -14,7 +14,7 @@ import {
 } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { useMutation } from "@tanstack/react-query";
-import { Button, Popconfirm, message } from "antd";
+import { Button, Popconfirm, Tag, message } from "antd";
 import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { adminContentApi } from "../../../../api/adminContentApi";
@@ -123,13 +123,21 @@ export function PalacesManagerWorkspace({
       {
         title: "Premium",
         dataIndex: "isPremium",
-        valueType: "switch",
+        render: (_, row) => (
+          <Tag color={row.isPremium ? "gold" : "default"}>
+            {row.isPremium ? "Premium" : "No"}
+          </Tag>
+        ),
         width: 100,
       },
       {
         title: "Custom",
         dataIndex: "isCustom",
-        valueType: "switch",
+        render: (_, row) => (
+          <Tag color={row.isCustom ? "blue" : "default"}>
+            {row.isCustom ? "Custom" : "No"}
+          </Tag>
+        ),
         width: 100,
       },
       {
