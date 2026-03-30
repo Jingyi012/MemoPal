@@ -3,6 +3,12 @@ using MemoPal.Api.Mapping;
 using MediatR;
 using MemoPal.Api.Options;
 using MemoPal.Application.Common.Exceptions;
+using MemoPal.Application.Features.Auth.DTOs;
+using MemoPal.Application.Features.Badges.DTOs;
+using MemoPal.Application.Features.Community.DTOs;
+using MemoPal.Application.Features.Locations.DTOs;
+using MemoPal.Application.Features.Palaces.DTOs;
+using MemoPal.Application.Features.Users.DTOs;
 using MemoPal.Domain.Common;
 using MemoPal.Infrastructure.Storage;
 using Microsoft.AspNetCore.Mvc;
@@ -46,17 +52,25 @@ public abstract class ApiControllerBase : ControllerBase
 
     protected T MapMediaUrls<T>(T value)
     {
+        var sampleBefore = ExtractMediaPathSample(value);
         var mediaBaseUrl = GetMediaBaseUrl();
         var mediaPublicBasePath = GetMediaPublicBasePath();
         var config = MediaUrlMapsterConfigFactory.Get(mediaBaseUrl, mediaPublicBasePath);
         var mapped = value.Adapt<T>(config);
 
+        var sampleAfter = ExtractMediaPathSample(mapped);
+        if (ShouldUseManualFallback(sampleBefore, sampleAfter))
+        {
+            mapped = ApplyManualMediaMapping(mapped);
+            sampleAfter = ExtractMediaPathSample(mapped);
+        }
+
         LogMediaMappingDiagnostics(
             phase: "single",
             mediaBaseUrl: mediaBaseUrl,
             mediaPublicBasePath: mediaPublicBasePath,
-            sampleBefore: ExtractMediaPathSample(value),
-            sampleAfter: ExtractMediaPathSample(mapped),
+            sampleBefore: sampleBefore,
+            sampleAfter: sampleAfter,
             count: 1);
 
         return mapped;
@@ -64,17 +78,25 @@ public abstract class ApiControllerBase : ControllerBase
 
     protected IReadOnlyList<T> MapMediaUrls<T>(IReadOnlyList<T> value)
     {
+        var sampleBefore = ExtractMediaPathSample(value);
         var mediaBaseUrl = GetMediaBaseUrl();
         var mediaPublicBasePath = GetMediaPublicBasePath();
         var config = MediaUrlMapsterConfigFactory.Get(mediaBaseUrl, mediaPublicBasePath);
         var mapped = value.Adapt<List<T>>(config);
 
+        var sampleAfter = ExtractMediaPathSample(mapped);
+        if (ShouldUseManualFallback(sampleBefore, sampleAfter))
+        {
+            mapped = value.Select(ApplyManualMediaMapping).ToList();
+            sampleAfter = ExtractMediaPathSample(mapped);
+        }
+
         LogMediaMappingDiagnostics(
             phase: "list",
             mediaBaseUrl: mediaBaseUrl,
             mediaPublicBasePath: mediaPublicBasePath,
-            sampleBefore: ExtractMediaPathSample(value),
-            sampleAfter: ExtractMediaPathSample(mapped),
+            sampleBefore: sampleBefore,
+            sampleAfter: sampleAfter,
             count: value.Count);
 
         return mapped;
@@ -254,5 +276,33 @@ public abstract class ApiControllerBase : ControllerBase
         }
 
         return null;
+    }
+
+    private static bool ShouldUseManualFallback(string? sampleBefore, string? sampleAfter)
+    {
+        if (string.IsNullOrWhiteSpace(sampleBefore))
+        {
+            return false;
+        }
+
+        return string.Equals(sampleBefore, sampleAfter, StringComparison.Ordinal);
+    }
+
+    private T ApplyManualMediaMapping<T>(T value)
+    {
+        object mapped = value! switch
+        {
+            PalaceDto dto => dto with { Thumbnail = ToAbsoluteMediaUrl(dto.Thumbnail) },
+            LocationDto dto => dto with { ImageUrl = ToAbsoluteMediaUrl(dto.ImageUrl) },
+            BadgeDto dto => dto with { IconUrl = ToAbsoluteMediaUrlOrNull(dto.IconUrl) },
+            BadgeDefinitionDto dto => dto with { IconUrl = ToAbsoluteMediaUrlOrNull(dto.IconUrl) },
+            UserWithStatDto dto => dto with { AvatarUrl = ToAbsoluteMediaUrlOrNull(dto.AvatarUrl) },
+            ManagedUserDto dto => dto with { AvatarUrl = ToAbsoluteMediaUrlOrNull(dto.AvatarUrl) },
+            ManagedUserLocationDataDto dto => dto with { ImageUrl = ToAbsoluteMediaUrl(dto.ImageUrl) },
+            CommunityCreatorDto dto => dto with { AvatarUrl = ToAbsoluteMediaUrlOrNull(dto.AvatarUrl) },
+            _ => value!
+        };
+
+        return mapped is T typed ? typed : value;
     }
 }
