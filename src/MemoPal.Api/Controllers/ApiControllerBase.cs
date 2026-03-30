@@ -1,5 +1,3 @@
-using Mapster;
-using MemoPal.Api.Mapping;
 using MediatR;
 using MemoPal.Api.Options;
 using MemoPal.Application.Common.Exceptions;
@@ -55,15 +53,8 @@ public abstract class ApiControllerBase : ControllerBase
         var sampleBefore = ExtractMediaPathSample(value);
         var mediaBaseUrl = GetMediaBaseUrl();
         var mediaPublicBasePath = GetMediaPublicBasePath();
-        var config = MediaUrlMapsterConfigFactory.Get(mediaBaseUrl, mediaPublicBasePath);
-        var mapped = value.Adapt<T>(config);
-
+        var mapped = ApplyManualMediaMapping(value);
         var sampleAfter = ExtractMediaPathSample(mapped);
-        if (ShouldUseManualFallback(sampleBefore, sampleAfter))
-        {
-            mapped = ApplyManualMediaMapping(mapped);
-            sampleAfter = ExtractMediaPathSample(mapped);
-        }
 
         LogMediaMappingDiagnostics(
             phase: "single",
@@ -81,15 +72,8 @@ public abstract class ApiControllerBase : ControllerBase
         var sampleBefore = ExtractMediaPathSample(value);
         var mediaBaseUrl = GetMediaBaseUrl();
         var mediaPublicBasePath = GetMediaPublicBasePath();
-        var config = MediaUrlMapsterConfigFactory.Get(mediaBaseUrl, mediaPublicBasePath);
-        var mapped = value.Adapt<List<T>>(config);
-
+        var mapped = value.Select(ApplyManualMediaMapping).ToList();
         var sampleAfter = ExtractMediaPathSample(mapped);
-        if (ShouldUseManualFallback(sampleBefore, sampleAfter))
-        {
-            mapped = value.Select(ApplyManualMediaMapping).ToList();
-            sampleAfter = ExtractMediaPathSample(mapped);
-        }
 
         LogMediaMappingDiagnostics(
             phase: "list",
@@ -278,16 +262,6 @@ public abstract class ApiControllerBase : ControllerBase
         return null;
     }
 
-    private static bool ShouldUseManualFallback(string? sampleBefore, string? sampleAfter)
-    {
-        if (string.IsNullOrWhiteSpace(sampleBefore))
-        {
-            return false;
-        }
-
-        return string.Equals(sampleBefore, sampleAfter, StringComparison.Ordinal);
-    }
-
     private T ApplyManualMediaMapping<T>(T value)
     {
         object mapped = value! switch
@@ -297,9 +271,27 @@ public abstract class ApiControllerBase : ControllerBase
             BadgeDto dto => dto with { IconUrl = ToAbsoluteMediaUrlOrNull(dto.IconUrl) },
             BadgeDefinitionDto dto => dto with { IconUrl = ToAbsoluteMediaUrlOrNull(dto.IconUrl) },
             UserWithStatDto dto => dto with { AvatarUrl = ToAbsoluteMediaUrlOrNull(dto.AvatarUrl) },
+            AuthResponseDto dto => dto with { User = ApplyManualMediaMapping(dto.User) },
             ManagedUserDto dto => dto with { AvatarUrl = ToAbsoluteMediaUrlOrNull(dto.AvatarUrl) },
+            ManagedUserPalaceDataDto dto => dto with
+            {
+                Locations = dto.Locations.Select(ApplyManualMediaMapping).ToList()
+            },
+            ManagedUserDataDto dto => dto with
+            {
+                User = ApplyManualMediaMapping(dto.User),
+                Palaces = dto.Palaces.Select(ApplyManualMediaMapping).ToList()
+            },
+            ManagedUserDataOverviewDto dto => dto with
+            {
+                User = ApplyManualMediaMapping(dto.User)
+            },
             ManagedUserLocationDataDto dto => dto with { ImageUrl = ToAbsoluteMediaUrl(dto.ImageUrl) },
             CommunityCreatorDto dto => dto with { AvatarUrl = ToAbsoluteMediaUrlOrNull(dto.AvatarUrl) },
+            CommunityLessonDto dto => dto with
+            {
+                Creator = ApplyManualMediaMapping(dto.Creator)
+            },
             _ => value!
         };
 
