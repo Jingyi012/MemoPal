@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target_env || 'uat' }}
     env:
+      TARGET_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.target_env || 'uat' }}
       DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
       IMAGE_OWNER: ${{ vars.IMAGE_OWNER }}
 
@@ -117,43 +118,74 @@ jobs:
 
       - name: Deploy backend and run migrations
         run: |
-          ssh -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" 'bash -s' -- "${DEPLOY_PATH}" "${RESOLVED_IMAGE_OWNER}" <<'EOF'
+          ssh -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" 'bash -s' -- "${DEPLOY_PATH}" "${RESOLVED_IMAGE_OWNER}" "${TARGET_ENV}" <<'EOF'
           set -euo pipefail
           DEPLOY_PATH="$1"
           IMAGE_OWNER="$2"
+          TARGET_ENV="$3"
+          COMPOSE_PROJECT_NAME="memopal-${TARGET_ENV}"
           cd "${DEPLOY_PATH}"
 
           test -f ./.env || { echo "Missing ${DEPLOY_PATH}/.env. Copy from .env.example and fill values."; exit 1; }
+          test -f ./docker-compose.yml || { echo "Missing ${DEPLOY_PATH}/docker-compose.yml"; exit 1; }
           sed -i 's/\r$//' ./.env
           set -a
           . ./.env
           set +a
+          : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required in ${DEPLOY_PATH}/.env}"
+          : "${DB_HOST_PORT:?DB_HOST_PORT is required in ${DEPLOY_PATH}/.env}"
           UPLOADS_VOLUME_NAME="${UPLOADS_VOLUME_NAME:-memopal_uploads}"
-          docker volume create "${UPLOADS_VOLUME_NAME}" >/dev/null
 
-          IMAGE_OWNER="${IMAGE_OWNER}" docker compose up -d db
-          until docker compose exec -T db pg_isready -U memopal -d memopal >/dev/null 2>&1; do
+          compose() {
+            IMAGE_OWNER="${IMAGE_OWNER}" BACKEND_IMAGE_TAG=${{ github.sha }} \
+            docker compose \
+              --project-name "${COMPOSE_PROJECT_NAME}" \
+              --env-file ./.env \
+              --file ./docker-compose.yml "$@"
+          }
+
+          docker volume create "${UPLOADS_VOLUME_NAME}" >/dev/null
+          compose config --services | grep -qx 'api' || { echo "Service 'api' not found in compose config"; compose config; exit 1; }
+          compose up -d db
+          until compose exec -T db pg_isready -U memopal -d memopal >/dev/null 2>&1; do
             sleep 2
           done
 
           chmod +x ./bin/efbundle
-          DB_HOST_PORT="${DB_HOST_PORT:-5432}"
           ./bin/efbundle --connection "Host=127.0.0.1;Port=${DB_HOST_PORT};Database=memopal;Username=memopal;Password=$POSTGRES_PASSWORD"
 
-          IMAGE_OWNER="${IMAGE_OWNER}" BACKEND_IMAGE_TAG=${{ github.sha }} docker compose pull api
-          IMAGE_OWNER="${IMAGE_OWNER}" BACKEND_IMAGE_TAG=${{ github.sha }} docker compose up -d api
+          migration_count="$(compose exec -T db psql -U memopal -d memopal -Atqc 'SELECT COUNT(*) FROM "__EFMigrationsHistory";' 2>/dev/null || true)"
+          if [ -z "${migration_count}" ] || [ "${migration_count}" = "0" ]; then
+            echo "EF migration verification failed: __EFMigrationsHistory is empty or unavailable."
+            compose exec -T db psql -U memopal -d memopal -c '\dt' || true
+            exit 1
+          fi
 
-          if ! docker compose ps -a api | grep -q 'api'; then
+          public_table_count="$(compose exec -T db psql -U memopal -d memopal -Atqc \"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public';\" 2>/dev/null || true)"
+          if [ -z "${public_table_count}" ] || [ "${public_table_count}" = "0" ]; then
+            echo "EF migration verification failed: no public tables found after migration."
+            compose exec -T db psql -U memopal -d memopal -c '\dt' || true
+            exit 1
+          fi
+
+          compose pull api
+          compose up -d --no-deps --force-recreate api
+
+          api_container_id="$(compose ps -q api)"
+          if [ -z "${api_container_id}" ]; then
             echo "API container was not created."
-            docker compose ps -a
+            compose config --services || true
+            compose ps -a || true
             exit 1
           fi
 
-          if ! docker compose ps --status running api | grep -q 'api'; then
-            echo "API container is not running."
-            docker compose logs api --tail 200 || true
+          api_status="$(docker inspect -f '{{.State.Status}}' "${api_container_id}" 2>/dev/null || echo unknown)"
+          if [ "${api_status}" != "running" ]; then
+            echo "API container is not running. status=${api_status}"
+            compose ps -a || true
+            compose logs api --tail 200 || true
             exit 1
           fi
 
-          docker compose ps
+          compose ps
           EOF
