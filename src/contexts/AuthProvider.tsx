@@ -1,8 +1,16 @@
 import { ApiClientError, authApi, RegisterRequest } from '@/api/auth';
 import { AUTH_STORAGE_KEY } from '@/constants/auth';
+import { USER_STATE_STORAGE_KEY } from '@/constants/storage';
+import { clearLocalCacheOnLogout } from '@/db/seed';
 import { CURRENT_USER_KEYS } from '@/hooks/useCurrentUser';
 import { createUserRepository } from '@/repositories/user.repo';
-import { clearAccessToken, getAccessToken, setAccessToken } from '@/services/user.service';
+import {
+  clearAuthTokens,
+  getAccessToken,
+  getRefreshToken,
+  setAccessToken,
+  setRefreshToken,
+} from '@/services/user.service';
 import { LoginRequest } from '@/types/auth';
 import { User } from '@/types/users';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -86,7 +94,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const token = await getAccessToken();
         if (!token) {
-          await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+          await Promise.allSettled([
+            AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
+            clearAuthTokens(),
+            clearLocalCacheOnLogout({ preserveSystemSettings: true }),
+          ]);
           setUser(null);
           return;
         }
@@ -109,9 +121,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const shouldInvalidateSession = statusCode === 401 || statusCode === 403;
 
           if (shouldInvalidateSession) {
-            await clearAccessToken();
-            await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-            await userRepo.clearLocalAuthUser();
+            await Promise.allSettled([
+              AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
+              clearAuthTokens(),
+              clearLocalCacheOnLogout({ preserveSystemSettings: true }),
+            ]);
             await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
             setUser(null);
             return;
@@ -133,10 +147,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     void loadUser();
   }, [loadCachedSessionUser, queryClient, userRepo]);
 
-  const setSession = async (sessionUser: User, token: string) => {
+  const setSession = async (sessionUser: User, token: string, refreshToken: string) => {
     await Promise.all([
       AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionUser)),
       setAccessToken(token),
+      setRefreshToken(refreshToken),
       userRepo.upsertFromRemote(sessionUser),
     ]);
     setUser(sessionUser);
@@ -145,29 +160,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (req: LoginRequest) => {
     const auth = await authApi.login(req);
-    await setSession(auth.user, auth.token);
+    await setSession(auth.user, auth.token, auth.refreshToken);
   };
 
   const register = async (req: RegisterRequest) => {
     const auth = await authApi.register(req);
-    await setSession(auth.user, auth.token);
+    await setSession(auth.user, auth.token, auth.refreshToken);
   };
 
   const loginWithGoogle = async (idToken: string) => {
     const auth = await authApi.googleLogin(idToken);
-    await setSession(auth.user, auth.token);
+    await setSession(auth.user, auth.token, auth.refreshToken);
   };
 
   const loginWithFacebook = async (accessToken: string) => {
     const auth = await authApi.facebookLogin(accessToken);
-    await setSession(auth.user, auth.token);
+    await setSession(auth.user, auth.token, auth.refreshToken);
   };
 
   const logout = async () => {
-    await AsyncStorage.clear();
-    await Promise.all([clearAccessToken(), userRepo.clearLocalAuthUser()]);
+    const refreshToken = await getRefreshToken();
+    if (refreshToken) {
+      try {
+        await authApi.logout({ refreshToken });
+      } catch {
+        // Continue with local sign-out even when server-side revoke fails.
+      }
+    }
+
+    await Promise.allSettled([
+      AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
+      clearAuthTokens(),
+      clearLocalCacheOnLogout({ preserveSystemSettings: true }),
+    ]);
     setUser(null);
-    await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
+    queryClient.clear();
     router.replace('/login');
   };
 

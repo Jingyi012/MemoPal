@@ -6,7 +6,7 @@ import { InAppNotificationSync } from '@/services/notification/inAppNotification
 import { PushNotificationService } from '@/services/notification/pushNotificationService';
 import { SyncBase } from '@/services/sync/sync.base';
 import { LessonProgress, ReviewSchedule } from '@/types/lesson';
-import { ReviewStats } from '@/types/review';
+import { DueReviewLessonPreview, ReviewStats } from '@/types/review';
 import { resolveNextStreak } from '@/utils/gamification/streak';
 import { calculateNextDueDate, REVIEW_INTERVALS } from '@/utils/review';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
@@ -15,6 +15,7 @@ import * as Crypto from 'expo-crypto';
 export interface ReviewRepository {
   getReviewSchedule(lessonProgressId: string): Promise<ReviewSchedule[]>;
   getDueReviews(): Promise<ReviewSchedule[]>;
+  getDueReviewLessons(limit?: number): Promise<DueReviewLessonPreview[]>;
   scheduleNextRound(
     tx: any,
     options: {
@@ -54,7 +55,10 @@ export function createReviewRepository(): ReviewRepository {
           eq(schema.reviewSchedules.isDeleted, false),
           sql`${schema.reviewSchedules.dueDate} <= ${dueBeforeIso}`
         )
-      : and(eq(schema.reviewSchedules.completed, false), eq(schema.reviewSchedules.isDeleted, false));
+      : and(
+          eq(schema.reviewSchedules.completed, false),
+          eq(schema.reviewSchedules.isDeleted, false)
+        );
 
   const getPendingReviews = async (dueBeforeIso?: string): Promise<ReviewSchedule[]> => {
     return await db.query.reviewSchedules.findMany({
@@ -75,7 +79,61 @@ export function createReviewRepository(): ReviewRepository {
 
     async getDueReviews(): Promise<ReviewSchedule[]> {
       const now = new Date().toISOString();
-      return await getPendingReviews(now);
+      let rev = await getPendingReviews(now);
+      return rev;
+    },
+
+    async getDueReviewLessons(limit = 2): Promise<DueReviewLessonPreview[]> {
+      const nowIso = new Date().toISOString();
+      const nowMs = Date.now();
+
+      const rows = await db
+        .select({
+          reviewId: schema.reviewSchedules.id,
+          lessonProgressId: schema.reviewSchedules.lessonProgressId,
+          lessonId: schema.lessons.id,
+          lessonTitle: schema.lessons.title,
+          dueDate: schema.reviewSchedules.dueDate,
+        })
+        .from(schema.reviewSchedules)
+        .innerJoin(
+          schema.lessonProgress,
+          eq(schema.reviewSchedules.lessonProgressId, schema.lessonProgress.id)
+        )
+        .innerJoin(schema.lessons, eq(schema.lessonProgress.lessonId, schema.lessons.id))
+        .where(
+          and(
+            eq(schema.reviewSchedules.completed, false),
+            eq(schema.reviewSchedules.isDeleted, false),
+            sql`${schema.reviewSchedules.dueDate} <= ${nowIso}`,
+            eq(schema.lessonProgress.isDeleted, false),
+            eq(schema.lessons.isDeleted, false)
+          )
+        )
+        .orderBy(asc(schema.reviewSchedules.dueDate));
+
+      const seenLessonIds = new Set<string>();
+      const previews: DueReviewLessonPreview[] = [];
+
+      for (const row of rows) {
+        if (seenLessonIds.has(row.lessonId)) continue;
+        seenLessonIds.add(row.lessonId);
+
+        previews.push({
+          reviewId: row.reviewId,
+          lessonProgressId: row.lessonProgressId,
+          lessonId: row.lessonId,
+          lessonTitle: row.lessonTitle,
+          dueDate: row.dueDate,
+          isOverdue: new Date(row.dueDate).getTime() < nowMs,
+        });
+
+        if (previews.length >= Math.max(1, limit)) {
+          break;
+        }
+      }
+
+      return previews;
     },
 
     async scheduleNextRound(tx: any, { progress, currentRound, completedDate }): Promise<void> {
@@ -136,7 +194,6 @@ export function createReviewRepository(): ReviewRepository {
           lessonName: lessonName,
           dueDate: nextDueDate.toISOString(),
         });
-
       }
     },
 
@@ -314,7 +371,8 @@ export function createReviewRepository(): ReviewRepository {
                 lessonId: currentProgress.lessonId,
                 updatedAt: nowIso,
                 totalReviews: currentProgress.totalReviews + (isPassed ? 1 : 0),
-                masteryLevel: isPassed && currentRound >= MAX_REVIEW_ROUND ? 'mastered' : 'reviewing',
+                masteryLevel:
+                  isPassed && currentRound >= MAX_REVIEW_ROUND ? 'mastered' : 'reviewing',
                 lastReviewDate: nowIso,
                 xpEarned: currentProgress.xpEarned + xpEarned,
               },

@@ -1,8 +1,7 @@
+import { USER_STATE_STORAGE_KEY } from '@/constants/storage';
 import { defaultUserState, LessonProgress, UserState } from '@/types/userState';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-
-const USER_STATE_KEY = '@memopal_user_state';
 
 type UserStateContextType = {
   userState: UserState;
@@ -22,7 +21,7 @@ export const UserStateProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const loadState = async () => {
       try {
-        const stored = await AsyncStorage.getItem(USER_STATE_KEY);
+        const stored = await AsyncStorage.getItem(USER_STATE_STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored) as Partial<UserState>;
           setState({
@@ -44,7 +43,7 @@ export const UserStateProvider = ({ children }: { children: ReactNode }) => {
   // Save state helper
   const saveState = async (newState: UserState) => {
     setState(newState);
-    await AsyncStorage.setItem(USER_STATE_KEY, JSON.stringify(newState));
+    await AsyncStorage.setItem(USER_STATE_STORAGE_KEY, JSON.stringify(newState));
   };
 
   // Update full or partial state

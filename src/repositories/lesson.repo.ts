@@ -5,6 +5,7 @@ import { SyncBase } from '@/services/sync/sync.base';
 import { Lesson, LessonDetails } from '@/types/lesson';
 import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
+import { createLessonProgressRepository } from './lessonProgress.repo';
 
 /**
  * LessonRepository - Local database operations only
@@ -213,6 +214,7 @@ export function createLessonRepository(): LessonRepository {
       serverLessons: Lesson[],
       options?: { pruneMissingOfficial?: boolean; palaceId?: string }
     ): Promise<void> {
+      const progressRepo = createLessonProgressRepository();
       const ids = serverLessons.map((l) => l.id);
       const now = new Date().toISOString();
       const pruneMissingOfficial = options?.pruneMissingOfficial ?? false;
@@ -310,6 +312,14 @@ export function createLessonRepository(): LessonRepository {
           }
         }
       });
+
+      const embeddedProgresses = serverLessons
+        .map((lesson) => lesson.progress)
+        .filter((progress): progress is NonNullable<Lesson['progress']> => Boolean(progress));
+
+      if (embeddedProgresses.length > 0) {
+        await progressRepo.upsertMany(embeddedProgresses);
+      }
     },
 
     /**

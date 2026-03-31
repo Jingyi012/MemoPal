@@ -28,5 +28,8 @@ export type UseAuthReturn = AuthState & AuthActions;
 
 export interface AuthResponse {
   token: string;
+  tokenExpiresAtUtc: string;
+  refreshToken: string;
+  refreshTokenExpiresAtUtc: string;
   user: User;
 }

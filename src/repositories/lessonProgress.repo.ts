@@ -3,7 +3,7 @@ import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { LessonProgress } from '@/types/lesson';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 import { createReviewRepository } from './review.repo';
 
@@ -57,48 +57,133 @@ export function createLessonProgressRepository(): LessonProgressRepository {
     progressId: string,
     syncTime: string
   ): Promise<void> => {
-    await tx
-      .insert(schema.lessonProgress)
-      .values({
+    const existing = await tx.query.lessonProgress.findFirst({
+      where: eq(schema.lessonProgress.id, progressId),
+    });
+
+    if (!existing) {
+      await tx.insert(schema.lessonProgress).values({
         id: progressId,
         lessonId: item.lessonId!,
-        firstCompletedDate: item.firstCompletedDate,
+        firstCompletedDate: item.firstCompletedDate ?? null,
         masteryLevel: item.masteryLevel || 'new',
-        lastReviewDate: item.lastReviewDate,
+        lastReviewDate: item.lastReviewDate ?? null,
         xpEarned: item.xpEarned ?? 0,
         totalReviews: item.totalReviews ?? 0,
         createdAt: item.createdAt || syncTime,
         updatedAt: item.updatedAt || syncTime,
         lastSyncedAt: syncTime,
         isDeleted: Boolean(item.isDeleted),
-      })
-      .onConflictDoUpdate({
-        target: schema.lessonProgress.lessonId,
-        set: {
-          masteryLevel: item.masteryLevel,
-          lastReviewDate: item.lastReviewDate,
-          totalReviews: item.totalReviews,
-          xpEarned: item.xpEarned,
-          updatedAt: item.updatedAt || syncTime,
-          lastSyncedAt: syncTime,
-        },
+        deletedAt: item.deletedAt ?? null,
       });
+      return;
+    }
+
+    await tx
+      .update(schema.lessonProgress)
+      .set({
+        lessonId: item.lessonId!,
+        firstCompletedDate: item.firstCompletedDate ?? null,
+        masteryLevel: item.masteryLevel || 'new',
+        lastReviewDate: item.lastReviewDate ?? null,
+        xpEarned: item.xpEarned ?? 0,
+        totalReviews: item.totalReviews ?? 0,
+        updatedAt: item.updatedAt || syncTime,
+        lastSyncedAt: syncTime,
+        isDeleted: Boolean(item.isDeleted),
+        deletedAt: item.deletedAt ?? null,
+      })
+      .where(eq(schema.lessonProgress.id, progressId));
+  };
+
+  const getProgressRowsByLesson = async (tx: any, lessonId: string) => {
+    return await tx.query.lessonProgress.findMany({
+      where: eq(schema.lessonProgress.lessonId, lessonId),
+      orderBy: [desc(schema.lessonProgress.updatedAt)],
+    });
+  };
+
+  const ensureSingleProgressRecord = async (
+    tx: any,
+    lessonId: string,
+    options?: { preferredId?: string }
+  ): Promise<string | null> => {
+    const now = new Date().toISOString();
+    const rows = await getProgressRowsByLesson(tx, lessonId);
+    if (rows.length === 0) return null;
+
+    const preferredId = options?.preferredId?.trim();
+    let canonical = preferredId
+      ? rows.find((row: { id: string }) => row.id === preferredId)
+      : undefined;
+    canonical ??= rows.find((row: { isDeleted: any }) => !row.isDeleted) ?? rows[0];
+
+    if (preferredId && canonical.id !== preferredId) {
+      const preferredRow = await tx.query.lessonProgress.findFirst({
+        where: eq(schema.lessonProgress.id, preferredId),
+      });
+
+      if (preferredRow && preferredRow.lessonId !== lessonId) {
+        // Defensive fallback for corrupted local ids: keep existing canonical id.
+      } else if (!preferredRow) {
+        await tx.insert(schema.lessonProgress).values({
+          id: preferredId,
+          lessonId,
+          firstCompletedDate: canonical.firstCompletedDate,
+          masteryLevel: canonical.masteryLevel,
+          lastReviewDate: canonical.lastReviewDate,
+          xpEarned: canonical.xpEarned,
+          totalReviews: canonical.totalReviews,
+          createdAt: canonical.createdAt,
+          updatedAt: canonical.updatedAt,
+          lastSyncedAt: canonical.lastSyncedAt,
+          isDeleted: canonical.isDeleted,
+          deletedAt: canonical.deletedAt,
+        });
+      }
+
+      if (!preferredRow || preferredRow.lessonId === lessonId) {
+        canonical = { ...canonical, id: preferredId };
+      }
+    }
+
+    for (const row of rows) {
+      if (row.id === canonical.id) continue;
+
+      await tx
+        .update(schema.reviewSchedules)
+        .set({
+          lessonProgressId: canonical.id,
+          updatedAt: now,
+          lastSyncedAt: null,
+        })
+        .where(eq(schema.reviewSchedules.lessonProgressId, row.id));
+
+      await tx.delete(schema.lessonProgress).where(eq(schema.lessonProgress.id, row.id));
+    }
+
+    return canonical.id;
   };
 
   return {
     async getLessonProgress(lessonId: string): Promise<LessonProgress | null> {
       try {
-        const result = await db.query.lessonProgress.findFirst({
-          where: and(
-            eq(schema.lessonProgress.lessonId, lessonId),
-            eq(schema.lessonProgress.isDeleted, false)
-          ),
-          with: {
-            reviewSchedules: {
-              where: eq(schema.reviewSchedules.isDeleted, false),
-              orderBy: (entries, { asc }) => [asc(entries.reviewRound)],
+        const result = await db.transaction(async (tx) => {
+          const canonicalId = await ensureSingleProgressRecord(tx, lessonId);
+          if (!canonicalId) return null;
+
+          return await tx.query.lessonProgress.findFirst({
+            where: and(
+              eq(schema.lessonProgress.id, canonicalId),
+              eq(schema.lessonProgress.isDeleted, false)
+            ),
+            with: {
+              reviewSchedules: {
+                where: eq(schema.reviewSchedules.isDeleted, false),
+                orderBy: (entries, { asc }) => [asc(entries.reviewRound)],
+              },
             },
-          },
+          });
         });
 
         if (!result) {
@@ -129,15 +214,19 @@ export function createLessonProgressRepository(): LessonProgressRepository {
       };
 
       await db.transaction(async (tx) => {
-        const existing = await tx.query.lessonProgress.findFirst({
-          where: eq(schema.lessonProgress.lessonId, lessonId),
-          with: {
-            reviewSchedules: {
-              where: eq(schema.reviewSchedules.isDeleted, false),
-              orderBy: (entries, { asc }) => [asc(entries.reviewRound)],
-            },
-          },
-        });
+        const canonicalId = await ensureSingleProgressRecord(tx, lessonId);
+
+        const existing = canonicalId
+          ? await tx.query.lessonProgress.findFirst({
+              where: eq(schema.lessonProgress.id, canonicalId),
+              with: {
+                reviewSchedules: {
+                  where: eq(schema.reviewSchedules.isDeleted, false),
+                  orderBy: (entries, { asc }) => [asc(entries.reviewRound)],
+                },
+              },
+            })
+          : null;
 
         if (existing && !existing.isDeleted) {
           progress = existing as LessonProgress;
@@ -218,9 +307,28 @@ export function createLessonProgressRepository(): LessonProgressRepository {
       if (hasSchedule) return;
 
       await db.transaction(async (tx) => {
+        const canonicalId = await ensureSingleProgressRecord(tx, progress.lessonId);
+        if (!canonicalId) return;
+
+        const canonicalProgress = await tx.query.lessonProgress.findFirst({
+          where: eq(schema.lessonProgress.id, canonicalId),
+          with: {
+            reviewSchedules: {
+              where: eq(schema.reviewSchedules.isDeleted, false),
+              orderBy: (entries, { asc }) => [asc(entries.reviewRound)],
+            },
+          },
+        });
+
+        if (!canonicalProgress) return;
+
+        const hasCanonicalSchedule =
+          canonicalProgress.reviewSchedules && canonicalProgress.reviewSchedules.length > 0;
+        if (hasCanonicalSchedule) return;
+
         const reviewRepo = createReviewRepository();
         await reviewRepo.scheduleNextRound(tx as any, {
-          progress: progress,
+          progress: canonicalProgress as LessonProgress,
           currentRound: 0,
           completedDate: new Date(),
         });
@@ -231,27 +339,36 @@ export function createLessonProgressRepository(): LessonProgressRepository {
       const now = new Date().toISOString();
 
       await db.transaction(async (tx) => {
-        const progressId = progress.id ?? Crypto.randomUUID();
+        const canonicalId = await ensureSingleProgressRecord(tx, progress.lessonId);
+        const progressId = canonicalId ?? progress.id ?? Crypto.randomUUID();
 
-        await tx
-          .insert(schema.lessonProgress)
-          .values({
+        const existing = await tx.query.lessonProgress.findFirst({
+          where: eq(schema.lessonProgress.id, progressId),
+        });
+
+        if (!existing) {
+          await tx.insert(schema.lessonProgress).values({
             ...progress,
             id: progressId,
             updatedAt: now,
             lastSyncedAt: null,
-          })
-          .onConflictDoUpdate({
-            target: schema.lessonProgress.id,
-            set: {
+          });
+        } else {
+          await tx
+            .update(schema.lessonProgress)
+            .set({
               masteryLevel: progress.masteryLevel,
               firstCompletedDate: progress.firstCompletedDate,
               lastReviewDate: progress.lastReviewDate,
               totalReviews: progress.totalReviews,
               xpEarned: progress.xpEarned,
+              isDeleted: Boolean(progress.isDeleted),
+              deletedAt: progress.deletedAt ?? null,
               updatedAt: now,
-            },
-          });
+              lastSyncedAt: null,
+            })
+            .where(eq(schema.lessonProgress.id, progressId));
+        }
 
         // Queue for backend sync
         await SyncBase.addToQueue(tx as any, {
@@ -267,14 +384,20 @@ export function createLessonProgressRepository(): LessonProgressRepository {
       const now = new Date().toISOString();
 
       await db.transaction(async (tx) => {
-        const record = await tx.query.lessonProgress.findFirst({
-          columns: { id: true, lastSyncedAt: true },
-          where: eq(schema.lessonProgress.lessonId, lessonId),
-        });
+        const canonicalId = await ensureSingleProgressRecord(tx, lessonId);
+        const record = canonicalId
+          ? await tx.query.lessonProgress.findFirst({
+              columns: { id: true, lastSyncedAt: true },
+              where: eq(schema.lessonProgress.id, canonicalId),
+            })
+          : null;
 
         if (!record) return;
 
-        // Soft delete
+        const allRows = await getProgressRowsByLesson(tx, lessonId);
+        const allIds = allRows.map((row: { id: any }) => row.id);
+
+        // Soft delete all progress rows for lesson (after consolidation this should be one)
         await tx
           .update(schema.lessonProgress)
           .set({
@@ -303,10 +426,12 @@ export function createLessonProgressRepository(): LessonProgressRepository {
           await SyncBase.removePendingSyncs(tx as any, lessonId);
         }
 
-        // Also delete related review schedules
-        await tx
-          .delete(schema.reviewSchedules)
-          .where(eq(schema.reviewSchedules.lessonProgressId, record.id));
+        // Also delete related review schedules from any duplicate progress ids
+        if (allIds.length > 0) {
+          await tx
+            .delete(schema.reviewSchedules)
+            .where(inArray(schema.reviewSchedules.lessonProgressId, allIds));
+        }
       });
     },
 
@@ -317,13 +442,7 @@ export function createLessonProgressRepository(): LessonProgressRepository {
       const lessonIds = progressList.map((p) => p.lessonId!);
 
       await db.transaction(async (tx) => {
-        // Get local records for conflict resolution
-        const localRecords = await tx.query.lessonProgress.findMany({
-          where: inArray(schema.lessonProgress.lessonId, lessonIds),
-        });
-        const localMap = new Map(localRecords.map((r) => [r.lessonId, r]));
-
-        // Get dirty IDs
+        // Get dirty lesson IDs (locally modified, queued for sync)
         const dirtyIds = await SyncBase.getEntityDirtyIds(
           tx as any,
           lessonIds,
@@ -331,63 +450,117 @@ export function createLessonProgressRepository(): LessonProgressRepository {
         );
 
         for (const progress of progressList) {
-          const localProgress = localMap.get(progress.lessonId!);
-          const isDirty = dirtyIds.has(progress.lessonId!);
+          if (!progress.lessonId) continue;
 
-          // Skip if locally modified
-          if (isDirty) continue;
+          const isDirty = dirtyIds.has(progress.lessonId);
+          const preferredId = progress.id ?? undefined;
+          const canonicalId = await ensureSingleProgressRecord(tx, progress.lessonId, {
+            preferredId,
+          });
+          const progressId = canonicalId ?? preferredId ?? Crypto.randomUUID();
 
-          const progressId = progress.id ?? Crypto.randomUUID();
+          const localProgress = await tx.query.lessonProgress.findFirst({
+            where: eq(schema.lessonProgress.id, progressId),
+          });
 
-          if (!localProgress) {
-            // New from server
-            await applyServerVersion(tx, progress, progressId, now);
-          } else {
-            const serverDate = new Date(progress.updatedAt || new Date(0).toISOString()).getTime();
-            const localDate = new Date(localProgress.updatedAt).getTime();
-
-            if (serverDate > localDate) {
-              // Server is newer: apply server version
+          if (!isDirty) {
+            if (!localProgress) {
+              // New from server
               await applyServerVersion(tx, progress, progressId, now);
-            } else if (localDate > serverDate) {
-              // Local is newer: queue for sync
-              await SyncBase.addToQueue(tx as any, {
-                entityType: EntityType.LESSON_PROGRESS,
-                entityId: localProgress.lessonId,
-                action: 'update',
-                payload: { ...localProgress },
-              });
+            } else {
+              const serverDate = new Date(
+                progress.updatedAt || new Date(0).toISOString()
+              ).getTime();
+              const localDate = new Date(localProgress.updatedAt).getTime();
+
+              if (serverDate >= localDate) {
+                // Server is newer (or same): apply server version and keep server id
+                await applyServerVersion(tx, progress, progressId, now);
+              } else {
+                // Local is newer: keep local and queue sync with canonical id
+                await SyncBase.addToQueue(tx as any, {
+                  entityType: EntityType.LESSON_PROGRESS,
+                  entityId: localProgress.lessonId,
+                  action: 'update',
+                  payload: { ...localProgress, id: progressId },
+                });
+              }
             }
-          }
 
-          // Upsert review schedules if they exist
-          if (progress.reviewSchedules && progress.reviewSchedules.length > 0) {
-            for (const review of progress.reviewSchedules) {
-              const reviewId = review.id || Crypto.randomUUID();
+            const shouldPruneSchedules =
+              Array.isArray(progress.reviewSchedules) || Boolean(progress.isDeleted);
 
-              await tx
-                .insert(schema.reviewSchedules)
-                .values({
-                  id: reviewId,
-                  lessonProgressId: progressId,
-                  reviewRound: review.reviewRound,
-                  dueDate: review.dueDate,
-                  completed: review.completed,
-                  completedDate: review.completedDate,
-                  createdAt: review.createdAt || now,
-                  updatedAt: now,
-                  lastSyncedAt: now,
-                })
-                .onConflictDoUpdate({
-                  target: schema.reviewSchedules.id,
-                  set: {
+            if (Array.isArray(progress.reviewSchedules) && progress.reviewSchedules.length > 0) {
+              for (const review of progress.reviewSchedules) {
+                const reviewId = review.id || Crypto.randomUUID();
+
+                await tx
+                  .insert(schema.reviewSchedules)
+                  .values({
+                    id: reviewId,
+                    lessonProgressId: progressId,
+                    reviewRound: review.reviewRound,
+                    dueDate: review.dueDate,
                     completed: review.completed,
                     completedDate: review.completedDate,
-                    dueDate: review.dueDate,
+                    createdAt: review.createdAt || now,
                     updatedAt: now,
                     lastSyncedAt: now,
-                  },
-                });
+                  })
+                  .onConflictDoUpdate({
+                    target: schema.reviewSchedules.id,
+                    set: {
+                      lessonProgressId: progressId,
+                      reviewRound: review.reviewRound,
+                      completed: review.completed,
+                      completedDate: review.completedDate,
+                      dueDate: review.dueDate,
+                      updatedAt: now,
+                      lastSyncedAt: now,
+                      isDeleted: Boolean(review.isDeleted),
+                      deletedAt: review.deletedAt ?? null,
+                    },
+                  });
+              }
+            }
+
+            if (shouldPruneSchedules) {
+              const remoteReviewIds = new Set(
+                (progress.reviewSchedules ?? []).map((review) => review.id).filter(Boolean)
+              );
+
+              const localActiveSchedules = await tx.query.reviewSchedules.findMany({
+                columns: { id: true },
+                where: and(
+                  eq(schema.reviewSchedules.lessonProgressId, progressId),
+                  eq(schema.reviewSchedules.isDeleted, false)
+                ),
+              });
+
+              const candidateIds = localActiveSchedules
+                .map((item) => item.id)
+                .filter((id) => !remoteReviewIds.has(id));
+
+              if (candidateIds.length > 0) {
+                const dirtyReviewIds = await SyncBase.getEntityDirtyIds(
+                  tx as any,
+                  candidateIds,
+                  EntityType.REVIEW_SCHEDULE
+                );
+                const pruneIds = candidateIds.filter((id) => !dirtyReviewIds.has(id));
+
+                if (pruneIds.length > 0) {
+                  await tx
+                    .update(schema.reviewSchedules)
+                    .set({
+                      isDeleted: true,
+                      deletedAt: now,
+                      updatedAt: now,
+                      lastSyncedAt: now,
+                    })
+                    .where(inArray(schema.reviewSchedules.id, pruneIds));
+                }
+              }
             }
           }
         }

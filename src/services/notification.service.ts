@@ -45,6 +45,10 @@ export const InAppNotificationService = {
     await repo.dismiss(id);
   },
 
+  async restore(id: string): Promise<void> {
+    await repo.restore(id);
+  },
+
   /**
    * Create a notification record (e.g., when a review is due)
    */

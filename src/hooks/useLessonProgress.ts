@@ -20,13 +20,11 @@ export function useLessonProgress(lessonId: string) {
     staleTime: 0,
     refetchOnMount: 'always',
     queryFn: async () => {
-      // Always ensure local progress exists as soon as lesson page is opened.
-      let progress = await lessonProgressService.initLessonProgress(lessonId);
-
-      // Then sync with backend and refresh local snapshot if server has newer data.
-      const syncedProgress = await lessonProgressService.getProgress(lessonId);
-      if (syncedProgress) {
-        progress = syncedProgress;
+      // Pull merged server/local progress first. This avoids generating a random local
+      // progress id before we know whether server already has one.
+      let progress = await lessonProgressService.getProgress(lessonId);
+      if (!progress) {
+        progress = await lessonProgressService.initLessonProgress(lessonId);
       }
 
       // Ensure learning mode is properly initialized

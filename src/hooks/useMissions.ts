@@ -38,7 +38,20 @@ export function useClaimMissionReward() {
 
   return useMutation({
     mutationFn: async (mission: MissionProgress) => claimMissionReward(mission),
-    onSuccess: () => {
+    onSuccess: (_, claimedMission) => {
+      queryClient.setQueryData(MISSION_KEYS.current(), (current: any) => {
+        if (!current?.missions || !Array.isArray(current.missions)) {
+          return current;
+        }
+
+        return {
+          ...current,
+          missions: current.missions.map((mission: MissionProgress) =>
+            mission.key === claimedMission.key ? { ...mission, isClaimed: true } : mission
+          ),
+        };
+      });
+
       queryClient.invalidateQueries({ queryKey: XP_KEYS.all });
       queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
       queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.all });

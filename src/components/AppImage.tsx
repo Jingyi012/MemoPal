@@ -1,5 +1,5 @@
-import { Image, ImageProps } from 'expo-image';
-import { mapLocalhostForExpoGo } from '@/utils/network/localhost';
+import { Image, type ImageProps, type ImageSource } from 'expo-image';
+import { resolveMediaUrl } from '@/utils/mediaUrl';
 import { StyleSheet } from 'react-native';
 
 // Standard "neutral" blurhash (frosted glass look)
@@ -21,9 +21,9 @@ export const AppImage = ({
   cachePolicy = 'disk', // Always cache to disk for offline support
   ...props
 }: AppImageProps) => {
-  const mapUri = (uri: string) => mapLocalhostForExpoGo(uri);
+  const mapUri = (uri: string) => resolveMediaUrl(uri);
 
-  const normalizeSource = (value: ImageProps['source']) => {
+  const normalizeSource = (value: ImageProps['source']): ImageProps['source'] => {
     if (!value) return value;
 
     if (typeof value === 'string') {
@@ -31,11 +31,19 @@ export const AppImage = ({
     }
 
     if (Array.isArray(value)) {
-      return value.map((item) =>
-        item && typeof item === 'object' && 'uri' in item && item.uri
-          ? { ...item, uri: mapUri(item.uri) }
-          : item
-      );
+      const mappedArray: ImageSource[] = value.map((item) => {
+        if (typeof item === 'string') {
+          return { uri: mapUri(item) };
+        }
+
+        if (item && typeof item === 'object' && 'uri' in item && typeof item.uri === 'string') {
+          return { ...item, uri: mapUri(item.uri) };
+        }
+
+        return item as ImageSource;
+      });
+
+      return mappedArray;
     }
 
     if (typeof value === 'object' && 'uri' in value && value.uri) {
@@ -45,7 +53,9 @@ export const AppImage = ({
     return value;
   };
 
-  const resolvedSource = imageUrl ? { uri: mapUri(imageUrl) } : normalizeSource(source);
+  const resolvedSource: ImageProps['source'] = imageUrl
+    ? { uri: mapUri(imageUrl) }
+    : normalizeSource(source);
 
   const handleError: ImageProps['onError'] = (event) => {
     if (__DEV__) {

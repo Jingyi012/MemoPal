@@ -11,8 +11,8 @@ import { useLevelByXp } from '@/hooks/useLevelConfigs';
 import { useMissions } from '@/hooks/useMissions';
 import { HomeHeader } from '@/screens/Home/Header/HomeHeader';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { DailyTip } from './DailyTip';
 import { ReviewDueBadge } from './ReviewDueBadge';
 
@@ -38,19 +38,20 @@ const QuickAction = ({
 
 const HomeScreen = () => {
   const router = useRouter();
-  const { user } = useCurrentUser();
-  const { limits: featureLimits } = useFeatureLimits();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { user, refetch: refetchCurrentUser } = useCurrentUser();
+  const { limits: featureLimits, refetch: refetchFeatureLimits } = useFeatureLimits();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
-  const { levelInfo } = useLevelByXp(totalXp, user?.level);
-  const { missions } = useMissions();
-  const { config: gamificationUiConfig } = useGamificationUiConfig();
-  const { dueReviews } = useDueReviews();
+  const { levelInfo, refetch: refetchLevelInfo } = useLevelByXp(totalXp, user?.level);
+  const { missions, refetch: refetchMissions } = useMissions();
+  const { config: gamificationUiConfig, refetch: refetchGamificationUiConfig } =
+    useGamificationUiConfig();
+  const { dueReviews, dueLessons, refetch: refetchDueReviews } = useDueReviews();
   const { userState, updateState } = useUserState();
 
   const showTutorialPrompt = !userState.ui.tutorialPromptDismissed;
   const canCreateCustomPalace = featureLimits.customPalaces > 0;
 
-  const overdueCount = dueReviews.filter((r) => new Date(r.dueDate).getTime() < Date.now()).length;
   const dueCount = dueReviews.length;
 
   const headerUser = user
@@ -75,12 +76,36 @@ const HomeScreen = () => {
   const missionPreview = activeMissions.slice(0, previewMissionCount);
   const completedMissionCount = activeMissions.filter((mission) => mission.isCompleted).length;
 
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.allSettled([
+        refetchCurrentUser(),
+        refetchFeatureLimits(),
+        refetchLevelInfo(),
+        refetchMissions(),
+        refetchGamificationUiConfig(),
+        refetchDueReviews(),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [
+    refetchCurrentUser,
+    refetchDueReviews,
+    refetchFeatureLimits,
+    refetchGamificationUiConfig,
+    refetchLevelInfo,
+    refetchMissions,
+  ]);
+
   return (
     <View className="flex-1 bg-slate-50">
       <HomeHeader userData={headerUser} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingBottom: 24 }}>
         <View className="px-4 py-2">
           {/* {isFirstTime && <PalaceTrainingCard />} */}
@@ -108,8 +133,9 @@ const HomeScreen = () => {
 
           <ReviewDueBadge
             dueCount={dueCount}
-            overdueCount={overdueCount}
-            onPress={() => router.push('/(tabs)/palaces')}
+            dueLessons={dueLessons}
+            onOpenLesson={(lessonId) => router.push(`/lessons/${lessonId}`)}
+            onOpenAll={() => router.push('/(tabs)/palaces')}
           />
 
           <BaseCard className="mt-3 bg-teal-600 p-4" padding="none" shadow="sm" bordered={false}>

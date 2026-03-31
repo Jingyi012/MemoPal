@@ -105,6 +105,27 @@ export const useNotificationMutations = () => {
     },
   });
 
+  const restore = useMutation({
+    mutationFn: (notificationId: string) => InAppNotificationService.restore(notificationId),
+    onSuccess: (_, notificationId) => {
+      let restoredUnread = false;
+      setNotificationList((list) =>
+        list.map((item) => {
+          if (item.id !== notificationId) return item;
+          restoredUnread = item.isDismissed && !item.isRead;
+          return item.isDismissed ? { ...item, isDismissed: false } : item;
+        })
+      );
+
+      if (restoredUnread) {
+        setUnreadCount((count) => count + 1);
+      }
+
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.unread() });
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.lists() });
+    },
+  });
+
   const createNotification = useMutation({
     mutationFn: (notification: any) =>
       InAppNotificationService.createInAppNotification(notification),
@@ -118,5 +139,5 @@ export const useNotificationMutations = () => {
     },
   });
 
-  return { markAsRead, markAllAsRead, dismiss, createNotification };
+  return { markAsRead, markAllAsRead, dismiss, restore, createNotification };
 };

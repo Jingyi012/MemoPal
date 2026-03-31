@@ -1,7 +1,7 @@
 import GamificationRewardModal from '@/components/GamificationRewardModal';
 import React, { createContext, ReactNode, useContext, useMemo, useRef, useState } from 'react';
 
-type RewardPayload = { levelUpTo?: number; milestones: string[]; badges: string[] };
+type RewardPayload = { levelUpTo?: number; milestones: string[]; badges: string[]; xpEarned?: number };
 
 type GamificationRewardContextType = {
   showRewards: (payload: RewardPayload) => void;
@@ -13,7 +13,7 @@ const GamificationRewardContext = createContext<GamificationRewardContextType | 
 
 export function GamificationRewardProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
-  const [payload, setPayload] = useState<RewardPayload>({ milestones: [], badges: [] });
+  const [payload, setPayload] = useState<RewardPayload>({ milestones: [], badges: [], xpEarned: 0 });
   const shownRewardKeys = useRef<Set<string>>(new Set());
 
   const value = useMemo<GamificationRewardContextType>(
@@ -45,8 +45,10 @@ export function GamificationRewardProvider({ children }: { children: ReactNode }
           levelUpTo: shouldShowLevel ? nextPayload.levelUpTo : undefined,
           milestones: newMilestones,
           badges: newBadges,
+          xpEarned: Math.max(0, nextPayload.xpEarned ?? 0),
         };
         const hasContent =
+          (normalizedPayload.xpEarned ?? 0) > 0 ||
           !!normalizedPayload.levelUpTo ||
           normalizedPayload.milestones.length > 0 ||
           normalizedPayload.badges.length > 0;
@@ -63,6 +65,7 @@ export function GamificationRewardProvider({ children }: { children: ReactNode }
       {children}
       <GamificationRewardModal
         visible={visible}
+        xpEarned={payload.xpEarned}
         levelUpTo={payload.levelUpTo}
         milestones={payload.milestones}
         badges={payload.badges}

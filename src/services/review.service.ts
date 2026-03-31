@@ -10,6 +10,7 @@ import { createReviewRepository } from '@/repositories/review.repo';
 import { recordXpEventWithClientEventId } from '@/services/xpEvents.service';
 import * as xpConfigService from '@/services/xpConfig.service';
 import { ReviewSchedule } from '@/types/lesson';
+import { DueReviewLessonPreview } from '@/types/review';
 import * as Crypto from 'expo-crypto';
 
 const reviewRepository = createReviewRepository();
@@ -31,6 +32,11 @@ export interface ReviewResult {
   correctCount: number;
   accuracy: number;
   isPassed: boolean;
+}
+
+export interface DueReviewSnapshot {
+  dueReviews: ReviewSchedule[];
+  dueLessons: DueReviewLessonPreview[];
 }
 
 /**
@@ -67,6 +73,17 @@ export async function getDueReviews(): Promise<ReviewSchedule[]> {
   await syncRemoteReviews(() => reviewApi.getDueReviews(), 'Failed to sync due reviews:');
 
   return reviewRepository.getDueReviews();
+}
+
+export async function getDueReviewSnapshot(limit = 2): Promise<DueReviewSnapshot> {
+  await syncRemoteReviews(() => reviewApi.getDueReviews(), 'Failed to sync due reviews:');
+
+  const [dueReviews, dueLessons] = await Promise.all([
+    reviewRepository.getDueReviews(),
+    reviewRepository.getDueReviewLessons(limit),
+  ]);
+
+  return { dueReviews, dueLessons };
 }
 
 /**

@@ -1,28 +1,27 @@
-import { formatDistanceToNow } from 'date-fns';
-import { useRouter } from 'expo-router';
-import {
-  Award,
-  Bell,
-  BookOpen,
-  CheckCheck,
-  ChevronRight,
-  Settings,
-  Star,
-  Trash2,
-  TrendingUp,
-  Users,
-  Zap,
-} from 'lucide-react-native';
-import React, { useMemo, useState } from 'react';
-import { FlatList, Text, TouchableOpacity, View } from 'react-native';
-import Toast from 'react-native-toast-message';
-
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
 import { NotificationType } from '@/enums/notificationType';
 import { useNotificationMutations, useNotifications } from '@/hooks/useNotifications';
 import { Notification } from '@/types/notification';
+import { formatDistanceToNow } from 'date-fns';
+import { useRouter } from 'expo-router';
+import {
+  Award,
+  Bell,
+  BookOpen,
+  Check,
+  CheckCheck,
+  ChevronRight,
+  Settings,
+  Star,
+  TrendingUp,
+  Users,
+  Zap,
+} from 'lucide-react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 const TYPE_CONFIG = {
   [NotificationType.XP]: { icon: Zap, color: Colors.amber500, bgColor: 'bg-amber-50' },
@@ -43,25 +42,154 @@ const TYPE_CONFIG = {
   [NotificationType.SYSTEM]: { icon: Settings, color: Colors.slate500, bgColor: 'bg-slate-50' },
 };
 
+type NotificationListRow =
+  | {
+      type: 'header';
+      id: string;
+      title: string;
+      count: number;
+    }
+  | {
+      type: 'item';
+      id: string;
+      notification: Notification;
+    };
+
 const NotificationScreen = () => {
   const router = useRouter();
   const { data: notifications = [], isLoading, refetch, isRefetching } = useNotifications();
-  const { markAsRead, dismiss, markAllAsRead } = useNotificationMutations();
-  const [pendingDismissId, setPendingDismissId] = useState<string | null>(null);
-  const [pendingDismissExpiry, setPendingDismissExpiry] = useState<number>(0);
+  const { markAsRead, dismiss, restore, markAllAsRead } = useNotificationMutations();
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedNotificationIds, setSelectedNotificationIds] = useState<string[]>([]);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [isUndoing, setIsUndoing] = useState(false);
+  const [undoPayload, setUndoPayload] = useState<{ ids: string[]; count: number } | null>(null);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Filter out dismissed notifications
   const activeNotifications = useMemo(
-    () => notifications.filter((n) => !n.isDismissed),
+    () => notifications.filter((notification) => !notification.isDismissed),
     [notifications]
   );
 
   const unreadCount = useMemo(
-    () => activeNotifications.filter((n) => !n.isRead).length,
+    () => activeNotifications.filter((notification) => !notification.isRead).length,
     [activeNotifications]
   );
 
+  const unreadNotifications = useMemo(
+    () => activeNotifications.filter((notification) => !notification.isRead),
+    [activeNotifications]
+  );
+
+  const readNotifications = useMemo(
+    () => activeNotifications.filter((notification) => notification.isRead),
+    [activeNotifications]
+  );
+
+  const allSelectableIds = useMemo(
+    () => activeNotifications.map((notification) => notification.id),
+    [activeNotifications]
+  );
+
+  const listRows = useMemo<NotificationListRow[]>(() => {
+    if (isSelectionMode) {
+      return activeNotifications.map((notification) => ({
+        type: 'item',
+        id: notification.id,
+        notification,
+      }));
+    }
+
+    const rows: NotificationListRow[] = [];
+
+    if (unreadNotifications.length > 0) {
+      rows.push({
+        type: 'header',
+        id: 'header-unread',
+        title: 'Unread',
+        count: unreadNotifications.length,
+      });
+      rows.push(
+        ...unreadNotifications.map((notification) => ({
+          type: 'item' as const,
+          id: notification.id,
+          notification,
+        }))
+      );
+    }
+
+    if (readNotifications.length > 0) {
+      rows.push({
+        type: 'header',
+        id: 'header-earlier',
+        title: unreadNotifications.length > 0 ? 'Earlier' : 'Recent',
+        count: readNotifications.length,
+      });
+      rows.push(
+        ...readNotifications.map((notification) => ({
+          type: 'item' as const,
+          id: notification.id,
+          notification,
+        }))
+      );
+    }
+
+    return rows;
+  }, [activeNotifications, isSelectionMode, readNotifications, unreadNotifications]);
+
+  const selectedCount = selectedNotificationIds.length;
+  const isAllSelected = allSelectableIds.length > 0 && selectedCount === allSelectableIds.length;
+
+  useEffect(() => {
+    setSelectedNotificationIds((previous) =>
+      previous.filter((id) => allSelectableIds.includes(id))
+    );
+  }, [allSelectableIds]);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
+      }
+    };
+  }, []);
+
+  const clearSelectionMode = () => {
+    setIsSelectionMode(false);
+    setSelectedNotificationIds([]);
+  };
+
+  const toggleSelection = (notificationId: string) => {
+    setSelectedNotificationIds((previous) =>
+      previous.includes(notificationId)
+        ? previous.filter((id) => id !== notificationId)
+        : [...previous, notificationId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedNotificationIds([]);
+      return;
+    }
+    setSelectedNotificationIds(allSelectableIds);
+  };
+
+  const handleNotificationLongPress = (notification: Notification) => {
+    if (!isSelectionMode) {
+      setIsSelectionMode(true);
+      setSelectedNotificationIds([notification.id]);
+      return;
+    }
+    toggleSelection(notification.id);
+  };
+
   const handleNotificationPress = async (notification: Notification) => {
+    if (isSelectionMode) {
+      toggleSelection(notification.id);
+      return;
+    }
+
     if (!notification.isRead) {
       await markAsRead.mutateAsync(notification.id);
     }
@@ -72,42 +200,107 @@ const NotificationScreen = () => {
     }
   };
 
-  const handleDismiss = async (id: string) => {
-    const now = Date.now();
-    const canConfirmNow = pendingDismissId === id && now <= pendingDismissExpiry;
+  const beginUndoWindow = (ids: string[]) => {
+    if (undoTimerRef.current) {
+      clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
 
-    if (!canConfirmNow) {
-      setPendingDismissId(id);
-      setPendingDismissExpiry(now + 3000);
-      Toast.show({
-        type: 'info',
-        text1: 'Confirm delete',
-        text2: 'Tap delete again within 3 seconds.',
-      });
+    if (ids.length === 0) {
+      setUndoPayload(null);
       return;
     }
 
+    setUndoPayload({ ids, count: ids.length });
+    undoTimerRef.current = setTimeout(() => {
+      setUndoPayload(null);
+      undoTimerRef.current = null;
+    }, 5000);
+  };
+
+  const handleRemoveSelected = async () => {
+    if (selectedCount === 0 || isRemoving) return;
+
+    const targetIds = [...selectedNotificationIds];
+    setIsRemoving(true);
     try {
-      await dismiss.mutateAsync(id);
-      Toast.show({
-        type: 'success',
-        text1: 'Notification removed',
-      });
+      const results = await Promise.allSettled(
+        targetIds.map((notificationId) => dismiss.mutateAsync(notificationId))
+      );
+
+      const successIds = results
+        .map((result, index) => ({ result, id: targetIds[index] }))
+        .filter((entry) => entry.result.status === 'fulfilled')
+        .map((entry) => entry.id);
+
+      const failedIds = results
+        .map((result, index) => ({ result, id: targetIds[index] }))
+        .filter((entry) => entry.result.status === 'rejected')
+        .map((entry) => entry.id);
+
+      beginUndoWindow(successIds);
+
+      if (failedIds.length > 0) {
+        setIsSelectionMode(true);
+        setSelectedNotificationIds(failedIds);
+        Toast.show({
+          type: 'error',
+          text1: 'Some removes failed',
+          text2: `${failedIds.length} notification${failedIds.length > 1 ? 's' : ''} could not be removed.`,
+        });
+      } else {
+        clearSelectionMode();
+      }
     } catch {
       Toast.show({
         type: 'error',
-        text1: 'Delete failed',
-        text2: 'Unable to remove this notification right now.',
+        text1: 'Remove failed',
+        text2: 'Unable to remove selected notifications.',
       });
     } finally {
-      setPendingDismissId(null);
-      setPendingDismissExpiry(0);
+      setIsRemoving(false);
+    }
+  };
+
+  const handleUndoRemove = async () => {
+    if (!undoPayload || isUndoing) return;
+
+    const targetIds = [...undoPayload.ids];
+    setIsUndoing(true);
+    try {
+      const results = await Promise.allSettled(
+        targetIds.map((notificationId) => restore.mutateAsync(notificationId))
+      );
+      const failedCount = results.filter((result) => result.status === 'rejected').length;
+
+      if (failedCount > 0) {
+        Toast.show({
+          type: 'error',
+          text1: 'Undo incomplete',
+          text2: `${failedCount} notification${failedCount > 1 ? 's' : ''} could not be restored.`,
+        });
+      }
+    } finally {
+      setUndoPayload(null);
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = null;
+      }
+      setIsUndoing(false);
     }
   };
 
   const handleMarkAllRead = () => {
-    if (unreadCount === 0) return;
+    if (unreadCount === 0 || isSelectionMode) return;
     markAllAsRead.mutateAsync();
+  };
+
+  const handleBackAction = () => {
+    if (isSelectionMode) {
+      clearSelectionMode();
+      return;
+    }
+    router.back();
   };
 
   const buildNavigationRoute = (
@@ -121,11 +314,11 @@ const NotificationScreen = () => {
 
       case NotificationType.BADGE:
       case NotificationType.MILESTONE:
-        // Both navigate to the same screen
         return `/badges`;
 
       case NotificationType.PALACE:
         return `/palaces/${referenceId}`;
+
       case NotificationType.REFERRAL:
         return '/referral';
 
@@ -134,71 +327,96 @@ const NotificationScreen = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: Notification }) => {
+  const renderItem = ({ item }: { item: NotificationListRow }) => {
+    if (item.type === 'header') {
+      return (
+        <View className="px-4 pb-2 pt-3">
+          <Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {item.title} ({item.count})
+          </Text>
+        </View>
+      );
+    }
+
+    const notification = item.notification;
     const config =
-      TYPE_CONFIG[item.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG[NotificationType.SYSTEM];
+      TYPE_CONFIG[notification.type as keyof typeof TYPE_CONFIG] ||
+      TYPE_CONFIG[NotificationType.SYSTEM];
     const Icon = config.icon;
+    const isSelected = selectedNotificationIds.includes(notification.id);
 
     return (
       <View className="relative">
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => handleNotificationPress(item)}
-          className={`flex-row items-start border-b border-slate-100 p-4 ${
-            item.isRead ? 'bg-white' : 'bg-blue-50/40'
+          onLongPress={() => handleNotificationLongPress(notification)}
+          delayLongPress={220}
+          onPress={() => void handleNotificationPress(notification)}
+          className={`mx-4 mb-2 flex-row items-start rounded-2xl border px-4 py-3 ${
+            isSelectionMode && isSelected
+              ? 'border-red-200 bg-red-50'
+              : notification.isRead
+                ? 'border-slate-200 bg-white'
+                : 'border-blue-100 bg-blue-50/60'
           }`}>
-          {/* Unread Indicator Dot */}
-          {!item.isRead && (
-            <View className="absolute left-1 top-1/2 h-2 w-2 -translate-y-1 rounded-full bg-blue-500" />
+          {isSelectionMode && (
+            <View className="mr-3 mt-2">
+              <View
+                className={`h-5 w-5 items-center justify-center rounded-md border ${
+                  isSelected ? 'border-red-500 bg-red-500' : 'border-slate-300 bg-white'
+                }`}>
+                {isSelected && <Check size={12} color="white" />}
+              </View>
+            </View>
           )}
 
-          {/* Icon Circle */}
           <View className={`h-12 w-12 items-center justify-center rounded-full ${config.bgColor}`}>
             <Icon size={22} color={config.color} />
           </View>
 
-          {/* Content */}
           <View className="ml-4 flex-1">
             <View className="flex-row items-center justify-between">
-              <Text
-                numberOfLines={1}
-                className={`flex-1 pr-2 text-base ${
-                  item.isRead ? 'font-medium text-slate-600' : 'font-bold text-slate-900'
-                }`}>
-                {item.title}
-              </Text>
+              <View className="flex-1 flex-row items-center pr-2">
+                <Text
+                  numberOfLines={1}
+                  className={`flex-1 text-base ${
+                    notification.isRead ? 'font-medium text-slate-600' : 'font-bold text-slate-900'
+                  }`}>
+                  {notification.title}
+                </Text>
+                {!isSelectionMode && !notification.isRead && (
+                  <View className="ml-2 rounded-full bg-blue-100 px-2 py-0.5">
+                    <Text className="text-[10px] font-bold text-blue-700">NEW</Text>
+                  </View>
+                )}
+              </View>
               <Text className="text-xs text-slate-400">
-                {formatDistanceToNow(new Date(item.createdAt), { addSuffix: false })}
+                {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
               </Text>
             </View>
 
             <Text
               numberOfLines={2}
-              className={`mt-1 text-sm leading-5 ${item.isRead ? 'text-slate-500' : 'text-slate-700'}`}>
-              {item.body}
+              className={`mt-1 text-sm leading-5 ${
+                notification.isRead ? 'text-slate-500' : 'text-slate-700'
+              }`}>
+              {notification.body}
             </Text>
 
             <View className="mt-2 flex-row items-center justify-between">
               <View className="flex-row items-center">
-                {item.referenceType && (
+                {notification.referenceType && (
                   <View className="rounded-md bg-slate-100 px-2 py-0.5">
                     <Text className="text-[10px] font-bold uppercase text-slate-500">
-                      {item.referenceType}
+                      {notification.referenceType}
                     </Text>
                   </View>
                 )}
               </View>
-
-              {/* Inline Action to delete */}
-              <TouchableOpacity
-                onPress={() => void handleDismiss(item.id)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Trash2 size={14} color={Colors.slate400} />
-              </TouchableOpacity>
             </View>
           </View>
 
-          {item.referenceType && (
+          {!isSelectionMode && notification.referenceType && (
             <View className="ml-2 self-center">
               <ChevronRight size={18} color={Colors.slate300} />
             </View>
@@ -214,23 +432,51 @@ const NotificationScreen = () => {
     <View className="flex-1 bg-white">
       <CommonHeader
         title="Notifications"
-        description={unreadCount > 0 ? `${unreadCount} unread messages` : 'All caught up!'}
-        backAction={() => router.back()}
-        actions={[
-          {
-            icon: CheckCheck,
-            onPress: handleMarkAllRead,
-          },
-        ]}
+        description={
+          isSelectionMode
+            ? selectedCount > 0
+              ? `${selectedCount} selected`
+              : 'Tap notifications to select'
+            : unreadCount > 0
+              ? `${unreadCount} unread messages`
+              : 'All caught up!'
+        }
+        backAction={handleBackAction}
+        actions={
+          isSelectionMode
+            ? []
+            : [
+                {
+                  icon: CheckCheck,
+                  onPress: handleMarkAllRead,
+                },
+              ]
+        }
       />
 
+      {isSelectionMode && (
+        <View className="mb-2 border-b border-slate-200 bg-white px-4 py-3">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity onPress={clearSelectionMode} activeOpacity={0.7}>
+              <Text className="font-semibold text-slate-700">Cancel</Text>
+            </TouchableOpacity>
+            <Text className="text-sm font-medium text-slate-700">{selectedCount} selected</Text>
+            <TouchableOpacity onPress={toggleSelectAll} activeOpacity={0.7}>
+              <Text className="font-semibold text-slate-700">
+                {isAllSelected ? 'Unselect All' : 'Select All'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       <FlatList
-        data={activeNotifications}
+        data={listRows}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         onRefresh={refetch}
         refreshing={isRefetching}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: isSelectionMode ? 132 : undoPayload ? 110 : 40 }}
         ListEmptyComponent={
           <View className="mt-32 items-center justify-center p-6">
             <View className="h-20 w-20 items-center justify-center rounded-full bg-slate-50">
@@ -243,6 +489,47 @@ const NotificationScreen = () => {
           </View>
         }
       />
+
+      {isSelectionMode && (
+        <View className="border-t border-slate-200 bg-white px-4 pb-5 pt-3">
+          <TouchableOpacity
+            activeOpacity={0.8}
+            disabled={selectedCount === 0 || isRemoving}
+            onPress={() => void handleRemoveSelected()}
+            className={`flex-row items-center justify-center rounded-xl py-3 ${
+              selectedCount === 0 || isRemoving ? 'bg-slate-200' : 'bg-red-600'
+            }`}>
+            {isRemoving ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <Text className="font-semibold text-white">
+                {selectedCount > 0 ? `Remove (${selectedCount})` : 'Select notifications to remove'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {!isSelectionMode && undoPayload && (
+        <View className="absolute bottom-5 left-4 right-4 rounded-xl bg-slate-900 px-4 py-3">
+          <View className="flex-row items-center justify-between">
+            <Text className="flex-1 text-sm font-medium text-white">
+              {undoPayload.count} notification{undoPayload.count > 1 ? 's' : ''} removed
+            </Text>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              disabled={isUndoing}
+              onPress={() => void handleUndoRemove()}
+              className="ml-3 rounded-lg bg-white/20 px-3 py-1">
+              {isUndoing ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text className="font-semibold text-white">Undo</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 };

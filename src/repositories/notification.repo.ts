@@ -3,7 +3,7 @@ import * as schema from '@/db/schema';
 import { EntityType } from '@/enums/entityType';
 import { SyncBase } from '@/services/sync/sync.base';
 import { Notification } from '@/types/notification';
-import { and, desc, eq, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, lt, sql } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 
 interface NotificationRepository {
@@ -12,6 +12,7 @@ interface NotificationRepository {
   markAsRead(notificationId: string): Promise<void>;
   markAllAsRead(): Promise<void>;
   dismiss(notificationId: string): Promise<void>;
+  restore(notificationId: string): Promise<void>;
   delete(notificationId: string): Promise<void>;
   create(notification: Omit<Notification, 'id' | 'createdAt'>): Promise<Notification>;
   deleteOldDismissed(daysOld?: number): Promise<void>;
@@ -126,6 +127,28 @@ export function createNotificationRepository(): NotificationRepository {
       });
     },
 
+    async restore(notificationId: string): Promise<void> {
+      const now = new Date().toISOString();
+      await db.transaction(async (tx) => {
+        await tx
+          .update(schema.notifications)
+          .set({ isDismissed: false, updatedAt: now })
+          .where(
+            and(
+              eq(schema.notifications.id, notificationId),
+              eq(schema.notifications.isDeleted, false)
+            )
+          );
+
+        await SyncBase.addToQueue(tx as any, {
+          entityType: EntityType.NOTIFICATION,
+          entityId: notificationId,
+          action: 'update',
+          payload: { isDismissed: false, updatedAt: now },
+        });
+      });
+    },
+
     async delete(notificationId: string): Promise<void> {
       await db.transaction(async (tx) => {
         const record = await tx.query.notifications.findFirst({
@@ -197,23 +220,62 @@ export function createNotificationRepository(): NotificationRepository {
       if (notifications.length === 0) return;
       const now = new Date().toISOString();
 
-      for (const notification of notifications) {
-        await db
-          .insert(schema.notifications)
-          .values(notification)
-          .onConflictDoUpdate({
-            target: schema.notifications.id,
-            set: {
-              isRead: notification.isRead,
-              isDismissed: notification.isDismissed,
-              readAt: notification.readAt,
-              isDeleted: notification.isDeleted,
-              deletedAt: notification.deletedAt,
-              updatedAt: now,
+      const ids = notifications.map((notification) => notification.id);
+
+      await db.transaction(async (tx) => {
+        const localRecords =
+          ids.length > 0
+            ? await tx.query.notifications.findMany({
+                where: inArray(schema.notifications.id, ids),
+              })
+            : [];
+        const localMap = new Map(localRecords.map((record) => [record.id, record]));
+        const dirtyIds = await SyncBase.getEntityDirtyIds(
+          tx as any,
+          ids,
+          EntityType.NOTIFICATION
+        );
+
+        for (const notification of notifications) {
+          if (dirtyIds.has(notification.id)) continue;
+
+          const localNotification = localMap.get(notification.id);
+          const serverDate = new Date(notification.updatedAt || now).getTime();
+          const localDate = localNotification
+            ? new Date(localNotification.updatedAt || localNotification.createdAt || now).getTime()
+            : 0;
+
+          if (localNotification && localDate > serverDate) {
+            continue;
+          }
+
+          await tx
+            .insert(schema.notifications)
+            .values({
+              ...notification,
+              isDeleted: Boolean(notification.isDeleted),
+              deletedAt: notification.deletedAt ?? null,
               lastSyncedAt: now,
-            },
-          });
-      }
+            })
+            .onConflictDoUpdate({
+              target: schema.notifications.id,
+              set: {
+                type: notification.type,
+                title: notification.title,
+                body: notification.body,
+                referenceType: notification.referenceType,
+                referenceId: notification.referenceId,
+                isRead: notification.isRead,
+                isDismissed: notification.isDismissed,
+                readAt: notification.readAt,
+                isDeleted: Boolean(notification.isDeleted),
+                deletedAt: notification.deletedAt ?? null,
+                updatedAt: notification.updatedAt || now,
+                lastSyncedAt: now,
+              },
+            });
+        }
+      });
     },
   };
 }

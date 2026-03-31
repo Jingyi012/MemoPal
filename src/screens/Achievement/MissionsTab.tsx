@@ -1,7 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { BaseCard } from '@/components/BaseCard';
 import { Colors } from '@/constants/colors';
-import { useGamificationRewards } from '@/contexts/GamificationRewardContext';
 import { SourceType } from '@/enums/sourceType';
 import { getMissionClaimSourceId, useClaimMissionReward } from '@/hooks/useMissions';
 import { useXpEvents } from '@/hooks/useXpEvents';
@@ -162,7 +161,6 @@ export function MissionsTab({
   sectionTitle,
   sectionDescription,
 }: MissionsTabProps) {
-  const { showRewards } = useGamificationRewards();
   const { events: xpEvents, isLoading: isXpEventsLoading } = useXpEvents();
   const [claimingMissionKey, setClaimingMissionKey] = useState<string | null>(null);
   const claimMissionMutation = useClaimMissionReward();
@@ -181,10 +179,9 @@ export function MissionsTab({
   const missionViewModels = useMemo(() => {
     return missions.map((mission) => {
       const sourceId = getMissionClaimSourceId(mission);
-      const isClaimed =
-        typeof mission.isClaimed === 'boolean'
-          ? mission.isClaimed
-          : claimedMissionSourceIds.has(sourceId);
+      const isClaimedFromMission = Boolean(mission.isClaimed);
+      const isClaimedFromEvents = claimedMissionSourceIds.has(sourceId);
+      const isClaimed = isClaimedFromMission || isClaimedFromEvents;
       const status = resolveMissionStatus(mission, isClaimed);
       return { mission, sourceId, isClaimed, status };
     });
@@ -274,15 +271,6 @@ export function MissionsTab({
                 onClaim={() => {
                   setClaimingMissionKey(mission.key);
                   claimMissionMutation.mutate(mission, {
-                    onSuccess: (result) => {
-                      if (!result.wasAlreadyClaimed) {
-                        showRewards({
-                          levelUpTo: result.levelUpTo,
-                          milestones: result.achievedMilestones,
-                          badges: result.earnedBadges,
-                        });
-                      }
-                    },
                     onError: (error) => {
                       const message =
                         error instanceof Error

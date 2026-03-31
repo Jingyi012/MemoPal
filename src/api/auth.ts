@@ -1,4 +1,5 @@
 import api from '@/api/api';
+import { getDeviceSessionContext } from '@/services/authSession.service';
 import { AuthResponse, LoginMethods, LoginRequest } from '@/types/auth';
 import { GeneralResponse } from '@/types/general';
 import { User } from '@/types/users';
@@ -9,6 +10,11 @@ export interface RegisterRequest {
   email: string;
   password: string;
 }
+
+type LogoutRequest = {
+  refreshToken?: string;
+  logoutAllDevices?: boolean;
+};
 
 export type ApiClientError = Error & {
   statusCode?: number;
@@ -102,7 +108,11 @@ function createApiClientError(error: unknown, fallback = 'Request failed.'): Api
 export const authApi = {
   async register(data: RegisterRequest): Promise<AuthResponse> {
     try {
-      const response = await api.post<GeneralResponse<AuthResponse>>('/auth/register', data);
+      const device = await getDeviceSessionContext();
+      const response = await api.post<GeneralResponse<AuthResponse>>('/auth/register', {
+        ...data,
+        ...device,
+      });
       return getApiDataOrThrow<AuthResponse>(response.data, 'Registration failed.');
     } catch (error) {
       throw createApiClientError(error, 'Registration failed.');
@@ -111,7 +121,11 @@ export const authApi = {
 
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      const response = await api.post<GeneralResponse<AuthResponse>>('/auth/login', credentials);
+      const device = await getDeviceSessionContext();
+      const response = await api.post<GeneralResponse<AuthResponse>>('/auth/login', {
+        ...credentials,
+        ...device,
+      });
       return getApiDataOrThrow<AuthResponse>(response.data, 'Login failed.');
     } catch (error) {
       throw createApiClientError(error, 'Login failed.');
@@ -120,7 +134,11 @@ export const authApi = {
 
   async googleLogin(idToken: string): Promise<AuthResponse> {
     try {
-      const response = await api.post<GeneralResponse<AuthResponse>>('/auth/google', { idToken });
+      const device = await getDeviceSessionContext();
+      const response = await api.post<GeneralResponse<AuthResponse>>('/auth/google', {
+        idToken,
+        ...device,
+      });
       return getApiDataOrThrow<AuthResponse>(response.data, 'Google login failed.');
     } catch (error) {
       throw createApiClientError(error, 'Google login failed.');
@@ -129,8 +147,10 @@ export const authApi = {
 
   async facebookLogin(accessToken: string): Promise<AuthResponse> {
     try {
+      const device = await getDeviceSessionContext();
       const response = await api.post<GeneralResponse<AuthResponse>>('/auth/facebook', {
         accessToken,
+        ...device,
       });
       return getApiDataOrThrow<AuthResponse>(response.data, 'Facebook login failed.');
     } catch (error) {
@@ -191,6 +211,46 @@ export const authApi = {
       return getApiDataOrThrow<User>(response.data, 'Failed to upload avatar.');
     } catch (error) {
       throw createApiClientError(error, 'Failed to upload avatar.');
+    }
+  },
+
+  async refreshToken(refreshToken: string): Promise<AuthResponse> {
+    try {
+      const device = await getDeviceSessionContext();
+      const response = await api.post<GeneralResponse<AuthResponse>>(
+        '/auth/refresh',
+        {
+          refreshToken,
+          ...device,
+        },
+        {
+          // Avoid recursive refresh loops in the response interceptor.
+          headers: { 'X-MemoPal-Skip-Refresh': '1' },
+        }
+      );
+
+      return getApiDataOrThrow<AuthResponse>(response.data, 'Session refresh failed.');
+    } catch (error) {
+      throw createApiClientError(error, 'Session refresh failed.');
+    }
+  },
+
+  async logout(payload?: LogoutRequest): Promise<void> {
+    try {
+      const device = await getDeviceSessionContext();
+      await api.post<GeneralResponse<boolean>>(
+        '/auth/logout',
+        {
+          refreshToken: payload?.refreshToken,
+          logoutAllDevices: payload?.logoutAllDevices ?? false,
+          deviceId: device.deviceId,
+        },
+        {
+          headers: { 'X-MemoPal-Skip-Refresh': '1' },
+        }
+      );
+    } catch (error) {
+      throw createApiClientError(error, 'Logout failed.');
     }
   },
 };
