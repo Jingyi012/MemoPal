@@ -51,20 +51,32 @@ public sealed class CreateReviewCommandHandler : IRequestHandler<CreateReviewCom
             throw new NotFoundAppException("Lesson progress not found.");
         }
 
-        var reviewId = string.IsNullOrWhiteSpace(request.Request.Id)
+        var now = DateTime.UtcNow;
+        var requestedReviewId = string.IsNullOrWhiteSpace(request.Request.Id)
             ? Guid.NewGuid().ToString("D")
             : request.Request.Id!;
-        var now = DateTime.UtcNow;
 
         var entity = await _db.ReviewSchedules.FirstOrDefaultAsync(
-            x => x.Id == reviewId && x.UserId == request.UserId,
+            x => x.Id == requestedReviewId && x.UserId == request.UserId,
             cancellationToken);
+
+        if (entity is null)
+        {
+            // Idempotency for offline sync: if the same round already exists on server under
+            // a different id, update that row instead of inserting a duplicate.
+            entity = await _db.ReviewSchedules.FirstOrDefaultAsync(
+                x => x.UserId == request.UserId &&
+                     x.LessonProgressId == progress.Id &&
+                     x.ReviewRound == request.Request.ReviewRound &&
+                     !x.IsDeleted,
+                cancellationToken);
+        }
 
         if (entity is null)
         {
             entity = new ReviewSchedule
             {
-                Id = reviewId,
+                Id = requestedReviewId,
                 UserId = request.UserId,
                 LessonProgressId = progress.Id,
                 CreatedAt = request.Request.CreatedAt ?? now,
@@ -81,7 +93,29 @@ public sealed class CreateReviewCommandHandler : IRequestHandler<CreateReviewCom
         entity.IsDeleted = request.Request.IsDeleted ?? false;
         entity.DeletedAt = request.Request.DeletedAt;
 
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // Handle race conditions where another request inserted the same unique key
+            // (UserId + LessonProgressId + ReviewRound) between read and write.
+            var existingByRound = await _db.ReviewSchedules.FirstOrDefaultAsync(
+                x => x.UserId == request.UserId &&
+                     x.LessonProgressId == progress.Id &&
+                     x.ReviewRound == request.Request.ReviewRound &&
+                     !x.IsDeleted,
+                cancellationToken);
+
+            if (existingByRound is null)
+            {
+                throw;
+            }
+
+            return ApiResponse<ReviewScheduleDto>.Ok(existingByRound.Adapt<ReviewScheduleDto>());
+        }
+
         return ApiResponse<ReviewScheduleDto>.Ok(entity.Adapt<ReviewScheduleDto>());
     }
 }

@@ -1,4 +1,3 @@
-using Mapster;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
@@ -11,7 +10,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Auth.Commands;
 
-public sealed record GoogleLoginCommand(string GoogleIdToken) : IRequest<ApiResponse<AuthResponseDto>>;
+public sealed record GoogleLoginCommand(
+    string GoogleIdToken,
+    string? DeviceId = null,
+    string? DeviceName = null) : IRequest<ApiResponse<AuthResponseDto>>;
 
 public sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, ApiResponse<AuthResponseDto>>
 {
@@ -65,8 +67,16 @@ public sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginComma
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        var token = _tokenGenerator.GenerateToken(user.Id, user.Email, user.Role);
-        return ApiResponse<AuthResponseDto>.Ok(new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>()));
+        var result = await AuthSessionManager.IssueAsync(
+            _db,
+            _tokenGenerator,
+            user,
+            stats,
+            request.DeviceId,
+            request.DeviceName,
+            "replaced_on_login",
+            cancellationToken);
+        return ApiResponse<AuthResponseDto>.Ok(result);
     }
 
     private async Task<User> ResolveUserAsync(ExternalAuthUserInfo profile, CancellationToken cancellationToken)

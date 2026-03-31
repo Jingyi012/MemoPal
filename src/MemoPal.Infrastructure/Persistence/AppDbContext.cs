@@ -18,6 +18,7 @@ public class AppDbContext : DbContext, IAppDbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<UserAuthIdentity> UserAuthIdentities => Set<UserAuthIdentity>();
+    public DbSet<RefreshTokenSession> RefreshTokenSessions => Set<RefreshTokenSession>();
     public DbSet<UserStats> UserStats => Set<UserStats>();
     public DbSet<Palace> Palaces => Set<Palace>();
     public DbSet<UserPalace> UserPalaces => Set<UserPalace>();
@@ -58,6 +59,10 @@ public class AppDbContext : DbContext, IAppDbContext
                 .WithOne(x => x.User)
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.RefreshTokenSessions)
+                .WithOne(x => x.User)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<UserAuthIdentity>(b =>
@@ -69,6 +74,20 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.ProviderEmail).HasMaxLength(320);
             b.HasIndex(x => new { x.Provider, x.ProviderUserId }).IsUnique();
             b.HasIndex(x => new { x.UserId, x.Provider }).IsUnique();
+        });
+
+        modelBuilder.Entity<RefreshTokenSession>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.TokenHash).HasMaxLength(128);
+            b.Property(x => x.DeviceId).HasMaxLength(128);
+            b.Property(x => x.DeviceName).HasMaxLength(256);
+            b.Property(x => x.RevokedReason).HasMaxLength(128);
+            b.Property(x => x.ReplacedByTokenHash).HasMaxLength(128);
+            b.HasIndex(x => x.TokenHash).IsUnique();
+            b.HasIndex(x => new { x.UserId, x.DeviceId, x.CreatedAt });
+            b.HasIndex(x => new { x.UserId, x.RevokedAt, x.ExpiresAt });
         });
 
         modelBuilder.Entity<UserStats>(b =>

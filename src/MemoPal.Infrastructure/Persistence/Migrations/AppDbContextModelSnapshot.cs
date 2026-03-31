@@ -670,6 +670,77 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.ToTable("ReferralRecords");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.RefreshTokenSession", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeviceId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("DeviceName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReplacedByTokenHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RevokedReason")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "DeviceId", "CreatedAt");
+
+                    b.HasIndex("UserId", "RevokedAt", "ExpiresAt");
+
+                    b.ToTable("RefreshTokenSessions");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.ReviewSchedule", b =>
                 {
                     b.Property<string>("Id")
@@ -1332,6 +1403,17 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Navigation("Palace");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.RefreshTokenSession", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.User", "User")
+                        .WithMany("RefreshTokenSessions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.ReviewSchedule", b =>
                 {
                     b.HasOne("MemoPal.Domain.Entities.LessonProgress", "LessonProgress")
@@ -1460,6 +1542,8 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("MemoPal.Domain.Entities.User", b =>
                 {
                     b.Navigation("AuthIdentities");
+
+                    b.Navigation("RefreshTokenSessions");
 
                     b.Navigation("Stats");
                 });

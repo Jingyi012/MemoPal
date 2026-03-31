@@ -16,4 +16,5 @@ public sealed class User : AuditableBaseEntity
 
     public UserStats? Stats { get; set; }
     public ICollection<UserAuthIdentity> AuthIdentities { get; set; } = [];
+    public ICollection<RefreshTokenSession> RefreshTokenSessions { get; set; } = [];
 }

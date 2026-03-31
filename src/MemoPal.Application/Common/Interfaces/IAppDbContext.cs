@@ -7,6 +7,7 @@ public interface IAppDbContext
 {
     DbSet<User> Users { get; }
     DbSet<UserAuthIdentity> UserAuthIdentities { get; }
+    DbSet<RefreshTokenSession> RefreshTokenSessions { get; }
     DbSet<UserStats> UserStats { get; }
     DbSet<Palace> Palaces { get; }
     DbSet<UserPalace> UserPalaces { get; }

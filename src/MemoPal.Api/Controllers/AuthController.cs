@@ -31,7 +31,9 @@ public sealed class AuthController : ApiControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new RegisterCommand(request.DisplayName, request.Email, request.Password), cancellationToken);
+        var result = await Sender.Send(
+            new RegisterCommand(request.DisplayName, request.Email, request.Password, request.DeviceId, request.DeviceName),
+            cancellationToken);
         return Ok(result);
     }
 
@@ -39,7 +41,9 @@ public sealed class AuthController : ApiControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new LoginCommand(request.Email, request.Password), cancellationToken);
+        var result = await Sender.Send(
+            new LoginCommand(request.Email, request.Password, request.DeviceId, request.DeviceName),
+            cancellationToken);
         return Ok(result);
     }
 
@@ -52,7 +56,9 @@ public sealed class AuthController : ApiControllerBase
             request.IdToken,
             request.GoogleAccessToken,
             request.AccessToken);
-        var result = await Sender.Send(new GoogleLoginCommand(token ?? string.Empty), cancellationToken);
+        var result = await Sender.Send(
+            new GoogleLoginCommand(token ?? string.Empty, request.DeviceId, request.DeviceName),
+            cancellationToken);
         return Ok(result);
     }
 
@@ -61,7 +67,29 @@ public sealed class AuthController : ApiControllerBase
     public async Task<IActionResult> FacebookLogin([FromBody] FacebookLoginRequest request, CancellationToken cancellationToken)
     {
         var token = string.IsNullOrWhiteSpace(request.FacebookAccessToken) ? request.AccessToken : request.FacebookAccessToken;
-        var result = await Sender.Send(new FacebookLoginCommand(token ?? string.Empty), cancellationToken);
+        var result = await Sender.Send(
+            new FacebookLoginCommand(token ?? string.Empty, request.DeviceId, request.DeviceName),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [AllowAnonymous]
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new RefreshTokenCommand(request.RefreshToken ?? string.Empty, request.DeviceId, request.DeviceName),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] LogoutRequest request, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new LogoutCommand(GetUserIdOrThrow(), request.RefreshToken, request.DeviceId, request.LogoutAllDevices),
+            cancellationToken);
         return Ok(result);
     }
 
@@ -119,12 +147,30 @@ public sealed class AuthController : ApiControllerBase
         public string DisplayName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string? DeviceId { get; set; }
+        public string? DeviceName { get; set; }
     }
 
     public sealed class LoginRequest
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string? DeviceId { get; set; }
+        public string? DeviceName { get; set; }
+    }
+
+    public sealed class RefreshTokenRequest
+    {
+        public string? RefreshToken { get; set; }
+        public string? DeviceId { get; set; }
+        public string? DeviceName { get; set; }
+    }
+
+    public sealed class LogoutRequest
+    {
+        public string? RefreshToken { get; set; }
+        public string? DeviceId { get; set; }
+        public bool LogoutAllDevices { get; set; }
     }
 
     public sealed class UpdateProfileRequest
@@ -145,12 +191,16 @@ public sealed class AuthController : ApiControllerBase
         public string? GoogleIdToken { get; set; }
         public string? AccessToken { get; set; }
         public string? GoogleAccessToken { get; set; }
+        public string? DeviceId { get; set; }
+        public string? DeviceName { get; set; }
     }
 
     public sealed class FacebookLoginRequest
     {
         public string? AccessToken { get; set; }
         public string? FacebookAccessToken { get; set; }
+        public string? DeviceId { get; set; }
+        public string? DeviceName { get; set; }
     }
 
     private static string? FirstNonEmpty(params string?[] values)

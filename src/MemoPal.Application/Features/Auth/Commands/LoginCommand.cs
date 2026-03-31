@@ -1,4 +1,3 @@
-using Mapster;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
@@ -11,7 +10,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Auth.Commands;
 
-public sealed record LoginCommand(string Email, string Password) : IRequest<ApiResponse<AuthResponseDto>>;
+public sealed record LoginCommand(
+    string Email,
+    string Password,
+    string? DeviceId = null,
+    string? DeviceName = null) : IRequest<ApiResponse<AuthResponseDto>>;
 
 public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, ApiResponse<AuthResponseDto>>
 {
@@ -85,8 +88,15 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, ApiRespo
         await _db.SaveChangesAsync(cancellationToken);
 
         var stats = await _db.UserStats.FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
-        var token = _tokenGenerator.GenerateToken(user.Id, user.Email, user.Role);
-        var result = new AuthResponseDto(token, (user, stats).Adapt<UserWithStatDto>());
+        var result = await AuthSessionManager.IssueAsync(
+            _db,
+            _tokenGenerator,
+            user,
+            stats,
+            request.DeviceId,
+            request.DeviceName,
+            "replaced_on_login",
+            cancellationToken);
         return ApiResponse<AuthResponseDto>.Ok(result);
     }
 }
