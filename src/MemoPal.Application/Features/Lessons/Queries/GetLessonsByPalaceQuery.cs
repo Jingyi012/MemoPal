@@ -8,7 +8,6 @@ using MemoPal.Domain.Common;
 using MemoPal.Application.Features.LessonProgress.DTOs;
 using MemoPal.Application.Features.Lessons.DTOs;
 using MemoPal.Application.Features.Reviews.DTOs;
-using MemoPal.Application.Features.Words.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Lessons.Queries;
@@ -100,24 +99,57 @@ public sealed class GetLessonsByPalaceQueryHandler : IRequestHandler<GetLessonsB
             return [];
         }
 
-        var lessonIds = lessons.Select(x => x.Id).ToList();
+        var lessonIds = lessons
+            .Where(x => x is not null && !string.IsNullOrWhiteSpace(x.Id))
+            .Select(x => x.Id)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        if (lessonIds.Count == 0)
+        {
+            return lessons
+                .Where(x => x is not null)
+                .Select(x => x.Adapt<LessonDto>() with { Progress = null, Words = null })
+                .ToList();
+        }
+
         var progresses = await _db.LessonProgresses
             .AsNoTracking()
-            .Where(x => x.UserId == userId && lessonIds.Contains(x.LessonId) && !x.IsDeleted)
+            .Where(x =>
+                x.UserId == userId &&
+                !string.IsNullOrWhiteSpace(x.LessonId) &&
+                lessonIds.Contains(x.LessonId) &&
+                !x.IsDeleted)
             .ToListAsync(cancellationToken);
 
-        var progressByLessonId = progresses.ToDictionary(x => x.LessonId, StringComparer.Ordinal);
-        var progressIds = progresses.Select(x => x.Id).ToList();
+        var progressByLessonId = progresses
+            .Where(x => !string.IsNullOrWhiteSpace(x.LessonId))
+            .GroupBy(x => x.LessonId, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group => group.OrderByDescending(item => item.UpdatedAt).First(),
+                StringComparer.Ordinal);
+
+        var progressIds = progressByLessonId.Values
+            .Where(x => !string.IsNullOrWhiteSpace(x.Id))
+            .Select(x => x.Id)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
 
         var schedules = progressIds.Count == 0
             ? []
             : await _db.ReviewSchedules
                 .AsNoTracking()
-                .Where(x => x.UserId == userId && progressIds.Contains(x.LessonProgressId) && !x.IsDeleted)
+                .Where(x =>
+                    x.UserId == userId &&
+                    !string.IsNullOrWhiteSpace(x.LessonProgressId) &&
+                    progressIds.Contains(x.LessonProgressId) &&
+                    !x.IsDeleted)
                 .OrderBy(x => x.ReviewRound)
                 .ToListAsync(cancellationToken);
 
         var reviewDtoByProgressId = schedules
+            .Where(x => !string.IsNullOrWhiteSpace(x.LessonProgressId))
             .GroupBy(x => x.LessonProgressId)
             .ToDictionary(
                 group => group.Key,
@@ -127,10 +159,12 @@ public sealed class GetLessonsByPalaceQueryHandler : IRequestHandler<GetLessonsB
                 StringComparer.Ordinal);
 
         return lessons
+            .Where(lesson => lesson is not null)
             .Select(lesson =>
             {
                 LessonProgressDto? progressDto = null;
-                if (progressByLessonId.TryGetValue(lesson.Id, out var progress))
+                if (!string.IsNullOrWhiteSpace(lesson.Id) &&
+                    progressByLessonId.TryGetValue(lesson.Id, out var progress))
                 {
                     var schedulesForProgress = reviewDtoByProgressId.TryGetValue(progress.Id, out var reviewDtos)
                         ? reviewDtos
@@ -138,7 +172,11 @@ public sealed class GetLessonsByPalaceQueryHandler : IRequestHandler<GetLessonsB
                     progressDto = (progress, schedulesForProgress).Adapt<LessonProgressDto>();
                 }
 
-                return (lesson, progressDto, (IReadOnlyList<WordDto>?)null).Adapt<LessonDto>();
+                return lesson.Adapt<LessonDto>() with
+                {
+                    Progress = progressDto,
+                    Words = null
+                };
             })
             .ToList();
     }
