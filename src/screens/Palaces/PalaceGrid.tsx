@@ -47,21 +47,19 @@ export const PalaceGrid: React.FC = () => {
       stickySectionHeadersEnabled={false}
       renderSectionHeader={({ section }) => (
         <View className="mb-3 mt-2 rounded-xl bg-slate-100 px-3 py-2">
-          <Text className="text-xs font-bold uppercase tracking-wide text-slate-600">{section.title}</Text>
+          <Text className="text-xs font-bold uppercase tracking-wide text-slate-600">
+            {section.title}
+          </Text>
         </View>
       )}
       renderItem={({ item }) => (
-        <PalaceCard
-          palace={item}
-          isCompleted={!item.isLocked && Boolean(item.unlockedAt)}
-          isDisabled={isPalaceDisabled(item)}
-          onPress={handlePalacePress}
-        />
+        <PalaceCard palace={item} isDisabled={isPalaceDisabled(item)} onPress={handlePalacePress} />
       )}
       ListHeaderComponent={
         <View className="mb-3 rounded-2xl bg-teal-50 p-4">
           <Text className="text-sm font-semibold text-teal-800">
-            Official palaces come first. Custom palace creation is available based on your feature limits.
+            Official palaces come first. Custom palace creation is available based on your feature
+            limits.
           </Text>
         </View>
       }
