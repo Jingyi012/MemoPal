@@ -2,7 +2,10 @@ import { UploadOutlined } from '@ant-design/icons';
 import { Button, Image, Space, Upload } from 'antd';
 import type { UploadProps } from 'antd';
 import { useState } from 'react';
-import { adminMediaApi, type AdminImageCategory } from '../../../api/adminMediaApi';
+import {
+  useAdminMediaApi,
+  type AdminImageCategory,
+} from '../hooks/useAdminMediaApi';
 import { compressImageForUpload } from '../utils/imageCompression';
 
 interface ImageUploadFieldProps {
@@ -12,6 +15,7 @@ interface ImageUploadFieldProps {
 }
 
 export function ImageUploadField({ value, onChange, category }: ImageUploadFieldProps) {
+  const { uploadImage, resolveMediaPath } = useAdminMediaApi();
   const [uploading, setUploading] = useState(false);
 
   const uploadProps: UploadProps = {
@@ -22,7 +26,7 @@ export function ImageUploadField({ value, onChange, category }: ImageUploadField
         setUploading(true);
         const originalFile = options.file as File;
         const optimizedFile = await compressImageForUpload(originalFile);
-        const uploadedPath = await adminMediaApi.uploadImage(optimizedFile, category);
+        const uploadedPath = await uploadImage(optimizedFile, category);
         onChange?.(uploadedPath);
         options.onSuccess?.({}, new XMLHttpRequest());
       } catch (error) {
@@ -33,7 +37,7 @@ export function ImageUploadField({ value, onChange, category }: ImageUploadField
     },
   };
 
-  const previewUrl = value ? adminMediaApi.resolveMediaUrl(value) : '';
+  const previewUrl = value ? resolveMediaPath(value) : '';
 
   return (
     <Space direction='vertical' size={8} style={{ width: '100%' }}>

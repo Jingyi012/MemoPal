@@ -10,9 +10,9 @@ import {
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { App, Button, Card, Popconfirm, Space, Table, Tag } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { adminConfigsApi } from '../../../api/adminConfigsApi';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
 import type { MissionTemplateDto } from '../../../types/config';
+import { useAdminConfigsApi } from '../hooks/useAdminConfigsApi';
 
 const metricOptions = [
   'reviews_completed',
@@ -28,13 +28,14 @@ type MissionFormValues = MissionTemplateDto;
 
 export default function MissionTemplatesPage() {
   const { message } = App.useApp();
+  const { listMissionTemplates, updateMissionTemplates } = useAdminConfigsApi();
   const [draft, setDraft] = useState<MissionTemplateDto[]>([]);
   const [editing, setEditing] = useState<MissionTemplateDto | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
   const query = useQuery({
     queryKey: ['admin-mission-templates'],
-    queryFn: () => adminConfigsApi.listMissionTemplates(),
+    queryFn: listMissionTemplates,
   });
 
   useEffect(() => {
@@ -44,12 +45,11 @@ export default function MissionTemplatesPage() {
   }, [query.data]);
 
   const saveMutation = useMutation({
-    mutationFn: (payload: MissionTemplateDto[]) => adminConfigsApi.updateMissionTemplates(payload),
+    mutationFn: (payload: MissionTemplateDto[]) => updateMissionTemplates(payload),
     onSuccess: (data) => {
       setDraft(data);
       message.success('Mission templates saved.');
     },
-    onError: () => message.error('Failed to save mission templates.'),
   });
 
   const hasChanges = useMemo(() => JSON.stringify(query.data ?? []) !== JSON.stringify(draft), [query.data, draft]);

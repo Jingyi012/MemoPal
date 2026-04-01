@@ -1,5 +1,5 @@
 import { Flex, Image, Typography } from 'antd';
-import { adminMediaApi } from '../../../api/adminMediaApi';
+import { useAdminMediaApi } from '../hooks/useAdminMediaApi';
 
 interface MediaThumbnailProps {
   path?: string | null;
@@ -9,6 +9,8 @@ interface MediaThumbnailProps {
 }
 
 export function MediaThumbnail({ path, alt, width = 88, height = 56 }: MediaThumbnailProps) {
+  const { resolveMediaPath } = useAdminMediaApi();
+
   if (!path) {
     return (
       <Flex
@@ -31,7 +33,7 @@ export function MediaThumbnail({ path, alt, width = 88, height = 56 }: MediaThum
 
   return (
     <Image
-      src={adminMediaApi.resolveMediaUrl(path)}
+      src={resolveMediaPath(path)}
       alt={alt}
       width={width}
       height={height}

@@ -1,11 +1,14 @@
 import { useMutation } from '@tanstack/react-query';
-import { message } from 'antd';
-import { adminUsersApi } from '../../../api/adminUsersApi';
+import { App } from 'antd';
+import { useAdminUsersApi } from './useAdminUsersApi';
 import type { ManagedUserUpsertRequest } from '../../../types/user';
 
 export function useUserMutations(onDone: () => void) {
+  const { message } = App.useApp();
+  const { createUser, updateUser, deleteUser } = useAdminUsersApi();
+
   const createMutation = useMutation({
-    mutationFn: (payload: ManagedUserUpsertRequest) => adminUsersApi.create(payload),
+    mutationFn: (payload: ManagedUserUpsertRequest) => createUser(payload),
     onSuccess: () => {
       message.success('User created');
       onDone();
@@ -14,7 +17,7 @@ export function useUserMutations(onDone: () => void) {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: ManagedUserUpsertRequest }) =>
-      adminUsersApi.update(id, payload),
+      updateUser(id, payload),
     onSuccess: () => {
       message.success('User updated');
       onDone();
@@ -22,7 +25,7 @@ export function useUserMutations(onDone: () => void) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => adminUsersApi.remove(id),
+    mutationFn: deleteUser,
     onSuccess: () => {
       message.success('User deleted');
       onDone();

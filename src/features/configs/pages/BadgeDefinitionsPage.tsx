@@ -4,12 +4,12 @@ import {
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
-import { adminConfigsApi } from "../../../api/adminConfigsApi";
 import { PortalPageContainer } from "../../../components/PortalPageContainer";
 import type { BadgeDefinitionDto } from "../../../types/config";
 import { ImageUploadField } from "../../content/components/ImageUploadField";
 import { MediaThumbnail } from "../../content/components/MediaThumbnail";
 import { DefinitionCrudTab } from "../components/DefinitionCrudTab";
+import { useAdminConfigsApi } from "../hooks/useAdminConfigsApi";
 
 const badgeConditionOptions = [
   { label: "Manual Only", value: "manual" },
@@ -23,14 +23,21 @@ const badgeConditionOptions = [
 ];
 
 export default function BadgeDefinitionsPage() {
+  const {
+    listBadgeDefinitions,
+    createBadgeDefinition,
+    updateBadgeDefinition,
+    deleteBadgeDefinition,
+  } = useAdminConfigsApi();
+
   return (
     <PortalPageContainer>
       <DefinitionCrudTab<BadgeDefinitionDto>
         title="Badge Definition"
-        list={adminConfigsApi.listBadgeDefinitions}
-        create={adminConfigsApi.createBadgeDefinition}
-        update={adminConfigsApi.updateBadgeDefinition}
-        remove={adminConfigsApi.deleteBadgeDefinition}
+        list={listBadgeDefinitions}
+        create={createBadgeDefinition}
+        update={updateBadgeDefinition}
+        remove={deleteBadgeDefinition}
         columns={[
           {
             title: "Icon",

@@ -1,5 +1,5 @@
-import { apiClient } from '../lib/apiClient';
-import type { ApiResponse, PaginatedResponse } from '../types/api';
+import { apiClient } from "../lib/apiClient";
+import type { ApiResponse, PaginatedResponse } from "../types/api";
 import type {
   LessonDto,
   LessonUpsertRequest,
@@ -10,19 +10,26 @@ import type {
   PalaceUpsertRequest,
   WordDto,
   WordUpsertRequest,
-} from '../types/content';
+} from "../types/content";
 
-interface ContentQueryScope {
+export interface ContentQueryScope {
   adminCreatedOnly?: boolean;
 }
 
 const buildScopeParams = (scope?: ContentQueryScope) =>
   scope?.adminCreatedOnly ? { adminCreatedOnly: true } : undefined;
 
-async function listPalacesPage(pageNumber: number, pageSize: number, scope?: ContentQueryScope) {
-  const response = await apiClient.get<PaginatedResponse<PalaceDto>>('/palaces', {
-    params: { pageNumber, pageSize, ...buildScopeParams(scope) },
-  });
+async function listPalacesPage(
+  pageNumber: number,
+  pageSize: number,
+  scope?: ContentQueryScope,
+) {
+  const response = await apiClient.get<PaginatedResponse<PalaceDto>>(
+    "/palaces",
+    {
+      params: { pageNumber, pageSize, ...buildScopeParams(scope) },
+    },
+  );
   return response.data;
 }
 
@@ -48,135 +55,165 @@ export const adminContentApi = {
     return all;
   },
 
-  createPalace(payload: PalaceUpsertRequest) {
-    return apiClient
-      .post<ApiResponse<PalaceDto>>('/palaces', payload)
-      .then((response) => response.data.data);
+  async createPalace(payload: PalaceUpsertRequest) {
+    const response = await apiClient.post<ApiResponse<PalaceDto>>(
+      "/palaces",
+      payload,
+    );
+    return response.data.data;
   },
 
-  updatePalace(id: string, payload: PalaceUpsertRequest) {
-    return apiClient
-      .put<ApiResponse<PalaceDto>>(`/palaces/${id}`, payload)
-      .then((response) => response.data.data);
+  async updatePalace(id: string, payload: PalaceUpsertRequest) {
+    const response = await apiClient.put<ApiResponse<PalaceDto>>(
+      `/palaces/${id}`,
+      payload,
+    );
+    return response.data.data;
   },
 
-  deletePalace(id: string) {
-    return apiClient
-      .delete<ApiResponse<boolean>>(`/palaces/${id}`)
-      .then((response) => response.data.data);
+  async deletePalace(id: string) {
+    const response = await apiClient.delete<ApiResponse<boolean>>(
+      `/palaces/${id}`,
+    );
+    return response.data.data;
   },
 
-  listLocationsByPalace(palaceId: string, scope?: ContentQueryScope) {
-    return apiClient
-      .get<ApiResponse<LocationDto[]>>(`/palaces/${palaceId}/locations`, {
+  async listLocationsByPalace(palaceId: string, scope?: ContentQueryScope) {
+    const response = await apiClient.get<ApiResponse<LocationDto[]>>(
+      `/palaces/${palaceId}/locations`,
+      {
         params: buildScopeParams(scope),
-      })
-      .then((response) => response.data.data);
+      },
+    );
+    return response.data.data;
   },
 
-  getPalaceById(palaceId: string, scope?: ContentQueryScope) {
-    return apiClient
-      .get<ApiResponse<PalaceDto>>(`/palaces/${palaceId}`, {
+  async getPalaceById(palaceId: string, scope?: ContentQueryScope) {
+    const response = await apiClient.get<ApiResponse<PalaceDto>>(
+      `/palaces/${palaceId}`,
+      {
         params: buildScopeParams(scope),
-      })
-      .then((response) => response.data.data);
+      },
+    );
+    return response.data.data;
   },
 
-  createLocation(payload: LocationUpsertRequest) {
-    return apiClient
-      .post<ApiResponse<LocationDto>>('/locations', payload)
-      .then((response) => response.data.data);
+  async createLocation(payload: LocationUpsertRequest) {
+    const response = await apiClient.post<ApiResponse<LocationDto>>(
+      "/locations",
+      payload,
+    );
+    return response.data.data;
   },
 
-  updateLocation(id: string, payload: LocationUpsertRequest) {
-    return apiClient
-      .put<ApiResponse<LocationDto>>(`/locations/${id}`, payload)
-      .then((response) => response.data.data);
+  async updateLocation(id: string, payload: LocationUpsertRequest) {
+    const response = await apiClient.put<ApiResponse<LocationDto>>(
+      `/locations/${id}`,
+      payload,
+    );
+    return response.data.data;
   },
 
-  deleteLocation(id: string) {
-    return apiClient
-      .delete<ApiResponse<boolean>>(`/locations/${id}`)
-      .then((response) => response.data.data);
+  async deleteLocation(id: string) {
+    const response = await apiClient.delete<ApiResponse<boolean>>(
+      `/locations/${id}`,
+    );
+    return response.data.data;
   },
 
-  reorderLocations(palaceId: string, payload: LocationReorderRequest) {
-    return apiClient
-      .post<ApiResponse<LocationDto[]>>(`/palaces/${palaceId}/locations/reorder`, payload)
-      .then((response) => response.data.data);
+  async reorderLocations(palaceId: string, payload: LocationReorderRequest) {
+    const response = await apiClient.post<ApiResponse<LocationDto[]>>(
+      `/palaces/${palaceId}/locations/reorder`,
+      payload,
+    );
+    return response.data.data;
   },
 
-  listLessons(scope?: ContentQueryScope) {
-    return apiClient
-      .get<ApiResponse<LessonDto[]>>('/lessons', {
+  async listLessons(scope?: ContentQueryScope) {
+    const response = await apiClient.get<ApiResponse<LessonDto[]>>("/lessons", {
+      params: buildScopeParams(scope),
+    });
+    return response.data.data;
+  },
+
+  async listLessonsByPalace(palaceId: string, scope?: ContentQueryScope) {
+    const response = await apiClient.get<ApiResponse<LessonDto[]>>(
+      `/palaces/${palaceId}/lessons`,
+      {
         params: buildScopeParams(scope),
-      })
-      .then((response) => response.data.data);
+      },
+    );
+    return response.data.data;
   },
 
-  listLessonsByPalace(palaceId: string, scope?: ContentQueryScope) {
-    return apiClient
-      .get<ApiResponse<LessonDto[]>>(`/palaces/${palaceId}/lessons`, {
+  async getLessonById(lessonId: string, scope?: ContentQueryScope) {
+    const response = await apiClient.get<ApiResponse<LessonDto>>(
+      `/lessons/${lessonId}`,
+      {
         params: buildScopeParams(scope),
-      })
-      .then((response) => response.data.data);
+      },
+    );
+    return response.data.data;
   },
 
-  getLessonById(lessonId: string, scope?: ContentQueryScope) {
-    return apiClient
-      .get<ApiResponse<LessonDto>>(`/lessons/${lessonId}`, {
-        params: buildScopeParams(scope),
-      })
-      .then((response) => response.data.data);
+  async createLesson(payload: LessonUpsertRequest) {
+    const response = await apiClient.post<ApiResponse<LessonDto>>(
+      "/lessons",
+      payload,
+    );
+    return response.data.data;
   },
 
-  createLesson(payload: LessonUpsertRequest) {
-    return apiClient
-      .post<ApiResponse<LessonDto>>('/lessons', payload)
-      .then((response) => response.data.data);
+  async updateLesson(id: string, payload: LessonUpsertRequest) {
+    const response = await apiClient.put<ApiResponse<LessonDto>>(
+      `/lessons/${id}`,
+      payload,
+    );
+    return response.data.data;
   },
 
-  updateLesson(id: string, payload: LessonUpsertRequest) {
-    return apiClient
-      .put<ApiResponse<LessonDto>>(`/lessons/${id}`, payload)
-      .then((response) => response.data.data);
+  async deleteLesson(id: string) {
+    const response = await apiClient.delete<ApiResponse<boolean>>(
+      `/lessons/${id}`,
+    );
+    return response.data.data;
   },
 
-  deleteLesson(id: string) {
-    return apiClient
-      .delete<ApiResponse<boolean>>(`/lessons/${id}`)
-      .then((response) => response.data.data);
+  async listWordsByLesson(lessonId: string, scope?: ContentQueryScope) {
+    const response = await apiClient.get<ApiResponse<WordDto[]>>("/words", {
+      params: { lessonId, ...buildScopeParams(scope) },
+    });
+    return response.data.data;
   },
 
-  listWordsByLesson(lessonId: string, scope?: ContentQueryScope) {
-    return apiClient
-      .get<ApiResponse<WordDto[]>>('/words', {
-        params: { lessonId, ...buildScopeParams(scope) },
-      })
-      .then((response) => response.data.data);
+  async createWord(payload: WordUpsertRequest) {
+    const response = await apiClient.post<ApiResponse<WordDto>>(
+      "/words",
+      payload,
+    );
+    return response.data.data;
   },
 
-  createWord(payload: WordUpsertRequest) {
-    return apiClient
-      .post<ApiResponse<WordDto>>('/words', payload)
-      .then((response) => response.data.data);
+  async createWordsBatch(payload: WordUpsertRequest[]) {
+    const response = await apiClient.post<ApiResponse<WordDto[]>>(
+      "/words/batch",
+      payload,
+    );
+    return response.data.data;
   },
 
-  createWordsBatch(payload: WordUpsertRequest[]) {
-    return apiClient
-      .post<ApiResponse<WordDto[]>>('/words/batch', payload)
-      .then((response) => response.data.data);
+  async updateWord(id: string, payload: WordUpsertRequest) {
+    const response = await apiClient.patch<ApiResponse<WordDto>>(
+      `/words/${id}`,
+      payload,
+    );
+    return response.data.data;
   },
 
-  updateWord(id: string, payload: WordUpsertRequest) {
-    return apiClient
-      .patch<ApiResponse<WordDto>>(`/words/${id}`, payload)
-      .then((response) => response.data.data);
-  },
-
-  deleteWord(id: string) {
-    return apiClient
-      .delete<ApiResponse<boolean>>(`/words/${id}`)
-      .then((response) => response.data.data);
+  async deleteWord(id: string) {
+    const response = await apiClient.delete<ApiResponse<boolean>>(
+      `/words/${id}`,
+    );
+    return response.data.data;
   },
 };

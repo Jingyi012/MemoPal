@@ -7,10 +7,10 @@ import {
   ProFormText,
 } from "@ant-design/pro-components";
 import { useMutation } from "@tanstack/react-query";
-import { Button, Card, Col, Descriptions, message, Row } from "antd";
+import { App, Button, Card, Col, Descriptions, Row } from "antd";
 import { useState } from "react";
-import { adminContentApi } from "../../../../api/adminContentApi";
 import type { PalaceDto } from "../../../../types/content";
+import { useAdminContentApi } from "../../hooks/useAdminContentApi";
 import { ImageUploadField } from "../ImageUploadField";
 import { MediaThumbnail } from "../MediaThumbnail";
 import { buildPalacePayload, type PalaceFormValues } from "./forms";
@@ -28,6 +28,8 @@ export function PalaceOverviewCard({
   onChanged,
   editable = true,
 }: PalaceOverviewCardProps) {
+  const { message } = App.useApp();
+  const { updatePalace } = useAdminContentApi();
   const [editingPalace, setEditingPalace] = useState(false);
   const formLayout = {
     layout: "horizontal" as const,
@@ -37,7 +39,7 @@ export function PalaceOverviewCard({
 
   const palaceMutation = useMutation({
     mutationFn: (values: PalaceFormValues) =>
-      adminContentApi.updatePalace(
+      updatePalace(
         palaceId,
         buildPalacePayload(values, palace),
       ),
@@ -46,7 +48,6 @@ export function PalaceOverviewCard({
       setEditingPalace(false);
       await onChanged();
     },
-    onError: () => message.error("Failed to update palace."),
   });
 
   return (

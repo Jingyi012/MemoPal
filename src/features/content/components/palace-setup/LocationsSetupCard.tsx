@@ -8,10 +8,10 @@ import {
 } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useMutation } from '@tanstack/react-query';
-import { Button, Card, Popconfirm, Space, message } from 'antd';
+import { App, Button, Card, Popconfirm, Space } from 'antd';
 import { useMemo, useState } from 'react';
-import { adminContentApi } from '../../../../api/adminContentApi';
 import type { LocationDto, LocationUpsertRequest } from '../../../../types/content';
+import { useAdminContentApi } from '../../hooks/useAdminContentApi';
 import { ImageUploadField } from '../ImageUploadField';
 import { MediaThumbnail } from '../MediaThumbnail';
 import { buildLocationPayload, type LocationFormValues } from './forms';
@@ -25,6 +25,13 @@ interface LocationsSetupCardProps {
 }
 
 export function LocationsSetupCard({ palaceId, locations, loading, onChanged, editable = true }: LocationsSetupCardProps) {
+  const { message } = App.useApp();
+  const {
+    createLocation,
+    updateLocation,
+    deleteLocation,
+    reorderLocations,
+  } = useAdminContentApi();
   const [editingLocation, setEditingLocation] = useState<LocationDto | null>(null);
   const [createLocationOpen, setCreateLocationOpen] = useState(false);
   const [reorderDraft, setReorderDraft] = useState<LocationDto[] | null>(null);
@@ -36,36 +43,33 @@ export function LocationsSetupCard({ palaceId, locations, loading, onChanged, ed
     reorderDraft.some((location, index) => location.id !== locations[index]?.id || location.position !== index + 1);
 
   const createLocationMutation = useMutation({
-    mutationFn: (payload: LocationUpsertRequest) => adminContentApi.createLocation(payload),
+    mutationFn: (payload: LocationUpsertRequest) => createLocation(payload),
     onSuccess: async () => {
       message.success('Location created.');
       setCreateLocationOpen(false);
       setReorderDraft(null);
       await onChanged();
     },
-    onError: () => message.error('Failed to create location.'),
   });
 
   const updateLocationMutation = useMutation({
     mutationFn: (args: { id: string; payload: LocationUpsertRequest }) =>
-      adminContentApi.updateLocation(args.id, args.payload),
+      updateLocation(args.id, args.payload),
     onSuccess: async () => {
       message.success('Location updated.');
       setEditingLocation(null);
       setReorderDraft(null);
       await onChanged();
     },
-    onError: () => message.error('Failed to update location.'),
   });
 
   const deleteLocationMutation = useMutation({
-    mutationFn: (id: string) => adminContentApi.deleteLocation(id),
+    mutationFn: deleteLocation,
     onSuccess: async () => {
       message.success('Location deleted.');
       setReorderDraft(null);
       await onChanged();
     },
-    onError: () => message.error('Failed to delete location.'),
   });
 
   const saveOrderMutation = useMutation({
@@ -73,14 +77,13 @@ export function LocationsSetupCard({ palaceId, locations, loading, onChanged, ed
       if (!reorderDraft) return;
       const locationIds = reorderDraft.map((location) => location.id);
       if (locationIds.length === 0) return;
-      await adminContentApi.reorderLocations(palaceId, { locationIds });
+      await reorderLocations(palaceId, { locationIds });
     },
     onSuccess: async () => {
       message.success('Location order saved.');
       setReorderDraft(null);
       await onChanged();
     },
-    onError: () => message.error('Failed to save location order.'),
   });
 
   const columns: ProColumns<LocationDto>[] = useMemo(

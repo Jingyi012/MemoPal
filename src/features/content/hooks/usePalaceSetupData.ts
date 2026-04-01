@@ -29,6 +29,7 @@ export function usePalaceSetupData(palaceId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['admin-content', 'palace', palaceId, scopedSuffix] }),
       queryClient.invalidateQueries({ queryKey: ['admin-content', 'locations', palaceId, scopedSuffix] }),
       queryClient.invalidateQueries({ queryKey: ['admin-content', 'lessons', palaceId, scopedSuffix] }),
+      queryClient.invalidateQueries({ queryKey: ['admin-content', 'palaces'] }),
       queryClient.invalidateQueries({ queryKey: ['admin-content-palaces'] }),
     ]);
   };

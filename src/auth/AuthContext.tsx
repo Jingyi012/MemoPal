@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { authApi } from '../api/authApi';
 import { tokenStorageKey } from '../lib/apiClient';
 import type { AuthUser } from '../types/auth';
+import { useAuthApi } from './useAuthApi';
 
 function readRoleFromJwt(token: string): 'User' | 'Admin' | undefined {
   try {
@@ -24,6 +24,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { login: loginApi, me } = useAuthApi();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const profile = await authApi.me();
+        const profile = await me();
         setUser({ ...profile, role: profile.role ?? readRoleFromJwt(token) });
       } catch {
         localStorage.removeItem(tokenStorageKey);
@@ -46,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     void init();
-  }, []);
+  }, [me]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -54,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       isAdmin: user?.role === 'Admin',
       login: async (email, password) => {
-        const auth = await authApi.login(email, password);
+        const auth = await loginApi(email, password);
         localStorage.setItem(tokenStorageKey, auth.token);
         setUser({ ...auth.user, role: auth.user.role ?? readRoleFromJwt(auth.token) });
       },
@@ -63,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
       },
     }),
-    [user, loading],
+    [user, loading, loginApi],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

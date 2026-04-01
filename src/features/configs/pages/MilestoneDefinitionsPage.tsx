@@ -1,18 +1,25 @@
 import { ProFormDigit, ProFormSelect, ProFormText } from '@ant-design/pro-components';
-import { adminConfigsApi } from '../../../api/adminConfigsApi';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
 import type { MilestoneDefinitionDto } from '../../../types/config';
 import { DefinitionCrudTab } from '../components/DefinitionCrudTab';
+import { useAdminConfigsApi } from '../hooks/useAdminConfigsApi';
 
 export default function MilestoneDefinitionsPage() {
+  const {
+    listMilestoneDefinitions,
+    createMilestoneDefinition,
+    updateMilestoneDefinition,
+    deleteMilestoneDefinition,
+  } = useAdminConfigsApi();
+
   return (
     <PortalPageContainer>
       <DefinitionCrudTab<MilestoneDefinitionDto>
         title='Milestone Definition'
-        list={adminConfigsApi.listMilestoneDefinitions}
-        create={adminConfigsApi.createMilestoneDefinition}
-        update={adminConfigsApi.updateMilestoneDefinition}
-        remove={adminConfigsApi.deleteMilestoneDefinition}
+        list={listMilestoneDefinitions}
+        create={createMilestoneDefinition}
+        update={updateMilestoneDefinition}
+        remove={deleteMilestoneDefinition}
         columns={[
           { title: 'Key', dataIndex: 'key' },
           { title: 'Title', dataIndex: 'title' },

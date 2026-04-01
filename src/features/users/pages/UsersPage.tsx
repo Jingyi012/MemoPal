@@ -1,19 +1,22 @@
 import { PlusOutlined } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType } from "@ant-design/pro-components";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "antd";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminUsersApi } from "../../../api/adminUsersApi";
 import { PortalPageContainer } from "../../../components/PortalPageContainer";
 import { adminPaths } from "../../../navigation/adminPaths";
 import type { ManagedUserDto } from "../../../types/user";
 import { buildUserColumns } from "../components/userColumns";
 import { UserFormModal } from "../components/UserFormModal";
+import { useAdminUsersApi } from "../hooks/useAdminUsersApi";
 import { useUserMutations } from "../hooks/useUserMutations";
 
 export default function UsersPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { listUsers } = useAdminUsersApi();
   const actionRef = useRef<ActionType | null>(null);
   const [editing, setEditing] = useState<ManagedUserDto | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -36,11 +39,12 @@ export default function UsersPage() {
         search={{ labelWidth: "auto" }}
         request={async (params) => {
           const search = String(params.displayName || params.email || "");
-          const page = await adminUsersApi.list(
-            params.current || 1,
-            params.pageSize || 20,
-            search,
-          );
+          const pageNumber = params.current || 1;
+          const pageSize = params.pageSize || 20;
+          const page = await queryClient.fetchQuery({
+            queryKey: ["admin-users", "list", pageNumber, pageSize, search],
+            queryFn: () => listUsers(pageNumber, pageSize, search),
+          });
           return {
             data: page.data,
             success: page.success,

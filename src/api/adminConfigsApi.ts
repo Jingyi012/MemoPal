@@ -9,77 +9,80 @@ import type {
 } from "../types/config";
 
 export const adminConfigsApi = {
-  listBadgeDefinitions(pageNumber = 1, pageSize = 20, search = "") {
-    return apiClient
-      .get<PaginatedResponse<BadgeDefinitionDto>>("/admin/badge-definitions", {
+  async listBadgeDefinitions(pageNumber = 1, pageSize = 20, search = "") {
+    const r = await apiClient.get<PaginatedResponse<BadgeDefinitionDto>>(
+      "/admin/badge-definitions",
+      {
         params: { pageNumber, pageSize, search: search || undefined },
-      })
-      .then((r) => r.data);
+      },
+    );
+    return r.data;
   },
-  createBadgeDefinition(payload: BadgeDefinitionUpsertRequest) {
-    return apiClient
-      .post<
-        ApiResponse<BadgeDefinitionDto>
-      >("/admin/badge-definitions", payload)
-      .then((r) => r.data.data);
+  async createBadgeDefinition(payload: BadgeDefinitionUpsertRequest) {
+    const r = await apiClient.post<ApiResponse<BadgeDefinitionDto>>(
+      "/admin/badge-definitions",
+      payload,
+    );
+    return r.data.data;
   },
-  updateBadgeDefinition(id: string, payload: BadgeDefinitionUpsertRequest) {
-    return apiClient
-      .put<
-        ApiResponse<BadgeDefinitionDto>
-      >(`/admin/badge-definitions/${id}`, payload)
-      .then((r) => r.data.data);
+  async updateBadgeDefinition(
+    id: string,
+    payload: BadgeDefinitionUpsertRequest,
+  ) {
+    const r = await apiClient.put<ApiResponse<BadgeDefinitionDto>>(
+      `/admin/badge-definitions/${id}`,
+      payload,
+    );
+    return r.data.data;
   },
-  deleteBadgeDefinition(id: string) {
-    return apiClient
-      .delete(`/admin/badge-definitions/${id}`)
-      .then(() => undefined);
+  async deleteBadgeDefinition(id: string) {
+    await apiClient.delete(`/admin/badge-definitions/${id}`);
+    return undefined;
   },
 
-  listMilestoneDefinitions(pageNumber = 1, pageSize = 20, search = "") {
-    return apiClient
-      .get<PaginatedResponse<MilestoneDefinitionDto>>(
-        "/admin/milestone-definitions",
-        {
-          params: { pageNumber, pageSize, search: search || undefined },
-        },
-      )
-      .then((r) => r.data);
+  async listMilestoneDefinitions(pageNumber = 1, pageSize = 20, search = "") {
+    const r = await apiClient.get<PaginatedResponse<MilestoneDefinitionDto>>(
+      "/admin/milestone-definitions",
+      {
+        params: { pageNumber, pageSize, search: search || undefined },
+      },
+    );
+    return r.data;
   },
-  createMilestoneDefinition(payload: MilestoneDefinitionUpsertRequest) {
-    return apiClient
-      .post<
-        ApiResponse<MilestoneDefinitionDto>
-      >("/admin/milestone-definitions", payload)
-      .then((r) => r.data.data);
+  async createMilestoneDefinition(payload: MilestoneDefinitionUpsertRequest) {
+    const r = await apiClient.post<ApiResponse<MilestoneDefinitionDto>>(
+      "/admin/milestone-definitions",
+      payload,
+    );
+    return r.data.data;
   },
-  updateMilestoneDefinition(
+  async updateMilestoneDefinition(
     id: string,
     payload: MilestoneDefinitionUpsertRequest,
   ) {
-    return apiClient
-      .put<
-        ApiResponse<MilestoneDefinitionDto>
-      >(`/admin/milestone-definitions/${id}`, payload)
-      .then((r) => r.data.data);
+    const r = await apiClient.put<ApiResponse<MilestoneDefinitionDto>>(
+      `/admin/milestone-definitions/${id}`,
+      payload,
+    );
+    return r.data.data;
   },
-  deleteMilestoneDefinition(id: string) {
-    return apiClient
-      .delete(`/admin/milestone-definitions/${id}`)
-      .then(() => undefined);
-  },
-
-  listMissionTemplates() {
-    return apiClient
-      .get<ApiResponse<MissionTemplateDto[]>>("/admin/mission-templates")
-      .then((r) => r.data.data);
+  async deleteMilestoneDefinition(id: string) {
+    await apiClient.delete(`/admin/milestone-definitions/${id}`);
+    return undefined;
   },
 
-  updateMissionTemplates(templates: MissionTemplateDto[]) {
-    return apiClient
-      .put<
-        ApiResponse<MissionTemplateDto[]>
-      >("/admin/mission-templates", { templates })
-      .then((r) => r.data.data);
+  async listMissionTemplates() {
+    const r = await apiClient.get<ApiResponse<MissionTemplateDto[]>>(
+      "/admin/mission-templates",
+    );
+    return r.data.data;
+  },
+
+  async updateMissionTemplates(templates: MissionTemplateDto[]) {
+    const r = await apiClient.put<ApiResponse<MissionTemplateDto[]>>(
+      "/admin/mission-templates",
+      { templates },
+    );
+    return r.data.data;
   },
 };

@@ -14,28 +14,23 @@ import {
 } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { useMutation } from "@tanstack/react-query";
-import { Button, Popconfirm, Tag, message } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
+import { App, Button, Popconfirm, Tag } from "antd";
 import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { adminContentApi } from "../../../../api/adminContentApi";
-import type { PaginatedResponse } from "../../../../types/api";
-import type { PalaceDto, PalaceUpsertRequest } from "../../../../types/content";
+import type { PalaceDto } from "../../../../types/content";
+import {
+  useAdminContentApi,
+  type ContentQueryScope,
+  usePaginatedPalaces,
+} from "../../hooks/useAdminContentApi";
 import { ImageUploadField } from "../ImageUploadField";
 import { MediaThumbnail } from "../MediaThumbnail";
 import { buildPalacePayload, type PalaceFormValues } from "./forms";
 
 interface PalacesManagerWorkspaceProps {
   onConfigure: (palaceId: string) => void;
-  listPalaces?: (
-    pageNumber: number,
-    pageSize: number,
-  ) => Promise<PaginatedResponse<PalaceDto>>;
-  createPalace?: (payload: PalaceUpsertRequest) => Promise<PalaceDto>;
-  updatePalace?: (
-    id: string,
-    payload: PalaceUpsertRequest,
-  ) => Promise<PalaceDto>;
-  deletePalace?: (id: string) => Promise<boolean>;
+  scope?: ContentQueryScope;
   allowCreate?: boolean;
   allowEdit?: boolean;
   allowDelete?: boolean;
@@ -43,14 +38,26 @@ interface PalacesManagerWorkspaceProps {
 
 export function PalacesManagerWorkspace({
   onConfigure,
-  listPalaces = adminContentApi.listPalaces,
-  createPalace = adminContentApi.createPalace,
-  updatePalace = adminContentApi.updatePalace,
-  deletePalace = adminContentApi.deletePalace,
+  scope,
   allowCreate = true,
   allowEdit = true,
   allowDelete = true,
 }: PalacesManagerWorkspaceProps) {
+  const { message } = App.useApp();
+  const queryClient = useQueryClient();
+  const {
+    createPalace,
+    updatePalace,
+    deletePalace,
+  } = useAdminContentApi();
+  const {
+    pageNumber,
+    pageSize,
+    onTablePageChange,
+    palacesQuery,
+  } = usePaginatedPalaces({
+    scope,
+  });
   const actionRef = useRef<ActionType | null>(null);
   const [editing, setEditing] = useState<PalaceDto | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -60,36 +67,38 @@ export function PalacesManagerWorkspace({
     wrapperCol: { span: 17 },
   };
 
-  const refresh = () => actionRef.current?.reload();
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["admin-content", "palaces"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin-content-palaces"] }),
+    ]);
+  };
 
   const createMutation = useMutation({
-    mutationFn: (payload: PalaceUpsertRequest) => createPalace(payload),
-    onSuccess: () => {
+    mutationFn: createPalace,
+    onSuccess: async () => {
       message.success("Palace created.");
       setCreateOpen(false);
-      refresh();
+      await refresh();
     },
-    onError: () => message.error("Failed to create palace."),
   });
 
   const updateMutation = useMutation({
-    mutationFn: (args: { id: string; payload: PalaceUpsertRequest }) =>
+    mutationFn: (args: { id: string; payload: Parameters<typeof updatePalace>[1] }) =>
       updatePalace(args.id, args.payload),
-    onSuccess: () => {
+    onSuccess: async () => {
       message.success("Palace updated.");
       setEditing(null);
-      refresh();
+      await refresh();
     },
-    onError: () => message.error("Failed to update palace."),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deletePalace(id),
-    onSuccess: () => {
+    mutationFn: deletePalace,
+    onSuccess: async () => {
       message.success("Palace deleted.");
-      refresh();
+      await refresh();
     },
-    onError: () => message.error("Failed to delete palace."),
   });
 
   const columns: ProColumns<PalaceDto>[] = useMemo(
@@ -190,18 +199,22 @@ export function PalacesManagerWorkspace({
       <ProTable<PalaceDto>
         rowKey="id"
         actionRef={actionRef}
+        dataSource={palacesQuery.data?.data ?? []}
+        loading={
+          palacesQuery.isLoading ||
+          palacesQuery.isFetching ||
+          createMutation.isPending ||
+          updateMutation.isPending ||
+          deleteMutation.isPending
+        }
         columns={columns}
         search={false}
-        request={async (params) => {
-          const data = await listPalaces(
-            params.current || 1,
-            params.pageSize || 20,
-          );
-          return {
-            data: data.data,
-            success: data.success,
-            total: data.pagination.totalCount,
-          };
+        pagination={{
+          current: pageNumber,
+          pageSize,
+          total: palacesQuery.data?.pagination.totalCount ?? 0,
+          showSizeChanger: true,
+          onChange: onTablePageChange,
         }}
         scroll={{ x: 800 }}
         toolBarRender={

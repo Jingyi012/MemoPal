@@ -14,6 +14,7 @@ import {
   theme,
 } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import { extractApiErrorMessage } from "../lib/errorMessage";
 
 const Form = withTheme(AntdTheme);
 
@@ -233,7 +234,7 @@ export const ConfigEditorForm: React.FC<ConfigEditorFormProps> = ({
       message.success("Configuration updated successfully");
     } catch (error) {
       console.error("Submission error:", error);
-      message.error("Failed to save configuration");
+      message.error(extractApiErrorMessage(error, "Failed to save configuration"));
     } finally {
       setIsSubmitting(false);
     }

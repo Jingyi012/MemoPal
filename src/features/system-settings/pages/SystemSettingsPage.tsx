@@ -1,9 +1,9 @@
 import { ModalForm, ProFormText, ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { useMutation } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { App, Button, Tabs } from "antd";
 import { useRef, useState } from "react";
-import { adminSystemSettingsApi } from "../../../api/adminSystemSettingsApi";
 import { PortalPageContainer } from "../../../components/PortalPageContainer";
 import type {
   SystemSettingDto,
@@ -16,14 +16,17 @@ import AuthLoginMethodsConfigTab from "../../configs/components/AuthLoginMethods
 import HelpFaqConfigTab from "../../configs/components/HelpFaqConfigTab";
 import PrivacyPolicyConfigTab from "../../configs/components/PrivacyPolicyConfigTab";
 import PremiumSubscriptionConfigTab from "../../configs/components/PremiumSubscriptionConfigTab";
+import { useAdminSystemSettingsApi } from "../hooks/useAdminSystemSettingsApi";
 
 export default function SystemSettingsPage() {
   const { message } = App.useApp();
+  const queryClient = useQueryClient();
+  const { listSystemSettings, upsertSystemSetting } = useAdminSystemSettingsApi();
   const actionRef = useRef<ActionType | null>(null);
   const [open, setOpen] = useState(false);
 
   const upsertMutation = useMutation({
-    mutationFn: adminSystemSettingsApi.upsert,
+    mutationFn: upsertSystemSetting,
     onSuccess: () => {
       message.success("Setting saved");
       setOpen(false);
@@ -101,11 +104,19 @@ export default function SystemSettingsPage() {
                     </Button>,
                   ]}
                   request={async (params) => {
-                    const data = await adminSystemSettingsApi.list(
-                      params.current || 1,
-                      params.pageSize || 20,
-                      String(params.key || ""),
-                    );
+                    const pageNumber = params.current || 1;
+                    const pageSize = params.pageSize || 20;
+                    const key = String(params.key || "");
+                    const data = await queryClient.fetchQuery({
+                      queryKey: [
+                        "admin-system-settings",
+                        "list",
+                        pageNumber,
+                        pageSize,
+                        key,
+                      ],
+                      queryFn: () => listSystemSettings(pageNumber, pageSize, key),
+                    });
                     return {
                       data: data.data,
                       success: data.success,

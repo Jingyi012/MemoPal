@@ -13,12 +13,12 @@ import {
 } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useMutation } from '@tanstack/react-query';
-import { Button, Card, Popconfirm, message } from 'antd';
+import { App, Button, Card, Popconfirm } from 'antd';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminContentApi } from '../../../../api/adminContentApi';
 import { adminPaths } from '../../../../navigation/adminPaths';
 import type { LessonDto } from '../../../../types/content';
+import { useAdminContentApi } from '../../hooks/useAdminContentApi';
 import { buildLessonPayload, type LessonFormValues } from './forms';
 
 interface LessonsSetupCardProps {
@@ -38,6 +38,8 @@ export function LessonsSetupCard({
   canCreate = true,
   onConfigureWords,
 }: LessonsSetupCardProps) {
+  const { message } = App.useApp();
+  const { createLesson, updateLesson, deleteLesson } = useAdminContentApi();
   const navigate = useNavigate();
   const [editingLesson, setEditingLesson] = useState<LessonDto | null>(null);
   const [createLessonOpen, setCreateLessonOpen] = useState(false);
@@ -49,18 +51,17 @@ export function LessonsSetupCard({
 
   const createLessonMutation = useMutation({
     mutationFn: (values: LessonFormValues) =>
-      adminContentApi.createLesson(buildLessonPayload(palaceId, values)),
+      createLesson(buildLessonPayload(palaceId, values)),
     onSuccess: async () => {
       message.success('Lesson created.');
       setCreateLessonOpen(false);
       await onChanged();
     },
-    onError: () => message.error('Failed to create lesson.'),
   });
 
   const updateLessonMutation = useMutation({
     mutationFn: (args: { id: string; values: LessonFormValues }) =>
-      adminContentApi.updateLesson(
+      updateLesson(
         args.id,
         buildLessonPayload(palaceId, args.values, editingLesson ?? undefined),
       ),
@@ -69,16 +70,14 @@ export function LessonsSetupCard({
       setEditingLesson(null);
       await onChanged();
     },
-    onError: () => message.error('Failed to update lesson.'),
   });
 
   const deleteLessonMutation = useMutation({
-    mutationFn: (id: string) => adminContentApi.deleteLesson(id),
+    mutationFn: deleteLesson,
     onSuccess: async () => {
       message.success('Lesson deleted.');
       await onChanged();
     },
-    onError: () => message.error('Failed to delete lesson.'),
   });
 
   const columns: ProColumns<LessonDto>[] = useMemo(

@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import Editor from "@monaco-editor/react";
 import { App, Button, Card, Space, Spin, Alert } from "antd";
 import Ajv from "ajv";
+import { extractApiErrorMessage } from "../lib/errorMessage";
 
 interface AdvancedJsonEditorProps {
   value: Record<string, unknown>;
@@ -86,8 +87,10 @@ export const AdvancedJsonEditor: React.FC<AdvancedJsonEditorProps> = ({
       await onSubmit(parsedData);
       message.success("Configuration saved successfully");
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to save configuration";
+      const errorMessage = extractApiErrorMessage(
+        error,
+        "Failed to save configuration",
+      );
       message.error(errorMessage);
       console.error("Config submission error:", error);
     } finally {

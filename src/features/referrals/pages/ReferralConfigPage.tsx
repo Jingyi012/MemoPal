@@ -1,11 +1,11 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import { ModalForm, ProFormDigit, ProFormSwitch, ProFormText } from '@ant-design/pro-components';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Alert, Button, Card, Col, Form, InputNumber, Popconfirm, Row, Space, Switch, Table, Tag, Typography, message } from 'antd';
+import { Alert, App, Button, Card, Col, Form, InputNumber, Popconfirm, Row, Space, Switch, Table, Tag, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { adminReferralsApi } from '../../../api/adminReferralsApi';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
 import type { ReferralMilestoneConfigDto, ReferralProgramConfigDto } from '../../../types/referral';
+import { useAdminReferralsApi } from '../hooks/useAdminReferralsApi';
 
 type MilestoneFormValues = ReferralMilestoneConfigDto;
 
@@ -34,6 +34,8 @@ function serializeForDiff(config: ReferralProgramConfigDto | null, milestones: R
 }
 
 export default function ReferralConfigPage() {
+  const { message } = App.useApp();
+  const { getConfig, updateConfig } = useAdminReferralsApi();
   const [form] = Form.useForm<ReferralProgramConfigDto>();
   const watchedValues = Form.useWatch([], form);
   const [milestones, setMilestones] = useState<ReferralMilestoneConfigDto[]>([]);
@@ -43,7 +45,7 @@ export default function ReferralConfigPage() {
 
   const configQuery = useQuery({
     queryKey: ['admin-referral-config'],
-    queryFn: () => adminReferralsApi.getConfig(),
+    queryFn: getConfig,
   });
 
   useEffect(() => {
@@ -56,15 +58,12 @@ export default function ReferralConfigPage() {
   }, [configQuery.data, form]);
 
   const saveMutation = useMutation({
-    mutationFn: (payload: ReferralProgramConfigDto) => adminReferralsApi.updateConfig(payload),
+    mutationFn: (payload: ReferralProgramConfigDto) => updateConfig(payload),
     onSuccess: (next) => {
       form.setFieldsValue(next);
       setMilestones(next.milestones ?? []);
       setBaselineSerialized(serializeForDiff(next, next.milestones ?? []));
       message.success('Referral reward configuration updated.');
-    },
-    onError: () => {
-      message.error('Failed to update referral reward configuration.');
     },
   });
 

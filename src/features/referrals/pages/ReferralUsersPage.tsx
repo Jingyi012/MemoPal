@@ -1,10 +1,11 @@
 import { FilterOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button, Card, Space, Tag } from 'antd';
 import { useMemo, useState } from 'react';
-import { adminReferralsApi } from '../../../api/adminReferralsApi';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
 import type { AdminReferralRecordDto, AdminReferralUserDto } from '../../../types/referral';
+import { useAdminReferralsApi } from '../hooks/useAdminReferralsApi';
 
 function formatDateTime(value?: string | null) {
   if (!value) return '-';
@@ -13,6 +14,8 @@ function formatDateTime(value?: string | null) {
 }
 
 export default function ReferralUsersPage() {
+  const queryClient = useQueryClient();
+  const { listReferralUsers, listReferralRecords } = useAdminReferralsApi();
   const [selectedReferrer, setSelectedReferrer] = useState<AdminReferralUserDto | null>(null);
 
   const selectedTag = useMemo(() => {
@@ -31,11 +34,12 @@ export default function ReferralUsersPage() {
             pagination={{ pageSize: 20 }}
             request={async (params) => {
               const search = String(params.displayName || params.email || params.referralCode || '');
-              const page = await adminReferralsApi.listUsers(
-                params.current || 1,
-                params.pageSize || 20,
-                search
-              );
+              const pageNumber = params.current || 1;
+              const pageSize = params.pageSize || 20;
+              const page = await queryClient.fetchQuery({
+                queryKey: ['admin-referrals', 'users', pageNumber, pageSize, search],
+                queryFn: () => listReferralUsers(pageNumber, pageSize, search),
+              });
               return {
                 data: page.data,
                 success: page.success,
@@ -99,12 +103,13 @@ export default function ReferralUsersPage() {
               const search = String(
                 params.referralCode || params.referrerDisplayName || params.refereeDisplayName || ''
               );
-              const page = await adminReferralsApi.listRecords(
-                params.current || 1,
-                params.pageSize || 20,
-                search,
-                selectedReferrer?.userId
-              );
+              const pageNumber = params.current || 1;
+              const pageSize = params.pageSize || 20;
+              const referrerUserId = selectedReferrer?.userId;
+              const page = await queryClient.fetchQuery({
+                queryKey: ['admin-referrals', 'records', pageNumber, pageSize, search, referrerUserId ?? 'all'],
+                queryFn: () => listReferralRecords(pageNumber, pageSize, search, referrerUserId),
+              });
               return {
                 data: page.data,
                 success: page.success,

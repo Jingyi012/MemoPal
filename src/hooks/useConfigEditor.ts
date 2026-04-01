@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminSystemSettingsApi } from "../api/adminSystemSettingsApi";
+import { extractApiErrorMessage } from "../lib/errorMessage";
 
 interface UseConfigEditorOptions {
   configKey: string;
@@ -102,14 +103,6 @@ function normalizeConfigShape(
   return defaultValue;
 }
 
-function toErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message.trim().length > 0) {
-    return error.message;
-  }
-
-  return fallback;
-}
-
 /**
  * Config editor hook backed by TanStack Query.
  */
@@ -179,11 +172,14 @@ export function useConfigEditor({
 
   const error = useMemo(() => {
     if (saveMutation.error) {
-      return toErrorMessage(saveMutation.error, "Failed to save configuration");
+      return extractApiErrorMessage(
+        saveMutation.error,
+        "Failed to save configuration",
+      );
     }
 
     if (query.error) {
-      return toErrorMessage(query.error, "Failed to load configuration");
+      return extractApiErrorMessage(query.error, "Failed to load configuration");
     }
 
     return null;

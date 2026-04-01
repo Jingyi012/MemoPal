@@ -1,10 +1,10 @@
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useMutation } from '@tanstack/react-query';
-import { Alert, Button, Card, Popconfirm, Space, Tabs, Typography, message } from 'antd';
+import { Alert, App, Button, Card, Popconfirm, Space, Tabs, Typography } from 'antd';
 import { useMemo, useState } from 'react';
-import { adminContentApi } from '../../../../api/adminContentApi';
 import type { WordDto, WordUpsertRequest } from '../../../../types/content';
+import { useAdminContentApi } from '../../hooks/useAdminContentApi';
 import { MediaThumbnail } from '../MediaThumbnail';
 import { WordLocationBoard } from '../word-setup/WordLocationBoard';
 import { type PlannedWordItem } from '../word-setup/WordPlannerBoard';
@@ -37,6 +37,13 @@ interface LessonWordsWorkspaceProps {
 }
 
 export function LessonWordsWorkspace({ palaceId, lessonId, onBack }: LessonWordsWorkspaceProps) {
+  const { message } = App.useApp();
+  const {
+    createWord,
+    updateWord,
+    createWordsBatch,
+    deleteWord,
+  } = useAdminContentApi();
   const [activeTab, setActiveTab] = useState<LessonWordsTabKey>('words');
   const [createOpen, setCreateOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
@@ -79,53 +86,48 @@ export function LessonWordsWorkspace({ palaceId, lessonId, onBack }: LessonWords
   };
 
   const createWordMutation = useMutation({
-    mutationFn: (payload: WordUpsertRequest) => adminContentApi.createWord(payload),
+    mutationFn: (payload: WordUpsertRequest) => createWord(payload),
     onSuccess: async () => {
       message.success('Word created.');
       setCreateOpen(false);
       await refreshWords();
     },
-    onError: () => message.error('Failed to create word.'),
   });
 
   const updateWordMutation = useMutation({
     mutationFn: (args: { id: string; payload: WordUpsertRequest }) =>
-      adminContentApi.updateWord(args.id, args.payload),
+      updateWord(args.id, args.payload),
     onSuccess: async () => {
       message.success('Word updated.');
       setEditingWord(null);
       await refreshWords();
     },
-    onError: () => message.error('Failed to update word.'),
   });
 
   const moveWordMutation = useMutation({
     mutationFn: (args: { id: string; payload: WordUpsertRequest }) =>
-      adminContentApi.updateWord(args.id, args.payload),
+      updateWord(args.id, args.payload),
     onSuccess: async () => {
       await refreshWords();
     },
-    onError: () => message.error('Failed to move word to selected location.'),
   });
 
   const batchCreateMutation = useMutation({
-    mutationFn: (payload: WordUpsertRequest[]) => adminContentApi.createWordsBatch(payload),
+    mutationFn: (payload: WordUpsertRequest[]) => createWordsBatch(payload),
     onSuccess: async (createdWords) => {
       message.success(`${createdWords.length} words created.`);
       setPlannedWords([]);
       setBatchOpen(false);
       await refreshWords();
     },
-    onError: () => message.error('Failed to create words in batch.'),
   });
 
   const deleteWordMutation = useMutation({
-    mutationFn: (id: string) => adminContentApi.deleteWord(id),
+    mutationFn: deleteWord,
     onSuccess: async () => {
       message.success('Word deleted.');
       await refreshWords();
     },
-    onError: () => message.error('Failed to delete word.'),
   });
 
   const wordsColumns: ProColumns<WordDto>[] = [

@@ -1,6 +1,7 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { ModalForm, ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button, Popconfirm } from "antd";
 import { useRef, useState, type ReactNode } from "react";
 import { useConfigCrudMutations } from "../hooks/useConfigCrudMutations";
@@ -16,6 +17,7 @@ type Props<T extends { id: string }> = {
 };
 
 export function DefinitionCrudTab<T extends { id: string }>(props: Props<T>) {
+  const queryClient = useQueryClient();
   const actionRef = useRef<ActionType | null>(null);
   const [editing, setEditing] = useState<T | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -71,11 +73,20 @@ export function DefinitionCrudTab<T extends { id: string }>(props: Props<T>) {
         ]}
         pagination={{ showSizeChanger: true }}
         request={async (params) => {
-          const res = await props.list(
-            params.current || 1,
-            params.pageSize || 20,
-            String(params.key || params.name || params.title || ""),
-          );
+          const pageNumber = params.current || 1;
+          const pageSize = params.pageSize || 20;
+          const search = String(params.key || params.name || params.title || "");
+          const res = await queryClient.fetchQuery({
+            queryKey: [
+              "admin-configs",
+              "definition-crud",
+              props.title,
+              pageNumber,
+              pageSize,
+              search,
+            ],
+            queryFn: () => props.list(pageNumber, pageSize, search),
+          });
           return {
             data: res.data,
             success: res.success,

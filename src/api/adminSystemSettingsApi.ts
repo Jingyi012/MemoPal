@@ -1,21 +1,31 @@
-import { apiClient } from '../lib/apiClient';
-import type { ApiResponse, PaginatedResponse } from '../types/api';
-import type { SystemSettingDto, UpsertSystemSettingRequest } from '../types/systemSetting';
+import { apiClient } from "../lib/apiClient";
+import type { ApiResponse, PaginatedResponse } from "../types/api";
+import type {
+  SystemSettingDto,
+  UpsertSystemSettingRequest,
+} from "../types/systemSetting";
 
 export const adminSystemSettingsApi = {
-  list(pageNumber = 1, pageSize = 20, search = '') {
-    return apiClient
-      .get<PaginatedResponse<SystemSettingDto>>('/admin/system-settings', {
+  async list(pageNumber = 1, pageSize = 20, search = "") {
+    const r = await apiClient.get<PaginatedResponse<SystemSettingDto>>(
+      "/admin/system-settings",
+      {
         params: { pageNumber, pageSize, search: search || undefined },
-      })
-      .then((r) => r.data);
+      },
+    );
+    return r.data;
   },
-  getByKey(key: string) {
-    return apiClient
-      .get<ApiResponse<SystemSettingDto>>(`/admin/system-settings/${encodeURIComponent(key)}`)
-      .then((r) => r.data.data);
+  async getByKey(key: string) {
+    const r = await apiClient.get<ApiResponse<SystemSettingDto>>(
+      `/admin/system-settings/${encodeURIComponent(key)}`,
+    );
+    return r.data.data;
   },
-  upsert(payload: UpsertSystemSettingRequest) {
-    return apiClient.post<ApiResponse<SystemSettingDto>>('/admin/system-settings', payload).then((r) => r.data.data);
+  async upsert(payload: UpsertSystemSettingRequest) {
+    const r = await apiClient.post<ApiResponse<SystemSettingDto>>(
+      "/admin/system-settings",
+      payload,
+    );
+    return r.data.data;
   },
 };
