@@ -90,6 +90,21 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
 
         await _db.EnsureUserLevelMatchesXpAsync(user, cancellationToken);
         var stats = await _db.UserStats.FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
+        if (stats is null)
+        {
+            stats = new UserStats
+            {
+                UserId = user.Id,
+                LastActiveDate = now,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            await _db.UserStats.AddAsync(stats, cancellationToken);
+        }
+
+        // Build user payload before rotating token records so serialization cannot
+        // fail after the old token is revoked.
+        var responseUser = (user, stats).Adapt<UserWithStatDto>();
 
         var accessToken = _tokenGenerator.GenerateAccessToken(user.Id, user.Email, user.Role);
         var nextRefreshToken = _tokenGenerator.GenerateRefreshToken();
@@ -129,7 +144,7 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
             accessToken.ExpiresAtUtc,
             nextRefreshToken.Token,
             nextRefreshToken.ExpiresAtUtc,
-            (user, stats).Adapt<UserWithStatDto>());
+            responseUser);
 
         return ApiResponse<AuthResponseDto>.Ok(response);
     }
