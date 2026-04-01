@@ -38,23 +38,6 @@ export const adminContentApi = {
     return listPalacesPage(pageNumber, pageSize, scope);
   },
 
-  async listAllPalaces(scope?: ContentQueryScope) {
-    const pageSize = 100;
-    let pageNumber = 1;
-    let totalCount = Number.MAX_SAFE_INTEGER;
-    const all: PalaceDto[] = [];
-
-    while (all.length < totalCount) {
-      const page = await listPalacesPage(pageNumber, pageSize, scope);
-      all.push(...page.data);
-      totalCount = page.pagination.totalCount;
-      if (page.data.length === 0) break;
-      pageNumber += 1;
-    }
-
-    return all;
-  },
-
   async createPalace(payload: PalaceUpsertRequest) {
     const response = await apiClient.post<ApiResponse<PalaceDto>>(
       "/palaces",

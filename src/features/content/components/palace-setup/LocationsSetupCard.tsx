@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import {
   DragSortTable,
   ModalForm,
@@ -20,11 +20,21 @@ interface LocationsSetupCardProps {
   palaceId: string;
   locations: LocationDto[];
   loading?: boolean;
+  refreshing?: boolean;
+  onRefresh?: () => Promise<void> | void;
   onChanged: () => Promise<void> | void;
   editable?: boolean;
 }
 
-export function LocationsSetupCard({ palaceId, locations, loading, onChanged, editable = true }: LocationsSetupCardProps) {
+export function LocationsSetupCard({
+  palaceId,
+  locations,
+  loading,
+  refreshing,
+  onRefresh,
+  onChanged,
+  editable = true,
+}: LocationsSetupCardProps) {
   const { message } = App.useApp();
   const {
     createLocation,
@@ -38,6 +48,7 @@ export function LocationsSetupCard({ palaceId, locations, loading, onChanged, ed
   const formLayout = { layout: 'horizontal' as const, labelCol: { span: 7 }, wrapperCol: { span: 17 } };
 
   const displayedRows = reorderDraft ?? locations;
+  const tableLoading = Boolean(loading || refreshing);
   const hasOrderChanges =
     reorderDraft !== null &&
     reorderDraft.some((location, index) => location.id !== locations[index]?.id || location.position !== index + 1);
@@ -133,7 +144,7 @@ export function LocationsSetupCard({ palaceId, locations, loading, onChanged, ed
     <Card
       title='Locations'
       extra={
-        editable ? (
+        editable || onRefresh ? (
           <Space>
             {hasOrderChanges ? (
               <>
@@ -148,9 +159,16 @@ export function LocationsSetupCard({ palaceId, locations, loading, onChanged, ed
                 </Button>
               </>
             ) : null}
-            <Button type='primary' icon={<PlusOutlined />} onClick={() => setCreateLocationOpen(true)}>
-              New Location
-            </Button>
+            {editable ? (
+              <Button type='primary' icon={<PlusOutlined />} onClick={() => setCreateLocationOpen(true)}>
+                New Location
+              </Button>
+            ) : null}
+            {onRefresh ? (
+              <Button icon={<ReloadOutlined />} loading={refreshing} onClick={() => void onRefresh()}>
+                Refresh
+              </Button>
+            ) : null}
           </Space>
         ) : undefined
       }
@@ -161,7 +179,7 @@ export function LocationsSetupCard({ palaceId, locations, loading, onChanged, ed
           search={false}
           options={false}
           pagination={false}
-          loading={loading}
+          loading={tableLoading}
           dataSource={displayedRows}
           columns={columns}
           dragSortKey='sort'
@@ -179,7 +197,7 @@ export function LocationsSetupCard({ palaceId, locations, loading, onChanged, ed
           search={false}
           options={false}
           pagination={false}
-          loading={loading}
+          loading={tableLoading}
           dataSource={locations}
           columns={readOnlyColumns}
         />

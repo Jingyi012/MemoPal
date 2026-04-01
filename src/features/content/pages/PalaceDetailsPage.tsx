@@ -1,4 +1,5 @@
 import { Alert, Card } from 'antd';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
 import { adminPaths } from '../../../navigation/adminPaths';
@@ -8,7 +9,18 @@ import { usePalaceSetupData } from '../hooks/usePalaceSetupData';
 export default function PalaceDetailsPage() {
   const { palaceId } = useParams<{ palaceId: string }>();
   const navigate = useNavigate();
-  const { palaceQuery, locationsQuery, lessonsQuery, refreshAll } = usePalaceSetupData(palaceId);
+  const [activeTab, setActiveTab] = useState<'locations' | 'lessons'>('locations');
+  const {
+    palaceQuery,
+    locationsQuery,
+    lessonsQuery,
+    refreshLocations,
+    refreshLessons,
+    refreshAll,
+  } = usePalaceSetupData(palaceId, {
+    fetchLocations: activeTab === 'locations',
+    fetchLessons: activeTab === 'lessons',
+  });
 
   if (!palaceId) {
     return <Alert type='error' showIcon message='Missing palace id.' />;
@@ -31,6 +43,12 @@ export default function PalaceDetailsPage() {
         lessons={lessonsQuery.data ?? []}
         locationsLoading={locationsQuery.isLoading}
         lessonsLoading={lessonsQuery.isLoading}
+        locationsRefreshing={locationsQuery.isFetching}
+        lessonsRefreshing={lessonsQuery.isFetching}
+        onRefreshLocations={refreshLocations}
+        onRefreshLessons={refreshLessons}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         onChanged={refreshAll}
         onBack={() => navigate(adminPaths.palaces)}
         backLabel='Back to Palaces'

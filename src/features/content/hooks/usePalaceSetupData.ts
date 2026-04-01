@@ -1,10 +1,20 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminContentApi } from '../../../api/adminContentApi';
 
-export function usePalaceSetupData(palaceId: string | undefined) {
+interface UsePalaceSetupDataOptions {
+  fetchLocations?: boolean;
+  fetchLessons?: boolean;
+}
+
+export function usePalaceSetupData(
+  palaceId: string | undefined,
+  options?: UsePalaceSetupDataOptions,
+) {
   const queryClient = useQueryClient();
   const contentScope = { adminCreatedOnly: true } as const;
   const scopedSuffix = 'admin-created-only';
+  const fetchLocations = options?.fetchLocations ?? true;
+  const fetchLessons = options?.fetchLessons ?? true;
 
   const palaceQuery = useQuery({
     queryKey: ['admin-content', 'palace', palaceId, scopedSuffix],
@@ -15,14 +25,22 @@ export function usePalaceSetupData(palaceId: string | undefined) {
   const locationsQuery = useQuery({
     queryKey: ['admin-content', 'locations', palaceId, scopedSuffix],
     queryFn: () => adminContentApi.listLocationsByPalace(palaceId!, contentScope),
-    enabled: !!palaceId,
+    enabled: !!palaceId && fetchLocations,
   });
 
   const lessonsQuery = useQuery({
     queryKey: ['admin-content', 'lessons', palaceId, scopedSuffix],
     queryFn: () => adminContentApi.listLessonsByPalace(palaceId!, contentScope),
-    enabled: !!palaceId,
+    enabled: !!palaceId && fetchLessons,
   });
+
+  const refreshLocations = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['admin-content', 'locations', palaceId, scopedSuffix] });
+  };
+
+  const refreshLessons = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['admin-content', 'lessons', palaceId, scopedSuffix] });
+  };
 
   const refreshAll = async () => {
     await Promise.all([
@@ -38,6 +56,8 @@ export function usePalaceSetupData(palaceId: string | undefined) {
     palaceQuery,
     locationsQuery,
     lessonsQuery,
+    refreshLocations,
+    refreshLessons,
     refreshAll,
   };
 }

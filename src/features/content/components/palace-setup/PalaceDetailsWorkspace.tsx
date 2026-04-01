@@ -13,7 +13,13 @@ interface PalaceDetailsWorkspaceProps {
   lessons: LessonDto[];
   locationsLoading?: boolean;
   lessonsLoading?: boolean;
+  locationsRefreshing?: boolean;
+  lessonsRefreshing?: boolean;
   onChanged: () => Promise<void> | void;
+  onRefreshLocations?: () => Promise<void> | void;
+  onRefreshLessons?: () => Promise<void> | void;
+  activeTab?: 'locations' | 'lessons';
+  onTabChange?: (tab: 'locations' | 'lessons') => void;
   onBack?: () => void;
   backLabel?: string;
   showBackButton?: boolean;
@@ -33,7 +39,13 @@ export function PalaceDetailsWorkspace({
   lessons,
   locationsLoading,
   lessonsLoading,
+  locationsRefreshing,
+  lessonsRefreshing,
   onChanged,
+  onRefreshLocations,
+  onRefreshLessons,
+  activeTab,
+  onTabChange,
   onBack,
   backLabel = 'Back to Palaces',
   showBackButton = true,
@@ -65,7 +77,9 @@ export function PalaceDetailsWorkspace({
       <PalaceOverviewCard palaceId={palaceId} palace={palace} onChanged={onChanged} editable={editablePalace} />
 
       <Tabs
-        defaultActiveKey='locations'
+        activeKey={activeTab}
+        defaultActiveKey={activeTab ? undefined : 'locations'}
+        onChange={(tabKey) => onTabChange?.(tabKey as 'locations' | 'lessons')}
         items={[
           {
             key: 'locations',
@@ -75,6 +89,8 @@ export function PalaceDetailsWorkspace({
                 palaceId={palaceId}
                 locations={locations}
                 loading={locationsLoading}
+                refreshing={locationsRefreshing}
+                onRefresh={onRefreshLocations}
                 onChanged={onChanged}
                 editable={editableLocations}
               />
@@ -88,6 +104,8 @@ export function PalaceDetailsWorkspace({
                 palaceId={palaceId}
                 lessons={lessons}
                 loading={lessonsLoading}
+                refreshing={lessonsRefreshing}
+                onRefresh={onRefreshLessons}
                 onChanged={onChanged}
                 canCreate={canCreateLesson}
                 onConfigureWords={onConfigureLessonWords}

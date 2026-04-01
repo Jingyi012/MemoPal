@@ -2,6 +2,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   PlusOutlined,
+  ReloadOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
 import {
@@ -13,7 +14,7 @@ import {
 } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useMutation } from '@tanstack/react-query';
-import { App, Button, Card, Popconfirm } from 'antd';
+import { App, Button, Card, Popconfirm, Space } from 'antd';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminPaths } from '../../../../navigation/adminPaths';
@@ -25,15 +26,42 @@ interface LessonsSetupCardProps {
   palaceId: string;
   lessons: LessonDto[];
   loading?: boolean;
+  refreshing?: boolean;
+  onRefresh?: () => Promise<void> | void;
   onChanged: () => Promise<void> | void;
   canCreate?: boolean;
   onConfigureWords?: (lessonId: string) => void;
+}
+
+const LESSON_CATEGORY_OPTIONS: Array<{ label: string; value: string }> = [
+  { label: 'General', value: 'general' },
+  { label: 'Language Learning', value: 'language-learning' },
+  { label: 'Vocabulary', value: 'vocabulary' },
+  { label: 'Medical', value: 'medical' },
+  { label: 'Science', value: 'science' },
+  { label: 'History', value: 'history' },
+  { label: 'Business', value: 'business' },
+  { label: 'Test Prep', value: 'test-prep' },
+];
+
+const LESSON_CATEGORY_LABEL_BY_VALUE: Map<string, string> = new Map(
+  LESSON_CATEGORY_OPTIONS.map((item) => [item.value, item.label]),
+);
+
+function normalizeLessonCategory(category?: string | null): string {
+  if (!category) {
+    return 'general';
+  }
+
+  return LESSON_CATEGORY_LABEL_BY_VALUE.has(category) ? category : 'general';
 }
 
 export function LessonsSetupCard({
   palaceId,
   lessons,
   loading,
+  refreshing,
+  onRefresh,
   onChanged,
   canCreate = true,
   onConfigureWords,
@@ -48,6 +76,7 @@ export function LessonsSetupCard({
     labelCol: { span: 7 },
     wrapperCol: { span: 17 },
   };
+  const tableLoading = Boolean(loading || refreshing);
 
   const createLessonMutation = useMutation({
     mutationFn: (values: LessonFormValues) =>
@@ -83,7 +112,14 @@ export function LessonsSetupCard({
   const columns: ProColumns<LessonDto>[] = useMemo(
     () => [
       { title: 'Title', dataIndex: 'title' },
-      { title: 'Category', dataIndex: 'category' },
+      {
+        title: 'Category',
+        dataIndex: 'category',
+        render: (_, row) =>
+          LESSON_CATEGORY_LABEL_BY_VALUE.get(
+            normalizeLessonCategory(row.category),
+          ) ?? 'General',
+      },
       { title: 'Privacy', dataIndex: 'privacy', width: 100 },
       { title: 'Words', dataIndex: 'wordCount', width: 90 },
       {
@@ -134,14 +170,23 @@ export function LessonsSetupCard({
     <Card
       title='Lessons'
       extra={
-        canCreate ? (
-          <Button
-            type='primary'
-            icon={<PlusOutlined />}
-            onClick={() => setCreateLessonOpen(true)}
-          >
-            New Lesson
-          </Button>
+        canCreate || onRefresh ? (
+          <Space>
+            {canCreate ? (
+              <Button
+                type='primary'
+                icon={<PlusOutlined />}
+                onClick={() => setCreateLessonOpen(true)}
+              >
+                New Lesson
+              </Button>
+            ) : null}
+            {onRefresh ? (
+              <Button icon={<ReloadOutlined />} loading={refreshing} onClick={() => void onRefresh()}>
+                Refresh
+              </Button>
+            ) : null}
+          </Space>
         ) : undefined
       }
     >
@@ -150,7 +195,7 @@ export function LessonsSetupCard({
         search={false}
         options={false}
         pagination={false}
-        loading={loading}
+        loading={tableLoading}
         dataSource={lessons}
         columns={columns}
       />
@@ -162,6 +207,7 @@ export function LessonsSetupCard({
         {...formLayout}
         onOpenChange={setCreateLessonOpen}
         initialValues={{
+          category: 'general',
           privacy: 'private',
           isPremium: false,
           isCustom: false,
@@ -183,12 +229,12 @@ export function LessonsSetupCard({
           label='Description'
           fieldProps={{ placeholder: 'Enter lesson description (optional)' }}
         />
-        <ProFormText
+        <ProFormSelect
           name='category'
           label='Category'
-          fieldProps={{
-            placeholder: 'Enter category (e.g., anchors, actions)',
-          }}
+          options={LESSON_CATEGORY_OPTIONS}
+          placeholder='Select lesson category'
+          rules={[{ required: true }]}
         />
         <ProFormSelect
           name='privacy'
@@ -216,7 +262,7 @@ export function LessonsSetupCard({
             ? {
                 title: editingLesson.title,
                 description: editingLesson.description ?? '',
-                category: editingLesson.category ?? '',
+                category: normalizeLessonCategory(editingLesson.category),
                 privacy: editingLesson.privacy,
                 isPremium: editingLesson.isPremium ?? false,
                 isCustom: editingLesson.isCustom ?? false,
@@ -247,12 +293,12 @@ export function LessonsSetupCard({
           label='Description'
           fieldProps={{ placeholder: 'Enter lesson description (optional)' }}
         />
-        <ProFormText
+        <ProFormSelect
           name='category'
           label='Category'
-          fieldProps={{
-            placeholder: 'Enter category (e.g., anchors, actions)',
-          }}
+          options={LESSON_CATEGORY_OPTIONS}
+          placeholder='Select lesson category'
+          rules={[{ required: true }]}
         />
         <ProFormSelect
           name='privacy'
