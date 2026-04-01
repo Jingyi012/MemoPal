@@ -1,5 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { tokenStorageKey } from '../lib/apiClient';
+import {
+  authSessionExpiredEventName,
+  clearStoredAuthSession,
+  getStoredAccessToken,
+  getStoredRefreshToken,
+  setStoredAuthSession,
+} from '../lib/apiClient';
 import type { AuthUser } from '../types/auth';
 import { useAuthApi } from './useAuthApi';
 
@@ -24,13 +30,13 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { login: loginApi, me } = useAuthApi();
+  const { login: loginApi, me, logout: logoutApi } = useAuthApi();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const init = async () => {
-      const token = localStorage.getItem(tokenStorageKey);
+      const token = getStoredAccessToken();
       if (!token) {
         setLoading(false);
         return;
@@ -40,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const profile = await me();
         setUser({ ...profile, role: profile.role ?? readRoleFromJwt(token) });
       } catch {
-        localStorage.removeItem(tokenStorageKey);
+        clearStoredAuthSession();
       } finally {
         setLoading(false);
       }
@@ -49,6 +55,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void init();
   }, [me]);
 
+  useEffect(() => {
+    const handleAuthSessionExpired = () => {
+      clearStoredAuthSession();
+      setUser(null);
+      setLoading(false);
+    };
+
+    window.addEventListener(authSessionExpiredEventName, handleAuthSessionExpired);
+    return () => {
+      window.removeEventListener(authSessionExpiredEventName, handleAuthSessionExpired);
+    };
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -56,15 +75,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin: user?.role === 'Admin',
       login: async (email, password) => {
         const auth = await loginApi(email, password);
-        localStorage.setItem(tokenStorageKey, auth.token);
+        setStoredAuthSession({ token: auth.token, refreshToken: auth.refreshToken });
         setUser({ ...auth.user, role: auth.user.role ?? readRoleFromJwt(auth.token) });
       },
       logout: () => {
-        localStorage.removeItem(tokenStorageKey);
+        const refreshToken = getStoredRefreshToken();
+        if (refreshToken) {
+          void logoutApi(refreshToken).catch(() => undefined);
+        }
+
+        clearStoredAuthSession();
         setUser(null);
       },
     }),
-    [user, loading, loginApi],
+    [user, loading, loginApi, logoutApi],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

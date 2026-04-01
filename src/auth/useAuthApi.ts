@@ -8,9 +8,11 @@ export function useAuthApi() {
   );
 
   const me = useCallback(() => authApi.me(), []);
+  const logout = useCallback((refreshToken?: string) => authApi.logout({ refreshToken }), []);
 
   return {
     login,
     me,
+    logout,
   };
 }
