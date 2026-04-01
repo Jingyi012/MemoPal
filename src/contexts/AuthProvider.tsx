@@ -90,21 +90,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [normalizeUser, userRepo]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadUser = async () => {
       try {
         const token = await getAccessToken();
         if (!token) {
+          // Keep this branch side-effect free to avoid racing with an in-flight login
+          // that may persist tokens moments later.
+          if (!cancelled) {
+            setUser(null);
+          }
+          return;
+        }
+
+        const refreshToken = await getRefreshToken();
+        if (!refreshToken) {
           await Promise.allSettled([
             AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
             clearAuthTokens(),
             clearLocalCacheOnLogout({ preserveSystemSettings: true }),
           ]);
-          setUser(null);
+          if (!cancelled) {
+            setUser(null);
+          }
           return;
         }
 
         const cachedUser = await loadCachedSessionUser();
-        if (cachedUser) {
+        if (cachedUser && !cancelled) {
           setUser(cachedUser);
         }
 
@@ -114,7 +128,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(remoteUser)),
             userRepo.upsertFromRemote(remoteUser),
           ]);
-          setUser(remoteUser);
+          if (!cancelled) {
+            setUser(remoteUser);
+          }
           await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
         } catch (error) {
           const statusCode = (error as ApiClientError | undefined)?.statusCode;
@@ -127,33 +143,59 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               clearLocalCacheOnLogout({ preserveSystemSettings: true }),
             ]);
             await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
-            setUser(null);
+            if (!cancelled) {
+              setUser(null);
+            }
             return;
           }
 
           if (cachedUser) {
             // Offline mode: keep last known authenticated user.
-            setUser(cachedUser);
+            if (!cancelled) {
+              setUser(cachedUser);
+            }
             return;
           }
-
-          setUser(null);
+          if (!cancelled) {
+            setUser(null);
+          }
         }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     void loadUser();
+
+    return () => {
+      cancelled = true;
+    };
   }, [loadCachedSessionUser, queryClient, userRepo]);
 
   const setSession = async (sessionUser: User, token: string, refreshToken: string) => {
+    if (!token || !token.trim()) {
+      throw new Error('Missing access token from login response.');
+    }
+
+    if (!refreshToken || !refreshToken.trim()) {
+      throw new Error('Missing refresh token from login response.');
+    }
+
     await Promise.all([
       AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionUser)),
       setAccessToken(token),
       setRefreshToken(refreshToken),
-      userRepo.upsertFromRemote(sessionUser),
     ]);
+
+    // Keep remote profile cache best-effort; token persistence is critical path.
+    try {
+      await userRepo.upsertFromRemote(sessionUser);
+    } catch (error) {
+      console.warn('[MemoPal][Auth] Failed to cache user locally after login:', error);
+    }
+
     setUser(sessionUser);
     await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
   };

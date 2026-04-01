@@ -1,8 +1,14 @@
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/constants/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+function normalizeStoredToken(value: string | null): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 export async function getAccessToken() {
-  return AsyncStorage.getItem(AUTH_TOKEN_KEY);
+  return normalizeStoredToken(await AsyncStorage.getItem(AUTH_TOKEN_KEY));
 }
 
 export async function setAccessToken(token: string) {
@@ -14,7 +20,7 @@ export async function clearAccessToken() {
 }
 
 export async function getRefreshToken() {
-  return AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+  return normalizeStoredToken(await AsyncStorage.getItem(REFRESH_TOKEN_KEY));
 }
 
 export async function setRefreshToken(token: string) {

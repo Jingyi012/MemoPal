@@ -83,6 +83,18 @@ function getApiDataOrThrow<T>(payload: GeneralResponse<T>, fallbackMessage: stri
   return payload.data;
 }
 
+function assertAuthResponsePayload(payload: AuthResponse, fallbackMessage: string): AuthResponse {
+  if (!payload?.token || !payload.token.trim()) {
+    throw new Error(`${fallbackMessage} Missing access token.`);
+  }
+
+  if (!payload?.refreshToken || !payload.refreshToken.trim()) {
+    throw new Error(`${fallbackMessage} Missing refresh token.`);
+  }
+
+  return payload;
+}
+
 function getApiErrorMessage(error: unknown, fallback = 'Request failed.') {
   if (isAxiosError(error)) {
     const messageFromPayload = extractMessageFromPayload(error.response?.data);
@@ -113,7 +125,10 @@ export const authApi = {
         ...data,
         ...device,
       });
-      return getApiDataOrThrow<AuthResponse>(response.data, 'Registration failed.');
+      return assertAuthResponsePayload(
+        getApiDataOrThrow<AuthResponse>(response.data, 'Registration failed.'),
+        'Registration failed.'
+      );
     } catch (error) {
       throw createApiClientError(error, 'Registration failed.');
     }
@@ -126,7 +141,10 @@ export const authApi = {
         ...credentials,
         ...device,
       });
-      return getApiDataOrThrow<AuthResponse>(response.data, 'Login failed.');
+      return assertAuthResponsePayload(
+        getApiDataOrThrow<AuthResponse>(response.data, 'Login failed.'),
+        'Login failed.'
+      );
     } catch (error) {
       throw createApiClientError(error, 'Login failed.');
     }
@@ -139,7 +157,10 @@ export const authApi = {
         idToken,
         ...device,
       });
-      return getApiDataOrThrow<AuthResponse>(response.data, 'Google login failed.');
+      return assertAuthResponsePayload(
+        getApiDataOrThrow<AuthResponse>(response.data, 'Google login failed.'),
+        'Google login failed.'
+      );
     } catch (error) {
       throw createApiClientError(error, 'Google login failed.');
     }
@@ -152,7 +173,10 @@ export const authApi = {
         accessToken,
         ...device,
       });
-      return getApiDataOrThrow<AuthResponse>(response.data, 'Facebook login failed.');
+      return assertAuthResponsePayload(
+        getApiDataOrThrow<AuthResponse>(response.data, 'Facebook login failed.'),
+        'Facebook login failed.'
+      );
     } catch (error) {
       throw createApiClientError(error, 'Facebook login failed.');
     }
@@ -229,7 +253,10 @@ export const authApi = {
         }
       );
 
-      return getApiDataOrThrow<AuthResponse>(response.data, 'Session refresh failed.');
+      return assertAuthResponsePayload(
+        getApiDataOrThrow<AuthResponse>(response.data, 'Session refresh failed.'),
+        'Session refresh failed.'
+      );
     } catch (error) {
       throw createApiClientError(error, 'Session refresh failed.');
     }

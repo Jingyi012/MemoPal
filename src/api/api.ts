@@ -68,8 +68,23 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
 };
 
+type RefreshAttemptFailureKind =
+  | 'missing_refresh_token'
+  | 'invalid_refresh_payload'
+  | 'unauthorized'
+  | 'network'
+  | 'server'
+  | 'unknown';
+
+type RefreshOutcome = {
+  token: string | null;
+  shouldLogout: boolean;
+  failureKind?: RefreshAttemptFailureKind;
+  message?: string;
+};
+
 let isHandlingUnauthorized = false;
-let refreshRequestInFlight: Promise<string | null> | null = null;
+let refreshRequestInFlight: Promise<RefreshOutcome> | null = null;
 
 function includesAuthEndpoint(url?: string): boolean {
   if (!url) return false;
@@ -81,6 +96,60 @@ function shouldSkipRefresh(config?: RetryableRequestConfig): boolean {
   const headerValue = config.headers?.['X-MemoPal-Skip-Refresh'];
   const skipByHeader = String(headerValue ?? '').trim() === '1';
   return skipByHeader || includesAuthEndpoint(config.url);
+}
+
+function isValidRefreshPayload(
+  payload: GeneralResponse<AuthResponse> | null | undefined
+): boolean {
+  return !!(
+    payload?.success &&
+    payload.data?.token &&
+    payload.data?.refreshToken &&
+    payload.data?.user
+  );
+}
+
+async function persistRefreshedSession(payload: GeneralResponse<AuthResponse>): Promise<string> {
+  await Promise.all([
+    setAccessToken(payload.data.token),
+    setRefreshToken(payload.data.refreshToken),
+    AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(payload.data.user)),
+  ]);
+
+  return payload.data.token;
+}
+
+function extractApiErrorMessage(error: unknown): string | null {
+  if (!isAxiosError(error)) {
+    return null;
+  }
+
+  const body = error.response?.data;
+  if (!body) {
+    return null;
+  }
+
+  if (typeof body === 'string') {
+    const trimmed = body.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (typeof body !== 'object') {
+    return null;
+  }
+
+  const map = body as Record<string, unknown>;
+  const directMessage = map.message;
+  if (typeof directMessage === 'string' && directMessage.trim().length > 0) {
+    return directMessage.trim();
+  }
+
+  const directError = map.error;
+  if (typeof directError === 'string' && directError.trim().length > 0) {
+    return directError.trim();
+  }
+
+  return null;
 }
 
 async function clearSessionAndRedirectToLogin() {
@@ -102,7 +171,7 @@ async function clearSessionAndRedirectToLogin() {
   }
 }
 
-async function refreshAccessToken(): Promise<string | null> {
+async function refreshAccessToken(): Promise<RefreshOutcome> {
   if (refreshRequestInFlight) {
     return refreshRequestInFlight;
   }
@@ -110,7 +179,12 @@ async function refreshAccessToken(): Promise<string | null> {
   refreshRequestInFlight = (async () => {
     const currentRefreshToken = await getRefreshToken();
     if (!currentRefreshToken) {
-      return null;
+      return {
+        token: null,
+        shouldLogout: true,
+        failureKind: 'missing_refresh_token',
+        message: 'No refresh token in storage.',
+      };
     }
 
     const device = await getDeviceSessionContext();
@@ -140,52 +214,103 @@ async function refreshAccessToken(): Promise<string | null> {
       return response.data;
     };
 
-    try {
-      let refreshPayload = await requestRefresh(true);
-
-      // Backward compatibility: old sessions may be bound to "unknown-device".
-      // If strict device refresh fails server-side, retry once without device context.
-      if (
-        !refreshPayload?.success ||
-        !refreshPayload.data?.token ||
-        !refreshPayload.data?.refreshToken
-      ) {
-        return null;
-      }
-
-      await Promise.all([
-        setAccessToken(refreshPayload.data.token),
-        setRefreshToken(refreshPayload.data.refreshToken),
-        AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(refreshPayload.data.user)),
-      ]);
-
-      return refreshPayload.data.token;
-    } catch (error) {
-      const statusCode = isAxiosError(error) ? error.response?.status : undefined;
-      if (statusCode !== 401 && statusCode !== 403) {
-        return null;
-      }
-
+    const attemptRefresh = async (
+      includeDeviceContext: boolean
+    ): Promise<{
+      payload: GeneralResponse<AuthResponse> | null;
+      shouldRetryWithoutDevice: boolean;
+      failureKind?: RefreshAttemptFailureKind;
+      message?: string;
+    }> => {
       try {
-        const refreshPayload = await requestRefresh(false);
-        if (
-          !refreshPayload?.success ||
-          !refreshPayload.data?.token ||
-          !refreshPayload.data?.refreshToken
-        ) {
-          return null;
+        const payload = await requestRefresh(includeDeviceContext);
+        if (isValidRefreshPayload(payload)) {
+          return { payload, shouldRetryWithoutDevice: false };
         }
 
-        await Promise.all([
-          setAccessToken(refreshPayload.data.token),
-          setRefreshToken(refreshPayload.data.refreshToken),
-          AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(refreshPayload.data.user)),
-        ]);
+        const message =
+          typeof payload?.message === 'string' && payload.message.trim().length > 0
+            ? payload.message.trim()
+            : 'Invalid refresh response payload.';
+        const shouldRetryWithoutDevice =
+          includeDeviceContext && /device/i.test(message);
 
-        return refreshPayload.data.token;
-      } catch {
-        return null;
+        return {
+          payload: null,
+          shouldRetryWithoutDevice,
+          failureKind: 'invalid_refresh_payload',
+          message,
+        };
+      } catch (error) {
+        const statusCode = isAxiosError(error) ? error.response?.status : undefined;
+        const message = extractApiErrorMessage(error) ?? (error as Error)?.message ?? 'Refresh request failed.';
+
+        if (statusCode === 401 || statusCode === 403) {
+          return {
+            payload: null,
+            shouldRetryWithoutDevice: includeDeviceContext && /device/i.test(message),
+            failureKind: 'unauthorized',
+            message,
+          };
+        }
+
+        if (statusCode === undefined) {
+          return {
+            payload: null,
+            shouldRetryWithoutDevice: false,
+            failureKind: 'network',
+            message,
+          };
+        }
+
+        if (statusCode >= 500) {
+          return {
+            payload: null,
+            shouldRetryWithoutDevice: false,
+            failureKind: 'server',
+            message,
+          };
+        }
+
+        return {
+          payload: null,
+          shouldRetryWithoutDevice: false,
+          failureKind: 'unknown',
+          message,
+        };
       }
+    };
+
+    try {
+      const strictAttempt = await attemptRefresh(true);
+      if (strictAttempt.payload) {
+        const token = await persistRefreshedSession(strictAttempt.payload);
+        return { token, shouldLogout: false };
+      }
+
+      if (strictAttempt.shouldRetryWithoutDevice) {
+        // Backward compatibility for legacy sessions bound to unknown-device
+        // or mismatched device identifiers.
+        const fallbackAttempt = await attemptRefresh(false);
+        if (fallbackAttempt.payload) {
+          const token = await persistRefreshedSession(fallbackAttempt.payload);
+          return { token, shouldLogout: false };
+        }
+
+        return {
+          token: null,
+          shouldLogout: fallbackAttempt.failureKind === 'unauthorized',
+          failureKind: fallbackAttempt.failureKind,
+          message: fallbackAttempt.message,
+        };
+      }
+
+      return {
+        token: null,
+        shouldLogout: strictAttempt.failureKind === 'unauthorized' || strictAttempt.failureKind === 'missing_refresh_token',
+        failureKind: strictAttempt.failureKind,
+        message: strictAttempt.message,
+      };
     } finally {
       refreshRequestInFlight = null;
     }
@@ -216,17 +341,35 @@ api.interceptors.response.use(
       );
     } else if (error.response.status === 401) {
       const originalConfig = error.config as RetryableRequestConfig | undefined;
+      const hasRefreshToken = !!(await getRefreshToken());
       const canTryRefresh =
-        !!originalConfig && !originalConfig._retry && !shouldSkipRefresh(originalConfig);
+        !!originalConfig && !originalConfig._retry && !shouldSkipRefresh(originalConfig) && hasRefreshToken;
 
       if (canTryRefresh) {
         originalConfig._retry = true;
-        const nextAccessToken = await refreshAccessToken();
+        const refreshOutcome = await refreshAccessToken();
+        const nextAccessToken = refreshOutcome.token;
+
         if (nextAccessToken) {
           originalConfig.headers = originalConfig.headers ?? {};
           originalConfig.headers.Authorization = `Bearer ${nextAccessToken}`;
           return api.request(originalConfig);
         }
+
+        if (__DEV__) {
+          console.warn(
+            `[MemoPal][API] Refresh token flow failed. kind=${refreshOutcome.failureKind ?? 'unknown'} message=${refreshOutcome.message ?? 'n/a'}`
+          );
+        }
+
+        if (!refreshOutcome.shouldLogout) {
+          return Promise.reject(error);
+        }
+      }
+      else if (__DEV__ && !hasRefreshToken && !includesAuthEndpoint(originalConfig?.url)) {
+        console.warn(
+          '[MemoPal][API] No refresh token available for 401 recovery. Session will be cleared.'
+        );
       }
 
       if (!includesAuthEndpoint(originalConfig?.url)) {
