@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, LucideIcon } from 'lucide-react-native';
 import React, { ReactNode } from 'react';
 import { Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnimatedPressable from './AnimatedPressable';
 import HomeButton from './HomeButton';
 import { NotificationBell } from './NotificationBell';
@@ -38,6 +39,8 @@ export const CommonHeader: React.FC<HeaderProps> = ({
   showNotification = false,
   showHomeButton = false,
 }) => {
+  const insets = useSafeAreaInsets();
+
   return (
     <View
       style={{
@@ -53,6 +56,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
           borderBottomLeftRadius: 24,
           borderBottomRightRadius: 24,
           padding: 16,
+          paddingTop: insets.top + 16,
           paddingBottom: 24,
           overflow: 'hidden',
         }}>

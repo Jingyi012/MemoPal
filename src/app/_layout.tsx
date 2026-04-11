@@ -49,7 +49,8 @@ function AppLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <SafeAreaView
-          className={colorScheme === 'dark' ? 'dark flex-1' : 'flex-1'}
+          edges={['left', 'right', 'bottom']}
+          className={colorScheme === 'dark' ? 'dark flex-1 bg-slate-950' : 'flex-1 bg-slate-50'}
           //style={palettes[colorScheme ?? 'light']}
         >
           <Stack
