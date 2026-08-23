@@ -10,6 +10,7 @@ export const adminPaths = {
 
   contentRoot: '/admin/content',
   palaces: '/admin/content/palaces',
+  palaceScenes: '/admin/content/palace-scenes',
   palaceDetails: (palaceId: string) => `/admin/content/palaces/${palaceId}`,
   lessonWords: (palaceId: string, lessonId: string) =>
     `/admin/content/palaces/${palaceId}/lessons/${lessonId}`,

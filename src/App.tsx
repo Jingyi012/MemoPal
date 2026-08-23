@@ -20,6 +20,7 @@ import XpConfigsPage from './pages/XpConfigsPage';
 import ForbiddenPage from './pages/ForbiddenPage';
 import LoginPage from './pages/LoginPage';
 import { adminPaths, adminRouteParams } from './navigation/adminPaths';
+import PalaceScenesPage from './features/palace-scenes/pages/PalaceScenesPage';
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="content">
               <Route index element={<Navigate to="palaces" replace />} />
               <Route path="palaces" element={<PalacesPage />} />
+              <Route path="palace-scenes" element={<PalaceScenesPage />} />
               <Route path={`palaces/${adminRouteParams.palaceId}`} element={<PalaceDetailsPage />} />
               <Route
                 path={`palaces/${adminRouteParams.palaceId}/lessons/${adminRouteParams.lessonId}`}
