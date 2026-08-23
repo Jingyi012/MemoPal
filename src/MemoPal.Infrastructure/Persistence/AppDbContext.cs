@@ -2,7 +2,6 @@ using MemoPal.Application.Common.Interfaces;
 using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace MemoPal.Infrastructure.Persistence;
 
@@ -40,6 +39,11 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<ReferralProfile> ReferralProfiles => Set<ReferralProfile>();
     public DbSet<ReferralRecord> ReferralRecords => Set<ReferralRecord>();
     public DbSet<ReferralMilestoneReward> ReferralMilestoneRewards => Set<ReferralMilestoneReward>();
+    public DbSet<MemorySet> MemorySets => Set<MemorySet>();
+    public DbSet<MemoryItem> MemoryItems => Set<MemoryItem>();
+    public DbSet<TechniquePlan> TechniquePlans => Set<TechniquePlan>();
+    public DbSet<PegBinding> PegBindings => Set<PegBinding>();
+    public DbSet<PalaceBinding> PalaceBindings => Set<PalaceBinding>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -93,6 +97,7 @@ public class AppDbContext : DbContext, IAppDbContext
         modelBuilder.Entity<UserStats>(b =>
         {
             b.HasKey(x => x.UserId);
+            b.Ignore(x => x.Id);
         });
 
         modelBuilder.Entity<Palace>(b =>
@@ -288,6 +293,97 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.ReferrerUserId).HasMaxLength(64);
             b.Property(x => x.MilestoneKey).HasMaxLength(96);
         });
+
+        modelBuilder.Entity<MemorySet>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.Title).HasMaxLength(200);
+            b.Property(x => x.Description).HasMaxLength(1000);
+            b.Property(x => x.GoalType).HasMaxLength(32);
+            b.Property(x => x.TechniqueKey).HasMaxLength(32);
+            b.Property(x => x.Status).HasMaxLength(32);
+            b.Property(x => x.Visibility).HasMaxLength(32);
+            b.HasIndex(x => new { x.UserId, x.UpdatedAt });
+            b.HasIndex(x => new { x.UserId, x.Status, x.IsDeleted });
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.Items)
+                .WithOne(x => x.MemorySet)
+                .HasForeignKey(x => x.MemorySetId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.TechniquePlan)
+                .WithOne(x => x.MemorySet)
+                .HasForeignKey<TechniquePlan>(x => x.MemorySetId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MemoryItem>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Prompt).HasMaxLength(500);
+            b.Property(x => x.Answer).HasMaxLength(500);
+            b.Property(x => x.Hint).HasMaxLength(1000);
+            b.Property(x => x.PronunciationAudioUrl).HasMaxLength(2048);
+            b.Property(x => x.NormalizedAnswer).HasMaxLength(500);
+            b.HasIndex(x => new { x.MemorySetId, x.Position })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+        });
+
+        modelBuilder.Entity<TechniquePlan>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.TechniqueKey).HasMaxLength(32);
+            b.HasIndex(x => x.MemorySetId)
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+        });
+
+        modelBuilder.Entity<PegBinding>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.SceneText).HasMaxLength(1000);
+            b.Property(x => x.SceneAssetUrl).HasMaxLength(2048);
+            b.HasIndex(x => new { x.TechniquePlanId, x.PegNumber })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.TechniquePlanId, x.MemoryItemId })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+            b.HasOne(x => x.TechniquePlan)
+                .WithMany(x => x.PegBindings)
+                .HasForeignKey(x => x.TechniquePlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.MemoryItem)
+                .WithMany()
+                .HasForeignKey(x => x.MemoryItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PalaceBinding>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.LocusId).HasMaxLength(64);
+            b.Property(x => x.AssociationText).HasMaxLength(1000);
+            b.Property(x => x.SceneAssetUrl).HasMaxLength(2048);
+            b.HasIndex(x => new { x.TechniquePlanId, x.LocusId })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.TechniquePlanId, x.MemoryItemId })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+            b.HasOne(x => x.TechniquePlan)
+                .WithMany(x => x.PalaceBindings)
+                .HasForeignKey(x => x.TechniquePlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.MemoryItem)
+                .WithMany()
+                .HasForeignKey(x => x.MemoryItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -344,6 +440,16 @@ public class AppDbContext : DbContext, IAppDbContext
                     {
                         entry.Entity.UpdatedBy = currentUserId;
                     }
+
+                    var isDeleted = entry.Property(x => x.IsDeleted);
+                    if (isDeleted.IsModified && entry.Entity.IsDeleted)
+                    {
+                        entry.Entity.DeletedAt ??= now;
+                        if (!string.IsNullOrWhiteSpace(currentUserId))
+                        {
+                            entry.Entity.DeletedBy = currentUserId;
+                        }
+                    }
                     break;
 
                 case EntityState.Deleted:
@@ -354,33 +460,9 @@ public class AppDbContext : DbContext, IAppDbContext
                     if (!string.IsNullOrWhiteSpace(currentUserId))
                     {
                         entry.Entity.UpdatedBy = currentUserId;
+                        entry.Entity.DeletedBy = currentUserId;
                     }
                     break;
-            }
-        }
-
-        ApplyTimestampFallback(ChangeTracker.Entries<UserStats>(), now);
-    }
-
-    private static void ApplyTimestampFallback<T>(IEnumerable<EntityEntry<T>> entries, DateTime now) where T : class
-    {
-        foreach (var entry in entries.Where(e => e.State == EntityState.Added || e.State == EntityState.Modified))
-        {
-            var createdAtProperty = entry.Metadata.FindProperty("CreatedAt");
-            var updatedAtProperty = entry.Metadata.FindProperty("UpdatedAt");
-
-            if (entry.State == EntityState.Added && createdAtProperty is not null)
-            {
-                var value = entry.Property("CreatedAt").CurrentValue;
-                if (value is DateTime dt && dt == default)
-                {
-                    entry.Property("CreatedAt").CurrentValue = now;
-                }
-            }
-
-            if (updatedAtProperty is not null)
-            {
-                entry.Property("UpdatedAt").CurrentValue = now;
             }
         }
     }

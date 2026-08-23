@@ -48,6 +48,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
@@ -104,6 +107,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -165,6 +171,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<DateTime?>("FirstCompletedDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -222,6 +231,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
@@ -258,6 +270,142 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.ToTable("Locations");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.MemoryItem", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Hint")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MemorySetId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NormalizedAnswer")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Prompt")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("PronunciationAudioUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemorySetId", "Position")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE");
+
+                    b.ToTable("MemoryItems");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.MemorySet", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("GoalType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("TechniqueKey")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Visibility")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "UpdatedAt");
+
+                    b.HasIndex("UserId", "Status", "IsDeleted");
+
+                    b.ToTable("MemorySets");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.MilestoneDefinition", b =>
                 {
                     b.Property<string>("Id")
@@ -278,6 +426,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -323,6 +474,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -404,6 +558,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -461,6 +618,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
@@ -506,6 +666,136 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.ToTable("Palaces");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.PalaceBinding", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AssociationText")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsCustomScene")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LocusId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("MemoryItemId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SceneAssetUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("TechniquePlanId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemoryItemId");
+
+                    b.HasIndex("TechniquePlanId", "LocusId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE");
+
+                    b.HasIndex("TechniquePlanId", "MemoryItemId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE");
+
+                    b.ToTable("PalaceBindings");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PegBinding", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsCustomScene")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MemoryItemId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PegNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SceneAssetUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("SceneText")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("TechniquePlanId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemoryItemId");
+
+                    b.HasIndex("TechniquePlanId", "MemoryItemId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE");
+
+                    b.HasIndex("TechniquePlanId", "PegNumber")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE");
+
+                    b.ToTable("PegBindings");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.ReferralMilestoneReward", b =>
                 {
                     b.Property<string>("Id")
@@ -522,6 +812,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -575,6 +868,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -618,6 +914,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<int>("InviteeRewardPremiumDays")
                         .HasColumnType("integer");
@@ -683,6 +982,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<string>("DeviceId")
                         .IsRequired()
@@ -761,6 +1063,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -810,6 +1115,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
@@ -839,6 +1147,53 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.ToTable("SystemSettings");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.TechniquePlan", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MemorySetId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TechniqueKey")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemorySetId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE");
+
+                    b.ToTable("TechniquePlans");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.User", b =>
                 {
                     b.Property<string>("Id")
@@ -855,6 +1210,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
@@ -921,6 +1279,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -981,6 +1342,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<DateTime?>("EarnedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1023,6 +1387,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -1070,6 +1437,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -1132,6 +1502,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -1176,11 +1549,17 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
                     b.Property<int>("CurrentStreak")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -1196,6 +1575,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
 
                     b.Property<int>("WordsLearned")
                         .HasColumnType("integer");
@@ -1221,6 +1603,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
@@ -1286,6 +1671,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -1336,6 +1724,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -1403,6 +1794,64 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Navigation("Palace");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.MemoryItem", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.MemorySet", "MemorySet")
+                        .WithMany("Items")
+                        .HasForeignKey("MemorySetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MemorySet");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.MemorySet", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PalaceBinding", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.MemoryItem", "MemoryItem")
+                        .WithMany()
+                        .HasForeignKey("MemoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MemoPal.Domain.Entities.TechniquePlan", "TechniquePlan")
+                        .WithMany("PalaceBindings")
+                        .HasForeignKey("TechniquePlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MemoryItem");
+
+                    b.Navigation("TechniquePlan");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PegBinding", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.MemoryItem", "MemoryItem")
+                        .WithMany()
+                        .HasForeignKey("MemoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MemoPal.Domain.Entities.TechniquePlan", "TechniquePlan")
+                        .WithMany("PegBindings")
+                        .HasForeignKey("TechniquePlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MemoryItem");
+
+                    b.Navigation("TechniquePlan");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.RefreshTokenSession", b =>
                 {
                     b.HasOne("MemoPal.Domain.Entities.User", "User")
@@ -1423,6 +1872,17 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("LessonProgress");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.TechniquePlan", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.MemorySet", "MemorySet")
+                        .WithOne("TechniquePlan")
+                        .HasForeignKey("MemoPal.Domain.Entities.TechniquePlan", "MemorySetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MemorySet");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.UserAuthIdentity", b =>
@@ -1529,6 +1989,13 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Navigation("ReviewSchedules");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.MemorySet", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("TechniquePlan");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.MilestoneDefinition", b =>
                 {
                     b.Navigation("UserMilestones");
@@ -1537,6 +2004,13 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("MemoPal.Domain.Entities.Palace", b =>
                 {
                     b.Navigation("Locations");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.TechniquePlan", b =>
+                {
+                    b.Navigation("PalaceBindings");
+
+                    b.Navigation("PegBindings");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.User", b =>

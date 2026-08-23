@@ -1,7 +1,10 @@
 namespace MemoPal.Domain.Common;
 
-public abstract class UserOwnedSyncEntity : AuditableBaseEntity
+/// <summary>
+/// Legacy alias retained while the mobile SQLite synchronization layer is removed.
+/// New entities should inherit <see cref="UserOwnedEntity"/> directly.
+/// </summary>
+public abstract class UserOwnedSyncEntity : UserOwnedEntity
 {
-    public string UserId { get; set; } = string.Empty;
 }
 

@@ -39,7 +39,7 @@ public class FeatureLimitTests
     {
         await using var db = CreateDbContext();
         db.Users.Add(CreateUser("user-premium", isPremium: true));
-        SeedSetting(db, SystemSettingKeys.CustomPalacesPremium, 4);
+        SeedFeatureLimits(db, customPalacesPremium: 4);
         db.Palaces.AddRange(
             CreateCustomPalace("palace-1", "user-premium"),
             CreateCustomPalace("palace-2", "user-premium"));
@@ -88,7 +88,7 @@ public class FeatureLimitTests
     {
         await using var db = CreateDbContext();
         db.Users.Add(CreateUser("user-premium", isPremium: true));
-        SeedSetting(db, SystemSettingKeys.CustomLessonsPerPalacePremium, 4);
+        SeedFeatureLimits(db, customLessonsPerPalacePremium: 4);
         db.Palaces.Add(CreateOfficialPalace("palace-premium"));
         db.Lessons.AddRange(
             CreateCustomLesson("lesson-1", "palace-premium", "user-premium"),
@@ -232,13 +232,27 @@ public class FeatureLimitTests
         });
     }
 
-    private static void SeedSetting(AppDbContext db, string key, int value)
+    private static void SeedFeatureLimits(
+        AppDbContext db,
+        int customPalacesPremium = SystemSettingDefaults.CustomPalacesPremium,
+        int customLessonsPerPalacePremium = SystemSettingDefaults.CustomLessonsPerPalacePremium)
     {
         db.SystemSettings.Add(new SystemSetting
         {
             Id = Guid.NewGuid().ToString("N"),
-            Key = key,
-            Value = value.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            Key = SystemSettingKeys.FeatureLimits,
+            Value = $$"""
+                {
+                  "customPalaces": {
+                    "free": {{SystemSettingDefaults.CustomPalacesFree}},
+                    "premium": {{customPalacesPremium}}
+                  },
+                  "customLessonsPerPalace": {
+                    "free": {{SystemSettingDefaults.CustomLessonsPerPalaceFree}},
+                    "premium": {{customLessonsPerPalacePremium}}
+                  }
+                }
+                """
         });
     }
 }

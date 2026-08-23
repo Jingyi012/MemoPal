@@ -29,6 +29,11 @@ public interface IAppDbContext
     DbSet<ReferralProfile> ReferralProfiles { get; }
     DbSet<ReferralRecord> ReferralRecords { get; }
     DbSet<ReferralMilestoneReward> ReferralMilestoneRewards { get; }
+    DbSet<MemorySet> MemorySets { get; }
+    DbSet<MemoryItem> MemoryItems { get; }
+    DbSet<TechniquePlan> TechniquePlans { get; }
+    DbSet<PegBinding> PegBindings { get; }
+    DbSet<PalaceBinding> PalaceBindings { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
