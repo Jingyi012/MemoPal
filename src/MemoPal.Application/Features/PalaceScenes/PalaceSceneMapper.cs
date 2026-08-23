@@ -10,6 +10,7 @@ internal static class PalaceSceneMapper
         scene.Name,
         scene.Description,
         scene.ImageUrl,
+        scene.Status,
         scene.IsTemplate,
         scene.IsPremium,
         scene.Version,

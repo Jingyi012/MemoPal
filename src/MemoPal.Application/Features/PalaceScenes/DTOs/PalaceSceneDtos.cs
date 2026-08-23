@@ -18,6 +18,7 @@ public sealed record PalaceSceneDto(
     string Name,
     string Description,
     string ImageUrl,
+    string Status,
     bool IsTemplate,
     bool IsPremium,
     int Version,
