@@ -1,0 +1,271 @@
+import AnimatedPressable from '@/components/AnimatedPressable';
+import { CommonHeader } from '@/components/CommonHeader';
+import LoadingView from '@/components/LoadingView';
+import { useMemorySet } from '@/features/memory-sets';
+import type { MemoryItem, PegBinding } from '@/features/memory-sets';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { buildNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
+import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
+import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
+import { Check, Play, RefreshCcw, Sparkles, X } from 'lucide-react-native';
+import { useMemo, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+
+type SessionTab = 'scenes' | 'recall';
+type Feedback = 'correct' | 'wrong' | null;
+
+function normalizeAnswer(value: string) {
+  return value.trim().replace(/\s+/g, ' ').toLocaleUpperCase();
+}
+
+function findBinding(bindings: PegBinding[], memoryItem: MemoryItem) {
+  return bindings.find((binding) => binding.memoryItemId === memoryItem.id);
+}
+
+export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: string }) {
+  const router = useRouter();
+  const memorySetQuery = useMemorySet(memorySetId);
+  const pegs = useMemo(() => buildNumberPegItems(), []);
+  const [tab, setTab] = useState<SessionTab>('scenes');
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [answer, setAnswer] = useState('');
+  const [feedback, setFeedback] = useState<Feedback>(null);
+  const [score, setScore] = useState(0);
+
+  const restartRecall = () => {
+    setQuestionIndex(0);
+    setAnswer('');
+    setFeedback(null);
+    setScore(0);
+  };
+
+  const openTab = (nextTab: SessionTab) => {
+    setTab(nextTab);
+    if (nextTab === 'recall') restartRecall();
+  };
+
+  if (memorySetQuery.isLoading) return <LoadingView description="Building your memory scenes…" />;
+
+  if (memorySetQuery.isError || !memorySetQuery.data) {
+    return (
+      <View style={styles.page}>
+        <CommonHeader title="Number Peg" description="Memory unavailable" backAction={() => router.back()} />
+        <View style={styles.centerState}>
+          <Text style={styles.stateEmoji}>🧩</Text>
+          <Text style={styles.stateTitle}>This memory did not load</Text>
+          <Text style={styles.stateBody}>
+            {getNumberPegErrorMessage(memorySetQuery.error, 'Check your connection and try again.')}
+          </Text>
+          <AnimatedPressable onPress={() => memorySetQuery.refetch()} style={styles.retryButton}>
+            <RefreshCcw size={17} color={theme.ink} />
+            <Text style={styles.retryText}>Try again</Text>
+          </AnimatedPressable>
+        </View>
+      </View>
+    );
+  }
+
+  const memorySet = memorySetQuery.data;
+  const bindings = memorySet.techniquePlan?.pegBindings ?? [];
+  const isComplete = questionIndex >= memorySet.items.length;
+  const currentItem = isComplete ? null : memorySet.items[questionIndex];
+  const currentBinding = currentItem ? findBinding(bindings, currentItem) : null;
+  const currentPeg = currentBinding ? pegs[currentBinding.pegNumber - 1] : null;
+
+  const checkOrContinue = () => {
+    if (!currentItem) return;
+    if (feedback) {
+      setQuestionIndex((current) => current + 1);
+      setAnswer('');
+      setFeedback(null);
+      return;
+    }
+
+    if (!answer.trim()) return;
+    const isCorrect = normalizeAnswer(answer) === normalizeAnswer(currentItem.answer);
+    setFeedback(isCorrect ? 'correct' : 'wrong');
+    if (isCorrect) {
+      setScore((current) => current + 1);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    }
+  };
+
+  return (
+    <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <CommonHeader title={memorySet.title} description={`${memorySet.items.length} items · Number Peg`} backAction={() => router.back()} />
+      <View style={styles.tabs}>
+        <AnimatedPressable onPress={() => openTab('scenes')} style={[styles.tab, tab === 'scenes' && styles.activeTab]}>
+          <Sparkles size={16} color={tab === 'scenes' ? 'white' : theme.inkSoft} />
+          <Text style={[styles.tabText, tab === 'scenes' && styles.activeTabText]}>Scenes</Text>
+        </AnimatedPressable>
+        <AnimatedPressable onPress={() => openTab('recall')} style={[styles.tab, tab === 'recall' && styles.activeTab]}>
+          <Play size={16} color={tab === 'recall' ? 'white' : theme.inkSoft} />
+          <Text style={[styles.tabText, tab === 'recall' && styles.activeTabText]}>Recall</Text>
+        </AnimatedPressable>
+      </View>
+
+      {tab === 'scenes' ? (
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.coachCard}>
+            <Text style={styles.coachEmoji}>🎬</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.coachTitle}>Play each scene like a tiny movie</Text>
+              <Text style={styles.coachBody}>Pause for a second. Make it move. Then continue down the list.</Text>
+            </View>
+          </View>
+          {memorySet.items.map((item, index) => {
+            const binding = findBinding(bindings, item);
+            const peg = binding ? pegs[binding.pegNumber - 1] : pegs[index];
+            return (
+              <View key={item.id} style={styles.sceneCard}>
+                <View style={styles.sceneBadge}><Text style={styles.sceneBadgeText}>{binding?.pegNumber ?? index + 1}</Text></View>
+                <View style={styles.sceneVisual}>
+                  <Text style={styles.pegEmoji}>{peg?.image ?? '✨'}</Text>
+                  <Text style={styles.sceneArrow}>→</Text>
+                  <Text numberOfLines={2} style={styles.answerWord}>{item.answer}</Text>
+                </View>
+                <Text style={styles.pegName}>PEG {binding?.pegNumber ?? index + 1} · {peg?.keyword.toUpperCase()}</Text>
+                <Text style={styles.sceneText}>{binding?.sceneText ?? `Picture ${item.answer} interacting with this peg.`}</Text>
+              </View>
+            );
+          })}
+          <AnimatedPressable onPress={() => openTab('recall')} style={styles.primaryButton}>
+            <Play size={19} color={theme.ink} />
+            <Text style={styles.primaryButtonText}>I can see them — start recall</Text>
+          </AnimatedPressable>
+        </ScrollView>
+      ) : (
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.recallContent}>
+          {isComplete ? (
+            <View style={styles.completeCard}>
+              <Text style={styles.trophy}>🏆</Text>
+              <Text style={styles.completeTitle}>Round complete!</Text>
+              <Text style={styles.completeScore}>{score} / {memorySet.items.length}</Text>
+              <Text style={styles.completeBody}>
+                {score === memorySet.items.length
+                  ? 'Perfect recall. Your scenes are doing their job!'
+                  : 'Nice work. Replay the scenes you missed, then try once more.'}
+              </Text>
+              <AnimatedPressable onPress={restartRecall} style={styles.primaryButton}>
+                <RefreshCcw size={18} color={theme.ink} />
+                <Text style={styles.primaryButtonText}>Try another round</Text>
+              </AnimatedPressable>
+            </View>
+          ) : (
+            <>
+              <View style={styles.dots}>
+                {memorySet.items.map((item, index) => (
+                  <View
+                    key={item.id}
+                    style={[
+                      styles.dot,
+                      index < questionIndex && styles.doneDot,
+                      index === questionIndex && styles.currentDot,
+                    ]}
+                  />
+                ))}
+              </View>
+              <View style={styles.quizCard}>
+                <View style={styles.bigPeg}><Text style={styles.bigPegText}>{currentBinding?.pegNumber ?? questionIndex + 1}</Text></View>
+                <Text style={styles.quizEyebrow}>PEG {currentBinding?.pegNumber ?? questionIndex + 1} · {currentPeg?.keyword.toUpperCase()}</Text>
+                <Text style={styles.quizPrompt}>What was in your mini movie?</Text>
+                <Text style={styles.quizEmoji}>{currentPeg?.image ?? '✨'}</Text>
+                <TextInput
+                  value={answer}
+                  onChangeText={(value) => {
+                    if (!feedback) setAnswer(value);
+                  }}
+                  onSubmitEditing={checkOrContinue}
+                  editable={!feedback}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  placeholder="TYPE YOUR ANSWER"
+                  placeholderTextColor="#AAA7B5"
+                  style={[
+                    styles.answerInput,
+                    feedback === 'correct' && styles.correctInput,
+                    feedback === 'wrong' && styles.wrongInput,
+                  ]}
+                />
+                {feedback && (
+                  <View style={styles.feedback}>
+                    {feedback === 'correct' ? <Check size={18} color={theme.grass} /> : <X size={18} color={theme.berryDeep} />}
+                    <Text style={[styles.feedbackText, { color: feedback === 'correct' ? theme.grass : theme.berryDeep }]}>
+                      {feedback === 'correct' ? 'Nailed it!' : `It was ${currentItem?.answer}. Picture it once more.`}
+                    </Text>
+                  </View>
+                )}
+                <AnimatedPressable
+                  disabled={!answer.trim() && !feedback}
+                  onPress={checkOrContinue}
+                  style={[styles.quizButton, !answer.trim() && !feedback && styles.disabledButton]}>
+                  <Text style={styles.quizButtonText}>{feedback ? 'Next peg' : 'Check answer'}</Text>
+                </AnimatedPressable>
+              </View>
+              <Text style={styles.scoreText}>Score so far: {score} / {questionIndex}</Text>
+            </>
+          )}
+        </ScrollView>
+      )}
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  page: { flex: 1, backgroundColor: theme.canvas },
+  tabs: { flexDirection: 'row', gap: 7, padding: 10, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: theme.line },
+  tab: { flex: 1, minHeight: 42, borderRadius: 13, borderWidth: 2, borderColor: theme.line, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: 'white' },
+  activeTab: { backgroundColor: theme.ink, borderColor: theme.ink },
+  tabText: { color: theme.inkSoft, fontSize: 13, fontWeight: '900' },
+  activeTabText: { color: 'white' },
+  content: { padding: 16, paddingBottom: 42 },
+  coachCard: { flexDirection: 'row', gap: 12, borderRadius: 18, backgroundColor: '#FFF7E0', borderWidth: 1.5, borderColor: '#FFE6A3', padding: 14, marginBottom: 18 },
+  coachEmoji: { fontSize: 28 },
+  coachTitle: { color: theme.ink, fontSize: 14, fontWeight: '900' },
+  coachBody: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, marginTop: 3, fontWeight: '600' },
+  sceneCard: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 22, padding: 14, marginBottom: 18, marginTop: 4 },
+  sceneBadge: { position: 'absolute', top: -12, left: 14, zIndex: 2, minWidth: 32, height: 32, borderRadius: 16, paddingHorizontal: 5, backgroundColor: theme.berry, borderWidth: 3, borderColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
+  sceneBadgeText: { color: 'white', fontSize: 13, fontWeight: '900' },
+  sceneVisual: { minHeight: 104, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#EADFC4', backgroundColor: '#FFFCF4', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 12 },
+  pegEmoji: { fontSize: 40 },
+  sceneArrow: { color: theme.berryDeep, fontSize: 23, fontWeight: '900' },
+  answerWord: { maxWidth: 145, color: theme.ink, fontSize: 18, fontWeight: '900', textAlign: 'center' },
+  pegName: { color: theme.berryDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.8, marginTop: 11 },
+  sceneText: { color: theme.ink, fontSize: 13, lineHeight: 19, fontWeight: '700', marginTop: 5 },
+  primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3, marginTop: 4 },
+  primaryButtonText: { color: theme.ink, fontSize: 14, fontWeight: '900', textAlign: 'center' },
+  recallContent: { padding: 16, paddingBottom: 42, flexGrow: 1 },
+  dots: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: 7, marginVertical: 7, minHeight: 12 },
+  dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: theme.line },
+  doneDot: { backgroundColor: theme.grass },
+  currentDot: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.25 }] },
+  quizCard: { marginTop: 14, backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 24, padding: 22, alignItems: 'center' },
+  bigPeg: { width: 58, height: 58, borderRadius: 29, backgroundColor: theme.berry, alignItems: 'center', justifyContent: 'center', shadowColor: theme.berry, shadowOpacity: 0.35, shadowRadius: 8, elevation: 3 },
+  bigPegText: { color: 'white', fontSize: 21, fontWeight: '900' },
+  quizEyebrow: { color: theme.berryDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.9, marginTop: 13 },
+  quizPrompt: { color: theme.inkSoft, fontSize: 13, fontWeight: '800', marginTop: 5 },
+  quizEmoji: { fontSize: 50, marginVertical: 14 },
+  answerInput: { width: '100%', minHeight: 54, borderRadius: 14, borderWidth: 2.5, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 13, color: theme.ink, textAlign: 'center', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
+  correctInput: { borderColor: theme.grass, backgroundColor: '#F1FBF5' },
+  wrongInput: { borderColor: theme.berry, backgroundColor: '#FFF1F4' },
+  feedback: { marginTop: 12, flexDirection: 'row', gap: 7, alignItems: 'center' },
+  feedbackText: { flexShrink: 1, fontSize: 12, lineHeight: 18, fontWeight: '900', textAlign: 'center' },
+  quizButton: { width: '100%', minHeight: 48, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
+  quizButtonText: { color: 'white', fontSize: 14, fontWeight: '900' },
+  disabledButton: { opacity: 0.4 },
+  scoreText: { color: theme.inkSoft, fontSize: 12, fontWeight: '900', textAlign: 'center', marginTop: 15 },
+  completeCard: { flex: 1, minHeight: 390, borderRadius: 25, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 24, alignItems: 'center', justifyContent: 'center' },
+  trophy: { fontSize: 54 },
+  completeTitle: { color: theme.ink, fontSize: 22, fontWeight: '900', marginTop: 12 },
+  completeScore: { color: theme.grass, fontSize: 34, fontWeight: '900', marginTop: 8 },
+  completeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 8, marginBottom: 18 },
+  centerState: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
+  stateEmoji: { fontSize: 42 },
+  stateTitle: { color: theme.ink, fontSize: 18, fontWeight: '900', marginTop: 12 },
+  stateBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 7 },
+  retryButton: { marginTop: 16, minHeight: 45, borderRadius: 14, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 17, gap: 7 },
+  retryText: { color: theme.ink, fontSize: 13, fontWeight: '900' },
+});

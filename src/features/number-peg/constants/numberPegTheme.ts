@@ -1,0 +1,15 @@
+export const numberPegTheme = {
+  ink: '#2B2A3D',
+  inkSoft: '#6B6A80',
+  paper: '#FFFDF8',
+  canvas: '#F6F3EA',
+  line: '#EEE9DC',
+  sun: '#FFC93C',
+  sunDeep: '#F2A900',
+  berry: '#FF6F91',
+  berryDeep: '#E8527A',
+  grass: '#3FB87F',
+  sky: '#4FC0E8',
+  night: '#2B2641',
+  nightDeep: '#1E1A30',
+} as const;
