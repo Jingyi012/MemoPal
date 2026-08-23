@@ -17,6 +17,7 @@ export type PalaceScene = {
   name: string;
   description: string;
   imageUrl: string;
+  status: 'draft' | 'published' | 'archived';
   isTemplate: boolean;
   isPremium: boolean;
   version: number;
