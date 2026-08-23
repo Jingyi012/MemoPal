@@ -36,6 +36,9 @@ public interface IAppDbContext
     DbSet<PalaceBinding> PalaceBindings { get; }
     DbSet<PalaceScene> PalaceScenes { get; }
     DbSet<PalaceLocus> PalaceLoci { get; }
+    DbSet<PracticeAttempt> PracticeAttempts { get; }
+    DbSet<PracticeResponse> PracticeResponses { get; }
+    DbSet<MemoryReviewSchedule> MemoryReviewSchedules { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

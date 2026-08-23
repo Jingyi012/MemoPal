@@ -334,6 +334,77 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.ToTable("MemoryItems");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.MemoryReviewSchedule", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("IntervalDays")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastAttemptId")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("LastResultCorrect")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MemoryItemId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MemorySetId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ReviewCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastAttemptId");
+
+                    b.HasIndex("MemoryItemId");
+
+                    b.HasIndex("MemorySetId");
+
+                    b.HasIndex("UserId", "MemoryItemId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE");
+
+                    b.HasIndex("UserId", "DueAt", "IsDeleted");
+
+                    b.ToTable("MemoryReviewSchedules");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.MemorySet", b =>
                 {
                     b.Property<string>("Id")
@@ -927,6 +998,139 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasFilter("\"IsDeleted\" = FALSE");
 
                     b.ToTable("PegBindings");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PracticeAttempt", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClientAttemptId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CorrectCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DurationMs")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FirstAttemptCorrectCount")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MemorySetId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TechniqueKey")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("TotalCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemorySetId");
+
+                    b.HasIndex("UserId", "ClientAttemptId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "MemorySetId", "CompletedAt");
+
+                    b.ToTable("PracticeAttempts");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PracticeResponse", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MemoryItemId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PracticeAttemptId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ResponseMs")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemoryItemId");
+
+                    b.HasIndex("PracticeAttemptId", "MemoryItemId")
+                        .IsUnique();
+
+                    b.ToTable("PracticeResponses");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.ReferralMilestoneReward", b =>
@@ -1943,6 +2147,32 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Navigation("MemorySet");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.MemoryReviewSchedule", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.PracticeAttempt", "LastAttempt")
+                        .WithMany()
+                        .HasForeignKey("LastAttemptId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("MemoPal.Domain.Entities.MemoryItem", "MemoryItem")
+                        .WithMany()
+                        .HasForeignKey("MemoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MemoPal.Domain.Entities.MemorySet", "MemorySet")
+                        .WithMany()
+                        .HasForeignKey("MemorySetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LastAttempt");
+
+                    b.Navigation("MemoryItem");
+
+                    b.Navigation("MemorySet");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.MemorySet", b =>
                 {
                     b.HasOne("MemoPal.Domain.Entities.User", null)
@@ -2015,6 +2245,36 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Navigation("MemoryItem");
 
                     b.Navigation("TechniquePlan");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PracticeAttempt", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.MemorySet", "MemorySet")
+                        .WithMany()
+                        .HasForeignKey("MemorySetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MemorySet");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PracticeResponse", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.MemoryItem", "MemoryItem")
+                        .WithMany()
+                        .HasForeignKey("MemoryItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MemoPal.Domain.Entities.PracticeAttempt", "PracticeAttempt")
+                        .WithMany("Responses")
+                        .HasForeignKey("PracticeAttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MemoryItem");
+
+                    b.Navigation("PracticeAttempt");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.RefreshTokenSession", b =>
@@ -2181,6 +2441,11 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("MemoPal.Domain.Entities.PalaceScene", b =>
                 {
                     b.Navigation("Loci");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PracticeAttempt", b =>
+                {
+                    b.Navigation("Responses");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.TechniquePlan", b =>

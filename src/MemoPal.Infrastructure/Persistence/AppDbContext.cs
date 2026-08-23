@@ -46,6 +46,9 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<PalaceBinding> PalaceBindings => Set<PalaceBinding>();
     public DbSet<PalaceScene> PalaceScenes => Set<PalaceScene>();
     public DbSet<PalaceLocus> PalaceLoci => Set<PalaceLocus>();
+    public DbSet<PracticeAttempt> PracticeAttempts => Set<PracticeAttempt>();
+    public DbSet<PracticeResponse> PracticeResponses => Set<PracticeResponse>();
+    public DbSet<MemoryReviewSchedule> MemoryReviewSchedules => Set<MemoryReviewSchedule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -333,6 +336,57 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasIndex(x => new { x.MemorySetId, x.Position })
                 .IsUnique()
                 .HasFilter("\"IsDeleted\" = FALSE");
+        });
+
+        modelBuilder.Entity<PracticeAttempt>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.ClientAttemptId).HasMaxLength(64);
+            b.Property(x => x.TechniqueKey).HasMaxLength(32);
+            b.Property(x => x.Mode).HasMaxLength(32);
+            b.HasIndex(x => new { x.UserId, x.ClientAttemptId }).IsUnique();
+            b.HasIndex(x => new { x.UserId, x.MemorySetId, x.CompletedAt });
+            b.HasOne(x => x.MemorySet)
+                .WithMany()
+                .HasForeignKey(x => x.MemorySetId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.Responses)
+                .WithOne(x => x.PracticeAttempt)
+                .HasForeignKey(x => x.PracticeAttemptId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PracticeResponse>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.PracticeAttemptId, x.MemoryItemId }).IsUnique();
+            b.HasOne(x => x.MemoryItem)
+                .WithMany()
+                .HasForeignKey(x => x.MemoryItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MemoryReviewSchedule>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.HasIndex(x => new { x.UserId, x.MemoryItemId })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.UserId, x.DueAt, x.IsDeleted });
+            b.HasOne(x => x.MemorySet)
+                .WithMany()
+                .HasForeignKey(x => x.MemorySetId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.MemoryItem)
+                .WithMany()
+                .HasForeignKey(x => x.MemoryItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.LastAttempt)
+                .WithMany()
+                .HasForeignKey(x => x.LastAttemptId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<TechniquePlan>(b =>
