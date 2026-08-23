@@ -6,7 +6,7 @@ export default function NotFoundScreen() {
     <>
       <Stack.Screen options={{ title: 'Oops!' }} />
       <View className="flex-1 items-center justify-center gap-3">
-        <Text className="text-2xl">This screen doesn't exist.</Text>
+        <Text className="text-2xl">This screen doesn&apos;t exist.</Text>
         <View className="h-2" />
         <Link href="/">
           <Text>Go Home</Text>

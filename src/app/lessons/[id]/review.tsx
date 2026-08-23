@@ -1,4 +1,4 @@
-import { ReviewTest } from '@/screens/Lesson/Reviewing';
+import { ReviewTest } from '@/features/palace';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 

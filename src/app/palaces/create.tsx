@@ -1,4 +1,4 @@
-import CreatePalaceScreen from '@/screens/Palaces/CreatePalaceScreen';
+import { PalaceCreateScreen as CreatePalaceScreen } from '@/features/palace';
 import React from 'react';
 
 export default function CreatePalaceRoute() {

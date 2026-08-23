@@ -1,4 +1,4 @@
-import { PalaceTrainingScreen } from '@/screens/Palaces/Training';
+import { PalaceTrainingScreen } from '@/features/palace';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 

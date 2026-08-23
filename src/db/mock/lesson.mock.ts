@@ -1,4 +1,4 @@
-import { LessonCategory } from '@/types/lesson';
+import { LessonCategory } from '@/features/palace';
 
 export const mockLessons = [
   {

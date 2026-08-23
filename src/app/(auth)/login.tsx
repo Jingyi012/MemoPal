@@ -1,4 +1,4 @@
-import { LoginScreen } from '@/screens/Login';
+import { LoginScreen } from '@/features/auth';
 import React from 'react';
 
 const Login = () => {

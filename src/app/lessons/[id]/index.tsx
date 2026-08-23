@@ -1,4 +1,4 @@
-import LessonDetailScreen from '@/screens/Lesson/Detail';
+import { LessonDetailsScreen as LessonDetailScreen } from '@/features/palace';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 

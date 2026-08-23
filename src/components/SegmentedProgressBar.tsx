@@ -19,7 +19,7 @@ export const SegmentedProgressBar: React.FC<Props> = ({ total, current, label })
       friction: 8,
       tension: 40,
     }).start();
-  }, [current]);
+  }, [current, progressAnim, total]);
 
   return (
     <View style={styles.wrapper}>

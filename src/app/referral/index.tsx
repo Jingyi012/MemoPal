@@ -1,4 +1,4 @@
-import ReferralScreen from '@/screens/Referral';
+import { ReferralScreen } from '@/features/referral';
 import React from 'react';
 
 const Referral = () => {

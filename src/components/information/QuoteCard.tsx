@@ -19,7 +19,7 @@ export function QuoteCard({ todayQuote }: { todayQuote: string }) {
           fontStyle: 'italic',
           textAlign: 'center',
         }}>
-        "{todayQuote}"
+        &quot;{todayQuote}&quot;
       </Text>
     </LinearGradient>
   );

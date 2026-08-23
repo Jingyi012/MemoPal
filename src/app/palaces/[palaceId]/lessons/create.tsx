@@ -1,4 +1,4 @@
-import { CreateLessonScreen } from '@/screens/Lesson/Create';
+import { CreateLessonScreen } from '@/features/palace';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 

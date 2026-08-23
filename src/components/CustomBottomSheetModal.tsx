@@ -30,4 +30,6 @@ const CustomBottomSheetModal = forwardRef<Ref, Props>(
   }
 );
 
+CustomBottomSheetModal.displayName = 'CustomBottomSheetModal';
+
 export default CustomBottomSheetModal;

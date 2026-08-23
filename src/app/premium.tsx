@@ -1,4 +1,4 @@
-import PremiumScreen from '@/screens/Premium';
+import { PremiumScreen } from '@/features/subscription';
 import React from 'react';
 
 const Premium = () => {

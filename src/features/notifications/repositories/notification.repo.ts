@@ -1,0 +1,281 @@
+import { db } from '@/db/client';
+import * as schema from '@/db/schema';
+import { EntityType } from '@/enums/entityType';
+import { SyncBase } from '@/core/sync/sync.base';
+import { Notification } from '@/features/notifications/types/notification';
+import { and, desc, eq, inArray, lt, sql } from 'drizzle-orm';
+import * as Crypto from 'expo-crypto';
+
+interface NotificationRepository {
+  getAll(): Promise<Notification[]>;
+  getAllUnread(): Promise<Notification[]>;
+  markAsRead(notificationId: string): Promise<void>;
+  markAllAsRead(): Promise<void>;
+  dismiss(notificationId: string): Promise<void>;
+  restore(notificationId: string): Promise<void>;
+  delete(notificationId: string): Promise<void>;
+  create(notification: Omit<Notification, 'id' | 'createdAt'>): Promise<Notification>;
+  deleteOldDismissed(daysOld?: number): Promise<void>;
+  upsertMany(notifications: Notification[]): Promise<void>;
+}
+
+export function createNotificationRepository(): NotificationRepository {
+  return {
+    async getAll(): Promise<Notification[]> {
+      return (await db.query.notifications.findMany({
+        where: and(eq(schema.notifications.isDeleted, false)),
+        orderBy: [desc(schema.notifications.createdAt)],
+      })) as Notification[];
+    },
+
+    async getAllUnread(): Promise<Notification[]> {
+      return (await db.query.notifications.findMany({
+        where: and(
+          eq(schema.notifications.isRead, false),
+          eq(schema.notifications.isDismissed, false),
+          eq(schema.notifications.isDeleted, false)
+        ),
+        orderBy: [desc(schema.notifications.createdAt)],
+      })) as Notification[];
+    },
+
+    async markAsRead(notificationId: string): Promise<void> {
+      const now = new Date().toISOString();
+      await db.transaction(async (tx) => {
+        await tx
+          .update(schema.notifications)
+          .set({ isRead: true, readAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(schema.notifications.id, notificationId),
+              eq(schema.notifications.isDeleted, false)
+            )
+          );
+
+        await SyncBase.addToQueue(tx as any, {
+          entityType: EntityType.NOTIFICATION,
+          entityId: notificationId,
+          action: 'update',
+          payload: { isRead: true, readAt: now },
+        });
+      });
+    },
+
+    async markAllAsRead(): Promise<void> {
+      const now = new Date().toISOString();
+
+      const unreadCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(schema.notifications)
+        .where(
+          and(eq(schema.notifications.isRead, false), eq(schema.notifications.isDeleted, false))
+        )
+        .then((res) => res[0]?.count ?? 0);
+
+      if (unreadCount === 0) return;
+      try {
+        await db.transaction(async (tx) => {
+          await tx
+            .update(schema.notifications)
+            .set({
+              isRead: true,
+              readAt: now,
+              updatedAt: now,
+            })
+            .where(
+              and(eq(schema.notifications.isRead, false), eq(schema.notifications.isDeleted, false))
+            );
+
+          await SyncBase.addToQueue(tx as any, {
+            entityType: EntityType.NOTIFICATION,
+            entityId: '0000-0000-0000-0000',
+            action: 'update',
+            payload: {
+              isRead: true,
+              readAt: now,
+              scope: 'all', // Hint for backend to process all unread
+            },
+          });
+        });
+      } catch (err) {
+        console.error('Failed to mark all as read:', err);
+        // On mobile, sometimes a failed transaction leaves the DB in a bad state.
+        // Throwing allows your UI to handle the error.
+        throw err;
+      }
+    },
+
+    async dismiss(notificationId: string): Promise<void> {
+      const now = new Date().toISOString();
+      await db.transaction(async (tx) => {
+        await tx
+          .update(schema.notifications)
+          .set({ isDismissed: true, updatedAt: now })
+          .where(
+            and(
+              eq(schema.notifications.id, notificationId),
+              eq(schema.notifications.isDeleted, false)
+            )
+          );
+
+        await SyncBase.addToQueue(tx as any, {
+          entityType: EntityType.NOTIFICATION,
+          entityId: notificationId,
+          action: 'update',
+          payload: { isDismissed: true, updatedAt: now },
+        });
+      });
+    },
+
+    async restore(notificationId: string): Promise<void> {
+      const now = new Date().toISOString();
+      await db.transaction(async (tx) => {
+        await tx
+          .update(schema.notifications)
+          .set({ isDismissed: false, updatedAt: now })
+          .where(
+            and(
+              eq(schema.notifications.id, notificationId),
+              eq(schema.notifications.isDeleted, false)
+            )
+          );
+
+        await SyncBase.addToQueue(tx as any, {
+          entityType: EntityType.NOTIFICATION,
+          entityId: notificationId,
+          action: 'update',
+          payload: { isDismissed: false, updatedAt: now },
+        });
+      });
+    },
+
+    async delete(notificationId: string): Promise<void> {
+      await db.transaction(async (tx) => {
+        const record = await tx.query.notifications.findFirst({
+          columns: { lastSyncedAt: true },
+          where: eq(schema.notifications.id, notificationId),
+        });
+
+        if (!record) return;
+
+        const now = new Date().toISOString();
+
+        if (record.lastSyncedAt) {
+          await SyncBase.addToQueue(tx as any, {
+            entityType: EntityType.NOTIFICATION,
+            entityId: notificationId,
+            action: 'delete',
+          });
+        } else {
+          await SyncBase.removePendingSyncs(tx as any, notificationId);
+        }
+
+        await tx
+          .update(schema.notifications)
+          .set({ isDeleted: true, deletedAt: now, updatedAt: now })
+          .where(eq(schema.notifications.id, notificationId));
+      });
+    },
+
+    async create(notification: Omit<Notification, 'id' | 'createdAt'>): Promise<Notification> {
+      const id = Crypto.randomUUID();
+      const createdAt = new Date().toISOString();
+
+      const newNotification: Notification = {
+        id,
+        createdAt,
+        ...notification,
+        isDeleted: false,
+        deletedAt: null,
+      };
+
+      await db.transaction(async (tx) => {
+        await tx.insert(schema.notifications).values(newNotification);
+
+        await SyncBase.addToQueue(tx as any, {
+          entityType: EntityType.NOTIFICATION,
+          entityId: id,
+          action: 'create',
+          payload: newNotification,
+        });
+      });
+
+      return newNotification;
+    },
+
+    async deleteOldDismissed(daysOld: number = 30): Promise<void> {
+      const cutoffTime = new Date(Date.now() - daysOld * 24 * 60 * 60 * 1000).toISOString();
+      await db
+        .delete(schema.notifications)
+        .where(
+          and(
+            eq(schema.notifications.isDismissed, true),
+            eq(schema.notifications.isDeleted, true),
+            lt(schema.notifications.deletedAt, cutoffTime)
+          )
+        );
+    },
+
+    async upsertMany(notifications: Notification[]): Promise<void> {
+      if (notifications.length === 0) return;
+      const now = new Date().toISOString();
+
+      const ids = notifications.map((notification) => notification.id);
+
+      await db.transaction(async (tx) => {
+        const localRecords =
+          ids.length > 0
+            ? await tx.query.notifications.findMany({
+                where: inArray(schema.notifications.id, ids),
+              })
+            : [];
+        const localMap = new Map(localRecords.map((record) => [record.id, record]));
+        const dirtyIds = await SyncBase.getEntityDirtyIds(
+          tx as any,
+          ids,
+          EntityType.NOTIFICATION
+        );
+
+        for (const notification of notifications) {
+          if (dirtyIds.has(notification.id)) continue;
+
+          const localNotification = localMap.get(notification.id);
+          const serverDate = new Date(notification.updatedAt || now).getTime();
+          const localDate = localNotification
+            ? new Date(localNotification.updatedAt || localNotification.createdAt || now).getTime()
+            : 0;
+
+          if (localNotification && localDate > serverDate) {
+            continue;
+          }
+
+          await tx
+            .insert(schema.notifications)
+            .values({
+              ...notification,
+              isDeleted: Boolean(notification.isDeleted),
+              deletedAt: notification.deletedAt ?? null,
+              lastSyncedAt: now,
+            })
+            .onConflictDoUpdate({
+              target: schema.notifications.id,
+              set: {
+                type: notification.type,
+                title: notification.title,
+                body: notification.body,
+                referenceType: notification.referenceType,
+                referenceId: notification.referenceId,
+                isRead: notification.isRead,
+                isDismissed: notification.isDismissed,
+                readAt: notification.readAt,
+                isDeleted: Boolean(notification.isDeleted),
+                deletedAt: notification.deletedAt ?? null,
+                updatedAt: notification.updatedAt || now,
+                lastSyncedAt: now,
+              },
+            });
+        }
+      });
+    },
+  };
+}

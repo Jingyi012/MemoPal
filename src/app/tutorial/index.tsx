@@ -1,4 +1,4 @@
-import { TutorialScreen } from '@/screens/Tutorial';
+import { TutorialScreen } from '@/features/tutorial';
 import { useRouter } from 'expo-router';
 import React from 'react';
 

@@ -1,5 +1,5 @@
-import { USER_STATE_STORAGE_KEY } from '@/constants/storage';
-import { defaultUserState, LessonProgress, UserState } from '@/types/userState';
+import { USER_STATE_STORAGE_KEY } from '@/core/storage/constants';
+import { defaultUserState, LessonProgress, UserState } from '@/features/onboarding/types/userState';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 

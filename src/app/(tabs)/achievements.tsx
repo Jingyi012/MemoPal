@@ -1,4 +1,4 @@
-import AchievementsScreen from '@/screens/Achievement/AchievementsScreen';
+import { AchievementsScreen } from '@/features/gamification';
 import React from 'react';
 
 export default function AchievementsRoute() {

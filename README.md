@@ -23,17 +23,46 @@ In the output, you'll find options to open the app in a
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+You can start developing by editing the files inside the `src/app` and
+`src/features` directories. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
+## Memory module structure
 
-When you're ready, run:
+Product features live under `src/features/<feature>`. Each feature owns its
+screens, components, hooks, services, API clients, repositories, and types.
+Folders use the same vocabulary across features. Expo Router files under
+`src/app` are thin route adapters and import screens from the feature's public
+`index.ts`.
 
-```bash
-npm run reset-project
+Large features can use vertical slices such as `palace-list`, `palace-details`,
+or `lesson-review`. A slice keeps its screen, model hooks, and UI components
+together. Code reused by multiple slices belongs in that feature's `shared`
+folder; unused folders should not be created.
+
+The shared module contract and registry are in `src/core/memory`. Add a new
+technique by creating its feature folder, exporting its module definition, and
+registering that definition in `src/core/memory/memory-registry.ts`.
+
+Module availability is controlled centrally by `src/core/memory/memory-flags.ts`.
+The default configuration enables both current modules. For a staged local
+build, set Expo public variables before starting the app:
+
+```text
+EXPO_PUBLIC_ENABLE_PALACE=true
+EXPO_PUBLIC_ENABLE_NUMBER_PEG=false
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The Practice screen lists only enabled modules, and each module route checks the
+same flag before rendering. These build-time flags can later be replaced or
+merged with backend settings without changing feature screens.
+
+Palace, Number Peg, Community, Home, Auth, Profile, Gamification,
+Notifications, Subscription, Referral, Support, Onboarding, and Tutorial each
+live in their own feature folder. Cross-feature infrastructure lives under
+`src/core` (HTTP/API transport, settings, sync, shared hooks, and shared
+types). Generic UI components, database code, contexts, constants, and utility
+functions remain in their shared top-level folders. New feature-specific code
+should not be added to those shared folders.
 
 ## Learn more
 

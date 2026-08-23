@@ -1,8 +1,8 @@
-import { OnboardingCarousel } from '@/screens/Onboarding/OnboardingCarousel';
+import { OnboardingScreen } from '@/features/onboarding';
 import React from 'react';
 
 const Onboarding = () => {
-  return <OnboardingCarousel />;
+  return <OnboardingScreen />;
 };
 
 export default Onboarding;

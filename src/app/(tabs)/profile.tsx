@@ -1,6 +1,6 @@
-import SettingsScreen from '@/screens/Settings';
+import { ProfileScreen } from '@/features/profile';
 import React from 'react';
 
 export default function Profile() {
-  return <SettingsScreen />;
+  return <ProfileScreen />;
 }

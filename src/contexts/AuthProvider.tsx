@@ -1,18 +1,18 @@
-import { ApiClientError, authApi, RegisterRequest } from '@/api/auth';
-import { AUTH_STORAGE_KEY } from '@/constants/auth';
-import { USER_STATE_STORAGE_KEY } from '@/constants/storage';
+import { ApiClientError, authApi, RegisterRequest } from '@/features/auth/api/auth';
+import { AUTH_STORAGE_KEY } from '@/features/auth/constants/auth';
+import { USER_STATE_STORAGE_KEY } from '@/core/storage/constants';
 import { clearLocalCacheOnLogout } from '@/db/seed';
-import { CURRENT_USER_KEYS } from '@/hooks/useCurrentUser';
-import { createUserRepository } from '@/repositories/user.repo';
+import { CURRENT_USER_KEYS } from '@/features/profile/hooks/useCurrentUser';
+import { createUserRepository } from '@/features/profile/repositories/user.repo';
 import {
   clearAuthTokens,
   getAccessToken,
   getRefreshToken,
   setAccessToken,
   setRefreshToken,
-} from '@/services/user.service';
-import { LoginRequest } from '@/types/auth';
-import { User } from '@/types/users';
+} from '@/features/auth/services/user.service';
+import { LoginRequest } from '@/features/auth/types/auth';
+import { User } from '@/features/profile/types/users';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
