@@ -34,6 +34,7 @@ export type TechniquePlan = {
   id: string;
   techniqueKey: MemoryTechniqueKey;
   schemaVersion: number;
+  palaceSceneId?: string | null;
   pegBindings: PegBinding[];
   palaceBindings: PalaceBinding[];
 };
@@ -88,6 +89,7 @@ export type MemorySetUpsertRequest = {
   items: MemoryItemInput[];
   techniquePlan?: {
     schemaVersion: number;
+    palaceSceneId?: string | null;
     pegBindings: PegBindingInput[];
     palaceBindings: PalaceBindingInput[];
   } | null;

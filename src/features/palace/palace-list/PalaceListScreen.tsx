@@ -3,12 +3,15 @@ import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { usePalaceListModel } from '@/features/palace/palace-list/hooks/usePalaceListModel';
 import { PalaceCard } from '@/features/palace/palace-list/components/PalaceCard';
-import { Plus, Trash2 } from 'lucide-react-native';
+import { ArrowRight, MapPinned, Plus, Trash2 } from 'lucide-react-native';
 import React from 'react';
 import { FlatList, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import AnimatedPressable from '@/components/AnimatedPressable';
+import { Href, useRouter } from 'expo-router';
 
 export default function PalaceListScreen() {
+  const router = useRouter();
   const {
     officialPalaces,
     customPalaces,
@@ -67,6 +70,18 @@ export default function PalaceListScreen() {
         />
 
         <View className="px-4 pb-2 pt-3">
+          <AnimatedPressable
+            onPress={() => router.push('/palaces/create-memory' as Href)}
+            className="mb-3 flex-row items-center rounded-2xl border-2 border-violet-200 bg-violet-50 p-4">
+            <View className="h-11 w-11 items-center justify-center rounded-2xl bg-violet-200">
+              <MapPinned size={22} color="#6d28d9" />
+            </View>
+            <View className="ml-3 flex-1">
+              <Text className="text-sm font-extrabold text-slate-900">Create a scene-based memory</Text>
+              <Text className="mt-1 text-xs font-semibold text-slate-500">Place your items on loci over one connected image</Text>
+            </View>
+            <ArrowRight size={19} color="#6d28d9" />
+          </AnimatedPressable>
           {canUseCustomPalaces ? (
             <View className="mb-2 flex-row rounded-2xl bg-slate-200 p-1">
               <Text
