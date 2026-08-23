@@ -719,6 +719,8 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("LocusId");
+
                     b.HasIndex("MemoryItemId");
 
                     b.HasIndex("TechniquePlanId", "LocusId")
@@ -730,6 +732,137 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasFilter("\"IsDeleted\" = FALSE");
 
                     b.ToTable("PalaceBindings");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PalaceLocus", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PalaceSceneId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("RadiusPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("XPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<decimal>("YPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PalaceSceneId", "Position")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE");
+
+                    b.ToTable("PalaceLoci");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PalaceScene", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPremium")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsTemplate")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "IsDeleted");
+
+                    b.HasIndex("Status", "IsTemplate", "IsDeleted");
+
+                    b.ToTable("PalaceScenes");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.PegBinding", b =>
@@ -1171,6 +1304,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PalaceSceneId")
+                        .HasColumnType("text");
+
                     b.Property<int>("SchemaVersion")
                         .HasColumnType("integer");
 
@@ -1190,6 +1326,8 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.HasIndex("MemorySetId")
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = FALSE");
+
+                    b.HasIndex("PalaceSceneId");
 
                     b.ToTable("TechniquePlans");
                 });
@@ -1816,6 +1954,12 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MemoPal.Domain.Entities.PalaceBinding", b =>
                 {
+                    b.HasOne("MemoPal.Domain.Entities.PalaceLocus", "Locus")
+                        .WithMany()
+                        .HasForeignKey("LocusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("MemoPal.Domain.Entities.MemoryItem", "MemoryItem")
                         .WithMany()
                         .HasForeignKey("MemoryItemId")
@@ -1828,9 +1972,30 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Locus");
+
                     b.Navigation("MemoryItem");
 
                     b.Navigation("TechniquePlan");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PalaceLocus", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.PalaceScene", "PalaceScene")
+                        .WithMany("Loci")
+                        .HasForeignKey("PalaceSceneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PalaceScene");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PalaceScene", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.PegBinding", b =>
@@ -1882,7 +2047,14 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MemoPal.Domain.Entities.PalaceScene", "PalaceScene")
+                        .WithMany()
+                        .HasForeignKey("PalaceSceneId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("MemorySet");
+
+                    b.Navigation("PalaceScene");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.UserAuthIdentity", b =>
@@ -2004,6 +2176,11 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("MemoPal.Domain.Entities.Palace", b =>
                 {
                     b.Navigation("Locations");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PalaceScene", b =>
+                {
+                    b.Navigation("Loci");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.TechniquePlan", b =>

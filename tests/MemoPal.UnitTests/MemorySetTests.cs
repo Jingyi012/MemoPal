@@ -97,6 +97,71 @@ public sealed class MemorySetTests
         Assert.Contains("up to 10", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task PalaceMemorySet_Should_Use_Audited_Loci_From_Selected_Scene()
+    {
+        const string userId = "user-palace";
+        await using var db = CreateDbContext(userId);
+        db.Users.Add(CreateUser(userId));
+        var scene = new PalaceScene
+        {
+            Name = "Cozy study",
+            Description = "A warm room with clear landmarks",
+            ImageUrl = "/uploads/palaces/cozy-study.webp",
+            IsTemplate = true,
+            Status = PalaceSceneStatuses.Published,
+            Loci =
+            [
+                new PalaceLocus { Position = 1, Name = "Door", XPercent = 12, YPercent = 58 },
+                new PalaceLocus { Position = 2, Name = "Desk", XPercent = 62, YPercent = 65 }
+            ]
+        };
+        db.PalaceScenes.Add(scene);
+        await db.SaveChangesAsync();
+
+        var request = new MemorySetUpsertRequest
+        {
+            Title = "History dates",
+            GoalType = MemoryGoalTypes.Facts,
+            TechniqueKey = MemoryTechniqueKeys.Palace,
+            Status = MemorySetStatuses.Ready,
+            Items =
+            [
+                new MemoryItemInput { Position = 1, Prompt = "First date", Answer = "1215 Magna Carta" },
+                new MemoryItemInput { Position = 2, Prompt = "Second date", Answer = "1969 Moon landing" }
+            ],
+            TechniquePlan = new TechniquePlanInput
+            {
+                PalaceSceneId = scene.Id,
+                PalaceBindings =
+                [
+                    new PalaceBindingInput
+                    {
+                        ItemPosition = 1,
+                        LocusId = scene.Loci.Single(x => x.Position == 1).Id,
+                        AssociationText = "A giant scroll blocks the door"
+                    },
+                    new PalaceBindingInput
+                    {
+                        ItemPosition = 2,
+                        LocusId = scene.Loci.Single(x => x.Position == 2).Id,
+                        AssociationText = "The moon lands on the desk"
+                    }
+                ]
+            }
+        };
+
+        var result = await new CreateMemorySetCommandHandler(db).Handle(
+            new CreateMemorySetCommand(userId, request),
+            default);
+
+        Assert.True(result.Success);
+        Assert.Equal(scene.Id, result.Data!.TechniquePlan!.PalaceSceneId);
+        Assert.Equal(2, result.Data.TechniquePlan.PalaceBindings.Count);
+        AssertAudit(scene, userId);
+        Assert.All(scene.Loci, locus => AssertAudit(locus, userId));
+    }
+
     private static AppDbContext CreateDbContext(string userId)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()

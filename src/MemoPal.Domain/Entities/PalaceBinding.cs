@@ -13,4 +13,5 @@ public sealed class PalaceBinding : AuditableBaseEntity
 
     public TechniquePlan? TechniquePlan { get; set; }
     public MemoryItem? MemoryItem { get; set; }
+    public PalaceLocus? Locus { get; set; }
 }

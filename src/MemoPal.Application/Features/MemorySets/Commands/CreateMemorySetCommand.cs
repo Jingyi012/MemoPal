@@ -23,6 +23,11 @@ public sealed class CreateMemorySetCommandHandler
         CreateMemorySetCommand request,
         CancellationToken cancellationToken)
     {
+        await MemorySetPalaceValidator.ValidateAsync(
+            _db,
+            request.UserId,
+            request.Request,
+            cancellationToken);
         var entity = MemorySetAggregate.Create(request.UserId, request.Request);
         await _db.MemorySets.AddAsync(entity, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);

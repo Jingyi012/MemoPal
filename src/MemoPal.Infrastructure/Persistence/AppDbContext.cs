@@ -44,6 +44,8 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<TechniquePlan> TechniquePlans => Set<TechniquePlan>();
     public DbSet<PegBinding> PegBindings => Set<PegBinding>();
     public DbSet<PalaceBinding> PalaceBindings => Set<PalaceBinding>();
+    public DbSet<PalaceScene> PalaceScenes => Set<PalaceScene>();
+    public DbSet<PalaceLocus> PalaceLoci => Set<PalaceLocus>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -340,6 +342,10 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasIndex(x => x.MemorySetId)
                 .IsUnique()
                 .HasFilter("\"IsDeleted\" = FALSE");
+            b.HasOne(x => x.PalaceScene)
+                .WithMany()
+                .HasForeignKey(x => x.PalaceSceneId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<PegBinding>(b =>
@@ -363,6 +369,39 @@ public class AppDbContext : DbContext, IAppDbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<PalaceScene>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.Name).HasMaxLength(200);
+            b.Property(x => x.Description).HasMaxLength(1000);
+            b.Property(x => x.ImageUrl).HasMaxLength(2048);
+            b.Property(x => x.Status).HasMaxLength(32);
+            b.HasIndex(x => new { x.Status, x.IsTemplate, x.IsDeleted });
+            b.HasIndex(x => new { x.UserId, x.IsDeleted });
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.HasMany(x => x.Loci)
+                .WithOne(x => x.PalaceScene)
+                .HasForeignKey(x => x.PalaceSceneId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PalaceLocus>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Name).HasMaxLength(100);
+            b.Property(x => x.Description).HasMaxLength(500);
+            b.Property(x => x.XPercent).HasPrecision(5, 2);
+            b.Property(x => x.YPercent).HasPrecision(5, 2);
+            b.Property(x => x.RadiusPercent).HasPrecision(5, 2);
+            b.HasIndex(x => new { x.PalaceSceneId, x.Position })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+        });
+
         modelBuilder.Entity<PalaceBinding>(b =>
         {
             b.HasKey(x => x.Id);
@@ -383,6 +422,10 @@ public class AppDbContext : DbContext, IAppDbContext
                 .WithMany()
                 .HasForeignKey(x => x.MemoryItemId)
                 .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.Locus)
+                .WithMany()
+                .HasForeignKey(x => x.LocusId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 

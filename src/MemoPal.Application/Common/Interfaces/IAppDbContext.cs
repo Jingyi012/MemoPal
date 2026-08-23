@@ -34,6 +34,8 @@ public interface IAppDbContext
     DbSet<TechniquePlan> TechniquePlans { get; }
     DbSet<PegBinding> PegBindings { get; }
     DbSet<PalaceBinding> PalaceBindings { get; }
+    DbSet<PalaceScene> PalaceScenes { get; }
+    DbSet<PalaceLocus> PalaceLoci { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

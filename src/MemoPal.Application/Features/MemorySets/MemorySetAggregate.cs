@@ -141,6 +141,11 @@ internal static class MemorySetAggregate
         bool isDraft)
     {
         var bindings = request.TechniquePlan!.PalaceBindings;
+        if (string.IsNullOrWhiteSpace(request.TechniquePlan.PalaceSceneId))
+        {
+            throw new ValidationAppException("Choose a Palace scene before placing memory items.");
+        }
+
         if (request.TechniquePlan.PegBindings.Count > 0)
         {
             throw new ValidationAppException("A Memory Palace plan cannot contain Peg bindings.");
@@ -216,6 +221,7 @@ internal static class MemorySetAggregate
                 entity.TechniquePlan.Id,
                 entity.TechniquePlan.TechniqueKey,
                 entity.TechniquePlan.SchemaVersion,
+                entity.TechniquePlan.PalaceSceneId,
                 entity.TechniquePlan.PegBindings
                     .Where(x => !x.IsDeleted)
                     .OrderBy(x => x.PegNumber)
@@ -332,6 +338,9 @@ internal static class MemorySetAggregate
 
         plan.TechniqueKey = request.TechniqueKey;
         plan.SchemaVersion = request.TechniquePlan.SchemaVersion;
+        plan.PalaceSceneId = request.TechniqueKey == MemoryTechniqueKeys.Palace
+            ? request.TechniquePlan.PalaceSceneId
+            : null;
         if (request.TechniqueKey == MemoryTechniqueKeys.NumberPeg)
         {
             ReconcilePegBindings(plan, request, itemsByPosition);
@@ -372,6 +381,9 @@ internal static class MemorySetAggregate
         var plan = new TechniquePlan
         {
             MemorySetId = memorySetId,
+            PalaceSceneId = request.TechniqueKey == MemoryTechniqueKeys.Palace
+                ? request.TechniquePlan!.PalaceSceneId
+                : null,
             TechniqueKey = request.TechniqueKey,
             SchemaVersion = request.TechniquePlan!.SchemaVersion
         };

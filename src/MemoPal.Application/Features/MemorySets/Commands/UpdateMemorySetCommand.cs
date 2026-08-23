@@ -42,6 +42,12 @@ public sealed class UpdateMemorySetCommandHandler
                 $"This memory set changed on another request. Reload version {entity.Version} before saving again.");
         }
 
+        await MemorySetPalaceValidator.ValidateAsync(
+            _db,
+            request.UserId,
+            request.Request,
+            cancellationToken);
+
         MemorySetAggregate.Update(entity, request.Request);
         await _db.SaveChangesAsync(cancellationToken);
         return ApiResponse<MemorySetDto>.Ok(MemorySetAggregate.ToDto(entity));

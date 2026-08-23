@@ -28,6 +28,7 @@ public sealed record TechniquePlanDto(
     string Id,
     string TechniqueKey,
     int SchemaVersion,
+    string? PalaceSceneId,
     IReadOnlyList<PegBindingDto> PegBindings,
     IReadOnlyList<PalaceBindingDto> PalaceBindings);
 
@@ -70,6 +71,7 @@ public sealed class MemoryItemInput
 public sealed class TechniquePlanInput
 {
     public int SchemaVersion { get; set; } = 1;
+    public string? PalaceSceneId { get; set; }
     public IReadOnlyList<PegBindingInput> PegBindings { get; set; } = [];
     public IReadOnlyList<PalaceBindingInput> PalaceBindings { get; set; } = [];
 }
