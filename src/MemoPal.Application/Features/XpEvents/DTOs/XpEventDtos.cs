@@ -7,7 +7,12 @@ public sealed record XpEventDto(
     int XpAmount,
     string ClientEventId,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    string? CreatedBy,
+    string? UpdatedBy,
+    bool IsDeleted,
+    DateTime? DeletedAt,
+    string? DeletedBy
 );
 
 public sealed class XpEventUpsertRequest

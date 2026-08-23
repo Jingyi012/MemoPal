@@ -3,6 +3,7 @@ using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Missions.DTOs;
 using MemoPal.Application.Features.XpEvents.Commands;
 using MemoPal.Application.Features.XpEvents.DTOs;
+using MemoPal.Application.Features.XpEvents.Queries;
 using MemoPal.Domain.Entities;
 using MemoPal.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,56 @@ namespace MemoPal.UnitTests;
 
 public class XpEventTests
 {
+    [Fact]
+    public async Task GetXpEventsQueryHandler_Should_Return_Only_Current_User_Active_Events()
+    {
+        await using var db = CreateDbContext();
+        var now = DateTime.UtcNow;
+        db.XpEvents.AddRange(
+            new XpEvent
+            {
+                Id = "visible",
+                UserId = "user-1",
+                SourceType = "review_complete",
+                XpAmount = 10,
+                ClientEventId = "client-visible",
+                CreatedAt = now,
+                UpdatedAt = now,
+                CreatedBy = "user-1",
+                UpdatedBy = "user-1"
+            },
+            new XpEvent
+            {
+                Id = "deleted",
+                UserId = "user-1",
+                SourceType = "review_complete",
+                XpAmount = 20,
+                ClientEventId = "client-deleted",
+                CreatedAt = now,
+                UpdatedAt = now,
+                IsDeleted = true
+            },
+            new XpEvent
+            {
+                Id = "other-user",
+                UserId = "user-2",
+                SourceType = "review_complete",
+                XpAmount = 30,
+                ClientEventId = "client-other",
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+        await db.SaveChangesAsync();
+
+        var response = await new GetXpEventsQueryHandler(db)
+            .Handle(new GetXpEventsQuery("user-1"), default);
+
+        var item = Assert.Single(response.Data!);
+        Assert.Equal("visible", item.Id);
+        Assert.Equal("user-1", item.CreatedBy);
+        Assert.False(item.IsDeleted);
+    }
+
     [Fact]
     public async Task CreateXpEventCommandHandler_Should_Increment_User_Xp_And_Level()
     {
