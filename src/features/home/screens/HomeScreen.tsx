@@ -11,6 +11,7 @@ import { useGamificationUiConfig } from '@/features/gamification/shared/hooks/us
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { useMissions } from '@/features/gamification/shared/hooks/useMissions';
 import { HomeHeader } from '@/features/home/components/Header/HomeHeader';
+import { useDueMemoryReviews } from '@/features/practice-attempts';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
@@ -51,12 +52,13 @@ const HomeScreen = () => {
   const { dueReviews, dueLessons, refetch: refetchDueReviews } = useDueReviews({
     enabled: palaceEnabled,
   });
+  const { data: dueMemoryReviews = [], refetch: refetchMemoryReviews } = useDueMemoryReviews();
   const { userState, updateState } = useUserState();
 
   const showTutorialPrompt = !userState.ui.tutorialPromptDismissed;
   const canCreateCustomPalace = palaceEnabled && featureLimits.customPalaces > 0;
 
-  const dueCount = dueReviews.length;
+  const dueCount = dueReviews.length + dueMemoryReviews.length;
 
   const headerUser = user
     ? {
@@ -90,6 +92,7 @@ const HomeScreen = () => {
         refetchMissions(),
         refetchGamificationUiConfig(),
         palaceEnabled ? refetchDueReviews() : Promise.resolve(),
+        refetchMemoryReviews(),
       ]);
     } finally {
       setIsRefreshing(false);
@@ -102,6 +105,7 @@ const HomeScreen = () => {
     refetchLevelInfo,
     refetchMissions,
     palaceEnabled,
+    refetchMemoryReviews,
   ]);
 
   return (
@@ -143,6 +147,34 @@ const HomeScreen = () => {
               onOpenLesson={(lessonId) => router.push(`/lessons/${lessonId}`)}
               onOpenAll={() => router.push('/palaces')}
             />
+          ) : null}
+
+          {dueMemoryReviews.length > 0 ? (
+            <BaseCard className="mt-3 border-violet-200 bg-violet-50 p-4" padding="none">
+              <Text className="text-base font-bold text-violet-950">Memory sets ready to review</Text>
+              <Text className="mt-1 text-xs text-violet-700">
+                Recall first. Your schedule adapts to every answer.
+              </Text>
+              <View className="mt-3 gap-2">
+                {dueMemoryReviews.slice(0, 3).map((review) => (
+                  <AnimatedPressable
+                    key={review.id}
+                    onPress={() =>
+                      router.push(
+                        review.techniqueKey === 'number-peg'
+                          ? `/number-peg/${review.memorySetId}`
+                          : `/palaces/memory/${review.memorySetId}`
+                      )
+                    }
+                    className="rounded-xl bg-white px-3 py-3">
+                    <Text className="font-bold text-slate-900">{review.memorySetTitle}</Text>
+                    <Text className="mt-0.5 text-xs text-slate-500">
+                      Item {review.itemPosition} · {review.prompt}
+                    </Text>
+                  </AnimatedPressable>
+                ))}
+              </View>
+            </BaseCard>
           ) : null}
 
           {palaceEnabled ? (

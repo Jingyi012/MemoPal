@@ -6,6 +6,12 @@ import type { MemoryItem, PegBinding } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { buildNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
+import {
+  useCreatePracticeAttempt,
+  type PracticeAttemptInput,
+  type PracticeResponseInput,
+} from '@/features/practice-attempts';
+import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Check, Play, RefreshCcw, Sparkles, X } from 'lucide-react-native';
@@ -32,12 +38,26 @@ export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: s
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [score, setScore] = useState(0);
+  const [clientAttemptId, setClientAttemptId] = useState(() => Crypto.randomUUID());
+  const [startedAt, setStartedAt] = useState(() => new Date().toISOString());
+  const [startedAtMs, setStartedAtMs] = useState(() => Date.now());
+  const [questionStartedAtMs, setQuestionStartedAtMs] = useState(() => Date.now());
+  const [responses, setResponses] = useState<PracticeResponseInput[]>([]);
+  const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
+  const practiceAttempt = useCreatePracticeAttempt();
 
   const restartRecall = () => {
     setQuestionIndex(0);
     setAnswer('');
     setFeedback(null);
     setScore(0);
+    setClientAttemptId(Crypto.randomUUID());
+    setStartedAt(new Date().toISOString());
+    setStartedAtMs(Date.now());
+    setQuestionStartedAtMs(Date.now());
+    setResponses([]);
+    setLastPayload(null);
+    practiceAttempt.reset();
   };
 
   const openTab = (nextTab: SessionTab) => {
@@ -76,14 +96,36 @@ export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: s
   const checkOrContinue = () => {
     if (!currentItem) return;
     if (feedback) {
+      if (questionIndex === memorySet.items.length - 1) {
+        const payload: PracticeAttemptInput = {
+          clientAttemptId,
+          memorySetId: memorySet.id,
+          mode: 'recall',
+          startedAt,
+          durationMs: Math.max(0, Date.now() - startedAtMs),
+          responses,
+        };
+        setLastPayload(payload);
+        practiceAttempt.mutate(payload);
+      }
       setQuestionIndex((current) => current + 1);
       setAnswer('');
       setFeedback(null);
+      setQuestionStartedAtMs(Date.now());
       return;
     }
 
     if (!answer.trim()) return;
     const isCorrect = normalizeAnswer(answer) === normalizeAnswer(currentItem.answer);
+    setResponses((current) => [
+      ...current,
+      {
+        memoryItemId: currentItem.id,
+        isCorrect,
+        attemptCount: 1,
+        responseMs: Math.max(0, Date.now() - questionStartedAtMs),
+      },
+    ]);
     setFeedback(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) {
       setScore((current) => current + 1);
@@ -149,6 +191,22 @@ export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: s
                   ? 'Perfect recall. Your scenes are doing their job!'
                   : 'Nice work. Replay the scenes you missed, then try once more.'}
               </Text>
+              {practiceAttempt.isPending ? (
+                <Text style={styles.saveState}>Saving your progress…</Text>
+              ) : practiceAttempt.isError ? (
+                <View style={styles.saveError}>
+                  <Text style={styles.saveErrorText}>Progress was not saved. Your result is still here.</Text>
+                  <AnimatedPressable
+                    onPress={() => lastPayload && practiceAttempt.mutate(lastPayload)}
+                    style={styles.retrySaveButton}>
+                    <Text style={styles.retrySaveText}>Retry save</Text>
+                  </AnimatedPressable>
+                </View>
+              ) : practiceAttempt.data ? (
+                <Text style={styles.saveSuccess}>
+                  Saved ✓ Next review {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : 'will appear in Today'}
+                </Text>
+              ) : null}
               <AnimatedPressable onPress={restartRecall} style={styles.primaryButton}>
                 <RefreshCcw size={18} color={theme.ink} />
                 <Text style={styles.primaryButtonText}>Try another round</Text>
@@ -262,6 +320,12 @@ const styles = StyleSheet.create({
   completeTitle: { color: theme.ink, fontSize: 22, fontWeight: '900', marginTop: 12 },
   completeScore: { color: theme.grass, fontSize: 34, fontWeight: '900', marginTop: 8 },
   completeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 8, marginBottom: 18 },
+  saveState: { color: theme.inkSoft, fontSize: 12, fontWeight: '800', marginBottom: 12 },
+  saveSuccess: { color: theme.grass, fontSize: 12, lineHeight: 18, fontWeight: '900', textAlign: 'center', marginBottom: 12 },
+  saveError: { width: '100%', alignItems: 'center', marginBottom: 12 },
+  saveErrorText: { color: theme.berryDeep, fontSize: 12, lineHeight: 18, fontWeight: '800', textAlign: 'center' },
+  retrySaveButton: { marginTop: 8, borderRadius: 12, backgroundColor: '#FFE3EA', paddingHorizontal: 14, paddingVertical: 9 },
+  retrySaveText: { color: theme.berryDeep, fontSize: 12, fontWeight: '900' },
   centerState: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
   stateEmoji: { fontSize: 42 },
   stateTitle: { color: theme.ink, fontSize: 18, fontWeight: '900', marginTop: 12 },
