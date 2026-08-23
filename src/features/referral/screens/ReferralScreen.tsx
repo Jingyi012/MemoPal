@@ -5,7 +5,6 @@ import LoadingView from '@/components/LoadingView';
 import { Colors } from '@/constants/colors';
 import { NotificationType } from '@/enums/notificationType';
 import { useNotificationMutations, useNotifications } from '@/features/notifications/hooks/useNotifications';
-import { createUserRepository } from '@/features/profile/repositories/user.repo';
 import { syncEntitlementToLocal } from '@/features/subscription/services/subscription.service';
 import type { Notification } from '@/features/notifications/types/notification';
 import type { ReferralSummary } from '@/features/referral/types/referral';
@@ -31,7 +30,6 @@ import { ShareIconBtn } from '../components/ShareIconBtn';
 import { StatBox } from '../components/StatBox';
 
 const ReferralScreen: React.FC = () => {
-  const userRepo = useMemo(() => createUserRepository(), []);
   const router = useRouter();
   const { data: notifications = [] } = useNotifications();
   const { markAsRead } = useNotificationMutations();
@@ -169,10 +167,7 @@ const ReferralScreen: React.FC = () => {
       setRedeeming(true);
       const result = await referralApi.redeem(normalized);
       setRedeemCode('');
-      const currentUser = await userRepo.getCurrent();
-      if (currentUser) {
-        await syncEntitlementToLocal(currentUser.id);
-      }
+      await syncEntitlementToLocal();
       await loadSummary(true);
 
       const milestoneBonus = result.newlyAwardedMilestones.reduce(

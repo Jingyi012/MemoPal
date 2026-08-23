@@ -1,57 +1,39 @@
 import { notificationApi } from '@/features/notifications/api/notification';
-import { NotificationType } from '@/enums/notificationType';
-import { createNotificationRepository } from '@/features/notifications/repositories/notification.repo';
-import { Notification } from '@/features/notifications/types/notification';
+import type { Notification } from '@/features/notifications/types/notification';
+import type { NotificationType } from '@/enums/notificationType';
 import * as Crypto from 'expo-crypto';
 
-const repo = createNotificationRepository();
-
 export const InAppNotificationService = {
-  /**
-   * Syncs with server and returns all notifications
-   */
   async getNotifications(): Promise<Notification[]> {
-    try {
-      const remote = await notificationApi.getAll();
-      if (remote?.length > 0) {
-        await repo.upsertMany(remote);
-      }
-    } catch (error) {
-      console.warn('[NotificationService] Fetch failed, using local:', error);
-    }
-    return await repo.getAll();
+    return (await notificationApi.getAll()) ?? [];
   },
 
-  /**
-   * Specialized fetch for unread items
-   */
   async getUnreadCount(): Promise<number> {
-    const unread = await repo.getAllUnread();
-    return unread.length;
+    return ((await notificationApi.getAllUnread()) ?? []).length;
   },
 
-  /**
-   * Local actions that trigger the Sync Queue
-   */
   async markAsRead(id: string): Promise<void> {
-    await repo.markAsRead(id);
+    await notificationApi.update(id, { isRead: true, readAt: new Date().toISOString() });
   },
 
   async markAllAsRead(): Promise<void> {
-    await repo.markAllAsRead();
+    const unread = (await notificationApi.getAllUnread()) ?? [];
+    const readAt = new Date().toISOString();
+    await Promise.all(
+      unread.map((notification) =>
+        notificationApi.update(notification.id, { isRead: true, readAt })
+      )
+    );
   },
 
   async dismiss(id: string): Promise<void> {
-    await repo.dismiss(id);
+    await notificationApi.update(id, { isDismissed: true });
   },
 
   async restore(id: string): Promise<void> {
-    await repo.restore(id);
+    await notificationApi.update(id, { isDismissed: false });
   },
 
-  /**
-   * Create a notification record (e.g., when a review is due)
-   */
   async createInAppNotification(params: {
     type: NotificationType;
     title: string;
@@ -60,19 +42,17 @@ export const InAppNotificationService = {
     referenceType?: string;
   }): Promise<Notification> {
     const now = new Date().toISOString();
-    const newNotification: Notification = {
+    return notificationApi.create({
       id: Crypto.randomUUID(),
       ...params,
       isRead: false,
       isDismissed: false,
       createdAt: now,
       updatedAt: now,
-    };
-
-    return await repo.create(newNotification);
+    });
   },
 
   async cleanup(): Promise<void> {
-    await repo.deleteOldDismissed(30);
+    // Retention is server-owned in the online-first architecture.
   },
 };

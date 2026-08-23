@@ -1,6 +1,8 @@
 export interface Auditable {
   createdAt: string;
   updatedAt: string;
+  createdBy?: string | null;
+  updatedBy?: string | null;
 }
 
 export interface Syncable {
@@ -10,6 +12,7 @@ export interface Syncable {
 export interface SoftDeletable {
   isDeleted?: boolean;
   deletedAt?: string | null;
+  deletedBy?: string | null;
 }
 
 export interface GeneralResponse<T> {

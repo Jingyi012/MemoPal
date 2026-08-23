@@ -1,8 +1,5 @@
 import { FeatureLimits, userStatsApi } from '@/features/gamification/shared/api/userStats';
 import { systemSettingsApi } from '@/core/settings/api/systemSettings';
-import { createFeatureLimitsRepository } from '@/features/subscription/repositories/featureLimits.repo';
-
-const repo = createFeatureLimitsRepository();
 
 export const DEFAULT_FREE_LIMITS: FeatureLimits = {
   isPremium: false,
@@ -128,12 +125,11 @@ function parseFeatureLimitsSetting(
   };
 }
 
-export async function getFeatureLimits(userId: string, isPremium: boolean): Promise<FeatureLimits> {
+export async function getFeatureLimits(_userId: string, isPremium: boolean): Promise<FeatureLimits> {
   const fallback = getFeatureLimitsFallback(isPremium);
 
   try {
     const remote = await userStatsApi.getFeatureLimits();
-    await repo.upsert(userId, remote);
     return remote;
   } catch (error) {
     console.warn('Failed to fetch user feature limits endpoint:', error);
@@ -144,7 +140,6 @@ export async function getFeatureLimits(userId: string, isPremium: boolean): Prom
     if (setting?.value) {
       const fromSetting = parseFeatureLimitsSetting(setting.value, isPremium, fallback);
       if (fromSetting) {
-        await repo.upsert(userId, fromSetting);
         return fromSetting;
       }
     }
@@ -152,6 +147,5 @@ export async function getFeatureLimits(userId: string, isPremium: boolean): Prom
     console.warn('Failed to fetch feature limits from system settings endpoint:', error);
   }
 
-  const local = await repo.getByUserId(userId);
-  return local ?? fallback;
+  return fallback;
 }

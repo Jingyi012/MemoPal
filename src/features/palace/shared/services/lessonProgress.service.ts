@@ -1,30 +1,68 @@
 import { lessonProgressApi } from '@/features/palace/shared/api/lessonProgress.api';
-import { createLessonProgressRepository } from '@/features/palace/shared/repositories/lessonProgress.repository';
 import type { LessonProgress } from '@/features/palace/shared/types/lesson.types';
+import * as Crypto from 'expo-crypto';
 
 export async function getProgress(lessonId: string): Promise<LessonProgress | null> {
-  const repo = createLessonProgressRepository();
   try {
-    const remoteProgress = await lessonProgressApi.getProgress(lessonId);
-    if (remoteProgress) await repo.upsertMany([remoteProgress]);
+    return await lessonProgressApi.getProgress(lessonId);
   } catch (error: any) {
-    if (error?.response?.status !== 404) console.warn('Failed to sync progress from backend:', error);
+    const status = error?.statusCode ?? error?.response?.status;
+    if (status === 404) return null;
+    throw error;
   }
-  return repo.getLessonProgress(lessonId);
 }
 
 export async function initLessonProgress(lessonId: string): Promise<LessonProgress> {
-  return createLessonProgressRepository().initLessonProgress(lessonId);
+  const now = new Date().toISOString();
+  return lessonProgressApi.updateProgress({
+    id: Crypto.randomUUID(),
+    lessonId,
+    firstCompletedDate: null,
+    masteryLevel: 'new',
+    totalReviews: 0,
+    xpEarned: 0,
+    createdAt: now,
+    updatedAt: now,
+    isDeleted: false,
+    reviewSchedules: [],
+  });
 }
 
 export async function ensureLearningInitialized(progress: LessonProgress): Promise<void> {
-  return createLessonProgressRepository().ensureLearningInitialized(progress);
+  if (progress.masteryLevel !== 'learning' || progress.reviewSchedules?.length > 0) return;
+
+  const now = new Date();
+  const dueDate = new Date(now);
+  dueDate.setUTCDate(dueDate.getUTCDate() + 1);
+  await lessonProgressApi.updateProgress({
+    ...progress,
+    reviewSchedules: [
+      {
+        id: Crypto.randomUUID(),
+        lessonProgressId: progress.id,
+        reviewRound: 1,
+        dueDate: dueDate.toISOString(),
+        completed: false,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+        isDeleted: false,
+      },
+    ],
+  });
 }
 
 export async function saveProgress(progress: LessonProgress): Promise<void> {
-  return createLessonProgressRepository().saveProgress(progress);
+  await lessonProgressApi.updateProgress({ ...progress, updatedAt: new Date().toISOString() });
 }
 
 export async function deleteProgress(lessonId: string): Promise<void> {
-  return createLessonProgressRepository().delete(lessonId);
+  const progress = await getProgress(lessonId);
+  if (!progress) return;
+  const now = new Date().toISOString();
+  await lessonProgressApi.updateProgress({
+    ...progress,
+    isDeleted: true,
+    deletedAt: now,
+    updatedAt: now,
+  });
 }

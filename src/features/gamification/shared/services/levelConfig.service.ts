@@ -1,13 +1,5 @@
 import { systemSettingsApi } from '@/core/settings/api/systemSettings';
 import { LevelConfigs } from '@/features/gamification/shared/types/levelConfigs';
-import { createSystemSettingsRepository } from '@/core/settings/repositories/systemSettings.repo';
-
-const repo = createSystemSettingsRepository();
-
-// 1 hour cache window for remote pulls.
-const SYNC_COOLDOWN_MS = 60 * 60 * 1000;
-let lastSyncAt = 0;
-let inFlightSync: Promise<void> | null = null;
 
 function getComputedLevelFromXp(configs: LevelConfigs[], totalXp: number): number {
   if (!configs.length) return 1;
@@ -29,34 +21,34 @@ function getComputedLevelFromXp(configs: LevelConfigs[], totalXp: number): numbe
   return Math.max(1, resolvedLevel);
 }
 
-async function syncLevelConfigsFromRemote(force = false): Promise<void> {
-  if (inFlightSync) return inFlightSync;
-
-  const shouldSync = force || Date.now() - lastSyncAt >= SYNC_COOLDOWN_MS;
-  if (!shouldSync) return;
-
-  inFlightSync = (async () => {
-    try {
-      const remote = await systemSettingsApi.getLevelConfigs();
-      if (remote) {
-        await repo.syncSetting(remote);
-      }
-      lastSyncAt = Date.now();
-    } catch (error) {
-      console.warn('Level config sync failed, using local cache:', error);
-    }
-  })();
+async function ensureLevelConfigsLoaded(_forceRemote = false): Promise<LevelConfigs[]> {
+  const setting = await systemSettingsApi.getLevelConfigs();
+  if (!setting?.value) return [];
 
   try {
-    await inFlightSync;
-  } finally {
-    inFlightSync = null;
+    const parsed = JSON.parse(setting.value) as unknown;
+    const source = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === 'object'
+        ? ((parsed as Record<string, unknown>).levels ??
+          (parsed as Record<string, unknown>).configs ??
+          (parsed as Record<string, unknown>).items)
+        : [];
+    if (!Array.isArray(source)) return [];
+    return source
+      .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+      .map((item) => ({
+        level: Number(item.level ?? 0),
+        requiredXp: Number(item.requiredXp ?? 0),
+        title: item.title ? String(item.title) : undefined,
+        createdAt: String(item.createdAt ?? setting.createdAt),
+        updatedAt: String(item.updatedAt ?? setting.updatedAt),
+      }))
+      .filter((item) => item.level > 0)
+      .sort((a, b) => a.level - b.level);
+  } catch {
+    return [];
   }
-}
-
-async function ensureLevelConfigsLoaded(forceRemote = false): Promise<LevelConfigs[]> {
-  await syncLevelConfigsFromRemote(forceRemote);
-  return await repo.getLevelConfigs();
 }
 
 export async function getLevelConfigs(options?: {

@@ -6,27 +6,12 @@ import {
   REVIEW_TARGET_SECONDS_PER_WORD,
 } from '@/features/palace/shared/constants/config';
 import { SourceType } from '@/enums/sourceType';
-import { createReviewRepository } from '@/features/palace/shared/repositories/review.repository';
 import { recordXpEventWithClientEventId } from '@/features/gamification/shared/services/xpEvents.service';
 import * as xpConfigService from '@/features/gamification/shared/services/xpConfig.service';
+import { lessonProgressApi } from '@/features/palace/shared/api/lessonProgress.api';
 import type { ReviewSchedule } from '@/features/palace/shared/types/lesson.types';
 import type { DueReviewLessonPreview } from '@/features/palace/shared/types/review.types';
 import * as Crypto from 'expo-crypto';
-
-const reviewRepository = createReviewRepository();
-
-async function syncRemoteReviews(
-  fetchRemote: () => Promise<ReviewSchedule[]>,
-  warningMessage: string,
-  options?: { pruneByProgressId?: string }
-): Promise<void> {
-  try {
-    const remote = (await fetchRemote()) ?? [];
-    await reviewRepository.upsertMany(remote, options);
-  } catch (error) {
-    console.warn(warningMessage, error);
-  }
-}
 
 export interface ReviewResult {
   correctCount: number;
@@ -46,26 +31,18 @@ export function calculateReviewResults(results: any[], totalSteps: number): Revi
 }
 
 export async function getReviewSchedule(lessonProgressId: string): Promise<ReviewSchedule[]> {
-  await syncRemoteReviews(
-    () => reviewApi.getByProgressId(lessonProgressId),
-    'Failed to sync reviews from backend:',
-    { pruneByProgressId: lessonProgressId }
-  );
-  return reviewRepository.getReviewSchedule(lessonProgressId);
+  return (await reviewApi.getByProgressId(lessonProgressId)) ?? [];
 }
 
 export async function getDueReviews(): Promise<ReviewSchedule[]> {
-  await syncRemoteReviews(() => reviewApi.getDueReviews(), 'Failed to sync due reviews:');
-  return reviewRepository.getDueReviews();
+  return (await reviewApi.getDueReviews()) ?? [];
 }
 
-export async function getDueReviewSnapshot(limit = 2): Promise<DueReviewSnapshot> {
-  await syncRemoteReviews(() => reviewApi.getDueReviews(), 'Failed to sync due reviews:');
-  const [dueReviews, dueLessons] = await Promise.all([
-    reviewRepository.getDueReviews(),
-    reviewRepository.getDueReviewLessons(limit),
-  ]);
-  return { dueReviews, dueLessons };
+export async function getDueReviewSnapshot(_limit = 2): Promise<DueReviewSnapshot> {
+  const dueReviews = (await reviewApi.getDueReviews()) ?? [];
+  // The legacy API does not expose lesson titles on due review rows yet.
+  // Keep the query server-authoritative and omit previews until that contract is enriched.
+  return { dueReviews, dueLessons: [] as DueReviewLessonPreview[] };
 }
 
 export async function completeReview(
@@ -119,12 +96,13 @@ export async function completeReview(
   const xpEarned = isPassed ? computedXpEarned : 0;
   const score = Math.round(Math.min(100, accuracy * 80 + speedRatio * 20));
 
-  await reviewRepository.updateLessonProgressAfterReview(
-    lessonId,
-    xpEarned,
-    correctCount,
-    totalCount
-  );
+  const progress = await lessonProgressApi.getProgress(lessonId);
+  const pendingReview = [...(progress.reviewSchedules ?? [])]
+    .filter((review) => !review.completed && !review.isDeleted)
+    .sort((a, b) => a.reviewRound - b.reviewRound)[0];
+  if (pendingReview) {
+    await reviewApi.complete(pendingReview.id, correctCount, totalCount);
+  }
 
   let rewards: { levelUpTo?: number; achievedMilestones: string[]; earnedBadges: string[] } = {
     achievedMilestones: [],
@@ -157,10 +135,5 @@ export async function completeReview(
 }
 
 export async function getReviewStats() {
-  try {
-    return await reviewApi.getStats();
-  } catch {
-    console.warn('Using local stats fallback.');
-    return reviewRepository.getReviewStats();
-  }
+  return reviewApi.getStats();
 }

@@ -1,14 +1,10 @@
 import { communityApi, CommunityLessonQuery } from '@/features/community/api/community.api';
 import { getFeatureLimits } from '@/features/subscription/services/featureLimits.service';
 import { getLocationsByPalace } from '@/features/palace/shared/services/location.service';
-import { createLesson } from '@/features/palace/shared/services/lesson.service';
+import { createLesson, getLessonsByPalace } from '@/features/palace/shared/services/lesson.service';
 import { syncLessonWords } from '@/features/palace/shared/services/word.service';
-import { createLessonRepository } from '@/features/palace/shared/repositories/lesson.repository';
-import { createUserRepository } from '@/features/profile/repositories/user.repo';
+import { authApi } from '@/features/auth/api/auth';
 import { CommunityLesson } from '@/features/community/types/community.types';
-
-const lessonRepo = createLessonRepository();
-const userRepo = createUserRepository();
 
 export async function getCommunityLessons(query: CommunityLessonQuery = {}) {
   return await communityApi.getLessons(query);
@@ -28,10 +24,10 @@ export async function importCommunityLessonToPalace(params: {
 }) {
   const { lesson, palaceId } = params;
 
-  const currentUser = await userRepo.getCurrent();
+  const currentUser = await authApi.getCurrentProfile();
   if (currentUser) {
     const limits = await getFeatureLimits(currentUser.id, currentUser.isPremium);
-    const currentLessons = await lessonRepo.getAllByPalace(palaceId);
+    const currentLessons = await getLessonsByPalace(palaceId);
     const currentCustomLessonsCount = currentLessons.filter((entry) => entry.isCustom !== false).length;
 
     if (currentCustomLessonsCount >= limits.customLessonsPerPalace) {

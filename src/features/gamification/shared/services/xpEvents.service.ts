@@ -1,8 +1,13 @@
 import { SourceType } from '@/enums/sourceType';
-import { createXpEventsRepository, XpEventCreateResult } from '@/features/gamification/shared/repositories/xpEvents.repo';
+import { xpEventApi } from '@/features/gamification/shared/api/xpEvent';
 import * as Crypto from 'expo-crypto';
 
-const repo = createXpEventsRepository();
+export interface XpEventCreateResult {
+  id: string;
+  levelUpTo?: number;
+  achievedMilestones: string[];
+  earnedBadges: string[];
+}
 
 export async function recordXpEvent(
   sourceType: SourceType,
@@ -22,14 +27,22 @@ export async function recordXpEventWithClientEventId(
   sourceId?: string,
   options?: { trackActivity?: boolean }
 ): Promise<XpEventCreateResult> {
-  return await repo.create({
-    sourceType: sourceType as string,
+  const created = await xpEventApi.create({
+    id: Crypto.randomUUID(),
+    sourceType,
     sourceId,
     xpAmount,
     clientEventId,
-  }, options);
+  });
+
+  return {
+    id: created.id,
+    achievedMilestones: [],
+    earnedBadges: [],
+  };
 }
 
-export async function getBySourceType(sourceType: string): Promise<any[]> {
-  return await repo.getBySourceType(sourceType);
+export async function getBySourceType(sourceType: string) {
+  const events = await xpEventApi.getAll();
+  return events.filter((event) => event.sourceType === sourceType);
 }

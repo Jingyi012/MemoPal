@@ -3,7 +3,6 @@ import { referralApi } from '@/features/referral/api/referral';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthProvider';
-import { createUserRepository } from '@/features/profile/repositories/user.repo';
 import {
   getFacebookAccessToken,
   getGoogleIdToken,
@@ -83,10 +82,7 @@ export default function Register() {
       if (normalizedReferralCode) {
         try {
           await referralApi.redeem(normalizedReferralCode);
-          const currentUser = await createUserRepository().getCurrent();
-          if (currentUser) {
-            await syncEntitlementToLocal(currentUser.id);
-          }
+          await syncEntitlementToLocal();
           Toast.show({
             type: 'success',
             text1: 'Referral applied',

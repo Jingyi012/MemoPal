@@ -1,10 +1,8 @@
 import { useAuth } from '@/contexts/AuthProvider';
-import { resetSeedData } from '@/db/seed';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useXpIntegrityCheck } from '@/features/profile/hooks/useDiagnostics';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { useQueryClient } from '@tanstack/react-query';
-import { createUserRepository } from '@/features/profile/repositories/user.repo';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -17,8 +15,7 @@ import { PremiumUpdateCard } from '@/components/PremiumUpdateCard';
 import { Colors } from '@/constants/colors';
 import { useUserState } from '@/contexts/UserStateContext';
 import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
-import { clearSyncQueueForDevelopment } from '@/core/sync/processQueue';
-import { Bell, Gift, HelpCircle, LogOut, Moon, Shield } from 'lucide-react-native';
+import { Bell, Gift, HelpCircle, LogOut, Shield } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { EditProfileSheet } from '../components/EditProfileSheet';
 import HelpSheet from '../components/HelpSheet';
@@ -37,7 +34,6 @@ export default function SettingsScreen() {
   const { userState, updateState, updatePreferences } = useUserState();
   const xpIntegrityCheck = useXpIntegrityCheck();
   const updateProfileMutation = useUpdateProfile();
-  const userRepo = createUserRepository();
   const [showLogout, setShowLogout] = useState<boolean>(false);
   const { logout } = useAuth();
   const [dailyLearningEnabled, setDailyLearningEnabled] = useState<boolean>(
@@ -95,34 +91,12 @@ export default function SettingsScreen() {
   };
 
   const clearLocalData = async () => {
-    await resetSeedData();
     queryClient.clear();
     Toast.show({
       type: 'success',
-      text1: 'Local SQLite data cleared',
-      text2: 'Restart app or refresh to sync from backend.',
+      text1: 'API cache cleared',
+      text2: 'Screens will fetch fresh data from the server.',
     });
-  };
-
-  const clearSyncQueue = async () => {
-    try {
-      const removedCount = await clearSyncQueueForDevelopment();
-      Toast.show({
-        type: 'success',
-        text1: 'Sync queue cleared',
-        text2:
-          removedCount > 0
-            ? `Removed ${removedCount} pending sync item(s).`
-            : 'No pending sync items found.',
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to clear sync queue.';
-      Toast.show({
-        type: 'error',
-        text1: 'Unable to clear sync queue',
-        text2: message,
-      });
-    }
   };
 
   const checkXpIntegrity = async () => {
@@ -142,30 +116,6 @@ export default function SettingsScreen() {
       text1: 'XP mismatch detected',
       text2: `users.totalXp=${result.userXp}, xp_events_sum=${result.xpEventsTotal}`,
     });
-  };
-
-  const togglePremiumForTesting = async () => {
-    if (!user) return;
-    const nextPremium = !user.isPremium;
-    const now = new Date();
-    const nextExpiry = new Date(now);
-    nextExpiry.setMonth(nextExpiry.getMonth() + 1);
-
-    await userRepo.setPremium(user.id, nextPremium);
-
-    await updateState({
-      subscription: {
-        ...userState.subscription,
-        isPremium: nextPremium,
-        planId: nextPremium ? 'premium_monthly' : undefined,
-        startedAt: nextPremium ? now.toISOString() : userState.subscription.startedAt,
-        expiresAt: nextPremium ? nextExpiry.toISOString() : now.toISOString(),
-        status: nextPremium ? 'active' : 'canceled',
-        autoRenew: nextPremium,
-      },
-    });
-
-    await queryClient.invalidateQueries();
   };
 
   const helpRef = useRef<BottomSheetModal>(null);
@@ -229,21 +179,9 @@ export default function SettingsScreen() {
           <SettingsSection title="Developer Tools">
             <SettingsRow
               icon={<Shield size={20} color="#475569" />}
-              title="Clear Local SQLite Data"
-              subtitle="Delete all local tables and cached offline rows"
+              title="Clear API Cache"
+              subtitle="Discard cached queries and fetch fresh server data"
               onPress={clearLocalData}
-            />
-            <SettingsRow
-              icon={<Shield size={20} color="#475569" />}
-              title="Clear Sync Queue"
-              subtitle="Delete all pending offline sync actions"
-              onPress={clearSyncQueue}
-            />
-            <SettingsRow
-              icon={<Moon size={20} color="#475569" />}
-              title={`Toggle Premium (Current: ${user?.isPremium ? 'ON' : 'OFF'})`}
-              subtitle="Testing helper"
-              onPress={togglePremiumForTesting}
             />
             <SettingsRow
               icon={<Shield size={20} color="#475569" />}

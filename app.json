@@ -50,7 +50,6 @@
           "enableBackgroundRemoteNotifications": false
         }
       ],
-      "expo-sqlite",
       [
         "@react-native-google-signin/google-signin",
         {

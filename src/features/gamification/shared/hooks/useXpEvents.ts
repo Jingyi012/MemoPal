@@ -1,4 +1,5 @@
-import { createXpEventsRepository } from '@/features/gamification/shared/repositories/xpEvents.repo';
+import { userStatsApi } from '@/features/gamification/shared/api/userStats';
+import { xpEventApi } from '@/features/gamification/shared/api/xpEvent';
 import { useQuery } from '@tanstack/react-query';
 
 export const XP_KEYS = {
@@ -9,13 +10,9 @@ export const XP_KEYS = {
 };
 
 export function useTotalXp() {
-  const repo = createXpEventsRepository();
-
   const query = useQuery({
     queryKey: XP_KEYS.total(),
-    queryFn: async () => {
-      return await repo.getTotalXp();
-    },
+    queryFn: async () => (await userStatsApi.getLevel()).xp,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -28,17 +25,11 @@ export function useTotalXp() {
 }
 
 export function useXpEvents(options?: { recentDays?: number }) {
-  const repo = createXpEventsRepository();
   const recentDays = options?.recentDays;
 
   const query = useQuery({
     queryKey: XP_KEYS.events(recentDays),
-    queryFn: async () => {
-      if (recentDays && recentDays > 0) {
-        return await repo.getRecent(recentDays);
-      }
-      return await repo.getAll();
-    },
+    queryFn: () => xpEventApi.getAll(recentDays),
     staleTime: 1000 * 60 * 5,
   });
 

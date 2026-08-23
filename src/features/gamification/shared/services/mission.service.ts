@@ -1,18 +1,17 @@
 import { missionApi } from '@/features/gamification/shared/api/mission';
 import { SourceType } from '@/enums/sourceType';
-import { createMissionRepository } from '@/features/gamification/shared/repositories/mission.repo';
-import { XpEventCreateResult, createXpEventsRepository } from '@/features/gamification/shared/repositories/xpEvents.repo';
+import {
+  XpEventCreateResult,
+  getBySourceType,
+  recordXpEventWithClientEventId,
+} from '@/features/gamification/shared/services/xpEvents.service';
 import { MissionDashboard, MissionProgress } from '@/features/gamification/shared/types/missions';
-import { recordXpEventWithClientEventId } from './xpEvents.service';
 
 export interface MissionClaimResult extends XpEventCreateResult {
   sourceId: string;
   clientEventId: string;
   wasAlreadyClaimed: boolean;
 }
-
-const xpEventRepo = createXpEventsRepository();
-const missionRepo = createMissionRepository();
 
 function formatDate(value: Date): string {
   return value.toISOString().slice(0, 10);
@@ -53,7 +52,7 @@ export async function hasClaimedMissionReward(mission: MissionProgress, now = ne
   }
 
   const sourceId = getMissionClaimSourceId(mission, now);
-  const events = await xpEventRepo.getBySourceType(SourceType.MissionComplete);
+  const events = await getBySourceType(SourceType.MissionComplete);
   return events.some((item) => item.sourceId === sourceId && !item.isDeleted);
 }
 
@@ -85,17 +84,5 @@ export async function claimMissionReward(
 }
 
 export async function getCurrentMissionDashboard(): Promise<MissionDashboard> {
-  try {
-    const remoteDashboard = await missionApi.getCurrent();
-    await missionRepo.upsertCurrent(remoteDashboard);
-  } catch (error) {
-    console.warn('Failed to sync missions from backend, using local data:', error);
-  }
-
-  const localDashboard = await missionRepo.getCurrent();
-  if (localDashboard) {
-    return localDashboard;
-  }
-
-  throw new Error('Unable to load missions right now.');
+  return missionApi.getCurrent();
 }
