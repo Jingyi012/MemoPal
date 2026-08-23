@@ -1,7 +1,6 @@
 import { AUTH_STORAGE_KEY } from '@/features/auth/constants/auth';
-import { db } from '@/db/client';
+import { authApi } from '@/features/auth/api/auth';
 import type { User } from '@/features/profile/types/users';
-import { getEffectiveCurrentStreak } from '@/features/gamification/shared/utils/streak';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 
@@ -13,10 +12,13 @@ export function useCurrentUser() {
   const query = useQuery({
     queryKey: CURRENT_USER_KEYS.all,
     queryFn: async (): Promise<User | null> => {
-      const user = await db.query.users.findFirst();
-      if (!user) {
+      try {
+        const remote = await authApi.getCurrentProfile();
+        await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(remote));
+        return remote;
+      } catch (error) {
         const raw = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-        if (!raw) return null;
+        if (!raw) throw error;
 
         try {
           const fromStorage = JSON.parse(raw) as User;
@@ -27,34 +29,12 @@ export function useCurrentUser() {
             totalXp: Math.max(0, fromStorage.totalXp ?? 0),
           };
         } catch {
-          return null;
+          throw error;
         }
       }
-
-      const stats = await db.query.userStats.findFirst({
-        where: (fields, { eq }) => eq(fields.userId, user.id),
-      });
-
-      return {
-        id: user.id,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl ?? undefined,
-        email: user.email ?? 'player@example.com',
-        totalXp: user.totalXp,
-        level: user.level,
-        isPremium: user.isPremium,
-        stats: stats
-          ? {
-              lessonsCompleted: stats.lessonsCompleted,
-              wordsLearned: stats.wordsLearned,
-              currentStreak: getEffectiveCurrentStreak(stats.currentStreak, stats.lastActiveDate),
-              longestStreak: stats.longestStreak,
-              lastActiveDate: stats.lastActiveDate,
-            }
-          : undefined,
-      };
     },
-    staleTime: 0,
+    staleTime: 1000 * 60 * 2,
+    networkMode: 'online',
   });
 
   return {

@@ -1,9 +1,7 @@
 import { ApiClientError, authApi, RegisterRequest } from '@/features/auth/api/auth';
 import { AUTH_STORAGE_KEY } from '@/features/auth/constants/auth';
 import { USER_STATE_STORAGE_KEY } from '@/core/storage/constants';
-import { clearLocalCacheOnLogout } from '@/db/seed';
 import { CURRENT_USER_KEYS } from '@/features/profile/hooks/useCurrentUser';
-import { createUserRepository } from '@/features/profile/repositories/user.repo';
 import {
   clearAuthTokens,
   getAccessToken,
@@ -22,7 +20,6 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 
@@ -43,7 +40,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const userRepo = useMemo(() => createUserRepository(), []);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -76,18 +72,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return normalized;
         }
       } catch {
-        // Ignore malformed cache and fallback to local db user.
+        // Ignore malformed session cache.
       }
     }
 
-    const localCurrent = await userRepo.getCurrent();
-    if (!localCurrent) {
-      return null;
-    }
-
-    const localProfile = await userRepo.getProfileLocal(localCurrent.id);
-    return normalizeUser(localProfile ?? null);
-  }, [normalizeUser, userRepo]);
+    return null;
+  }, [normalizeUser]);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,7 +99,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           await Promise.allSettled([
             AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
             clearAuthTokens(),
-            clearLocalCacheOnLogout({ preserveSystemSettings: true }),
           ]);
           if (!cancelled) {
             setUser(null);
@@ -124,10 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         try {
           const remoteUser = await authApi.getCurrentProfile();
-          await Promise.all([
-            AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(remoteUser)),
-            userRepo.upsertFromRemote(remoteUser),
-          ]);
+          await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(remoteUser));
           if (!cancelled) {
             setUser(remoteUser);
           }
@@ -140,7 +126,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             await Promise.allSettled([
               AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
               clearAuthTokens(),
-              clearLocalCacheOnLogout({ preserveSystemSettings: true }),
             ]);
             await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
             if (!cancelled) {
@@ -172,7 +157,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       cancelled = true;
     };
-  }, [loadCachedSessionUser, queryClient, userRepo]);
+  }, [loadCachedSessionUser, queryClient]);
 
   const setSession = async (sessionUser: User, token: string, refreshToken: string) => {
     if (!token || !token.trim()) {
@@ -188,13 +173,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setAccessToken(token),
       setRefreshToken(refreshToken),
     ]);
-
-    // Keep remote profile cache best-effort; token persistence is critical path.
-    try {
-      await userRepo.upsertFromRemote(sessionUser);
-    } catch (error) {
-      console.warn('[MemoPal][Auth] Failed to cache user locally after login:', error);
-    }
 
     setUser(sessionUser);
     await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
@@ -233,7 +211,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await Promise.allSettled([
       AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
       clearAuthTokens(),
-      clearLocalCacheOnLogout({ preserveSystemSettings: true }),
     ]);
     setUser(null);
     queryClient.clear();

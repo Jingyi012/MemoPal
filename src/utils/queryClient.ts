@@ -8,11 +8,13 @@ export const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 60, // 1 hour
       refetchOnReconnect: true,
       refetchOnWindowFocus: false, // RN has no window focus
-      networkMode: 'always', // IMPORTANT for offline-first
+      networkMode: 'online',
     },
     mutations: {
-      retry: 1,
-      networkMode: 'always',
+      // POST requests are not retried automatically until every write endpoint
+      // supports an idempotency key.
+      retry: false,
+      networkMode: 'online',
     },
   },
 });

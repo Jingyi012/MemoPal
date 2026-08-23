@@ -2,47 +2,28 @@ import { Colors } from '@/constants/colors';
 import { AuthProvider } from '@/contexts/AuthProvider';
 import { GamificationRewardProvider } from '@/contexts/GamificationRewardContext';
 import { UserStateProvider } from '@/contexts/UserStateContext';
-import { db } from '@/db/client';
 import { useNotificationObserver } from '@/features/notifications/hooks/useNotificationObserver';
 import { useSubscriptionEntitlementSync } from '@/features/subscription/hooks/useSubscriptionEntitlementSync';
 import { useSubscriptionGuard } from '@/features/subscription/hooks/useSubscriptionGuard';
-import { useSyncManager } from '@/core/sync/useSyncManager';
 import { useGamificationBootstrap } from '@/features/gamification/shared/hooks/useGamificationBootstrap';
 import { queryClient } from '@/utils/queryClient';
 import { toastConfig } from '@/utils/toastConfig';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import '../../global.css';
-import migrations from '../drizzle/migrations';
 
 function AppLayout() {
   const { colorScheme } = useColorScheme();
 
-  const { success: migrationsSuccess, error: migrationError } = useMigrations(db, migrations);
-  const isAppReady = migrationsSuccess;
-
-  // Start observers only after DB migrations are ready.
-  useNotificationObserver(isAppReady);
-
-  if (migrationError) {
-    console.error('Migration failed: ', migrationError);
-  }
-
-  useGamificationBootstrap(isAppReady);
-  useSyncManager(isAppReady);
-  useSubscriptionGuard(isAppReady);
-  useSubscriptionEntitlementSync(isAppReady);
-
-  // Wait for DB migrations to complete before rendering app features.
-  if (!isAppReady) {
-    return null;
-  }
+  useNotificationObserver(true);
+  useGamificationBootstrap(true);
+  useSubscriptionGuard(true);
+  useSubscriptionEntitlementSync(true);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
