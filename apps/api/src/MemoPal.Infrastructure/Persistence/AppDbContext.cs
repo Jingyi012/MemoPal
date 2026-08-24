@@ -425,33 +425,29 @@ public class AppDbContext : DbContext, IAppDbContext
             switch (entry.State)
             {
                 case EntityState.Added:
-                    if (entry.Entity.CreatedAt == default)
-                    {
-                        entry.Entity.CreatedAt = now;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(entry.Entity.CreatedBy) && !string.IsNullOrWhiteSpace(currentUserId))
-                    {
-                        entry.Entity.CreatedBy = currentUserId;
-                    }
-
-                    if (entry.Entity.UpdatedAt == default)
-                    {
-                        entry.Entity.UpdatedAt = now;
-                    }
-
                     if (!string.IsNullOrWhiteSpace(currentUserId))
                     {
+                        entry.Entity.CreatedAt = now;
+                        entry.Entity.CreatedBy = currentUserId;
+                        entry.Entity.UpdatedAt = now;
                         entry.Entity.UpdatedBy = currentUserId;
+                    }
+                    else
+                    {
+                        entry.Entity.CreatedAt = entry.Entity.CreatedAt == default ? now : entry.Entity.CreatedAt;
+                        entry.Entity.UpdatedAt = entry.Entity.UpdatedAt == default ? now : entry.Entity.UpdatedAt;
                     }
                     break;
 
                 case EntityState.Modified:
-                    var updatedAt = entry.Property(x => x.UpdatedAt);
-                    if (!updatedAt.IsModified || updatedAt.CurrentValue == default)
-                    {
-                        entry.Entity.UpdatedAt = now;
-                    }
+                    var createdAt = entry.Property(x => x.CreatedAt);
+                    var createdBy = entry.Property(x => x.CreatedBy);
+                    createdAt.CurrentValue = createdAt.OriginalValue;
+                    createdBy.CurrentValue = createdBy.OriginalValue;
+                    createdAt.IsModified = false;
+                    createdBy.IsModified = false;
+
+                    entry.Entity.UpdatedAt = now;
 
                     if (!string.IsNullOrWhiteSpace(currentUserId))
                     {
@@ -459,20 +455,26 @@ public class AppDbContext : DbContext, IAppDbContext
                     }
 
                     var isDeleted = entry.Property(x => x.IsDeleted);
-                    if (isDeleted.IsModified && entry.Entity.IsDeleted)
+                    var wasDeleted = isDeleted.OriginalValue;
+                    if (isDeleted.IsModified && entry.Entity.IsDeleted && !wasDeleted)
                     {
-                        entry.Entity.DeletedAt ??= now;
+                        entry.Entity.DeletedAt = now;
                         if (!string.IsNullOrWhiteSpace(currentUserId))
                         {
                             entry.Entity.DeletedBy = currentUserId;
                         }
+                    }
+                    else if (isDeleted.IsModified && !entry.Entity.IsDeleted && wasDeleted)
+                    {
+                        entry.Entity.DeletedAt = null;
+                        entry.Entity.DeletedBy = null;
                     }
                     break;
 
                 case EntityState.Deleted:
                     entry.State = EntityState.Modified;
                     entry.Entity.IsDeleted = true;
-                    entry.Entity.DeletedAt ??= now;
+                    entry.Entity.DeletedAt = now;
                     entry.Entity.UpdatedAt = now;
                     if (!string.IsNullOrWhiteSpace(currentUserId))
                     {

@@ -1,5 +1,6 @@
 using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
+using MemoPal.Application.Common.Interfaces;
 using MemoPal.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -56,5 +57,47 @@ public sealed class PersistenceModelTests
                 Assert.NotNull(modelEntity!.FindProperty(propertyName));
             }
         }
+    }
+
+    [Fact]
+    public async Task SaveChanges_Should_Protect_Creation_Audit_And_Stamp_The_Authenticated_Actor()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase($"audit-stamps-{Guid.NewGuid():N}")
+            .Options;
+
+        await using var dbContext = new AppDbContext(options, new TestCurrentUserAccessor("actual-user"));
+        var user = new User
+        {
+            Id = "audit-user",
+            Email = "audit@example.com",
+            DisplayName = "Audit User",
+            PasswordHash = "hash",
+            CreatedAt = DateTime.UnixEpoch,
+            CreatedBy = "spoofed-user"
+        };
+
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        var createdAt = user.CreatedAt;
+        Assert.Equal("actual-user", user.CreatedBy);
+        Assert.Equal("actual-user", user.UpdatedBy);
+
+        user.CreatedAt = DateTime.UnixEpoch;
+        user.CreatedBy = "another-spoofed-user";
+        user.DisplayName = "Updated display name";
+        user.UpdatedBy = "spoofed-updater";
+        await dbContext.SaveChangesAsync();
+
+        Assert.Equal(createdAt, user.CreatedAt);
+        Assert.Equal("actual-user", user.CreatedBy);
+        Assert.Equal("actual-user", user.UpdatedBy);
+        Assert.True(user.UpdatedAt >= createdAt);
+    }
+
+    private sealed class TestCurrentUserAccessor(string userId) : ICurrentUserAccessor
+    {
+        public string? UserId { get; } = userId;
     }
 }
