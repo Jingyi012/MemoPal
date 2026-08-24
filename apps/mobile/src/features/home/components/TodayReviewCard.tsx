@@ -4,7 +4,13 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { ArrowRight, Clock3, Hash, MapPinned } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
-export function TodayReviewCard({ reviews, onOpen }: { reviews: DueMemoryReview[]; onOpen: (review: DueMemoryReview) => void }) {
+type TodayReviewCardProps = {
+  reviews: DueMemoryReview[];
+  onOpen: (review: DueMemoryReview) => void;
+  onStartReview?: (review: DueMemoryReview) => void;
+};
+
+export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewCardProps) {
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
@@ -32,6 +38,16 @@ export function TodayReviewCard({ reviews, onOpen }: { reviews: DueMemoryReview[
           );
         })}
       </View>
+      {onStartReview ? (
+        <AnimatedPressable
+          accessibilityRole="button"
+          accessibilityLabel="Start today's memory review"
+          onPress={() => onStartReview(reviews[0])}
+          style={styles.startButton}>
+          <Text style={styles.startButtonText}>Start review</Text>
+          <ArrowRight size={17} color={theme.ink} />
+        </AnimatedPressable>
+      ) : null}
     </View>
   );
 }
@@ -51,4 +67,6 @@ const styles = StyleSheet.create({
   reviewCopy: { flex: 1, minWidth: 0 },
   reviewTitle: { color: theme.ink, fontSize: 12.5, fontWeight: '900' },
   reviewMeta: { color: theme.inkSoft, fontSize: 10.5, fontWeight: '700', marginTop: 2 },
+  startButton: { minHeight: 44, borderRadius: 13, backgroundColor: theme.sun, marginTop: 10, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
+  startButtonText: { color: theme.ink, fontSize: 12.5, fontWeight: '900' },
 });
