@@ -22,6 +22,7 @@ export default function PalaceHomeScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
+        eyebrow="Memory Palace"
         title="Memory Palace"
         description="Place memories on one scene, then walk the route"
         backAction={() => router.back()}
@@ -32,13 +33,13 @@ export default function PalaceHomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} />}>
         <LinearGradient
-          colors={['#124E52', '#183947']}
+          colors={['#51479B', '#2B2641']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.hero}>
           <View style={styles.heroGlow} />
           <View style={styles.heroIcon}>
-            <MapPinned size={27} color="#163B3F" />
+            <MapPinned size={27} color={theme.ink} />
           </View>
           <Text style={styles.heroEyebrow}>SEE IT · PLACE IT · RECALL IT</Text>
           <Text style={styles.heroTitle}>Turn one place into a memory journey</Text>
@@ -50,9 +51,9 @@ export default function PalaceHomeScreen() {
             accessibilityRole="button"
             onPress={() => router.push('/palaces/create-memory' as Href)}
             style={styles.primaryButton}>
-            <Plus size={20} color="#163B3F" />
+            <Plus size={20} color={theme.ink} />
             <Text style={styles.primaryButtonText}>Build a new Palace</Text>
-            <ArrowRight size={19} color="#163B3F" />
+            <ArrowRight size={19} color={theme.ink} />
           </AnimatedPressable>
         </LinearGradient>
 
@@ -82,7 +83,9 @@ export default function PalaceHomeScreen() {
             {scenes.data.map((scene) => (
               <AnimatedPressable
                 key={scene.id}
-                onPress={() => router.push('/palaces/create-memory' as Href)}
+                onPress={() =>
+                  router.push({ pathname: '/palaces/create-memory', params: { sceneId: scene.id } })
+                }
                 style={styles.sceneCard}>
                 <AppImage imageUrl={scene.imageUrl} style={styles.sceneImage} />
                 <View style={styles.sceneShade} />
@@ -187,36 +190,36 @@ const styles = StyleSheet.create({
     borderRadius: 95,
     right: -55,
     top: -75,
-    backgroundColor: 'rgba(129, 226, 188, 0.18)',
+    backgroundColor: 'rgba(184, 173, 255, 0.2)',
   },
   heroIcon: {
     width: 52,
     height: 52,
     borderRadius: 18,
-    backgroundColor: '#8CE1BE',
+    backgroundColor: '#B9B1FF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 18,
   },
-  heroEyebrow: { color: '#C9E7DF', fontSize: 11, fontWeight: '900', letterSpacing: 1.1 },
+  heroEyebrow: { color: '#E3DFFF', fontSize: 11, fontWeight: '900', letterSpacing: 1.1 },
   heroTitle: { color: 'white', fontSize: 25, fontWeight: '900', marginTop: 6 },
-  heroBody: { color: '#DCEFEB', fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 320 },
+  heroBody: { color: '#E8E5F4', fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 320 },
   primaryButton: {
     marginTop: 20,
     minHeight: 52,
     borderRadius: 16,
-    backgroundColor: '#8CE1BE',
+    backgroundColor: theme.sun,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 9,
-    shadowColor: '#4BA984',
+    shadowColor: theme.sunDeep,
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 1,
     shadowRadius: 0,
     elevation: 3,
   },
-  primaryButtonText: { color: '#163B3F', fontSize: 15, fontWeight: '900', flex: 1, textAlign: 'center' },
+  primaryButtonText: { color: theme.ink, fontSize: 15, fontWeight: '900', flex: 1, textAlign: 'center' },
   sectionHeadingRow: {
     marginTop: 28,
     marginBottom: 11,
@@ -224,12 +227,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  sectionEyebrow: { color: '#247B67', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+  sectionEyebrow: { color: theme.violetDeep, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
   sectionTitle: { color: theme.ink, fontSize: 17, fontWeight: '900', marginTop: 3 },
   countPill: {
     overflow: 'hidden',
-    color: '#247B67',
-    backgroundColor: '#E3F6ED',
+    color: theme.violetDeep,
+    backgroundColor: '#EEE9FF',
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -242,7 +245,9 @@ const styles = StyleSheet.create({
     height: 148,
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: '#D9E6E1',
+    backgroundColor: '#DCD4FF',
+    borderWidth: 2,
+    borderColor: '#DCD4FF',
   },
   sceneImage: { ...StyleSheet.absoluteFillObject },
   sceneShade: {
@@ -267,11 +272,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 15,
-    backgroundColor: '#E3F6ED',
+    backgroundColor: '#EEE9FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  memoryBadgeText: { color: '#247B67', fontSize: 18, fontWeight: '900' },
+  memoryBadgeText: { color: theme.violetDeep, fontSize: 18, fontWeight: '900' },
   memoryMeta: { flex: 1, marginHorizontal: 12 },
   memoryTitle: { color: theme.ink, fontSize: 15, fontWeight: '900' },
   memorySub: { color: theme.inkSoft, fontSize: 12, fontWeight: '700', marginTop: 3 },

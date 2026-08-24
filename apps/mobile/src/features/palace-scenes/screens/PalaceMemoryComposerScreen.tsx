@@ -8,21 +8,37 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight, Check, Image as ImageIcon, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { firstParam, parseComposerItems } from '@/features/memory-composer/utils/composerParams';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function PalaceMemoryComposerScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ title?: string | string[]; items?: string | string[] }>();
+  const params = useLocalSearchParams<{
+    title?: string | string[];
+    items?: string | string[];
+    sceneId?: string | string[];
+  }>();
   const scenesQuery = usePalaceScenes();
   const { createMemorySet } = useMemorySetMutations();
   const prefilledItems = useMemo(() => parseComposerItems(params.items), [params.items]);
   const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
   const [newItem, setNewItem] = useState('');
   const [items, setItems] = useState<string[]>(() => prefilledItems);
-  const [selectedSceneId, setSelectedSceneId] = useState('');
+  const [selectedSceneId, setSelectedSceneId] = useState(() => firstParam(params.sceneId) ?? '');
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!scenesQuery.data?.length) return;
+    const requestedSceneId = firstParam(params.sceneId);
+    const selectedSceneIsValid = scenesQuery.data.some((scene) => scene.id === selectedSceneId);
+    if (selectedSceneIsValid) return;
+    setSelectedSceneId(
+      requestedSceneId && scenesQuery.data.some((scene) => scene.id === requestedSceneId)
+        ? requestedSceneId
+        : scenesQuery.data[0].id
+    );
+  }, [params.sceneId, scenesQuery.data, selectedSceneId]);
 
   const selectedScene = useMemo(
     () => scenesQuery.data?.find((scene) => scene.id === selectedSceneId),
@@ -121,14 +137,32 @@ export default function PalaceMemoryComposerScreen() {
         )}
 
         {selectedScene && (
-          <View style={styles.canvas}>
-            <AppImage imageUrl={selectedScene.imageUrl} style={StyleSheet.absoluteFillObject} />
-            {loci.map((locus, index) => (
-              <View key={locus.id} style={[styles.marker, { left: `${locus.xPercent}%`, top: `${locus.yPercent}%` }]}>
-                <Text style={styles.markerText}>{index + 1}</Text>
+          <>
+            <View style={styles.previewHeader}>
+              <View>
+                <Text style={styles.previewEyebrow}>SCENE PREVIEW</Text>
+                <Text style={styles.previewTitle}>{selectedScene.name}</Text>
               </View>
-            ))}
-          </View>
+              <Text style={styles.previewCount}>{items.length}/{loci.length} placed</Text>
+            </View>
+            <View style={styles.canvas}>
+              <AppImage imageUrl={selectedScene.imageUrl} style={StyleSheet.absoluteFillObject} />
+              {loci.map((locus, index) => (
+                <View
+                  key={locus.id}
+                  style={[
+                    styles.marker,
+                    index < items.length && styles.markerPlaced,
+                    { left: `${locus.xPercent}%`, top: `${locus.yPercent}%` },
+                  ]}>
+                  <Text style={styles.markerText}>{index + 1}</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={styles.canvasHint}>
+              Markers show the order your memory will follow. Add an item to place it on the next marker.
+            </Text>
+          </>
         )}
 
         <View style={styles.labelRow}><Text style={styles.label}>Add your items</Text><Text style={styles.counter}>{items.length}/{loci.length || '—'}</Text></View>
@@ -160,7 +194,8 @@ const styles = StyleSheet.create({
   label: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 18, marginBottom: 8 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: '#7A68E0', fontSize: 12, fontWeight: '900', marginTop: 18 },
   input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 14, color: theme.ink, fontSize: 14, fontWeight: '700' },
   sceneRail: { marginHorizontal: -16, paddingLeft: 16 }, sceneOption: { width: 172, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8, marginRight: 10 }, sceneOptionActive: { borderColor: '#7A68E0', backgroundColor: '#F7F5FF' }, sceneThumb: { height: 92, borderRadius: 12 }, sceneName: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 8 }, sceneMeta: { color: theme.inkSoft, fontSize: 10, fontWeight: '700', marginTop: 2 },
-  canvas: { height: 250, borderRadius: 22, overflow: 'hidden', marginTop: 16, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#EAE5D8' }, marker: { position: 'absolute', width: 32, height: 32, marginLeft: -16, marginTop: -16, borderRadius: 16, backgroundColor: '#9B8CFF', borderWidth: 3, borderColor: 'white', alignItems: 'center', justifyContent: 'center', shadowColor: '#241F38', shadowOpacity: 0.3, shadowRadius: 4, elevation: 4 }, markerText: { color: 'white', fontSize: 12, fontWeight: '900' },
+  previewHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 19, marginBottom: 9 }, previewEyebrow: { color: theme.violetDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.9 }, previewTitle: { color: theme.ink, fontSize: 15, fontWeight: '900', marginTop: 3 }, previewCount: { color: theme.violetDeep, backgroundColor: '#EEE9FF', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontSize: 10, fontWeight: '900' },
+  canvas: { height: 250, borderRadius: 22, overflow: 'hidden', marginTop: 0, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#EAE5D8' }, canvasHint: { color: theme.inkSoft, fontSize: 11, lineHeight: 17, fontWeight: '700', textAlign: 'center', marginTop: 8 }, marker: { position: 'absolute', width: 32, height: 32, marginLeft: -16, marginTop: -16, borderRadius: 16, backgroundColor: '#9B8CFF', borderWidth: 3, borderColor: 'white', alignItems: 'center', justifyContent: 'center', shadowColor: '#241F38', shadowOpacity: 0.3, shadowRadius: 4, elevation: 4 }, markerPlaced: { backgroundColor: theme.sunDeep }, markerText: { color: 'white', fontSize: 12, fontWeight: '900' },
   emptyScenes: { borderWidth: 2, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.paper, padding: 18, alignItems: 'center' }, helper: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, textAlign: 'center' }, refreshButton: { marginTop: 10, flexDirection: 'row', gap: 6, backgroundColor: theme.sun, borderRadius: 11, paddingHorizontal: 12, paddingVertical: 8 }, refreshText: { color: theme.ink, fontSize: 12, fontWeight: '900' },
   addRow: { flexDirection: 'row', gap: 9 }, addButton: { width: 50, height: 50, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center' },
   itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line }, itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center' }, itemNumberText: { color: 'white', fontSize: 11, fontWeight: '900' }, itemText: { color: theme.ink, fontSize: 13, fontWeight: '900', marginLeft: 11 }, locusText: { color: theme.inkSoft, fontSize: 10, fontWeight: '700', marginLeft: 11, marginTop: 2 }, deleteButton: { width: 39, height: 39, alignItems: 'center', justifyContent: 'center' },
