@@ -162,6 +162,72 @@ public sealed class MemorySetTests
         Assert.All(scene.Loci, locus => AssertAudit(locus, userId));
     }
 
+    [Fact]
+    public async Task LibraryActions_Should_Archive_Restore_And_Duplicate_With_Audit_Metadata()
+    {
+        const string userId = "user-library";
+        await using var db = CreateDbContext(userId);
+        db.Users.Add(CreateUser(userId));
+        await db.SaveChangesAsync();
+
+        var created = await new CreateMemorySetCommandHandler(db).Handle(
+            new CreateMemorySetCommand(userId, BuildNumberPegRequest()),
+            default);
+        var memorySetId = created.Data!.Id;
+        var archiveHandler = new SetMemorySetArchivedCommandHandler(db);
+
+        var archived = await archiveHandler.Handle(
+            new SetMemorySetArchivedCommand(userId, memorySetId, true),
+            default);
+        Assert.Equal(MemorySetStatuses.Archived, archived.Data!.Status);
+        Assert.Equal(2, archived.Data.Version);
+
+        var restored = await archiveHandler.Handle(
+            new SetMemorySetArchivedCommand(userId, memorySetId, false),
+            default);
+        Assert.Equal(MemorySetStatuses.Ready, restored.Data!.Status);
+        Assert.Equal(3, restored.Data.Version);
+
+        var duplicated = await new DuplicateMemorySetCommandHandler(db).Handle(
+            new DuplicateMemorySetCommand(userId, memorySetId),
+            default);
+
+        Assert.NotNull(duplicated.Data);
+        Assert.NotEqual(memorySetId, duplicated.Data.Id);
+        Assert.Equal("Saturday shopping (copy)", duplicated.Data.Title);
+        Assert.Equal(MemorySetVisibilities.Private, duplicated.Data.Visibility);
+        Assert.Equal(2, duplicated.Data.Items.Count);
+        Assert.Equal(2, duplicated.Data.TechniquePlan!.PegBindings.Count);
+
+        var duplicateEntity = await db.MemorySets
+            .Include(x => x.Items)
+            .Include(x => x.TechniquePlan!)
+                .ThenInclude(x => x.PegBindings)
+            .SingleAsync(x => x.Id == duplicated.Data.Id);
+        AssertAudit(duplicateEntity, userId);
+        Assert.All(duplicateEntity.Items, item => AssertAudit(item, userId));
+        AssertAudit(duplicateEntity.TechniquePlan!, userId);
+        Assert.All(duplicateEntity.TechniquePlan!.PegBindings, binding => AssertAudit(binding, userId));
+
+        var draft = await new CreateMemorySetCommandHandler(db).Handle(
+            new CreateMemorySetCommand(userId, new MemorySetUpsertRequest
+            {
+                Title = "Unfinished spelling list",
+                GoalType = MemoryGoalTypes.Spelling,
+                TechniqueKey = MemoryTechniqueKeys.NumberPeg,
+                Status = MemorySetStatuses.Draft,
+                Visibility = MemorySetVisibilities.Private
+            }),
+            default);
+        await archiveHandler.Handle(
+            new SetMemorySetArchivedCommand(userId, draft.Data!.Id, true),
+            default);
+        var restoredDraft = await archiveHandler.Handle(
+            new SetMemorySetArchivedCommand(userId, draft.Data.Id, false),
+            default);
+        Assert.Equal(MemorySetStatuses.Draft, restoredDraft.Data!.Status);
+    }
+
     private static AppDbContext CreateDbContext(string userId)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()

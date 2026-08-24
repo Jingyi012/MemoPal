@@ -192,6 +192,80 @@ internal static class MemorySetAggregate
         return entity;
     }
 
+    public static MemorySetUpsertRequest CreateDuplicateRequest(MemorySet source)
+    {
+        const string copySuffix = " (copy)";
+        var sourceTitle = source.Title.Trim();
+        var copyTitle = $"{sourceTitle[..Math.Min(sourceTitle.Length, 200 - copySuffix.Length)]}{copySuffix}";
+        var items = source.Items
+            .Where(x => !x.IsDeleted)
+            .OrderBy(x => x.Position)
+            .ToList();
+        var itemPositions = items.ToDictionary(x => x.Id, x => x.Position);
+
+        var request = new MemorySetUpsertRequest
+        {
+            Title = copyTitle,
+            Description = source.Description,
+            GoalType = source.GoalType,
+            TechniqueKey = source.TechniqueKey,
+            Status = source.Status == MemorySetStatuses.Archived
+                ? MemorySetStatuses.Draft
+                : source.Status,
+            Visibility = MemorySetVisibilities.Private,
+            Items = items.Select(x => new MemoryItemInput
+            {
+                Position = x.Position,
+                Prompt = x.Prompt,
+                Answer = x.Answer,
+                Hint = x.Hint,
+                PronunciationAudioUrl = x.PronunciationAudioUrl
+            }).ToList(),
+            TechniquePlan = source.TechniquePlan is null || source.TechniquePlan.IsDeleted
+                ? null
+                : new TechniquePlanInput
+                {
+                    SchemaVersion = source.TechniquePlan.SchemaVersion,
+                    PalaceSceneId = source.TechniquePlan.PalaceSceneId,
+                    PegBindings = source.TechniquePlan.PegBindings
+                        .Where(x => !x.IsDeleted && itemPositions.ContainsKey(x.MemoryItemId))
+                        .Select(x => new PegBindingInput
+                        {
+                            ItemPosition = itemPositions[x.MemoryItemId],
+                            PegNumber = x.PegNumber,
+                            SceneText = x.SceneText,
+                            IsCustomScene = x.IsCustomScene,
+                            SceneAssetUrl = x.SceneAssetUrl
+                        }).ToList(),
+                    PalaceBindings = source.TechniquePlan.PalaceBindings
+                        .Where(x => !x.IsDeleted && itemPositions.ContainsKey(x.MemoryItemId))
+                        .Select(x => new PalaceBindingInput
+                        {
+                            ItemPosition = itemPositions[x.MemoryItemId],
+                            LocusId = x.LocusId,
+                            AssociationText = x.AssociationText,
+                            IsCustomScene = x.IsCustomScene,
+                            SceneAssetUrl = x.SceneAssetUrl
+                        }).ToList()
+                }
+        };
+
+        if (source.Status == MemorySetStatuses.Archived)
+        {
+            request.Status = MemorySetStatuses.Ready;
+            try
+            {
+                Validate(request);
+            }
+            catch (ValidationAppException)
+            {
+                request.Status = MemorySetStatuses.Draft;
+            }
+        }
+
+        return request;
+    }
+
     public static void Update(MemorySet entity, MemorySetUpsertRequest request)
     {
         Validate(request);

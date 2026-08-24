@@ -1,34 +1,67 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
-import { useMemorySets } from '@/features/memory-sets';
+import { useMemorySetMutations, useMemorySets } from '@/features/memory-sets';
 import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
-import { Brain, ChevronRight, MapPinned, Plus, RefreshCcw, Shapes } from 'lucide-react-native';
+import { Archive, Brain, ChevronRight, MapPinned, MoreHorizontal, Plus, RefreshCcw, Shapes } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-type LibraryFilter = 'all' | MemoryTechniqueKey;
+type LibraryFilter = 'all' | MemoryTechniqueKey | 'archived';
 
 const filters: { key: LibraryFilter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'palace', label: 'Palaces' },
   { key: 'number-peg', label: 'Number Peg' },
+  { key: 'archived', label: 'Archived' },
 ];
 
 export default function LibraryScreen() {
   const router = useRouter();
   const memorySets = useMemorySets();
+  const { duplicateMemorySet, setMemorySetArchived } = useMemorySetMutations();
   const [filter, setFilter] = useState<LibraryFilter>('all');
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   const visibleSets = useMemo(() => {
     const items = memorySets.data ?? [];
     return items
-      .filter((memorySet) => filter === 'all' || memorySet.techniqueKey === filter)
+      .filter((memorySet) => {
+        if (filter === 'archived') return memorySet.status === 'archived';
+        if (memorySet.status === 'archived') return false;
+        return filter === 'all' || memorySet.techniqueKey === filter;
+      })
       .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt));
   }, [filter, memorySets.data]);
+
+  const activeCount = memorySets.data?.filter((memorySet) => memorySet.status !== 'archived').length ?? 0;
+
+  const showActions = (memorySet: MemorySet) => {
+    const isArchived = memorySet.status === 'archived';
+    Alert.alert(memorySet.title, 'Keep your Library tidy or make a copy to reuse this memory.', [
+      {
+        text: 'Duplicate',
+        onPress: () => duplicateMemorySet.mutate(memorySet.id, {
+          onSuccess: (copy) => setActionMessage(`“${copy.title}” is ready in your Library.`),
+          onError: (error) => setActionMessage(getNumberPegErrorMessage(error, 'Could not duplicate this memory.')),
+        }),
+      },
+      {
+        text: isArchived ? 'Restore' : 'Archive',
+        onPress: () => setMemorySetArchived.mutate(
+          { memorySetId: memorySet.id, isArchived: !isArchived },
+          {
+            onSuccess: () => setActionMessage(isArchived ? 'Memory restored.' : 'Memory moved to Archived.'),
+            onError: (error) => setActionMessage(getNumberPegErrorMessage(error, 'Could not update this memory.')),
+          }
+        ),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
 
   return (
     <View style={styles.page}>
@@ -51,8 +84,8 @@ export default function LibraryScreen() {
           <View style={styles.summaryCopy}>
             <Text style={styles.summaryEyebrow}>YOUR MEMORY COLLECTION</Text>
             <Text style={styles.summaryTitle}>
-              {memorySets.data?.length ?? 0}{' '}
-              {(memorySets.data?.length ?? 0) === 1 ? 'memory' : 'memories'}
+              {activeCount}{' '}
+              {activeCount === 1 ? 'memory' : 'memories'}
             </Text>
             <Text style={styles.summaryBody}>Small practice sessions make these paths stronger.</Text>
           </View>
@@ -80,6 +113,12 @@ export default function LibraryScreen() {
           })}
         </View>
 
+        {actionMessage && (
+          <AnimatedPressable onPress={() => setActionMessage(null)} style={styles.actionNotice}>
+            <Text style={styles.actionNoticeText}>{actionMessage}</Text>
+          </AnimatedPressable>
+        )}
+
         {memorySets.isLoading ? (
           <View style={styles.loadingFrame}>
             <LoadingView description="Opening your Library…" />
@@ -98,24 +137,33 @@ export default function LibraryScreen() {
         ) : visibleSets.length ? (
           <View style={styles.cardList}>
             {visibleSets.map((memorySet) => (
-              <MemoryCard key={memorySet.id} memorySet={memorySet} onOpen={() => openSet(router, memorySet)} />
+              <MemoryCard
+                key={memorySet.id}
+                memorySet={memorySet}
+                onOpen={() => openSet(router, memorySet)}
+                onActions={() => showActions(memorySet)}
+              />
             ))}
           </View>
         ) : (
           <View style={styles.noticeCard}>
-            <Text style={styles.emptyEmoji}>{filter === 'palace' ? '🏡' : filter === 'number-peg' ? '🦢' : '✨'}</Text>
+            <Text style={styles.emptyEmoji}>{filter === 'palace' ? '🏡' : filter === 'number-peg' ? '🦢' : filter === 'archived' ? '📦' : '✨'}</Text>
             <Text style={styles.noticeTitle}>
-              {filter === 'all' ? 'Build your first memory' : 'Nothing in this collection yet'}
+              {filter === 'all' ? 'Build your first memory' : filter === 'archived' ? 'Your archive is empty' : 'Nothing in this collection yet'}
             </Text>
             <Text style={styles.noticeBody}>
-              Choose a technique in Practice and turn something useful into a playful memory.
+              {filter === 'archived'
+                ? 'Memories you archive will wait here until you want them again.'
+                : 'Choose a technique in Practice and turn something useful into a playful memory.'}
             </Text>
-            <AnimatedPressable
-              onPress={() => router.push('/(tabs)/practice' as Href)}
-              style={styles.emptyButton}>
-              <Plus size={17} color="white" />
-              <Text style={styles.emptyButtonText}>Create memory</Text>
-            </AnimatedPressable>
+            {filter !== 'archived' && (
+              <AnimatedPressable
+                onPress={() => router.push('/(tabs)/practice' as Href)}
+                style={styles.emptyButton}>
+                <Plus size={17} color="white" />
+                <Text style={styles.emptyButtonText}>Create memory</Text>
+              </AnimatedPressable>
+            )}
           </View>
         )}
       </ScrollView>
@@ -134,9 +182,11 @@ function openSet(router: ReturnType<typeof useRouter>, memorySet: MemorySet) {
 function MemoryCard({
   memorySet,
   onOpen,
+  onActions,
 }: {
   memorySet: MemorySet;
   onOpen: () => void;
+  onActions: () => void;
 }) {
   const isPalace = memorySet.techniqueKey === 'palace';
   const updatedLabel = formatUpdatedAt(memorySet.updatedAt);
@@ -162,10 +212,25 @@ function MemoryCard({
         </Text>
         <Text style={styles.memoryMeta}>
           {memorySet.items.length} {memorySet.items.length === 1 ? 'item' : 'items'} ·{' '}
-          {memorySet.status === 'draft' ? 'Draft' : 'Ready to practice'}
+          {memorySet.status === 'archived'
+            ? 'Archived'
+            : memorySet.status === 'draft'
+              ? 'Draft'
+              : 'Ready to practice'}
         </Text>
       </View>
-      <ChevronRight size={20} color={theme.inkSoft} />
+      <AnimatedPressable
+        accessibilityLabel={`More actions for ${memorySet.title}`}
+        onPress={(event) => {
+          event.stopPropagation();
+          onActions();
+        }}
+        style={styles.moreButton}>
+        {memorySet.status === 'archived'
+          ? <Archive size={18} color={theme.inkSoft} />
+          : <MoreHorizontal size={20} color={theme.inkSoft} />}
+      </AnimatedPressable>
+      <ChevronRight size={18} color={theme.inkSoft} />
     </AnimatedPressable>
   );
 }
@@ -212,7 +277,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  filterRow: { flexDirection: 'row', gap: 8, marginVertical: 18 },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 18 },
   filterChip: {
     minHeight: 38,
     borderRadius: 999,
@@ -226,6 +291,8 @@ const styles = StyleSheet.create({
   filterChipSelected: { borderColor: '#36304D', backgroundColor: '#36304D' },
   filterText: { color: theme.inkSoft, fontSize: 12, fontWeight: '800' },
   filterTextSelected: { color: 'white' },
+  actionNotice: { marginBottom: 14, borderRadius: 14, backgroundColor: '#E3F6ED', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 13, paddingVertical: 11 },
+  actionNoticeText: { color: '#247B67', fontSize: 12, lineHeight: 17, fontWeight: '800', textAlign: 'center' },
   cardList: { gap: 10 },
   memoryCard: {
     minHeight: 90,
@@ -254,6 +321,7 @@ const styles = StyleSheet.create({
   updatedLabel: { color: '#9A97A7', fontSize: 10, fontWeight: '700' },
   memoryTitle: { color: theme.ink, fontSize: 15, fontWeight: '900', marginTop: 4 },
   memoryMeta: { color: theme.inkSoft, fontSize: 11, fontWeight: '700', marginTop: 3 },
+  moreButton: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   noticeCard: {
     borderWidth: 2,
     borderColor: theme.line,

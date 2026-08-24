@@ -56,6 +56,33 @@ public sealed class MemorySetsController : ApiControllerBase
         return Ok(result);
     }
 
+    [HttpPost("{memorySetId}/duplicate")]
+    public async Task<IActionResult> Duplicate(string memorySetId, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new DuplicateMemorySetCommand(GetUserIdOrThrow(), memorySetId),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPatch("{memorySetId}/archive")]
+    public async Task<IActionResult> Archive(string memorySetId, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new SetMemorySetArchivedCommand(GetUserIdOrThrow(), memorySetId, true),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPatch("{memorySetId}/restore")]
+    public async Task<IActionResult> Restore(string memorySetId, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new SetMemorySetArchivedCommand(GetUserIdOrThrow(), memorySetId, false),
+            cancellationToken);
+        return Ok(result);
+    }
+
     [HttpDelete("{memorySetId}")]
     public async Task<IActionResult> Delete(string memorySetId, CancellationToken cancellationToken)
     {

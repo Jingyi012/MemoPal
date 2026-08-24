@@ -40,6 +40,11 @@ export function useMemorySet(memorySetId: string) {
 export function useMemorySetMutations() {
   const queryClient = useQueryClient();
 
+  const cacheMemorySet = (memorySet: MemorySet) => {
+    queryClient.setQueryData(MEMORY_SET_KEYS.detail(memorySet.id), memorySet);
+    void queryClient.invalidateQueries({ queryKey: MEMORY_SET_KEYS.lists() });
+  };
+
   const createMemorySet = useMutation({
     mutationFn: (request: MemorySetUpsertRequest) => memorySetApi.create(request),
     // Avoid duplicate POSTs until the API accepts an idempotency key.
@@ -59,10 +64,20 @@ export function useMemorySetMutations() {
     mutationFn: ({ memorySetId, request }: { memorySetId: string; request: MemorySetUpsertRequest }) =>
       memorySetApi.update(memorySetId, request),
     retry: false,
-    onSuccess: (updated) => {
-      queryClient.setQueryData(MEMORY_SET_KEYS.detail(updated.id), updated);
-      void queryClient.invalidateQueries({ queryKey: MEMORY_SET_KEYS.lists() });
-    },
+    onSuccess: cacheMemorySet,
+  });
+
+  const duplicateMemorySet = useMutation({
+    mutationFn: (memorySetId: string) => memorySetApi.duplicate(memorySetId),
+    retry: false,
+    onSuccess: cacheMemorySet,
+  });
+
+  const setMemorySetArchived = useMutation({
+    mutationFn: ({ memorySetId, isArchived }: { memorySetId: string; isArchived: boolean }) =>
+      memorySetApi.setArchived(memorySetId, isArchived),
+    retry: false,
+    onSuccess: cacheMemorySet,
   });
 
   const deleteMemorySet = useMutation({
@@ -74,5 +89,11 @@ export function useMemorySetMutations() {
     },
   });
 
-  return { createMemorySet, updateMemorySet, deleteMemorySet };
+  return {
+    createMemorySet,
+    updateMemorySet,
+    duplicateMemorySet,
+    setMemorySetArchived,
+    deleteMemorySet,
+  };
 }

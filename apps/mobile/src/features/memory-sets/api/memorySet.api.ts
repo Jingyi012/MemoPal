@@ -35,6 +35,24 @@ export const memorySetApi = {
     return unwrap(response.data, 'Could not update this memory set.');
   },
 
+  async duplicate(memorySetId: string): Promise<MemorySet> {
+    const response = await api.post<GeneralResponse<MemorySet>>(
+      `/v2/memory-sets/${encodeURIComponent(memorySetId)}/duplicate`
+    );
+    return unwrap(response.data, 'Could not duplicate this memory set.');
+  },
+
+  async setArchived(memorySetId: string, isArchived: boolean): Promise<MemorySet> {
+    const action = isArchived ? 'archive' : 'restore';
+    const response = await api.patch<GeneralResponse<MemorySet>>(
+      `/v2/memory-sets/${encodeURIComponent(memorySetId)}/${action}`
+    );
+    return unwrap(
+      response.data,
+      isArchived ? 'Could not archive this memory set.' : 'Could not restore this memory set.'
+    );
+  },
+
   async delete(memorySetId: string): Promise<void> {
     const response = await api.delete<GeneralResponse<boolean>>(
       `/v2/memory-sets/${encodeURIComponent(memorySetId)}`
