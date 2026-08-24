@@ -27,8 +27,8 @@ export const StatCard: React.FC<StatCardProps> = ({ label, value, icon, bgClass,
         {icon}
       </View>
 
-      <Text className="mb-1 text-xs text-text-muted">{label}</Text>
-      <Text className="text-text">{value ?? '-'}</Text>
+      <Text className="mb-1 text-xs text-[#6B6A80]">{label}</Text>
+      <Text className="font-bold text-[#2B2A3D]">{value ?? '-'}</Text>
     </AnimatedPressable>
   );
 };

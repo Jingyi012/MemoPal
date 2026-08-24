@@ -23,9 +23,9 @@ const TermsAndConditionSheet = forwardRef<Ref, TermsAndConditionSheetProps>(({ t
     <CustomBottomSheetModal ref={bottomSheetRef} snapPoints={['95%']} enableDynamicSizing={false}>
       <View className="flex-1 px-6 pb-8 pt-2">
         <View className="mb-6 flex-row items-center justify-between">
-          <Text className="text-2xl font-bold text-slate-900">{terms.title}</Text>
-          <TouchableOpacity onPress={handleDismissTerms} className="rounded-full bg-slate-100 p-2">
-            <X size={20} color="#64748b" />
+          <Text className="text-2xl font-bold text-[#2B2A3D]">{terms.title}</Text>
+          <TouchableOpacity onPress={handleDismissTerms} className="rounded-full bg-[#F6F3EA] p-2">
+            <X size={20} color="#6B6A80" />
           </TouchableOpacity>
         </View>
 
@@ -44,8 +44,8 @@ const TermsAndConditionSheet = forwardRef<Ref, TermsAndConditionSheetProps>(({ t
 
         <TouchableOpacity
           onPress={handleDismissTerms}
-          className="mt-4 rounded-xl bg-slate-900 py-4">
-          <Text className="text-center font-bold text-white">{terms.closeButtonLabel}</Text>
+          className="mt-4 rounded-xl bg-[#FFC93C] py-4">
+          <Text className="text-center font-bold text-[#2B2A3D]">{terms.closeButtonLabel}</Text>
         </TouchableOpacity>
       </View>
     </CustomBottomSheetModal>
@@ -56,12 +56,12 @@ TermsAndConditionSheet.displayName = 'TermsAndConditionSheet';
 
 const TermSection = ({ number, title, body }: { number: string; title: string; body: string }) => (
   <View className="flex-row gap-3">
-    <View className="h-6 w-6 items-center justify-center rounded-full bg-orange-100">
-      <Text className="text-xs font-bold text-orange-600">{number}</Text>
+    <View className="h-6 w-6 items-center justify-center rounded-full bg-[#FFF7E0]">
+      <Text className="text-xs font-bold text-[#F2A900]">{number}</Text>
     </View>
     <View className="flex-1">
-      <Text className="mb-1 font-bold text-slate-900">{title}</Text>
-      <Text className="text-sm leading-5 text-slate-500">{body}</Text>
+      <Text className="mb-1 font-bold text-[#2B2A3D]">{title}</Text>
+      <Text className="text-sm leading-5 text-[#6B6A80]">{body}</Text>
     </View>
   </View>
 );

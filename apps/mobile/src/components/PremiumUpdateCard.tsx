@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { cn } from '@/utils/cn';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -15,7 +15,7 @@ export const PremiumUpdateCard: React.FC<Props> = ({ className }) => {
   return (
     <AnimatedPressable onPress={() => router.push('/premium')} className={cn('w-full', className)}>
       <LinearGradient
-        colors={[Colors.yellow400, Colors.orange500]}
+        colors={[theme.sun, theme.sunDeep]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={{
@@ -26,8 +26,8 @@ export const PremiumUpdateCard: React.FC<Props> = ({ className }) => {
           <Crown size={24} color="white" />
 
           <View className="flex-1">
-            <Text className="font-semibold text-white">Upgrade to Premium</Text>
-            <Text className="text-sm text-yellow-100">Unlock unlimited palaces & features</Text>
+            <Text className="font-semibold text-[#2B2A3D]">Upgrade to Premium</Text>
+            <Text className="text-sm text-[#6B6A80]">Unlock unlimited palaces & features</Text>
           </View>
         </View>
       </LinearGradient>

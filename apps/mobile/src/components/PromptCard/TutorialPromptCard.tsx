@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Brain, ChevronRight } from 'lucide-react-native';
@@ -29,7 +29,7 @@ const TutorialPromptCard: React.FC<TutorialCardProps> = ({
         <View className={getBaseCardClassName({ padding: 'md', radius: '2xl', shadow: 'sm' })}>
           <View className="flex-row items-center gap-3">
             <LinearGradient
-              colors={[Colors.purple600, Colors.pink600]}
+              colors={[theme.violetDeep, theme.berryDeep]}
               style={{
                 borderRadius: 30,
               }}
@@ -38,20 +38,20 @@ const TutorialPromptCard: React.FC<TutorialCardProps> = ({
             </LinearGradient>
 
             <View className="flex-1">
-              <Text className="mb-1 text-base font-medium text-text">New to Memory Palaces?</Text>
-              <Text className="text-sm text-text-muted">
+              <Text className="mb-1 text-base font-medium text-[#2B2A3D]">New to Memory Palaces?</Text>
+              <Text className="text-sm text-[#6B6A80]">
                 Learn the core technique with a quick guided tutorial.
               </Text>
             </View>
 
-            <ChevronRight size={20} color={Colors.slate400} />
+            <ChevronRight size={20} color={theme.inkSoft} />
           </View>
         </View>
       </AnimatedPressable>
 
       <View className="mt-2 flex-row justify-end">
         <AnimatedPressable onPress={dismissTutorialPrompt} className="px-1 py-0.5">
-          <Text className="text-xs text-text-muted">Dismiss</Text>
+          <Text className="text-xs text-[#6B6A80]">Dismiss</Text>
         </AnimatedPressable>
       </View>
     </View>

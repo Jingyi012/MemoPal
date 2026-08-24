@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Router } from 'expo-router';
 import { ChevronRight, Gift } from 'lucide-react-native';
@@ -18,7 +18,7 @@ const ReferrerPromptCard: React.FC<TutorialCardProps> = ({ router }) => {
         <View className="flex-row items-center gap-3">
           {/* Icon */}
           <LinearGradient
-            colors={[Colors.purple600, Colors.pink600]} // purple-600 → pink-600
+            colors={[theme.violetDeep, theme.berryDeep]}
             style={{
               borderRadius: 30,
             }}
@@ -28,12 +28,12 @@ const ReferrerPromptCard: React.FC<TutorialCardProps> = ({ router }) => {
 
           {/* Text */}
           <View className="flex-1">
-            <Text className="mb-1 text-base font-medium text-text">Refer Friends & Earn</Text>
-            <Text className="text-sm text-text-muted">Get rewards for every referral</Text>
+            <Text className="mb-1 text-base font-medium text-[#2B2A3D]">Refer Friends & Earn</Text>
+            <Text className="text-sm text-[#6B6A80]">Get rewards for every referral</Text>
           </View>
 
           <View className="gap-1">
-            <ChevronRight size={20} color={Colors.slate400} />
+            <ChevronRight size={20} color={theme.inkSoft} />
           </View>
         </View>
       </View>
