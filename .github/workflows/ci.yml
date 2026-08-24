@@ -27,6 +27,9 @@ jobs:
       - run: npm ci
       - name: Check mobile
         run: npm run check:mobile
+      - name: Export iOS bundle
+        working-directory: apps/mobile
+        run: npx expo export --platform ios --output-dir dist-ios-ci
       - name: Check admin
         run: npm run check:admin
 
