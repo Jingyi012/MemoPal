@@ -4,6 +4,7 @@ import LoadingView from '@/components/LoadingView';
 import { useMemorySetMutations, useMemorySets } from '@/features/memory-sets';
 import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -270,8 +271,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   summaryCopy: { flex: 1, marginHorizontal: 13 },
-  summaryEyebrow: { color: '#C9C5E0', fontSize: 9, fontWeight: '900', letterSpacing: 0.9 },
-  summaryTitle: { color: 'white', fontSize: 20, fontWeight: '900', marginTop: 3 },
+  summaryEyebrow: { color: '#C9C5E0', fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.9 },
+  summaryTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 20, marginTop: 3 },
   summaryBody: { color: '#DAD6E8', fontSize: 11, lineHeight: 16, marginTop: 3 },
   addButton: {
     width: 42,
@@ -293,10 +294,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   filterChipSelected: { borderColor: '#36304D', backgroundColor: '#36304D' },
-  filterText: { color: theme.inkSoft, fontSize: 12, fontWeight: '800' },
+  filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   filterTextSelected: { color: 'white' },
   actionNotice: { marginBottom: 14, borderRadius: 14, backgroundColor: '#F1FBF5', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 13, paddingVertical: 11 },
-  actionNoticeText: { color: theme.grass, fontSize: 12, lineHeight: 17, fontWeight: '800', textAlign: 'center' },
+  actionNoticeText: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
   cardList: { gap: 10 },
   memoryCard: {
     minHeight: 90,
@@ -319,12 +320,12 @@ const styles = StyleSheet.create({
   pegIcon: { backgroundColor: '#FFF0F4' },
   memoryCopy: { flex: 1, marginHorizontal: 12 },
   techniqueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  techniqueLabel: { fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
+  techniqueLabel: { fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.8 },
   palaceLabel: { color: theme.violetDeep },
   pegLabel: { color: theme.berryDeep },
-  updatedLabel: { color: '#9A97A7', fontSize: 10, fontWeight: '700' },
-  memoryTitle: { color: theme.ink, fontSize: 15, fontWeight: '900', marginTop: 4 },
-  memoryMeta: { color: theme.inkSoft, fontSize: 11, fontWeight: '700', marginTop: 3 },
+  updatedLabel: { color: '#9A97A7', fontFamily: typography.bodyBold, fontSize: 10 },
+  memoryTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, marginTop: 4 },
+  memoryMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3 },
   moreButton: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   noticeCard: {
     borderWidth: 2,
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
     padding: 22,
     alignItems: 'center',
   },
-  noticeTitle: { color: theme.ink, fontSize: 15, fontWeight: '900', textAlign: 'center' },
+  noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center' },
   noticeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 5 },
   retryButton: {
     marginTop: 14,
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
     gap: 7,
     alignItems: 'center',
   },
-  retryText: { color: theme.ink, fontSize: 13, fontWeight: '900' },
+  retryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   emptyEmoji: { fontSize: 32, marginBottom: 9 },
   emptyButton: {
     marginTop: 15,
@@ -358,6 +359,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 7,
   },
-  emptyButtonText: { color: 'white', fontSize: 13, fontWeight: '900' },
+  emptyButtonText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 13 },
   loadingFrame: { height: 180, overflow: 'hidden', borderRadius: 20 },
 });

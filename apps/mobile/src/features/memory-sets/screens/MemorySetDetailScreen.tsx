@@ -5,6 +5,7 @@ import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { usePracticeAttemptHistory } from '@/features/practice-attempts';
 import type { PracticeAttempt } from '@/features/practice-attempts';
 import { Href, useRouter } from 'expo-router';
@@ -155,29 +156,29 @@ const styles = StyleSheet.create({
   summaryIconPalace: { backgroundColor: '#EEE9FF' },
   summaryIconPeg: { backgroundColor: '#FFF0F4' },
   summaryCopy: { flex: 1, marginLeft: 13 },
-  techniqueLabel: { fontSize: 9.5, fontWeight: '900', letterSpacing: 0.8 },
+  techniqueLabel: { fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8 },
   palaceLabel: { color: theme.violetDeep },
   pegLabel: { color: theme.berryDeep },
-  summaryTitle: { color: theme.ink, fontSize: 18, fontWeight: '900', marginTop: 4 },
-  summaryMeta: { color: theme.inkSoft, fontSize: 11.5, fontWeight: '700', marginTop: 3 },
-  sectionLabel: { color: theme.inkSoft, fontSize: 12, fontWeight: '900', letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 24, marginBottom: 10 },
+  summaryTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 18, marginTop: 4 },
+  summaryMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, marginTop: 3 },
+  sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 24, marginBottom: 10 },
   itemList: { borderRadius: 19, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 13 },
   itemRow: { minHeight: 67, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line },
   itemRowLast: { borderBottomWidth: 0 },
   itemNumber: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   itemNumberPalace: { backgroundColor: theme.violet },
   itemNumberPeg: { backgroundColor: theme.sun },
-  itemNumberText: { color: theme.ink, fontSize: 11, fontWeight: '900' },
+  itemNumberText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   itemCopy: { flex: 1, minWidth: 0, marginLeft: 11 },
-  itemPrompt: { color: theme.inkSoft, fontSize: 10, fontWeight: '800' },
-  itemAnswer: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 2 },
+  itemPrompt: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 2 },
   readyBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 8 },
-  readyText: { color: theme.grass, fontSize: 10, fontWeight: '900' },
+  readyText: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   needsReviewText: { color: theme.berryDeep },
   notTriedText: { color: theme.inkSoft },
   primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
-  primaryButtonText: { color: theme.ink, fontSize: 15, fontWeight: '900' },
+  primaryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
   secondaryButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 4 },
-  secondaryButtonText: { color: theme.inkSoft, fontSize: 12, fontWeight: '800' },
+  secondaryButtonText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   centerState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
 });

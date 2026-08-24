@@ -1,5 +1,6 @@
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { Text, View } from 'react-native';
 
 type Props = {
@@ -34,12 +35,12 @@ export function NumberPegItemCard({ item }: Props) {
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-        <Text style={{ fontSize: 11, fontWeight: '900', color: 'white' }}>{item.number}</Text>
+        <Text style={{ fontFamily: typography.bodyExtraBold, fontSize: 11, color: 'white' }}>{item.number}</Text>
       </View>
       <Text style={{ fontSize: 34 }}>{item.image}</Text>
       <Text
         numberOfLines={1}
-        style={{ marginTop: 7, fontSize: 12, fontWeight: '900', color: theme.ink }}>
+        style={{ marginTop: 7, fontFamily: typography.bodyExtraBold, fontSize: 12, color: theme.ink }}>
         {item.keyword}
       </Text>
     </View>
