@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { typography } from '@/theme/typography';
 
 interface Props {
   total: number;
@@ -87,13 +88,13 @@ const styles = StyleSheet.create({
   },
   stepCount: {
     color: 'rgba(255,255,255,0.6)',
+    fontFamily: typography.bodyExtraBold,
     fontSize: 10,
-    fontWeight: '800',
     letterSpacing: 1,
   },
   labelText: {
     color: 'white',
+    fontFamily: typography.bodySemibold,
     fontSize: 14,
-    fontWeight: '600',
   },
 });

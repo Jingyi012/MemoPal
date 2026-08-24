@@ -7,6 +7,7 @@ import { greetingByTime } from '@/utils/greeting';
 import { User2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, View } from 'react-native';
+import { typography } from '@/theme/typography';
 import { CommonHeader } from '@/components/CommonHeader';
 import { NotificationBell } from '@/components/NotificationBell';
 import { useRouter } from 'expo-router';
@@ -107,8 +108,8 @@ const styles = {
   },
   levelDescription: {
     color: theme.inkSoft,
+    fontFamily: typography.bodyBold,
     fontSize: 11.5,
-    fontWeight: '700' as const,
   },
   avatarFallback: {
     width: 40,

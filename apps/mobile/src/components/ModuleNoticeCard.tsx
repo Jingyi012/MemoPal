@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     width: 42,
   },
   emoji: { fontSize: 31, marginBottom: 9 },
-  title: { color: theme.ink, fontFamily: typography.display, fontSize: 15, fontWeight: '900', textAlign: 'center' },
+  title: { color: theme.ink, fontFamily: typography.display, fontSize: 15, textAlign: 'center' },
   body: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' },
   retryButton: {
     alignItems: 'center',
@@ -76,5 +76,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  retryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, fontWeight: '900' },
+  retryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
 });

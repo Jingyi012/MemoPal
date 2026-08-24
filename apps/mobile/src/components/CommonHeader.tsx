@@ -143,7 +143,6 @@ const styles = {
     paddingVertical: 3,
     fontSize: 10,
     fontFamily: typography.display,
-    fontWeight: '900' as const,
     letterSpacing: 0.5,
     textTransform: 'uppercase' as const,
     marginBottom: 4,
@@ -152,14 +151,12 @@ const styles = {
     color: theme.ink,
     fontSize: 19,
     fontFamily: typography.displayExtraBold,
-    fontWeight: '900' as const,
     letterSpacing: -0.2,
   },
   description: {
     color: theme.inkSoft,
     fontSize: 11.5,
     fontFamily: typography.bodyBold,
-    fontWeight: '700' as const,
     marginTop: 2,
   },
   actions: {

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
+import { typography } from '@/theme/typography';
 
 const RECONNECTED_MESSAGE_DURATION = 2_400;
 
@@ -94,11 +95,12 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#2C241F',
+    fontFamily: typography.bodyExtraBold,
     fontSize: 13,
-    fontWeight: '800',
   },
   description: {
     color: '#665A51',
+    fontFamily: typography.bodySemibold,
     fontSize: 12,
     lineHeight: 17,
   },

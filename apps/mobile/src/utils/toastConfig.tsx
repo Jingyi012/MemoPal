@@ -2,6 +2,7 @@ import { Colors } from '@/constants/colors';
 import { AlertCircle, CheckCircle2, Info, type LucideIcon } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { typography } from '@/theme/typography';
 import { ToastConfig } from 'react-native-toast-message';
 
 type ToastVariant = 'success' | 'error' | 'info';
@@ -121,14 +122,14 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   title: {
+    fontFamily: typography.bodyBold,
     fontSize: 15,
-    fontWeight: '700',
     lineHeight: 20,
   },
   message: {
+    fontFamily: typography.bodySemibold,
     marginTop: 2,
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: '500',
   },
 });
