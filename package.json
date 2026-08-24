@@ -10,7 +10,8 @@
     "dev:mobile": "npm run start --workspace=memopal",
     "dev:admin": "npm run dev --workspace=memopal-admin",
     "check": "npm run check:mobile && npm run check:admin",
-    "check:mobile": "npm run typecheck --workspace=memopal && npm run lint --workspace=memopal",
+    "check:mobile": "npm run typecheck --workspace=memopal && npm run lint --workspace=memopal && npm run test --workspace=memopal",
+    "test:mobile": "npm run test --workspace=memopal",
     "check:admin": "npm run build --workspace=memopal-admin && npm run lint --workspace=memopal-admin",
     "build:admin": "npm run build --workspace=memopal-admin"
   },
