@@ -15,6 +15,7 @@ import React, { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { DailyTip } from '../components/DailyTip';
 import { ContinueSessionCard } from '../components/ContinueSessionCard';
+import { HomeSyncStatusCard } from '../components/HomeSyncStatusCard';
 import { QuickActionCard } from '../components/QuickActionCard';
 import { TodayReviewCard } from '../components/TodayReviewCard';
 
@@ -29,8 +30,16 @@ const HomeScreen = () => {
   const { missions, refetch: refetchMissions } = useMissions();
   const { config: gamificationUiConfig, refetch: refetchGamificationUiConfig } =
     useGamificationUiConfig();
-  const { data: dueMemoryReviews = [], refetch: refetchMemoryReviews } = useDueMemoryReviews();
-  const { data: memorySets = [], refetch: refetchMemorySets } = useMemorySets();
+  const {
+    data: dueMemoryReviews = [],
+    isError: dueReviewsError,
+    refetch: refetchMemoryReviews,
+  } = useDueMemoryReviews();
+  const {
+    data: memorySets = [],
+    isError: memorySetsError,
+    refetch: refetchMemorySets,
+  } = useMemorySets();
   const { userState, updateState } = useUserState();
   const recentMemorySet = memorySets
     .filter((memorySet) => memorySet.status !== 'archived')
@@ -111,6 +120,14 @@ const HomeScreen = () => {
               />
             </View>
           )}
+
+          {dueReviewsError || memorySetsError ? (
+            <HomeSyncStatusCard
+              onRetry={() => {
+                void Promise.allSettled([refetchMemoryReviews(), refetchMemorySets()]);
+              }}
+            />
+          ) : null}
 
           {dueMemoryReviews.length > 0 ? (
             <TodayReviewCard
