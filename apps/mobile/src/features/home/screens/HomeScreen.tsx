@@ -85,6 +85,7 @@ const HomeScreen = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { user, refetch: refetchCurrentUser } = useCurrentUser();
   const { enabled: palaceEnabled } = useMemoryModuleAccess('palace');
+  const { enabled: numberPegEnabled } = useMemoryModuleAccess('number-peg');
   const totalXp = Math.max(0, user?.totalXp ?? 0);
   const { levelInfo, refetch: refetchLevelInfo } = useLevelByXp(totalXp, user?.level);
   const { missions, refetch: refetchMissions } = useMissions();
@@ -240,7 +241,10 @@ const HomeScreen = () => {
                 <QuickAction
                   title="Review Session"
                   subtitle="Practice due items and keep streak alive"
-                  onPress={() => router.push('/palaces')}
+                  onPress={() => {
+                    const targetMemorySetId = dueMemoryReviews[0]?.memorySetId ?? recentMemorySet?.id;
+                    router.push(targetMemorySetId ? `/memory-details/${targetMemorySetId}` : '/practice');
+                  }}
                 />
               </>
             ) : null}
@@ -257,6 +261,13 @@ const HomeScreen = () => {
                 title="Build a Memory Palace"
                 subtitle="Place your ideas along one visual journey"
                 onPress={() => router.push('/palaces/create-memory')}
+              />
+            ) : null}
+            {numberPegEnabled ? (
+              <QuickAction
+                title="Start a Number Peg"
+                subtitle="Turn a short list into tiny, memorable movies"
+                onPress={() => router.push('/number-peg/create')}
               />
             ) : null}
           </View>
