@@ -67,6 +67,9 @@ function createLocalPreviewAttempt(attempt: PracticeAttemptInput): PracticeAttem
   const now = new Date().toISOString();
   const createdBy = 'local-preview-user';
   const correctCount = attempt.responses.filter((response) => response.isCorrect).length;
+  const firstAttemptCorrectCount = attempt.responses.filter(
+    (response) => response.isCorrect && response.attemptCount === 1,
+  ).length;
   const techniqueKey = getLocalPreviewMemorySet(attempt.memorySetId)?.techniqueKey ?? 'number-peg';
 
   const created: PracticeAttempt = {
@@ -79,7 +82,7 @@ function createLocalPreviewAttempt(attempt: PracticeAttemptInput): PracticeAttem
     completedAt: now,
     durationMs: attempt.durationMs,
     correctCount,
-    firstAttemptCorrectCount: correctCount,
+    firstAttemptCorrectCount,
     totalCount: attempt.responses.length,
     nextReviewAt: null,
     responses: attempt.responses.map((response, index) => ({

@@ -198,15 +198,18 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
 
     if (!answer.trim()) return;
     const isCorrect = normalizeAnswer(answer) === normalizeAnswer(active.item.answer);
-    setResponses((current) => [
-      ...current,
-      {
+    setResponses((current) => {
+      const existing = current.find((response) => response.memoryItemId === active.item.id);
+      const nextResponse = {
         memoryItemId: active.item.id,
         isCorrect,
-        attemptCount: current.filter((response) => response.memoryItemId === active.item.id).length + 1,
+        attemptCount: (existing?.attemptCount ?? 0) + 1,
         responseMs: Math.max(0, Date.now() - questionStartedAtMs),
-      },
-    ]);
+      };
+      return existing
+        ? current.map((response) => response.memoryItemId === active.item.id ? nextResponse : response)
+        : [...current, nextResponse];
+    });
     setFeedback(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) {
       setScore((value) => value + 1);

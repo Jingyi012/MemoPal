@@ -207,15 +207,18 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
 
     if (!answer.trim()) return;
     const isCorrect = normalizeAnswer(answer) === normalizeAnswer(currentItem.answer);
-    setResponses((current) => [
-      ...current,
-      {
+    setResponses((current) => {
+      const existing = current.find((response) => response.memoryItemId === currentItem.id);
+      const nextResponse = {
         memoryItemId: currentItem.id,
         isCorrect,
-        attemptCount: current.filter((response) => response.memoryItemId === currentItem.id).length + 1,
+        attemptCount: (existing?.attemptCount ?? 0) + 1,
         responseMs: Math.max(0, Date.now() - questionStartedAtMs),
-      },
-    ]);
+      };
+      return existing
+        ? current.map((response) => response.memoryItemId === currentItem.id ? nextResponse : response)
+        : [...current, nextResponse];
+    });
     setFeedback(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) {
       setScore((current) => current + 1);
