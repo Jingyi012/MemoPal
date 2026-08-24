@@ -37,6 +37,20 @@ export type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const isLocalPreviewEnabled =
+  String(process.env.EXPO_PUBLIC_LOCAL_DEV_MODE).trim().toLowerCase() === 'true';
+
+// Development-only seed data keeps the feature routes inspectable when the API is not running.
+// Production builds keep the normal token-based auth path because this flag is false there.
+const LOCAL_PREVIEW_USER: User = {
+  id: 'local-preview-user',
+  displayName: 'Preview Player',
+  email: 'preview@local',
+  totalXp: 840,
+  level: 4,
+  isPremium: false,
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -86,6 +100,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const token = await getAccessToken();
         if (!token) {
+          if (isLocalPreviewEnabled) {
+            await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(LOCAL_PREVIEW_USER));
+            if (!cancelled) {
+              setUser(LOCAL_PREVIEW_USER);
+            }
+            return;
+          }
+
           // Keep this branch side-effect free to avoid racing with an in-flight login
           // that may persist tokens moments later.
           if (!cancelled) {

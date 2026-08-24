@@ -5,12 +5,14 @@ import { Award, BookOpen, Home, Layers3, User } from 'lucide-react-native';
 
 export default function TabsLayout() {
   const { isAuthenticated, isLoading } = useAuth();
+  const isLocalDevMode =
+    String(process.env.EXPO_PUBLIC_LOCAL_DEV_MODE).trim().toLowerCase() === 'true';
 
   if (isLoading) {
     return null;
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isLocalDevMode) {
     return <Redirect href="/login" />;
   }
 
