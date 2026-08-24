@@ -3,6 +3,8 @@ import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { RecallAnswerCard } from '@/components/RecallAnswerCard';
+import { PalaceFocusCard } from '@/features/palace-scenes/components/PalaceFocusCard';
+import { PalaceOrderedList } from '@/features/palace-scenes/components/PalaceOrderedList';
 import { useMemorySet } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { usePalaceScene } from '@/features/palace-scenes/hooks/usePalaceScenes';
@@ -22,11 +24,11 @@ import {
 import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, ChevronRight, Footprints, MapPinned, RotateCcw, Sparkles, Target } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Footprints, List, MapPinned, RotateCcw, Sparkles, Target } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-type SessionMode = 'browse' | 'walk' | 'recall';
+type SessionMode = 'browse' | 'walk' | 'list' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
 
 export default function PalaceMemorySessionScreen({ memorySetId, restart = false }: { memorySetId: string; restart?: boolean }) {
@@ -213,27 +215,31 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
         backAction={() => router.back()}
       />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-        <View style={styles.canvas}>
-          <AppImage imageUrl={scene.imageUrl} style={StyleSheet.absoluteFillObject} />
-          {placements.map((placement, index) =>
-            placement.locus ? (
-              <AnimatedPressable
-                key={placement.item.id}
-                accessibilityLabel={`Locus ${index + 1}: ${placement.locus.name}`}
-                onPress={() => mode === 'browse' && setActiveIndex(index)}
-                style={[
-                  styles.marker,
-                  { left: `${placement.locus.xPercent}%`, top: `${placement.locus.yPercent}%` },
-                  index === activeIndex && styles.activeMarker,
-                ]}>
-                <Text style={styles.markerText}>{index + 1}</Text>
-              </AnimatedPressable>
-            ) : null
-          )}
-        </View>
-        <Text style={styles.hint}>
-          {mode === 'recall' ? 'Use the active locus as your cue.' : 'Tap a marker, or walk through every locus in order.'}
-        </Text>
+        {mode !== 'list' ? (
+          <>
+            <View style={styles.canvas}>
+              <AppImage imageUrl={scene.imageUrl} style={StyleSheet.absoluteFillObject} />
+              {placements.map((placement, index) =>
+                placement.locus ? (
+                  <AnimatedPressable
+                    key={placement.item.id}
+                    accessibilityLabel={`Locus ${index + 1}: ${placement.locus.name}`}
+                    onPress={() => mode === 'browse' && setActiveIndex(index)}
+                    style={[
+                      styles.marker,
+                      { left: `${placement.locus.xPercent}%`, top: `${placement.locus.yPercent}%` },
+                      index === activeIndex && styles.activeMarker,
+                    ]}>
+                    <Text style={styles.markerText}>{index + 1}</Text>
+                  </AnimatedPressable>
+                ) : null
+              )}
+            </View>
+            <Text style={styles.hint}>
+              {mode === 'recall' ? 'Use the active locus as your cue.' : 'Tap a marker, or walk through every locus in order.'}
+            </Text>
+          </>
+        ) : null}
         {hasRestoredSession ? (
           <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
             <Text style={styles.restoreNoticeText}>Welcome back — your Palace session was restored.</Text>
@@ -252,6 +258,12 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
             style={[styles.modeTab, mode === 'walk' && styles.modeTabActive]}>
             <Footprints size={16} color={mode === 'walk' ? theme.violetDeep : theme.inkSoft} />
             <Text style={[styles.modeTabText, mode === 'walk' && styles.modeTabTextActive]}>Walk</Text>
+          </AnimatedPressable>
+          <AnimatedPressable
+            onPress={() => { setMode('list'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
+            style={[styles.modeTab, mode === 'list' && styles.modeTabActive]}>
+            <List size={16} color={mode === 'list' ? theme.violetDeep : theme.inkSoft} />
+            <Text style={[styles.modeTabText, mode === 'list' && styles.modeTabTextActive]}>List</Text>
           </AnimatedPressable>
           <AnimatedPressable
             onPress={startRecall}
@@ -279,6 +291,22 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
         ) : null}
 
         {mode === 'walk' && active ? (
+          <>
+          {active.locus ? (
+            <PalaceFocusCard
+              answer={active.item.answer}
+              association={active.binding?.associationText}
+              index={activeIndex}
+              isLast={activeIndex === placements.length - 1}
+              locus={active.locus}
+              onNext={() =>
+                activeIndex === placements.length - 1
+                  ? setActiveIndex(0)
+                  : setActiveIndex((value) => value + 1)
+              }
+              scene={scene}
+            />
+          ) : null}
           <View style={styles.walkCard}>
             <View style={styles.walkIcon}><Footprints size={22} color={theme.violetDeep} /></View>
             <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}</Text>
@@ -312,6 +340,7 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
               <Text style={styles.secondaryText}>Start recall challenge</Text>
             </AnimatedPressable>
           </View>
+          </>
         ) : mode === 'recall' ? (
           recallComplete ? (
             <View style={styles.resultCard}>
@@ -367,6 +396,17 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
               onSubmit={checkOrContinue}
             />
           ) : null
+        ) : mode === 'list' ? (
+          <PalaceOrderedList
+            activeIndex={activeIndex}
+            items={placements.map((placement) => ({
+              id: placement.item.id,
+              answer: placement.item.answer,
+              association: placement.binding?.associationText,
+              locusName: placement.locus?.name,
+            }))}
+            onSelect={setActiveIndex}
+          />
         ) : (
           <>
             {placements.map((placement, index) => (

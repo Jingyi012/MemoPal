@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { PracticeResponseInput } from '@/features/practice-attempts';
 
-export type PalaceSessionMode = 'browse' | 'walk' | 'recall';
+export type PalaceSessionMode = 'browse' | 'walk' | 'list' | 'recall';
 
 export type PalaceSessionSnapshot = {
   memorySetId: string;
