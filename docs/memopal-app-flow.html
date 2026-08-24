@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MemoPal — app navigation mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --white:#ffffff; --paper:#fffdf8; --ink:#2b2a3d; --ink-soft:#6b6a80;
+    --sun:#ffc93c; --sun-deep:#f2a900; --grass:#3fb87f; --sky:#4fc0e8;
+    --berry:#ff6f91; --berry-deep:#e8527a; --violet:#9b8cff; --violet-deep:#7a68e0;
+    --line:#eee9dc; --shadow:0 8px 20px rgba(43,42,61,0.08);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#f2f1ea;color:var(--ink);font-family:'Nunito',sans-serif;
+    display:flex;justify-content:center;padding:24px 12px;min-height:100vh;
+  }
+  .phone{
+    width:390px;max-width:100%;background:var(--white);border-radius:44px;border:10px solid #16151f;
+    box-shadow:0 30px 60px rgba(0,0,0,.28);overflow:hidden;display:flex;flex-direction:column;
+    height:820px;max-height:90vh;position:relative;
+  }
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#16151f;border-radius:0 0 16px 16px;z-index:20;}
+  .statusbar{height:40px;flex:0 0 40px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-family:'Baloo 2';font-weight:700;font-size:12px;background:var(--white);}
+  .statusbar .icons{display:flex;gap:5px;align-items:center;font-size:11px;}
+
+  .appbar{flex:0 0 auto;padding:6px 16px 12px;background:var(--white);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;min-height:34px;}
+  .appbar .back{background:none;border:none;font-size:19px;cursor:pointer;color:var(--ink);padding:2px 4px;display:none;}
+  .appbar .back.show{display:block;}
+  .appbar .titles{flex:1;}
+  .appbar .eyebrow{font-family:'Baloo 2';font-weight:700;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--berry-deep);background:#fff0f4;border:1.3px solid #ffd9e2;padding:3px 9px;border-radius:999px;display:inline-block;margin-bottom:5px;}
+  .appbar h1{font-family:'Baloo 2';font-weight:800;font-size:19px;margin:0 0 2px;letter-spacing:-.01em;}
+  .appbar p{margin:0;color:var(--ink-soft);font-size:11.5px;font-weight:700;}
+
+  .screen{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 20px;background:var(--white);}
+  .screen::-webkit-scrollbar{width:0;}
+  .view{display:none;} .view.active{display:block;animation:fadein .3s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .btn{font-family:'Baloo 2';font-weight:700;font-size:14px;border:none;border-radius:11px;padding:11px 14px;cursor:pointer;}
+  .btn-primary{background:var(--ink);color:var(--white);}
+  .btn-big{width:100%;background:var(--sun);color:var(--ink);font-family:'Baloo 2';font-weight:800;font-size:15.5px;border:none;border-radius:15px;padding:14px;cursor:pointer;box-shadow:0 6px 0 var(--sun-deep);margin-top:16px;}
+  .btn-big:active{transform:translateY(4px);box-shadow:0 2px 0 var(--sun-deep);}
+  .btn-ghost{width:100%;background:var(--white);color:var(--ink);font-family:'Baloo 2';font-weight:700;font-size:13.5px;border:2px solid var(--line);border-radius:13px;padding:11px;cursor:pointer;margin-top:8px;}
+
+  /* ---------------- PRACTICE HOME ---------------- */
+  .new-session{
+    background:linear-gradient(135deg,#fff7e0,#fff);border:2px solid #ffe6a3;border-radius:20px;
+    padding:18px;text-align:center;box-shadow:var(--shadow);
+  }
+  .new-session .ic{font-size:32px;}
+  .new-session h2{font-family:'Baloo 2';font-weight:800;font-size:16.5px;margin:8px 0 4px;}
+  .new-session p{margin:0;color:var(--ink-soft);font-size:12.5px;font-weight:700;}
+
+  .section-label{font-family:'Baloo 2';font-weight:800;font-size:13px;color:var(--ink-soft);margin:22px 0 10px;text-transform:uppercase;letter-spacing:.03em;}
+
+  .tech-row{display:flex;gap:10px;}
+  .tech-jump{
+    flex:1;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:12px 10px;text-align:center;cursor:pointer;transition:.15s;
+  }
+  .tech-jump:active{transform:scale(.97);}
+  .tech-jump .ic{font-size:26px;}
+  .tech-jump .name{font-family:'Baloo 2';font-weight:800;font-size:12.5px;margin-top:5px;}
+  .tech-jump .go{font-size:10.5px;color:var(--sky);font-weight:800;margin-top:2px;}
+
+  .session-card{
+    display:flex;gap:12px;align-items:center;background:var(--paper);border:2px solid var(--line);
+    border-radius:16px;padding:12px;margin-bottom:10px;
+  }
+  .session-card .badge{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto;}
+  .badge.palace{background:#eee9ff;}
+  .badge.peg{background:#fff0f4;}
+  .session-card .meta{flex:1;min-width:0;}
+  .session-card .meta .t{font-family:'Baloo 2';font-weight:800;font-size:13.5px;}
+  .session-card .meta .s{font-size:11.5px;color:var(--ink-soft);font-weight:700;}
+  .session-card .score{font-family:'Baloo 2';font-weight:800;font-size:12.5px;color:var(--grass);flex:0 0 auto;}
+  .session-card{cursor:pointer;transition:.15s;}
+  .session-card:active{transform:scale(.98);}
+  .session-card .chevron{color:var(--ink-soft);font-size:15px;flex:0 0 auto;}
+
+  /* ---- lesson row ---- */
+  .lesson-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin:0 -16px;padding-left:16px;padding-right:16px;}
+  .lesson-scroll::-webkit-scrollbar{display:none;}
+  .lesson-card{
+    flex:0 0 auto;width:132px;background:var(--paper);border:2px solid var(--line);border-radius:16px;
+    padding:12px;cursor:pointer;transition:.15s;
+  }
+  .lesson-card:active{transform:scale(.96);}
+  .lesson-card .ic{font-size:26px;}
+  .lesson-card .t{font-family:'Baloo 2';font-weight:800;font-size:12px;margin-top:6px;line-height:1.25;min-height:30px;}
+  .lesson-card .count{font-size:10.5px;color:var(--ink-soft);font-weight:700;margin-top:4px;}
+  .lesson-card .lchip{display:inline-block;margin-top:6px;font-size:9.5px;font-weight:800;font-family:'Baloo 2';padding:2px 7px;border-radius:7px;}
+  .lchip.peg{background:#fff0f4;color:var(--berry-deep);}
+  .lchip.palace{background:#eee9ff;color:var(--violet-deep);}
+
+  /* ---- filter chips ---- */
+  .filter-row{display:flex;gap:7px;margin-bottom:12px;}
+  .filter-chip{
+    font-family:'Baloo 2';font-weight:700;font-size:12px;border:2px solid var(--line);background:var(--white);
+    border-radius:999px;padding:6px 13px;cursor:pointer;color:var(--ink-soft);
+  }
+  .filter-chip.active{background:var(--ink);color:var(--white);border-color:var(--ink);}
+  .empty-note{text-align:center;color:var(--ink-soft);font-size:12px;font-weight:700;padding:18px 10px;}
+
+  /* ---- session detail ---- */
+  .detail-head{display:flex;align-items:center;gap:12px;background:var(--paper);border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:16px;}
+  .detail-head .badge{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto;}
+  .detail-head .t{font-family:'Baloo 2';font-weight:800;font-size:15.5px;}
+  .detail-head .s{font-size:11.5px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
+  .detail-item{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);}
+  .detail-item:last-child{border-bottom:none;}
+  .detail-item .res{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex:0 0 auto;}
+  .res.yes{background:#eafaf2;color:var(--grass);} .res.no{background:#fff1f4;color:var(--berry-deep);}
+  .detail-item .w{font-family:'Baloo 2';font-weight:700;font-size:13.5px;flex:1;}
+  .detail-actions{display:flex;gap:8px;margin-top:18px;}
+  .detail-actions .btn{flex:1;}
+
+  /* ---------------- SYLLABUS INPUT ---------------- */
+  .input-card{background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:18px 16px;box-shadow:var(--shadow);}
+  .input-card label{font-family:'Baloo 2';font-weight:700;font-size:13px;display:block;margin-bottom:8px;}
+  .input-card input[type=text]{width:100%;padding:11px 12px;border-radius:11px;border:2px solid var(--line);font-family:'Nunito';font-weight:700;font-size:14px;outline:none;margin-bottom:16px;}
+  .input-card input[type=text]:focus{border-color:var(--sky);}
+  .chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+  .chip{background:var(--white);border:2px solid var(--line);border-radius:12px;padding:7px 10px;font-weight:800;font-family:'Baloo 2';font-size:12.5px;display:flex;align-items:center;gap:6px;}
+  .chip .num{width:17px;height:17px;border-radius:50%;background:var(--sun);color:var(--ink);font-size:9.5px;display:flex;align-items:center;justify-content:center;}
+  .chip button{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:12.5px;padding:0;}
+  .add-row{display:flex;gap:8px;}
+  .add-row input{flex:1;margin-bottom:0 !important;min-width:0;}
+  .hint{color:var(--ink-soft);font-size:11px;margin-top:10px;text-align:center;font-weight:600;line-height:1.4;}
+  .preset-count{font-family:'Baloo 2';font-weight:800;font-size:11.5px;color:var(--sky);text-align:center;margin-top:14px;}
+
+  /* ---------------- CHOOSE TECHNIQUE ---------------- */
+  .tech-card{position:relative;background:var(--paper);border:2.5px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px;cursor:pointer;transition:.15s;}
+  .tech-card:active{transform:scale(.98);}
+  .tech-card.recommended{border-color:var(--sun-deep);}
+  .ribbon{position:absolute;top:-11px;right:14px;background:var(--sun);color:var(--ink);font-family:'Baloo 2';font-weight:800;font-size:10.5px;padding:4px 10px;border-radius:999px;box-shadow:0 3px 6px rgba(0,0,0,.15);}
+  .tech-head{display:flex;align-items:center;gap:12px;}
+  .tech-head .ic{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto;}
+  .tech-head .ic.palace{background:#eee9ff;}
+  .tech-head .ic.peg{background:#fff0f4;}
+  .tech-head .t{flex:1;}
+  .tech-head .t .name{font-family:'Baloo 2';font-weight:800;font-size:15.5px;}
+  .tech-head .t .tag{font-size:11px;color:var(--ink-soft);font-weight:700;}
+  .tech-card p.desc{font-size:12.5px;color:var(--ink-soft);font-weight:600;line-height:1.5;margin:10px 0 0;}
+  .best-for{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .best-for span{background:var(--white);border:1.5px solid var(--line);border-radius:8px;padding:3px 8px;font-size:10.5px;font-weight:700;color:var(--ink-soft);}
+
+  /* ---------------- NUMBER PEG MODULE (condensed reuse) ---------------- */
+  .peg-tabs{display:flex;gap:6px;margin-bottom:14px;}
+  .peg-tabs button{flex:1;font-family:'Baloo 2';font-weight:700;font-size:12.5px;border:2px solid var(--line);background:var(--white);border-radius:11px;padding:8px;cursor:pointer;color:var(--ink-soft);}
+  .peg-tabs button.active{background:var(--ink);color:var(--white);border-color:var(--ink);}
+  .card{background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:14px;box-shadow:var(--shadow);position:relative;margin-bottom:16px;}
+  .card .peg-badge{position:absolute;top:-12px;left:14px;width:30px;height:30px;border-radius:50%;background:var(--berry);color:var(--white);font-family:'Baloo 2';font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;border:3px solid var(--white);box-shadow:0 3px 6px rgba(0,0,0,.15);}
+  .scene{height:92px;display:flex;align-items:center;justify-content:center;font-size:44px;margin:12px 0 8px;background:linear-gradient(180deg,#fff 0%,#fbf6ea 100%);border-radius:13px;border:1.5px dashed #eadfc4;}
+  .scene .emoji-pair{display:flex;gap:10px;animation:wiggle 2.6s ease-in-out infinite;}
+  @keyframes wiggle{0%,100%{transform:rotate(-2deg);}50%{transform:rotate(2deg);}}
+  .sentence{font-weight:700;font-size:13px;line-height:1.4;min-height:50px;}
+  .sentence b{color:var(--berry-deep);}
+  .card-actions{display:flex;gap:7px;margin-top:10px;}
+  .btn-small{flex:1;font-family:'Baloo 2';font-weight:700;font-size:11.5px;border-radius:10px;border:2px solid var(--line);background:var(--white);padding:8px 6px;cursor:pointer;}
+  .word-tag{display:inline-block;margin-top:9px;font-family:'Baloo 2';font-weight:800;font-size:11.5px;letter-spacing:.05em;color:var(--grass);background:#eafaf2;border:1.5px solid #cdf0dd;padding:3px 9px;border-radius:8px;}
+  .quiz-progress{display:flex;justify-content:center;gap:6px;margin-bottom:18px;}
+  .quiz-progress .dot{width:9px;height:9px;border-radius:50%;background:var(--line);}
+  .quiz-progress .dot.done{background:var(--grass);} .quiz-progress .dot.current{background:var(--sun-deep);}
+  .quiz-card{background:var(--paper);border:2px solid var(--line);border-radius:22px;padding:24px 18px;text-align:center;box-shadow:var(--shadow);}
+  .peg-big{width:54px;height:54px;border-radius:50%;background:var(--berry);color:var(--white);font-family:'Baloo 2';font-weight:800;font-size:21px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 4px 10px rgba(255,111,145,.4);}
+  .quiz-clue{font-size:13px;color:var(--ink-soft);font-weight:700;margin-bottom:6px;}
+  .quiz-scene-emoji{font-size:50px;margin:8px 0;}
+  .quiz-input-row input{text-transform:uppercase;text-align:center;letter-spacing:.1em;font-family:'Baloo 2';font-weight:800;font-size:17px;border:2.5px solid var(--line);border-radius:13px;padding:10px 14px;width:100%;max-width:220px;outline:none;}
+  .quiz-input-row input.correct{border-color:var(--grass);background:#f1fbf5;}
+  .quiz-input-row input.wrong{border-color:var(--berry);background:#fff1f4;}
+  .feedback{margin-top:12px;font-weight:800;font-family:'Baloo 2';font-size:13px;min-height:18px;}
+  .feedback.ok{color:var(--grass);} .feedback.no{color:var(--berry-deep);}
+  .quiz-actions{margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+  .score-board{text-align:center;margin-top:14px;font-family:'Baloo 2';font-weight:800;color:var(--ink-soft);font-size:13px;}
+  .score-board b{color:var(--ink);}
+
+  /* ---------------- MEMORY PALACE PLACEHOLDER ---------------- */
+  .room{
+    background:linear-gradient(180deg,#f4efe0,#ece3cc);border:2px solid #e3d7b3;border-radius:20px;
+    padding:20px;position:relative;height:230px;overflow:hidden;
+  }
+  .room .floor{position:absolute;inset:14px;border:2px dashed #cdbd8a;border-radius:14px;}
+  .marker{position:absolute;width:34px;height:34px;border-radius:50%;background:var(--violet);color:#fff;font-family:'Baloo 2';font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 8px rgba(0,0,0,.18);border:2.5px solid #fff;}
+  .marker-label{position:absolute;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:2px 7px;font-size:9.5px;font-weight:800;font-family:'Baloo 2';white-space:nowrap;color:var(--ink);}
+  .palace-list{margin-top:16px;}
+  .palace-item{display:flex;align-items:center;gap:10px;background:var(--paper);border:2px solid var(--line);border-radius:13px;padding:9px 11px;margin-bottom:8px;}
+  .palace-item .num{width:22px;height:22px;border-radius:50%;background:var(--violet);color:#fff;font-family:'Baloo 2';font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .palace-item .w{font-family:'Baloo 2';font-weight:700;font-size:13px;}
+
+  /* ---------------- TAB BAR ---------------- */
+  .tabbar{flex:0 0 auto;display:flex;border-top:1px solid var(--line);background:var(--white);padding:8px 6px calc(8px + env(safe-area-inset-bottom));}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:6px 2px;border-radius:12px;color:var(--ink-soft);font-family:'Nunito';font-weight:700;font-size:10px;}
+  .tab .ic{font-size:18px;line-height:1;}
+  .tab.active{color:var(--berry-deep);}
+
+  /* ---------------- XP HEADER ---------------- */
+  .xp-header{
+    background:linear-gradient(135deg,#3a3358,#241f38);border-radius:22px;padding:16px;color:#fff;
+    box-shadow:0 10px 24px rgba(43,42,61,.28);position:relative;overflow:hidden;margin-bottom:18px;
+  }
+  .xp-header::before{
+    content:'';position:absolute;top:-40px;right:-30px;width:140px;height:140px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,201,60,.35),transparent 70%);
+  }
+  .xp-top{display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+  .avatar-ring{
+    width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--sun),var(--berry));
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:3px solid rgba(255,255,255,.25);
+    cursor:pointer;
+  }
+  .avatar-ring .lvl{font-family:'Baloo 2';font-weight:800;font-size:16px;color:#241f38;}
+  .xp-info{flex:1;}
+  .xp-info .name{font-family:'Baloo 2';font-weight:800;font-size:14.5px;}
+  .xp-info .sub{font-size:11px;font-weight:700;color:#c9c5e0;margin-top:1px;}
+  .streak{
+    display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.12);border-radius:999px;
+    padding:5px 10px;font-family:'Baloo 2';font-weight:800;font-size:12px;flex:0 0 auto;
+  }
+  .xp-bar-track{height:9px;background:rgba(255,255,255,.15);border-radius:999px;margin-top:13px;overflow:hidden;position:relative;z-index:1;}
+  .xp-bar-fill{
+    height:100%;border-radius:999px;background:linear-gradient(90deg,var(--sun),#ffe08a);
+    position:relative;transition:width .5s ease;
+  }
+  .xp-bar-fill::after{
+    content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
+    width:40%;animation:shimmer 2.2s linear infinite;
+  }
+  @keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(250%);}}
+  .xp-label{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;color:#c9c5e0;margin-top:6px;position:relative;z-index:1;}
+
+  /* ---------------- unlock mini rows ---------------- */
+  .unlock-row{display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px;}
+  .unlock-row .see-all{font-family:'Baloo 2';font-weight:800;font-size:11.5px;color:var(--sky);cursor:pointer;}
+  .mini-scroll{display:flex;gap:9px;overflow-x:auto;margin:0 -16px;padding:0 16px 4px;}
+  .mini-scroll::-webkit-scrollbar{display:none;}
+  .mini-peg{
+    flex:0 0 auto;width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+    font-size:22px;background:var(--paper);border:2px solid var(--line);position:relative;
+  }
+  .mini-peg.locked{background:#f2f1ea;color:#b9b6aa;filter:grayscale(1);opacity:.65;}
+  .mini-peg .lock{position:absolute;bottom:-5px;right:-5px;background:var(--ink);color:#fff;width:18px;height:18px;border-radius:50%;font-size:9px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;}
+  .mini-palace{
+    flex:0 0 auto;width:96px;height:64px;border-radius:14px;position:relative;overflow:hidden;
+    display:flex;align-items:flex-end;padding:6px;border:2px solid var(--line);
+  }
+  .mini-palace .name{font-family:'Baloo 2';font-weight:800;font-size:10px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);}
+  .mini-palace .lock2{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.5);color:#fff;width:20px;height:20px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;}
+  .mini-palace.locked{filter:grayscale(.7) brightness(.75);}
+
+  /* ---------------- full unlock map screens ---------------- */
+  .map-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;}
+  .map-peg{
+    aspect-ratio:1;border-radius:18px;background:var(--paper);border:2.5px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;cursor:pointer;
+  }
+  .map-peg .e{font-size:24px;}
+  .map-peg .n{font-family:'Baloo 2';font-weight:800;font-size:11px;color:var(--ink-soft);}
+  .map-peg.unlocked{border-color:var(--sun-deep);box-shadow:0 4px 10px rgba(242,169,0,.18);}
+  .map-peg.locked{background:#f2f1ea;color:#b9b6aa;}
+  .map-peg.locked .e{filter:grayscale(1);opacity:.5;}
+  .map-peg .lockbadge{position:absolute;top:-8px;right:-6px;background:var(--ink);color:#fff;font-family:'Baloo 2';font-weight:800;font-size:9px;padding:3px 6px;border-radius:999px;border:2px solid #fff;}
+
+  .palace-card{
+    border-radius:20px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden;min-height:110px;
+    display:flex;flex-direction:column;justify-content:flex-end;border:2px solid var(--line);
+  }
+  .palace-card.locked{filter:grayscale(.55) brightness(.8);}
+  .palace-card .pname{font-family:'Baloo 2';font-weight:800;font-size:16px;color:#fff;text-shadow:0 2px 5px rgba(0,0,0,.35);}
+  .palace-card .ptag{font-size:11px;font-weight:700;color:rgba(255,255,255,.85);margin-top:2px;}
+  .palace-card .plockbadge{
+    position:absolute;top:12px;right:12px;background:rgba(0,0,0,.55);color:#fff;font-family:'Baloo 2';font-weight:800;
+    font-size:10.5px;padding:5px 10px;border-radius:999px;display:flex;align-items:center;gap:4px;
+  }
+
+  /* ---------------- level-up modal ---------------- */
+  .modal-overlay{
+    position:absolute;inset:0;background:rgba(20,18,32,.6);display:none;align-items:center;justify-content:center;
+    z-index:50;padding:24px;
+  }
+  .modal-overlay.show{display:flex;}
+  .levelup-card{
+    background:linear-gradient(160deg,#3a3358,#241f38);border-radius:26px;padding:30px 24px;text-align:center;color:#fff;
+    width:100%;position:relative;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.4);
+  }
+  .confetti-wrap{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+  .confetti{position:absolute;top:-10px;width:8px;height:14px;opacity:.9;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(420px) rotate(360deg);opacity:0;}}
+  .levelup-badge{
+    width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--sun),var(--berry));
+    display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-family:'Baloo 2';font-weight:800;
+    font-size:34px;color:#241f38;box-shadow:0 0 0 8px rgba(255,255,255,.08);position:relative;z-index:1;
+  }
+  .levelup-card h2{font-family:'Baloo 2';font-weight:800;font-size:21px;margin:0 0 6px;position:relative;z-index:1;}
+  .levelup-card p{margin:0 0 18px;color:#c9c5e0;font-size:13px;font-weight:700;position:relative;z-index:1;}
+  .unlock-chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-bottom:20px;position:relative;z-index:1;}
+  .unlock-chips span{background:rgba(255,255,255,.12);border-radius:999px;padding:6px 12px;font-size:11.5px;font-weight:800;font-family:'Baloo 2';}
+  .levelup-card .btn-big{margin-top:0;position:relative;z-index:1;}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span>9:41</span><span class="icons">●●● 🔋</span></div>
+
+  <div class="appbar">
+    <button class="back" id="backBtn" onclick="goBack()">←</button>
+    <div class="titles">
+      <div class="eyebrow" id="appEyebrow">Practice</div>
+      <h1 id="appTitle">Choose how to memorize</h1>
+      <p id="appSub">Pick a technique or jump back into a session</p>
+    </div>
+  </div>
+
+  <div class="screen" id="screen">
+
+    <!-- ================= PRACTICE HOME ================= -->
+    <div class="view active" id="v-home">
+      <div class="xp-header">
+        <div class="xp-top">
+          <div class="avatar-ring" onclick="goTo('profile')"><span class="lvl" id="xpLevelBadge">3</span></div>
+          <div class="xp-info">
+            <div class="name" id="xpName">Level 3 · Memory Apprentice</div>
+            <div class="sub" id="xpSub">420 / 600 XP to Level 4</div>
+          </div>
+          <div class="streak">🔥 <span id="streakCount">4</span></div>
+        </div>
+        <div class="xp-bar-track"><div class="xp-bar-fill" id="xpBarFill" style="width:70%;"></div></div>
+        <div class="xp-label"><span>Level 3</span><span>Level 4</span></div>
+      </div>
+
+      <div class="new-session" onclick="goTo('syllabus', {skipChoose:false})">
+        <div class="ic">➕</div>
+        <h2>New session</h2>
+        <p>Add your content, then we'll suggest a technique</p>
+      </div>
+
+      <div class="section-label">Jump straight to a technique</div>
+      <div class="tech-row">
+        <div class="tech-jump" onclick="goTo('syllabus', {skipChoose:true, technique:'palace'})">
+          <div class="ic">🏰</div>
+          <div class="name">Memory Palace</div>
+          <div class="go">Skip to this →</div>
+        </div>
+        <div class="tech-jump" onclick="goTo('syllabus', {skipChoose:true, technique:'peg'})">
+          <div class="ic">🕯️</div>
+          <div class="name">Number Peg</div>
+          <div class="go">Skip to this →</div>
+        </div>
+      </div>
+
+      <div class="unlock-row">
+        <div class="section-label" style="margin:0;">Your peg set</div>
+        <div class="see-all" onclick="goTo('pegmap')">See all →</div>
+      </div>
+      <div class="mini-scroll" id="miniPegRow"></div>
+
+      <div class="unlock-row">
+        <div class="section-label" style="margin:0;">Your palaces</div>
+        <div class="see-all" onclick="goTo('palacemap')">See all →</div>
+      </div>
+      <div class="mini-scroll" id="miniPalaceRow"></div>
+
+      <div class="section-label">Try a lesson</div>
+      <div class="lesson-scroll" id="lessonScroll"></div>
+
+      <div class="section-label">Recent sessions</div>
+      <div class="filter-row" id="filterRow"></div>
+      <div id="sessionList"></div>
+    </div>
+
+    <!-- ================= SESSION DETAIL ================= -->
+    <div class="view" id="v-detail">
+      <div class="detail-head" id="detailHead"></div>
+      <div id="detailItems"></div>
+      <div class="detail-actions">
+        <button class="btn btn-primary" id="detailResume">Resume</button>
+        <button class="btn-ghost" id="detailRetry" style="margin-top:0;">Retry from scratch</button>
+      </div>
+    </div>
+
+    <!-- ================= SYLLABUS INPUT ================= -->
+    <div class="view" id="v-syllabus">
+      <div class="input-card">
+        <label>Name this session</label>
+        <input type="text" id="sessionName" placeholder="e.g. Monday Spelling Test">
+        <label>Add your items</label>
+        <div class="chip-row" id="chipRow"></div>
+        <div class="add-row">
+          <input type="text" id="wordInput" placeholder="Type a word or fact…" maxlength="20">
+          <button class="btn btn-primary" onclick="addWord()">Add</button>
+        </div>
+        <div class="preset-count" id="presetCount"></div>
+        <div class="hint">Works for spelling words, vocab, dates, or any short facts you need to remember.</div>
+      </div>
+      <button class="btn-big" id="syllabusContinue" onclick="continueFromSyllabus()">Continue</button>
+    </div>
+
+    <!-- ================= CHOOSE TECHNIQUE ================= -->
+    <div class="view" id="v-choose">
+      <div class="tech-card" id="cardPalace" onclick="selectTechnique('palace')">
+        <div class="ribbon" id="ribbonPalace" style="display:none;">Recommended</div>
+        <div class="tech-head">
+          <div class="ic palace">🏰</div>
+          <div class="t"><div class="name">Memory Palace</div><div class="tag">Spatial · walk-through</div></div>
+        </div>
+        <p class="desc">Place each item at a spot in a room you know well, then walk through it to recall everything in order.</p>
+        <div class="best-for"><span>Longer lists</span><span>Sequences</span><span>No fixed limit</span></div>
+      </div>
+      <div class="tech-card" id="cardPeg" onclick="selectTechnique('peg')">
+        <div class="ribbon" id="ribbonPeg" style="display:none;">Recommended</div>
+        <div class="tech-head">
+          <div class="ic peg">🕯️</div>
+          <div class="t"><div class="name">Number Peg</div><div class="tag">Fast · one movie per item</div></div>
+        </div>
+        <p class="desc">Each number 1–9 has a fixed anchor image. Picture it doing something wild to your word to lock it in.</p>
+        <div class="best-for"><span>Short lists</span><span>Spelling words</span><span>Under 9 items</span></div>
+      </div>
+    </div>
+
+    <!-- ================= NUMBER PEG MODULE ================= -->
+    <div class="view" id="v-peg">
+      <div class="peg-tabs">
+        <button class="active" data-pegtab="scenes" onclick="pegTab('scenes')">🎨 Scenes</button>
+        <button data-pegtab="quiz" onclick="pegTab('quiz')">🧠 Recall</button>
+      </div>
+      <div id="peg-scenes-view">
+        <div id="sceneGrid"></div>
+      </div>
+      <div id="peg-quiz-view" style="display:none;">
+        <div class="quiz-progress" id="quizDots"></div>
+        <div class="quiz-card" id="quizCard"></div>
+        <div class="score-board" id="scoreBoard"></div>
+      </div>
+    </div>
+
+    <!-- ================= MEMORY PALACE MODULE ================= -->
+    <div class="view" id="v-palace">
+      <div class="room" id="roomView"></div>
+      <div class="hint" style="margin-top:12px;">Tap a marker to preview what's placed there, or walk through your rooms in order.</div>
+      <div class="palace-list" id="palaceList"></div>
+      <button class="btn-big">🚶 Walk through rooms</button>
+    </div>
+
+    <!-- ================= PEG MAP (unlocks) ================= -->
+    <div class="view" id="v-pegmap">
+      <div class="hint" style="margin-bottom:16px;">Each peg is a fixed anchor image. New pegs unlock as you level up — this keeps the anchor set small enough to actually memorize.</div>
+      <div class="map-grid" id="pegMapGrid"></div>
+    </div>
+
+    <!-- ================= PALACE MAP (unlocks) ================= -->
+    <div class="view" id="v-palacemap">
+      <div class="hint" style="margin-bottom:16px;">New palace themes give you fresh spatial layouts, so your lists don't blur together in one overused room.</div>
+      <div id="palaceMapList"></div>
+    </div>
+
+    <!-- ================= PROFILE (minimal) ================= -->
+    <div class="view" id="v-profile">
+      <div class="xp-header" style="margin-bottom:22px;">
+        <div class="xp-top">
+          <div class="avatar-ring"><span class="lvl">3</span></div>
+          <div class="xp-info">
+            <div class="name">Level 3 · Memory Apprentice</div>
+            <div class="sub">420 / 600 XP to Level 4</div>
+          </div>
+          <div class="streak">🔥 4</div>
+        </div>
+        <div class="xp-bar-track"><div class="xp-bar-fill" style="width:70%;"></div></div>
+        <div class="xp-label"><span>Level 3</span><span>Level 4</span></div>
+      </div>
+      <div class="hint">XP comes from finishing sessions, perfect-recall bonuses, and keeping your daily streak alive.</div>
+    </div>
+
+  </div>
+
+  <div class="modal-overlay" id="levelupOverlay">
+    <div class="levelup-card">
+      <div class="confetti-wrap" id="confettiWrap"></div>
+      <div class="levelup-badge">🎉</div>
+      <h2>Level up! You're Level 4</h2>
+      <p>New rewards unlocked</p>
+      <div class="unlock-chips">
+        <span>🕯️ Pegs 10–12</span>
+        <span>🏰 Village Library</span>
+      </div>
+      <button class="btn-big" onclick="closeLevelUp()">Awesome, keep going</button>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tab" onclick="goTo('home')"><span class="ic">🏠</span>Home</button>
+    <button class="tab active" onclick="goTo('home')"><span class="ic">🧩</span>Practice</button>
+    <button class="tab" onclick="goTo('home')"><span class="ic">📈</span>Progress</button>
+    <button class="tab" onclick="goTo('profile')"><span class="ic">👤</span>Profile</button>
+  </div>
+</div>
+
+<script>
+/* ---------------- shared state ---------------- */
+let words = [];
+let flow = { skipChoose:false, technique:null };
+let stack = ['home'];
+
+const APPBAR = {
+  home:   {eyebrow:'Practice', title:'Choose how to memorize', sub:'Pick a technique or jump back into a session', back:false},
+  syllabus:{eyebrow:'New session', title:'Add your content', sub:'A word, a fact, a date — anything short', back:true},
+  choose: {eyebrow:'New session', title:'Pick a technique', sub:'Based on your list, we have a suggestion', back:true},
+  peg:    {eyebrow:'Number Peg', title:'Build your scenes', sub:'One tiny movie per peg', back:true},
+  palace: {eyebrow:'Memory Palace', title:'Place your items', sub:'Walk the room to recall them in order', back:true},
+  detail: {eyebrow:'Session', title:'Session details', sub:'Review what was practiced', back:true},
+  pegmap: {eyebrow:'Your peg set', title:'Peg unlocks', sub:'Grows as you level up', back:true},
+  palacemap: {eyebrow:'Your palaces', title:'Palace unlocks', sub:'New rooms as you level up', back:true},
+  profile: {eyebrow:'Profile', title:'Your progress', sub:'Level, XP, and streak', back:false},
+};
+
+/* ---------------- player / leveling state ---------------- */
+const PLAYER = { level: 3, xp: 420, xpToNext: 600, streak: 4 };
+const PEG_UNLOCKS = [
+  {n:1,e:'🕯️',level:1},{n:2,e:'🦢',level:1},{n:3,e:'❤️',level:1},{n:4,e:'⛵',level:1},{n:5,e:'✋',level:1},
+  {n:6,e:'🐘',level:1},{n:7,e:'🌈',level:1},{n:8,e:'⛄',level:1},{n:9,e:'🎈',level:1},
+  {n:10,e:'🎩',level:3},{n:11,e:'🦯',level:3},{n:12,e:'🧦',level:3},
+  {n:13,e:'🪁',level:5},{n:14,e:'🧊',level:5},{n:15,e:'🚪',level:5},
+  {n:16,e:'🥁',level:8},{n:17,e:'🪄',level:8},{n:18,e:'🎺',level:8},{n:19,e:'🧵',level:8},{n:20,e:'🛎️',level:8},
+];
+const PALACE_UNLOCKS = [
+  {name:'Cozy Bedroom', tag:'Starter palace', level:1, grad:'linear-gradient(135deg,#f6c667,#e89a4d)'},
+  {name:'Village Library', tag:'Just unlocked!', level:3, grad:'linear-gradient(135deg,#7ecb9e,#3fb87f)'},
+  {name:'Moonlit Castle', tag:'6 more sessions to unlock', level:6, grad:'linear-gradient(135deg,#7d76c9,#4b427f)'},
+  {name:'Space Station', tag:'Unlocks at Level 10', level:10, grad:'linear-gradient(135deg,#4fc0e8,#2d6fa8)'},
+];
+
+function goTo(view, opts){
+  if(opts) flow = Object.assign(flow, opts);
+  stack.push(view);
+  renderView(view);
+}
+function goBack(){
+  if(stack.length > 1){ stack.pop(); renderView(stack[stack.length-1]); }
+}
+function renderView(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-'+view).classList.add('active');
+  const meta = APPBAR[view];
+  document.getElementById('appEyebrow').textContent = meta.eyebrow;
+  document.getElementById('appTitle').textContent = meta.title;
+  document.getElementById('appSub').textContent = meta.sub;
+  document.getElementById('backBtn').classList.toggle('show', meta.back);
+  document.getElementById('screen').scrollTop = 0;
+
+  if(view === 'choose') renderChoose();
+  if(view === 'peg') { renderScenes(); pegTab('scenes'); }
+  if(view === 'palace') renderPalace();
+  if(view === 'home') { renderXpHeader(); renderMiniUnlocks(); renderLessons(); renderFilters(); renderSessions(); }
+  if(view === 'detail') renderDetail();
+  if(view === 'pegmap') renderPegMap();
+  if(view === 'palacemap') renderPalaceMap();
+}
+
+/* ---------------- XP header + unlock rows ---------------- */
+function renderXpHeader(){
+  document.getElementById('xpLevelBadge').textContent = PLAYER.level;
+  document.getElementById('xpName').textContent = `Level ${PLAYER.level} · Memory Apprentice`;
+  document.getElementById('xpSub').textContent = `${PLAYER.xp} / ${PLAYER.xpToNext} XP to Level ${PLAYER.level+1}`;
+  document.getElementById('streakCount').textContent = PLAYER.streak;
+  document.getElementById('xpBarFill').style.width = Math.round((PLAYER.xp/PLAYER.xpToNext)*100) + '%';
+}
+function renderMiniUnlocks(){
+  const pegRow = document.getElementById('miniPegRow');
+  pegRow.innerHTML = PEG_UNLOCKS.slice(0,9).map(p => {
+    const unlocked = p.level <= PLAYER.level;
+    return `<div class="mini-peg ${unlocked?'':'locked'}">${p.e}${unlocked?'':'<div class=\"lock\">🔒</div>'}</div>`;
+  }).join('') + `<div class="mini-peg locked" onclick="goTo('pegmap')" style="cursor:pointer;">➕<div class="lock">🔒</div></div>`;
+
+  const palRow = document.getElementById('miniPalaceRow');
+  palRow.innerHTML = PALACE_UNLOCKS.map(p => {
+    const unlocked = p.level <= PLAYER.level;
+    return `<div class="mini-palace ${unlocked?'':'locked'}" style="background:${p.grad};">
+      ${unlocked?'':'<div class="lock2">🔒</div>'}
+      <div class="name">${p.name}</div>
+    </div>`;
+  }).join('');
+}
+function renderPegMap(){
+  const grid = document.getElementById('pegMapGrid');
+  grid.innerHTML = PEG_UNLOCKS.map(p => {
+    const unlocked = p.level <= PLAYER.level;
+    return `<div class="map-peg ${unlocked?'unlocked':'locked'}">
+      ${unlocked ? '' : `<div class="lockbadge">Lv ${p.level}</div>`}
+      <div class="e">${unlocked ? p.e : '🔒'}</div>
+      <div class="n">Peg ${p.n}</div>
+    </div>`;
+  }).join('');
+}
+function renderPalaceMap(){
+  const list = document.getElementById('palaceMapList');
+  list.innerHTML = PALACE_UNLOCKS.map(p => {
+    const unlocked = p.level <= PLAYER.level;
+    return `<div class="palace-card ${unlocked?'':'locked'}" style="background:${p.grad};">
+      ${unlocked ? '' : `<div class="plockbadge">🔒 Level ${p.level}</div>`}
+      <div class="pname">${p.name}</div>
+      <div class="ptag">${unlocked ? (p.level===PLAYER.level ? 'Just unlocked!' : 'Unlocked') : p.tag}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- level-up celebration (demo trigger) ---------------- */
+function showLevelUp(){
+  const wrap = document.getElementById('confettiWrap');
+  wrap.innerHTML = '';
+  const colors = ['#ffc93c','#ff6f91','#4fc0e8','#3fb87f','#9b8cff'];
+  for(let i=0;i<26;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random()*100 + '%';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (1.4 + Math.random()*1.2) + 's';
+    c.style.animationDelay = (Math.random()*0.4) + 's';
+    wrap.appendChild(c);
+  }
+  document.getElementById('levelupOverlay').classList.add('show');
+}
+function closeLevelUp(){
+  document.getElementById('levelupOverlay').classList.remove('show');
+  PLAYER.level = 4; PLAYER.xp = 40; PLAYER.xpToNext = 800;
+  renderXpHeader(); renderMiniUnlocks();
+}
+
+/* ---------------- lessons (predefined, tap-to-experience) ---------------- */
+const LESSONS = [
+  {id:'l1', title:'5 Tricky Spelling Words', ic:'🕯️', technique:'peg', items:['RHYTHM','NECESSARY','SEPARATE','DEFINITELY','OCCASION']},
+  {id:'l2', title:'Solar System Order', ic:'🕯️', technique:'peg', items:['MERCURY','VENUS','EARTH','MARS','JUPITER','SATURN']},
+  {id:'l3', title:'World Capitals', ic:'🏰', technique:'palace', items:['Tokyo — Japan','Cairo — Egypt','Ottawa — Canada','Canberra — Australia','Lima — Peru','Oslo — Norway','Hanoi — Vietnam','Accra — Ghana','Quito — Ecuador','Dublin — Ireland']},
+  {id:'l4', title:'Grocery Run', ic:'🕯️', technique:'peg', items:['MILK','EGGS','BREAD','APPLES','TOOTHPASTE']},
+];
+function renderLessons(){
+  const row = document.getElementById('lessonScroll');
+  row.innerHTML = LESSONS.map(l => `
+    <div class="lesson-card" onclick="startLesson('${l.id}')">
+      <div class="ic">${l.ic}</div>
+      <div class="t">${l.title}</div>
+      <div class="count">${l.items.length} items</div>
+      <div class="lchip ${l.technique}">${l.technique==='peg' ? 'Number Peg' : 'Memory Palace'}</div>
+    </div>
+  `).join('');
+}
+function startLesson(id){
+  const lesson = LESSONS.find(l => l.id === id);
+  words = [...lesson.items];
+  renderChips();
+  routeToTechnique(lesson.technique);
+}
+
+/* ---------------- recent sessions (with filter + detail) ---------------- */
+const SESSIONS = [
+  {id:'s1', title:'Monday Spelling Test', technique:'peg', items:['PHONE','ELEPHANT','SCHOOL','WINDOW','GARDEN'], results:[true,true,false,true,true]},
+  {id:'s2', title:'World History Dates', technique:'palace', items:['Rome fell — 476AD','Magna Carta — 1215','WWI starts — 1914','Moon landing — 1969'], results:[true,null,null,null]},
+  {id:'s3', title:'Grocery Run', technique:'peg', items:['MILK','EGGS','BREAD','APPLES','TOOTHPASTE','BANANAS'], results:[true,true,true,true,true,true]},
+];
+let sessionFilter = 'all';
+function renderFilters(){
+  const row = document.getElementById('filterRow');
+  const filters = [{k:'all',l:'All'},{k:'peg',l:'Number Peg'},{k:'palace',l:'Memory Palace'}];
+  row.innerHTML = filters.map(f => `<button class="filter-chip ${sessionFilter===f.k?'active':''}" onclick="setFilter('${f.k}')">${f.l}</button>`).join('');
+}
+function setFilter(k){ sessionFilter = k; renderFilters(); renderSessions(); }
+function renderSessions(){
+  const list = SESSIONS.filter(s => sessionFilter==='all' || s.technique===sessionFilter);
+  const el = document.getElementById('sessionList');
+  if(list.length === 0){ el.innerHTML = '<div class="empty-note">No sessions here yet — try a lesson above.</div>'; return; }
+  el.innerHTML = list.map(s => {
+    const done = s.results.filter(r => r !== null).length;
+    const correct = s.results.filter(r => r === true).length;
+    const scoreLabel = done < s.results.length ? 'In progress' : `${correct}/${s.results.length}`;
+    return `
+    <div class="session-card" onclick="openSession('${s.id}')">
+      <div class="badge ${s.technique}">${s.technique==='peg' ? '🕯️' : '🏰'}</div>
+      <div class="meta"><div class="t">${s.title}</div><div class="s">${s.technique==='peg'?'Number Peg':'Memory Palace'} · ${s.items.length} items</div></div>
+      <div class="score">${scoreLabel}</div>
+      <div class="chevron">›</div>
+    </div>`;
+  }).join('');
+}
+function openSession(id){
+  const s = SESSIONS.find(x => x.id === id);
+  window.__activeSession = s;
+  goTo('detail');
+}
+function renderDetail(){
+  const s = window.__activeSession;
+  if(!s) return;
+  document.getElementById('detailHead').innerHTML = `
+    <div class="badge ${s.technique}">${s.technique==='peg' ? '🕯️' : '🏰'}</div>
+    <div><div class="t">${s.title}</div><div class="s">${s.technique==='peg'?'Number Peg':'Memory Palace'} · ${s.items.length} items</div></div>`;
+  document.getElementById('detailItems').innerHTML = s.items.map((it,i) => {
+    const r = s.results[i];
+    const resHtml = r === null ? '<div class="res" style="background:#f2f1ea;color:var(--ink-soft);">·</div>'
+                  : r ? '<div class="res yes">✓</div>' : '<div class="res no">✕</div>';
+    return `<div class="detail-item">${resHtml}<div class="w">${it}</div></div>`;
+  }).join('');
+  document.getElementById('detailResume').onclick = () => {
+    words = [...s.items]; renderChips(); routeToTechnique(s.technique);
+  };
+  document.getElementById('detailRetry').onclick = () => {
+    words = [...s.items]; renderChips(); routeToTechnique(s.technique);
+  };
+}
+
+/* ---------------- syllabus screen ---------------- */
+function renderChips(){
+  const row = document.getElementById('chipRow');
+  row.innerHTML = '';
+  words.forEach((w,i)=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `<span class="num">${i+1}</span> ${w} <button onclick="removeWord(${i})">✕</button>`;
+    row.appendChild(chip);
+  });
+  document.getElementById('presetCount').textContent = words.length ? `${words.length} item${words.length>1?'s':''} added` : '';
+}
+function addWord(){
+  const input = document.getElementById('wordInput');
+  const v = input.value.trim().toUpperCase();
+  if(v && !words.includes(v)){ words.push(v); input.value=''; renderChips(); }
+}
+document.getElementById('wordInput').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addWord(); }});
+function removeWord(i){ words.splice(i,1); renderChips(); }
+
+function continueFromSyllabus(){
+  if(words.length === 0){ addWord(); } // guard: nothing typed, keep demo usable
+  if(flow.skipChoose && flow.technique){
+    routeToTechnique(flow.technique);
+  } else {
+    goTo('choose');
+  }
+}
+
+/* ---------------- choose technique screen ---------------- */
+function renderChoose(){
+  const pegRecommended = words.length > 0 && words.length <= 9;
+  document.getElementById('ribbonPeg').style.display = pegRecommended ? 'block' : 'none';
+  document.getElementById('ribbonPalace').style.display = !pegRecommended ? 'block' : 'none';
+  document.getElementById('cardPeg').classList.toggle('recommended', pegRecommended);
+  document.getElementById('cardPalace').classList.toggle('recommended', !pegRecommended);
+}
+function selectTechnique(t){ routeToTechnique(t); }
+function routeToTechnique(t){
+  flow.technique = t;
+  goTo(t === 'peg' ? 'peg' : 'palace');
+}
+
+/* ---------------- NUMBER PEG (condensed) ---------------- */
+const PEGS = [
+  {n:1,name:'Candle',emoji:'🕯️'},{n:2,name:'Swan',emoji:'🦢'},{n:3,name:'Heart',emoji:'❤️'},
+  {n:4,name:'Sailboat',emoji:'⛵'},{n:5,name:'Hand',emoji:'✋'},{n:6,name:'Elephant',emoji:'🐘'},
+  {n:7,name:'Rainbow',emoji:'🌈'},{n:8,name:'Snowman',emoji:'⛄'},{n:9,name:'Balloon',emoji:'🎈'},
+];
+const WORD_EMOJI = {PHONE:'📱', ELEPHANT:'🐘', SCHOOL:'🏫', WINDOW:'🪟', GARDEN:'🌻', MILK:'🥛', EGGS:'🥚', BREAD:'🍞', APPLES:'🍎'};
+const CRAZY = [
+  (peg,word)=>`A giant ${peg.name.toLowerCase()} is <b>eating</b> the ${word.toLowerCase()} like spaghetti!`,
+  (peg,word)=>`The ${peg.name.toLowerCase()} is riding the ${word.toLowerCase()} like a motorcycle!`,
+  (peg,word)=>`The ${peg.name.toLowerCase()} sneezes and the ${word.toLowerCase()} goes flying!`,
+];
+let variantIndex = {};
+function pegWords(){ return words.length ? words.slice(0,9) : ['PHONE','ELEPHANT','SCHOOL']; }
+function wordEmojiFor(w){ return WORD_EMOJI[w] || '❓'; }
+function sceneSentence(peg, word, vIdx){
+  if(vIdx===0) return `The ${peg.name.toLowerCase()} is quietly sitting next to a <b>${word}</b>.`;
+  return CRAZY[(vIdx-1)%CRAZY.length](peg, word);
+}
+function renderScenes(){
+  const list = pegWords();
+  const grid = document.getElementById('sceneGrid');
+  grid.innerHTML = '';
+  list.forEach((w,i)=>{
+    const peg = PEGS[i];
+    if(variantIndex[w]===undefined) variantIndex[w]=1;
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML = `
+      <div class="peg-badge">${peg.n}</div>
+      <div class="scene"><div class="emoji-pair"><span>${peg.emoji}</span><span>${wordEmojiFor(w)}</span></div></div>
+      <div class="sentence" id="sentence-${i}">${sceneSentence(peg,w,variantIndex[w])}</div>
+      <div class="word-tag">${w}</div>
+      <div class="card-actions">
+        <button class="btn-small" onclick="makeCrazier(${i})">🤪 Crazier</button>
+        <button class="btn-small" onclick="resetScene(${i})">↺ Reset</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+function makeCrazier(i){ const w=pegWords()[i]; variantIndex[w]=(variantIndex[w]%CRAZY.length)+1; document.getElementById('sentence-'+i).innerHTML = sceneSentence(PEGS[i], w, variantIndex[w]); }
+function resetScene(i){ const w=pegWords()[i]; variantIndex[w]=0; document.getElementById('sentence-'+i).innerHTML = sceneSentence(PEGS[i], w, 0); }
+
+function pegTab(which){
+  document.querySelectorAll('[data-pegtab]').forEach(b=>b.classList.toggle('active', b.dataset.pegtab===which));
+  document.getElementById('peg-scenes-view').style.display = which==='scenes' ? 'block':'none';
+  document.getElementById('peg-quiz-view').style.display = which==='quiz' ? 'block':'none';
+  if(which==='quiz') startQuiz();
+}
+let quizIndex=0, score=0, results=[];
+function startQuiz(){
+  const list = pegWords();
+  quizIndex=0; score=0; results=new Array(list.length).fill(null);
+  renderQuizDots(); renderQuizQuestion();
+}
+function renderQuizDots(){
+  const list = pegWords();
+  document.getElementById('quizDots').innerHTML = list.map((_,i)=>{
+    let cls='dot';
+    if(i<quizIndex) cls += results[i] ? ' done':'';
+    if(i===quizIndex) cls += ' current';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+}
+function renderQuizQuestion(){
+  const list = pegWords();
+  const card = document.getElementById('quizCard');
+  if(quizIndex>=list.length){
+    card.innerHTML = `<div style="font-size:38px;">🏆</div>
+      <div style="font-family:'Baloo 2';font-weight:800;font-size:17px;margin:8px 0 4px;">Round complete!</div>
+      <div style="color:var(--ink-soft);font-weight:700;font-size:13px;">You recalled <b style="color:var(--grass)">${score}/${list.length}</b> correctly. +${score*10} XP</div>
+      <div class="quiz-actions"><button class="btn btn-primary" onclick="startQuiz()">↺ Try again</button></div>`;
+    document.getElementById('scoreBoard').innerHTML='';
+    if(score === list.length && PLAYER.level === 3){ setTimeout(showLevelUp, 500); }
+    return;
+  }
+  const w = list[quizIndex]; const peg = PEGS[quizIndex];
+  card.innerHTML = `
+    <div class="peg-big">${peg.n}</div>
+    <div class="quiz-clue">Peg ${peg.n} was the <b>${peg.name}</b>. What was it doing?</div>
+    <div class="quiz-scene-emoji">${peg.emoji}</div>
+    <div class="quiz-input-row"><input type="text" id="quizInput" placeholder="TYPE THE WORD" autocomplete="off"></div>
+    <div class="feedback" id="quizFeedback"></div>
+    <div class="quiz-actions"><button class="btn btn-primary" onclick="checkAnswer()">Check</button></div>`;
+  document.getElementById('scoreBoard').innerHTML = `Score so far: <b>${score}</b> / ${quizIndex}`;
+  const inp = document.getElementById('quizInput'); inp.focus();
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter') checkAnswer(); });
+}
+function checkAnswer(){
+  const list = pegWords();
+  const inp = document.getElementById('quizInput');
+  const val = inp.value.trim().toUpperCase();
+  const correct = list[quizIndex];
+  const fb = document.getElementById('quizFeedback');
+  const isRight = val===correct;
+  results[quizIndex]=isRight;
+  if(isRight){ score++; inp.classList.add('correct'); fb.className='feedback ok'; fb.textContent='✅ Nailed it!'; }
+  else { inp.classList.add('wrong'); fb.className='feedback no'; fb.textContent=`It was ${correct} — you'll see it again.`; }
+  inp.disabled=true;
+  setTimeout(()=>{ quizIndex++; renderQuizDots(); renderQuizQuestion(); }, 1100);
+}
+
+/* ---------------- MEMORY PALACE (placeholder module) ---------------- */
+const ROOM_SPOTS = [
+  {x:'14%',y:'20%'},{x:'62%',y:'14%'},{x:'80%',y:'55%'},{x:'40%',y:'62%'},{x:'18%',y:'70%'},
+  {x:'55%',y:'40%'},{x:'30%',y:'38%'},{x:'70%',y:'75%'},{x:'8%',y:'50%'},{x:'85%',y:'20%'},
+  {x:'45%',y:'15%'},{x:'25%',y:'80%'},
+];
+function palaceWords(){ return words.length ? words : ['Rome fell 476AD','Magna Carta 1215','WWI starts 1914','Moon landing 1969']; }
+function renderPalace(){
+  const list = palaceWords();
+  const room = document.getElementById('roomView');
+  room.innerHTML = '<div class="floor"></div>';
+  list.forEach((w,i)=>{
+    const spot = ROOM_SPOTS[i % ROOM_SPOTS.length];
+    const marker = document.createElement('div');
+    marker.className='marker';
+    marker.style.left = spot.x; marker.style.top = spot.y;
+    marker.textContent = i+1;
+    room.appendChild(marker);
+  });
+  document.getElementById('palaceList').innerHTML = list.map((w,i)=>`
+    <div class="palace-item"><div class="num">${i+1}</div><div class="w">${w}</div></div>
+  `).join('');
+}
+
+/* ---------------- init ---------------- */
+renderChips();
+renderXpHeader();
+renderMiniUnlocks();
+renderLessons();
+renderFilters();
+renderSessions();
+</script>
+</body>
+</html>

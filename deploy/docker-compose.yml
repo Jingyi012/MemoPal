@@ -1,0 +1,64 @@
+name: memopal
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: memopal-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: memopal
+      POSTGRES_USER: memopal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - memopal_db:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U memopal -d memopal"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    image: ghcr.io/${IMAGE_OWNER}/memopal-backend:${BACKEND_IMAGE_TAG:-latest}
+    container_name: memopal-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=memopal;Username=memopal;Password=${POSTGRES_PASSWORD}
+      FileStorage__RootPath: /data/uploads
+    volumes:
+      - memopal_uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  admin:
+    image: ghcr.io/${IMAGE_OWNER}/memopal-admin:${ADMIN_IMAGE_TAG:-latest}
+    container_name: memopal-admin
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: memopal-nginx
+    restart: unless-stopped
+    depends_on:
+      - api
+      - admin
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # If you terminate TLS in this container, mount cert files here.
+      # - ./deploy/nginx/certs:/etc/nginx/certs:ro
+
+volumes:
+  memopal_db:
+    name: memopal_db
+  memopal_uploads:
+    external: true
+    name: memopal_uploads

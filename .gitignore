@@ -1,41 +1,50 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+secrets/
+*.pem
+*.key
+*.p8
+*.p12
+*.jks
+*.mobileprovision
 
-# dependencies
+# JavaScript / Expo
 node_modules/
-
-# Expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
-
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
 .metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
-*.pem
-
-# local env files
-.env*.local
-
-# typescript
+.npm/
 *.tsbuildinfo
+ios/
+android/
+.kotlin/
 
-# generated native folders
-/ios
-/android
+# .NET
+bin/
+obj/
+TestResults/
+*.user
+*.suo
+
+# Runtime data
+uploads/
+uploads-*/
+.dotnet/
+
+# Logs and operating-system files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# Temporary source repositories used only during monorepo assembly.
+/MemoPal/
+/MemoPal.backend/
+/MemoPal.admin/
