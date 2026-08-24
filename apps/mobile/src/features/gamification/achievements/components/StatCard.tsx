@@ -11,9 +11,9 @@ interface StatCardProps {
 }
 
 export const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, color }) => (
-  <BaseCard className="flex-1 items-center rounded-xl p-4" padding="none">
+  <BaseCard className="flex-1 items-center rounded-2xl border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
     <Icon size={20} color={color} style={{ marginBottom: 5 }} />
-    <Text className="text-2xl font-normal">{value}</Text>
-    <Text className="text-xs text-slate-600">{label}</Text>
+    <Text className="text-2xl font-bold text-[#2B2A3D]">{value}</Text>
+    <Text className="text-xs text-[#6B6A80]">{label}</Text>
   </BaseCard>
 );

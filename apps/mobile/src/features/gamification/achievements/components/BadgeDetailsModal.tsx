@@ -2,6 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { BADGE_RARITY_CONFIG, LOCKED_BADGE_GRADIENT } from '@/features/gamification/shared/constants/badgeRarityConfig';
 import { GradientColors } from '@/core/types/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { Badge } from '@/features/gamification/shared/types/levelAndbadge';
 import { iconMap } from '@/utils/IconMap';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -53,24 +54,24 @@ export const BadgeDetailsModal: React.FC<BadgeDetailsModalProps> = ({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       {/* 4. Use a Pressable background to allow closing when clicking outside the card */}
       <Pressable
-        className="flex-1 items-center justify-center bg-slate-900/60 px-5"
+        className="flex-1 items-center justify-center bg-[#2B2A3D]/60 px-5"
         onPress={onClose}>
         {/* StopPropagation equivalent: Wrap content in a Pressable that does nothing */}
         <Pressable
-          className="max-h-[85%] w-full rounded-3xl bg-white p-5"
+          className="max-h-[85%] w-full rounded-3xl border-2 border-[#EEE9DC] bg-[#FFFDF8] p-5"
           onPress={(e) => e.stopPropagation()}>
           <View className="flex-row items-start justify-between">
-            <Text className="flex-1 text-lg font-bold text-slate-900">{badge.name}</Text>
+            <Text className="flex-1 text-lg font-bold text-[#2B2A3D]">{badge.name}</Text>
             <AnimatedPressable
               onPress={onClose}
-              className="ml-3 h-8 w-8 items-center justify-center rounded-full bg-slate-100">
-              <X size={16} color="#334155" />
+              className="ml-3 h-8 w-8 items-center justify-center rounded-full bg-[#F6F3EA]">
+              <X size={16} color={theme.inkSoft} />
             </AnimatedPressable>
           </View>
 
           <View className="mt-4 items-center">
             {badge.iconUrl ? (
-              <View className="h-20 w-20 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              <View className="h-20 w-20 overflow-hidden rounded-2xl border border-[#EEE9DC] bg-white">
                 <AppImage source={{ uri: badge.iconUrl }} className="h-full w-full" contentFit="cover" />
               </View>
             ) : (
@@ -86,15 +87,15 @@ export const BadgeDetailsModal: React.FC<BadgeDetailsModalProps> = ({
 
             <View
               className={`mt-3 flex-row items-center rounded-full px-3 py-1 ${
-                isLocked ? 'bg-slate-100' : 'bg-emerald-50'
+                isLocked ? 'bg-[#F6F3EA]' : 'bg-[#F1FBF5]'
               }`}>
               {isLocked ? (
-                <Lock size={12} color="#64748b" />
+                <Lock size={12} color={theme.inkSoft} />
               ) : (
-                <Star size={12} color="#15803d" fill="#15803d" />
+                <Star size={12} color={theme.grass} fill={theme.grass} />
               )}
               <Text
-                className={`ml-1 text-xs font-semibold ${isLocked ? 'text-slate-600' : 'text-emerald-700'}`}>
+                className={`ml-1 text-xs font-semibold ${isLocked ? 'text-[#6B6A80]' : 'text-[#3FB87F]'}`}>
                 {isLocked ? 'Locked' : 'Earned'}
               </Text>
             </View>
@@ -105,31 +106,31 @@ export const BadgeDetailsModal: React.FC<BadgeDetailsModalProps> = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 10 }} // Extra space at bottom of scroll
           >
-            <View className="rounded-2xl bg-slate-50 p-4">
-              <Text className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <View className="rounded-2xl bg-[#F6F3EA] p-4">
+              <Text className="text-xs font-semibold uppercase tracking-wider text-[#6B6A80]">
                 Rarity
               </Text>
-              <Text className="mt-1 text-sm font-semibold text-slate-800">
+              <Text className="mt-1 text-sm font-semibold text-[#2B2A3D]">
                 {rarityConfig.label}
               </Text>
             </View>
 
-            <View className="mt-3 rounded-2xl bg-slate-50 p-4">
-              <Text className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <View className="mt-3 rounded-2xl bg-[#F6F3EA] p-4">
+              <Text className="text-xs font-semibold uppercase tracking-wider text-[#6B6A80]">
                 How to Earn
               </Text>
-              <Text className="mt-1 text-sm leading-5 text-slate-700">
+              <Text className="mt-1 text-sm leading-5 text-[#2B2A3D]">
                 {badge.description?.trim() ||
                   'Complete the related learning challenge to unlock this badge.'}
               </Text>
             </View>
 
             {badge.earnedAt ? (
-              <View className="mt-3 rounded-2xl bg-emerald-50 p-4">
-                <Text className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+              <View className="mt-3 rounded-2xl bg-[#F1FBF5] p-4">
+                <Text className="text-xs font-semibold uppercase tracking-wider text-[#3FB87F]">
                   Earned On
                 </Text>
-                <Text className="mt-1 text-sm font-semibold text-emerald-700">
+                <Text className="mt-1 text-sm font-semibold text-[#3FB87F]">
                   {formatEarnedDate(badge.earnedAt)}
                 </Text>
               </View>

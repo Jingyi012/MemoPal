@@ -35,10 +35,10 @@ export function MilestonesTab({ milestoneGroups, config }: MilestonesTabProps) {
   };
 
   return (
-    <BaseCard className="p-4" padding="none">
+    <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
       <View className="mb-4">
-        <Text className="text-base font-bold text-slate-900">{config.milestoneSectionTitle}</Text>
-        <Text className="mt-1 text-sm text-slate-500">
+        <Text className="text-base font-bold text-[#2B2A3D]">{config.milestoneSectionTitle}</Text>
+        <Text className="mt-1 text-sm text-[#6B6A80]">
           Progress updates automatically as you learn and review.
         </Text>
       </View>
@@ -53,29 +53,29 @@ export function MilestonesTab({ milestoneGroups, config }: MilestonesTabProps) {
           return (
             <View
               key={conditionType}
-              className="overflow-hidden rounded-xl border border-slate-100">
+              className="overflow-hidden rounded-xl border-2 border-[#EEE9DC]">
               {/* Accordion Header */}
               <AnimatedPressable
                 onPress={() => toggleGroup(conditionType)}
-                className={`flex-row items-center justify-between p-4 ${isExpanded ? 'bg-slate-50' : 'bg-white'}`}>
+                className={`flex-row items-center justify-between p-4 ${isExpanded ? 'bg-[#F6F3EA]' : 'bg-white'}`}>
                 <View>
-                  <Text className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                  <Text className="text-xs font-bold uppercase tracking-widest text-[#6B6A80]">
                     {label}
                   </Text>
-                  <Text className="text-xs text-slate-400">
+                  <Text className="text-xs text-[#9A97A7]">
                     {achievedCount} of {items.length} completed
                   </Text>
                 </View>
                 {isExpanded ? (
-                  <ChevronUp size={18} color="#64748b" />
+                  <ChevronUp size={18} color="#7A68E0" />
                 ) : (
-                  <ChevronDown size={18} color="#64748b" />
+                  <ChevronDown size={18} color="#7A68E0" />
                 )}
               </AnimatedPressable>
 
               {/* Accordion Content */}
               {isExpanded && (
-                <View className="gap-4 bg-white p-4 pt-2">
+                <View className="gap-4 bg-[#FFFDF8] p-4 pt-2">
                   {items.map((milestone, index) => (
                     <MilestoneItem
                       key={milestone.id}

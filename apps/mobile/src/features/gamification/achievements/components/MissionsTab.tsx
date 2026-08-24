@@ -1,10 +1,10 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { BaseCard } from '@/components/BaseCard';
-import { Colors } from '@/constants/colors';
 import { SourceType } from '@/enums/sourceType';
 import { getMissionClaimSourceId, useClaimMissionReward } from '@/features/gamification/shared/hooks/useMissions';
 import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
 import { MissionProgress } from '@/features/gamification/shared/types/missions';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { CheckCircle2, Clock3, Gift, Sparkles, Target } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
@@ -29,22 +29,22 @@ function statusMeta(status: MissionStatus): {
       return {
         label: 'Ready to claim',
         icon: Gift,
-        textColor: Colors.teal700,
-        bgClass: 'bg-teal-100',
+        textColor: theme.violetDeep,
+        bgClass: 'bg-[#EEE9FF]',
       };
     case 'claimed':
       return {
         label: 'Claimed',
         icon: CheckCircle2,
-        textColor: Colors.emerald700,
-        bgClass: 'bg-emerald-100',
+        textColor: theme.grass,
+        bgClass: 'bg-[#F1FBF5]',
       };
     default:
       return {
         label: 'In progress',
         icon: Clock3,
-        textColor: Colors.slate700,
-        bgClass: 'bg-slate-200',
+        textColor: theme.inkSoft,
+        bgClass: 'bg-[#F6F3EA]',
       };
   }
 }
@@ -84,21 +84,21 @@ function MissionCard({
   const StatusIcon = meta.icon;
 
   return (
-    <BaseCard className="p-4" padding="none">
+    <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-3">
           <View className="mb-1 flex-row items-center gap-2">
-            <View className="rounded-full bg-indigo-100 p-1.5">
-              <Target size={12} color={Colors.indigo700} />
+              <View className="rounded-full bg-[#EEE9FF] p-1.5">
+              <Target size={12} color={theme.violetDeep} />
             </View>
-            <Text className="text-base font-semibold text-slate-900">{mission.title}</Text>
+            <Text className="text-base font-semibold text-[#2B2A3D]">{mission.title}</Text>
           </View>
           {!!mission.description && (
-            <Text className="text-sm text-slate-500">{mission.description}</Text>
+            <Text className="text-sm text-[#6B6A80]">{mission.description}</Text>
           )}
         </View>
-        <View className="rounded-full bg-amber-100 px-3 py-1">
-          <Text className="text-sm font-semibold text-amber-700">+{mission.rewardXp} XP</Text>
+        <View className="rounded-full bg-[#FFF7E0] px-3 py-1">
+          <Text className="text-sm font-semibold text-[#F2A900]">+{mission.rewardXp} XP</Text>
         </View>
       </View>
 
@@ -109,21 +109,21 @@ function MissionCard({
             {meta.label}
           </Text>
         </View>
-        <Text className="text-xs font-semibold uppercase text-slate-500">
+        <Text className="text-xs font-semibold uppercase text-[#6B6A80]">
           {formatPeriod(mission.period)}
         </Text>
       </View>
 
       <View className="mt-3">
         <View className="mb-1 flex-row items-center justify-between">
-          <Text className="text-xs text-slate-500">
+          <Text className="text-xs text-[#6B6A80]">
             {mission.currentValue}/{mission.targetValue}
           </Text>
-          <Text className="text-xs font-semibold text-slate-600">{mission.progressPercent}%</Text>
+          <Text className="text-xs font-semibold text-[#7A68E0]">{mission.progressPercent}%</Text>
         </View>
-        <View className="h-2 overflow-hidden rounded-full bg-slate-200">
+        <View className="h-2 overflow-hidden rounded-full bg-[#EEE9DC]">
           <View
-            className={`h-full ${status === 'claimed' ? 'bg-emerald-500' : 'bg-teal-500'}`}
+            className={`h-full ${status === 'claimed' ? 'bg-[#3FB87F]' : 'bg-[#9B8CFF]'}`}
             style={{ width: `${mission.progressPercent}%` }}
           />
         </View>
@@ -132,15 +132,15 @@ function MissionCard({
       {canClaim ? (
         <AnimatedPressable
           onPress={onClaim}
-          className="mt-3 items-center rounded-xl bg-teal-600 px-3 py-2">
-          <Text className="text-sm font-semibold text-white">
+          className="mt-3 items-center rounded-xl bg-[#FFC93C] px-3 py-2">
+          <Text className="text-sm font-semibold text-[#2B2A3D]">
             {isClaiming ? 'Claiming...' : 'Claim Reward'}
           </Text>
         </AnimatedPressable>
       ) : status === 'claimed' ? (
-        <Text className="mt-3 text-sm font-semibold text-emerald-700">Reward already claimed</Text>
+        <Text className="mt-3 text-sm font-semibold text-[#3FB87F]">Reward already claimed</Text>
       ) : (
-        <Text className="mt-3 text-sm text-slate-500">Complete this mission to claim reward</Text>
+        <Text className="mt-3 text-sm text-[#6B6A80]">Complete this mission to claim reward</Text>
       )}
     </BaseCard>
   );
@@ -219,41 +219,41 @@ export function MissionsTab({
   );
 
   return (
-    <BaseCard className="p-4" padding="none">
-      <Text className="text-base font-bold text-slate-900">{sectionTitle}</Text>
-      <Text className="mt-1 text-sm text-slate-500">{sectionDescription}</Text>
+    <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
+      <Text className="text-base font-bold text-[#2B2A3D]">{sectionTitle}</Text>
+      <Text className="mt-1 text-sm text-[#6B6A80]">{sectionDescription}</Text>
 
       <View className="mt-3 flex-row gap-2">
-        <View className="flex-1 rounded-xl bg-slate-100 px-3 py-2">
-          <Text className="text-sm text-slate-500">Active</Text>
-          <Text className="mt-1 text-lg font-bold text-slate-900">{missions.length}</Text>
+        <View className="flex-1 rounded-xl bg-[#F6F3EA] px-3 py-2">
+          <Text className="text-sm text-[#6B6A80]">Active</Text>
+          <Text className="mt-1 text-lg font-bold text-[#2B2A3D]">{missions.length}</Text>
         </View>
-        <View className="flex-1 rounded-xl bg-teal-50 px-3 py-2">
-          <Text className="text-sm text-teal-700">Claimable</Text>
-          <Text className="mt-1 text-lg font-bold text-teal-700">{claimableCount}</Text>
+        <View className="flex-1 rounded-xl bg-[#EEE9FF] px-3 py-2">
+          <Text className="text-sm text-[#7A68E0]">Claimable</Text>
+          <Text className="mt-1 text-lg font-bold text-[#7A68E0]">{claimableCount}</Text>
         </View>
-        <View className="flex-1 rounded-xl bg-emerald-50 px-3 py-2">
-          <Text className="text-sm text-emerald-700">Claimed</Text>
-          <Text className="mt-1 text-lg font-bold text-emerald-700">{claimedCount}</Text>
+        <View className="flex-1 rounded-xl bg-[#F1FBF5] px-3 py-2">
+          <Text className="text-sm text-[#3FB87F]">Claimed</Text>
+          <Text className="mt-1 text-lg font-bold text-[#3FB87F]">{claimedCount}</Text>
         </View>
       </View>
 
       {isError ? (
-        <View className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4">
-          <Text className="text-sm font-semibold text-rose-700">
+        <View className="mt-4 rounded-2xl border border-[#FFD9E2] bg-[#FFF0F4] p-4">
+          <Text className="text-sm font-semibold text-[#E8527A]">
             Unable to load missions right now.
           </Text>
           <AnimatedPressable
             onPress={onRetry}
-            className="mt-3 self-start rounded-lg bg-rose-600 px-3 py-2">
+            className="mt-3 self-start rounded-lg bg-[#E8527A] px-3 py-2">
             <Text className="text-sm font-semibold text-white">Retry</Text>
           </AnimatedPressable>
         </View>
       ) : null}
 
       {!isError && missions.length === 0 ? (
-        <View className="mt-3 rounded-xl bg-slate-50 px-3 py-2">
-          <Text className="text-sm text-slate-500">No active missions right now.</Text>
+        <View className="mt-3 rounded-xl bg-[#F6F3EA] px-3 py-2">
+          <Text className="text-sm text-[#6B6A80]">No active missions right now.</Text>
         </View>
       ) : null}
 
@@ -295,8 +295,8 @@ export function MissionsTab({
 
       {isXpEventsLoading ? (
         <View className="mt-3 flex-row items-center gap-2">
-          <Sparkles size={14} color={Colors.slate500} />
-          <Text className="text-sm text-slate-500">Syncing mission rewards...</Text>
+          <Sparkles size={14} color={theme.sunDeep} />
+          <Text className="text-sm text-[#6B6A80]">Syncing mission rewards...</Text>
         </View>
       ) : null}
     </BaseCard>

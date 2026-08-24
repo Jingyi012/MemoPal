@@ -30,7 +30,7 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ badge, onPress }) => {
       onPress={onPress}
       activeOpacity={0.85}
       className={getBaseCardClassName({
-        className: 'mb-3 p-4',
+        className: 'mb-3 border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4',
         padding: 'none',
       })}
       style={
@@ -46,7 +46,7 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ badge, onPress }) => {
       <View className="flex-row items-start">
         <View className="relative">
           {badge.iconUrl ? (
-            <View className="h-14 w-14 overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <View className="h-14 w-14 overflow-hidden rounded-xl border border-[#EEE9DC] bg-white">
               <AppImage
                 source={{ uri: badge.iconUrl }}
                 className="h-full w-full"
@@ -67,7 +67,7 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ badge, onPress }) => {
           )}
 
           <View
-            className={`absolute -right-2 -top-2 rounded-full p-1 ${isLocked ? 'bg-slate-400' : 'bg-green-500'}`}>
+            className={`absolute -right-2 -top-2 rounded-full p-1 ${isLocked ? 'bg-[#D8D4C9]' : 'bg-[#3FB87F]'}`}>
             {isLocked ? (
               <Lock size={12} color="white" />
             ) : (
@@ -79,24 +79,24 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ badge, onPress }) => {
         <View className="ml-3 flex-1">
           <View className="flex-row items-start justify-between">
             <Text
-              className={`flex-1 pr-2 text-base font-semibold ${isLocked ? 'text-slate-500' : 'text-slate-900'}`}>
+              className={`flex-1 pr-2 text-base font-semibold ${isLocked ? 'text-[#9A97A7]' : 'text-[#2B2A3D]'}`}>
               {badge.name}
             </Text>
-            <View className="rounded-full bg-slate-100 px-2 py-1">
-              <Text className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+            <View className="rounded-full bg-[#F6F3EA] px-2 py-1">
+              <Text className="text-[10px] font-semibold uppercase tracking-wider text-[#6B6A80]">
                 {rarityConfig.label}
               </Text>
             </View>
           </View>
           <Text
-            className={`mt-2 text-sm leading-5 ${isLocked ? 'text-slate-500' : 'text-slate-700'}`}>
+            className={`mt-2 text-sm leading-5 ${isLocked ? 'text-[#9A97A7]' : 'text-[#6B6A80]'}`}>
             {badge.description?.trim() ||
               'Complete the related learning challenge to unlock this badge.'}
           </Text>
         </View>
       </View>
       <Text
-        className={`mt-3 text-xs font-semibold ${isLocked ? 'text-slate-500' : 'text-emerald-700'}`}>
+        className={`mt-3 text-xs font-semibold ${isLocked ? 'text-[#9A97A7]' : 'text-[#3FB87F]'}`}>
         {isLocked ? 'Locked' : 'Earned'}
       </Text>
     </TouchableOpacity>
