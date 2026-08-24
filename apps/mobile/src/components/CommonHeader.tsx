@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnimatedPressable from './AnimatedPressable';
 import HomeButton from './HomeButton';
 import { NotificationBell } from './NotificationBell';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 
 interface Actions {
   icon?: LucideIcon;
@@ -53,7 +54,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
               <AnimatedPressable
                 onPress={backAction}
                 style={styles.backButton}>
-                <ChevronLeft size={20} color="#2B2A3D" />
+                <ChevronLeft size={20} color={theme.ink} />
               </AnimatedPressable>
             )
           ) : (
@@ -81,7 +82,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
                       key={index}
                       onPress={action.onPress}
                       style={styles.actionButton}>
-                      <Icon size={20} color="#2B2A3D" />
+                      <Icon size={20} color={theme.ink} />
                     </AnimatedPressable>
                   );
                 }
@@ -102,7 +103,7 @@ const styles = {
   header: {
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE9DC',
+    borderBottomColor: theme.line,
   },
   headerInner: {
     paddingHorizontal: 16,
@@ -120,17 +121,17 @@ const styles = {
     borderRadius: 19,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: '#F6F3EA',
+    backgroundColor: theme.sand,
   },
   titleBlock: {
     flex: 1,
   },
   eyebrow: {
     alignSelf: 'flex-start' as const,
-    color: '#E8527A',
-    backgroundColor: '#FFF0F4',
+    color: theme.berryDeep,
+    backgroundColor: theme.berryTint,
     borderWidth: 1.3,
-    borderColor: '#FFD9E2',
+    borderColor: theme.berryLine,
     borderRadius: 999,
     paddingHorizontal: 9,
     paddingVertical: 3,
@@ -141,13 +142,13 @@ const styles = {
     marginBottom: 4,
   },
   title: {
-    color: '#2B2A3D',
+    color: theme.ink,
     fontSize: 19,
     fontWeight: '900' as const,
     letterSpacing: -0.2,
   },
   description: {
-    color: '#6B6A80',
+    color: theme.inkSoft,
     fontSize: 11.5,
     fontWeight: '700' as const,
     marginTop: 2,
@@ -162,7 +163,7 @@ const styles = {
     borderRadius: 19,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: '#F6F3EA',
+    backgroundColor: theme.sand,
   },
   additionalContent: {
     marginTop: 10,
