@@ -12,6 +12,9 @@ import {
   writePalaceSession,
 } from '@/features/palace-scenes/services/palaceSessionRecovery';
 import {
+  getSpellingHint,
+  normalizeRecallAnswer,
+  upsertRecallResponse,
   useCreatePracticeAttempt,
   type PracticeAttemptInput,
   type PracticeResponseInput,
@@ -25,19 +28,6 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type SessionMode = 'browse' | 'walk' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
-
-function normalizeAnswer(value: string) {
-  return value.trim().replace(/\s+/g, ' ').toLocaleUpperCase();
-}
-
-function spellingHint(expected: string, actual: string) {
-  const expectedLetters = Array.from(expected.trim().toLocaleUpperCase());
-  const actualLetters = Array.from(actual.trim().toLocaleUpperCase());
-  const mismatch = expectedLetters.findIndex((letter, index) => letter !== actualLetters[index]);
-  if (mismatch >= 0) return `letter ${mismatch + 1} should be “${expectedLetters[mismatch]}”.`;
-  if (expectedLetters.length !== actualLetters.length) return `the ending — it needs ${expectedLetters.length} letters.`;
-  return 'the letter pattern once more.';
-}
 
 export default function PalaceMemorySessionScreen({ memorySetId, restart = false }: { memorySetId: string; restart?: boolean }) {
   const router = useRouter();
@@ -198,19 +188,13 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
     }
 
     if (!answer.trim()) return;
-    const isCorrect = normalizeAnswer(answer) === normalizeAnswer(active.item.answer);
-    setResponses((current) => {
-      const existing = current.find((response) => response.memoryItemId === active.item.id);
-      const nextResponse = {
-        memoryItemId: active.item.id,
-        isCorrect,
-        attemptCount: (existing?.attemptCount ?? 0) + 1,
-        responseMs: Math.max(0, Date.now() - questionStartedAtMs),
-      };
-      return existing
-        ? current.map((response) => response.memoryItemId === active.item.id ? nextResponse : response)
-        : [...current, nextResponse];
-    });
+    const isCorrect = normalizeRecallAnswer(answer) === normalizeRecallAnswer(active.item.answer);
+    setResponses((current) => upsertRecallResponse(
+      current,
+      active.item.id,
+      isCorrect,
+      Math.max(0, Date.now() - questionStartedAtMs),
+    ));
     setFeedback(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) {
       setScore((value) => value + 1);
@@ -372,7 +356,7 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
               feedbackText={feedback === 'correct'
                 ? 'That is it!'
                 : isSpelling
-                  ? `Check the spelling: ${spellingHint(active.item.answer, answer)}`
+                  ? `Check the spelling: ${getSpellingHint(active.item.answer, answer)}`
                   : `It was ${active.item.answer}. See it at this locus once more, then try again.`}
               actionLabel={feedback === 'wrong' ? 'Try this locus again' : feedback ? 'Next locus' : 'Check answer'}
               scoreLabel={`Locus ${activeIndex + 1} / ${placements.length} · Score ${score}`}

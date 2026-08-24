@@ -9,6 +9,9 @@ import { buildNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import {
   useCreatePracticeAttempt,
+  getSpellingHint,
+  normalizeRecallAnswer,
+  upsertRecallResponse,
   type PracticeAttemptInput,
   type PracticeResponseInput,
 } from '@/features/practice-attempts';
@@ -26,19 +29,6 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 
 type SessionTab = 'scenes' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
-
-function normalizeAnswer(value: string) {
-  return value.trim().replace(/\s+/g, ' ').toLocaleUpperCase();
-}
-
-function spellingHint(expected: string, actual: string) {
-  const expectedLetters = Array.from(expected.trim().toLocaleUpperCase());
-  const actualLetters = Array.from(actual.trim().toLocaleUpperCase());
-  const mismatch = expectedLetters.findIndex((letter, index) => letter !== actualLetters[index]);
-  if (mismatch >= 0) return `letter ${mismatch + 1} should be “${expectedLetters[mismatch]}”.`;
-  if (expectedLetters.length !== actualLetters.length) return `the ending — it needs ${expectedLetters.length} letters.`;
-  return 'the letter pattern once more.';
-}
 
 function findBinding(bindings: PegBinding[], memoryItem: MemoryItem) {
   return bindings.find((binding) => binding.memoryItemId === memoryItem.id);
@@ -207,19 +197,13 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
     }
 
     if (!answer.trim()) return;
-    const isCorrect = normalizeAnswer(answer) === normalizeAnswer(currentItem.answer);
-    setResponses((current) => {
-      const existing = current.find((response) => response.memoryItemId === currentItem.id);
-      const nextResponse = {
-        memoryItemId: currentItem.id,
-        isCorrect,
-        attemptCount: (existing?.attemptCount ?? 0) + 1,
-        responseMs: Math.max(0, Date.now() - questionStartedAtMs),
-      };
-      return existing
-        ? current.map((response) => response.memoryItemId === currentItem.id ? nextResponse : response)
-        : [...current, nextResponse];
-    });
+    const isCorrect = normalizeRecallAnswer(answer) === normalizeRecallAnswer(currentItem.answer);
+    setResponses((current) => upsertRecallResponse(
+      current,
+      currentItem.id,
+      isCorrect,
+      Math.max(0, Date.now() - questionStartedAtMs),
+    ));
     setFeedback(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) {
       setScore((current) => current + 1);
@@ -336,7 +320,7 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
                 feedbackText={feedback === 'correct'
                   ? 'Nailed it!'
                   : isSpelling
-                    ? `Check the spelling: ${spellingHint(currentItem?.answer ?? '', answer)}`
+                    ? `Check the spelling: ${getSpellingHint(currentItem?.answer ?? '', answer)}`
                     : `It was ${currentItem?.answer}. Picture it once more, then try again.`}
                 actionLabel={feedback === 'wrong' ? 'Try this peg again' : feedback ? 'Next peg' : 'Check answer'}
                 scoreLabel={`Score so far: ${score} / ${responses.length}`}
