@@ -19,6 +19,7 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   style,
   onPress,
   className,
+  accessibilityRole = 'button',
   ...rest
 }) => {
   const scale = useSharedValue(1);
@@ -31,6 +32,7 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
     <AnimatedPressableBase
       {...rest}
       className={className}
+      accessibilityRole={accessibilityRole}
       style={[style, animatedStyle]}
       onPressIn={() => {
         scale.value = withSpring(0.96, { stiffness: 300 });
