@@ -1,5 +1,5 @@
 import { BaseCard } from '@/components/BaseCard';
-import { Colors } from '@/constants/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { Award, Flag, Sparkles, Target } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -42,17 +42,17 @@ function SummaryCard({
   iconBgClass: string;
 }) {
   return (
-    <BaseCard className="flex-1 flex-col p-3" padding="none">
+    <BaseCard className="flex-1 flex-col border-2 border-[#EEE9DC] bg-[#FFFDF8] p-3" padding="none">
       <View className="flex-col items-center justify-between">
         <View className={`mb-3 rounded-full p-2 ${iconBgClass}`}>
           <Icon size={14} color={iconColor} />
         </View>
-        <Text className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <Text className="text-xs font-semibold uppercase tracking-wider text-[#6B6A80]">
           {title}
         </Text>
       </View>
-      <Text className="mt-3 text-center text-2xl font-bold text-slate-900">{value}</Text>
-      <Text className="mt-1 text-center text-xs text-slate-500">{subtitle}</Text>
+      <Text className="mt-3 text-center text-2xl font-bold text-[#2B2A3D]">{value}</Text>
+      <Text className="mt-1 text-center text-xs text-[#6B6A80]">{subtitle}</Text>
     </BaseCard>
   );
 }
@@ -72,9 +72,9 @@ export function OverviewTab({
 
   return (
     <View className="gap-3">
-      <BaseCard className="p-4" padding="none">
-        <Text className="text-base font-bold text-slate-900">Overview</Text>
-        <Text className="mt-1 text-sm text-slate-500">
+      <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
+        <Text className="text-base font-bold text-[#2B2A3D]">Overview</Text>
+        <Text className="mt-1 text-sm text-[#6B6A80]">
           Quick view of your current progress and nearest wins.
         </Text>
 
@@ -84,57 +84,57 @@ export function OverviewTab({
             value={`${totalBadgeEarned}`}
             subtitle="Earned so far"
             Icon={Award}
-            iconColor={Colors.amber700}
-            iconBgClass="bg-amber-100"
+            iconColor={theme.sunDeep}
+            iconBgClass="bg-[#FFF7E0]"
           />
           <SummaryCard
             title="Milestones"
             value={`${totalMilestonesAchieved}`}
             subtitle="Achieved"
             Icon={Flag}
-            iconColor={Colors.indigo700}
-            iconBgClass="bg-indigo-100"
+            iconColor={theme.violetDeep}
+            iconBgClass="bg-[#EEE9FF]"
           />
           <SummaryCard
             title="Missions"
             value={`${completedMissions}/${totalActiveMissions}`}
             subtitle={`${missionCompletionPercent}% completed`}
             Icon={Target}
-            iconColor={Colors.teal700}
-            iconBgClass="bg-teal-100"
+            iconColor={theme.grass}
+            iconBgClass="bg-[#F1FBF5]"
           />
         </View>
       </BaseCard>
 
-      <BaseCard className="p-4" padding="none">
+      <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
         <View className="flex-row items-center justify-between">
-          <Text className="text-sm font-semibold text-slate-800">Recent Badges</Text>
-          <View className="rounded-full bg-amber-100 p-2">
-            <Sparkles size={14} color={Colors.amber700} />
+          <Text className="text-sm font-semibold text-[#2B2A3D]">Recent Badges</Text>
+          <View className="rounded-full bg-[#FFF7E0] p-2">
+            <Sparkles size={14} color={theme.sunDeep} />
           </View>
         </View>
         {recentBadges.length === 0 ? (
-          <Text className="mt-2 text-sm text-slate-500">No badges earned yet. Keep going.</Text>
+          <Text className="mt-2 text-sm text-[#6B6A80]">No badges earned yet. Keep going.</Text>
         ) : (
           <View className="mt-3 flex-row flex-wrap gap-2">
             {recentBadges.map((badge) => (
               <View
                 key={badge.id}
-                className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5">
-                <Text className="text-sm font-semibold text-amber-700">{badge.name}</Text>
+                className="rounded-full border border-[#FFD9E2] bg-[#FFF0F4] px-3 py-1.5">
+                <Text className="text-sm font-semibold text-[#E8527A]">{badge.name}</Text>
               </View>
             ))}
           </View>
         )}
       </BaseCard>
 
-      <BaseCard className="p-4" padding="none">
+      <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
         <View className="flex-row items-center justify-between">
-          <Text className="text-sm font-semibold text-slate-800">Upcoming Milestones</Text>
-          <Text className="text-xs text-slate-500">Closest first</Text>
+          <Text className="text-sm font-semibold text-[#2B2A3D]">Upcoming Milestones</Text>
+          <Text className="text-xs text-[#6B6A80]">Closest first</Text>
         </View>
         {upcomingMilestones.length === 0 ? (
-          <Text className="mt-2 text-sm text-slate-500">All milestones are completed.</Text>
+          <Text className="mt-2 text-sm text-[#6B6A80]">All milestones are completed.</Text>
         ) : (
           <View className="mt-3 gap-2">
             {upcomingMilestones.map((milestone) => {
@@ -149,19 +149,19 @@ export function OverviewTab({
               return (
                 <View
                   key={milestone.id}
-                  className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
+                  className="rounded-xl border border-[#EEE9DC] bg-[#F6F3EA] px-3 py-3">
                   <View className="flex-row items-center justify-between">
-                    <Text className="flex-1 pr-2 text-sm font-semibold text-slate-800">
+                    <Text className="flex-1 pr-2 text-sm font-semibold text-[#2B2A3D]">
                       {milestone.title}
                     </Text>
-                    <Text className="text-xs font-semibold text-slate-600">{progressPercent}%</Text>
+                    <Text className="text-xs font-semibold text-[#7A68E0]">{progressPercent}%</Text>
                   </View>
-                  <Text className="mt-1 text-xs text-slate-500">
+                  <Text className="mt-1 text-xs text-[#6B6A80]">
                     {milestone.currentValue}/{milestone.targetValue} complete •{' '}
                     {milestone.remaining} to go
                   </Text>
-                  <View className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
-                    <View className="h-full bg-teal-500" style={{ width: `${progressPercent}%` }} />
+                  <View className="mt-2 h-2 overflow-hidden rounded-full bg-[#EEE9DC]">
+                    <View className="h-full bg-[#9B8CFF]" style={{ width: `${progressPercent}%` }} />
                   </View>
                 </View>
               );

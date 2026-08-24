@@ -1,6 +1,6 @@
 import { AppImage } from '@/components/AppImage';
-import { Colors } from '@/constants/colors';
 import { User } from '@/features/profile/types/users';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Crown, Pencil, User2 } from 'lucide-react-native';
 import React from 'react';
@@ -23,7 +23,7 @@ const ProfileCard: React.FC<Props> = ({ user, onEdit }) => {
           />
         ) : (
           <LinearGradient
-            colors={[Colors.teal500, Colors.indigo600]}
+            colors={[theme.sun, theme.berry]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
@@ -33,7 +33,7 @@ const ProfileCard: React.FC<Props> = ({ user, onEdit }) => {
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-            <User2 size={25} color="white" />
+            <User2 size={25} color={theme.ink} />
           </LinearGradient>
         )}
       </View>

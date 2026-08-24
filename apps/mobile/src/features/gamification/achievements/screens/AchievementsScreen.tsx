@@ -202,6 +202,7 @@ const AchievementsScreen: React.FC = () => {
   return (
     <>
       <CommonHeader
+        eyebrow="Progress"
         title="Achievements"
         description="Track your badges, milestones, and missions"
         hideBackButton
@@ -211,7 +212,7 @@ const AchievementsScreen: React.FC = () => {
       />
 
       <ScrollView
-        className="flex-1 bg-gray-50 p-4"
+        className="flex-1 bg-white p-4"
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingBottom: 24 }}>

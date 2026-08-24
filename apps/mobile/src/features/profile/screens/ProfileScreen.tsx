@@ -15,6 +15,7 @@ import { PremiumUpdateCard } from '@/components/PremiumUpdateCard';
 import { Colors } from '@/constants/colors';
 import { useUserState } from '@/contexts/UserStateContext';
 import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { Bell, Gift, HelpCircle, LogOut, Shield } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { EditProfileSheet } from '../components/EditProfileSheet';
@@ -124,8 +125,8 @@ export default function SettingsScreen() {
   const editProfileRef = useRef<BottomSheetModal>(null);
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <CommonHeader title={'Settings'} description={undefined} showNotification hideBackButton />
+    <View className="flex-1 bg-white">
+      <CommonHeader eyebrow="Profile" title="Settings" description={undefined} showNotification hideBackButton />
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <SettingsSection title="Profile">
           <ProfileCard user={user} onEdit={() => editProfileRef.current?.present()} />
@@ -133,7 +134,7 @@ export default function SettingsScreen() {
 
         <SettingsSection title="Subscription">
           <SettingsRow
-            icon={<Shield size={20} color="#475569" />}
+            icon={<Shield size={20} color={theme.violetDeep} />}
             title={userState.subscription.isPremium ? 'Premium Active' : 'Free Plan'}
             subtitle={
               userState.subscription.isPremium
@@ -145,7 +146,7 @@ export default function SettingsScreen() {
 
         <SettingsSection title="Notifications & Learning Time">
           <SettingsRow
-            icon={<Bell size={20} color="#475569" />}
+            icon={<Bell size={20} color={theme.violetDeep} />}
             title="Daily Learning Reminder"
             subtitle={`At ${userState.preferences.reviewTime}`}
             right="switch"
@@ -156,7 +157,7 @@ export default function SettingsScreen() {
             title="Daily Learning Time"
             subtitle={`Reminder time: ${userState.preferences.reviewTime}`}
             onPress={() => reviewScheduleRef.current?.present()}
-            icon={<Bell size={20} color="#475569" />}
+            icon={<Bell size={20} color={theme.violetDeep} />}
           />
         </SettingsSection>
 
@@ -165,7 +166,7 @@ export default function SettingsScreen() {
             title="Refer Friends & Earn"
             subtitle={`Get rewards for every referral`}
             onPress={() => router.push('/referral')}
-            icon={<Gift size={20} color="#475569" />}
+            icon={<Gift size={20} color={theme.berryDeep} />}
           />
         </SettingsSection>
 
@@ -178,13 +179,13 @@ export default function SettingsScreen() {
         {isLocalDevMode && (
           <SettingsSection title="Developer Tools">
             <SettingsRow
-              icon={<Shield size={20} color="#475569" />}
+              icon={<Shield size={20} color={theme.violetDeep} />}
               title="Clear API Cache"
               subtitle="Discard cached queries and fetch fresh server data"
               onPress={clearLocalData}
             />
             <SettingsRow
-              icon={<Shield size={20} color="#475569" />}
+              icon={<Shield size={20} color={theme.violetDeep} />}
               title="Check XP Integrity"
               subtitle="Compare users.totalXp with xp_events sum"
               onPress={checkXpIntegrity}
@@ -194,12 +195,12 @@ export default function SettingsScreen() {
 
         <SettingsSection title="Support">
           <SettingsRow
-            icon={<HelpCircle size={20} color="#475569" />}
+            icon={<HelpCircle size={20} color={theme.sky} />}
             title="Help & FAQ"
             onPress={() => helpRef.current?.present()}
           />
           <SettingsRow
-            icon={<Shield size={20} color="#475569" />}
+            icon={<Shield size={20} color={theme.violetDeep} />}
             title="Privacy Policy"
             onPress={() => privacyRef.current?.present()}
           />

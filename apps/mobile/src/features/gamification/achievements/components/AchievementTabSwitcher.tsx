@@ -18,8 +18,8 @@ interface AchievementTabSwitcherProps {
 
 export function AchievementTabSwitcher({ activeTab, onTabChange }: AchievementTabSwitcherProps) {
   return (
-    <View className="mb-6 rounded-2xl bg-white p-2">
-      <View className="flex-row rounded-xl bg-slate-100 p-1">
+    <View className="mb-6 rounded-2xl border-2 border-[#EEE9DC] bg-[#FFFDF8] p-2">
+      <View className="flex-row rounded-xl bg-[#F6F3EA] p-1">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key;
 
@@ -45,7 +45,7 @@ export function AchievementTabSwitcher({ activeTab, onTabChange }: AchievementTa
               <Text
                 numberOfLines={1}
                 className={`text-center text-xs font-semibold ${
-                  isActive ? 'text-teal-700' : 'text-slate-600'
+                  isActive ? 'text-[#7A68E0]' : 'text-[#6B6A80]'
                 }`}>
                 {tab.label}
               </Text>
