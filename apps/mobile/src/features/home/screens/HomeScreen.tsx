@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { DailyTip } from '../components/DailyTip';
+import { TodayReviewCard } from '../components/TodayReviewCard';
 
 const QuickAction = ({
   title,
@@ -48,8 +49,6 @@ const HomeScreen = () => {
   const { userState, updateState } = useUserState();
 
   const showTutorialPrompt = !userState.ui.tutorialPromptDismissed;
-  const dueCount = dueMemoryReviews.length;
-
   const headerUser = user
     ? {
         ...user,
@@ -124,49 +123,16 @@ const HomeScreen = () => {
           )}
 
           {dueMemoryReviews.length > 0 ? (
-            <BaseCard className="mt-3 border-violet-200 bg-violet-50 p-4" padding="none">
-              <Text className="text-base font-bold text-violet-950">Memory sets ready to review</Text>
-              <Text className="mt-1 text-xs text-violet-700">
-                Recall first. Your schedule adapts to every answer.
-              </Text>
-              <View className="mt-3 gap-2">
-                {dueMemoryReviews.slice(0, 3).map((review) => (
-                  <AnimatedPressable
-                    key={review.id}
-                    onPress={() =>
-                      router.push(
-                        review.techniqueKey === 'number-peg'
-                          ? `/number-peg/${review.memorySetId}`
-                          : `/palaces/memory/${review.memorySetId}`
-                      )
-                    }
-                    className="rounded-xl bg-white px-3 py-3">
-                    <Text className="font-bold text-slate-900">{review.memorySetTitle}</Text>
-                    <Text className="mt-0.5 text-xs text-slate-500">
-                      Item {review.itemPosition} · {review.prompt}
-                    </Text>
-                  </AnimatedPressable>
-                ))}
-              </View>
-            </BaseCard>
-          ) : null}
-
-          {palaceEnabled ? (
-            <BaseCard className="mt-3 bg-teal-600 p-4" padding="none" shadow="sm" bordered={false}>
-            <Text className="text-lg font-bold text-white">Daily Focus</Text>
-            <Text className="mt-1 text-sm text-teal-100">
-              {dueCount > 0
-                ? `${dueCount} review${dueCount > 1 ? 's' : ''} waiting for you`
-                : 'No due review right now. Continue learning to build momentum.'}
-            </Text>
-            <AnimatedPressable
-              onPress={() => router.push('/palaces')}
-              className="mt-3 self-start rounded-xl bg-white px-4 py-2">
-              <Text className="font-semibold text-teal-700">
-                {dueCount > 0 ? 'Review Now' : 'Browse Palaces'}
-              </Text>
-            </AnimatedPressable>
-            </BaseCard>
+            <TodayReviewCard
+              reviews={dueMemoryReviews}
+              onOpen={(review) =>
+                router.push(
+                  review.techniqueKey === 'number-peg'
+                    ? `/number-peg/${review.memorySetId}`
+                    : `/palaces/memory/${review.memorySetId}`
+                )
+              }
+            />
           ) : null}
 
           <BaseCard className="mt-4 p-4" padding="none">

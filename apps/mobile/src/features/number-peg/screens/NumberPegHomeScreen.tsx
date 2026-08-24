@@ -19,6 +19,7 @@ export default function NumberPegHomeScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
+        eyebrow="Number Peg"
         title="Number Peg"
         description="Turn a short list into unforgettable mini movies"
         backAction={() => router.back()}
@@ -54,6 +55,15 @@ export default function NumberPegHomeScreen() {
             <ArrowRight size={19} color={theme.ink} />
           </AnimatedPressable>
         </LinearGradient>
+
+        <AnimatedPressable onPress={() => router.push('/number-peg/familiarity' as Href)} style={styles.familiarityCard}>
+          <View style={styles.familiarityIcon}><Sparkles size={20} color={theme.berryDeep} /></View>
+          <View style={styles.familiarityCopy}>
+            <Text style={styles.familiarityTitle}>Learn your 1–10 anchors</Text>
+            <Text style={styles.familiarityBody}>A quick picture quiz makes your first memory feel easier.</Text>
+          </View>
+          <ArrowRight size={18} color={theme.inkSoft} />
+        </AnimatedPressable>
 
         <View style={styles.sectionHeadingRow}>
           <View>
@@ -150,6 +160,11 @@ const styles = StyleSheet.create({
   heroEyebrow: { color: '#C9C5E0', fontSize: 11, fontWeight: '900', letterSpacing: 1.1 },
   heroTitle: { color: 'white', fontSize: 25, fontWeight: '900', marginTop: 6 },
   heroBody: { color: '#E4E1F1', fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 315 },
+  familiarityCard: { minHeight: 72, borderRadius: 18, borderWidth: 2, borderColor: '#FFD9E2', backgroundColor: '#FFF0F4', padding: 12, marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  familiarityIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  familiarityCopy: { flex: 1 },
+  familiarityTitle: { color: theme.ink, fontSize: 14, fontWeight: '900' },
+  familiarityBody: { color: theme.inkSoft, fontSize: 11.5, lineHeight: 17, fontWeight: '700', marginTop: 3 },
   primaryButton: {
     marginTop: 20,
     minHeight: 52,
