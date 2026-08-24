@@ -36,12 +36,19 @@ export default function NumberPegComposerScreen() {
   const { createMemorySet } = useMemorySetMutations();
   const pegs = useMemo(() => buildNumberPegItems(), []);
   const prefilledItems = useMemo(() => parseComposerItems(params.items), [params.items]);
-  const [step, setStep] = useState<ComposerStep>('items');
+  const fromSharedComposer = prefilledItems.length > 0;
+  const [step, setStep] = useState<ComposerStep>(() => (prefilledItems.length ? 'scenes' : 'items'));
   const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
   const [goalType, setGoalType] = useState<MemoryGoalType>(() => parseComposerGoal(params.goalType));
   const [newItem, setNewItem] = useState('');
   const [items, setItems] = useState<string[]>(() => prefilledItems.slice(0, 10));
-  const [scenes, setScenes] = useState<SceneDraft[]>([]);
+  const [scenes, setScenes] = useState<SceneDraft[]>(() =>
+    prefilledItems.slice(0, 10).map((answer, index) => ({
+      answer,
+      sceneText: buildPegScene((index + 1) as PegNumber, answer),
+      variant: 0,
+    }))
+  );
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
   const addItem = () => {
@@ -154,8 +161,8 @@ export default function NumberPegComposerScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <CommonHeader
         eyebrow="Number Peg"
-        title={step === 'items' ? 'Add what you need to remember' : 'Make tiny memory movies'}
-        description={step === 'items' ? 'Step 1 of 2 · Up to 10 items' : 'Step 2 of 2 · Weird wins'}
+        title={step === 'items' ? (fromSharedComposer ? 'Check your items' : 'Add what you need to remember') : 'Make tiny memory movies'}
+        description={step === 'items' ? (fromSharedComposer ? `${items.length} items · Up to 10` : 'Step 1 of 2 · Up to 10 items') : 'One tiny movie per peg · Weird wins'}
         backAction={() => (step === 'scenes' ? setStep('items') : router.back())}
       />
 
@@ -181,36 +188,46 @@ export default function NumberPegComposerScreen() {
               </View>
             </View>
 
-            <Text style={styles.label}>What is this for?</Text>
-            <View style={styles.goalGrid}>
-              {goals.map((goal) => {
-                const selected = goal.key === goalType;
-                return (
-                  <AnimatedPressable
-                    key={goal.key}
-                    onPress={() => setGoalType(goal.key)}
-                    style={[styles.goalChip, selected && styles.goalChipSelected]}>
-                    <Text style={styles.goalEmoji}>{goal.emoji}</Text>
-                    <Text style={[styles.goalLabel, selected && styles.goalLabelSelected]}>
-                      {goal.label}
-                    </Text>
-                  </AnimatedPressable>
-                );
-              })}
-            </View>
+            {fromSharedComposer && title.trim() ? (
+              <View style={styles.draftCard}>
+                <Text style={styles.draftEyebrow}>SESSION READY</Text>
+                <Text numberOfLines={1} style={styles.draftTitle}>{title}</Text>
+                <Text style={styles.draftMeta}>{goalLabel(goalType)} · {items.length} items</Text>
+              </View>
+            ) : (
+              <>
+                <Text style={styles.label}>What is this for?</Text>
+                <View style={styles.goalGrid}>
+                  {goals.map((goal) => {
+                    const selected = goal.key === goalType;
+                    return (
+                      <AnimatedPressable
+                        key={goal.key}
+                        onPress={() => setGoalType(goal.key)}
+                        style={[styles.goalChip, selected && styles.goalChipSelected]}>
+                        <Text style={styles.goalEmoji}>{goal.emoji}</Text>
+                        <Text style={[styles.goalLabel, selected && styles.goalLabelSelected]}>
+                          {goal.label}
+                        </Text>
+                      </AnimatedPressable>
+                    );
+                  })}
+                </View>
 
-            <Text style={styles.label}>Name this memory</Text>
-            <TextInput
-              value={title}
-              onChangeText={(value) => {
-                setTitle(value);
-                setValidationMessage(null);
-              }}
-              maxLength={200}
-              placeholder="e.g. Friday spelling test"
-              placeholderTextColor="#AAA7B5"
-              style={styles.input}
-            />
+                <Text style={styles.label}>Name this memory</Text>
+                <TextInput
+                  value={title}
+                  onChangeText={(value) => {
+                    setTitle(value);
+                    setValidationMessage(null);
+                  }}
+                  maxLength={200}
+                  placeholder="e.g. Friday spelling test"
+                  placeholderTextColor="#AAA7B5"
+                  style={styles.input}
+                />
+              </>
+            )}
 
             <View style={styles.labelRow}>
               <Text style={styles.label}>Add your items</Text>
@@ -335,6 +352,10 @@ export default function NumberPegComposerScreen() {
   );
 }
 
+function goalLabel(goalType: MemoryGoalType) {
+  return goals.find((goal) => goal.key === goalType)?.label ?? 'Something to remember';
+}
+
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 44 },
@@ -353,6 +374,10 @@ const styles = StyleSheet.create({
   tipIcon: { width: 38, height: 38, borderRadius: 13, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
   tipTitle: { color: theme.ink, fontSize: 14, fontWeight: '900' },
   tipBody: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, marginTop: 3, fontWeight: '600' },
+  draftCard: { borderRadius: 16, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 13, marginBottom: 2 },
+  draftEyebrow: { color: theme.sunDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
+  draftTitle: { color: theme.ink, fontSize: 16, fontWeight: '900', marginTop: 4 },
+  draftMeta: { color: theme.inkSoft, fontSize: 11, fontWeight: '700', marginTop: 3 },
   label: { color: theme.ink, fontSize: 13, fontWeight: '900', marginBottom: 8, marginTop: 10 },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   itemCount: { color: theme.berryDeep, fontSize: 12, fontWeight: '900', marginTop: 10, marginBottom: 8 },

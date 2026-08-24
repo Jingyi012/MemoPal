@@ -22,6 +22,7 @@ export default function PalaceMemoryComposerScreen() {
   const scenesQuery = usePalaceScenes();
   const { createMemorySet } = useMemorySetMutations();
   const prefilledItems = useMemo(() => parseComposerItems(params.items), [params.items]);
+  const fromSharedComposer = prefilledItems.length > 0;
   const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
   const [newItem, setNewItem] = useState('');
   const [items, setItems] = useState<string[]>(() => prefilledItems);
@@ -99,7 +100,12 @@ export default function PalaceMemoryComposerScreen() {
 
   return (
     <View style={styles.page}>
-      <CommonHeader eyebrow="Memory Palace" title="Build a Memory Palace" description="One scene · many memorable loci" backAction={() => router.back()} />
+      <CommonHeader
+        eyebrow="Memory Palace"
+        title={fromSharedComposer ? 'Place your items' : 'Build a Memory Palace'}
+        description={fromSharedComposer ? 'Choose a room, then place each item on a locus' : 'One scene · many memorable loci'}
+        backAction={() => router.back()}
+      />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
         <View style={styles.infoCard}>
           <Text style={styles.infoEmoji}>🏡</Text>
@@ -109,8 +115,18 @@ export default function PalaceMemoryComposerScreen() {
           </View>
         </View>
 
-        <Text style={styles.label}>Name this memory</Text>
-        <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Biology chapter 4" placeholderTextColor="#AAA7B5" style={styles.input} />
+        {fromSharedComposer && title.trim() ? (
+          <View style={styles.draftCard}>
+            <Text style={styles.draftEyebrow}>SESSION READY</Text>
+            <Text numberOfLines={1} style={styles.draftTitle}>{title}</Text>
+            <Text style={styles.draftMeta}>{items.length} items · Choose a scene to place them</Text>
+          </View>
+        ) : (
+          <>
+            <Text style={styles.label}>Name this memory</Text>
+            <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Biology chapter 4" placeholderTextColor="#AAA7B5" style={styles.input} />
+          </>
+        )}
 
         <Text style={styles.label}>Choose your scene</Text>
         {scenesQuery.isLoading ? (
@@ -191,6 +207,7 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas }, content: { padding: 16, paddingBottom: 42 },
   infoCard: { flexDirection: 'row', gap: 12, borderRadius: 19, backgroundColor: '#EEE9FF', borderWidth: 1.5, borderColor: '#DCD4FF', padding: 14 },
   infoEmoji: { fontSize: 28 }, infoTitle: { color: theme.ink, fontSize: 14, fontWeight: '900' }, infoText: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, marginTop: 3, fontWeight: '600' },
+  draftCard: { borderRadius: 16, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 13 }, draftEyebrow: { color: theme.sunDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.8 }, draftTitle: { color: theme.ink, fontSize: 16, fontWeight: '900', marginTop: 4 }, draftMeta: { color: theme.inkSoft, fontSize: 11, fontWeight: '700', marginTop: 3 },
   label: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 18, marginBottom: 8 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: '#7A68E0', fontSize: 12, fontWeight: '900', marginTop: 18 },
   input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 14, color: theme.ink, fontSize: 14, fontWeight: '700' },
   sceneRail: { marginHorizontal: -16, paddingLeft: 16 }, sceneOption: { width: 172, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8, marginRight: 10 }, sceneOptionActive: { borderColor: '#7A68E0', backgroundColor: '#F7F5FF' }, sceneThumb: { height: 92, borderRadius: 12 }, sceneName: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 8 }, sceneMeta: { color: theme.inkSoft, fontSize: 10, fontWeight: '700', marginTop: 2 },
