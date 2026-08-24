@@ -9,7 +9,7 @@ import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfi
 import { useMissions } from '@/features/gamification/shared/hooks/useMissions';
 import { HomeHeader } from '@/features/home/components/Header/HomeHeader';
 import { useMemorySets } from '@/features/memory-sets';
-import { useDueMemoryReviews } from '@/features/practice-attempts';
+import { useDueMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
@@ -133,13 +133,7 @@ const HomeScreen = () => {
             <TodayReviewCard
               reviews={dueMemoryReviews}
               onOpen={(review) => router.push(`/memory-details/${review.memorySetId}`)}
-              onStartReview={(review) =>
-                router.push(
-                  review.techniqueKey === 'palace'
-                    ? `/palaces/memory/${review.memorySetId}?mode=recall`
-                    : `/number-peg/${review.memorySetId}?mode=recall`,
-                )
-              }
+              onStartReview={(review) => startDueReview(router, review)}
             />
           ) : null}
 
@@ -204,8 +198,12 @@ const HomeScreen = () => {
                   title="Review Session"
                   subtitle="Practice due items and keep streak alive"
                   onPress={() => {
-                    const targetMemorySetId = dueMemoryReviews[0]?.memorySetId ?? recentMemorySet?.id;
-                    router.push(targetMemorySetId ? `/memory-details/${targetMemorySetId}` : '/practice');
+                    const dueReview = dueMemoryReviews[0];
+                    if (dueReview) {
+                      startDueReview(router, dueReview);
+                      return;
+                    }
+                    router.push(recentMemorySet ? `/memory-details/${recentMemorySet.id}` : '/practice');
                   }}
                 />
               </>
@@ -243,3 +241,11 @@ const HomeScreen = () => {
 };
 
 export default HomeScreen;
+
+function startDueReview(router: ReturnType<typeof useRouter>, review: DueMemoryReview) {
+  router.push(
+    review.techniqueKey === 'palace'
+      ? `/palaces/memory/${review.memorySetId}?mode=recall`
+      : `/number-peg/${review.memorySetId}?mode=recall`,
+  );
+}

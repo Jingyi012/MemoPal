@@ -339,7 +339,7 @@ export default function NumberPegComposerScreen() {
                   ? 'Build my scenes'
                   : errorMessage
                     ? 'Try saving again'
-                    : 'Save and start recall'}
+                    : 'Save and open scenes'}
             </Text>
             {step === 'items' ? <ArrowRight size={19} color={theme.ink} /> : null}
           </AnimatedPressable>
