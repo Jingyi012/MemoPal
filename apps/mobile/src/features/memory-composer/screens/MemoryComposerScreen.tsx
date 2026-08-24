@@ -6,6 +6,7 @@ import { Href, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Hash, MapPinned, Plus, Sparkles, Trash2 } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 
 type ComposerStep = 'content' | 'technique';
 type TechniqueChoice = 'palace' | 'number-peg';
@@ -56,14 +57,11 @@ export default function MemoryComposerScreen() {
   };
 
   const continueToTechniques = () => {
-    if (!title.trim()) {
-      setMessage('Give this session a short name so you can find it later.');
-      return;
-    }
     if (!items.length) {
       setMessage('Add at least one thing to remember.');
       return;
     }
+    if (!title.trim()) setTitle(suggestMemoryTitle(goalType, items));
     setMessage(null);
     setStep('technique');
   };
@@ -98,7 +96,7 @@ export default function MemoryComposerScreen() {
               <Text style={styles.cardTitle}>Start with something useful</Text>
               <Text style={styles.cardBody}>Spelling words, grocery lists, dates, names, or a few facts all make great first memories.</Text>
 
-              <Text style={styles.label}>Name this session</Text>
+              <Text style={styles.label}>Name this session <Text style={styles.optionalLabel}>optional</Text></Text>
               <TextInput
                 value={title}
                 onChangeText={(value) => { setTitle(value); setMessage(null); }}
@@ -155,7 +153,7 @@ export default function MemoryComposerScreen() {
                   </View>
                 ))}
               </View>
-              <Text style={styles.hint}>The app will suggest a technique after you add your list.</Text>
+              <Text style={styles.hint}>Leave the name blank and we’ll suggest one from your list.</Text>
             </View>
 
             {message && <MessageCard message={message} />}
@@ -242,6 +240,7 @@ const styles = StyleSheet.create({
   cardTitle: { color: theme.ink, fontSize: 17, fontWeight: '900', marginTop: 10 },
   cardBody: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, fontWeight: '600', marginTop: 4 },
   label: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 18, marginBottom: 8 },
+  optionalLabel: { color: theme.inkSoft, fontSize: 11, fontWeight: '700' },
   input: { minHeight: 49, borderRadius: 12, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 12, color: theme.ink, fontSize: 14, fontWeight: '700' },
   goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   goalChip: { minWidth: '47%', flexGrow: 1, minHeight: 43, borderRadius: 12, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },

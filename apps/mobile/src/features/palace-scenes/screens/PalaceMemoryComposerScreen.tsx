@@ -9,7 +9,7 @@ import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegE
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight, Check, Image as ImageIcon, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { firstParam, parseComposerItems } from '@/features/memory-composer/utils/composerParams';
+import { firstParam, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function PalaceMemoryComposerScreen() {
@@ -61,13 +61,14 @@ export default function PalaceMemoryComposerScreen() {
   };
 
   const save = () => {
-    if (!title.trim()) return setMessage('Give this memory a short name.');
     if (!selectedScene) return setMessage('Choose a scene for your Palace.');
     if (!items.length) return setMessage('Add at least one thing to remember.');
     if (items.length > loci.length) return setMessage(`This scene only has ${loci.length} loci.`);
+    const normalizedTitle = title.trim() || suggestMemoryTitle('custom', items);
+    if (!title.trim()) setTitle(normalizedTitle);
 
     const request: MemorySetUpsertRequest = {
-      title: title.trim(),
+      title: normalizedTitle,
       goalType: items.length > 10 ? 'facts' : 'ordered-list',
       techniqueKey: 'palace',
       status: 'ready',
@@ -123,7 +124,7 @@ export default function PalaceMemoryComposerScreen() {
           </View>
         ) : (
           <>
-            <Text style={styles.label}>Name this memory</Text>
+            <Text style={styles.label}>Name this memory <Text style={styles.optionalLabel}>optional</Text></Text>
             <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Biology chapter 4" placeholderTextColor="#AAA7B5" style={styles.input} />
           </>
         )}
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
   infoCard: { flexDirection: 'row', gap: 12, borderRadius: 19, backgroundColor: '#EEE9FF', borderWidth: 1.5, borderColor: '#DCD4FF', padding: 14 },
   infoEmoji: { fontSize: 28 }, infoTitle: { color: theme.ink, fontSize: 14, fontWeight: '900' }, infoText: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, marginTop: 3, fontWeight: '600' },
   draftCard: { borderRadius: 16, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 13 }, draftEyebrow: { color: theme.sunDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.8 }, draftTitle: { color: theme.ink, fontSize: 16, fontWeight: '900', marginTop: 4 }, draftMeta: { color: theme.inkSoft, fontSize: 11, fontWeight: '700', marginTop: 3 },
-  label: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 18, marginBottom: 8 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: '#7A68E0', fontSize: 12, fontWeight: '900', marginTop: 18 },
+  label: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 18, marginBottom: 8 }, optionalLabel: { color: theme.inkSoft, fontSize: 11, fontWeight: '700' }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: '#7A68E0', fontSize: 12, fontWeight: '900', marginTop: 18 },
   input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 14, color: theme.ink, fontSize: 14, fontWeight: '700' },
   sceneRail: { marginHorizontal: -16, paddingLeft: 16 }, sceneOption: { width: 172, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8, marginRight: 10 }, sceneOptionActive: { borderColor: '#7A68E0', backgroundColor: '#F7F5FF' }, sceneThumb: { height: 92, borderRadius: 12 }, sceneName: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 8 }, sceneMeta: { color: theme.inkSoft, fontSize: 10, fontWeight: '700', marginTop: 2 },
   previewHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 19, marginBottom: 9 }, previewEyebrow: { color: theme.violetDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.9 }, previewTitle: { color: theme.ink, fontSize: 15, fontWeight: '900', marginTop: 3 }, previewCount: { color: theme.violetDeep, backgroundColor: '#EEE9FF', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontSize: 10, fontWeight: '900' },

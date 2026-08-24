@@ -9,7 +9,7 @@ import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegE
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Check, Plus, Sparkles, Trash2, WandSparkles } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { firstParam, parseComposerGoal, parseComposerItems } from '@/features/memory-composer/utils/composerParams';
+import { firstParam, parseComposerGoal, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -71,14 +71,11 @@ export default function NumberPegComposerScreen() {
   };
 
   const continueToScenes = () => {
-    if (!title.trim()) {
-      setValidationMessage('Give this memory a short name so you can find it later.');
-      return;
-    }
     if (!items.length) {
       setValidationMessage('Add at least one thing to remember.');
       return;
     }
+    if (!title.trim()) setTitle(suggestMemoryTitle(goalType, items));
 
     setScenes(
       items.map((answer, index) => {
@@ -214,7 +211,7 @@ export default function NumberPegComposerScreen() {
                   })}
                 </View>
 
-                <Text style={styles.label}>Name this memory</Text>
+                <Text style={styles.label}>Name this memory <Text style={styles.optionalLabel}>optional</Text></Text>
                 <TextInput
                   value={title}
                   onChangeText={(value) => {
@@ -379,6 +376,7 @@ const styles = StyleSheet.create({
   draftTitle: { color: theme.ink, fontSize: 16, fontWeight: '900', marginTop: 4 },
   draftMeta: { color: theme.inkSoft, fontSize: 11, fontWeight: '700', marginTop: 3 },
   label: { color: theme.ink, fontSize: 13, fontWeight: '900', marginBottom: 8, marginTop: 10 },
+  optionalLabel: { color: theme.inkSoft, fontSize: 11, fontWeight: '700' },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   itemCount: { color: theme.berryDeep, fontSize: 12, fontWeight: '900', marginTop: 10, marginBottom: 8 },
   goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
