@@ -5,7 +5,7 @@ import LoadingView from '@/components/LoadingView';
 import { RecallAnswerCard } from '@/components/RecallAnswerCard';
 import { useMemorySet } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
-import { usePalaceScene } from '@/features/palace-scenes';
+import { usePalaceScene } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import {
   clearPalaceSession,
   readPalaceSession,

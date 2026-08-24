@@ -7,7 +7,7 @@ import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
-import { usePalaceScenes } from '@/features/palace-scenes';
+import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { Href, useRouter } from 'expo-router';
 import { MapPinned, RefreshCcw } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';

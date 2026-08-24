@@ -3,7 +3,7 @@ import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useMemorySetMutations } from '@/features/memory-sets';
 import type { MemorySetUpsertRequest } from '@/features/memory-sets';
-import { usePalaceScenes } from '@/features/palace-scenes';
+import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import {
