@@ -16,6 +16,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 export default function PracticeScreen() {
   const router = useRouter();
   const modules = useEnabledMemoryModules();
+  const numberPegEnabled = modules.some((module) => module.key === 'number-peg');
+  const palaceEnabled = modules.some((module) => module.key === 'palace');
   const memorySets = useMemorySets();
   const palaceScenes = usePalaceScenes();
   const [filter, setFilter] = useState<'all' | 'number-peg' | 'palace'>('all');
@@ -66,35 +68,39 @@ export default function PracticeScreen() {
           })}
         </View>
 
-        <PracticeDiscoveryRow
-          title="Your peg set"
-          actionLabel="See all →"
-          onAction={() => router.push('/number-peg' as Href)}
-          items={PEG_ANCHORS.map((peg) => ({
-            key: String(peg.number),
-            title: `${peg.number}. ${peg.name}`,
-            subtitle: peg.emoji,
-            tone: 'peg' as const,
-          }))}
-          onItemPress={() => router.push('/number-peg' as Href)}
-        />
+        {numberPegEnabled ? (
+          <PracticeDiscoveryRow
+            title="Your peg set"
+            actionLabel="See all →"
+            onAction={() => router.push('/number-peg' as Href)}
+            items={PEG_ANCHORS.map((peg) => ({
+              key: String(peg.number),
+              title: `${peg.number}. ${peg.name}`,
+              subtitle: peg.emoji,
+              tone: 'peg' as const,
+            }))}
+            onItemPress={() => router.push('/number-peg' as Href)}
+          />
+        ) : null}
 
-        <PracticeDiscoveryRow
-          title="Your palaces"
-          actionLabel="See all →"
-          onAction={() => router.push('/palaces' as Href)}
-          items={(palaceScenes.data ?? []).slice(0, 4).map((scene) => ({
-            key: scene.id,
-            title: scene.name,
-            subtitle: `${scene.loci.length} loci`,
-            imageUrl: scene.imageUrl,
-            tone: 'palace' as const,
-          }))}
-          onItemPress={(sceneId) =>
-            router.push({ pathname: '/palaces/create-memory', params: { sceneId } })
-          }
-          emptyLabel={palaceScenes.isLoading ? 'Opening your palace shelf…' : 'Build your first palace'}
-        />
+        {palaceEnabled ? (
+          <PracticeDiscoveryRow
+            title="Your palaces"
+            actionLabel="See all →"
+            onAction={() => router.push('/palaces' as Href)}
+            items={(palaceScenes.data ?? []).slice(0, 4).map((scene) => ({
+              key: scene.id,
+              title: scene.name,
+              subtitle: `${scene.loci.length} loci`,
+              imageUrl: scene.imageUrl,
+              tone: 'palace' as const,
+            }))}
+            onItemPress={(sceneId) =>
+              router.push({ pathname: '/palaces/create-memory', params: { sceneId } })
+            }
+            emptyLabel={palaceScenes.isLoading ? 'Opening your palace shelf…' : 'Build your first palace'}
+          />
+        ) : null}
 
         <View style={styles.discoverySection}>
           <View style={styles.sectionHeadingRow}>
@@ -102,7 +108,7 @@ export default function PracticeScreen() {
             <Text style={styles.lessonHint}>Tap to start</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.lessonList}>
-            {LESSONS.map((lesson) => (
+            {LESSONS.filter((lesson) => lesson.technique === 'palace' ? palaceEnabled : numberPegEnabled).map((lesson) => (
               <AnimatedPressable
                 key={lesson.title}
                 onPress={() => openLesson(router, lesson)}
@@ -126,7 +132,7 @@ export default function PracticeScreen() {
         </View>
 
         <View style={styles.filterRow}>
-          {SESSION_FILTERS.map((option) => (
+          {SESSION_FILTERS.filter((option) => option.key === 'all' || (option.key === 'palace' ? palaceEnabled : numberPegEnabled)).map((option) => (
             <AnimatedPressable
               key={option.key}
               onPress={() => setFilter(option.key)}
