@@ -1,5 +1,5 @@
 import { numberPegModule } from '@/features/number-peg/number-peg.module';
-import { palaceModule } from '@/features/palace/palace.module';
+import { palaceModule } from '@/features/palace-scenes/palace.module';
 import type { MemoryMethod } from './memory.types';
 import type { MemoryModuleDefinition } from './memory-module';
 

@@ -2,7 +2,7 @@ import { HapticTab } from '@/components/ui/haptic-tab';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthProvider';
 import { Redirect, Tabs } from 'expo-router';
-import { Award, Home, Layers3, User, Users } from 'lucide-react-native';
+import { Award, BookOpen, Home, Layers3, User } from 'lucide-react-native';
 
 export default function TabsLayout() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -40,10 +40,10 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="community"
+        name="library"
         options={{
-          title: 'Community',
-          tabBarIcon: ({ color }) => <Users size={24} color={color} />,
+          title: 'Library',
+          tabBarIcon: ({ color }) => <BookOpen size={24} color={color} />,
         }}
       />
       <Tabs.Screen

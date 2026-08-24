@@ -1,12 +1,9 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { BaseCard, getBaseCardClassName } from '@/components/BaseCard';
-import { PremiumUpdateCard } from '@/components/PremiumUpdateCard';
 import TutorialPromptCard from '@/components/PromptCard/TutorialPromptCard';
 import { useUserState } from '@/contexts/UserStateContext';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useMemoryModuleAccess } from '@/core/memory';
-import { useDueReviews } from '@/features/palace';
-import { useFeatureLimits } from '@/features/subscription/hooks/useFeatureLimits';
 import { useGamificationUiConfig } from '@/features/gamification/shared/hooks/useGamificationUiConfig';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { useMissions } from '@/features/gamification/shared/hooks/useMissions';
@@ -16,7 +13,6 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { DailyTip } from '../components/DailyTip';
-import { ReviewDueBadge } from '../components/ReviewDueBadge';
 
 const QuickAction = ({
   title,
@@ -43,22 +39,16 @@ const HomeScreen = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { user, refetch: refetchCurrentUser } = useCurrentUser();
   const { enabled: palaceEnabled } = useMemoryModuleAccess('palace');
-  const { limits: featureLimits, refetch: refetchFeatureLimits } = useFeatureLimits();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
   const { levelInfo, refetch: refetchLevelInfo } = useLevelByXp(totalXp, user?.level);
   const { missions, refetch: refetchMissions } = useMissions();
   const { config: gamificationUiConfig, refetch: refetchGamificationUiConfig } =
     useGamificationUiConfig();
-  const { dueReviews, dueLessons, refetch: refetchDueReviews } = useDueReviews({
-    enabled: palaceEnabled,
-  });
   const { data: dueMemoryReviews = [], refetch: refetchMemoryReviews } = useDueMemoryReviews();
   const { userState, updateState } = useUserState();
 
   const showTutorialPrompt = !userState.ui.tutorialPromptDismissed;
-  const canCreateCustomPalace = palaceEnabled && featureLimits.customPalaces > 0;
-
-  const dueCount = dueReviews.length + dueMemoryReviews.length;
+  const dueCount = dueMemoryReviews.length;
 
   const headerUser = user
     ? {
@@ -87,11 +77,9 @@ const HomeScreen = () => {
     try {
       await Promise.allSettled([
         refetchCurrentUser(),
-        refetchFeatureLimits(),
         refetchLevelInfo(),
         refetchMissions(),
         refetchGamificationUiConfig(),
-        palaceEnabled ? refetchDueReviews() : Promise.resolve(),
         refetchMemoryReviews(),
       ]);
     } finally {
@@ -99,12 +87,9 @@ const HomeScreen = () => {
     }
   }, [
     refetchCurrentUser,
-    refetchDueReviews,
-    refetchFeatureLimits,
     refetchGamificationUiConfig,
     refetchLevelInfo,
     refetchMissions,
-    palaceEnabled,
     refetchMemoryReviews,
   ]);
 
@@ -117,8 +102,6 @@ const HomeScreen = () => {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingBottom: 24 }}>
         <View className="px-4 py-2">
-          {/* {isFirstTime && <PalaceTrainingCard />} */}
-
           {showTutorialPrompt && (
             <View className="mt-3">
               <TutorialPromptCard
@@ -139,15 +122,6 @@ const HomeScreen = () => {
               />
             </View>
           )}
-
-          {palaceEnabled ? (
-            <ReviewDueBadge
-              dueCount={dueCount}
-              dueLessons={dueLessons}
-              onOpenLesson={(lessonId) => router.push(`/lessons/${lessonId}`)}
-              onOpenAll={() => router.push('/palaces')}
-            />
-          ) : null}
 
           {dueMemoryReviews.length > 0 ? (
             <BaseCard className="mt-3 border-violet-200 bg-violet-50 p-4" padding="none">
@@ -260,20 +234,17 @@ const HomeScreen = () => {
               }
             />
 
-            {canCreateCustomPalace ? (
+            {palaceEnabled ? (
               <QuickAction
-                title="Create Custom Palace"
-                subtitle="Create your own visual memory map"
-                onPress={() => router.push('/palaces/create')}
+                title="Build a Memory Palace"
+                subtitle="Place your ideas along one visual journey"
+                onPress={() => router.push('/palaces/create-memory')}
               />
             ) : null}
           </View>
 
           <DailyTip />
 
-          {palaceEnabled && !user?.isPremium && !canCreateCustomPalace ? (
-            <PremiumUpdateCard className="mt-4" />
-          ) : null}
         </View>
       </ScrollView>
     </View>

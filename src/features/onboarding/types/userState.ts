@@ -1,5 +1,3 @@
-import type { LessonProgress } from '@/features/palace';
-
 export interface UserState {
   isFirstTime: boolean;
   hasCompletedOnboarding: boolean;
@@ -10,10 +8,7 @@ export interface UserState {
   ui: {
     tutorialPromptDismissed: boolean;
     tutorialViewedAt?: string | null;
-    palaceListTab: 'official' | 'custom';
   };
-
-  lessonsProgress: Record<string, LessonProgress>;
 
   preferences: {
     reviewTime: string;
@@ -44,11 +39,9 @@ export const defaultUserState: UserState = {
   lastVisitDate: new Date().toISOString(),
   totalVisits: 0,
   currentStreak: 0,
-  lessonsProgress: {},
   ui: {
     tutorialPromptDismissed: false,
     tutorialViewedAt: null,
-    palaceListTab: 'official',
   },
   preferences: {
     reviewTime: '09:00',
@@ -66,5 +59,3 @@ export const defaultUserState: UserState = {
     autoRenew: false,
   },
 };
-
-export type { LessonProgress };

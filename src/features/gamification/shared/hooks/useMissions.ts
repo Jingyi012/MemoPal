@@ -1,7 +1,6 @@
 import { BADGE_KEYS } from '@/features/gamification/shared/hooks/useBadges';
 import { CURRENT_USER_KEYS } from '@/features/profile/hooks/useCurrentUser';
 import { MILESTONE_KEYS } from '@/features/gamification/shared/hooks/useMilestones';
-import { PALACE_KEYS } from '@/features/palace/shared/queryKeys';
 import {
   claimMissionReward,
   getCurrentMissionDashboard,
@@ -56,7 +55,6 @@ export function useClaimMissionReward() {
       queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
       queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.all });
       queryClient.invalidateQueries({ queryKey: BADGE_KEYS.all });
-      queryClient.invalidateQueries({ queryKey: PALACE_KEYS.all });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: MISSION_KEYS.all });

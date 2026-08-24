@@ -1,5 +1,5 @@
 import { USER_STATE_STORAGE_KEY } from '@/core/storage/constants';
-import { defaultUserState, LessonProgress, UserState } from '@/features/onboarding/types/userState';
+import { defaultUserState, UserState } from '@/features/onboarding/types/userState';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
@@ -7,7 +7,6 @@ type UserStateContextType = {
   userState: UserState;
   updateState: (updates: Partial<UserState>) => Promise<void>;
   updatePreferences: (updates: Partial<UserState['preferences']>) => Promise<void>;
-  updateLessonProgress: (lessonId: string, updates: Partial<LessonProgress>) => Promise<void>;
   resetState: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
 };
@@ -58,19 +57,6 @@ export const UserStateProvider = ({ children }: { children: ReactNode }) => {
     await saveState(newState);
   };
 
-  // Update lesson progress
-  const updateLessonProgress = async (lessonId: string, updates: Partial<LessonProgress>) => {
-    const existing = state.lessonsProgress[lessonId] || {};
-    const newState = {
-      ...state,
-      lessonsProgress: {
-        ...state.lessonsProgress,
-        [lessonId]: { ...existing, ...updates },
-      },
-    };
-    await saveState(newState);
-  };
-
   const resetState = async () => {
     await saveState(defaultUserState);
   };
@@ -91,7 +77,6 @@ export const UserStateProvider = ({ children }: { children: ReactNode }) => {
         userState: state,
         updateState,
         updatePreferences,
-        updateLessonProgress,
         resetState,
         completeOnboarding,
       }}>
