@@ -24,25 +24,24 @@ export function RewardHighlights({
   if (!hasContent) return null;
 
   return (
-    <View className={cn('rounded-2xl bg-amber-50 p-4', className)}>
-      <Text className="text-sm font-bold text-amber-800">Rewards Unlocked</Text>
+    <View className={cn('rounded-2xl bg-[#FFF7E0] p-4', className)}>
+      <Text className="text-sm font-bold text-[#F2A900]">Rewards Unlocked</Text>
 
       {levelUpTo ? (
-        <Text className="mt-2 text-xs font-semibold text-amber-700">Level Up: Level {levelUpTo}</Text>
+        <Text className="mt-2 text-xs font-semibold text-[#F2A900]">Level Up: Level {levelUpTo}</Text>
       ) : null}
 
       {visibleMilestones.map((item) => (
-        <Text key={`milestone-${item}`} className="mt-1 text-xs text-amber-700">
+        <Text key={`milestone-${item}`} className="mt-1 text-xs text-[#F2A900]">
           Milestone: {item}
         </Text>
       ))}
 
       {visibleBadges.map((item) => (
-        <Text key={`badge-${item}`} className="mt-1 text-xs text-amber-700">
+        <Text key={`badge-${item}`} className="mt-1 text-xs text-[#F2A900]">
           Badge: {item}
         </Text>
       ))}
     </View>
   );
 }
-

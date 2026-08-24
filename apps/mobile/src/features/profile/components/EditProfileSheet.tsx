@@ -48,18 +48,18 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
     return (
       <CustomBottomSheetModal ref={ref} snapPoints={['75%']} enableDynamicSizing={false}>
         <View className="p-6">
-          <Text className="text-xl font-bold text-slate-900">Edit Profile</Text>
-          <Text className="mt-1 text-sm text-slate-500">Update your profile details</Text>
+          <Text className="text-xl font-bold text-[#2B2A3D]">Edit Profile</Text>
+          <Text className="mt-1 text-sm text-[#6B6A80]">Update your profile details</Text>
 
           <TextInput
-            className="mt-4 rounded-xl border border-slate-200 px-4 py-3"
+            className="mt-4 rounded-xl border-2 border-[#EEE9DC] bg-[#FFFDF8] px-4 py-3"
             placeholder="Display Name"
             value={displayName}
             onChangeText={setDisplayName}
           />
 
           <TextInput
-            className="mt-3 rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500"
+            className="mt-3 rounded-xl border-2 border-[#EEE9DC] bg-[#F6F3EA] px-4 py-3 text-[#9A97A7]"
             placeholder="Email"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -67,11 +67,11 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
             editable={false}
             selectTextOnFocus={false}
           />
-          <Text className="mt-1 text-xs text-slate-500">
+          <Text className="mt-1 text-xs text-[#6B6A80]">
             Email cannot be changed from mobile profile settings.
           </Text>
 
-          <Text className="mt-4 text-xs font-bold uppercase text-slate-500">Profile Picture</Text>
+          <Text className="mt-4 text-xs font-bold uppercase text-[#6B6A80]">Profile Picture</Text>
           <AnimatedPressable
             onPress={async () => {
               const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -95,22 +95,22 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
 
               setAvatarUrl(result.assets[0].uri);
             }}
-            className="mt-2 overflow-hidden rounded-xl border border-slate-200">
-            <View className="h-24 w-24 self-center rounded-full border border-slate-200">
+            className="mt-2 overflow-hidden rounded-xl border-2 border-[#EEE9DC] bg-[#FFFDF8]">
+            <View className="h-24 w-24 self-center rounded-full border-2 border-[#EEE9DC]">
               <AppImage
                 source={avatarUrl ? { uri: avatarUrl } : undefined}
                 className="h-full w-full rounded-full"
                 contentFit="cover"
               />
             </View>
-            <Text className="p-3 text-center text-sm text-teal-700">Tap to choose image</Text>
+            <Text className="p-3 text-center text-sm text-[#7A68E0]">Tap to choose image</Text>
           </AnimatedPressable>
 
           <View className="mt-5 flex-row gap-3">
             <AnimatedPressable
               onPress={close}
-              className="flex-1 items-center rounded-xl bg-slate-100 py-3">
-              <Text className="font-semibold text-slate-700">Cancel</Text>
+              className="flex-1 items-center rounded-xl bg-[#F6F3EA] py-3">
+              <Text className="font-semibold text-[#6B6A80]">Cancel</Text>
             </AnimatedPressable>
             <AnimatedPressable
               onPress={async () => {
@@ -130,8 +130,8 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
                   setSaving(false);
                 }
               }}
-              className="flex-1 items-center rounded-xl bg-teal-600 py-3">
-              <Text className="font-semibold text-white">{saving ? 'Saving...' : 'Save'}</Text>
+              className="flex-1 items-center rounded-xl bg-[#FFC93C] py-3">
+              <Text className="font-semibold text-[#2B2A3D]">{saving ? 'Saving...' : 'Save'}</Text>
             </AnimatedPressable>
           </View>
         </View>

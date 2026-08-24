@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -44,7 +44,7 @@ export const LevelXpProgressBar: React.FC<LevelXpProgressBarProps> = ({
   showPercent = false,
   trackClassName = 'h-2 overflow-hidden rounded-full bg-white/20',
   fillClassName = 'h-full rounded-full',
-  percentClassName = 'mt-1 text-right text-[11px] text-teal-100',
+  percentClassName = 'mt-1 text-right text-[11px] text-[#E3DFFF]',
 }) => {
   const { progress } = getLevelProgressMetrics(xpInCurrentLevel, xpToNextLevel);
 
@@ -52,7 +52,7 @@ export const LevelXpProgressBar: React.FC<LevelXpProgressBarProps> = ({
     <>
       <View className={trackClassName}>
         <LinearGradient
-          colors={[Colors.yellow300, Colors.orange500]}
+          colors={[theme.sun, theme.sunDeep]}
           start={[0, 0]}
           end={[1, 0]}
           className={fillClassName}
@@ -64,4 +64,3 @@ export const LevelXpProgressBar: React.FC<LevelXpProgressBarProps> = ({
     </>
   );
 };
-

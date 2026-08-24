@@ -1,4 +1,5 @@
 import { getBaseCardClassName } from '@/components/BaseCard';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Lightbulb } from 'lucide-react-native';
@@ -58,7 +59,7 @@ export const DailyTip: React.FC<DailyTipProps> = ({ dayOfMonth }) => {
     <Animated.View
       entering={FadeInDown.delay(300)}
       className={getBaseCardClassName({
-        className: 'mt-2 bg-indigo-50 p-4',
+        className: 'mt-2 border-2 border-[#E0D9FF] bg-[#EEE9FF] p-4',
         padding: 'none',
       })}>
       <View className="flex-row gap-3">
@@ -67,10 +68,10 @@ export const DailyTip: React.FC<DailyTipProps> = ({ dayOfMonth }) => {
         </View>
         <View className="flex-1">
           <View className="mb-1 flex-row items-center gap-2">
-            <Lightbulb size={16} color="#6366f1" />
-            <Text className="font-bold text-indigo-900">{tip.title}</Text>
+            <Lightbulb size={16} color={theme.violetDeep} />
+            <Text className="font-bold text-[#2B2A3D]">{tip.title}</Text>
           </View>
-          <Text className="text-sm leading-5 text-indigo-800">{tip.tip}</Text>
+          <Text className="text-sm leading-5 text-[#6B6A80]">{tip.tip}</Text>
         </View>
       </View>
     </Animated.View>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import AnimatedPressable from './AnimatedPressable';
 import { BaseCard } from './BaseCard';
 
@@ -32,26 +33,28 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           {/* Card */}
           <TouchableWithoutFeedback>
             <BaseCard className="w-full" padding="lg" radius="2xl" bordered={false} shadow="sm">
-              <Text className="text-center text-lg font-semibold text-neutral-900">{title}</Text>
+          <Text className="text-center text-lg font-semibold text-[#2B2A3D]">{title}</Text>
 
               {description && (
-                <Text className="mt-2 text-center text-sm text-neutral-500">{description}</Text>
+                <Text className="mt-2 text-center text-sm text-[#6B6A80]">{description}</Text>
               )}
 
               <View className="mt-6 flex-row gap-3">
                 <AnimatedPressable
                   onPress={onCancel}
-                  className="flex-1 items-center justify-center rounded-xl bg-neutral-100 py-3">
-                  <Text className="text-base text-neutral-700">{cancelText}</Text>
+                  className="flex-1 items-center justify-center rounded-xl bg-[#F6F3EA] py-3">
+                  <Text className="text-base text-[#6B6A80]">{cancelText}</Text>
                 </AnimatedPressable>
 
                 <AnimatedPressable
                   onPress={onConfirm}
                   className={[
                     'flex-1 items-center justify-center rounded-xl py-3',
-                    destructive ? 'bg-red-500' : 'bg-blue-500',
+                    destructive ? 'bg-[#E8527A]' : 'bg-[#FFC93C]',
                   ].join(' ')}>
-                  <Text className="text-base font-medium text-white">{confirmText}</Text>
+                  <Text className="text-base font-medium" style={{ color: destructive ? '#FFFFFF' : theme.ink }}>
+                    {confirmText}
+                  </Text>
                 </AnimatedPressable>
               </View>
             </BaseCard>

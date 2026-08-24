@@ -1,5 +1,5 @@
 import { getBaseCardClassName } from '@/components/BaseCard';
-import { Colors } from '@/constants/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Brain } from 'lucide-react-native';
 import React from 'react';
@@ -19,30 +19,30 @@ export const WhyThisWorkCard: React.FC = () => {
 
   return (
     <LinearGradient
-      colors={[Colors.purple50, Colors.pink50]}
+      colors={['#EEE9FF', '#FFF0F4']}
       style={{
         borderRadius: 10,
       }}
       className={getBaseCardClassName({
-        className: 'mt-6 border-2 border-purple-200 bg-transparent p-4',
+        className: 'mt-6 border-2 border-[#E0D9FF] bg-transparent p-4',
         padding: 'none',
         bordered: false,
       })}>
       {/* Header */}
       <View className="mb-3 flex-row items-center gap-2">
-        <Brain size={20} color="#9333ea" />
-        <Text className="text-lg font-semibold text-text">Why This Works</Text>
+        <Brain size={20} color={theme.violetDeep} />
+        <Text className="text-lg font-semibold text-[#2B2A3D]">Why This Works</Text>
       </View>
 
       {/* Points */}
       <View className="space-y-2 text-sm">
         {points.map((point, index) => (
           <View key={index} className="flex-row items-start gap-2">
-            <Text className="text-purple-600 dark:text-purple-300">✓</Text>
+            <Text className="text-[#7A68E0]">✓</Text>
             <View className="flex-1">
               <Text className="flex-wrap">
-                <Text className="font-bold text-text">{point.title}</Text>
-                <Text className="text-text-muted"> - {point.description}</Text>
+                <Text className="font-bold text-[#2B2A3D]">{point.title}</Text>
+                <Text className="text-[#6B6A80]"> - {point.description}</Text>
               </Text>
             </View>
           </View>

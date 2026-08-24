@@ -30,8 +30,8 @@ const QuickAction = ({
       className: 'mb-2 border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4',
       padding: 'none',
     })}>
-    <Text className="font-bold text-slate-800">{title}</Text>
-    <Text className="mt-0.5 text-xs text-slate-500">{subtitle}</Text>
+    <Text className="font-bold text-[#2B2A3D]">{title}</Text>
+    <Text className="mt-0.5 text-xs text-[#6B6A80]">{subtitle}</Text>
   </AnimatedPressable>
 );
 
@@ -177,7 +177,7 @@ const HomeScreen = () => {
           </BaseCard>
 
           <View className="mt-4">
-            <Text className="mb-2 text-base font-bold text-slate-800">Quick Actions</Text>
+            <Text className="mb-2 text-base font-bold text-[#2B2A3D]">Quick Actions</Text>
             {palaceEnabled ? (
               <>
                 <QuickAction

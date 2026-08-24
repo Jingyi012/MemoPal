@@ -1,4 +1,3 @@
-import { Colors } from '@/constants/colors';
 import { AuthProvider } from '@/contexts/AuthProvider';
 import { GamificationRewardProvider } from '@/contexts/GamificationRewardContext';
 import { UserStateProvider } from '@/contexts/UserStateContext';
@@ -30,7 +29,7 @@ function AppLayout() {
       <BottomSheetModalProvider>
         <SafeAreaView
           edges={['left', 'right', 'bottom']}
-          className={colorScheme === 'dark' ? 'dark flex-1 bg-slate-950' : 'flex-1 bg-slate-50'}
+          className={colorScheme === 'dark' ? 'dark flex-1 bg-[#1E1A30]' : 'flex-1 bg-[#FFFDF8]'}
           //style={palettes[colorScheme ?? 'light']}
         >
           <Stack
@@ -38,7 +37,7 @@ function AppLayout() {
             screenOptions={{
               headerShown: false,
               contentStyle: {
-                backgroundColor: Colors.slate50,
+                backgroundColor: '#FFFDF8',
               },
             }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />

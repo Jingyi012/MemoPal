@@ -33,8 +33,8 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
       <CustomBottomSheetModal ref={ref} snapPoints={['90%']} enableDynamicSizing={false}>
         {/* Header */}
         <View className="z-10 bg-white px-6 pb-2 pt-3">
-          <Text className="text-xl font-bold text-slate-900">Daily Learning Time</Text>
-          <Text className="text-sm text-slate-500">
+          <Text className="text-xl font-bold text-[#2B2A3D]">Daily Learning Time</Text>
+          <Text className="text-sm text-[#6B6A80]">
             Select the hour for your daily learning reminder
           </Text>
         </View>
@@ -62,11 +62,11 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
                   handleDismiss();
                 }}
                 className={`mb-2 w-full items-center rounded-xl border py-4 ${
-                  isSelected ? 'border-teal-200 bg-teal-50' : 'border-transparent bg-gray-50'
+                  isSelected ? 'border-2 border-[#DCD4FF] bg-[#EEE9FF]' : 'border-2 border-transparent bg-[#F6F3EA]'
                 }`}>
                 <Text
                   className={`text-lg ${
-                    isSelected ? 'font-bold text-teal-600' : 'font-medium text-slate-700'
+                    isSelected ? 'font-bold text-[#7A68E0]' : 'font-medium text-[#6B6A80]'
                   }`}>
                   {item}
                 </Text>
@@ -77,12 +77,12 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
 
         {/* Fixed Footer */}
         <View
-          className="border-t border-slate-100 bg-white px-6 py-4"
+          className="border-t-2 border-[#EEE9DC] bg-white px-6 py-4"
           style={{ paddingBottom: insets.bottom }}>
           <AnimatedPressable
             onPress={handleDismiss}
-            className="w-full items-center rounded-xl bg-gray-100 py-4">
-            <Text className="text-base font-semibold text-slate-600">Cancel</Text>
+            className="w-full items-center rounded-xl bg-[#F6F3EA] py-4">
+            <Text className="text-base font-semibold text-[#6B6A80]">Cancel</Text>
           </AnimatedPressable>
         </View>
       </CustomBottomSheetModal>

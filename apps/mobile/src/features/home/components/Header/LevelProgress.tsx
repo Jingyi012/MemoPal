@@ -19,7 +19,7 @@ export function LevelProgress({ level }: LevelProgressProps) {
   return (
     <View className="space-y-2">
       <View className="mb-2 flex-row items-center justify-between">
-        <Text className="text-xs text-teal-100">Level {level.currentLevel}</Text>
+        <Text className="text-xs text-[#E3DFFF]">Level {level.currentLevel}</Text>
         <Text className="text-xs text-white">
           {isMaxLevel ? 'MAX LEVEL' : `${level.xpInCurrentLevel}/${levelWindowXp} XP`}
         </Text>

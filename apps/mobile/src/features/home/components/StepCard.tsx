@@ -1,6 +1,6 @@
 import { BaseCard } from '@/components/BaseCard';
-import { Colors } from '@/constants/colors';
 import { Step } from '@/core/types/application';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, View } from 'react-native';
 
@@ -20,12 +20,12 @@ export const StepCard: React.FC<StepCardProps> = ({ step }) => {
       <View className="flex-row items-start gap-4">
         {/* Circle */}
         {isLocked ? (
-          <View className="h-12 w-12 items-center justify-center rounded-full bg-gray-200">
-            <Text className="text-slate-600">{step.id}</Text>
+          <View className="h-12 w-12 items-center justify-center rounded-full bg-[#F6F3EA]">
+            <Text className="text-[#6B6A80]">{step.id}</Text>
           </View>
         ) : (
           <LinearGradient
-            colors={[Colors.teal600, Colors.indigo600]} // teal → indigo
+            colors={[theme.violetDeep, theme.berryDeep]}
             className="h-12 w-12 items-center justify-center"
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -39,28 +39,28 @@ export const StepCard: React.FC<StepCardProps> = ({ step }) => {
         {/* Content */}
         <View className="flex-1">
           <Text
-            className={`mb-1 ${isLocked ? 'text-slate-600' : 'text-slate-800'} flex-row items-center`}>
+            className={`mb-1 ${isLocked ? 'text-[#9A97A7]' : 'text-[#2B2A3D]'} flex-row items-center`}>
             {step.title}
             {isLocked && (
-              <Text className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-slate-600">
+              <Text className="ml-2 rounded-full bg-[#F6F3EA] px-2 py-0.5 text-xs text-[#6B6A80]">
                 Locked
               </Text>
             )}
           </Text>
-          <Text className={`text-sm ${isLocked ? 'text-slate-600' : 'text-slate-600'} mb-2`}>
+          <Text className="mb-2 text-sm text-[#6B6A80]">
             {step.description}
           </Text>
 
           {/* Progress bar */}
           {step.progress && !isLocked && (
             <View className="flex-row items-center gap-2">
-              <View className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
+              <View className="h-2 flex-1 overflow-hidden rounded-full bg-[#EEE9DC]">
                 <View
-                  className="h-full rounded-full bg-teal-600"
+                  className="h-full rounded-full bg-[#3FB87F]"
                   style={{ width: `${progressPercent}%` }}
                 />
               </View>
-              <Text className="text-xs text-slate-600">
+              <Text className="text-xs text-[#6B6A80]">
                 {step.progress.current}/{step.progress.total}
               </Text>
             </View>

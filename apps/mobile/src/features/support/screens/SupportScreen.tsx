@@ -51,11 +51,11 @@ export default function Support() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-[#FFFDF8]">
       <CommonHeader title="Support" description={undefined} backAction={() => router.back()} />
 
       <View className="gap-4 p-5">
-        <Text className="text-slate-600">
+        <Text className="text-[#6B6A80]">
           {supportEnabled
             ? `Need help? Send us a message and we'll get back to you at ${supportEmail}.`
             : 'Email support is currently disabled.'}
@@ -65,7 +65,7 @@ export default function Support() {
           value={subject}
           onChangeText={setSubject}
           placeholder="Subject"
-          className="rounded-xl border border-slate-200 bg-white px-4 py-3"
+          className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
         />
 
         <TextInput
@@ -75,14 +75,14 @@ export default function Support() {
           multiline
           numberOfLines={6}
           textAlignVertical="top"
-          className="rounded-xl border border-slate-200 bg-white px-4 py-3"
+          className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
         />
 
         <AnimatedPressable
           onPress={handleSend}
           disabled={!supportEnabled}
-          className={`items-center rounded-xl py-4 ${supportEnabled ? 'bg-teal-600' : 'bg-slate-300'}`}>
-          <Text className="font-semibold text-white">{supportButtonTitle}</Text>
+          className={`items-center rounded-2xl py-4 ${supportEnabled ? 'bg-[#FFC93C]' : 'bg-[#D8D4C9]'}`}>
+          <Text className={`font-semibold ${supportEnabled ? 'text-[#2B2A3D]' : 'text-[#9A97A7]'}`}>{supportButtonTitle}</Text>
         </AnimatedPressable>
       </View>
     </View>

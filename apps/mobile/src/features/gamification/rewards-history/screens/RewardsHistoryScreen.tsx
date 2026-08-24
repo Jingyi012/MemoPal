@@ -5,6 +5,7 @@ import { useAllBadges } from '@/features/gamification/shared/hooks/useBadges';
 import { useMilestones } from '@/features/gamification/shared/hooks/useMilestones';
 import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
 import { useRouter } from 'expo-router';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { Award, Flag, Sparkles } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -141,7 +142,7 @@ export default function RewardsHistoryScreen() {
   }
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-[#FFFDF8]">
       <CommonHeader
         title="Reward History"
         description="Track XP, badges, and milestones over time"
@@ -154,7 +155,7 @@ export default function RewardsHistoryScreen() {
         contentContainerStyle={{ paddingBottom: 24 }}>
         <View className="p-4">
           <BaseCard className="p-4" padding="none">
-            <Text className="text-sm font-semibold text-slate-800">Filter</Text>
+            <Text className="text-sm font-semibold text-[#2B2A3D]">Filter</Text>
             <View className="mt-3 flex-row flex-wrap gap-2">
               {FILTERS.map((item) => {
                 const isActive = item.key === filter;
@@ -163,11 +164,11 @@ export default function RewardsHistoryScreen() {
                     key={item.key}
                     onPress={() => setFilter(item.key)}
                     className={`min-w-[68px] items-center justify-center rounded-full px-3 py-1.5 ${
-                      isActive ? 'bg-teal-600' : 'bg-slate-100'
+                      isActive ? 'bg-[#7A68E0]' : 'bg-[#F6F3EA]'
                     }`}>
                     <Text
                       className={`text-center text-xs font-semibold ${
-                        isActive ? 'text-white' : 'text-slate-600'
+                        isActive ? 'text-white' : 'text-[#6B6A80]'
                       }`}>
                       {item.label}
                     </Text>
@@ -175,19 +176,19 @@ export default function RewardsHistoryScreen() {
                 );
               })}
             </View>
-            <Text className="mt-3 text-xs text-slate-500">
+            <Text className="mt-3 text-xs text-[#6B6A80]">
               Showing only rewards from the latest {historyWindowDays} days.
             </Text>
           </BaseCard>
 
           {groupedTimeline.length === 0 ? (
             <BaseCard className="mt-4 p-5" padding="none">
-              <Text className="text-sm text-slate-500">No rewards recorded yet.</Text>
+              <Text className="text-sm text-[#6B6A80]">No rewards recorded yet.</Text>
             </BaseCard>
           ) : (
             groupedTimeline.map(([dayLabel, items]) => (
               <View key={dayLabel} className="mt-4">
-                <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#6B6A80]">
                   {dayLabel}
                 </Text>
                 <View className="gap-2">
@@ -199,29 +200,29 @@ export default function RewardsHistoryScreen() {
                         <View className="flex-row items-center">
                           <View
                             className={`h-9 w-9 items-center justify-center rounded-full ${
-                              isXp ? 'bg-teal-100' : isBadge ? 'bg-amber-100' : 'bg-indigo-100'
+                              isXp ? 'bg-[#EEE9FF]' : isBadge ? 'bg-[#FFF7E0]' : 'bg-[#F1FBF5]'
                             }`}>
                             {isXp ? (
-                              <Sparkles size={16} color="#0f766e" />
+                              <Sparkles size={16} color={theme.violetDeep} />
                             ) : isBadge ? (
-                              <Award size={16} color="#b45309" />
+                              <Award size={16} color={theme.sunDeep} />
                             ) : (
-                              <Flag size={16} color="#4338ca" />
+                              <Flag size={16} color={theme.grass} />
                             )}
                           </View>
                           <View className="ml-3 flex-1">
-                            <Text className="font-semibold text-slate-800">{item.title}</Text>
+                            <Text className="font-semibold text-[#2B2A3D]">{item.title}</Text>
                             {!!item.subtitle && (
-                              <Text className="mt-0.5 text-xs text-slate-500">{item.subtitle}</Text>
+                              <Text className="mt-0.5 text-xs text-[#6B6A80]">{item.subtitle}</Text>
                             )}
                           </View>
                           {typeof item.points === 'number' ? (
-                            <Text className="text-xs font-semibold text-teal-700">
+                            <Text className="text-xs font-semibold text-[#3FB87F]">
                               +{item.points} XP
                             </Text>
                           ) : null}
                         </View>
-                        <Text className="mt-2 text-xs text-slate-400">
+                        <Text className="mt-2 text-xs text-[#9A97A7]">
                           {new Date(item.occurredAt).toLocaleTimeString()}
                         </Text>
                       </BaseCard>

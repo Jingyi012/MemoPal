@@ -22,15 +22,15 @@ export function StepNavigationFooter({
 
   return (
     <View
-      className="w-full flex-row justify-between gap-3 border-t border-slate-100 bg-white p-5"
+      className="w-full flex-row justify-between gap-3 border-t-2 border-[#EEE9DC] bg-white p-5"
       style={{ paddingBottom: Math.max(12, insets.bottom + 8) }}>
       {/* Previous Button */}
       {onPrevious && (
         <AnimatedPressable
           onPress={onPrevious}
           // Changed p-4 to py-4 to match the Next button
-          className="flex-1 items-center justify-center rounded-2xl bg-slate-200 py-4 shadow-sm">
-          <Text className="text-base font-black text-slate-700">{previousLabel}</Text>
+          className="flex-1 items-center justify-center rounded-2xl bg-[#F6F3EA] py-4 shadow-sm">
+          <Text className="text-base font-black text-[#6B6A80]">{previousLabel}</Text>
         </AnimatedPressable>
       )}
 
@@ -39,11 +39,11 @@ export function StepNavigationFooter({
         onPress={onNext}
         disabled={disableNext}
         className={`flex-[2] items-center justify-center rounded-2xl py-4 shadow-xl ${
-          disableNext ? 'bg-slate-300' : 'bg-teal-600 shadow-teal-600/20'
+          disableNext ? 'bg-[#D8D4C9]' : 'bg-[#FFC93C] shadow-[#F2A900]/20'
         }`}>
         <Text
           className={`text-center text-base font-bold ${
-            disableNext ? 'text-slate-500' : 'text-white'
+            disableNext ? 'text-[#9A97A7]' : 'text-[#2B2A3D]'
           }`}>
           {nextLabel}
         </Text>

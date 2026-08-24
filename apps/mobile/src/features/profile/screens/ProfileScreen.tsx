@@ -12,7 +12,6 @@ import { ActionSheet } from '@/components/ActionSheet';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { PremiumUpdateCard } from '@/components/PremiumUpdateCard';
-import { Colors } from '@/constants/colors';
 import { useUserState } from '@/contexts/UserStateContext';
 import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
@@ -209,9 +208,9 @@ export default function SettingsScreen() {
         {user?.email && (
           <SettingsSection>
             <AnimatedPressable onPress={() => setShowLogout(true)}>
-              <View className="flex-row items-center justify-center rounded-lg border border-red-400 bg-red-500 p-4">
-                <LogOut size={20} color={Colors.white} />
-                <Text className="ml-1 text-white">Sign Out</Text>
+              <View className="flex-row items-center justify-center rounded-2xl border-2 border-[#FFD2DC] bg-[#FFF0F4] p-4">
+                <LogOut size={20} color={theme.berryDeep} />
+                <Text className="ml-1 font-semibold text-[#E8527A]">Sign Out</Text>
               </View>
             </AnimatedPressable>
           </SettingsSection>

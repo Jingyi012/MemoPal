@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
@@ -52,27 +52,27 @@ export const AlertMessage: React.FC<AlertMessageProps> = ({
       backdropComponent={renderBackdrop}
       onDismiss={onClose}
       backgroundStyle={{ borderRadius: 32 }}
-      handleIndicatorStyle={{ backgroundColor: '#E5E7EB', width: 48, height: 6 }}>
+      handleIndicatorStyle={{ backgroundColor: theme.line, width: 48, height: 6 }}>
       <BottomSheetView className="p-6 pb-12">
         <View className="mb-8 items-center">
           {Icon && (
             <View
               className={`mb-4 h-16 w-16 items-center justify-center rounded-full ${
-                variant === 'destructive' ? 'bg-red-50' : 'bg-teal-50'
+                variant === 'destructive' ? 'bg-[#FFF0F4]' : 'bg-[#EEE9FF]'
               }`}>
-              <Icon size={32} color={variant === 'destructive' ? Colors.red600 : Colors.teal600} />
+              <Icon size={32} color={variant === 'destructive' ? theme.berryDeep : theme.violetDeep} />
             </View>
           )}
-          <Text className="text-center text-xl font-bold text-slate-800">{title}</Text>
+          <Text className="text-center text-xl font-bold text-[#2B2A3D]">{title}</Text>
           {description && (
-            <Text className="mt-2 px-4 text-center leading-5 text-slate-600">{description}</Text>
+            <Text className="mt-2 px-4 text-center leading-5 text-[#6B6A80]">{description}</Text>
           )}
         </View>
 
         <AnimatedPressable
           onPress={() => bottomSheetModalRef.current?.dismiss()}
           className={`${
-            variant === 'destructive' ? 'bg-red-500' : 'bg-teal-600'
+            variant === 'destructive' ? 'bg-[#E8527A]' : 'bg-[#7A68E0]'
           } h-14 items-center justify-center rounded-2xl`}>
           <Text className="text-lg font-bold text-white">{okLabel}</Text>
         </AnimatedPressable>

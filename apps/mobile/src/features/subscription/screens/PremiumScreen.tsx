@@ -2,7 +2,7 @@ import { systemSettingsApi } from '@/core/settings/api/systemSettings';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { BaseCard, getBaseCardClassName } from '@/components/BaseCard';
 import LoadingView from '@/components/LoadingView';
-import { Colors } from '@/constants/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { normalizePremiumSubscriptionConfig } from '@/features/subscription/hooks/usePremiumSubscriptionConfig';
 import { PremiumSubscriptionConfig } from '@/features/subscription/types/premiumSubscriptionConfig';
 import { cn } from '@/utils/cn';
@@ -83,31 +83,31 @@ const PremiumScreen: React.FC = () => {
 
   if (!config) {
     return (
-      <View className="flex-1 bg-slate-50">
+      <View className="flex-1 bg-[#FFFDF8]">
         <LinearGradient
-          colors={[Colors.orange400, Colors.orange600]}
+          colors={[theme.berry, theme.berryDeep]}
           className="px-6 pb-10 pt-8 shadow-lg">
           <View className="flex-row items-center justify-between">
             <Text className="text-2xl font-bold text-white">Premium</Text>
             <AnimatedPressable
               onPress={() => router.back()}
               className="rounded-full bg-white/20 p-2">
-              <X size={20} color={Colors.white} />
+              <X size={20} color="white" />
             </AnimatedPressable>
           </View>
         </LinearGradient>
 
         <View className="flex-1 items-center justify-center px-6">
-          <Text className="mb-2 text-center text-base font-semibold text-slate-700">
+          <Text className="mb-2 text-center text-base font-semibold text-[#2B2A3D]">
             Premium data is unavailable right now.
           </Text>
-          <Text className="mb-5 text-center text-sm text-slate-500">
+          <Text className="mb-5 text-center text-sm text-[#6B6A80]">
             {loadError ?? 'Please try again in a moment.'}
           </Text>
           <TouchableOpacity
-            className="rounded-xl bg-orange-500 px-5 py-3"
+            className="rounded-xl bg-[#FFC93C] px-5 py-3"
             onPress={() => void loadPremiumConfig()}>
-            <Text className="font-semibold text-white">Try Again</Text>
+            <Text className="font-semibold text-[#2B2A3D]">Try Again</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -121,21 +121,21 @@ const PremiumScreen: React.FC = () => {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-[#FFFDF8]">
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}>
         {loadError ? (
-          <View className="mx-6 mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
-            <Text className="text-sm font-semibold text-rose-700">
+          <View className="mx-6 mt-3 rounded-2xl border-2 border-[#FFD9E2] bg-[#FFF0F4] px-4 py-3">
+            <Text className="text-sm font-semibold text-[#E8527A]">
               Unable to refresh premium data
             </Text>
-            <Text className="mt-1 text-sm text-rose-600">{loadError}</Text>
+            <Text className="mt-1 text-sm text-[#E8527A]">{loadError}</Text>
           </View>
         ) : null}
 
         <LinearGradient
-          colors={[Colors.orange400, Colors.orange600]}
+          colors={[theme.berry, theme.berryDeep]}
           className="px-6 pb-16 pt-8 shadow-lg">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-4">
@@ -151,25 +151,25 @@ const PremiumScreen: React.FC = () => {
             <AnimatedPressable
               onPress={() => router.back()}
               className="rounded-full bg-white/20 p-2">
-              <X size={20} color={Colors.white} />
+              <X size={20} color="white" />
             </AnimatedPressable>
           </View>
         </LinearGradient>
 
         <View className="-mt-8 px-6">
           <BaseCard radius="3xl" padding="lg" shadow="sm">
-            <Text className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+            <Text className="mb-4 text-xs font-bold uppercase tracking-widest text-[#6B6A80]">
               {config.sections.includedTitle}
             </Text>
             <View className="gap-y-4">
               {features.map((feature) => (
                 <View key={feature.key} className="flex-row items-start gap-3">
                   <View className="mt-1">
-                    <CheckCircle2 color={Colors.green500} size={20} />
+                    <CheckCircle2 color={theme.grass} size={20} />
                   </View>
                   <View className="flex-1">
-                    <Text className="font-semibold text-slate-800">{feature.title}</Text>
-                    <Text className="text-sm leading-4 text-slate-500">{feature.description}</Text>
+                    <Text className="font-semibold text-[#2B2A3D]">{feature.title}</Text>
+                    <Text className="text-sm leading-4 text-[#6B6A80]">{feature.description}</Text>
                   </View>
                 </View>
               ))}
@@ -189,13 +189,13 @@ const PremiumScreen: React.FC = () => {
                     radius: '3xl',
                     className: cn(
                       'relative border-2',
-                      selected ? 'border-orange-500' : 'border-slate-200'
+                      selected ? 'border-[#FF6F91]' : 'border-[#EEE9DC]'
                     ),
                   })}>
                   {plan.isBestValue && (
                     <View className="absolute -top-3 right-6">
                       <LinearGradient
-                        colors={[Colors.orange400, Colors.orange600]}
+                        colors={[theme.sun, theme.sunDeep]}
                         start={[0, 0]}
                         end={[1, 0]}
                         style={{ borderRadius: 10 }}
@@ -211,26 +211,26 @@ const PremiumScreen: React.FC = () => {
                     <View className="flex-row items-center gap-3">
                       <View
                         className={`h-6 w-6 items-center justify-center rounded-full border-2 ${
-                          selected ? 'border-orange-500' : 'border-slate-300'
+                          selected ? 'border-[#FF6F91]' : 'border-[#D8D4C9]'
                         }`}>
-                        {selected && <View className="h-3 w-3 rounded-full bg-orange-500" />}
+                        {selected && <View className="h-3 w-3 rounded-full bg-[#FF6F91]" />}
                       </View>
                       <View>
                         <Text
-                          className={`text-lg font-bold ${selected ? 'text-orange-900' : 'text-slate-800'}`}>
+                          className={`text-lg font-bold ${selected ? 'text-[#E8527A]' : 'text-[#2B2A3D]'}`}>
                           {plan.name}
                         </Text>
                         {!!plan.savings && (
-                          <Text className="text-xs font-bold text-green-600">{plan.savings}</Text>
+                          <Text className="text-xs font-bold text-[#3FB87F]">{plan.savings}</Text>
                         )}
                         {!!plan.subtext && (
-                          <Text className="text-xs text-slate-500">{plan.subtext}</Text>
+                          <Text className="text-xs text-[#6B6A80]">{plan.subtext}</Text>
                         )}
                       </View>
                     </View>
                     <View className="items-end">
-                      <Text className="text-2xl font-black text-slate-900">{plan.price}</Text>
-                      <Text className="px-2 text-xs text-slate-500">{plan.label}</Text>
+                      <Text className="text-2xl font-black text-[#2B2A3D]">{plan.price}</Text>
+                      <Text className="px-2 text-xs text-[#6B6A80]">{plan.label}</Text>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -243,22 +243,22 @@ const PremiumScreen: React.FC = () => {
             disabled={!config.subscribeButton.enabled}
             className={cn(
               'mt-8 rounded-xl',
-              config.subscribeButton.enabled ? 'shadow-xl shadow-orange-200' : 'opacity-80'
+              config.subscribeButton.enabled ? 'shadow-xl shadow-[#FFE6A3]' : 'opacity-80'
             )}>
             {config.subscribeButton.enabled ? (
               <LinearGradient
-                colors={[Colors.orange400, Colors.orange600]}
+                colors={[theme.sun, theme.sunDeep]}
                 start={[0, 0]}
                 end={[1, 0]}
                 style={{ borderRadius: 10 }}
                 className="py-5">
-                <Text className="text-center text-lg font-bold text-white">
+                <Text className="text-center text-lg font-bold text-[#2B2A3D]">
                   {config.subscribeButton.label}
                 </Text>
               </LinearGradient>
             ) : (
-              <View className="rounded-xl bg-slate-300 py-5">
-                <Text className="text-center text-lg font-bold text-slate-700">
+              <View className="rounded-xl bg-[#D8D4C9] py-5">
+                <Text className="text-center text-lg font-bold text-[#6B6A80]">
                   {config.subscribeButton.disabledLabel}
                 </Text>
               </View>
@@ -266,10 +266,10 @@ const PremiumScreen: React.FC = () => {
           </AnimatedPressable>
 
           <View className="mb-10 mt-6 items-center">
-            <Text className="text-center text-xs text-slate-400">{config.footer.finePrint}</Text>
+            <Text className="text-center text-xs text-[#9A97A7]">{config.footer.finePrint}</Text>
             <View className="mt-2 flex-row gap-4">
               <TouchableOpacity onPress={() => termsRef.current?.present()}>
-                <Text className="text-xs font-medium text-orange-600 underline">
+                <Text className="text-xs font-medium text-[#E8527A] underline">
                   {config.terms.buttonLabel}
                 </Text>
               </TouchableOpacity>

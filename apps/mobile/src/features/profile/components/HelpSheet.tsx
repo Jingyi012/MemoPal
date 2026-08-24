@@ -1,6 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
-import { Colors } from '@/constants/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { useHelpFaqConfig } from '@/features/support/hooks/useHelpFaqConfig';
 import { HelpFaqItem } from '@/features/support/types/helpFaqConfig';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -49,22 +49,22 @@ const HelpSheet = forwardRef<Ref, HelpSheetProps>(({ router }, ref) => {
         ))}
 
         {/* Contact / Tutorial Options */}
-        <Text className="mb-3 mt-4 text-lg font-bold text-slate-900">Still need help?</Text>
+        <Text className="mb-3 mt-4 text-lg font-bold text-[#2B2A3D]">Still need help?</Text>
 
         <AnimatedPressable
           onPress={() => {
             bottomSheetRef.current?.dismiss();
             router.push('/tutorial');
           }}
-          className="mb-3 flex-row items-center gap-3 rounded-xl border border-teal-200 bg-teal-50 p-4">
-          <View className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100">
-            <Book className="h-5 w-5" color={Colors.teal600} />
+          className="mb-3 flex-row items-center gap-3 rounded-2xl border-2 border-[#BFE7D6] bg-[#F1FBF5] p-4">
+          <View className="flex h-10 w-10 items-center justify-center rounded-full bg-[#BFE7D6]">
+            <Book className="h-5 w-5" color={theme.grass} />
           </View>
           <View className="flex-1">
-            <Text className="font-medium text-slate-900">View Tutorial</Text>
-            <Text className="text-sm text-slate-600">Learn the basics</Text>
+            <Text className="font-medium text-[#2B2A3D]">View Tutorial</Text>
+            <Text className="text-sm text-[#6B6A80]">Learn the basics</Text>
           </View>
-          <ChevronRight className="h-5 w-5" color={Colors.slate400} />
+          <ChevronRight className="h-5 w-5" color={theme.inkSoft} />
         </AnimatedPressable>
 
         {/* <AnimatedPressable
@@ -89,15 +89,15 @@ const HelpSheet = forwardRef<Ref, HelpSheetProps>(({ router }, ref) => {
               bottomSheetRef.current?.dismiss();
               router.push('/support');
             }}
-            className="mb-6 flex-row items-center gap-3 rounded-xl bg-gray-50 p-4">
-            <View className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-              <Mail className="h-5 w-5" color={Colors.blue600} />
+            className="mb-6 flex-row items-center gap-3 rounded-2xl border-2 border-[#DCD4FF] bg-[#EEE9FF] p-4">
+            <View className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DCD4FF]">
+              <Mail className="h-5 w-5" color={theme.violetDeep} />
             </View>
             <View className="flex-1">
-              <Text className="font-medium text-slate-900">{support.emailButtonTitle}</Text>
-              <Text className="text-sm text-slate-600">{support.emailSubtitle || support.email}</Text>
+              <Text className="font-medium text-[#2B2A3D]">{support.emailButtonTitle}</Text>
+              <Text className="text-sm text-[#6B6A80]">{support.emailSubtitle || support.email}</Text>
             </View>
-            <ChevronRight className="h-5 w-5" color={Colors.slate400} />
+            <ChevronRight className="h-5 w-5" color={theme.inkSoft} />
           </AnimatedPressable>
         ) : null}
       </BottomSheetScrollView>
@@ -137,17 +137,17 @@ const AccordionItem = ({
     <View className="mb-2 overflow-hidden">
       <AnimatedPressable
         onPress={onPress}
-        className="mb-1 flex-row justify-between rounded-xl bg-gray-50 p-4 active:bg-gray-100">
-        <Text className="flex-1 pr-4 font-semibold text-slate-900">{item.question}</Text>
+        className="mb-1 flex-row justify-between rounded-2xl border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4 active:bg-[#F6F3EA]">
+        <Text className="flex-1 pr-4 font-semibold text-[#2B2A3D]">{item.question}</Text>
         <Animated.View style={chevronStyle}>
-          <ChevronRight className="h-5 w-5" color={Colors.slate400} />
+          <ChevronRight className="h-5 w-5" color={theme.inkSoft} />
         </Animated.View>
       </AnimatedPressable>
 
       <Animated.View style={contentStyle}>
         {/* We use a wrapper view to ensure padding doesn't mess up height calculations */}
         <View className="px-4 pb-4">
-          <Text className="text-sm leading-5 text-slate-600">{item.answer}</Text>
+          <Text className="text-sm leading-5 text-[#6B6A80]">{item.answer}</Text>
         </View>
       </Animated.View>
     </View>

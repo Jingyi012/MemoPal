@@ -30,19 +30,19 @@ export const SettingsRow: React.FC<Props> = ({
   };
 
   const content = (
-    <View className="flex-row items-center justify-between rounded-xl border border-[#EEE9DC] bg-white p-4">
+    <View className="flex-row items-center justify-between rounded-2xl border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4">
       <View className="flex-row items-center gap-3">
         {icon}
         <View>
-          <Text className="font-semibold text-slate-900">{title}</Text>
-          {subtitle && <Text className="text-xs text-slate-500">{subtitle}</Text>}
+          <Text className="font-semibold text-[#2B2A3D]">{title}</Text>
+          {subtitle && <Text className="text-xs text-[#6B6A80]">{subtitle}</Text>}
         </View>
       </View>
 
       {right === 'switch' ? (
         <Switch value={isEnabled} onValueChange={toggleSwitch} />
       ) : (
-        <ChevronRight size={18} color="#94a3b8" />
+        <ChevronRight size={18} color="#9A97A7" />
       )}
     </View>
   );

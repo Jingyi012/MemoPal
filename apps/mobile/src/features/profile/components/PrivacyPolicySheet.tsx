@@ -21,8 +21,8 @@ const PrivacyPolicySheet = forwardRef<Ref>((_, ref) => {
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 16 }}>
           {config.sections.map((section, index) => (
             <View key={`${index}-${section.heading}`} className="mb-3">
-              <Text className="mb-2 text-lg font-semibold">{section.heading}</Text>
-              <Text className="text-sm text-slate-600">{section.body}</Text>
+              <Text className="mb-2 text-lg font-semibold text-[#2B2A3D]">{section.heading}</Text>
+              <Text className="text-sm text-[#6B6A80]">{section.body}</Text>
             </View>
           ))}
         </BottomSheetScrollView>
