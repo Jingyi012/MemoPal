@@ -7,6 +7,7 @@ const HomeButton = () => {
   const router = useRouter();
   return (
     <AnimatedPressable
+      accessibilityLabel="Go to home"
       onPress={() => router.dismissAll()}
       className="h-10 w-10 items-center justify-center rounded-full bg-white/20">
       <Home size={20} color="white" />

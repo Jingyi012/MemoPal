@@ -219,6 +219,7 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
             placement.locus ? (
               <AnimatedPressable
                 key={placement.item.id}
+                accessibilityLabel={`Locus ${index + 1}: ${placement.locus.name}`}
                 onPress={() => mode === 'browse' && setActiveIndex(index)}
                 style={[
                   styles.marker,
@@ -285,6 +286,7 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
             <Text style={styles.walkAssociation}>{active.binding?.associationText}</Text>
             <View style={styles.walkActions}>
               <AnimatedPressable
+                accessibilityLabel="Previous locus"
                 disabled={activeIndex === 0}
                 onPress={() => setActiveIndex((value) => Math.max(0, value - 1))}
                 style={[styles.roundButton, activeIndex === 0 && styles.disabled]}>
@@ -292,6 +294,7 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
               </AnimatedPressable>
               <Text style={styles.count}>{activeIndex + 1} / {placements.length}</Text>
               <AnimatedPressable
+                accessibilityLabel={activeIndex === placements.length - 1 ? 'Restart Palace walk' : 'Next locus'}
                 onPress={() =>
                   activeIndex === placements.length - 1
                     ? setActiveIndex(0)

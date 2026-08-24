@@ -11,6 +11,7 @@ interface Actions {
   icon?: LucideIcon;
   onPress?: () => void;
   component?: ReactNode;
+  accessibilityLabel?: string;
 }
 
 interface HeaderProps {
@@ -52,6 +53,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
               leftComponent
             ) : (
               <AnimatedPressable
+                accessibilityLabel="Go back"
                 onPress={backAction}
                 style={styles.backButton}>
                 <ChevronLeft size={20} color={theme.ink} />
@@ -79,6 +81,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
                   const Icon = action.icon;
                   return (
                     <AnimatedPressable
+                      accessibilityLabel={action.accessibilityLabel}
                       key={index}
                       onPress={action.onPress}
                       style={styles.actionButton}>

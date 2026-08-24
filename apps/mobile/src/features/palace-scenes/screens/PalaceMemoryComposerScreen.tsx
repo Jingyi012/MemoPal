@@ -222,7 +222,7 @@ export default function PalaceMemoryComposerScreen() {
           <View key={`${item}-${index}`} style={styles.itemRow}>
             <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
             <View style={{ flex: 1 }}><Text style={styles.itemText}>{item}</Text><Text style={styles.locusText}>{loci[index]?.name ?? 'Choose a scene to assign a locus'}</Text></View>
-            <AnimatedPressable onPress={() => setItems((current) => current.filter((_, i) => i !== index))} style={styles.deleteButton}><Trash2 size={17} color={theme.inkSoft} /></AnimatedPressable>
+            <AnimatedPressable accessibilityLabel={`Remove ${item}`} onPress={() => setItems((current) => current.filter((_, i) => i !== index))} style={styles.deleteButton}><Trash2 size={17} color={theme.inkSoft} /></AnimatedPressable>
           </View>
         ))}
 
