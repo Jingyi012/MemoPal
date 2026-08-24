@@ -35,11 +35,19 @@ function findBinding(bindings: PegBinding[], memoryItem: MemoryItem) {
   return bindings.find((binding) => binding.memoryItemId === memoryItem.id);
 }
 
-export default function NumberPegSessionScreen({ memorySetId, restart = false }: { memorySetId: string; restart?: boolean }) {
+export default function NumberPegSessionScreen({
+  memorySetId,
+  restart = false,
+  startInRecall = false,
+}: {
+  memorySetId: string;
+  restart?: boolean;
+  startInRecall?: boolean;
+}) {
   const router = useRouter();
   const memorySetQuery = useMemorySet(memorySetId);
   const pegs = useMemo(() => buildNumberPegItems(), []);
-  const [tab, setTab] = useState<SessionTab>('scenes');
+  const [tab, setTab] = useState<SessionTab>(startInRecall ? 'recall' : 'scenes');
   const [sceneIndex, setSceneIndex] = useState(0);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState('');

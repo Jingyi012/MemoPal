@@ -31,13 +31,21 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 type SessionMode = 'browse' | 'walk' | 'list' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
 
-export default function PalaceMemorySessionScreen({ memorySetId, restart = false }: { memorySetId: string; restart?: boolean }) {
+export default function PalaceMemorySessionScreen({
+  memorySetId,
+  restart = false,
+  startInRecall = false,
+}: {
+  memorySetId: string;
+  restart?: boolean;
+  startInRecall?: boolean;
+}) {
   const router = useRouter();
   const memorySetQuery = useMemorySet(memorySetId);
   const sceneId = memorySetQuery.data?.techniquePlan?.palaceSceneId ?? '';
   const sceneQuery = usePalaceScene(sceneId);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [mode, setMode] = useState<SessionMode>('browse');
+  const [mode, setMode] = useState<SessionMode>(startInRecall ? 'recall' : 'browse');
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [score, setScore] = useState(0);

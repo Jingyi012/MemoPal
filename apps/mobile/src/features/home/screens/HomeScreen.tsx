@@ -119,8 +119,8 @@ const HomeScreen = () => {
               onStartReview={(review) =>
                 router.push(
                   review.techniqueKey === 'palace'
-                    ? `/palaces/memory/${review.memorySetId}`
-                    : `/number-peg/${review.memorySetId}`,
+                    ? `/palaces/memory/${review.memorySetId}?mode=recall`
+                    : `/number-peg/${review.memorySetId}?mode=recall`,
                 )
               }
             />
