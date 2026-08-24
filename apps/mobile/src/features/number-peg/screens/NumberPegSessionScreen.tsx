@@ -3,7 +3,7 @@ import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { RecallAnswerCard } from '@/components/RecallAnswerCard';
-import { ReturnToTodayButton } from '@/components/ReturnToTodayButton';
+import { RecallResultCard } from '@/components/RecallResultCard';
 import { NumberPegRehearsalCard } from '@/features/number-peg/components/NumberPegRehearsalCard';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
@@ -27,7 +27,7 @@ import {
 import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Play, RefreshCcw, Sparkles } from 'lucide-react-native';
+import { Play, Sparkles } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -303,37 +303,37 @@ export default function NumberPegSessionScreen({
       ) : (
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.recallContent}>
           {isComplete ? (
-            <View style={styles.completeCard}>
-              <Text style={styles.trophy}>🏆</Text>
-              <Text style={styles.completeTitle}>Round complete!</Text>
-              <Text style={styles.completeScore}>{score} / {memorySet.items.length}</Text>
-              <Text style={styles.completeBody}>
-                {score === memorySet.items.length
-                  ? 'Perfect recall. Your scenes are doing their job!'
-                  : 'Nice work. Replay the scenes you missed, then try once more.'}
-              </Text>
-              {practiceAttempt.isPending ? (
-                <Text style={styles.saveState}>Saving your progress…</Text>
-              ) : practiceAttempt.isError ? (
-                <View style={styles.saveError}>
-                  <Text style={styles.saveErrorText}>Progress was not saved. Your result is still here.</Text>
-                  <AnimatedPressable
-                    onPress={() => lastPayload && practiceAttempt.mutate(lastPayload)}
-                    style={styles.retrySaveButton}>
-                    <Text style={styles.retrySaveText}>Retry save</Text>
-                  </AnimatedPressable>
-                </View>
-              ) : practiceAttempt.data ? (
-                <Text style={styles.saveSuccess}>
-                  Saved ✓ Next review {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : 'will appear in Today'}
-                </Text>
-              ) : null}
-              <AnimatedPressable onPress={restartRecall} style={styles.primaryButton}>
-                <RefreshCcw size={18} color={theme.ink} />
-                <Text style={styles.primaryButtonText}>Try another round</Text>
-              </AnimatedPressable>
-              <ReturnToTodayButton onPress={() => router.replace('/(tabs)')} />
-            </View>
+            <RecallResultCard
+              tone="peg"
+              title="Round complete!"
+              score={score}
+              total={memorySet.items.length}
+              body={score === memorySet.items.length
+                ? 'Perfect recall. Your scenes are doing their job!'
+                : 'Nice work. Replay the scenes you missed, then try once more.'}
+              saveStatus={
+                practiceAttempt.isPending ? (
+                  <Text style={styles.saveState}>Saving your progress…</Text>
+                ) : practiceAttempt.isError ? (
+                  <View style={styles.saveError}>
+                    <Text style={styles.saveErrorText}>Progress was not saved. Your result is still here.</Text>
+                    <AnimatedPressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Retry saving progress"
+                      onPress={() => lastPayload && practiceAttempt.mutate(lastPayload)}
+                      style={styles.retrySaveButton}>
+                      <Text style={styles.retrySaveText}>Retry save</Text>
+                    </AnimatedPressable>
+                  </View>
+                ) : practiceAttempt.data ? (
+                  <Text style={styles.saveSuccess}>
+                    Saved ✓ Next review {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : 'will appear in Today'}
+                  </Text>
+                ) : null
+              }
+              onRetry={restartRecall}
+              onReturnToToday={() => router.replace('/(tabs)')}
+            />
           ) : (
             <>
               <View style={styles.dots}>
@@ -398,18 +398,12 @@ const styles = StyleSheet.create({
   pegName: { color: theme.berryDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.8, marginTop: 11 },
   sceneText: { color: theme.ink, fontSize: 13, lineHeight: 19, fontWeight: '700', marginTop: 5 },
   primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3, marginTop: 4 },
-  primaryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
   recallContent: { padding: 16, paddingBottom: 42, flexGrow: 1 },
   dots: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: 7, marginVertical: 7, minHeight: 12 },
   dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: theme.line },
   doneDot: { backgroundColor: theme.grass },
   currentDot: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.25 }] },
   quizEmoji: { fontSize: 36 },
-  completeCard: { flex: 1, minHeight: 390, borderRadius: 25, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 24, alignItems: 'center', justifyContent: 'center' },
-  trophy: { fontSize: 54 },
-  completeTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 22, marginTop: 12 },
-  completeScore: { color: theme.grass, fontFamily: typography.displayExtraBold, fontSize: 34, marginTop: 8 },
-  completeBody: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 8, marginBottom: 18 },
   saveState: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, marginBottom: 12 },
   saveSuccess: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center', marginBottom: 12 },
   saveError: { width: '100%', alignItems: 'center', marginBottom: 12 },

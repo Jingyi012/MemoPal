@@ -4,7 +4,7 @@ import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { RecallAnswerCard } from '@/components/RecallAnswerCard';
-import { ReturnToTodayButton } from '@/components/ReturnToTodayButton';
+import { RecallResultCard } from '@/components/RecallResultCard';
 import { PalaceFocusCard } from '@/features/palace-scenes/components/PalaceFocusCard';
 import { PalaceOrderedList } from '@/features/palace-scenes/components/PalaceOrderedList';
 import { useMemorySet } from '@/features/memory-sets';
@@ -350,41 +350,38 @@ export default function PalaceMemorySessionScreen({
           ) : null
         ) : mode === 'recall' ? (
           recallComplete ? (
-            <View style={styles.resultCard}>
-              <Text style={styles.resultEmoji}>🏆</Text>
-              <Text style={styles.resultTitle}>Palace recalled!</Text>
-              <Text style={styles.resultScore}>{score} / {placements.length}</Text>
-              <Text style={styles.resultBody}>
-                {score === placements.length
-                  ? 'Every locus led you to the right memory.'
-                  : 'Walk through the missed loci once more, then try another round.'}
-              </Text>
-              {practiceAttempt.isPending ? (
-                <Text style={styles.saveState}>Saving your progress…</Text>
-              ) : practiceAttempt.isError ? (
-                <View style={styles.saveError}>
-                  <Text style={styles.saveErrorText}>Progress was not saved. Your result is still here.</Text>
-                  <AnimatedPressable
-                    onPress={() => lastPayload && practiceAttempt.mutate(lastPayload)}
-                    style={styles.retrySaveButton}>
-                    <Text style={styles.retrySaveText}>Retry save</Text>
-                  </AnimatedPressable>
-                </View>
-              ) : practiceAttempt.data ? (
-                <Text style={styles.saveSuccess}>
-                  Saved ✓ Next review {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : 'will appear in Today'}
-                </Text>
-              ) : null}
-              <AnimatedPressable onPress={startRecall} style={styles.primaryButton}>
-                <Text style={styles.primaryText}>Try another round</Text>
-              </AnimatedPressable>
-              <AnimatedPressable
-                onPress={() => { setMode('walk'); setActiveIndex(0); }}
-                style={styles.secondaryButton}>
-                <Text style={styles.secondaryText}>Walk the Palace again</Text>
-              </AnimatedPressable>
-              <ReturnToTodayButton onPress={() => router.replace('/(tabs)')} />
-            </View>
+            <RecallResultCard
+              tone="palace"
+              title="Palace recalled!"
+              score={score}
+              total={placements.length}
+              body={score === placements.length
+                ? 'Every locus led you to the right memory.'
+                : 'Walk through the missed loci once more, then try another round.'}
+              saveStatus={
+                practiceAttempt.isPending ? (
+                  <Text style={styles.saveState}>Saving your progress…</Text>
+                ) : practiceAttempt.isError ? (
+                  <View style={styles.saveError}>
+                    <Text style={styles.saveErrorText}>Progress was not saved. Your result is still here.</Text>
+                    <AnimatedPressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Retry saving progress"
+                      onPress={() => lastPayload && practiceAttempt.mutate(lastPayload)}
+                      style={styles.retrySaveButton}>
+                      <Text style={styles.retrySaveText}>Retry save</Text>
+                    </AnimatedPressable>
+                  </View>
+                ) : practiceAttempt.data ? (
+                  <Text style={styles.saveSuccess}>
+                    Saved ✓ Next review {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : 'will appear in Today'}
+                  </Text>
+                ) : null
+              }
+              onRetry={startRecall}
+              secondaryAction={{ label: 'Walk the Palace again', onPress: () => { setMode('walk'); setActiveIndex(0); } }}
+              onReturnToToday={() => router.replace('/(tabs)')}
+            />
           ) : active ? (
             <RecallAnswerCard
               tone="palace"
@@ -477,11 +474,6 @@ const styles = StyleSheet.create({
   primaryText: { color: theme.ink, fontSize: 14, fontWeight: '900', textAlign: 'center' },
   secondaryButton: { width: '100%', minHeight: 49, borderRadius: 16, borderWidth: 2, borderColor: '#9B8CFF', backgroundColor: '#F7F5FF', alignItems: 'center', justifyContent: 'center', marginTop: 12, paddingHorizontal: 16 },
   secondaryText: { color: '#6654D9', fontSize: 14, fontWeight: '900' },
-  resultCard: { minHeight: 360, borderRadius: 23, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: theme.paper, padding: 24, alignItems: 'center', justifyContent: 'center' },
-  resultEmoji: { fontSize: 52 },
-  resultTitle: { color: theme.ink, fontSize: 22, fontWeight: '900', marginTop: 10 },
-  resultScore: { color: theme.grass, fontSize: 34, fontWeight: '900', marginTop: 8 },
-  resultBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 8, marginBottom: 14 },
   saveState: { color: theme.inkSoft, fontSize: 12, fontWeight: '800', marginBottom: 8 },
   saveSuccess: { color: theme.grass, fontSize: 12, lineHeight: 18, fontWeight: '900', textAlign: 'center', marginBottom: 8 },
   saveError: { width: '100%', alignItems: 'center', marginBottom: 8 },
