@@ -15,6 +15,34 @@ import {
   suggestMemoryTitle,
 } from '../src/features/memory-composer/utils/composerParams.ts';
 import { buildNumberPegItems, buildPegScene } from '../src/features/number-peg/utils/numberPegMap.ts';
+import {
+  choosePalaceScene,
+  getPalaceCapacityMessage,
+  getPalaceLoci,
+} from '../src/features/palace-scenes/utils/palaceCapacity.ts';
+
+const makeScene = (id, locusCount) => ({
+  id,
+  name: id,
+  description: '',
+  imageUrl: '',
+  status: 'published',
+  isTemplate: true,
+  isPremium: false,
+  version: 1,
+  loci: Array.from({ length: locusCount }, (_, index) => ({
+    id: `${id}-${index + 1}`,
+    position: index + 1,
+    name: `Locus ${index + 1}`,
+    xPercent: 50,
+    yPercent: 50,
+    radiusPercent: 7,
+    createdAt: '',
+    updatedAt: '',
+  })),
+  createdAt: '',
+  updatedAt: '',
+});
 
 test('normalizes recall answers for case and whitespace differences', () => {
   assert.equal(normalizeRecallAnswer('  Solar   System '), 'SOLAR SYSTEM');
@@ -68,4 +96,20 @@ test('keeps the peg map ordered and makes each scene vivid', () => {
   assert.equal(pegs[9].number, 10);
   assert.match(scene, /swan/i);
   assert.match(scene, /apples/);
+});
+
+test('chooses the smallest Palace that fits and explains overflow clearly', () => {
+  const compact = makeScene('compact', 6);
+  const roomy = makeScene('roomy', 12);
+  const scenes = [roomy, compact];
+
+  assert.equal(choosePalaceScene(scenes, 5).id, 'compact');
+  assert.equal(choosePalaceScene(scenes, 8).id, 'roomy');
+  assert.equal(choosePalaceScene(scenes, 20).id, 'roomy');
+  assert.equal(choosePalaceScene(scenes, 5, 'roomy').id, 'roomy');
+  assert.equal(getPalaceLoci(roomy).length, 12);
+  assert.equal(
+    getPalaceCapacityMessage(15, 12),
+    'This list has 15 items, but the largest available Palace has 12 loci. Remove 3 items or create a second memory.',
+  );
 });

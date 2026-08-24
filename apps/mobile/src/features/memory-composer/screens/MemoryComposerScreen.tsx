@@ -197,10 +197,10 @@ function TechniqueCard({ technique, recommended, onPress }: { technique: Techniq
       <Text style={styles.techniqueDescription}>
         {isPeg
           ? 'Each number has a fixed anchor image. Picture it doing something wild to your word to lock it in.'
-          : 'Place each item at a spot in a room, then walk through it to recall everything in order.'}
+          : 'Place each item at a spot in a room, then walk through it to recall everything in order. Choose a room with enough loci for your list.'}
       </Text>
       <View style={styles.bestForRow}>
-        {(isPeg ? ['Short lists', 'Spelling words', 'Up to 10'] : ['Longer lists', 'Sequences', 'Visual rooms']).map((label) => (
+        {(isPeg ? ['Short lists', 'Spelling words', 'Up to 10'] : ['Longer lists', 'Sequences', 'Room capacity']).map((label) => (
           <Text key={label} style={styles.bestFor}>{label}</Text>
         ))}
       </View>
