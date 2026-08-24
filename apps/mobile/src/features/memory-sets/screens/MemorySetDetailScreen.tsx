@@ -4,13 +4,15 @@ import LoadingView from '@/components/LoadingView';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { usePracticeAttemptHistory } from '@/features/practice-attempts';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, Check, Hash, MapPinned, RefreshCcw } from 'lucide-react-native';
+import { AlertCircle, ArrowRight, Check, Circle, Hash, MapPinned, RefreshCcw, X } from 'lucide-react-native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: string }) {
   const router = useRouter();
   const query = useMemorySet(memorySetId);
+  const historyQuery = usePracticeAttemptHistory(memorySetId);
 
   if (query.isLoading) return <LoadingView description="Opening your session…" />;
 
@@ -33,6 +35,8 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
 
   const memorySet = query.data;
   const isPalace = memorySet.techniqueKey === 'palace';
+  const latestAttempt = historyQuery.data?.[0] ?? null;
+  const responseByItemId = new Map(latestAttempt?.responses.map((response) => [response.memoryItemId, response]) ?? []);
   const playerRoute = (isPalace ? `/palaces/memory/${memorySet.id}` : `/number-peg/${memorySet.id}`) as Href;
   const retryRoute = (isPalace ? `/palaces/memory/${memorySet.id}?restart=1` : `/number-peg/${memorySet.id}?restart=1`) as Href;
 
@@ -45,11 +49,14 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
         backAction={() => router.back()}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SummaryCard memorySet={memorySet} />
+        <SummaryCard memorySet={memorySet} latestAttempt={latestAttempt} />
 
         <Text style={styles.sectionLabel}>Your memory items</Text>
         <View style={styles.itemList}>
-          {memorySet.items.map((item) => (
+          {memorySet.items.map((item) => {
+            const response = responseByItemId.get(item.id);
+            const status = getItemStatus(response, Boolean(latestAttempt));
+            return (
             <View key={item.id} style={styles.itemRow}>
               <View style={[styles.itemNumber, isPalace ? styles.itemNumberPalace : styles.itemNumberPeg]}>
                 <Text style={styles.itemNumberText}>{item.position}</Text>
@@ -59,11 +66,17 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
                 <Text numberOfLines={1} style={styles.itemAnswer}>{item.answer}</Text>
               </View>
               <View style={styles.readyBadge}>
-                <Check size={13} color={theme.grass} />
-                <Text style={styles.readyText}>Ready</Text>
+                {status === 'recalled' ? <Check size={13} color={theme.grass} /> : null}
+                {status === 'needs-review' ? <X size={13} color={theme.berryDeep} /> : null}
+                {status === 'not-tried' ? <AlertCircle size={13} color={theme.inkSoft} /> : null}
+                {status === 'ready' ? <Circle size={11} color={theme.inkSoft} /> : null}
+                <Text style={[styles.readyText, status === 'needs-review' && styles.needsReviewText, status === 'not-tried' && styles.notTriedText]}>
+                  {statusLabel(status)}
+                </Text>
               </View>
             </View>
-          ))}
+            );
+          })}
         </View>
 
         <AnimatedPressable onPress={() => router.push(playerRoute)} style={styles.primaryButton}>
@@ -79,8 +92,9 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
   );
 }
 
-function SummaryCard({ memorySet }: { memorySet: MemorySet }) {
+function SummaryCard({ memorySet, latestAttempt }: { memorySet: MemorySet; latestAttempt: { correctCount: number; totalCount: number; completedAt: string } | null }) {
   const isPalace = memorySet.techniqueKey === 'palace';
+  const summaryMeta = getSummaryMeta(memorySet, latestAttempt);
   return (
     <View style={styles.summaryCard}>
       <View style={[styles.summaryIcon, isPalace ? styles.summaryIconPalace : styles.summaryIconPeg]}>
@@ -91,10 +105,38 @@ function SummaryCard({ memorySet }: { memorySet: MemorySet }) {
           {isPalace ? 'MEMORY PALACE' : 'NUMBER PEG'}
         </Text>
         <Text style={styles.summaryTitle}>{memorySet.title}</Text>
-        <Text style={styles.summaryMeta}>{memorySet.items.length} items · Ready to practice</Text>
+        <Text style={styles.summaryMeta}>{summaryMeta}</Text>
       </View>
     </View>
   );
+}
+
+type ItemStatus = 'recalled' | 'needs-review' | 'not-tried' | 'ready';
+
+function getItemStatus(response: { isCorrect: boolean } | undefined, hasAttempt: boolean): ItemStatus {
+  if (!hasAttempt) return 'ready';
+  if (!response) return 'not-tried';
+  return response.isCorrect ? 'recalled' : 'needs-review';
+}
+
+function statusLabel(status: ItemStatus) {
+  switch (status) {
+    case 'recalled': return 'Recalled';
+    case 'needs-review': return 'Review';
+    case 'not-tried': return 'Not tried';
+    default: return 'Ready';
+  }
+}
+
+function getSummaryMeta(memorySet: MemorySet, latestAttempt: { correctCount: number; totalCount: number; completedAt: string } | null) {
+  if (!latestAttempt) return `${memorySet.items.length} items · Ready to practice`;
+  if (latestAttempt.totalCount < memorySet.items.length) {
+    return `${latestAttempt.correctCount}/${latestAttempt.totalCount} correct · In progress`;
+  }
+  if (latestAttempt.correctCount === latestAttempt.totalCount) {
+    return `${latestAttempt.correctCount}/${latestAttempt.totalCount} correct · Last round perfect`;
+  }
+  return `${latestAttempt.correctCount}/${latestAttempt.totalCount} correct · Keep practicing`;
 }
 
 const styles = StyleSheet.create({
@@ -123,6 +165,8 @@ const styles = StyleSheet.create({
   itemAnswer: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 2 },
   readyBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 8 },
   readyText: { color: theme.grass, fontSize: 10, fontWeight: '900' },
+  needsReviewText: { color: theme.berryDeep },
+  notTriedText: { color: theme.inkSoft },
   primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
   primaryButtonText: { color: theme.ink, fontSize: 15, fontWeight: '900' },
   secondaryButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 4 },

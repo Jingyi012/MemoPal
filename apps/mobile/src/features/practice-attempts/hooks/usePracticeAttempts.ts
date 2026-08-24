@@ -1,5 +1,6 @@
 import { practiceAttemptApi } from '@/features/practice-attempts/api/practiceAttempt.api';
 import { getLocalPreviewMemorySet, isLocalPreviewEnabled } from '@/core/dev/localPreviewData';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {
   PracticeAttempt,
   PracticeAttemptInput,
@@ -9,13 +10,20 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 export const PRACTICE_KEYS = {
   all: ['practice-attempts'] as const,
   due: () => [...PRACTICE_KEYS.all, 'due'] as const,
+  history: (memorySetId: string) => [...PRACTICE_KEYS.all, 'history', memorySetId] as const,
 };
+
+const LOCAL_PREVIEW_ATTEMPTS_KEY = 'memopal:preview:practice-attempts';
 
 export function useCreatePracticeAttempt() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (attempt: PracticeAttemptInput) => {
-      if (isLocalPreviewEnabled) return createLocalPreviewAttempt(attempt);
+      if (isLocalPreviewEnabled) {
+        const created = createLocalPreviewAttempt(attempt);
+        await saveLocalPreviewAttempt(created);
+        return created;
+      }
       const results = await practiceAttemptApi.createBatch([attempt]);
       const created = results[0];
       if (!created) throw new Error('The practice result was not saved.');
@@ -23,7 +31,26 @@ export function useCreatePracticeAttempt() {
     },
     retry: false,
     networkMode: 'online',
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.due() }),
+    onSuccess: (attempt) => {
+      void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.due() });
+      void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.history(attempt.memorySetId) });
+    },
+  });
+}
+
+export function usePracticeAttemptHistory(memorySetId: string) {
+  return useQuery({
+    queryKey: PRACTICE_KEYS.history(memorySetId),
+    enabled: Boolean(memorySetId),
+    queryFn: async () => {
+      if (isLocalPreviewEnabled) {
+        const attempts = await loadLocalPreviewAttempts();
+        return attempts.filter((attempt) => attempt.memorySetId === memorySetId);
+      }
+      return practiceAttemptApi.getHistory(memorySetId);
+    },
+    staleTime: 1000 * 30,
+    networkMode: 'online',
   });
 }
 
@@ -42,7 +69,7 @@ function createLocalPreviewAttempt(attempt: PracticeAttemptInput): PracticeAttem
   const correctCount = attempt.responses.filter((response) => response.isCorrect).length;
   const techniqueKey = getLocalPreviewMemorySet(attempt.memorySetId)?.techniqueKey ?? 'number-peg';
 
-  return {
+  const created: PracticeAttempt = {
     id: `preview-attempt-${Date.now()}`,
     clientAttemptId: attempt.clientAttemptId,
     memorySetId: attempt.memorySetId,
@@ -68,4 +95,25 @@ function createLocalPreviewAttempt(attempt: PracticeAttemptInput): PracticeAttem
     createdBy,
     updatedBy: createdBy,
   };
+  return created;
+}
+
+async function loadLocalPreviewAttempts(): Promise<PracticeAttempt[]> {
+  const raw = await AsyncStorage.getItem(LOCAL_PREVIEW_ATTEMPTS_KEY);
+  if (!raw) return [];
+  try {
+    const attempts = JSON.parse(raw) as PracticeAttempt[];
+    return Array.isArray(attempts) ? attempts : [];
+  } catch {
+    await AsyncStorage.removeItem(LOCAL_PREVIEW_ATTEMPTS_KEY);
+    return [];
+  }
+}
+
+async function saveLocalPreviewAttempt(attempt: PracticeAttempt) {
+  const attempts = await loadLocalPreviewAttempts();
+  await AsyncStorage.setItem(
+    LOCAL_PREVIEW_ATTEMPTS_KEY,
+    JSON.stringify([attempt, ...attempts].slice(0, 20))
+  );
 }

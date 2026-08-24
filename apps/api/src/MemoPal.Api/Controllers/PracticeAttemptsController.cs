@@ -26,6 +26,17 @@ public sealed class PracticeAttemptsController : ApiControllerBase
         return Ok(result);
     }
 
+    [HttpGet("memory-set/{memorySetId}")]
+    public async Task<IActionResult> GetHistory(
+        string memorySetId,
+        CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new GetPracticeAttemptHistoryQuery(GetUserIdOrThrow(), memorySetId),
+            cancellationToken);
+        return Ok(result);
+    }
+
     [HttpGet("/v2/reviews/due")]
     public async Task<IActionResult> GetDue(CancellationToken cancellationToken)
     {

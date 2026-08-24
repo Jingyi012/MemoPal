@@ -21,4 +21,12 @@ export const practiceAttemptApi = {
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },
+
+  async getHistory(memorySetId: string): Promise<PracticeAttempt[]> {
+    const response = await api.get<GeneralResponse<PracticeAttempt[]>>(
+      `/v2/practice-attempts/memory-set/${encodeURIComponent(memorySetId)}`
+    );
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
 };
