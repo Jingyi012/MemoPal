@@ -3,6 +3,8 @@ import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useMemorySetMutations } from '@/features/memory-sets';
 import type { MemorySetUpsertRequest } from '@/features/memory-sets';
+import { PalaceAssociationEditor } from '@/features/palace-scenes/components/PalaceAssociationEditor';
+import { PalaceLocusMap } from '@/features/palace-scenes/components/PalaceLocusMap';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
@@ -13,6 +15,11 @@ import {
   getPalaceLoci,
   sceneFitsPalaceItems,
 } from '@/features/palace-scenes/utils/palaceCapacity';
+import {
+  createPalaceAssociation,
+  ensurePalaceAssociations,
+  getAssociationText,
+} from '@/features/palace-scenes/utils/palaceAuthoring';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight, Check, Image as ImageIcon, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
@@ -33,6 +40,8 @@ export default function PalaceMemoryComposerScreen() {
   const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
   const [newItem, setNewItem] = useState('');
   const [items, setItems] = useState<string[]>(() => prefilledItems);
+  const [associations, setAssociations] = useState<string[]>([]);
+  const [activeLocusIndex, setActiveLocusIndex] = useState(0);
   const [selectedSceneId, setSelectedSceneId] = useState(() => firstParam(params.sceneId) ?? '');
   const [message, setMessage] = useState<string | null>(null);
 
@@ -49,11 +58,17 @@ export default function PalaceMemoryComposerScreen() {
     () => scenesQuery.data?.find((scene) => scene.id === selectedSceneId),
     [scenesQuery.data, selectedSceneId]
   );
-  const loci = getPalaceLoci(selectedScene);
+  const loci = useMemo(() => getPalaceLoci(selectedScene), [selectedScene]);
   const selectedSceneCapacity = getPalaceCapacity(selectedScene);
   const capacityMessage = selectedScene
     ? getPalaceCapacityMessage(items.length, selectedSceneCapacity)
     : null;
+
+  useEffect(() => {
+    if (!loci.length || !items.length) return;
+    setAssociations((current) => ensurePalaceAssociations(items, loci, current));
+    setActiveLocusIndex((current) => Math.min(current, items.length - 1));
+  }, [items, loci]);
 
   const addItem = () => {
     const value = newItem.trim();
@@ -65,6 +80,11 @@ export default function PalaceMemoryComposerScreen() {
       return;
     }
     setItems((current) => [...current, value]);
+    setAssociations((current) => [
+      ...current,
+      createPalaceAssociation(value, loci[items.length]?.name ?? `locus ${items.length + 1}`),
+    ]);
+    setActiveLocusIndex(items.length);
     setNewItem('');
     setMessage(null);
     createMemorySet.reset();
@@ -93,7 +113,7 @@ export default function PalaceMemoryComposerScreen() {
         palaceBindings: items.map((answer, index) => ({
           itemPosition: index + 1,
           locusId: loci[index].id,
-          associationText: `${answer} comes alive at the ${loci[index].name}.`,
+          associationText: getAssociationText(associations, index, answer, loci[index]),
           isCustomScene: true,
         })),
       },
@@ -154,6 +174,11 @@ export default function PalaceMemoryComposerScreen() {
                   key={scene.id}
                   onPress={() => {
                     setSelectedSceneId(scene.id);
+                    const sceneLoci = getPalaceLoci(scene);
+                    setAssociations(items.map((item, index) =>
+                      createPalaceAssociation(item, sceneLoci[index]?.name ?? `locus ${index + 1}`),
+                    ));
+                    setActiveLocusIndex(0);
                     setMessage(
                       fits
                         ? null
@@ -187,20 +212,15 @@ export default function PalaceMemoryComposerScreen() {
               </View>
               <Text style={styles.previewCount}>{items.length}/{loci.length} placed</Text>
             </View>
-            <View style={styles.canvas}>
-              <AppImage imageUrl={selectedScene.imageUrl} style={StyleSheet.absoluteFillObject} />
-              {loci.map((locus, index) => (
-                <View
-                  key={locus.id}
-                  style={[
-                    styles.marker,
-                    index < items.length && styles.markerPlaced,
-                    { left: `${locus.xPercent}%`, top: `${locus.yPercent}%` },
-                  ]}>
-                  <Text style={styles.markerText}>{index + 1}</Text>
-                </View>
-              ))}
-            </View>
+            <PalaceLocusMap
+              activeIndex={activeLocusIndex}
+              loci={loci}
+              onSelect={(index) => {
+                if (index < items.length) setActiveLocusIndex(index);
+              }}
+              placedCount={items.length}
+              scene={selectedScene}
+            />
             <Text style={styles.canvasHint}>
               Markers show the order your memory will follow. Add an item to place it on the next marker.
             </Text>
@@ -210,6 +230,18 @@ export default function PalaceMemoryComposerScreen() {
                 <Text style={styles.capacityText}>{capacityMessage}</Text>
               </View>
             )}
+            <PalaceAssociationEditor
+              activeIndex={activeLocusIndex}
+              associations={associations}
+              items={items}
+              loci={loci}
+              onChangeAssociation={(value) =>
+                setAssociations((current) =>
+                  current.map((entry, index) => (index === activeLocusIndex ? value : entry)),
+                )
+              }
+              onSelectIndex={setActiveLocusIndex}
+            />
           </>
         )}
 
@@ -222,7 +254,16 @@ export default function PalaceMemoryComposerScreen() {
           <View key={`${item}-${index}`} style={styles.itemRow}>
             <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
             <View style={{ flex: 1 }}><Text style={styles.itemText}>{item}</Text><Text style={styles.locusText}>{loci[index]?.name ?? 'Choose a scene to assign a locus'}</Text></View>
-            <AnimatedPressable accessibilityLabel={`Remove ${item}`} onPress={() => setItems((current) => current.filter((_, i) => i !== index))} style={styles.deleteButton}><Trash2 size={17} color={theme.inkSoft} /></AnimatedPressable>
+            <AnimatedPressable
+              accessibilityLabel={`Remove ${item}`}
+              onPress={() => {
+                setItems((current) => current.filter((_, i) => i !== index));
+                setAssociations((current) => current.filter((_, i) => i !== index));
+                setActiveLocusIndex((current) => Math.min(current, Math.max(0, items.length - 2)));
+              }}
+              style={styles.deleteButton}>
+              <Trash2 size={17} color={theme.inkSoft} />
+            </AnimatedPressable>
           </View>
         ))}
 
@@ -244,7 +285,7 @@ const styles = StyleSheet.create({
   input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 14, color: theme.ink, fontSize: 14, fontWeight: '700' },
   sceneRail: { marginHorizontal: -16, paddingLeft: 16 }, sceneOption: { width: 172, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8, marginRight: 10 }, sceneOptionActive: { borderColor: '#7A68E0', backgroundColor: '#F7F5FF' }, sceneOptionLimited: { opacity: 0.72 }, sceneThumb: { height: 92, borderRadius: 12 }, sceneName: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 8 }, sceneMeta: { color: theme.inkSoft, fontSize: 10, fontWeight: '700', marginTop: 2 },
   previewHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 19, marginBottom: 9 }, previewEyebrow: { color: theme.violetDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.9 }, previewTitle: { color: theme.ink, fontSize: 15, fontWeight: '900', marginTop: 3 }, previewCount: { color: theme.violetDeep, backgroundColor: '#EEE9FF', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontSize: 10, fontWeight: '900' },
-  canvas: { height: 250, borderRadius: 22, overflow: 'hidden', marginTop: 0, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#EAE5D8' }, canvasHint: { color: theme.inkSoft, fontSize: 11, lineHeight: 17, fontWeight: '700', textAlign: 'center', marginTop: 8 }, capacityCard: { marginTop: 11, borderRadius: 14, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 12 }, capacityTitle: { color: theme.ink, fontSize: 12, fontWeight: '900' }, capacityText: { color: theme.inkSoft, fontSize: 11, lineHeight: 17, fontWeight: '700', marginTop: 3 }, marker: { position: 'absolute', width: 32, height: 32, marginLeft: -16, marginTop: -16, borderRadius: 16, backgroundColor: '#9B8CFF', borderWidth: 3, borderColor: 'white', alignItems: 'center', justifyContent: 'center', shadowColor: '#241F38', shadowOpacity: 0.3, shadowRadius: 4, elevation: 4 }, markerPlaced: { backgroundColor: theme.sunDeep }, markerText: { color: 'white', fontSize: 12, fontWeight: '900' },
+  canvasHint: { color: theme.inkSoft, fontSize: 11, lineHeight: 17, fontWeight: '700', textAlign: 'center', marginTop: 8 }, capacityCard: { marginTop: 11, borderRadius: 14, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 12 }, capacityTitle: { color: theme.ink, fontSize: 12, fontWeight: '900' }, capacityText: { color: theme.inkSoft, fontSize: 11, lineHeight: 17, fontWeight: '700', marginTop: 3 },
   emptyScenes: { borderWidth: 2, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.paper, padding: 18, alignItems: 'center' }, helper: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, textAlign: 'center' }, refreshButton: { marginTop: 10, flexDirection: 'row', gap: 6, backgroundColor: theme.sun, borderRadius: 11, paddingHorizontal: 12, paddingVertical: 8 }, refreshText: { color: theme.ink, fontSize: 12, fontWeight: '900' },
   addRow: { flexDirection: 'row', gap: 9 }, addButton: { width: 50, height: 50, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center' },
   itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line }, itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center' }, itemNumberText: { color: 'white', fontSize: 11, fontWeight: '900' }, itemText: { color: theme.ink, fontSize: 13, fontWeight: '900', marginLeft: 11 }, locusText: { color: theme.inkSoft, fontSize: 10, fontWeight: '700', marginLeft: 11, marginTop: 2 }, deleteButton: { width: 39, height: 39, alignItems: 'center', justifyContent: 'center' },

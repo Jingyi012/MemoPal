@@ -21,6 +21,11 @@ import {
   getPalaceCapacityMessage,
   getPalaceLoci,
 } from '../src/features/palace-scenes/utils/palaceCapacity.ts';
+import {
+  createPalaceAssociation,
+  ensurePalaceAssociations,
+  getAssociationText,
+} from '../src/features/palace-scenes/utils/palaceAuthoring.ts';
 import { isNetworkStateOnline } from '../src/core/network/networkState.ts';
 
 const makeScene = (id, locusCount) => ({
@@ -66,6 +71,23 @@ test('upserts a retry without creating duplicate item responses', () => {
     attemptCount: 2,
     responseMs: 220,
   });
+});
+
+test('keeps Palace associations vivid and editable per locus', () => {
+  const loci = [{ name: 'front door' }, { name: 'blue sofa' }];
+
+  assert.equal(
+    createPalaceAssociation('mitosis', 'front door'),
+    'mitosis comes alive at the front door.',
+  );
+  assert.deepEqual(
+    ensurePalaceAssociations(['mitosis', 'meiosis'], loci, ['Custom scene']),
+    ['Custom scene', 'meiosis comes alive at the blue sofa.'],
+  );
+  assert.equal(
+    getAssociationText(['  '], 0, 'mitosis', loci[0]),
+    'mitosis comes alive at the front door.',
+  );
 });
 
 test('recommends the right module for common memory goals', () => {
