@@ -1,4 +1,5 @@
 import { Check, Crown, Lock } from 'lucide-react-native';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { Text, View } from 'react-native';
 
 interface Props {
@@ -14,19 +15,19 @@ export const MilestoneRow: React.FC<Props> = ({ title, refs, rewardLabel, curren
   const isCompleted = current >= refs;
   return (
     <View
-      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-slate-50' : ''}`}>
+      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#EEE9DC]' : ''}`}>
       <View className="flex-row items-center">
         <View
-          className={`mr-4 h-9 w-9 items-center justify-center rounded-full ${isCompleted ? 'bg-green-100' : 'bg-slate-50'}`}>
-          {isAwarded ? <Check size={18} color="#16a34a" /> : <Lock size={18} color="#cbd5e1" />}
+          className={`mr-4 h-9 w-9 items-center justify-center rounded-full ${isCompleted ? 'bg-[#F1FBF5]' : 'bg-[#F6F3EA]'}`}>
+          {isAwarded ? <Check size={18} color={theme.grass} /> : <Lock size={18} color="#9A97A7" />}
         </View>
         <View>
-          <Text className={`text-sm font-bold ${isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>{title}</Text>
-          <Text className='text-xs text-slate-500'>{rewardLabel}</Text>
-          <Text className="text-xs text-slate-400">{refs} Friends required</Text>
+          <Text className={`text-sm font-bold ${isCompleted ? 'text-[#2B2A3D]' : 'text-[#9A97A7]'}`}>{title}</Text>
+          <Text className="text-xs text-[#6B6A80]">{rewardLabel}</Text>
+          <Text className="text-xs text-[#9A97A7]">{refs} Friends required</Text>
         </View>
       </View>
-      {isAwarded && <Crown size={18} color="#f59e0b" />}
+      {isAwarded && <Crown size={18} color={theme.sunDeep} />}
     </View>
   );
 };

@@ -1,6 +1,7 @@
 import { BaseCard } from '@/components/BaseCard';
 import { StepNavigationFooter } from '@/components/StepNavigationFooter';
 import { GradientColors } from '@/core/types/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Brain, ChevronLeft, Eye, Play, Repeat, Trophy } from 'lucide-react-native';
 import React, { useState } from 'react';
@@ -27,7 +28,7 @@ const tutorialSteps: TutorialStep[] = [
     id: 1,
     title: 'What is a Memory Palace?',
     icon: Brain,
-    colors: ['#a855f7', '#4f46e5'],
+    colors: [theme.violetDeep, theme.berryDeep],
     content:
       "A Memory Palace is a mental journey through a familiar place. Each location becomes an anchor for memories. This ancient technique, used by memory champions, leverages your brain's natural ability to remember spaces.",
     example: 'Imagine your home: front door -> living room -> kitchen. Each location holds a memory.',
@@ -36,7 +37,7 @@ const tutorialSteps: TutorialStep[] = [
     id: 2,
     title: 'Visualize & Associate',
     icon: Eye,
-    colors: ['#14b8a6', '#0891b2'],
+    colors: [theme.sky, theme.violetDeep],
     content:
       'The key is creating vivid, unusual mental images. The more bizarre and emotional the image, the better it sticks. Link each word to a specific location in your palace.',
     example: 'To remember "elephant," imagine a giant pink elephant squeezed into your front door.',
@@ -45,7 +46,7 @@ const tutorialSteps: TutorialStep[] = [
     id: 3,
     title: 'Mental Journey',
     icon: Play,
-    colors: ['#f97316', '#dc2626'],
+    colors: [theme.berry, theme.berryDeep],
     content:
       'Walk through your palace in the same order every time. Visit each location and recall the vivid image you created. This mental journey retrieves all your memories in sequence.',
     example: 'Walk from room to room, collecting each memory as you go.',
@@ -54,7 +55,7 @@ const tutorialSteps: TutorialStep[] = [
     id: 4,
     title: 'Spaced Repetition',
     icon: Repeat,
-    colors: ['#22c55e', '#059669'],
+    colors: [theme.grass, '#247B67'],
     content:
       'Review at specific intervals (24h, 3d, 7d, 30d) to combat the forgetting curve. Each review strengthens the memory and moves it from short-term to long-term storage.',
     example: 'Complete all 4 reviews to achieve 90%+ retention rate.',
@@ -63,7 +64,7 @@ const tutorialSteps: TutorialStep[] = [
     id: 5,
     title: 'Practice & Master',
     icon: Trophy,
-    colors: ['#eab308', '#d97706'],
+    colors: [theme.sun, theme.sunDeep],
     content:
       'Start with small palaces (10 locations) and gradually increase. Build muscle memory by using the same palace for different word sets. Consistency beats intensity!',
     example: 'Master the Beginner Palace before creating custom ones.',
@@ -160,7 +161,7 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
 
         <View className="mb-4 items-center">
           <View className="h-24 w-24 items-center justify-center rounded-full bg-white shadow-xl">
-            <Icon size={48} color="#374151" />
+            <Icon size={48} color={theme.ink} />
           </View>
         </View>
 
@@ -174,12 +175,12 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
         showsVerticalScrollIndicator={false}
         style={animatedContentStyle}>
         <View className="space-y-6 pb-10">
-          <BaseCard className="border-gray-100" radius="3xl" padding="lg" shadow="sm">
-            <Text className="text-base leading-6 text-slate-600">{step.content}</Text>
+          <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8]" radius="3xl" padding="lg" shadow="sm">
+            <Text className="text-base leading-6 text-[#6B6A80]">{step.content}</Text>
           </BaseCard>
 
           <BaseCard
-            className="mt-3 flex-row border-purple-100 bg-purple-50"
+            className="mt-3 flex-row border-2 border-[#E0D9FF] bg-[#EEE9FF]"
             radius="3xl"
             padding="lg"
             shadow="none">
@@ -187,25 +188,25 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
               <Text className="text-lg">i</Text>
             </View>
             <View className="flex-1">
-              <Text className="mb-1 font-bold text-purple-900">Example</Text>
-              <Text className="text-sm leading-5 text-purple-800">{step.example}</Text>
+              <Text className="mb-1 font-bold text-[#7A68E0]">Example</Text>
+              <Text className="text-sm leading-5 text-[#6B6A80]">{step.example}</Text>
             </View>
           </BaseCard>
 
           {currentStep === 1 && (
             <BaseCard
-              className="mt-3 border-teal-100 bg-teal-50"
+              className="mt-3 border-2 border-[#BFE7D6] bg-[#F1FBF5]"
               radius="3xl"
               padding="lg"
               shadow="none">
-              <Text className="mb-3 font-bold text-teal-900">Visualization Tips</Text>
+              <Text className="mb-3 font-bold text-[#247B67]">Visualization Tips</Text>
               {[
                 'Make it exaggerated',
                 'Add unusual colors',
                 'Include movement',
                 'Engage emotions',
               ].map((tip, i) => (
-                <Text key={i} className="text-sm text-teal-800">
+                <Text key={i} className="text-sm text-[#3B6F60]">
                   - {tip}
                 </Text>
               ))}
@@ -214,13 +215,13 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
 
           {currentStep === 3 && (
             <BaseCard
-              className="mt-3 border-orange-100 bg-orange-50"
+              className="mt-3 border-2 border-[#FFE6A3] bg-[#FFF7E0]"
               radius="3xl"
               padding="lg"
               shadow="none">
-              <Text className="mb-2 font-bold text-orange-900">Forgetting Curve</Text>
-              <Text className="text-sm text-orange-800">- After 24h: 70% forgotten</Text>
-              <Text className="text-sm text-orange-800">- After 7 days: 90% forgotten</Text>
+              <Text className="mb-2 font-bold text-[#F2A900]">Forgetting Curve</Text>
+              <Text className="text-sm text-[#6B6A80]">- After 24h: 70% forgotten</Text>
+              <Text className="text-sm text-[#6B6A80]">- After 7 days: 90% forgotten</Text>
             </BaseCard>
           )}
         </View>

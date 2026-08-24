@@ -48,11 +48,11 @@ export const OnboardingScreen: React.FC = () => {
     });
 
   return (
-    <View className="flex-1 bg-bg py-6">
+    <View className="flex-1 bg-[#FFFDF8] py-6">
       {/* Skip */}
       <View className="items-end p-6">
         <AnimatedPressable onPress={finish}>
-          <Text className="text-slate-600">Skip</Text>
+          <Text className="font-semibold text-[#6B6A80]">Skip</Text>
         </AnimatedPressable>
       </View>
 
@@ -73,11 +73,11 @@ export const OnboardingScreen: React.FC = () => {
               <Icon size={64} color="white" strokeWidth={1.5} />
             </LinearGradient>
 
-            <Text className="mb-4 px-4 text-center text-xl font-semibold text-text">
+            <Text className="mb-4 px-4 text-center text-xl font-semibold text-[#2B2A3D]">
               {slide.title}
             </Text>
 
-            <Text className="text-center leading-relaxed text-text-muted">{slide.description}</Text>
+            <Text className="text-center leading-relaxed text-[#6B6A80]">{slide.description}</Text>
           </Animated.View>
         </View>
       </GestureDetector>
@@ -90,7 +90,7 @@ export const OnboardingScreen: React.FC = () => {
             <Pressable
               key={i}
               onPress={() => setIndex(i)}
-              className={`h-2 rounded-full ${i === index ? 'w-8 bg-teal-600' : 'w-2 bg-gray-300'}`}
+              className={`h-2 rounded-full ${i === index ? 'w-8 bg-[#7A68E0]' : 'w-2 bg-[#D8D4C9]'}`}
             />
           ))}
         </View>
@@ -98,11 +98,11 @@ export const OnboardingScreen: React.FC = () => {
         {/* Next */}
         <AnimatedPressable
           onPress={next}
-          className="flex-row items-center justify-center gap-2 rounded-xl bg-teal-600 py-4">
-          <Text className="font-semibold text-white">
+          className="flex-row items-center justify-center gap-2 rounded-2xl bg-[#FFC93C] py-4">
+          <Text className="font-semibold text-[#2B2A3D]">
             {index === onboardingSlides.length - 1 ? 'Get Started' : 'Next'}
           </Text>
-          <ChevronRight size={20} color="white" />
+          <ChevronRight size={20} color="#2B2A3D" />
         </AnimatedPressable>
       </View>
     </View>

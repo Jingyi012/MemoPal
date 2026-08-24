@@ -1,6 +1,6 @@
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
-import { Colors } from '@/constants/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { NotificationType } from '@/enums/notificationType';
 import { useNotificationMutations, useNotifications } from '@/features/notifications/hooks/useNotifications';
 import { Notification } from '@/features/notifications/types/notification';
@@ -24,22 +24,22 @@ import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react
 import Toast from 'react-native-toast-message';
 
 const TYPE_CONFIG = {
-  [NotificationType.XP]: { icon: Zap, color: Colors.amber500, bgColor: 'bg-amber-50' },
+  [NotificationType.XP]: { icon: Zap, color: theme.sunDeep, bgColor: 'bg-[#FFF7E0]' },
   [NotificationType.LEVEL_UP]: {
     icon: TrendingUp,
-    color: Colors.purple500,
-    bgColor: 'bg-purple-50',
+    color: theme.violetDeep,
+    bgColor: 'bg-[#EEE9FF]',
   },
-  [NotificationType.MILESTONE]: { icon: Star, color: Colors.yellow500, bgColor: 'bg-yellow-50' },
-  [NotificationType.BADGE]: { icon: Award, color: Colors.blue500, bgColor: 'bg-blue-50' },
-  [NotificationType.REFERRAL]: { icon: Users, color: Colors.indigo500, bgColor: 'bg-indigo-50' },
-  [NotificationType.LESSON]: { icon: BookOpen, color: Colors.green500, bgColor: 'bg-green-50' },
+  [NotificationType.MILESTONE]: { icon: Star, color: theme.sunDeep, bgColor: 'bg-[#FFF7E0]' },
+  [NotificationType.BADGE]: { icon: Award, color: theme.sky, bgColor: 'bg-[#EAF9FD]' },
+  [NotificationType.REFERRAL]: { icon: Users, color: theme.violetDeep, bgColor: 'bg-[#EEE9FF]' },
+  [NotificationType.LESSON]: { icon: BookOpen, color: theme.grass, bgColor: 'bg-[#F1FBF5]' },
   [NotificationType.LESSON_REVIEW]: {
     icon: BookOpen,
-    color: Colors.teal500,
-    bgColor: 'bg-teal-50',
+    color: theme.grass,
+    bgColor: 'bg-[#F1FBF5]',
   },
-  [NotificationType.SYSTEM]: { icon: Settings, color: Colors.slate500, bgColor: 'bg-slate-50' },
+  [NotificationType.SYSTEM]: { icon: Settings, color: theme.inkSoft, bgColor: 'bg-[#F6F3EA]' },
 };
 
 type NotificationListRow =
@@ -331,7 +331,7 @@ const NotificationScreen = () => {
     if (item.type === 'header') {
       return (
         <View className="px-4 pb-2 pt-3">
-          <Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <Text className="text-xs font-semibold uppercase tracking-wide text-[#6B6A80]">
             {item.title} ({item.count})
           </Text>
         </View>
@@ -356,14 +356,14 @@ const NotificationScreen = () => {
             isSelectionMode && isSelected
               ? 'border-red-200 bg-red-50'
               : notification.isRead
-                ? 'border-slate-200 bg-white'
-                : 'border-blue-100 bg-blue-50/60'
+              ? 'border-2 border-[#EEE9DC] bg-white'
+                : 'border-2 border-[#DCD4FF] bg-[#F7F5FF]'
           }`}>
           {isSelectionMode && (
             <View className="mr-3 mt-2">
               <View
                 className={`h-5 w-5 items-center justify-center rounded-md border ${
-                  isSelected ? 'border-red-500 bg-red-500' : 'border-slate-300 bg-white'
+                    isSelected ? 'border-[#E8527A] bg-[#E8527A]' : 'border-[#D8D4C9] bg-white'
                 }`}>
                 {isSelected && <Check size={12} color="white" />}
               </View>
@@ -380,17 +380,17 @@ const NotificationScreen = () => {
                 <Text
                   numberOfLines={1}
                   className={`flex-1 text-base ${
-                    notification.isRead ? 'font-medium text-slate-600' : 'font-bold text-slate-900'
+                    notification.isRead ? 'font-medium text-[#6B6A80]' : 'font-bold text-[#2B2A3D]'
                   }`}>
                   {notification.title}
                 </Text>
                 {!isSelectionMode && !notification.isRead && (
-                  <View className="ml-2 rounded-full bg-blue-100 px-2 py-0.5">
-                    <Text className="text-[10px] font-bold text-blue-700">NEW</Text>
+                  <View className="ml-2 rounded-full bg-[#EEE9FF] px-2 py-0.5">
+                    <Text className="text-[10px] font-bold text-[#7A68E0]">NEW</Text>
                   </View>
                 )}
               </View>
-              <Text className="text-xs text-slate-400">
+              <Text className="text-xs text-[#9A97A7]">
                 {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
               </Text>
             </View>
@@ -398,7 +398,7 @@ const NotificationScreen = () => {
             <Text
               numberOfLines={2}
               className={`mt-1 text-sm leading-5 ${
-                notification.isRead ? 'text-slate-500' : 'text-slate-700'
+                notification.isRead ? 'text-[#9A97A7]' : 'text-[#6B6A80]'
               }`}>
               {notification.body}
             </Text>
@@ -406,8 +406,8 @@ const NotificationScreen = () => {
             <View className="mt-2 flex-row items-center justify-between">
               <View className="flex-row items-center">
                 {notification.referenceType && (
-                  <View className="rounded-md bg-slate-100 px-2 py-0.5">
-                    <Text className="text-[10px] font-bold uppercase text-slate-500">
+                  <View className="rounded-md bg-[#F6F3EA] px-2 py-0.5">
+                    <Text className="text-[10px] font-bold uppercase text-[#6B6A80]">
                       {notification.referenceType}
                     </Text>
                   </View>
@@ -418,7 +418,7 @@ const NotificationScreen = () => {
 
           {!isSelectionMode && notification.referenceType && (
             <View className="ml-2 self-center">
-              <ChevronRight size={18} color={Colors.slate300} />
+              <ChevronRight size={18} color="#D8D4C9" />
             </View>
           )}
         </TouchableOpacity>
@@ -429,7 +429,7 @@ const NotificationScreen = () => {
   if (isLoading) return <LoadingView />;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-[#FFFDF8]">
       <CommonHeader
         title="Notifications"
         description={
@@ -455,14 +455,14 @@ const NotificationScreen = () => {
       />
 
       {isSelectionMode && (
-        <View className="mb-2 border-b border-slate-200 bg-white px-4 py-3">
+        <View className="mb-2 border-b-2 border-[#EEE9DC] bg-white px-4 py-3">
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={clearSelectionMode} activeOpacity={0.7}>
-              <Text className="font-semibold text-slate-700">Cancel</Text>
+              <Text className="font-semibold text-[#6B6A80]">Cancel</Text>
             </TouchableOpacity>
-            <Text className="text-sm font-medium text-slate-700">{selectedCount} selected</Text>
+            <Text className="text-sm font-medium text-[#6B6A80]">{selectedCount} selected</Text>
             <TouchableOpacity onPress={toggleSelectAll} activeOpacity={0.7}>
-              <Text className="font-semibold text-slate-700">
+              <Text className="font-semibold text-[#7A68E0]">
                 {isAllSelected ? 'Unselect All' : 'Select All'}
               </Text>
             </TouchableOpacity>
@@ -479,11 +479,11 @@ const NotificationScreen = () => {
         contentContainerStyle={{ paddingBottom: isSelectionMode ? 132 : undoPayload ? 110 : 40 }}
         ListEmptyComponent={
           <View className="mt-32 items-center justify-center p-6">
-            <View className="h-20 w-20 items-center justify-center rounded-full bg-slate-50">
-              <Bell size={40} color={Colors.slate300} />
+            <View className="h-20 w-20 items-center justify-center rounded-full bg-[#F6F3EA]">
+              <Bell size={40} color="#D8D4C9" />
             </View>
-            <Text className="mt-4 text-xl font-bold text-slate-800">No notifications</Text>
-            <Text className="mt-2 text-center text-slate-500">
+            <Text className="mt-4 text-xl font-bold text-[#2B2A3D]">No notifications</Text>
+            <Text className="mt-2 text-center text-[#6B6A80]">
               We&apos;ll notify you when something important happens.
             </Text>
           </View>
@@ -491,18 +491,18 @@ const NotificationScreen = () => {
       />
 
       {isSelectionMode && (
-        <View className="border-t border-slate-200 bg-white px-4 pb-5 pt-3">
+        <View className="border-t-2 border-[#EEE9DC] bg-white px-4 pb-5 pt-3">
           <TouchableOpacity
             activeOpacity={0.8}
             disabled={selectedCount === 0 || isRemoving}
             onPress={() => void handleRemoveSelected()}
             className={`flex-row items-center justify-center rounded-xl py-3 ${
-              selectedCount === 0 || isRemoving ? 'bg-slate-200' : 'bg-red-600'
+              selectedCount === 0 || isRemoving ? 'bg-[#D8D4C9]' : 'bg-[#E8527A]'
             }`}>
             {isRemoving ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
-              <Text className="font-semibold text-white">
+              <Text className={`font-semibold ${selectedCount === 0 || isRemoving ? 'text-[#9A97A7]' : 'text-white'}`}>
                 {selectedCount > 0 ? `Remove (${selectedCount})` : 'Select notifications to remove'}
               </Text>
             )}
@@ -511,7 +511,7 @@ const NotificationScreen = () => {
       )}
 
       {!isSelectionMode && undoPayload && (
-        <View className="absolute bottom-5 left-4 right-4 rounded-xl bg-slate-900 px-4 py-3">
+        <View className="absolute bottom-5 left-4 right-4 rounded-2xl bg-[#2B2A3D] px-4 py-3">
           <View className="flex-row items-center justify-between">
             <Text className="flex-1 text-sm font-medium text-white">
               {undoPayload.count} notification{undoPayload.count > 1 ? 's' : ''} removed

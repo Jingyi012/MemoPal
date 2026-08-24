@@ -16,24 +16,24 @@ export const onboardingSlides: OnboardingSlide[] = [
     title: 'Remember Anything With Memory Palaces',
     description:
       'Use ancient memory techniques to remember lists, speeches, and anything you need.',
-    colors: ['#14b8a6', '#0d9488'],
+    colors: ['#7A68E0', '#E8527A'],
   },
   {
     icon: Eye,
     title: 'Learn With Visualization',
     description: 'Create vivid mental images and stories to make memories stick forever.',
-    colors: ['#6366f1', '#4f46e5'],
+    colors: ['#4FC0E8', '#7A68E0'],
   },
   {
     icon: Calendar,
     title: 'Review With Spaced Repetition',
     description: 'Smart reminders at the perfect time to cement your memory and boost retention.',
-    colors: ['#a855f7', '#7e22ce'],
+    colors: ['#FF6F91', '#E8527A'],
   },
   {
     icon: TrendingUp,
     title: 'Grow Your Palace to 100 Locations',
     description: 'Start with 10 locations and expand your memory palace as you level up.',
-    colors: ['#f97316', '#ea580c'],
+    colors: ['#FFC93C', '#F2A900'],
   },
 ];

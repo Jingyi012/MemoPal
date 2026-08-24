@@ -1,7 +1,7 @@
 import { authApi } from '@/features/auth/api/auth';
 import { referralApi } from '@/features/referral/api/referral';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { Colors } from '@/constants/colors';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { useAuth } from '@/contexts/AuthProvider';
 import {
   getFacebookAccessToken,
@@ -112,10 +112,10 @@ export default function Register() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-[#FFFDF8]">
       <View className="flex-1 items-center justify-center px-8">
         <LinearGradient
-          colors={[Colors.teal600, Colors.indigo600]}
+          colors={[theme.violetDeep, theme.berryDeep]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ borderRadius: 10 }}
@@ -123,14 +123,14 @@ export default function Register() {
           <Brain size={40} color="white" strokeWidth={1.5} />
         </LinearGradient>
 
-        <Text className="mb-2 text-2xl font-semibold text-gray-900">Create your MemoPal account</Text>
+        <Text className="mb-2 text-2xl font-semibold text-[#2B2A3D]">Create your MemoPal account</Text>
 
-        <Text className="mb-8 max-w-sm text-center text-gray-600">
+        <Text className="mb-8 max-w-sm text-center text-[#6B6A80]">
           Set up your account to sync your progress and unlock premium features
         </Text>
 
         {!hasEnabledMethod && (
-          <Text className="mb-4 max-w-sm text-center text-sm text-rose-600">
+          <Text className="mb-4 max-w-sm text-center text-sm text-[#E8527A]">
             Registration is temporarily unavailable. Please contact support.
           </Text>
         )}
@@ -142,7 +142,7 @@ export default function Register() {
                 value={displayName}
                 onChangeText={setDisplayName}
                 placeholder="Display name"
-                className="rounded-xl border-2 border-gray-200 px-4 py-3"
+                className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
                 autoCapitalize="words"
               />
               <TextInput
@@ -151,29 +151,29 @@ export default function Register() {
                 placeholder="Email"
                 keyboardType="email-address"
                 autoCapitalize="none"
-                className="rounded-xl border-2 border-gray-200 px-4 py-3"
+                className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
               />
               <TextInput
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Password (min 6 chars)"
                 secureTextEntry
-                className="rounded-xl border-2 border-gray-200 px-4 py-3"
+                className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
               />
               <TextInput
                 value={referralCode}
                 onChangeText={setReferralCode}
                 placeholder="Referral code (optional)"
                 autoCapitalize="characters"
-                className="rounded-xl border-2 border-gray-200 px-4 py-3"
+                className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
               />
             </View>
 
             <AnimatedPressable
               onPress={handleRegister}
               disabled={!canSubmit || isSubmitting}
-              className={`mb-3 w-full max-w-sm items-center justify-center rounded-xl px-6 py-4 ${!canSubmit || isSubmitting ? 'bg-gray-300' : 'bg-teal-600'}`}>
-              <Text className="font-medium text-white">
+              className={`mb-3 w-full max-w-sm items-center justify-center rounded-2xl px-6 py-4 ${!canSubmit || isSubmitting ? 'bg-[#D8D4C9]' : 'bg-[#FFC93C]'}`}>
+              <Text className={`font-medium ${!canSubmit || isSubmitting ? 'text-[#9A97A7]' : 'text-[#2B2A3D]'}`}>
                 {isSubmitting ? 'Creating account...' : 'Create account'}
               </Text>
             </AnimatedPressable>
@@ -208,13 +208,13 @@ export default function Register() {
               }
             }}
             disabled={isSubmitting}
-            className="mb-2 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-6 py-4">
+            className="mb-2 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#EEE9DC] bg-white px-6 py-4">
             <Image
               source={require('../../../../assets/images/google-icon.png')}
               style={{ width: 18, height: 18 }}
               contentFit="contain"
             />
-            <Text className="font-medium text-slate-700">Continue with Google</Text>
+            <Text className="font-medium text-[#2B2A3D]">Continue with Google</Text>
           </AnimatedPressable>
         )}
 
@@ -245,19 +245,19 @@ export default function Register() {
               }
             }}
             disabled={isSubmitting}
-            className="mb-3 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-6 py-4">
+            className="mb-3 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#EEE9DC] bg-white px-6 py-4">
             <Ionicons name="logo-facebook" size={18} color="#1877F2" />
-            <Text className="font-medium text-slate-700">Continue with Facebook</Text>
+            <Text className="font-medium text-[#2B2A3D]">Continue with Facebook</Text>
           </AnimatedPressable>
         )}
 
         <AnimatedPressable onPress={() => router.replace('/login')} className="mb-4">
-          <Text className="text-slate-500">Already have an account? Sign in</Text>
+          <Text className="text-[#7A68E0]">Already have an account? Sign in</Text>
         </AnimatedPressable>
       </View>
 
       <View className="p-6">
-        <Text className="text-center text-xs text-gray-400">
+        <Text className="text-center text-xs text-[#9A97A7]">
           By continuing, you agree to our Terms of Service and Privacy Policy
         </Text>
       </View>
