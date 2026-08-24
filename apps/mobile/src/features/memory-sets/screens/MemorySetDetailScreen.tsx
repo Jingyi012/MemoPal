@@ -34,7 +34,7 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
   const memorySet = query.data;
   const isPalace = memorySet.techniqueKey === 'palace';
   const playerRoute = (isPalace ? `/palaces/memory/${memorySet.id}` : `/number-peg/${memorySet.id}`) as Href;
-  const retryRoute = (isPalace ? `/palaces/memory/${memorySet.id}` : `/number-peg/${memorySet.id}?restart=1`) as Href;
+  const retryRoute = (isPalace ? `/palaces/memory/${memorySet.id}?restart=1` : `/number-peg/${memorySet.id}?restart=1`) as Href;
 
   return (
     <View style={styles.page}>

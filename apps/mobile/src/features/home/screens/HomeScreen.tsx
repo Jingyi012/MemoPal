@@ -125,13 +125,7 @@ const HomeScreen = () => {
           {dueMemoryReviews.length > 0 ? (
             <TodayReviewCard
               reviews={dueMemoryReviews}
-              onOpen={(review) =>
-                router.push(
-                  review.techniqueKey === 'number-peg'
-                    ? `/number-peg/${review.memorySetId}`
-                    : `/palaces/memory/${review.memorySetId}`
-                )
-              }
+              onOpen={(review) => router.push(`/memory-details/${review.memorySetId}`)}
             />
           ) : null}
 

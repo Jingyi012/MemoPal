@@ -6,6 +6,11 @@ import { useMemorySet } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { usePalaceScene } from '@/features/palace-scenes';
 import {
+  clearPalaceSession,
+  readPalaceSession,
+  writePalaceSession,
+} from '@/features/palace-scenes/services/palaceSessionRecovery';
+import {
   useCreatePracticeAttempt,
   type PracticeAttemptInput,
   type PracticeResponseInput,
@@ -14,7 +19,7 @@ import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Check, ChevronLeft, ChevronRight, Footprints, MapPinned, RotateCcw, Sparkles, Target, X } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type SessionMode = 'browse' | 'walk' | 'recall';
@@ -24,7 +29,7 @@ function normalizeAnswer(value: string) {
   return value.trim().replace(/\s+/g, ' ').toLocaleUpperCase();
 }
 
-export default function PalaceMemorySessionScreen({ memorySetId }: { memorySetId: string }) {
+export default function PalaceMemorySessionScreen({ memorySetId, restart = false }: { memorySetId: string; restart?: boolean }) {
   const router = useRouter();
   const memorySetQuery = useMemorySet(memorySetId);
   const sceneId = memorySetQuery.data?.techniquePlan?.palaceSceneId ?? '';
@@ -40,7 +45,70 @@ export default function PalaceMemorySessionScreen({ memorySetId }: { memorySetId
   const [questionStartedAtMs, setQuestionStartedAtMs] = useState(() => Date.now());
   const [responses, setResponses] = useState<PracticeResponseInput[]>([]);
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
+  const [hasRestoredSession, setHasRestoredSession] = useState(false);
+  const hydratedSessionRef = useRef<string | null>(null);
+  const sessionReadyRef = useRef(false);
   const practiceAttempt = useCreatePracticeAttempt();
+
+  useEffect(() => {
+    const memorySet = memorySetQuery.data;
+    if (!memorySet) return;
+
+    const sessionKey = `${memorySet.id}:${memorySet.version}`;
+    if (hydratedSessionRef.current === sessionKey) return;
+
+    hydratedSessionRef.current = sessionKey;
+    sessionReadyRef.current = false;
+    void readPalaceSession(memorySet.id).then((snapshot) => {
+      if (restart) {
+        if (snapshot) void clearPalaceSession(memorySet.id);
+        setHasRestoredSession(false);
+        sessionReadyRef.current = true;
+        return;
+      }
+
+      if (!snapshot || snapshot.memorySetVersion !== memorySet.version || snapshot.activeIndex > memorySet.items.length) {
+        if (snapshot) void clearPalaceSession(memorySet.id);
+        sessionReadyRef.current = true;
+        return;
+      }
+
+      setMode(snapshot.mode);
+      setActiveIndex(snapshot.activeIndex);
+      setScore(snapshot.score);
+      setClientAttemptId(snapshot.clientAttemptId);
+      setStartedAt(snapshot.startedAt);
+      setStartedAtMs(snapshot.startedAtMs);
+      setQuestionStartedAtMs(snapshot.questionStartedAtMs);
+      setResponses(snapshot.responses);
+      setHasRestoredSession(true);
+      sessionReadyRef.current = true;
+    });
+  }, [memorySetQuery.data, restart]);
+
+  useEffect(() => {
+    const memorySet = memorySetQuery.data;
+    if (!memorySet || !sessionReadyRef.current || hydratedSessionRef.current !== `${memorySet.id}:${memorySet.version}`) return;
+
+    if (activeIndex >= memorySet.items.length) {
+      void clearPalaceSession(memorySet.id);
+      return;
+    }
+
+    void writePalaceSession({
+      memorySetId: memorySet.id,
+      memorySetVersion: memorySet.version,
+      mode,
+      activeIndex,
+      score,
+      clientAttemptId,
+      startedAt,
+      startedAtMs,
+      questionStartedAtMs,
+      responses,
+      savedAt: new Date().toISOString(),
+    });
+  }, [activeIndex, clientAttemptId, memorySetQuery.data, mode, questionStartedAtMs, responses, score, startedAt, startedAtMs]);
 
   const placements = useMemo(() => {
     const memorySet = memorySetQuery.data;
@@ -161,6 +229,11 @@ export default function PalaceMemorySessionScreen({ memorySetId }: { memorySetId
         <Text style={styles.hint}>
           {mode === 'recall' ? 'Use the active locus as your cue.' : 'Tap a marker, or walk through every locus in order.'}
         </Text>
+        {hasRestoredSession ? (
+          <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
+            <Text style={styles.restoreNoticeText}>Welcome back — your Palace session was restored.</Text>
+          </AnimatedPressable>
+        ) : null}
 
         <View style={styles.modeRail}>
           <AnimatedPressable
@@ -349,6 +422,8 @@ const styles = StyleSheet.create({
   activeMarker: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.18 }] },
   markerText: { color: 'white', fontSize: 12, fontWeight: '900' },
   hint: { color: theme.inkSoft, fontSize: 11, lineHeight: 17, fontWeight: '700', textAlign: 'center', marginVertical: 12 },
+  restoreNotice: { marginBottom: 10, borderRadius: 12, backgroundColor: '#E3F6ED', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 12, paddingVertical: 9 },
+  restoreNoticeText: { color: '#247B67', fontSize: 12, lineHeight: 17, fontWeight: '800', textAlign: 'center' },
   modeRail: { flexDirection: 'row', gap: 7, padding: 5, borderRadius: 17, backgroundColor: '#EEE9FF', marginBottom: 12 },
   modeTab: { flex: 1, minHeight: 38, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   modeTabActive: { backgroundColor: 'white', shadowColor: theme.ink, shadowOpacity: 0.08, shadowRadius: 5, elevation: 1 },
