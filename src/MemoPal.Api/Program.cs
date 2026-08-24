@@ -4,6 +4,7 @@ using Microsoft.OpenApi;
 using MemoPal.Api.Middleware;
 using MemoPal.Api.Options;
 using MemoPal.Api.Security;
+using MemoPal.Api.Extensions;
 using MemoPal.Application;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Infrastructure;
@@ -170,6 +171,8 @@ builder.Services
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+await app.ApplyDatabaseMigrationsAsync();
 
 if (app.Environment.IsDevelopment())
 {
