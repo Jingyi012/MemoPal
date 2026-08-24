@@ -1,6 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
+import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
@@ -22,13 +23,12 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
       <View style={styles.page}>
         <CommonHeader eyebrow="Session" title="Session details" description="Memory unavailable" backAction={() => router.back()} />
         <View style={styles.centerState}>
-          <Text style={styles.stateEmoji}>🧩</Text>
-          <Text style={styles.stateTitle}>This memory did not load</Text>
-          <Text style={styles.stateBody}>Check your connection and try again.</Text>
-          <AnimatedPressable onPress={() => query.refetch()} style={styles.retryButton}>
-            <RefreshCcw size={16} color={theme.ink} />
-            <Text style={styles.retryButtonText}>Try again</Text>
-          </AnimatedPressable>
+          <ModuleNoticeCard
+            emoji="🧩"
+            title="This memory did not load"
+            body="Check your connection and try again."
+            onAction={() => query.refetch()}
+          />
         </View>
       </View>
     );
@@ -180,9 +180,4 @@ const styles = StyleSheet.create({
   secondaryButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 4 },
   secondaryButtonText: { color: theme.inkSoft, fontSize: 12, fontWeight: '800' },
   centerState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  stateEmoji: { fontSize: 36 },
-  stateTitle: { color: theme.ink, fontSize: 18, fontWeight: '900', marginTop: 10 },
-  stateBody: { color: theme.inkSoft, fontSize: 13, textAlign: 'center', marginTop: 5 },
-  retryButton: { marginTop: 15, borderRadius: 12, backgroundColor: theme.sun, paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 7 },
-  retryButtonText: { color: theme.ink, fontSize: 12, fontWeight: '900' },
 });
