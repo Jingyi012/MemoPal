@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dotnet CQRS Delivery"
+  short_description: "Build .NET backend features with clean CQRS guardrails"
+  default_prompt: "Use $dotnet-clean-cqrs-mediatr-delivery to implement a new backend feature end-to-end with thin controllers and handler-owned response contracts."

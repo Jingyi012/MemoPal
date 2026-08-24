@@ -1,0 +1,199 @@
+using System.Globalization;
+using System.Text;
+using System.Text.Json;
+using MemoPal.Application.Features.Referrals.DTOs;
+
+namespace MemoPal.Application.Features.Referrals;
+
+public static class ReferralProgramConfigSerializer
+{
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true
+    };
+
+    public static ReferralProgramConfigDto ParseOrDefault(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return GetDefault();
+        }
+
+        try
+        {
+            var config = JsonSerializer.Deserialize<ReferralProgramConfigDto>(rawValue, JsonOptions);
+            return Normalize(config ?? new ReferralProgramConfigDto());
+        }
+        catch (JsonException)
+        {
+            return GetDefault();
+        }
+    }
+
+    public static string Serialize(ReferralProgramConfigDto config)
+    {
+        return JsonSerializer.Serialize(Normalize(config), JsonOptions);
+    }
+
+    public static ReferralProgramConfigDto Normalize(ReferralProgramConfigDto config)
+    {
+        var normalized = new ReferralProgramConfigDto
+        {
+            IsEnabled = config.IsEnabled,
+            InviterRewardXp = Math.Max(0, config.InviterRewardXp),
+            InviterRewardPremiumDays = Math.Max(0, config.InviterRewardPremiumDays),
+            InviteeRewardXp = Math.Max(0, config.InviteeRewardXp),
+            InviteeRewardPremiumDays = Math.Max(0, config.InviteeRewardPremiumDays),
+            MaxSuccessfulReferralsPerUser = Math.Max(0, config.MaxSuccessfulReferralsPerUser),
+            Milestones = NormalizeMilestones(config.Milestones ?? [])
+        };
+
+        if (normalized.Milestones.Count == 0)
+        {
+            normalized.Milestones = GetDefault().Milestones;
+        }
+
+        return normalized;
+    }
+
+    public static ReferralProgramConfigDto GetDefault()
+    {
+        return new ReferralProgramConfigDto
+        {
+            IsEnabled = true,
+            InviterRewardXp = 80,
+            InviterRewardPremiumDays = 3,
+            InviteeRewardXp = 40,
+            InviteeRewardPremiumDays = 2,
+            MaxSuccessfulReferralsPerUser = 100,
+            Milestones =
+            [
+                new ReferralMilestoneConfigDto
+                {
+                    Key = "referral_1",
+                    Title = "First Invite",
+                    ReferralsRequired = 1,
+                    RewardXp = 100,
+                    RewardPremiumDays = 3,
+                    RewardLabel = "100 XP + 3 Premium Days",
+                    IsActive = true,
+                    SortOrder = 1
+                },
+                new ReferralMilestoneConfigDto
+                {
+                    Key = "referral_3",
+                    Title = "Community Starter",
+                    ReferralsRequired = 3,
+                    RewardXp = 250,
+                    RewardPremiumDays = 7,
+                    RewardLabel = "250 XP + 7 Premium Days",
+                    IsActive = true,
+                    SortOrder = 2
+                },
+                new ReferralMilestoneConfigDto
+                {
+                    Key = "referral_5",
+                    Title = "Memory Ambassador",
+                    ReferralsRequired = 5,
+                    RewardXp = 500,
+                    RewardPremiumDays = 14,
+                    RewardLabel = "500 XP + 14 Premium Days",
+                    IsActive = true,
+                    SortOrder = 3
+                },
+                new ReferralMilestoneConfigDto
+                {
+                    Key = "referral_10",
+                    Title = "Master Connector",
+                    ReferralsRequired = 10,
+                    RewardXp = 1000,
+                    RewardPremiumDays = 30,
+                    RewardLabel = "1000 XP + 30 Premium Days",
+                    IsActive = true,
+                    SortOrder = 4
+                }
+            ]
+        };
+    }
+
+    private static IReadOnlyList<ReferralMilestoneConfigDto> NormalizeMilestones(IEnumerable<ReferralMilestoneConfigDto> milestones)
+    {
+        var result = new List<ReferralMilestoneConfigDto>();
+        var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var sortOrder = 1;
+
+        foreach (var item in milestones)
+        {
+            if (item is null)
+            {
+                continue;
+            }
+
+            var referralsRequired = Math.Max(1, item.ReferralsRequired);
+            var key = string.IsNullOrWhiteSpace(item.Key)
+                ? $"referral_{referralsRequired}"
+                : Slugify(item.Key);
+
+            if (string.IsNullOrWhiteSpace(key) || !seenKeys.Add(key))
+            {
+                continue;
+            }
+
+            var title = string.IsNullOrWhiteSpace(item.Title)
+                ? $"Referral {referralsRequired}"
+                : item.Title.Trim();
+
+            result.Add(new ReferralMilestoneConfigDto
+            {
+                Key = key,
+                Title = title,
+                ReferralsRequired = referralsRequired,
+                RewardXp = Math.Max(0, item.RewardXp),
+                RewardPremiumDays = Math.Max(0, item.RewardPremiumDays),
+                RewardLabel = string.IsNullOrWhiteSpace(item.RewardLabel) ? null : item.RewardLabel.Trim(),
+                IsActive = item.IsActive,
+                SortOrder = item.SortOrder > 0 ? item.SortOrder : sortOrder
+            });
+
+            sortOrder++;
+        }
+
+        return result
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.ReferralsRequired)
+            .Select((x, index) =>
+            {
+                x.SortOrder = index + 1;
+                return x;
+            })
+            .ToList();
+    }
+
+    private static string Slugify(string input)
+    {
+        var text = input.Trim().ToLowerInvariant();
+        var buffer = new StringBuilder(text.Length);
+
+        foreach (var ch in text.Normalize(NormalizationForm.FormD))
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(ch) == UnicodeCategory.NonSpacingMark)
+            {
+                continue;
+            }
+
+            if (char.IsLetterOrDigit(ch))
+            {
+                buffer.Append(ch);
+                continue;
+            }
+
+            if (buffer.Length > 0 && buffer[^1] != '_')
+            {
+                buffer.Append('_');
+            }
+        }
+
+        return buffer.ToString().Trim('_');
+    }
+}
