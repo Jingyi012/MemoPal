@@ -3,16 +3,18 @@ import { CommonHeader } from '@/components/CommonHeader';
 import { useEnabledMemoryModules } from '@/core/memory';
 import { useMemorySets } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
+import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight, Brain, Hash, MapPinned, Plus, RefreshCcw, Sparkles } from 'lucide-react-native';
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function PracticeScreen() {
   const router = useRouter();
   const modules = useEnabledMemoryModules();
   const memorySets = useMemorySets();
+  const palaceScenes = usePalaceScenes();
   const recentSets = useMemo(
     () => (memorySets.data ?? []).filter((memorySet) => memorySet.status !== 'archived').slice(0, 4),
     [memorySets.data]
@@ -57,6 +59,36 @@ export default function PracticeScreen() {
           })}
         </View>
 
+        <DiscoveryRow
+          title="Your peg set"
+          actionLabel="See all →"
+          onAction={() => router.push('/number-peg' as Href)}
+          items={PEG_ANCHORS.map((peg) => ({
+            key: String(peg.number),
+            title: `${peg.number}. ${peg.name}`,
+            subtitle: peg.emoji,
+            tone: 'peg' as const,
+          }))}
+          onItemPress={() => router.push('/number-peg' as Href)}
+        />
+
+        <DiscoveryRow
+          title="Your palaces"
+          actionLabel="See all →"
+          onAction={() => router.push('/palaces' as Href)}
+          items={(palaceScenes.data ?? []).slice(0, 4).map((scene) => ({
+            key: scene.id,
+            title: scene.name,
+            subtitle: `${scene.loci.length} loci`,
+            imageUrl: scene.imageUrl,
+            tone: 'palace' as const,
+          }))}
+          onItemPress={(sceneId) =>
+            router.push({ pathname: '/palaces/create-memory', params: { sceneId } })
+          }
+          emptyLabel={palaceScenes.isLoading ? 'Opening your palace shelf…' : 'Build your first palace'}
+        />
+
         <View style={styles.sectionHeadingRow}>
           <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>Recent sessions</Text>
           <AnimatedPressable onPress={() => router.push('/(tabs)/library' as Href)}>
@@ -97,6 +129,62 @@ export default function PracticeScreen() {
           </View>
         )}
       </ScrollView>
+    </View>
+  );
+}
+
+type DiscoveryItem = {
+  key: string;
+  title: string;
+  subtitle: string;
+  tone: 'peg' | 'palace';
+  imageUrl?: string | null;
+};
+
+function DiscoveryRow({
+  title,
+  actionLabel,
+  onAction,
+  items,
+  onItemPress,
+  emptyLabel,
+}: {
+  title: string;
+  actionLabel: string;
+  onAction: () => void;
+  items: DiscoveryItem[];
+  onItemPress: (key: string) => void;
+  emptyLabel?: string;
+}) {
+  return (
+    <View style={styles.discoverySection}>
+      <View style={styles.sectionHeadingRow}>
+        <Text style={[styles.sectionLabel, styles.discoveryTitle]}>{title}</Text>
+        <AnimatedPressable onPress={onAction}>
+          <Text style={styles.seeAll}>{actionLabel}</Text>
+        </AnimatedPressable>
+      </View>
+      {items.length ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.discoveryList}>
+          {items.map((item) => (
+            <AnimatedPressable key={item.key} onPress={() => onItemPress(item.key)} style={styles.discoveryCard}>
+              <View style={[styles.discoveryArt, item.tone === 'peg' ? styles.pegBackground : styles.palaceBackground]}>
+                {item.imageUrl ? (
+                  <Image source={{ uri: item.imageUrl }} style={styles.discoveryImage} resizeMode="cover" />
+                ) : item.tone === 'peg' ? (
+                  <Text style={styles.discoveryEmoji}>{item.subtitle}</Text>
+                ) : (
+                  <MapPinned size={22} color={theme.violetDeep} />
+                )}
+              </View>
+              <Text numberOfLines={1} style={styles.discoveryCardTitle}>{item.title}</Text>
+              <Text style={styles.discoveryCardSubtitle}>{item.imageUrl ? item.subtitle : item.tone === 'peg' ? 'Anchor image' : item.subtitle}</Text>
+            </AnimatedPressable>
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={styles.discoveryEmpty}><Text style={styles.emptyBody}>{emptyLabel ?? 'Nothing here yet'}</Text></View>
+      )}
     </View>
   );
 }
@@ -149,6 +237,16 @@ const styles = StyleSheet.create({
   techniqueJumpName: { color: theme.ink, fontSize: 12.5, fontWeight: '900', textAlign: 'center', marginTop: 7 },
   techniqueJumpLink: { color: theme.sky, fontSize: 10.5, fontWeight: '900', marginTop: 3 },
   sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 1 },
+  discoverySection: { marginTop: 4 },
+  discoveryTitle: { marginBottom: 0 },
+  discoveryList: { gap: 10, paddingVertical: 10, paddingRight: 12 },
+  discoveryCard: { width: 132, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8 },
+  discoveryArt: { height: 76, borderRadius: 12, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  discoveryEmoji: { fontSize: 31 },
+  discoveryImage: { width: '100%', height: '100%', backgroundColor: '#BCAAF1' },
+  discoveryCardTitle: { color: theme.ink, fontSize: 11.5, fontWeight: '900', marginTop: 7 },
+  discoveryCardSubtitle: { color: theme.inkSoft, fontSize: 10.5, fontWeight: '700', marginTop: 2 },
+  discoveryEmpty: { borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 14 },
   seeAll: { color: theme.sky, fontSize: 11.5, fontWeight: '900', marginTop: 22 },
   sessionList: { gap: 10 },
   sessionCard: { minHeight: 70, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -163,3 +261,15 @@ const styles = StyleSheet.create({
   smallButton: { minHeight: 38, borderRadius: 11, backgroundColor: theme.ink, paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 13 },
   smallButtonText: { color: 'white', fontSize: 12, fontWeight: '900' },
 });
+
+const PEG_ANCHORS = [
+  { number: 1, emoji: '🕯️', name: 'Candle' },
+  { number: 2, emoji: '🦢', name: 'Swan' },
+  { number: 3, emoji: '❤️', name: 'Heart' },
+  { number: 4, emoji: '⛵', name: 'Sailboat' },
+  { number: 5, emoji: '✋', name: 'Hand' },
+  { number: 6, emoji: '🐘', name: 'Elephant' },
+  { number: 7, emoji: '🌈', name: 'Rainbow' },
+  { number: 8, emoji: '⛄', name: 'Snowman' },
+  { number: 9, emoji: '🎈', name: 'Balloon' },
+];
