@@ -1,0 +1,297 @@
+import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppImage } from '@/components/AppImage';
+import { CommonHeader } from '@/components/CommonHeader';
+import { mediaApi } from '@/core/api/media';
+import { useFeatureLimits } from '@/features/subscription/hooks/useFeatureLimits';
+import { usePalaceSceneMutations } from '@/features/palace-scenes/hooks/usePalaceSceneMutations';
+import { usePalaceScene } from '@/features/palace-scenes/hooks/usePalaceScenes';
+import type { PalaceLocusInput } from '@/features/palace-scenes/types/palaceScene.types';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { firstParam } from '@/features/memory-composer/utils/composerParams';
+import { Href, useLocalSearchParams, useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { Check, Crown, ImagePlus, MapPinned, Plus, Trash2 } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type GestureResponderEvent,
+} from 'react-native';
+
+type CanvasSize = { width: number; height: number };
+
+export default function CustomPalaceEditorScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ sceneId?: string | string[] }>();
+  const sceneId = firstParam(params.sceneId);
+  const sceneQuery = usePalaceScene(sceneId ?? '');
+  const { limits } = useFeatureLimits();
+  const { createCustom, updateCustom } = usePalaceSceneMutations();
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [imageUri, setImageUri] = useState('');
+  const [loci, setLoci] = useState<PalaceLocusInput[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [canvasSize, setCanvasSize] = useState<CanvasSize>({ width: 1, height: 1 });
+  const [message, setMessage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [hydratedSceneId, setHydratedSceneId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!sceneQuery.data || hydratedSceneId === sceneQuery.data.id) return;
+    const scene = sceneQuery.data;
+    setName(scene.name);
+    setDescription(scene.description);
+    setImageUri(scene.imageUrl);
+    setLoci(scene.loci.map(({ id, position, name: locusName, description: locusDescription, xPercent, yPercent, radiusPercent }) => ({
+      id,
+      position,
+      name: locusName,
+      description: locusDescription ?? undefined,
+      xPercent,
+      yPercent,
+      radiusPercent,
+    })));
+    setHydratedSceneId(scene.id);
+  }, [hydratedSceneId, sceneQuery.data]);
+
+  const maxLoci = Math.max(1, limits.customLocationsPerPalace);
+  const canCreate = limits.customPalaces > 0;
+  const canSave = canCreate || Boolean(sceneId);
+
+  const chooseImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setMessage('Photo access is needed to use a Palace image. You can enable it in device settings.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.82,
+      aspect: [16, 10],
+    });
+    if (result.canceled || !result.assets?.[0]?.uri) return;
+    setImageUri(result.assets[0].uri);
+    setMessage(null);
+  };
+
+  const placeLocus = (event: GestureResponderEvent) => {
+    if (!imageUri) {
+      setMessage('Choose a photo first, then tap memorable spots on it.');
+      return;
+    }
+    const xPercent = Math.max(0, Math.min(100, (event.nativeEvent.locationX / canvasSize.width) * 100));
+    const yPercent = Math.max(0, Math.min(100, (event.nativeEvent.locationY / canvasSize.height) * 100));
+    if (selectedIndex === loci.length) {
+      if (loci.length >= maxLoci) {
+        setMessage(`Your plan allows up to ${maxLoci} loci in this Palace.`);
+        return;
+      }
+      const nextIndex = loci.length;
+      setLoci((current) => [
+        ...current,
+        { position: nextIndex + 1, name: `Spot ${nextIndex + 1}`, xPercent, yPercent, radiusPercent: 7 },
+      ]);
+      setSelectedIndex(nextIndex);
+      setMessage(null);
+      return;
+    }
+    if (selectedIndex === null || !loci[selectedIndex]) return;
+    setLoci((current) => current.map((locus, index) =>
+      index === selectedIndex ? { ...locus, xPercent, yPercent } : locus,
+    ));
+    setMessage(null);
+  };
+
+  const addLocus = () => {
+    if (loci.length >= maxLoci) {
+      setMessage(`Your plan allows up to ${maxLoci} loci in this Palace.`);
+      return;
+    }
+    if (!imageUri) {
+      setMessage('Choose a photo first, then tap memorable spots on it.');
+      return;
+    }
+    setSelectedIndex(loci.length);
+    setMessage('Now tap the next memorable spot on your image.');
+  };
+
+  const removeLocus = (index: number) => {
+    setLoci((current) => current
+      .filter((_, locusIndex) => locusIndex !== index)
+      .map((locus, locusIndex) => ({ ...locus, position: locusIndex + 1 })));
+    setSelectedIndex((current) => {
+      if (current === null) return null;
+      if (current === index) return null;
+      return current > index ? current - 1 : current;
+    });
+  };
+
+  const save = async () => {
+    if (!canSave) {
+      router.push('/premium' as Href);
+      return;
+    }
+    if (!name.trim()) return setMessage('Give this Palace a name first.');
+    if (!imageUri) return setMessage('Choose a photo for your Palace.');
+    if (!loci.length) return setMessage('Tap at least one memorable spot on your image.');
+
+    setIsUploading(true);
+    setMessage(null);
+    try {
+      const fileName = imageUri.split('/').pop() || 'palace.jpg';
+      const imageUrl = /^(file:|content:|blob:|data:)/i.test(imageUri)
+        ? await mediaApi.uploadImage(imageUri, fileName, 'palace')
+        : imageUri;
+      const request = {
+        name: name.trim(),
+        description: description.trim(),
+        imageUrl,
+        status: 'published',
+        isPremium: false,
+        loci,
+        ...(sceneQuery.data ? { expectedVersion: sceneQuery.data.version } : {}),
+      } as const;
+      const scene = sceneId
+        ? await updateCustom.mutateAsync({ sceneId, request })
+        : await createCustom.mutateAsync(request);
+      router.replace({ pathname: '/palaces/create-memory', params: { sceneId: scene.id } });
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not save your Palace. Try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.page}>
+      <CommonHeader
+        eyebrow="Custom Palace"
+        title={sceneId ? 'Tune your Palace' : 'Make a place unforgettable'}
+        description="Use one photo, then tap the spots your mind already knows."
+        backAction={() => router.back()}
+      />
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <View style={styles.privacyCard}>
+          <Text style={styles.privacyEmoji}>🔒</Text>
+          <View style={styles.flex}>
+            <Text style={styles.privacyTitle}>Private by default</Text>
+            <Text style={styles.privacyBody}>Your image is used only for your Palace. Avoid faces, addresses, or school details.</Text>
+          </View>
+        </View>
+
+        {!canSave ? (
+          <View style={styles.upgradeCard}>
+            <View style={styles.upgradeIcon}><Crown size={21} color={theme.sunDeep} /></View>
+            <Text style={styles.upgradeTitle}>Custom Palaces are a Premium feature</Text>
+            <Text style={styles.upgradeBody}>Use the starter scenes for free, or unlock your own photo-based routes.</Text>
+            <AnimatedPressable onPress={() => router.push('/premium' as Href)} style={styles.upgradeButton}>
+              <Text style={styles.upgradeButtonText}>See Premium</Text>
+            </AnimatedPressable>
+          </View>
+        ) : null}
+
+        <Text style={styles.label}>Name your Palace</Text>
+        <TextInput value={name} onChangeText={setName} maxLength={200} placeholder="e.g. Grandma's kitchen" placeholderTextColor="#AAA7B5" style={styles.input} />
+        <Text style={styles.label}>A short description <Text style={styles.optional}>optional</Text></Text>
+        <TextInput value={description} onChangeText={setDescription} maxLength={1000} multiline placeholder="What makes this place familiar?" placeholderTextColor="#AAA7B5" style={[styles.input, styles.descriptionInput]} />
+
+        <Text style={styles.label}>Your scene image</Text>
+        <AnimatedPressable onPress={chooseImage} style={styles.imageButton}>
+          {imageUri ? <AppImage source={{ uri: imageUri }} style={styles.imagePreview} /> : <><ImagePlus size={28} color={theme.violetDeep} /><Text style={styles.imageButtonTitle}>Choose a photo</Text><Text style={styles.imageButtonBody}>A room, route, desk, or any place you know well</Text></>}
+        </AnimatedPressable>
+
+        <View style={styles.locusHeading}>
+          <View style={styles.flex}><Text style={styles.label}>Tap your loci</Text><Text style={styles.helper}>Select a marker to move it, or add a new one before tapping the image.</Text></View>
+          <Text style={styles.counter}>{loci.length}/{maxLoci}</Text>
+        </View>
+        <View
+          onLayout={(event) => setCanvasSize({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height })}
+          style={styles.canvas}>
+          {imageUri ? <Pressable onPress={placeLocus} style={StyleSheet.absoluteFillObject}><AppImage source={{ uri: imageUri }} style={StyleSheet.absoluteFillObject} /></Pressable> : <View style={styles.canvasEmpty}><MapPinned size={24} color={theme.violetDeep} /><Text style={styles.canvasEmptyText}>Your loci will appear on the photo</Text></View>}
+          {loci.map((locus, index) => (
+            <AnimatedPressable
+              key={locus.id ?? index}
+              accessibilityLabel={`Locus ${index + 1}: ${locus.name}`}
+              onPress={(event) => { event.stopPropagation(); setSelectedIndex(index); }}
+              style={[styles.marker, { left: `${locus.xPercent}%`, top: `${locus.yPercent}%` }, selectedIndex === index && styles.markerActive]}>
+              <Text style={styles.markerText}>{index + 1}</Text>
+            </AnimatedPressable>
+          ))}
+        </View>
+        <AnimatedPressable onPress={addLocus} style={styles.addLocusButton}><Plus size={17} color={theme.violetDeep} /><Text style={styles.addLocusText}>{selectedIndex === loci.length ? 'Tap the image to place it' : 'Add a locus'}</Text></AnimatedPressable>
+
+        <View style={styles.locusList}>
+          {loci.map((locus, index) => (
+            <View key={locus.id ?? index} style={[styles.locusRow, selectedIndex === index && styles.locusRowActive]}>
+              <View style={styles.locusNumber}><Text style={styles.locusNumberText}>{index + 1}</Text></View>
+              <TextInput value={locus.name} onChangeText={(value) => setLoci((current) => current.map((entry, entryIndex) => entryIndex === index ? { ...entry, name: value } : entry))} onFocus={() => setSelectedIndex(index)} placeholder="Name this spot" placeholderTextColor="#AAA7B5" style={styles.locusInput} />
+              <AnimatedPressable accessibilityLabel={`Remove locus ${index + 1}`} onPress={() => removeLocus(index)} style={styles.deleteButton}><Trash2 size={17} color={theme.inkSoft} /></AnimatedPressable>
+            </View>
+          ))}
+        </View>
+
+        {message ? <View style={styles.messageCard}><Text style={styles.messageText}>{message}</Text></View> : null}
+        <AnimatedPressable disabled={isUploading || createCustom.isPending || updateCustom.isPending} onPress={save} style={[styles.saveButton, (isUploading || createCustom.isPending || updateCustom.isPending) && styles.disabled]}>
+          <Check size={19} color={theme.ink} /><Text style={styles.saveText}>{isUploading ? 'Uploading image…' : createCustom.isPending || updateCustom.isPending ? 'Saving…' : canSave ? (sceneId ? 'Save Palace changes' : 'Save my Palace') : 'Unlock custom Palaces'}</Text>
+        </AnimatedPressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  page: { flex: 1, backgroundColor: theme.canvas },
+  content: { padding: 16, paddingBottom: 44 },
+  flex: { flex: 1 },
+  privacyCard: { flexDirection: 'row', gap: 10, borderRadius: 17, borderWidth: 1.5, borderColor: '#BFE7D6', backgroundColor: '#EAF9F1', padding: 13 },
+  privacyEmoji: { fontSize: 22 },
+  privacyTitle: { color: '#247B67', fontSize: 13, fontWeight: '900' },
+  privacyBody: { color: '#3E7769', fontSize: 11, lineHeight: 16, fontWeight: '700', marginTop: 3 },
+  upgradeCard: { marginTop: 14, borderRadius: 19, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 15, alignItems: 'center' },
+  upgradeIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: theme.sun, alignItems: 'center', justifyContent: 'center' },
+  upgradeTitle: { color: theme.ink, fontSize: 14, fontWeight: '900', textAlign: 'center', marginTop: 8 },
+  upgradeBody: { color: theme.inkSoft, fontSize: 12, lineHeight: 17, textAlign: 'center', fontWeight: '700', marginTop: 3 },
+  upgradeButton: { minHeight: 38, borderRadius: 11, backgroundColor: theme.ink, paddingHorizontal: 15, alignItems: 'center', justifyContent: 'center', marginTop: 11 },
+  upgradeButtonText: { color: 'white', fontSize: 12, fontWeight: '900' },
+  label: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 18, marginBottom: 8 },
+  optional: { color: theme.inkSoft, fontSize: 11, fontWeight: '700' },
+  input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 14, color: theme.ink, fontSize: 14, fontWeight: '700' },
+  descriptionInput: { minHeight: 76, paddingTop: 12, textAlignVertical: 'top' },
+  imageButton: { height: 185, borderRadius: 20, borderWidth: 2, borderColor: '#DCD4FF', borderStyle: 'dashed', backgroundColor: '#F7F5FF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  imagePreview: { ...StyleSheet.absoluteFillObject },
+  imageButtonTitle: { color: theme.violetDeep, fontSize: 14, fontWeight: '900', marginTop: 8 },
+  imageButtonBody: { color: theme.inkSoft, fontSize: 11, fontWeight: '700', marginTop: 3 },
+  locusHeading: { flexDirection: 'row', alignItems: 'flex-end', marginTop: 5 },
+  helper: { color: theme.inkSoft, fontSize: 11, lineHeight: 16, fontWeight: '700' },
+  counter: { color: theme.violetDeep, backgroundColor: '#EEE9FF', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontSize: 11, fontWeight: '900' },
+  canvas: { height: 240, marginTop: 5, borderRadius: 21, borderWidth: 2, borderColor: '#DCD4FF', overflow: 'hidden', backgroundColor: '#EEE9FF' },
+  canvasEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  canvasEmptyText: { color: theme.violetDeep, fontSize: 12, fontWeight: '800' },
+  marker: { position: 'absolute', width: 34, height: 34, marginLeft: -17, marginTop: -17, borderRadius: 17, borderWidth: 3, borderColor: 'white', backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center', elevation: 4 },
+  markerActive: { backgroundColor: theme.sunDeep, borderWidth: 4, transform: [{ scale: 1.12 }] },
+  markerText: { color: 'white', fontSize: 12, fontWeight: '900' },
+  addLocusButton: { minHeight: 44, borderRadius: 13, borderWidth: 1.5, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 9 },
+  addLocusText: { color: theme.violetDeep, fontSize: 12, fontWeight: '900' },
+  locusList: { marginTop: 8, gap: 7 },
+  locusRow: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 14, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 9 },
+  locusRowActive: { borderColor: '#9B8CFF', backgroundColor: '#F7F5FF' },
+  locusNumber: { width: 27, height: 27, borderRadius: 14, backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center' },
+  locusNumberText: { color: 'white', fontSize: 11, fontWeight: '900' },
+  locusInput: { flex: 1, minHeight: 42, color: theme.ink, fontSize: 13, fontWeight: '800' },
+  deleteButton: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  messageCard: { marginTop: 13, borderRadius: 14, borderWidth: 1.5, borderColor: '#FFD2DC', backgroundColor: '#FFF0F4', padding: 12 },
+  messageText: { color: '#B53A5F', fontSize: 12, lineHeight: 18, fontWeight: '800', textAlign: 'center' },
+  saveButton: { minHeight: 54, marginTop: 18, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
+  saveText: { color: theme.ink, fontSize: 14, fontWeight: '900' },
+  disabled: { opacity: 0.55 },
+});

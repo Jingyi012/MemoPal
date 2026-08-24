@@ -43,7 +43,21 @@ internal static class PalaceSceneAggregate
     {
         Validate(request);
         var scene = new PalaceScene { IsTemplate = true, Version = 1 };
-        Apply(scene, request);
+        Apply(scene, request, isTemplate: true);
+        foreach (var input in request.Loci) scene.Loci.Add(CreateLocus(scene.Id, input));
+        return scene;
+    }
+
+    public static PalaceScene CreateCustom(string userId, PalaceSceneUpsertRequest request)
+    {
+        Validate(request);
+        var scene = new PalaceScene
+        {
+            IsTemplate = false,
+            UserId = userId,
+            Version = 1,
+        };
+        Apply(scene, request, isTemplate: false);
         foreach (var input in request.Loci) scene.Loci.Add(CreateLocus(scene.Id, input));
         return scene;
     }
@@ -51,7 +65,7 @@ internal static class PalaceSceneAggregate
     public static void Update(PalaceScene scene, PalaceSceneUpsertRequest request)
     {
         Validate(request);
-        Apply(scene, request);
+        Apply(scene, request, isTemplate: true);
         var requestedIds = request.Loci.Where(x => !string.IsNullOrWhiteSpace(x.Id)).Select(x => x.Id!).ToHashSet();
         foreach (var locus in scene.Loci.Where(x => !x.IsDeleted && !requestedIds.Contains(x.Id)))
         {
@@ -74,14 +88,43 @@ internal static class PalaceSceneAggregate
         scene.Version += 1;
     }
 
-    private static void Apply(PalaceScene scene, PalaceSceneUpsertRequest request)
+    public static void UpdateCustom(PalaceScene scene, PalaceSceneUpsertRequest request)
+    {
+        Validate(request);
+        Apply(scene, request, isTemplate: false);
+        var requestedIds = request.Loci
+            .Where(x => !string.IsNullOrWhiteSpace(x.Id))
+            .Select(x => x.Id!)
+            .ToHashSet();
+        foreach (var locus in scene.Loci.Where(x => !x.IsDeleted && !requestedIds.Contains(x.Id)))
+        {
+            locus.IsDeleted = true;
+            locus.DeletedAt = DateTime.UtcNow;
+        }
+
+        var existing = scene.Loci.Where(x => !x.IsDeleted).ToDictionary(x => x.Id);
+        foreach (var input in request.Loci)
+        {
+            if (string.IsNullOrWhiteSpace(input.Id))
+            {
+                scene.Loci.Add(CreateLocus(scene.Id, input));
+                continue;
+            }
+            if (!existing.TryGetValue(input.Id, out var locus))
+                throw new ValidationAppException("A submitted locus does not belong to this Palace.");
+            ApplyLocus(locus, input);
+        }
+        scene.Version += 1;
+    }
+
+    private static void Apply(PalaceScene scene, PalaceSceneUpsertRequest request, bool isTemplate)
     {
         scene.Name = request.Name.Trim();
         scene.Description = request.Description.Trim();
         scene.ImageUrl = MediaPathNormalizer.Normalize(request.ImageUrl);
         scene.Status = request.Status;
         scene.IsPremium = request.IsPremium;
-        scene.IsTemplate = true;
+        scene.IsTemplate = isTemplate;
     }
 
     private static PalaceLocus CreateLocus(string sceneId, PalaceLocusInput input)
