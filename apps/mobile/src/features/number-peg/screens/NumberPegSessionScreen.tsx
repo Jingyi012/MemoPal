@@ -1,6 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
+import { RecallAnswerCard } from '@/components/RecallAnswerCard';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
@@ -19,9 +20,9 @@ import {
 import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Check, Play, RefreshCcw, Sparkles, X } from 'lucide-react-native';
+import { Play, RefreshCcw, Sparkles } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type SessionTab = 'scenes' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
@@ -325,50 +326,23 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
                   />
                 ))}
               </View>
-              <View style={styles.quizCard}>
-                <View style={styles.bigPeg}><Text style={styles.bigPegText}>{currentBinding?.pegNumber ?? questionIndex + 1}</Text></View>
-                <Text style={styles.quizEyebrow}>PEG {currentBinding?.pegNumber ?? questionIndex + 1} · {currentPeg?.keyword.toUpperCase()}</Text>
-                <Text style={styles.quizPrompt}>What was in your mini movie?</Text>
-                <Text style={styles.quizEmoji}>{currentPeg?.image ?? '✨'}</Text>
-                <TextInput
-                  value={answer}
-                  onChangeText={(value) => {
-                    if (!feedback) setAnswer(value);
-                  }}
-                  onSubmitEditing={checkOrContinue}
-                  editable={!feedback}
-                  autoCapitalize="characters"
-                  autoCorrect={false}
-                  placeholder="TYPE YOUR ANSWER"
-                  placeholderTextColor="#AAA7B5"
-                  style={[
-                    styles.answerInput,
-                    feedback === 'correct' && styles.correctInput,
-                    feedback === 'wrong' && styles.wrongInput,
-                  ]}
-                />
-                {feedback && (
-                  <View style={styles.feedback}>
-                    {feedback === 'correct' ? <Check size={18} color={theme.grass} /> : <X size={18} color={theme.berryDeep} />}
-                    <Text style={[styles.feedbackText, { color: feedback === 'correct' ? theme.grass : theme.berryDeep }]}>
-                    {feedback === 'correct'
-                      ? 'Nailed it!'
-                      : isSpelling
-                        ? `Check the spelling: ${spellingHint(currentItem?.answer ?? '', answer)}`
-                        : `It was ${currentItem?.answer}. Picture it once more, then try again.`}
-                    </Text>
-                  </View>
-                )}
-                <AnimatedPressable
-                  disabled={!answer.trim() && !feedback}
-                  onPress={checkOrContinue}
-                  style={[styles.quizButton, !answer.trim() && !feedback && styles.disabledButton]}>
-                  <Text style={styles.quizButtonText}>
-                    {feedback === 'wrong' ? 'Try this peg again' : feedback ? 'Next peg' : 'Check answer'}
-                  </Text>
-                </AnimatedPressable>
-              </View>
-              <Text style={styles.scoreText}>Score so far: {score} / {responses.length}</Text>
+              <RecallAnswerCard
+                tone="peg"
+                icon={<Text style={styles.quizEmoji}>{currentPeg?.image ?? '✨'}</Text>}
+                eyebrow={`PEG ${currentBinding?.pegNumber ?? questionIndex + 1} · ${currentPeg?.keyword.toUpperCase()}`}
+                prompt="What was in your mini movie?"
+                answer={answer}
+                feedback={feedback}
+                feedbackText={feedback === 'correct'
+                  ? 'Nailed it!'
+                  : isSpelling
+                    ? `Check the spelling: ${spellingHint(currentItem?.answer ?? '', answer)}`
+                    : `It was ${currentItem?.answer}. Picture it once more, then try again.`}
+                actionLabel={feedback === 'wrong' ? 'Try this peg again' : feedback ? 'Next peg' : 'Check answer'}
+                scoreLabel={`Score so far: ${score} / ${responses.length}`}
+                onAnswerChange={setAnswer}
+                onSubmit={checkOrContinue}
+              />
             </>
           )}
         </ScrollView>
@@ -407,21 +381,7 @@ const styles = StyleSheet.create({
   dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: theme.line },
   doneDot: { backgroundColor: theme.grass },
   currentDot: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.25 }] },
-  quizCard: { marginTop: 14, backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 24, padding: 22, alignItems: 'center' },
-  bigPeg: { width: 58, height: 58, borderRadius: 29, backgroundColor: theme.berry, alignItems: 'center', justifyContent: 'center', shadowColor: theme.berry, shadowOpacity: 0.35, shadowRadius: 8, elevation: 3 },
-  bigPegText: { color: 'white', fontSize: 21, fontWeight: '900' },
-  quizEyebrow: { color: theme.berryDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.9, marginTop: 13 },
-  quizPrompt: { color: theme.inkSoft, fontSize: 13, fontWeight: '800', marginTop: 5 },
-  quizEmoji: { fontSize: 50, marginVertical: 14 },
-  answerInput: { width: '100%', minHeight: 54, borderRadius: 14, borderWidth: 2.5, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 13, color: theme.ink, textAlign: 'center', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
-  correctInput: { borderColor: theme.grass, backgroundColor: '#F1FBF5' },
-  wrongInput: { borderColor: theme.berry, backgroundColor: '#FFF1F4' },
-  feedback: { marginTop: 12, flexDirection: 'row', gap: 7, alignItems: 'center' },
-  feedbackText: { flexShrink: 1, fontSize: 12, lineHeight: 18, fontWeight: '900', textAlign: 'center' },
-  quizButton: { width: '100%', minHeight: 48, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
-  quizButtonText: { color: 'white', fontSize: 14, fontWeight: '900' },
-  disabledButton: { opacity: 0.4 },
-  scoreText: { color: theme.inkSoft, fontSize: 12, fontWeight: '900', textAlign: 'center', marginTop: 15 },
+  quizEmoji: { fontSize: 36 },
   completeCard: { flex: 1, minHeight: 390, borderRadius: 25, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 24, alignItems: 'center', justifyContent: 'center' },
   trophy: { fontSize: 54 },
   completeTitle: { color: theme.ink, fontSize: 22, fontWeight: '900', marginTop: 12 },

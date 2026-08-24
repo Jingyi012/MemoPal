@@ -2,6 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
+import { RecallAnswerCard } from '@/components/RecallAnswerCard';
 import { useMemorySet } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { usePalaceScene } from '@/features/palace-scenes';
@@ -18,9 +19,9 @@ import {
 import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Check, ChevronLeft, ChevronRight, Footprints, MapPinned, RotateCcw, Sparkles, Target, X } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Footprints, MapPinned, RotateCcw, Sparkles, Target } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type SessionMode = 'browse' | 'walk' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
@@ -361,51 +362,23 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
               </AnimatedPressable>
             </View>
           ) : active ? (
-            <View style={styles.recallCard}>
-              <View style={styles.recallIcon}><Target size={23} color={theme.violetDeep} /></View>
-              <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}</Text>
-              <Text style={styles.recallPrompt}>What did you place here?</Text>
-              <TextInput
-                value={answer}
-                onChangeText={(value) => { if (!feedback) setAnswer(value); }}
-                onSubmitEditing={checkOrContinue}
-                editable={!feedback}
-                autoCapitalize="characters"
-                autoCorrect={false}
-                placeholder="TYPE YOUR ANSWER"
-                placeholderTextColor="#AAA7B5"
-                style={[
-                  styles.answerInput,
-                  feedback === 'correct' && styles.correctInput,
-                  feedback === 'wrong' && styles.wrongInput,
-                ]}
-              />
-              {feedback ? (
-                <View style={styles.feedback}>
-                  {feedback === 'correct' ? (
-                    <Check size={18} color={theme.grass} />
-                  ) : (
-                    <X size={18} color={theme.berryDeep} />
-                  )}
-                  <Text style={[styles.feedbackText, { color: feedback === 'correct' ? theme.grass : theme.berryDeep }]}>
-                    {feedback === 'correct'
-                      ? 'That is it!'
-                      : isSpelling
-                        ? `Check the spelling: ${spellingHint(active.item.answer, answer)}`
-                        : `It was ${active.item.answer}. See it at this locus once more, then try again.`}
-                  </Text>
-                </View>
-              ) : null}
-              <AnimatedPressable
-                disabled={!answer.trim() && !feedback}
-                onPress={checkOrContinue}
-                style={[styles.recallButton, !answer.trim() && !feedback && styles.disabled]}>
-                <Text style={styles.recallButtonText}>
-                  {feedback === 'wrong' ? 'Try this locus again' : feedback ? 'Next locus' : 'Check answer'}
-                </Text>
-              </AnimatedPressable>
-              <Text style={styles.count}>Locus {activeIndex + 1} / {placements.length} · Score {score}</Text>
-            </View>
+            <RecallAnswerCard
+              tone="palace"
+              icon={<Target size={23} color={theme.violetDeep} />}
+              eyebrow={`LOCUS ${activeIndex + 1} · ${active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}`}
+              prompt="What did you place here?"
+              answer={answer}
+              feedback={feedback}
+              feedbackText={feedback === 'correct'
+                ? 'That is it!'
+                : isSpelling
+                  ? `Check the spelling: ${spellingHint(active.item.answer, answer)}`
+                  : `It was ${active.item.answer}. See it at this locus once more, then try again.`}
+              actionLabel={feedback === 'wrong' ? 'Try this locus again' : feedback ? 'Next locus' : 'Check answer'}
+              scoreLabel={`Locus ${activeIndex + 1} / ${placements.length} · Score ${score}`}
+              onAnswerChange={setAnswer}
+              onSubmit={checkOrContinue}
+            />
           ) : null
         ) : (
           <>
@@ -477,16 +450,6 @@ const styles = StyleSheet.create({
   roundButton: { width: 46, height: 46, borderRadius: 23, backgroundColor: theme.sun, alignItems: 'center', justifyContent: 'center' },
   disabled: { opacity: 0.35 },
   count: { color: theme.inkSoft, fontSize: 12, fontWeight: '900' },
-  recallCard: { borderRadius: 23, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: theme.paper, padding: 22, alignItems: 'center' },
-  recallIcon: { width: 50, height: 50, borderRadius: 18, backgroundColor: '#FFF0F4', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  recallPrompt: { color: theme.ink, fontSize: 20, fontWeight: '900', marginTop: 12, marginBottom: 16 },
-  answerInput: { width: '100%', minHeight: 54, borderRadius: 14, borderWidth: 2.5, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 13, color: theme.ink, textAlign: 'center', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
-  correctInput: { borderColor: theme.grass, backgroundColor: '#F1FBF5' },
-  wrongInput: { borderColor: theme.berry, backgroundColor: '#FFF1F4' },
-  feedback: { marginTop: 12, flexDirection: 'row', gap: 7, alignItems: 'center' },
-  feedbackText: { flexShrink: 1, fontSize: 12, lineHeight: 18, fontWeight: '900', textAlign: 'center' },
-  recallButton: { width: '100%', minHeight: 48, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center', marginTop: 16, marginBottom: 14 },
-  recallButtonText: { color: 'white', fontSize: 14, fontWeight: '900' },
   resultCard: { minHeight: 360, borderRadius: 23, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: theme.paper, padding: 24, alignItems: 'center', justifyContent: 'center' },
   resultEmoji: { fontSize: 52 },
   resultTitle: { color: theme.ink, fontSize: 22, fontWeight: '900', marginTop: 10 },
