@@ -13,6 +13,7 @@ import { LoginRequest } from '@/features/auth/types/auth';
 import { User } from '@/features/profile/types/users';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from '@tanstack/react-query';
+import { clearPersistedQueryCache } from '@/utils/queryClient';
 import { useRouter } from 'expo-router';
 import React, {
   createContext,
@@ -235,7 +236,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       clearAuthTokens(),
     ]);
     setUser(null);
-    queryClient.clear();
+    await clearPersistedQueryCache();
     router.replace('/login');
   };
 

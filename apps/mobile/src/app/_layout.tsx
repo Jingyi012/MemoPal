@@ -1,14 +1,15 @@
 import { AuthProvider } from '@/contexts/AuthProvider';
+import { NetworkStatusBanner } from '@/components/NetworkStatusBanner';
 import { GamificationRewardProvider } from '@/contexts/GamificationRewardContext';
 import { UserStateProvider } from '@/contexts/UserStateContext';
 import { useNotificationObserver } from '@/features/notifications/hooks/useNotificationObserver';
 import { useSubscriptionEntitlementSync } from '@/features/subscription/hooks/useSubscriptionEntitlementSync';
 import { useSubscriptionGuard } from '@/features/subscription/hooks/useSubscriptionGuard';
 import { useGamificationBootstrap } from '@/features/gamification/shared/hooks/useGamificationBootstrap';
-import { queryClient } from '@/utils/queryClient';
+import { QUERY_CACHE_BUSTER, queryClient, queryPersister } from '@/utils/queryClient';
 import { toastConfig } from '@/utils/toastConfig';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -32,6 +33,7 @@ function AppLayout() {
           className={colorScheme === 'dark' ? 'dark flex-1 bg-[#1E1A30]' : 'flex-1 bg-[#FFFDF8]'}
           //style={palettes[colorScheme ?? 'light']}
         >
+          <NetworkStatusBanner />
           <Stack
             initialRouteName="index"
             screenOptions={{
@@ -55,7 +57,13 @@ function AppLayout() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister: queryPersister,
+          buster: QUERY_CACHE_BUSTER,
+          maxAge: 1000 * 60 * 60 * 24,
+        }}>
         <AuthProvider>
           <UserStateProvider>
             <GamificationRewardProvider>
@@ -64,7 +72,7 @@ export default function RootLayout() {
           </UserStateProvider>
         </AuthProvider>
         <Toast config={toastConfig} topOffset={60} />
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </SafeAreaProvider>
   );
 }

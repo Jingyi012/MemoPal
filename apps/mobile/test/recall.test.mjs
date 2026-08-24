@@ -21,6 +21,7 @@ import {
   getPalaceCapacityMessage,
   getPalaceLoci,
 } from '../src/features/palace-scenes/utils/palaceCapacity.ts';
+import { isNetworkStateOnline } from '../src/core/network/networkState.ts';
 
 const makeScene = (id, locusCount) => ({
   id,
@@ -93,6 +94,12 @@ test('turns pasted lines into bounded, non-empty memory items', () => {
     parseBulkItems('  rhythm\n\n separate\r\ncalendar  ', 2),
     ['rhythm', 'separate'],
   );
+});
+
+test('treats an unknown reachability result as online when the device is connected', () => {
+  assert.equal(isNetworkStateOnline({ isConnected: true, isInternetReachable: null }), true);
+  assert.equal(isNetworkStateOnline({ isConnected: true, isInternetReachable: false }), false);
+  assert.equal(isNetworkStateOnline({ isConnected: false, isInternetReachable: true }), false);
 });
 
 test('keeps the peg map ordered and makes each scene vivid', () => {

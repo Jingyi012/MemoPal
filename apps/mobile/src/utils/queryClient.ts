@@ -1,4 +1,14 @@
-import { QueryClient } from '@tanstack/react-query';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { onlineManager, QueryClient } from '@tanstack/react-query';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import { Platform } from 'react-native';
+
+import { subscribeToOnlineState } from '@/core/network/networkStatus';
+
+export const QUERY_CACHE_KEY = 'memopal-query-cache-v1';
+export const QUERY_CACHE_BUSTER = 'memopal-query-cache-v1';
+
+onlineManager.setEventListener((setOnline) => subscribeToOnlineState(setOnline));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,3 +28,16 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+export const queryPersister = createAsyncStoragePersister({
+  // Expo Router renders the web shell on the server first. Do not touch
+  // browser storage during that pass; the client restores the cache after mount.
+  storage: Platform.OS === 'web' && typeof window === 'undefined' ? undefined : AsyncStorage,
+  key: QUERY_CACHE_KEY,
+  throttleTime: 1_000,
+});
+
+export async function clearPersistedQueryCache() {
+  queryClient.clear();
+  await queryPersister.removeClient();
+}

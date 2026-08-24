@@ -3,6 +3,7 @@ import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useXpIntegrityCheck } from '@/features/profile/hooks/useDiagnostics';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { useQueryClient } from '@tanstack/react-query';
+import { clearPersistedQueryCache } from '@/utils/queryClient';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -91,7 +92,7 @@ export default function SettingsScreen() {
   };
 
   const clearLocalData = async () => {
-    queryClient.clear();
+    await clearPersistedQueryCache();
     Toast.show({
       type: 'success',
       text1: 'API cache cleared',
