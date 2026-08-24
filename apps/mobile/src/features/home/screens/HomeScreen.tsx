@@ -98,7 +98,8 @@ const HomeScreen = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
-        contentContainerStyle={{ paddingBottom: 24 }}>
+        // Keep the final quick action above the tab bar on compact devices.
+        contentContainerStyle={{ paddingBottom: 128 }}>
         <View className="px-4 py-2">
           {showTutorialPrompt && (
             <View className="mt-3">
