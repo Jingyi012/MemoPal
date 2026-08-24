@@ -191,6 +191,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw new Error('Missing refresh token from login response.');
     }
 
+    // A login can happen without an explicit logout (for example after an
+    // account switch). Never let the previous account's persisted reads leak
+    // into the new session.
+    if (user?.id && user.id !== sessionUser.id) {
+      await clearPersistedQueryCache();
+    }
+
     await Promise.all([
       AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionUser)),
       setAccessToken(token),
