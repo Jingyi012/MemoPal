@@ -54,6 +54,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
             ) : (
               <AnimatedPressable
                 accessibilityLabel="Go back"
+                hitSlop={4}
                 onPress={backAction}
                 style={styles.backButton}>
                 <ChevronLeft size={20} color={theme.ink} />
@@ -82,6 +83,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
                   return (
                     <AnimatedPressable
                       accessibilityLabel={action.accessibilityLabel}
+                      hitSlop={4}
                       key={index}
                       onPress={action.onPress}
                       style={styles.actionButton}>
@@ -119,8 +121,8 @@ const styles = {
     minHeight: 44,
   },
   backButton: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 19,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
@@ -161,8 +163,8 @@ const styles = {
     gap: 7,
   },
   actionButton: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 19,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,

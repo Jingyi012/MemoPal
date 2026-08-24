@@ -279,24 +279,32 @@ export default function PalaceMemorySessionScreen({
 
         <View style={styles.modeRail}>
           <AnimatedPressable
+            accessibilityLabel="Open Palace map"
+            accessibilityState={{ selected: mode === 'browse' }}
             onPress={() => { setMode('browse'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
             style={[styles.modeTab, mode === 'browse' && styles.modeTabActive]}>
             <MapPinned size={16} color={mode === 'browse' ? theme.violetDeep : theme.inkSoft} />
             <Text style={[styles.modeTabText, mode === 'browse' && styles.modeTabTextActive]}>Map</Text>
           </AnimatedPressable>
           <AnimatedPressable
+            accessibilityLabel="Start Palace walk"
+            accessibilityState={{ selected: mode === 'walk' }}
             onPress={() => { setMode('walk'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
             style={[styles.modeTab, mode === 'walk' && styles.modeTabActive]}>
             <Footprints size={16} color={mode === 'walk' ? theme.violetDeep : theme.inkSoft} />
             <Text style={[styles.modeTabText, mode === 'walk' && styles.modeTabTextActive]}>Walk</Text>
           </AnimatedPressable>
           <AnimatedPressable
+            accessibilityLabel="Open Palace ordered list"
+            accessibilityState={{ selected: mode === 'list' }}
             onPress={() => { setMode('list'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
             style={[styles.modeTab, mode === 'list' && styles.modeTabActive]}>
             <List size={16} color={mode === 'list' ? theme.violetDeep : theme.inkSoft} />
             <Text style={[styles.modeTabText, mode === 'list' && styles.modeTabTextActive]}>List</Text>
           </AnimatedPressable>
           <AnimatedPressable
+            accessibilityLabel="Open Palace recall"
+            accessibilityState={{ selected: mode === 'recall' }}
             onPress={startRecall}
             style={[styles.modeTab, mode === 'recall' && styles.modeTabActive]}>
             <Target size={16} color={mode === 'recall' ? theme.violetDeep : theme.inkSoft} />

@@ -247,11 +247,19 @@ export default function NumberPegSessionScreen({
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <CommonHeader eyebrow="Number Peg" title={memorySet.title} description={`${memorySet.items.length} items · Number Peg`} backAction={() => router.back()} />
       <View style={styles.tabs}>
-        <AnimatedPressable onPress={() => openTab('scenes')} style={[styles.tab, tab === 'scenes' && styles.activeTab]}>
+        <AnimatedPressable
+          accessibilityLabel="Open Number Peg scenes"
+          accessibilityState={{ selected: tab === 'scenes' }}
+          onPress={() => openTab('scenes')}
+          style={[styles.tab, tab === 'scenes' && styles.activeTab]}>
           <Sparkles size={16} color={tab === 'scenes' ? 'white' : theme.inkSoft} />
           <Text style={[styles.tabText, tab === 'scenes' && styles.activeTabText]}>Scenes</Text>
         </AnimatedPressable>
-        <AnimatedPressable onPress={() => openTab('recall')} style={[styles.tab, tab === 'recall' && styles.activeTab]}>
+        <AnimatedPressable
+          accessibilityLabel="Open Number Peg recall"
+          accessibilityState={{ selected: tab === 'recall' }}
+          onPress={() => openTab('recall')}
+          style={[styles.tab, tab === 'recall' && styles.activeTab]}>
           <Play size={16} color={tab === 'recall' ? 'white' : theme.inkSoft} />
           <Text style={[styles.tabText, tab === 'recall' && styles.activeTabText]}>Recall</Text>
         </AnimatedPressable>
