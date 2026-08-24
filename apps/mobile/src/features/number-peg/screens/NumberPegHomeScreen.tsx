@@ -1,14 +1,14 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
+import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { NumberPegItemCard } from '@/features/number-peg/components/NumberPegItemCard';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { useNumberPegOverview } from '@/features/number-peg/hooks/useNumberPegOverview';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, ChevronRight, Plus, RefreshCcw, Sparkles } from 'lucide-react-native';
+import { ArrowRight, ChevronRight, RefreshCcw, Sparkles } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function NumberPegHomeScreen() {
@@ -31,30 +31,15 @@ export default function NumberPegHomeScreen() {
         refreshControl={
           <RefreshControl refreshing={memorySets.isRefetching} onRefresh={memorySets.refetch} />
         }>
-        <LinearGradient
-          colors={[theme.night, theme.nightDeep]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.hero}>
-          <View style={styles.heroGlow} />
-          <View style={styles.heroIcon}>
-            <Sparkles size={26} color={theme.ink} />
-          </View>
-          <Text style={styles.heroEyebrow}>FAST, PLAYFUL, POWERFUL</Text>
-          <Text style={styles.heroTitle}>Build a memory in minutes</Text>
-          <Text style={styles.heroBody}>
-            Add up to 10 words. MemoPal pairs each one with a fixed number shape and helps you
-            make the scene wonderfully weird.
-          </Text>
-          <AnimatedPressable
-            accessibilityRole="button"
-            onPress={() => router.push('/number-peg/create' as Href)}
-            style={styles.primaryButton}>
-            <Plus size={20} color={theme.ink} />
-            <Text style={styles.primaryButtonText}>Make a new memory</Text>
-            <ArrowRight size={19} color={theme.ink} />
-          </AnimatedPressable>
-        </LinearGradient>
+        <TechniqueHeroCard
+          tone="peg"
+          icon={<Sparkles size={26} color={theme.ink} />}
+          eyebrow="FAST, PLAYFUL, POWERFUL"
+          title="Build a memory in minutes"
+          body="Add up to 10 words. MemoPal pairs each one with a fixed number shape and helps you make the scene wonderfully weird."
+          actionLabel="Make a new memory"
+          onAction={() => router.push('/number-peg/create' as Href)}
+        />
 
         <AnimatedPressable onPress={() => router.push('/number-peg/familiarity' as Href)} style={styles.familiarityCard}>
           <View style={styles.familiarityIcon}><Sparkles size={20} color={theme.berryDeep} /></View>
@@ -138,49 +123,11 @@ export default function NumberPegHomeScreen() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 40 },
-  hero: { borderRadius: 26, padding: 20, overflow: 'hidden' },
-  heroGlow: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    right: -60,
-    top: -70,
-    backgroundColor: 'rgba(255, 201, 60, 0.18)',
-  },
-  heroIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 18,
-    backgroundColor: theme.sun,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 18,
-  },
-  heroEyebrow: { color: '#C9C5E0', fontSize: 11, fontWeight: '900', letterSpacing: 1.1 },
-  heroTitle: { color: 'white', fontSize: 25, fontWeight: '900', marginTop: 6 },
-  heroBody: { color: '#E4E1F1', fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 315 },
   familiarityCard: { minHeight: 72, borderRadius: 18, borderWidth: 2, borderColor: '#FFD9E2', backgroundColor: '#FFF0F4', padding: 12, marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
   familiarityIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
   familiarityCopy: { flex: 1 },
   familiarityTitle: { color: theme.ink, fontSize: 14, fontWeight: '900' },
   familiarityBody: { color: theme.inkSoft, fontSize: 11.5, lineHeight: 17, fontWeight: '700', marginTop: 3 },
-  primaryButton: {
-    marginTop: 20,
-    minHeight: 52,
-    borderRadius: 16,
-    backgroundColor: theme.sun,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-    shadowColor: theme.sunDeep,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 3,
-  },
-  primaryButtonText: { color: theme.ink, fontSize: 15, fontWeight: '900', flex: 1, textAlign: 'center' },
   sectionHeadingRow: {
     marginTop: 28,
     marginBottom: 11,

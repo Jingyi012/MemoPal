@@ -2,13 +2,13 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
+import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { usePalaceScenes } from '@/features/palace-scenes';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, ChevronRight, MapPinned, Plus, RefreshCcw } from 'lucide-react-native';
+import { ChevronRight, MapPinned, RefreshCcw } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function PalaceHomeScreen() {
@@ -32,30 +32,15 @@ export default function PalaceHomeScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} />}>
-        <LinearGradient
-          colors={['#51479B', '#2B2641']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.hero}>
-          <View style={styles.heroGlow} />
-          <View style={styles.heroIcon}>
-            <MapPinned size={27} color={theme.ink} />
-          </View>
-          <Text style={styles.heroEyebrow}>SEE IT · PLACE IT · RECALL IT</Text>
-          <Text style={styles.heroTitle}>Turn one place into a memory journey</Text>
-          <Text style={styles.heroBody}>
-            Choose a scene, place each idea on a numbered locus, and follow the same visual path
-            whenever you want to remember it.
-          </Text>
-          <AnimatedPressable
-            accessibilityRole="button"
-            onPress={() => router.push('/palaces/create-memory' as Href)}
-            style={styles.primaryButton}>
-            <Plus size={20} color={theme.ink} />
-            <Text style={styles.primaryButtonText}>Build a new Palace</Text>
-            <ArrowRight size={19} color={theme.ink} />
-          </AnimatedPressable>
-        </LinearGradient>
+        <TechniqueHeroCard
+          tone="palace"
+          icon={<MapPinned size={27} color={theme.ink} />}
+          eyebrow="SEE IT · PLACE IT · RECALL IT"
+          title="Turn one place into a memory journey"
+          body="Choose a scene, place each idea on a numbered locus, and follow the same visual path whenever you want to remember it."
+          actionLabel="Build a new Palace"
+          onAction={() => router.push('/palaces/create-memory' as Href)}
+        />
 
         <View style={styles.sectionHeadingRow}>
           <View>
@@ -182,44 +167,6 @@ function Notice({
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 40 },
-  hero: { borderRadius: 26, padding: 20, overflow: 'hidden' },
-  heroGlow: {
-    position: 'absolute',
-    width: 190,
-    height: 190,
-    borderRadius: 95,
-    right: -55,
-    top: -75,
-    backgroundColor: 'rgba(184, 173, 255, 0.2)',
-  },
-  heroIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 18,
-    backgroundColor: '#B9B1FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 18,
-  },
-  heroEyebrow: { color: '#E3DFFF', fontSize: 11, fontWeight: '900', letterSpacing: 1.1 },
-  heroTitle: { color: 'white', fontSize: 25, fontWeight: '900', marginTop: 6 },
-  heroBody: { color: '#E8E5F4', fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 320 },
-  primaryButton: {
-    marginTop: 20,
-    minHeight: 52,
-    borderRadius: 16,
-    backgroundColor: theme.sun,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-    shadowColor: theme.sunDeep,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 3,
-  },
-  primaryButtonText: { color: theme.ink, fontSize: 15, fontWeight: '900', flex: 1, textAlign: 'center' },
   sectionHeadingRow: {
     marginTop: 28,
     marginBottom: 11,
