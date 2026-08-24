@@ -1,5 +1,3 @@
-import { Colors } from '@/constants/colors';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, LucideIcon } from 'lucide-react-native';
 import React, { ReactNode } from 'react';
 import { Text, View } from 'react-native';
@@ -17,6 +15,7 @@ interface Actions {
 interface HeaderProps {
   title: string;
   description?: ReactNode;
+  eyebrow?: string;
   actions?: Actions[];
   additionalContent?: ReactNode;
   /** Optional override for the back button slot */
@@ -31,6 +30,7 @@ interface HeaderProps {
 export const CommonHeader: React.FC<HeaderProps> = ({
   title,
   description = '',
+  eyebrow,
   actions = [],
   additionalContent,
   leftComponent,
@@ -42,25 +42,9 @@ export const CommonHeader: React.FC<HeaderProps> = ({
   const insets = useSafeAreaInsets();
 
   return (
-    <View
-      style={{
-        borderBottomLeftRadius: 24,
-        borderBottomRightRadius: 24,
-      }}>
-      <LinearGradient
-        colors={[Colors.teal600, Colors.indigo600]}
-        className="p-4 pb-6 shadow-lg"
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={{
-          borderBottomLeftRadius: 24,
-          borderBottomRightRadius: 24,
-          padding: 16,
-          paddingTop: insets.top + 16,
-          paddingBottom: 24,
-          overflow: 'hidden',
-        }}>
-        <View className="flex-row items-center gap-3">
+    <View style={styles.header}>
+      <View style={[styles.headerInner, { paddingTop: insets.top + 8 }]}>
+        <View style={styles.row}>
           {/* Back button slot */}
           {!hideBackButton ? (
             leftComponent ? (
@@ -68,8 +52,8 @@ export const CommonHeader: React.FC<HeaderProps> = ({
             ) : (
               <AnimatedPressable
                 onPress={backAction}
-                className="h-10 w-10 items-center justify-center rounded-full bg-white/20">
-                <ChevronLeft size={20} color="white" />
+                style={styles.backButton}>
+                <ChevronLeft size={20} color="#2B2A3D" />
               </AnimatedPressable>
             )
           ) : (
@@ -77,13 +61,14 @@ export const CommonHeader: React.FC<HeaderProps> = ({
           )}
 
           {/* Title + description */}
-          <View className="flex-1">
-            <Text className="text-lg text-white">{title}</Text>
-            {description && <Text className="text-sm text-teal-100">{description}</Text>}
+          <View style={styles.titleBlock}>
+            {eyebrow && <Text style={styles.eyebrow}>{eyebrow}</Text>}
+            <Text style={styles.title}>{title}</Text>
+            {description && <Text style={styles.description}>{description}</Text>}
           </View>
 
           {/* Actions */}
-          <View className="flex-row gap-2">
+          <View style={styles.actions}>
             {actions.length > 0 &&
               actions.map((action, index) => {
                 if (action.component) {
@@ -95,8 +80,8 @@ export const CommonHeader: React.FC<HeaderProps> = ({
                     <AnimatedPressable
                       key={index}
                       onPress={action.onPress}
-                      className="h-10 w-10 items-center justify-center rounded-full bg-white/20">
-                      <Icon size={20} color="white" />
+                      style={styles.actionButton}>
+                      <Icon size={20} color="#2B2A3D" />
                     </AnimatedPressable>
                   );
                 }
@@ -107,8 +92,79 @@ export const CommonHeader: React.FC<HeaderProps> = ({
         </View>
 
         {/* Additional Content */}
-        {additionalContent && <View className="mt-4 space-y-2">{additionalContent}</View>}
-      </LinearGradient>
+        {additionalContent && <View style={styles.additionalContent}>{additionalContent}</View>}
+      </View>
     </View>
   );
+};
+
+const styles = {
+  header: {
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE9DC',
+  },
+  headerInner: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  row: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+    minHeight: 44,
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: '#F6F3EA',
+  },
+  titleBlock: {
+    flex: 1,
+  },
+  eyebrow: {
+    alignSelf: 'flex-start' as const,
+    color: '#E8527A',
+    backgroundColor: '#FFF0F4',
+    borderWidth: 1.3,
+    borderColor: '#FFD9E2',
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    fontSize: 10,
+    fontWeight: '900' as const,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase' as const,
+    marginBottom: 4,
+  },
+  title: {
+    color: '#2B2A3D',
+    fontSize: 19,
+    fontWeight: '900' as const,
+    letterSpacing: -0.2,
+  },
+  description: {
+    color: '#6B6A80',
+    fontSize: 11.5,
+    fontWeight: '700' as const,
+    marginTop: 2,
+  },
+  actions: {
+    flexDirection: 'row' as const,
+    gap: 7,
+  },
+  actionButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: '#F6F3EA',
+  },
+  additionalContent: {
+    marginTop: 10,
+  },
 };

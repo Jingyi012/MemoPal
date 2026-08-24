@@ -8,6 +8,8 @@ export const numberPegTheme = {
   sunDeep: '#F2A900',
   berry: '#FF6F91',
   berryDeep: '#E8527A',
+  violet: '#9B8CFF',
+  violetDeep: '#7A68E0',
   grass: '#3FB87F',
   sky: '#4FC0E8',
   night: '#2B2641',

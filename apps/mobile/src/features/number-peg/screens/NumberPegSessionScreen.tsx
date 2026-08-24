@@ -204,7 +204,7 @@ export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: s
 
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <CommonHeader title={memorySet.title} description={`${memorySet.items.length} items · Number Peg`} backAction={() => router.back()} />
+      <CommonHeader eyebrow="Number Peg" title={memorySet.title} description={`${memorySet.items.length} items · Number Peg`} backAction={() => router.back()} />
       <View style={styles.tabs}>
         <AnimatedPressable onPress={() => openTab('scenes')} style={[styles.tab, tab === 'scenes' && styles.activeTab]}>
           <Sparkles size={16} color={tab === 'scenes' ? 'white' : theme.inkSoft} />

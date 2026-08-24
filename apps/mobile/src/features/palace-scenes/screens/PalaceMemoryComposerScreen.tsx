@@ -6,18 +6,21 @@ import type { MemorySetUpsertRequest } from '@/features/memory-sets';
 import { usePalaceScenes } from '@/features/palace-scenes';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
-import { Href, useRouter } from 'expo-router';
+import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight, Check, Image as ImageIcon, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
+import { firstParam, parseComposerItems } from '@/features/memory-composer/utils/composerParams';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function PalaceMemoryComposerScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ title?: string | string[]; items?: string | string[] }>();
   const scenesQuery = usePalaceScenes();
   const { createMemorySet } = useMemorySetMutations();
-  const [title, setTitle] = useState('');
+  const prefilledItems = useMemo(() => parseComposerItems(params.items), [params.items]);
+  const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
   const [newItem, setNewItem] = useState('');
-  const [items, setItems] = useState<string[]>([]);
+  const [items, setItems] = useState<string[]>(() => prefilledItems);
   const [selectedSceneId, setSelectedSceneId] = useState('');
   const [message, setMessage] = useState<string | null>(null);
 
@@ -80,7 +83,7 @@ export default function PalaceMemoryComposerScreen() {
 
   return (
     <View style={styles.page}>
-      <CommonHeader title="Build a Memory Palace" description="One scene · many memorable loci" backAction={() => router.back()} />
+      <CommonHeader eyebrow="Memory Palace" title="Build a Memory Palace" description="One scene · many memorable loci" backAction={() => router.back()} />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
         <View style={styles.infoCard}>
           <Text style={styles.infoEmoji}>🏡</Text>

@@ -135,6 +135,7 @@ export default function PalaceMemorySessionScreen({ memorySetId }: { memorySetId
   return (
     <View style={styles.page}>
       <CommonHeader
+        eyebrow="Memory Palace"
         title={memorySet.title}
         description={`${scene.name} · ${placements.length} loci`}
         backAction={() => router.back()}

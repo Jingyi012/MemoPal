@@ -6,9 +6,10 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import type { PegNumber } from '@/features/number-peg/types/numberPeg.types';
 import { buildNumberPegItems, buildPegScene } from '@/features/number-peg/utils/numberPegMap';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
-import { Href, useRouter } from 'expo-router';
+import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Check, Plus, Sparkles, Trash2, WandSparkles } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
+import { firstParam, parseComposerGoal, parseComposerItems } from '@/features/memory-composer/utils/composerParams';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -31,13 +32,15 @@ const goals: { key: MemoryGoalType; label: string; emoji: string }[] = [
 
 export default function NumberPegComposerScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ title?: string | string[]; items?: string | string[]; goalType?: string | string[] }>();
   const { createMemorySet } = useMemorySetMutations();
   const pegs = useMemo(() => buildNumberPegItems(), []);
+  const prefilledItems = useMemo(() => parseComposerItems(params.items), [params.items]);
   const [step, setStep] = useState<ComposerStep>('items');
-  const [title, setTitle] = useState('');
-  const [goalType, setGoalType] = useState<MemoryGoalType>('spelling');
+  const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
+  const [goalType, setGoalType] = useState<MemoryGoalType>(() => parseComposerGoal(params.goalType));
   const [newItem, setNewItem] = useState('');
-  const [items, setItems] = useState<string[]>([]);
+  const [items, setItems] = useState<string[]>(() => prefilledItems.slice(0, 10));
   const [scenes, setScenes] = useState<SceneDraft[]>([]);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
@@ -150,6 +153,7 @@ export default function NumberPegComposerScreen() {
       style={styles.page}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <CommonHeader
+        eyebrow="Number Peg"
         title={step === 'items' ? 'Add what you need to remember' : 'Make tiny memory movies'}
         description={step === 'items' ? 'Step 1 of 2 · Up to 10 items' : 'Step 2 of 2 · Weird wins'}
         backAction={() => (step === 'scenes' ? setStep('items') : router.back())}
