@@ -2,6 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
+import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { RecallAnswerCard } from '@/components/RecallAnswerCard';
 import { ReturnToTodayButton } from '@/components/ReturnToTodayButton';
 import { PalaceFocusCard } from '@/features/palace-scenes/components/PalaceFocusCard';
@@ -159,9 +160,12 @@ export default function PalaceMemorySessionScreen({
       <View style={styles.page}>
         <CommonHeader title="Memory Palace" description="Scene unavailable" backAction={() => router.back()} />
         <View style={styles.empty}>
-          <Text style={styles.emptyEmoji}>🏚️</Text>
-          <Text style={styles.emptyTitle}>This Palace could not open</Text>
-          <Text style={styles.emptyText}>Refresh your connection or choose another memory.</Text>
+          <ModuleNoticeCard
+            emoji="🏚️"
+            title="This Palace could not open"
+            body="Refresh your connection or choose another memory."
+            onAction={() => void Promise.allSettled([memorySetQuery.refetch(), sceneQuery.refetch()])}
+          />
         </View>
       </View>
     );
@@ -517,7 +521,4 @@ const styles = StyleSheet.create({
   retrySaveButton: { marginTop: 8, borderRadius: 12, backgroundColor: '#FFE3EA', paddingHorizontal: 14, paddingVertical: 9 },
   retrySaveText: { color: theme.berryDeep, fontSize: 12, fontWeight: '900' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  emptyEmoji: { fontSize: 43 },
-  emptyTitle: { color: theme.ink, fontSize: 18, fontWeight: '900', marginTop: 12 },
-  emptyText: { color: theme.inkSoft, fontSize: 13, textAlign: 'center', marginTop: 6 },
 });

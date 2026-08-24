@@ -1,6 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
+import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { RecallAnswerCard } from '@/components/RecallAnswerCard';
 import { ReturnToTodayButton } from '@/components/ReturnToTodayButton';
 import { NumberPegRehearsalCard } from '@/features/number-peg/components/NumberPegRehearsalCard';
@@ -175,15 +176,12 @@ export default function NumberPegSessionScreen({
       <View style={styles.page}>
         <CommonHeader title="Number Peg" description="Memory unavailable" backAction={() => router.back()} />
         <View style={styles.centerState}>
-          <Text style={styles.stateEmoji}>🧩</Text>
-          <Text style={styles.stateTitle}>This memory did not load</Text>
-          <Text style={styles.stateBody}>
-            {getNumberPegErrorMessage(memorySetQuery.error, 'Check your connection and try again.')}
-          </Text>
-          <AnimatedPressable onPress={() => memorySetQuery.refetch()} style={styles.retryButton}>
-            <RefreshCcw size={17} color={theme.ink} />
-            <Text style={styles.retryText}>Try again</Text>
-          </AnimatedPressable>
+          <ModuleNoticeCard
+            emoji="🧩"
+            title="This memory did not load"
+            body={getNumberPegErrorMessage(memorySetQuery.error, 'Check your connection and try again.')}
+            onAction={() => memorySetQuery.refetch()}
+          />
         </View>
       </View>
     );
@@ -410,9 +408,4 @@ const styles = StyleSheet.create({
   retrySaveButton: { marginTop: 8, borderRadius: 12, backgroundColor: '#FFE3EA', paddingHorizontal: 14, paddingVertical: 9 },
   retrySaveText: { color: theme.berryDeep, fontSize: 12, fontWeight: '900' },
   centerState: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
-  stateEmoji: { fontSize: 42 },
-  stateTitle: { color: theme.ink, fontSize: 18, fontWeight: '900', marginTop: 12 },
-  stateBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 7 },
-  retryButton: { marginTop: 16, minHeight: 45, borderRadius: 14, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 17, gap: 7 },
-  retryText: { color: theme.ink, fontSize: 13, fontWeight: '900' },
 });
