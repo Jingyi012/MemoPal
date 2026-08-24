@@ -1,4 +1,5 @@
 import { AppImage } from '@/components/AppImage';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { User } from '@/features/profile/types/users';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
@@ -8,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Text, View } from 'react-native';
 import { CommonHeader } from '@/components/CommonHeader';
 import { NotificationBell } from '@/components/NotificationBell';
+import { useRouter } from 'expo-router';
 import { LevelProgress } from './LevelProgress';
 import { StreakBadge } from './StreakBadge';
 import { useMemo } from 'react';
@@ -17,6 +19,7 @@ interface HomeHeaderProps {
 }
 
 export function HomeHeader({ userData }: HomeHeaderProps) {
+  const router = useRouter();
   const name = userData?.displayName ?? 'Welcome';
   const isPremium = userData?.isPremium ?? false;
   const avatar = userData?.avatarUrl;
@@ -65,18 +68,20 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
       ]}
       // Back button slot replaced with avatar
       leftComponent={
-        avatar ? (
-          <View className="h-10 w-10">
-            <AppImage
-              source={{ uri: avatar }}
-              style={{ width: '100%', height: '100%', borderRadius: 999 }}
-            />
-          </View>
-        ) : (
-          <View style={styles.avatarFallback}>
-            <User2 size={20} color={theme.berryDeep} />
-          </View>
-        )
+        <AnimatedPressable onPress={() => router.push('/(tabs)/profile')} style={styles.avatarButton}>
+          {avatar ? (
+            <View className="h-10 w-10">
+              <AppImage
+                source={{ uri: avatar }}
+                style={{ width: '100%', height: '100%', borderRadius: 999 }}
+              />
+            </View>
+          ) : (
+            <View style={styles.avatarFallback}>
+              <User2 size={20} color={theme.berryDeep} />
+            </View>
+          )}
+        </AnimatedPressable>
       }
       // Additional content below header
       additionalContent={
@@ -95,6 +100,11 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
 }
 
 const styles = {
+  avatarButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
   levelDescription: {
     color: theme.inkSoft,
     fontSize: 11.5,

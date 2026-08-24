@@ -204,7 +204,7 @@ const AchievementsScreen: React.FC = () => {
     <>
       <CommonHeader
         eyebrow="Progress"
-        title="Achievements"
+        title="Your progress"
         description="Track your badges, milestones, and missions"
         hideBackButton
         showNotification
