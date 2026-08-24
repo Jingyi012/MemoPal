@@ -8,6 +8,7 @@ import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { useFeatureLimits } from '@/features/subscription/hooks/useFeatureLimits';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { Href, useRouter } from 'expo-router';
@@ -171,8 +172,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  sectionEyebrow: { color: theme.violetDeep, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
-  sectionTitle: { color: theme.ink, fontSize: 17, fontWeight: '900', marginTop: 3 },
+  sectionEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
+  sectionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 3 },
   countPill: {
     overflow: 'hidden',
     color: theme.violetDeep,
@@ -180,8 +181,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
+    fontFamily: typography.bodyExtraBold,
     fontSize: 11,
-    fontWeight: '900',
   },
   sceneRail: { gap: 12, paddingRight: 8 },
   sceneCardWrap: { width: 240, height: 148 },
@@ -201,15 +202,15 @@ const styles = StyleSheet.create({
   },
   sceneCopy: { position: 'absolute', left: 14, right: 14, bottom: 13 },
   sceneEditButton: { position: 'absolute', top: 10, right: 10, width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.9)', alignItems: 'center', justifyContent: 'center' },
-  sceneName: { color: 'white', fontSize: 16, fontWeight: '900' },
-  sceneMeta: { color: '#E8F7F2', fontSize: 11, fontWeight: '700', marginTop: 3 },
+  sceneName: { color: 'white', fontFamily: typography.display, fontSize: 16 },
+  sceneMeta: { color: '#E8F7F2', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3 },
   sceneLoading: { height: 148, overflow: 'hidden', borderRadius: 20 },
   memoryLoading: { height: 150, overflow: 'hidden', borderRadius: 20 },
   customCard: { marginTop: 14, borderRadius: 18, borderWidth: 1.5, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 13, flexDirection: 'row', alignItems: 'center', gap: 10 },
   customIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },
   customCopy: { flex: 1 },
-  customEyebrow: { color: theme.violetDeep, fontSize: 9.5, fontWeight: '900', letterSpacing: 0.8 },
-  customTitle: { color: theme.ink, fontSize: 14, fontWeight: '900', marginTop: 2 },
-  customBody: { color: theme.inkSoft, fontSize: 11, lineHeight: 16, fontWeight: '700', marginTop: 2 },
-  customArrow: { color: theme.violetDeep, fontSize: 22, fontWeight: '900' },
+  customEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8 },
+  customTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, marginTop: 2 },
+  customBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, marginTop: 2 },
+  customArrow: { color: theme.violetDeep, fontFamily: typography.display, fontSize: 22 },
 });

@@ -7,6 +7,7 @@ import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { NumberPegItemCard } from '@/features/number-peg/components/NumberPegItemCard';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { useNumberPegOverview } from '@/features/number-peg/hooks/useNumberPegOverview';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
@@ -111,8 +112,8 @@ const styles = StyleSheet.create({
   familiarityCard: { minHeight: 72, borderRadius: 18, borderWidth: 2, borderColor: '#FFD9E2', backgroundColor: '#FFF0F4', padding: 12, marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
   familiarityIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
   familiarityCopy: { flex: 1 },
-  familiarityTitle: { color: theme.ink, fontSize: 14, fontWeight: '900' },
-  familiarityBody: { color: theme.inkSoft, fontSize: 11.5, lineHeight: 17, fontWeight: '700', marginTop: 3 },
+  familiarityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  familiarityBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 3 },
   sectionHeadingRow: {
     marginTop: 28,
     marginBottom: 11,
@@ -120,8 +121,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  sectionEyebrow: { color: theme.berryDeep, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
-  sectionTitle: { color: theme.ink, fontSize: 17, fontWeight: '900', marginTop: 3 },
+  sectionEyebrow: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
+  sectionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 3 },
   countPill: {
     overflow: 'hidden',
     color: theme.berryDeep,
@@ -129,8 +130,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
+    fontFamily: typography.bodyExtraBold,
     fontSize: 11,
-    fontWeight: '900',
   },
   pegRail: { marginHorizontal: -16, paddingLeft: 16 },
   loadingFrame: { height: 150, overflow: 'hidden', borderRadius: 20 },

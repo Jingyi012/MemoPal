@@ -8,6 +8,7 @@ import { PracticeDiscoveryRow } from '@/features/memory-hub/components/PracticeD
 import { PracticeRecentSessionCard } from '@/features/memory-hub/components/PracticeRecentSessionCard';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight, Hash, MapPinned, Plus, RefreshCcw, Sparkles } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
@@ -198,39 +199,39 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 42 },
   newSessionCard: { borderRadius: 20, borderWidth: 2, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 18, alignItems: 'center', shadowColor: theme.ink, shadowOpacity: 0.08, shadowRadius: 12, elevation: 2 },
   newSessionEmoji: { fontSize: 30 },
-  newSessionTitle: { color: theme.ink, fontSize: 17, fontWeight: '900', marginTop: 7 },
-  newSessionBody: { color: theme.inkSoft, fontSize: 12.5, fontWeight: '700', textAlign: 'center', marginTop: 3 },
+  newSessionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 7 },
+  newSessionBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12.5, textAlign: 'center', marginTop: 3 },
   newSessionAction: { minHeight: 36, borderRadius: 11, backgroundColor: theme.sun, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
-  newSessionActionText: { color: theme.ink, fontSize: 12, fontWeight: '900' },
-  sectionLabel: { color: theme.inkSoft, fontSize: 13, fontWeight: '900', letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },
+  newSessionActionText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },
   techniqueRow: { flexDirection: 'row', gap: 10 },
   techniqueJump: { flex: 1, minHeight: 135, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 12, alignItems: 'center' },
   techniqueJumpIcon: { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   pegBackground: { backgroundColor: '#FFF0F4' },
   palaceBackground: { backgroundColor: '#EEE9FF' },
-  techniqueJumpName: { color: theme.ink, fontSize: 12.5, fontWeight: '900', textAlign: 'center', marginTop: 7 },
-  techniqueJumpLink: { color: theme.sky, fontSize: 10.5, fontWeight: '900', marginTop: 3 },
+  techniqueJumpName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5, textAlign: 'center', marginTop: 7 },
+  techniqueJumpLink: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 10.5, marginTop: 3 },
   sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 1 },
   discoverySection: { marginTop: 4 },
   discoveryTitle: { marginBottom: 0 },
-  lessonHint: { color: theme.sky, fontSize: 11, fontWeight: '900', marginTop: 22 },
+  lessonHint: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 22 },
   lessonList: { gap: 10, paddingVertical: 10, paddingRight: 12 },
   lessonCard: { width: 150, minHeight: 148, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 11 },
   lessonEmoji: { fontSize: 27 },
-  lessonTitle: { color: theme.ink, fontSize: 12.5, lineHeight: 16, fontWeight: '900', marginTop: 6 },
-  lessonCount: { color: theme.inkSoft, fontSize: 10.5, fontWeight: '700', marginTop: 4 },
-  lessonTechnique: { alignSelf: 'flex-start', color: theme.berryDeep, backgroundColor: '#FFF0F4', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontSize: 9.5, fontWeight: '900', marginTop: 9 },
+  lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5, lineHeight: 16, marginTop: 6 },
+  lessonCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, marginTop: 4 },
+  lessonTechnique: { alignSelf: 'flex-start', color: theme.berryDeep, backgroundColor: '#FFF0F4', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontFamily: typography.bodyExtraBold, fontSize: 9.5, marginTop: 9 },
   lessonTechniquePalace: { color: theme.violetDeep, backgroundColor: '#EEE9FF' },
   filterRow: { flexDirection: 'row', gap: 7, marginTop: 9, marginBottom: 11 },
   filterChip: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 10, paddingVertical: 6 },
   filterChipActive: { borderColor: theme.ink, backgroundColor: theme.ink },
-  filterChipText: { color: theme.inkSoft, fontSize: 10.5, fontWeight: '900' },
+  filterChipText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
   filterChipTextActive: { color: 'white' },
-  seeAll: { color: theme.sky, fontSize: 11.5, fontWeight: '900', marginTop: 22 },
+  seeAll: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11.5, marginTop: 22 },
   sessionList: { gap: 10 },
   sessionCard: { minHeight: 70, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 10 },
   emptyCard: { borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 20, alignItems: 'center' },
-  emptyBody: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, fontWeight: '700', textAlign: 'center', marginTop: 4 },
+  emptyBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 4 },
 });
 
 const PEG_ANCHORS = [

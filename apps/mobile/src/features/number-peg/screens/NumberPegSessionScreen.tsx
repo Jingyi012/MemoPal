@@ -8,6 +8,7 @@ import { NumberPegRehearsalCard } from '@/features/number-peg/components/NumberP
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { buildNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import {
@@ -377,16 +378,16 @@ const styles = StyleSheet.create({
   tabs: { flexDirection: 'row', gap: 7, padding: 10, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: theme.line },
   tab: { flex: 1, minHeight: 42, borderRadius: 13, borderWidth: 2, borderColor: theme.line, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: 'white' },
   activeTab: { backgroundColor: theme.ink, borderColor: theme.ink },
-  tabText: { color: theme.inkSoft, fontSize: 13, fontWeight: '900' },
+  tabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   activeTabText: { color: 'white' },
   restoreNotice: { marginHorizontal: 10, marginTop: 10, borderRadius: 12, backgroundColor: '#E3F6ED', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 12, paddingVertical: 9 },
-  restoreNoticeText: { color: '#247B67', fontSize: 12, lineHeight: 17, fontWeight: '800', textAlign: 'center' },
+  restoreNoticeText: { color: '#247B67', fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
   content: { padding: 16, paddingBottom: 42 },
   coachCard: { flexDirection: 'row', gap: 12, borderRadius: 18, backgroundColor: '#FFF7E0', borderWidth: 1.5, borderColor: '#FFE6A3', padding: 14, marginBottom: 18 },
   coachEmoji: { fontSize: 28 },
-  coachTitle: { color: theme.ink, fontSize: 14, fontWeight: '900' },
-  coachBody: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, marginTop: 3, fontWeight: '600' },
-  rehearsalHint: { color: theme.inkSoft, fontSize: 11, fontWeight: '700', lineHeight: 17, marginTop: 11, textAlign: 'center' },
+  coachTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  coachBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 3 },
+  rehearsalHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 11, textAlign: 'center' },
   sceneCard: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 22, padding: 14, marginBottom: 18, marginTop: 4 },
   sceneBadge: { position: 'absolute', top: -12, left: 14, zIndex: 2, minWidth: 32, height: 32, borderRadius: 16, paddingHorizontal: 5, backgroundColor: theme.berry, borderWidth: 3, borderColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
   sceneBadgeText: { color: 'white', fontSize: 13, fontWeight: '900' },
@@ -397,7 +398,7 @@ const styles = StyleSheet.create({
   pegName: { color: theme.berryDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.8, marginTop: 11 },
   sceneText: { color: theme.ink, fontSize: 13, lineHeight: 19, fontWeight: '700', marginTop: 5 },
   primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3, marginTop: 4 },
-  primaryButtonText: { color: theme.ink, fontSize: 14, fontWeight: '900', textAlign: 'center' },
+  primaryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
   recallContent: { padding: 16, paddingBottom: 42, flexGrow: 1 },
   dots: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: 7, marginVertical: 7, minHeight: 12 },
   dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: theme.line },
@@ -406,14 +407,14 @@ const styles = StyleSheet.create({
   quizEmoji: { fontSize: 36 },
   completeCard: { flex: 1, minHeight: 390, borderRadius: 25, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 24, alignItems: 'center', justifyContent: 'center' },
   trophy: { fontSize: 54 },
-  completeTitle: { color: theme.ink, fontSize: 22, fontWeight: '900', marginTop: 12 },
-  completeScore: { color: theme.grass, fontSize: 34, fontWeight: '900', marginTop: 8 },
-  completeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 8, marginBottom: 18 },
-  saveState: { color: theme.inkSoft, fontSize: 12, fontWeight: '800', marginBottom: 12 },
-  saveSuccess: { color: theme.grass, fontSize: 12, lineHeight: 18, fontWeight: '900', textAlign: 'center', marginBottom: 12 },
+  completeTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 22, marginTop: 12 },
+  completeScore: { color: theme.grass, fontFamily: typography.displayExtraBold, fontSize: 34, marginTop: 8 },
+  completeBody: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 8, marginBottom: 18 },
+  saveState: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, marginBottom: 12 },
+  saveSuccess: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center', marginBottom: 12 },
   saveError: { width: '100%', alignItems: 'center', marginBottom: 12 },
-  saveErrorText: { color: theme.berryDeep, fontSize: 12, lineHeight: 18, fontWeight: '800', textAlign: 'center' },
+  saveErrorText: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   retrySaveButton: { marginTop: 8, borderRadius: 12, backgroundColor: '#FFE3EA', paddingHorizontal: 14, paddingVertical: 9 },
-  retrySaveText: { color: theme.berryDeep, fontSize: 12, fontWeight: '900' },
+  retrySaveText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   centerState: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
 });
