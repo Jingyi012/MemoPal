@@ -4,7 +4,7 @@ import { Pressable, PressableProps, StyleProp, ViewStyle } from 'react-native';
 import { cssInterop } from 'nativewind';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 
-const AnimatedPressableBase = cssInterop(Animated.createAnimatedComponent(Pressable), {
+const PressableBase = cssInterop(Pressable, {
   className: 'style',
 });
 
@@ -28,27 +28,28 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: reduceMotion ? 1 : scale.value }],
   }));
-  const combinedStyle = style ? [style, animatedStyle] : animatedStyle;
   const classNameProps = className ? { className } : {};
 
   return (
-    <AnimatedPressableBase
-      {...rest}
-      {...classNameProps}
-      accessibilityRole={accessibilityRole}
-      style={combinedStyle}
-      onPressIn={() => {
-        if (!reduceMotion) scale.value = withSpring(0.96, { stiffness: 300 });
-      }}
-      onPressOut={() => {
-        if (!reduceMotion) scale.value = withSpring(1);
-      }}
-      onPress={(e) => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onPress?.(e);
-      }}>
-      {children}
-    </AnimatedPressableBase>
+    <Animated.View style={animatedStyle}>
+      <PressableBase
+        {...rest}
+        {...classNameProps}
+        accessibilityRole={accessibilityRole}
+        style={style}
+        onPressIn={() => {
+          if (!reduceMotion) scale.value = withSpring(0.96, { stiffness: 300 });
+        }}
+        onPressOut={() => {
+          if (!reduceMotion) scale.value = withSpring(1);
+        }}
+        onPress={(e) => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onPress?.(e);
+        }}>
+        {children}
+      </PressableBase>
+    </Animated.View>
   );
 };
 
