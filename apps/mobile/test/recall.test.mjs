@@ -5,6 +5,10 @@ import {
   normalizeRecallAnswer,
   upsertRecallResponse,
 } from '../src/features/practice-attempts/utils/recall.ts';
+import {
+  buildTechniqueRoute,
+  recommendTechnique,
+} from '../src/features/memory-composer/utils/techniqueRecommendation.ts';
 
 test('normalizes recall answers for case and whitespace differences', () => {
   assert.equal(normalizeRecallAnswer('  Solar   System '), 'SOLAR SYSTEM');
@@ -26,4 +30,17 @@ test('upserts a retry without creating duplicate item responses', () => {
     attemptCount: 2,
     responseMs: 220,
   });
+});
+
+test('recommends the right module for common memory goals', () => {
+  assert.equal(recommendTechnique('spelling', 5), 'number-peg');
+  assert.equal(recommendTechnique('facts', 3), 'palace');
+  assert.equal(recommendTechnique('ordered-list', 11), 'palace');
+});
+
+test('builds a handoff route without losing the prepared list', () => {
+  const route = buildTechniqueRoute('number-peg', 'Friday spelling', 'spelling', ['rhythm', 'separate']);
+  assert.match(route, /^\/number-peg\/create\?/);
+  assert.match(route, /title=Friday%20spelling/);
+  assert.match(route, /items=%5B%22rhythm%22%2C%22separate%22%5D/);
 });

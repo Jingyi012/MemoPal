@@ -7,9 +7,9 @@ import { ArrowLeft, ArrowRight, Hash, MapPinned, Plus, Sparkles, Trash2 } from '
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
+import { buildTechniqueRoute, recommendTechnique, type TechniqueChoice } from '@/features/memory-composer/utils/techniqueRecommendation';
 
 type ComposerStep = 'content' | 'technique';
-type TechniqueChoice = 'palace' | 'number-peg';
 
 const goals: { key: MemoryGoalType; label: string; emoji: string }[] = [
   { key: 'spelling', label: 'Spelling', emoji: '✏️' },
@@ -17,21 +17,6 @@ const goals: { key: MemoryGoalType; label: string; emoji: string }[] = [
   { key: 'facts', label: 'Facts', emoji: '💡' },
   { key: 'custom', label: 'Something else', emoji: '✨' },
 ];
-
-function recommendTechnique(goalType: MemoryGoalType, itemCount: number): TechniqueChoice {
-  if (itemCount > 10 || goalType === 'facts') return 'palace';
-  return 'number-peg';
-}
-
-function buildTechniqueRoute(
-  technique: TechniqueChoice,
-  title: string,
-  goalType: MemoryGoalType,
-  items: string[]
-) {
-  const path = technique === 'palace' ? '/palaces/create-memory' : '/number-peg/create';
-  return `${path}?title=${encodeURIComponent(title)}&goalType=${encodeURIComponent(goalType)}&items=${encodeURIComponent(JSON.stringify(items))}` as Href;
-}
 
 export default function MemoryComposerScreen() {
   const router = useRouter();
@@ -67,7 +52,7 @@ export default function MemoryComposerScreen() {
   };
 
   const openTechnique = (technique: TechniqueChoice) => {
-    router.push(buildTechniqueRoute(technique, title.trim(), goalType, items));
+    router.push(buildTechniqueRoute(technique, title.trim(), goalType, items) as Href);
   };
 
   return (
