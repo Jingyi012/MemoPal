@@ -11,11 +11,16 @@ import {
   type PracticeAttemptInput,
   type PracticeResponseInput,
 } from '@/features/practice-attempts';
+import {
+  clearNumberPegSession,
+  readNumberPegSession,
+  writeNumberPegSession,
+} from '@/features/number-peg/services/numberPegSessionRecovery';
 import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Check, Play, RefreshCcw, Sparkles, X } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type SessionTab = 'scenes' | 'recall';
@@ -44,7 +49,67 @@ export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: s
   const [questionStartedAtMs, setQuestionStartedAtMs] = useState(() => Date.now());
   const [responses, setResponses] = useState<PracticeResponseInput[]>([]);
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
+  const [hasRestoredSession, setHasRestoredSession] = useState(false);
+  const hydratedSessionRef = useRef<string | null>(null);
+  const sessionReadyRef = useRef(false);
   const practiceAttempt = useCreatePracticeAttempt();
+
+  useEffect(() => {
+    const memorySet = memorySetQuery.data;
+    if (!memorySet) return;
+
+    const sessionKey = `${memorySet.id}:${memorySet.version}`;
+    if (hydratedSessionRef.current === sessionKey) return;
+
+    hydratedSessionRef.current = sessionKey;
+    sessionReadyRef.current = false;
+    void readNumberPegSession(memorySet.id).then((snapshot) => {
+      if (!snapshot || snapshot.memorySetVersion !== memorySet.version || snapshot.questionIndex >= memorySet.items.length) {
+        if (snapshot) void clearNumberPegSession(memorySet.id);
+        sessionReadyRef.current = true;
+        return;
+      }
+
+      setTab(snapshot.tab);
+      setQuestionIndex(snapshot.questionIndex);
+      setScore(snapshot.score);
+      setClientAttemptId(snapshot.clientAttemptId);
+      setStartedAt(snapshot.startedAt);
+      setStartedAtMs(snapshot.startedAtMs);
+      setQuestionStartedAtMs(snapshot.questionStartedAtMs);
+      setResponses(snapshot.responses);
+      setHasRestoredSession(true);
+      sessionReadyRef.current = true;
+    });
+  }, [memorySetQuery.data]);
+
+  useEffect(() => {
+    const memorySet = memorySetQuery.data;
+    if (
+      !memorySet ||
+      !sessionReadyRef.current ||
+      hydratedSessionRef.current !== `${memorySet.id}:${memorySet.version}`
+    ) return;
+
+    if (questionIndex >= memorySet.items.length) {
+      void clearNumberPegSession(memorySet.id);
+      return;
+    }
+
+    void writeNumberPegSession({
+      memorySetId: memorySet.id,
+      memorySetVersion: memorySet.version,
+      tab,
+      questionIndex,
+      score,
+      clientAttemptId,
+      startedAt,
+      startedAtMs,
+      questionStartedAtMs,
+      responses,
+      savedAt: new Date().toISOString(),
+    });
+  }, [clientAttemptId, memorySetQuery.data, questionIndex, questionStartedAtMs, responses, score, startedAt, startedAtMs, tab]);
 
   const restartRecall = () => {
     setQuestionIndex(0);
@@ -57,12 +122,14 @@ export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: s
     setQuestionStartedAtMs(Date.now());
     setResponses([]);
     setLastPayload(null);
+    setHasRestoredSession(false);
+    void clearNumberPegSession(memorySetId);
     practiceAttempt.reset();
   };
 
   const openTab = (nextTab: SessionTab) => {
     setTab(nextTab);
-    if (nextTab === 'recall') restartRecall();
+    if (nextTab === 'recall' && tab !== 'recall' && !hasRestoredSession) restartRecall();
   };
 
   if (memorySetQuery.isLoading) return <LoadingView description="Building your memory scenes…" />;
@@ -148,6 +215,12 @@ export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: s
           <Text style={[styles.tabText, tab === 'recall' && styles.activeTabText]}>Recall</Text>
         </AnimatedPressable>
       </View>
+
+      {hasRestoredSession && tab === 'recall' && (
+        <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
+          <Text style={styles.restoreNoticeText}>Welcome back — your recall round was restored.</Text>
+        </AnimatedPressable>
+      )}
 
       {tab === 'scenes' ? (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -279,6 +352,8 @@ const styles = StyleSheet.create({
   activeTab: { backgroundColor: theme.ink, borderColor: theme.ink },
   tabText: { color: theme.inkSoft, fontSize: 13, fontWeight: '900' },
   activeTabText: { color: 'white' },
+  restoreNotice: { marginHorizontal: 10, marginTop: 10, borderRadius: 12, backgroundColor: '#E3F6ED', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 12, paddingVertical: 9 },
+  restoreNoticeText: { color: '#247B67', fontSize: 12, lineHeight: 17, fontWeight: '800', textAlign: 'center' },
   content: { padding: 16, paddingBottom: 42 },
   coachCard: { flexDirection: 'row', gap: 12, borderRadius: 18, backgroundColor: '#FFF7E0', borderWidth: 1.5, borderColor: '#FFE6A3', padding: 14, marginBottom: 18 },
   coachEmoji: { fontSize: 28 },

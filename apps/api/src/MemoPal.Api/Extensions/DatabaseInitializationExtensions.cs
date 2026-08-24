@@ -18,6 +18,10 @@ public static class DatabaseInitializationExtensions
         await using var scope = app.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+        app.Logger.LogInformation(
+            "Checking database schema for pending EF Core migrations using {Provider}.",
+            dbContext.Database.ProviderName ?? "unknown provider");
+
         if (!dbContext.Database.IsRelational())
         {
             await dbContext.Database.EnsureCreatedAsync(cancellationToken);
