@@ -10,6 +10,10 @@ export type MemoryItem = {
   answer: string;
   hint?: string | null;
   pronunciationAudioUrl?: string | null;
+  createdAt?: string;
+  createdBy?: string | null;
+  updatedAt?: string;
+  updatedBy?: string | null;
 };
 
 export type PegBinding = {
@@ -19,6 +23,10 @@ export type PegBinding = {
   sceneText: string;
   isCustomScene: boolean;
   sceneAssetUrl?: string | null;
+  createdAt?: string;
+  createdBy?: string | null;
+  updatedAt?: string;
+  updatedBy?: string | null;
 };
 
 export type PalaceBinding = {
@@ -28,6 +36,10 @@ export type PalaceBinding = {
   associationText: string;
   isCustomScene: boolean;
   sceneAssetUrl?: string | null;
+  createdAt?: string;
+  createdBy?: string | null;
+  updatedAt?: string;
+  updatedBy?: string | null;
 };
 
 export type TechniquePlan = {
@@ -37,6 +49,10 @@ export type TechniquePlan = {
   palaceSceneId?: string | null;
   pegBindings: PegBinding[];
   palaceBindings: PalaceBinding[];
+  createdAt?: string;
+  createdBy?: string | null;
+  updatedAt?: string;
+  updatedBy?: string | null;
 };
 
 export type MemorySet = {
@@ -51,7 +67,9 @@ export type MemorySet = {
   items: MemoryItem[];
   techniquePlan?: TechniquePlan | null;
   createdAt: string;
+  createdBy?: string | null;
   updatedAt: string;
+  updatedBy?: string | null;
 };
 
 export type MemoryItemInput = {

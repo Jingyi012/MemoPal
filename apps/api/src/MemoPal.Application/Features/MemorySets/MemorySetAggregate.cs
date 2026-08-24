@@ -286,7 +286,11 @@ internal static class MemorySetAggregate
                 x.Prompt,
                 x.Answer,
                 x.Hint,
-                x.PronunciationAudioUrl))
+                x.PronunciationAudioUrl,
+                x.CreatedAt,
+                x.CreatedBy,
+                x.UpdatedAt,
+                x.UpdatedBy))
             .ToList();
 
         var plan = entity.TechniquePlan is null || entity.TechniquePlan.IsDeleted
@@ -305,7 +309,11 @@ internal static class MemorySetAggregate
                         x.PegNumber,
                         x.SceneText,
                         x.IsCustomScene,
-                        x.SceneAssetUrl))
+                        x.SceneAssetUrl,
+                        x.CreatedAt,
+                        x.CreatedBy,
+                        x.UpdatedAt,
+                        x.UpdatedBy))
                     .ToList(),
                 entity.TechniquePlan.PalaceBindings
                     .Where(x => !x.IsDeleted)
@@ -316,8 +324,16 @@ internal static class MemorySetAggregate
                         x.LocusId,
                         x.AssociationText,
                         x.IsCustomScene,
-                        x.SceneAssetUrl))
-                    .ToList());
+                        x.SceneAssetUrl,
+                        x.CreatedAt,
+                        x.CreatedBy,
+                        x.UpdatedAt,
+                        x.UpdatedBy))
+                    .ToList(),
+                entity.TechniquePlan.CreatedAt,
+                entity.TechniquePlan.CreatedBy,
+                entity.TechniquePlan.UpdatedAt,
+                entity.TechniquePlan.UpdatedBy);
 
         return new MemorySetDto(
             entity.Id,
@@ -331,7 +347,9 @@ internal static class MemorySetAggregate
             items,
             plan,
             entity.CreatedAt,
-            entity.UpdatedAt);
+            entity.CreatedBy,
+            entity.UpdatedAt,
+            entity.UpdatedBy);
     }
 
     private static void ApplyScalarValues(MemorySet entity, MemorySetUpsertRequest request)

@@ -6,7 +6,11 @@ public sealed record MemoryItemDto(
     string Prompt,
     string Answer,
     string? Hint,
-    string? PronunciationAudioUrl);
+    string? PronunciationAudioUrl,
+    DateTime CreatedAt,
+    string? CreatedBy,
+    DateTime UpdatedAt,
+    string? UpdatedBy);
 
 public sealed record PegBindingDto(
     string Id,
@@ -14,7 +18,11 @@ public sealed record PegBindingDto(
     int PegNumber,
     string SceneText,
     bool IsCustomScene,
-    string? SceneAssetUrl);
+    string? SceneAssetUrl,
+    DateTime CreatedAt,
+    string? CreatedBy,
+    DateTime UpdatedAt,
+    string? UpdatedBy);
 
 public sealed record PalaceBindingDto(
     string Id,
@@ -22,7 +30,11 @@ public sealed record PalaceBindingDto(
     string LocusId,
     string AssociationText,
     bool IsCustomScene,
-    string? SceneAssetUrl);
+    string? SceneAssetUrl,
+    DateTime CreatedAt,
+    string? CreatedBy,
+    DateTime UpdatedAt,
+    string? UpdatedBy);
 
 public sealed record TechniquePlanDto(
     string Id,
@@ -30,7 +42,11 @@ public sealed record TechniquePlanDto(
     int SchemaVersion,
     string? PalaceSceneId,
     IReadOnlyList<PegBindingDto> PegBindings,
-    IReadOnlyList<PalaceBindingDto> PalaceBindings);
+    IReadOnlyList<PalaceBindingDto> PalaceBindings,
+    DateTime CreatedAt,
+    string? CreatedBy,
+    DateTime UpdatedAt,
+    string? UpdatedBy);
 
 public sealed record MemorySetDto(
     string Id,
@@ -44,7 +60,9 @@ public sealed record MemorySetDto(
     IReadOnlyList<MemoryItemDto> Items,
     TechniquePlanDto? TechniquePlan,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    string? CreatedBy,
+    DateTime UpdatedAt,
+    string? UpdatedBy);
 
 public sealed class MemorySetUpsertRequest
 {
