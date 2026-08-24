@@ -2,6 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { RecallAnswerCard } from '@/components/RecallAnswerCard';
+import { ReturnToTodayButton } from '@/components/ReturnToTodayButton';
 import { NumberPegRehearsalCard } from '@/features/number-peg/components/NumberPegRehearsalCard';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
@@ -306,6 +307,7 @@ export default function NumberPegSessionScreen({
                 <RefreshCcw size={18} color={theme.ink} />
                 <Text style={styles.primaryButtonText}>Try another round</Text>
               </AnimatedPressable>
+              <ReturnToTodayButton onPress={() => router.replace('/(tabs)')} />
             </View>
           ) : (
             <>

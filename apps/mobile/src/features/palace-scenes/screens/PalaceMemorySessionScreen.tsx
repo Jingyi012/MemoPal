@@ -3,6 +3,7 @@ import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { RecallAnswerCard } from '@/components/RecallAnswerCard';
+import { ReturnToTodayButton } from '@/components/ReturnToTodayButton';
 import { PalaceFocusCard } from '@/features/palace-scenes/components/PalaceFocusCard';
 import { PalaceOrderedList } from '@/features/palace-scenes/components/PalaceOrderedList';
 import { useMemorySet } from '@/features/memory-sets';
@@ -384,6 +385,7 @@ export default function PalaceMemorySessionScreen({
                 style={styles.secondaryButton}>
                 <Text style={styles.secondaryText}>Walk the Palace again</Text>
               </AnimatedPressable>
+              <ReturnToTodayButton onPress={() => router.replace('/(tabs)')} />
             </View>
           ) : active ? (
             <RecallAnswerCard
