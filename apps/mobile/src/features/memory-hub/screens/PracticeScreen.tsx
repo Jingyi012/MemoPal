@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
+import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useEnabledMemoryModules } from '@/core/memory';
 import { useMemorySets } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
@@ -138,14 +139,12 @@ export default function PracticeScreen() {
         {memorySets.isLoading ? (
           <View style={styles.emptyCard}><Text style={styles.emptyBody}>Opening your recent sessions…</Text></View>
         ) : memorySets.isError ? (
-          <View style={styles.emptyCard}>
-            <RefreshCcw size={22} color={theme.inkSoft} />
-            <Text style={styles.emptyTitle}>Your sessions are out of reach</Text>
-            <Text style={styles.emptyBody}>Check your connection and try again.</Text>
-            <AnimatedPressable onPress={() => memorySets.refetch()} style={styles.smallButton}>
-              <Text style={styles.smallButtonText}>Try again</Text>
-            </AnimatedPressable>
-          </View>
+          <ModuleNoticeCard
+            icon={<RefreshCcw size={22} color={theme.inkSoft} />}
+            title="Your sessions are out of reach"
+            body="Check your connection and try again."
+            onAction={() => memorySets.refetch()}
+          />
         ) : recentSets.length ? (
           <View style={styles.sessionList}>
             {recentSets.map((memorySet) => (
@@ -157,15 +156,14 @@ export default function PracticeScreen() {
             ))}
           </View>
         ) : (
-          <View style={styles.emptyCard}>
-            <Sparkles size={24} color={theme.sunDeep} />
-            <Text style={styles.emptyTitle}>Your first memory starts here</Text>
-            <Text style={styles.emptyBody}>Add a small list and turn it into a tiny movie or a walk through a room.</Text>
-            <AnimatedPressable onPress={() => router.push('/create-memory' as Href)} style={styles.smallButton}>
-              <Plus size={15} color="white" />
-              <Text style={styles.smallButtonText}>Create memory</Text>
-            </AnimatedPressable>
-          </View>
+          <ModuleNoticeCard
+            icon={<Sparkles size={24} color={theme.sunDeep} />}
+            title="Your first memory starts here"
+            body="Add a small list and turn it into a tiny movie or a walk through a room."
+            actionLabel="Create memory"
+            actionIcon={<Plus size={15} color={theme.ink} />}
+            onAction={() => router.push('/create-memory' as Href)}
+          />
         )}
       </ScrollView>
     </View>
@@ -226,10 +224,7 @@ const styles = StyleSheet.create({
   sessionList: { gap: 10 },
   sessionCard: { minHeight: 70, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 10 },
   emptyCard: { borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 20, alignItems: 'center' },
-  emptyTitle: { color: theme.ink, fontSize: 14, fontWeight: '900', textAlign: 'center', marginTop: 8 },
   emptyBody: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, fontWeight: '700', textAlign: 'center', marginTop: 4 },
-  smallButton: { minHeight: 38, borderRadius: 11, backgroundColor: theme.ink, paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 13 },
-  smallButtonText: { color: 'white', fontSize: 12, fontWeight: '900' },
 });
 
 const PEG_ANCHORS = [

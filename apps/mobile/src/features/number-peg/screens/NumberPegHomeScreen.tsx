@@ -2,6 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { MemorySetRow } from '@/components/MemorySetRow';
+import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { NumberPegItemCard } from '@/features/number-peg/components/NumberPegItemCard';
@@ -9,7 +10,7 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { useNumberPegOverview } from '@/features/number-peg/hooks/useNumberPegOverview';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, RefreshCcw, Sparkles } from 'lucide-react-native';
+import { ArrowRight, Sparkles } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function NumberPegHomeScreen() {
@@ -76,16 +77,11 @@ export default function NumberPegHomeScreen() {
             <LoadingView description="Finding your memories…" />
           </View>
         ) : memorySets.isError ? (
-          <View style={styles.noticeCard}>
-            <Text style={styles.noticeTitle}>We could not reach MemoPal</Text>
-            <Text style={styles.noticeBody}>
-              {getNumberPegErrorMessage(memorySets.error, 'Check your connection and try again.')}
-            </Text>
-            <AnimatedPressable onPress={() => memorySets.refetch()} style={styles.retryButton}>
-              <RefreshCcw size={16} color={theme.ink} />
-              <Text style={styles.retryText}>Try again</Text>
-            </AnimatedPressable>
-          </View>
+          <ModuleNoticeCard
+            title="We could not reach MemoPal"
+            body={getNumberPegErrorMessage(memorySets.error, 'Check your connection and try again.')}
+            onAction={() => memorySets.refetch()}
+          />
         ) : memorySets.data?.length ? (
           memorySets.data.map((memorySet) => (
             <MemorySetRow
@@ -98,13 +94,11 @@ export default function NumberPegHomeScreen() {
             />
           ))
         ) : (
-          <View style={styles.noticeCard}>
-            <Text style={styles.emptyEmoji}>🎒</Text>
-            <Text style={styles.noticeTitle}>Your memory bag is empty</Text>
-            <Text style={styles.noticeBody}>
-              Start with a spelling test, a grocery list, or five fun facts.
-            </Text>
-          </View>
+          <ModuleNoticeCard
+            emoji="🎒"
+            title="Your memory bag is empty"
+            body="Start with a spelling test, a grocery list, or five fun facts."
+          />
         )}
       </ScrollView>
     </View>
@@ -139,27 +133,5 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   pegRail: { marginHorizontal: -16, paddingLeft: 16 },
-  noticeCard: {
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center',
-  },
-  noticeTitle: { color: theme.ink, fontSize: 15, fontWeight: '900', textAlign: 'center' },
-  noticeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 5 },
-  retryButton: {
-    marginTop: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: theme.sun,
-    flexDirection: 'row',
-    gap: 7,
-    alignItems: 'center',
-  },
-  retryText: { color: theme.ink, fontSize: 13, fontWeight: '900' },
-  emptyEmoji: { fontSize: 31, marginBottom: 9 },
   loadingFrame: { height: 150, overflow: 'hidden', borderRadius: 20 },
 });

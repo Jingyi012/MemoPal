@@ -3,6 +3,7 @@ import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { MemorySetRow } from '@/components/MemorySetRow';
+import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { useFeatureLimits } from '@/features/subscription/hooks/useFeatureLimits';
@@ -10,7 +11,7 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { Href, useRouter } from 'expo-router';
-import { Crown, ImagePlus, MapPinned, Pencil, RefreshCcw } from 'lucide-react-native';
+import { Crown, ImagePlus, MapPinned, Pencil } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function PalaceHomeScreen() {
@@ -72,10 +73,10 @@ export default function PalaceHomeScreen() {
             <LoadingView description="Opening the Palace doors…" />
           </View>
         ) : scenes.isError ? (
-          <Notice
+          <ModuleNoticeCard
             title="The Palace doors are stuck"
             body={getNumberPegErrorMessage(scenes.error, 'Check your connection and try again.')}
-            onRetry={scenes.refetch}
+            onAction={scenes.refetch}
           />
         ) : scenes.data?.length ? (
           <ScrollView
@@ -113,10 +114,10 @@ export default function PalaceHomeScreen() {
             ))}
           </ScrollView>
         ) : (
-          <Notice
+          <ModuleNoticeCard
             title="No Palace scenes yet"
             body="Publish a scene and its loci from the admin studio to start building journeys."
-            onRetry={scenes.refetch}
+            onAction={scenes.refetch}
           />
         )}
 
@@ -132,10 +133,10 @@ export default function PalaceHomeScreen() {
             <LoadingView description="Finding your Palaces…" />
           </View>
         ) : memorySets.isError ? (
-          <Notice
+          <ModuleNoticeCard
             title="We could not reach MemoPal"
             body={getNumberPegErrorMessage(memorySets.error, 'Check your connection and try again.')}
-            onRetry={memorySets.refetch}
+            onAction={memorySets.refetch}
           />
         ) : memorySets.data?.length ? (
           memorySets.data.map((memorySet) => (
@@ -149,36 +150,13 @@ export default function PalaceHomeScreen() {
             />
           ))
         ) : (
-          <View style={styles.noticeCard}>
-            <Text style={styles.emptyEmoji}>🗺️</Text>
-            <Text style={styles.noticeTitle}>Your first journey starts here</Text>
-            <Text style={styles.noticeBody}>
-              Try a school topic, a speech, or the steps of a new skill.
-            </Text>
-          </View>
+          <ModuleNoticeCard
+            emoji="🗺️"
+            title="Your first journey starts here"
+            body="Try a school topic, a speech, or the steps of a new skill."
+          />
         )}
       </ScrollView>
-    </View>
-  );
-}
-
-function Notice({
-  title,
-  body,
-  onRetry,
-}: {
-  title: string;
-  body: string;
-  onRetry: () => unknown;
-}) {
-  return (
-    <View style={styles.noticeCard}>
-      <Text style={styles.noticeTitle}>{title}</Text>
-      <Text style={styles.noticeBody}>{body}</Text>
-      <AnimatedPressable onPress={onRetry} style={styles.retryButton}>
-        <RefreshCcw size={16} color={theme.ink} />
-        <Text style={styles.retryText}>Try again</Text>
-      </AnimatedPressable>
     </View>
   );
 }
@@ -225,28 +203,6 @@ const styles = StyleSheet.create({
   sceneEditButton: { position: 'absolute', top: 10, right: 10, width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.9)', alignItems: 'center', justifyContent: 'center' },
   sceneName: { color: 'white', fontSize: 16, fontWeight: '900' },
   sceneMeta: { color: '#E8F7F2', fontSize: 11, fontWeight: '700', marginTop: 3 },
-  noticeCard: {
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center',
-  },
-  noticeTitle: { color: theme.ink, fontSize: 15, fontWeight: '900', textAlign: 'center' },
-  noticeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 5 },
-  retryButton: {
-    marginTop: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: theme.sun,
-    flexDirection: 'row',
-    gap: 7,
-    alignItems: 'center',
-  },
-  retryText: { color: theme.ink, fontSize: 13, fontWeight: '900' },
-  emptyEmoji: { fontSize: 31, marginBottom: 9 },
   sceneLoading: { height: 148, overflow: 'hidden', borderRadius: 20 },
   memoryLoading: { height: 150, overflow: 'hidden', borderRadius: 20 },
   customCard: { marginTop: 14, borderRadius: 18, borderWidth: 1.5, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 13, flexDirection: 'row', alignItems: 'center', gap: 10 },
