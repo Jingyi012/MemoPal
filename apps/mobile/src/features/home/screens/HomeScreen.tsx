@@ -27,7 +27,7 @@ const QuickAction = ({
   <AnimatedPressable
     onPress={onPress}
     className={getBaseCardClassName({
-      className: 'mb-2 p-4',
+      className: 'mb-2 border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4',
       padding: 'none',
     })}>
     <Text className="font-bold text-slate-800">{title}</Text>
@@ -93,7 +93,7 @@ const HomeScreen = () => {
   ]);
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-white">
       <HomeHeader userData={headerUser} />
 
       <ScrollView
@@ -135,23 +135,23 @@ const HomeScreen = () => {
             />
           ) : null}
 
-          <BaseCard className="mt-4 p-4" padding="none">
-            <Text className="text-base font-bold text-slate-900">
+          <BaseCard className="mt-4 border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
+            <Text className="text-base font-bold text-[#2B2A3D]">
               {gamificationUiConfig.homeMissionCardTitle}
             </Text>
-            <Text className="mt-1 text-sm text-slate-500">
+            <Text className="mt-1 text-sm text-[#6B6A80]">
               {gamificationUiConfig.homeMissionCardDescription}
             </Text>
             <View className="mt-3 flex-row gap-2">
-              <View className="flex-1 rounded-xl bg-slate-100 px-3 py-2">
-                <Text className="text-xs text-slate-500">Active Missions</Text>
-                <Text className="mt-1 text-lg font-bold text-slate-900">
+              <View className="flex-1 rounded-xl bg-[#F6F3EA] px-3 py-2">
+                <Text className="text-xs text-[#6B6A80]">Active Missions</Text>
+                <Text className="mt-1 text-lg font-bold text-[#2B2A3D]">
                   {activeMissions.length}
                 </Text>
               </View>
-              <View className="flex-1 rounded-xl bg-emerald-50 px-3 py-2">
-                <Text className="text-xs text-emerald-700">Completed</Text>
-                <Text className="mt-1 text-lg font-bold text-emerald-700">
+              <View className="flex-1 rounded-xl bg-[#F1FBF5] px-3 py-2">
+                <Text className="text-xs text-[#3FB87F]">Completed</Text>
+                <Text className="mt-1 text-lg font-bold text-[#3FB87F]">
                   {completedMissionCount}
                 </Text>
               </View>
@@ -159,19 +159,19 @@ const HomeScreen = () => {
             {missionPreview.length > 0 ? (
               <View className="mt-3 flex-row flex-wrap gap-2">
                 {missionPreview.map((mission) => (
-                  <View key={mission.key} className="rounded-full bg-slate-100 px-3 py-1">
-                    <Text className="text-xs font-medium text-slate-700">{mission.title}</Text>
+                  <View key={mission.key} className="rounded-full bg-[#F6F3EA] px-3 py-1">
+                    <Text className="text-xs font-medium text-[#2B2A3D]">{mission.title}</Text>
                   </View>
                 ))}
               </View>
             ) : (
-              <Text className="mt-3 text-xs text-slate-500">No active missions right now.</Text>
+              <Text className="mt-3 text-xs text-[#6B6A80]">No active missions right now.</Text>
             )}
             <AnimatedPressable
               onPress={() =>
                 router.push({ pathname: '/(tabs)/achievements', params: { tab: 'missions' } })
               }
-              className="mt-3 items-center rounded-xl bg-teal-600 px-3 py-2">
+              className="mt-3 items-center rounded-xl bg-[#2B2A3D] px-3 py-2">
               <Text className="text-xs font-semibold text-white">Open Missions</Text>
             </AnimatedPressable>
           </BaseCard>

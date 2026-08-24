@@ -1,8 +1,10 @@
 import { AppImage } from '@/components/AppImage';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { User } from '@/features/profile/types/users';
+import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { greetingByTime } from '@/utils/greeting';
 import { User2 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Text, View } from 'react-native';
 import { CommonHeader } from '@/components/CommonHeader';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -34,17 +36,18 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
 
   return (
     <CommonHeader
+      eyebrow="Today"
       // Title
       title={`${greetingByTime()}, ${name}!`}
       // Description
       description={
         level !== undefined ? (
-          <Text className="text-xs text-teal-100">
+          <Text style={styles.levelDescription}>
             Level {level}
             {isPremium && ' • 👑 Premium'}
           </Text>
         ) : (
-          <Text className="text-xs text-teal-100">New here? Let&apos;s get started 🚀</Text>
+          <Text style={styles.levelDescription}>New here? Let&apos;s get started 🚀</Text>
         )
       }
       // Actions (right side icons)
@@ -63,18 +66,60 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
             />
           </View>
         ) : (
-          <View className="h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-white/20">
-            <User2 size={20} color="white" />
+          <View style={styles.avatarFallback}>
+            <User2 size={20} color={theme.berryDeep} />
           </View>
         )
       }
       // Additional content below header
       additionalContent={
-        <>
+        <LinearGradient
+          colors={[theme.night, theme.nightDeep]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.progressCard}>
+          <View style={styles.progressGlow} />
           <LevelProgress level={displayLevelInfo} />
           <StreakBadge streak={userData.stats?.currentStreak ?? 0} />
-        </>
+        </LinearGradient>
       }
     />
   );
 }
+
+const styles = {
+  levelDescription: {
+    color: theme.inkSoft,
+    fontSize: 11.5,
+    fontWeight: '700' as const,
+  },
+  avatarFallback: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 2,
+    borderColor: '#FFD9E2',
+    backgroundColor: '#FFF0F4',
+  },
+  progressCard: {
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+    borderRadius: 22,
+    padding: 16,
+    shadowColor: theme.ink,
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  progressGlow: {
+    position: 'absolute' as const,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    right: -30,
+    top: -45,
+    backgroundColor: 'rgba(255, 201, 60, 0.2)',
+  },
+};

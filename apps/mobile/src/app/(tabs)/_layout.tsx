@@ -1,5 +1,4 @@
 import { HapticTab } from '@/components/ui/haptic-tab';
-import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthProvider';
 import { Redirect, Tabs } from 'expo-router';
 import { Award, BookOpen, Home, Layers3, User } from 'lucide-react-native';
@@ -18,11 +17,16 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.teal600,
+        tabBarActiveTintColor: '#E8527A',
+        tabBarInactiveTintColor: '#6B6A80',
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#EEE9DC',
+        },
         sceneStyle: {
-          backgroundColor: Colors.slate50,
+          backgroundColor: '#FFFFFF',
         },
       }}>
       <Tabs.Screen
