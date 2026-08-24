@@ -48,7 +48,8 @@ export default function PalaceHomeScreen() {
         />
 
         <AnimatedPressable
-          onPress={() => router.push('/palaces/create-custom' as Href)}
+          accessibilityLabel={limits.customPalaces > 0 ? 'Create a custom Palace' : 'Unlock custom Palaces'}
+          onPress={() => router.push((limits.customPalaces > 0 ? '/palaces/create-custom' : '/premium') as Href)}
           style={styles.customCard}>
           <View style={styles.customIcon}>
             {limits.customPalaces > 0 ? <ImagePlus size={21} color={theme.violetDeep} /> : <Crown size={20} color={theme.sunDeep} />}
