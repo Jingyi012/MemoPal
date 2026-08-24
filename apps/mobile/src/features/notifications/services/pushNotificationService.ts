@@ -15,12 +15,18 @@ Notifications.setNotificationHandler({
 
 export const DAILY_LEARNING_NOTIFICATION_ID = 'daily-learning-reminder';
 
+type PermissionOptions = {
+  prompt?: boolean;
+};
+
 export const PushNotificationService = {
-  // Request permissions
-  async requestPermissions() {
+  // Check permissions at startup without unexpectedly opening a system dialog.
+  // Settings can call this with the default prompt behavior when the user
+  // explicitly enables a reminder.
+  async requestPermissions({ prompt = true }: PermissionOptions = {}) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
-    if (existingStatus !== 'granted') {
+    if (prompt && existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }

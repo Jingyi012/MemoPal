@@ -14,7 +14,7 @@ export const useNotificationObserver = (enabled: boolean = true) => {
     const initializeNotifications = async () => {
       try {
         // 1. Ensure permissions
-        const granted = await PushNotificationService.requestPermissions();
+        const granted = await PushNotificationService.requestPermissions({ prompt: false });
 
         if (granted) {
           // 2. Sync hardware (Ensures future Push Notifications are set in the OS)
