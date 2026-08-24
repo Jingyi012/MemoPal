@@ -9,6 +9,12 @@ import {
   buildTechniqueRoute,
   recommendTechnique,
 } from '../src/features/memory-composer/utils/techniqueRecommendation.ts';
+import {
+  parseComposerGoal,
+  parseComposerItems,
+  suggestMemoryTitle,
+} from '../src/features/memory-composer/utils/composerParams.ts';
+import { buildNumberPegItems, buildPegScene } from '../src/features/number-peg/utils/numberPegMap.ts';
 
 test('normalizes recall answers for case and whitespace differences', () => {
   assert.equal(normalizeRecallAnswer('  Solar   System '), 'SOLAR SYSTEM');
@@ -43,4 +49,23 @@ test('builds a handoff route without losing the prepared list', () => {
   assert.match(route, /^\/number-peg\/create\?/);
   assert.match(route, /title=Friday%20spelling/);
   assert.match(route, /items=%5B%22rhythm%22%2C%22separate%22%5D/);
+});
+
+test('parses a shared composer payload and creates a useful title', () => {
+  const items = encodeURIComponent(JSON.stringify(['  planets ', '', 'moons']));
+
+  assert.deepEqual(parseComposerItems(items), ['  planets ', '', 'moons']);
+  assert.equal(parseComposerGoal('ordered-list'), 'ordered-list');
+  assert.equal(suggestMemoryTitle('ordered-list', ['  planets ', '', 'moons']), 'Memory list · planets + 1 more');
+});
+
+test('keeps the peg map ordered and makes each scene vivid', () => {
+  const pegs = buildNumberPegItems();
+  const scene = buildPegScene(2, 'apples');
+
+  assert.equal(pegs.length, 10);
+  assert.equal(pegs[0].number, 1);
+  assert.equal(pegs[9].number, 10);
+  assert.match(scene, /swan/i);
+  assert.match(scene, /apples/);
 });
