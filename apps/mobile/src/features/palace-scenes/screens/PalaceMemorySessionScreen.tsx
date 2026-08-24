@@ -13,7 +13,7 @@ import {
 import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Check, ChevronLeft, ChevronRight, RotateCcw, X } from 'lucide-react-native';
+import { Check, ChevronLeft, ChevronRight, Footprints, MapPinned, RotateCcw, Sparkles, Target, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -162,9 +162,48 @@ export default function PalaceMemorySessionScreen({ memorySetId }: { memorySetId
           {mode === 'recall' ? 'Use the active locus as your cue.' : 'Tap a marker, or walk through every locus in order.'}
         </Text>
 
+        <View style={styles.modeRail}>
+          <AnimatedPressable
+            onPress={() => { setMode('browse'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
+            style={[styles.modeTab, mode === 'browse' && styles.modeTabActive]}>
+            <MapPinned size={16} color={mode === 'browse' ? theme.violetDeep : theme.inkSoft} />
+            <Text style={[styles.modeTabText, mode === 'browse' && styles.modeTabTextActive]}>Map</Text>
+          </AnimatedPressable>
+          <AnimatedPressable
+            onPress={() => { setMode('walk'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
+            style={[styles.modeTab, mode === 'walk' && styles.modeTabActive]}>
+            <Footprints size={16} color={mode === 'walk' ? theme.violetDeep : theme.inkSoft} />
+            <Text style={[styles.modeTabText, mode === 'walk' && styles.modeTabTextActive]}>Walk</Text>
+          </AnimatedPressable>
+          <AnimatedPressable
+            onPress={startRecall}
+            style={[styles.modeTab, mode === 'recall' && styles.modeTabActive]}>
+            <Target size={16} color={mode === 'recall' ? theme.violetDeep : theme.inkSoft} />
+            <Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>Recall</Text>
+          </AnimatedPressable>
+        </View>
+
+        {mode === 'browse' && active ? (
+          <View style={styles.previewCard}>
+            <View style={styles.previewTop}>
+              <View style={styles.previewIcon}>
+                <Sparkles size={18} color={theme.violetDeep} />
+              </View>
+              <View style={styles.previewCopy}>
+                <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}</Text>
+                <Text style={styles.previewAnswer}>{active.item.answer}</Text>
+              </View>
+            </View>
+            <Text style={styles.previewAssociation}>
+              {active.binding?.associationText ?? 'This is the memory attached to this spot.'}
+            </Text>
+          </View>
+        ) : null}
+
         {mode === 'walk' && active ? (
           <View style={styles.walkCard}>
-            <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name.toUpperCase()}</Text>
+            <View style={styles.walkIcon}><Footprints size={22} color={theme.violetDeep} /></View>
+            <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}</Text>
             <Text style={styles.walkAnswer}>{active.item.answer}</Text>
             <Text style={styles.walkAssociation}>{active.binding?.associationText}</Text>
             <View style={styles.walkActions}>
@@ -231,7 +270,8 @@ export default function PalaceMemorySessionScreen({ memorySetId }: { memorySetId
             </View>
           ) : active ? (
             <View style={styles.recallCard}>
-              <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name.toUpperCase()}</Text>
+              <View style={styles.recallIcon}><Target size={23} color={theme.violetDeep} /></View>
+              <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}</Text>
               <Text style={styles.recallPrompt}>What did you place here?</Text>
               <TextInput
                 value={answer}
@@ -309,6 +349,17 @@ const styles = StyleSheet.create({
   activeMarker: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.18 }] },
   markerText: { color: 'white', fontSize: 12, fontWeight: '900' },
   hint: { color: theme.inkSoft, fontSize: 11, lineHeight: 17, fontWeight: '700', textAlign: 'center', marginVertical: 12 },
+  modeRail: { flexDirection: 'row', gap: 7, padding: 5, borderRadius: 17, backgroundColor: '#EEE9FF', marginBottom: 12 },
+  modeTab: { flex: 1, minHeight: 38, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  modeTabActive: { backgroundColor: 'white', shadowColor: theme.ink, shadowOpacity: 0.08, shadowRadius: 5, elevation: 1 },
+  modeTabText: { color: theme.inkSoft, fontSize: 12, fontWeight: '900' },
+  modeTabTextActive: { color: theme.violetDeep },
+  previewCard: { borderRadius: 20, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 14, marginBottom: 12 },
+  previewTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  previewIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },
+  previewCopy: { flex: 1 },
+  previewAnswer: { color: theme.ink, fontSize: 19, fontWeight: '900', marginTop: 4 },
+  previewAssociation: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, fontWeight: '700', marginTop: 10 },
   itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 15, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 10, marginBottom: 8 },
   activeRow: { borderColor: '#9B8CFF', backgroundColor: '#F7F5FF' },
   itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center' },
@@ -320,6 +371,7 @@ const styles = StyleSheet.create({
   secondaryButton: { width: '100%', minHeight: 49, borderRadius: 16, borderWidth: 2, borderColor: '#9B8CFF', backgroundColor: '#F7F5FF', alignItems: 'center', justifyContent: 'center', marginTop: 12, paddingHorizontal: 16 },
   secondaryText: { color: '#6654D9', fontSize: 14, fontWeight: '900' },
   walkCard: { borderRadius: 23, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 22, alignItems: 'center' },
+  walkIcon: { width: 48, height: 48, borderRadius: 17, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   eyebrow: { color: '#7A68E0', fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
   walkAnswer: { color: theme.ink, fontSize: 25, fontWeight: '900', textAlign: 'center', marginTop: 12 },
   walkAssociation: { color: theme.inkSoft, fontSize: 13, lineHeight: 20, fontWeight: '700', textAlign: 'center', marginTop: 8 },
@@ -328,6 +380,7 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.35 },
   count: { color: theme.inkSoft, fontSize: 12, fontWeight: '900' },
   recallCard: { borderRadius: 23, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: theme.paper, padding: 22, alignItems: 'center' },
+  recallIcon: { width: 50, height: 50, borderRadius: 18, backgroundColor: '#FFF0F4', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   recallPrompt: { color: theme.ink, fontSize: 20, fontWeight: '900', marginTop: 12, marginBottom: 16 },
   answerInput: { width: '100%', minHeight: 54, borderRadius: 14, borderWidth: 2.5, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 13, color: theme.ink, textAlign: 'center', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
   correctInput: { borderColor: theme.grass, backgroundColor: '#F1FBF5' },
