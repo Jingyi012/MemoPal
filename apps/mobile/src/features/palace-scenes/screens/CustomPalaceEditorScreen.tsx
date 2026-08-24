@@ -3,8 +3,10 @@ import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import { mediaApi } from '@/core/api/media';
 import { useFeatureLimits } from '@/features/subscription/hooks/useFeatureLimits';
+import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { usePalaceSceneMutations } from '@/features/palace-scenes/hooks/usePalaceSceneMutations';
 import { usePalaceScene } from '@/features/palace-scenes/hooks/usePalaceScenes';
+import { clearCustomPalaceDraft, readCustomPalaceDraft, writeCustomPalaceDraft } from '@/features/palace-scenes/services/customPalaceDraft';
 import type { PalaceLocusInput } from '@/features/palace-scenes/types/palaceScene.types';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { firstParam } from '@/features/memory-composer/utils/composerParams';
@@ -31,6 +33,7 @@ export default function CustomPalaceEditorScreen() {
   const params = useLocalSearchParams<{ sceneId?: string | string[] }>();
   const sceneId = firstParam(params.sceneId);
   const sceneQuery = usePalaceScene(sceneId ?? '');
+  const { user } = useCurrentUser();
   const { limits } = useFeatureLimits();
   const { createCustom, updateCustom } = usePalaceSceneMutations();
   const [name, setName] = useState('');
@@ -42,6 +45,7 @@ export default function CustomPalaceEditorScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [hydratedSceneId, setHydratedSceneId] = useState<string | null>(null);
+  const [draftHydrated, setDraftHydrated] = useState(Boolean(sceneId));
 
   useEffect(() => {
     if (!sceneQuery.data || hydratedSceneId === sceneQuery.data.id) return;
@@ -60,6 +64,30 @@ export default function CustomPalaceEditorScreen() {
     })));
     setHydratedSceneId(scene.id);
   }, [hydratedSceneId, sceneQuery.data]);
+
+  useEffect(() => {
+    if (sceneId || !user?.id || draftHydrated) return;
+    void readCustomPalaceDraft(user.id).then((draft) => {
+      if (draft) {
+        setName(draft.name);
+        setDescription(draft.description);
+        setImageUri(draft.imageUri);
+        setLoci(draft.loci);
+        setMessage('Your unfinished Palace draft was restored.');
+      }
+      setDraftHydrated(true);
+    });
+  }, [draftHydrated, sceneId, user?.id]);
+
+  useEffect(() => {
+    if (sceneId || !user?.id || !draftHydrated) return;
+    const hasDraft = Boolean(name.trim() || description.trim() || imageUri || loci.length);
+    if (!hasDraft) return;
+    const timer = setTimeout(() => {
+      void writeCustomPalaceDraft(user.id, { name, description, imageUri, loci });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [description, draftHydrated, imageUri, loci, name, sceneId, user?.id]);
 
   const maxLoci = Math.max(1, limits.customLocationsPerPalace);
   const canCreate = limits.customPalaces > 0;
@@ -162,6 +190,7 @@ export default function CustomPalaceEditorScreen() {
       const scene = sceneId
         ? await updateCustom.mutateAsync({ sceneId, request })
         : await createCustom.mutateAsync(request);
+      if (user?.id && !sceneId) await clearCustomPalaceDraft(user.id);
       router.replace({ pathname: '/palaces/create-memory', params: { sceneId: scene.id } });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not save your Palace. Try again.');
