@@ -2,6 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import type { PalaceLocus, PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { StyleSheet, Text, View } from 'react-native';
 
 type PalaceLocusMapProps = {
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
   },
   markerText: {
     color: 'white',
+    fontFamily: typography.bodyExtraBold,
     fontSize: 12,
-    fontWeight: '900',
   },
 });

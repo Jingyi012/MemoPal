@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { Check, ChevronRight, List } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -58,17 +59,17 @@ const styles = StyleSheet.create({
   headingRow: { alignItems: 'center', flexDirection: 'row', gap: 10 },
   headingIcon: { alignItems: 'center', backgroundColor: '#EEE9FF', borderRadius: 13, height: 38, justifyContent: 'center', width: 38 },
   headingCopy: { flex: 1 },
-  eyebrow: { color: theme.violetDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
-  title: { color: theme.ink, fontSize: 16, fontWeight: '900', marginTop: 2 },
-  helper: { color: theme.inkSoft, fontSize: 11, fontWeight: '700', lineHeight: 17, marginTop: 9 },
+  eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
+  title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 16, marginTop: 2 },
+  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 9 },
   list: { gap: 8, marginTop: 12 },
   row: { alignItems: 'center', backgroundColor: '#FFFDF8', borderColor: theme.line, borderRadius: 15, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 68, paddingHorizontal: 10, paddingVertical: 9 },
   rowActive: { backgroundColor: '#F7F5FF', borderColor: '#9B8CFF' },
   number: { alignItems: 'center', backgroundColor: '#EEE9FF', borderRadius: 15, height: 30, justifyContent: 'center', width: 30 },
   numberActive: { backgroundColor: theme.sun },
-  numberText: { color: theme.violetDeep, fontSize: 11, fontWeight: '900' },
+  numberText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   rowCopy: { flex: 1 },
-  locus: { color: theme.violetDeep, fontSize: 9.5, fontWeight: '900', letterSpacing: 0.6, textTransform: 'uppercase' },
-  answer: { color: theme.ink, fontSize: 14, fontWeight: '900', marginTop: 3 },
-  association: { color: theme.inkSoft, fontSize: 10.5, fontWeight: '700', lineHeight: 15, marginTop: 2 },
+  locus: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.6, textTransform: 'uppercase' },
+  answer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, marginTop: 3 },
+  association: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 15, marginTop: 2 },
 });
