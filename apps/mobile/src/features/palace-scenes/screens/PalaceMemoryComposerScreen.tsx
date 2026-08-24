@@ -168,7 +168,7 @@ export default function PalaceMemoryComposerScreen() {
         <View style={styles.labelRow}><Text style={styles.label}>Add your items</Text><Text style={styles.counter}>{items.length}/{loci.length || '—'}</Text></View>
         <View style={styles.addRow}>
           <TextInput value={newItem} onChangeText={setNewItem} onSubmitEditing={addItem} placeholder="A word, fact, name, or step" placeholderTextColor="#AAA7B5" style={[styles.input, { flex: 1 }]} />
-          <AnimatedPressable onPress={addItem} style={styles.addButton}><Plus size={21} color="white" /></AnimatedPressable>
+          <AnimatedPressable accessibilityLabel="Add item" onPress={addItem} style={styles.addButton}><Plus size={21} color="white" /></AnimatedPressable>
         </View>
         {items.map((item, index) => (
           <View key={`${item}-${index}`} style={styles.itemRow}>

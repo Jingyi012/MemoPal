@@ -1,4 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  archiveLocalPreviewMemorySet,
+  createLocalPreviewMemorySet,
+  deleteLocalPreviewMemorySet,
+  duplicateLocalPreviewMemorySet,
+  getLocalPreviewMemorySet,
+  getLocalPreviewMemorySets,
+  isLocalPreviewEnabled,
+  updateLocalPreviewMemorySet,
+} from '@/core/dev/localPreviewData';
 import { memorySetApi } from '../api/memorySet.api';
 import { MEMORY_SET_KEYS } from '../queryKeys';
 import type {
@@ -11,7 +21,13 @@ export function useMemorySets(techniqueKey?: MemoryTechniqueKey) {
   return useQuery({
     queryKey: MEMORY_SET_KEYS.list(techniqueKey),
     queryFn: async () => {
-      const memorySets = await memorySetApi.getAll();
+      let memorySets: MemorySet[];
+      try {
+        memorySets = await memorySetApi.getAll();
+      } catch (error) {
+        if (!isLocalPreviewEnabled) throw error;
+        memorySets = getLocalPreviewMemorySets();
+      }
       return techniqueKey
         ? memorySets.filter((memorySet) => memorySet.techniqueKey === techniqueKey)
         : memorySets;
@@ -26,7 +42,17 @@ export function useMemorySet(memorySetId: string) {
   return useQuery({
     queryKey: MEMORY_SET_KEYS.detail(memorySetId),
     enabled: Boolean(memorySetId),
-    queryFn: () => memorySetApi.getById(memorySetId),
+    queryFn: async () => {
+      try {
+        return await memorySetApi.getById(memorySetId);
+      } catch (error) {
+        const previewMemorySet = isLocalPreviewEnabled
+          ? getLocalPreviewMemorySet(memorySetId)
+          : undefined;
+        if (previewMemorySet) return previewMemorySet;
+        throw error;
+      }
+    },
     placeholderData: () => {
       const lists = queryClient.getQueriesData<MemorySet[]>({
         queryKey: MEMORY_SET_KEYS.lists(),
@@ -46,7 +72,8 @@ export function useMemorySetMutations() {
   };
 
   const createMemorySet = useMutation({
-    mutationFn: (request: MemorySetUpsertRequest) => memorySetApi.create(request),
+    mutationFn: (request: MemorySetUpsertRequest) =>
+      isLocalPreviewEnabled ? Promise.resolve(createLocalPreviewMemorySet(request)) : memorySetApi.create(request),
     // Avoid duplicate POSTs until the API accepts an idempotency key.
     // The composer keeps the failed state visible and offers an explicit retry.
     retry: false,
@@ -62,26 +89,39 @@ export function useMemorySetMutations() {
 
   const updateMemorySet = useMutation({
     mutationFn: ({ memorySetId, request }: { memorySetId: string; request: MemorySetUpsertRequest }) =>
-      memorySetApi.update(memorySetId, request),
+      isLocalPreviewEnabled
+        ? Promise.resolve(updateLocalPreviewMemorySet(memorySetId, request))
+        : memorySetApi.update(memorySetId, request),
     retry: false,
     onSuccess: cacheMemorySet,
   });
 
   const duplicateMemorySet = useMutation({
-    mutationFn: (memorySetId: string) => memorySetApi.duplicate(memorySetId),
+    mutationFn: (memorySetId: string) =>
+      isLocalPreviewEnabled
+        ? Promise.resolve(duplicateLocalPreviewMemorySet(memorySetId))
+        : memorySetApi.duplicate(memorySetId),
     retry: false,
     onSuccess: cacheMemorySet,
   });
 
   const setMemorySetArchived = useMutation({
     mutationFn: ({ memorySetId, isArchived }: { memorySetId: string; isArchived: boolean }) =>
-      memorySetApi.setArchived(memorySetId, isArchived),
+      isLocalPreviewEnabled
+        ? Promise.resolve(archiveLocalPreviewMemorySet(memorySetId, isArchived))
+        : memorySetApi.setArchived(memorySetId, isArchived),
     retry: false,
     onSuccess: cacheMemorySet,
   });
 
   const deleteMemorySet = useMutation({
-    mutationFn: (memorySetId: string) => memorySetApi.delete(memorySetId),
+    mutationFn: (memorySetId: string) => {
+      if (isLocalPreviewEnabled) {
+        deleteLocalPreviewMemorySet(memorySetId);
+        return Promise.resolve();
+      }
+      return memorySetApi.delete(memorySetId);
+    },
     retry: false,
     onSuccess: (_, memorySetId) => {
       queryClient.removeQueries({ queryKey: MEMORY_SET_KEYS.detail(memorySetId) });

@@ -153,12 +153,13 @@ const AchievementsScreen: React.FC = () => {
 
   const displayLevelInfo = useMemo(() => {
     if (!levelInfo) {
+      const fallbackLevel = Math.max(1, user?.level ?? 1);
       return {
-        currentLevel: 1,
-        xpInCurrentLevel: 0,
+        currentLevel: fallbackLevel,
+        xpInCurrentLevel: totalXp,
         xpToNextLevel: 0,
         totalXp,
-        title: 'Level 1',
+        title: `Level ${fallbackLevel}`,
       };
     }
 
@@ -172,7 +173,7 @@ const AchievementsScreen: React.FC = () => {
       totalXp,
       title: levelInfo.currentLevelConfig?.title || `Level ${levelInfo.currentLevel}`,
     };
-  }, [levelInfo, totalXp]);
+  }, [levelInfo, totalXp, user?.level]);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);

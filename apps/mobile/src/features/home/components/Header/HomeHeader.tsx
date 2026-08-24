@@ -23,14 +23,21 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
   const { levelInfo } = useLevelByXp(userData.totalXp, userData.level);
 
   const displayLevelInfo = useMemo(() => {
-    if (!levelInfo) return { currentLevel: 1, xpInCurrentLevel: 0, xpToNextLevel: 0, title: 'Level 1' };
+    if (!levelInfo) {
+      return {
+        currentLevel: Math.max(1, userData.level ?? 1),
+        xpInCurrentLevel: Math.max(0, userData.totalXp ?? 0),
+        xpToNextLevel: 0,
+        title: `Level ${Math.max(1, userData.level ?? 1)}`,
+      };
+    }
     return {
       currentLevel: levelInfo.currentLevel,
       xpInCurrentLevel: levelInfo.xpInCurrentLevel,
       xpToNextLevel: levelInfo.xpToNextLevel,
       title: levelInfo.currentLevelConfig?.title || `Level ${levelInfo.currentLevel}`,
     };
-  }, [levelInfo]);
+  }, [levelInfo, userData.level, userData.totalXp]);
 
   const level = levelInfo?.currentLevel ?? userData?.level ?? 1;
 

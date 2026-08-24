@@ -336,7 +336,7 @@ export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: s
                   <Text style={styles.quizButtonText}>{feedback ? 'Next peg' : 'Check answer'}</Text>
                 </AnimatedPressable>
               </View>
-              <Text style={styles.scoreText}>Score so far: {score} / {questionIndex}</Text>
+              <Text style={styles.scoreText}>Score so far: {score} / {responses.length}</Text>
             </>
           )}
         </ScrollView>
