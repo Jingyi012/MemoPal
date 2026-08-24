@@ -257,7 +257,7 @@ function RecentSessionCard({ memorySet, onPress }: { memorySet: MemorySet; onPre
 }
 
 function openMemorySet(router: ReturnType<typeof useRouter>, memorySet: MemorySet) {
-  router.push((memorySet.techniqueKey === 'palace' ? `/palaces/memory/${memorySet.id}` : `/number-peg/${memorySet.id}`) as Href);
+  router.push(`/memory-details/${memorySet.id}` as Href);
 }
 
 function formatUpdatedAt(value: string) {

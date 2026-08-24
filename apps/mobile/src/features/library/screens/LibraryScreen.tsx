@@ -179,11 +179,7 @@ export default function LibraryScreen() {
 }
 
 function openSet(router: ReturnType<typeof useRouter>, memorySet: MemorySet) {
-  router.push(
-    (memorySet.techniqueKey === 'palace'
-      ? `/palaces/memory/${memorySet.id}`
-      : `/number-peg/${memorySet.id}`) as Href
-  );
+  router.push(`/memory-details/${memorySet.id}` as Href);
 }
 
 function MemoryCard({

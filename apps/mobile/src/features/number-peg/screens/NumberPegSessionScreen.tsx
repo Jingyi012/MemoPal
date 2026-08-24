@@ -34,7 +34,7 @@ function findBinding(bindings: PegBinding[], memoryItem: MemoryItem) {
   return bindings.find((binding) => binding.memoryItemId === memoryItem.id);
 }
 
-export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: string }) {
+export default function NumberPegSessionScreen({ memorySetId, restart = false }: { memorySetId: string; restart?: boolean }) {
   const router = useRouter();
   const memorySetQuery = useMemorySet(memorySetId);
   const pegs = useMemo(() => buildNumberPegItems(), []);
@@ -64,6 +64,13 @@ export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: s
     hydratedSessionRef.current = sessionKey;
     sessionReadyRef.current = false;
     void readNumberPegSession(memorySet.id).then((snapshot) => {
+      if (restart) {
+        if (snapshot) void clearNumberPegSession(memorySet.id);
+        setHasRestoredSession(false);
+        sessionReadyRef.current = true;
+        return;
+      }
+
       if (!snapshot || snapshot.memorySetVersion !== memorySet.version || snapshot.questionIndex >= memorySet.items.length) {
         if (snapshot) void clearNumberPegSession(memorySet.id);
         sessionReadyRef.current = true;
@@ -81,7 +88,7 @@ export default function NumberPegSessionScreen({ memorySetId }: { memorySetId: s
       setHasRestoredSession(true);
       sessionReadyRef.current = true;
     });
-  }, [memorySetQuery.data]);
+  }, [memorySetQuery.data, restart]);
 
   useEffect(() => {
     const memorySet = memorySetQuery.data;
