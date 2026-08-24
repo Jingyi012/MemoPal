@@ -5,6 +5,7 @@ import { useMemorySet } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { usePracticeAttemptHistory } from '@/features/practice-attempts';
+import type { PracticeAttempt } from '@/features/practice-attempts';
 import { Href, useRouter } from 'expo-router';
 import { AlertCircle, ArrowRight, Check, Circle, Hash, MapPinned, RefreshCcw, X } from 'lucide-react-native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -92,7 +93,7 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
   );
 }
 
-function SummaryCard({ memorySet, latestAttempt }: { memorySet: MemorySet; latestAttempt: { correctCount: number; totalCount: number; completedAt: string } | null }) {
+function SummaryCard({ memorySet, latestAttempt }: { memorySet: MemorySet; latestAttempt: PracticeAttempt | null }) {
   const isPalace = memorySet.techniqueKey === 'palace';
   const summaryMeta = getSummaryMeta(memorySet, latestAttempt);
   return (
@@ -128,15 +129,22 @@ function statusLabel(status: ItemStatus) {
   }
 }
 
-function getSummaryMeta(memorySet: MemorySet, latestAttempt: { correctCount: number; totalCount: number; completedAt: string } | null) {
+function getSummaryMeta(memorySet: MemorySet, latestAttempt: PracticeAttempt | null) {
   if (!latestAttempt) return `${memorySet.items.length} items · Ready to practice`;
-  if (latestAttempt.totalCount < memorySet.items.length) {
-    return `${latestAttempt.correctCount}/${latestAttempt.totalCount} correct · In progress`;
+  const latestResponseByItem = new Map(
+    latestAttempt.responses.map((response) => [response.memoryItemId, response]),
+  );
+  const recalledCount = Array.from(latestResponseByItem.values()).filter((response) => response.isCorrect).length;
+  const retryCount = latestAttempt.responses.filter((response) => response.attemptCount > 1).length;
+  if (latestResponseByItem.size < memorySet.items.length) {
+    return `${recalledCount}/${memorySet.items.length} recalled · In progress`;
   }
-  if (latestAttempt.correctCount === latestAttempt.totalCount) {
-    return `${latestAttempt.correctCount}/${latestAttempt.totalCount} correct · Last round perfect`;
+  if (recalledCount === memorySet.items.length) {
+    return retryCount > 0
+      ? `${recalledCount}/${memorySet.items.length} recalled · ${retryCount} retried`
+      : `${recalledCount}/${memorySet.items.length} recalled · Last round perfect`;
   }
-  return `${latestAttempt.correctCount}/${latestAttempt.totalCount} correct · Keep practicing`;
+  return `${recalledCount}/${memorySet.items.length} recalled · Keep practicing`;
 }
 
 const styles = StyleSheet.create({

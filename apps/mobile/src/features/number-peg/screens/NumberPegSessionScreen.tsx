@@ -30,6 +30,15 @@ function normalizeAnswer(value: string) {
   return value.trim().replace(/\s+/g, ' ').toLocaleUpperCase();
 }
 
+function spellingHint(expected: string, actual: string) {
+  const expectedLetters = Array.from(expected.trim().toLocaleUpperCase());
+  const actualLetters = Array.from(actual.trim().toLocaleUpperCase());
+  const mismatch = expectedLetters.findIndex((letter, index) => letter !== actualLetters[index]);
+  if (mismatch >= 0) return `letter ${mismatch + 1} should be “${expectedLetters[mismatch]}”.`;
+  if (expectedLetters.length !== actualLetters.length) return `the ending — it needs ${expectedLetters.length} letters.`;
+  return 'the letter pattern once more.';
+}
+
 function findBinding(bindings: PegBinding[], memoryItem: MemoryItem) {
   return bindings.find((binding) => binding.memoryItemId === memoryItem.id);
 }
@@ -162,6 +171,7 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
 
   const memorySet = memorySetQuery.data;
   const bindings = memorySet.techniquePlan?.pegBindings ?? [];
+  const isSpelling = memorySet.goalType === 'spelling';
   const isComplete = questionIndex >= memorySet.items.length;
   const currentItem = isComplete ? null : memorySet.items[questionIndex];
   const currentBinding = currentItem ? findBinding(bindings, currentItem) : null;
@@ -170,6 +180,12 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
   const checkOrContinue = () => {
     if (!currentItem) return;
     if (feedback) {
+      if (feedback === 'wrong') {
+        setFeedback(null);
+        setAnswer('');
+        setQuestionStartedAtMs(Date.now());
+        return;
+      }
       if (questionIndex === memorySet.items.length - 1) {
         const payload: PracticeAttemptInput = {
           clientAttemptId,
@@ -196,7 +212,7 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
       {
         memoryItemId: currentItem.id,
         isCorrect,
-        attemptCount: 1,
+        attemptCount: current.filter((response) => response.memoryItemId === currentItem.id).length + 1,
         responseMs: Math.max(0, Date.now() - questionStartedAtMs),
       },
     ]);
@@ -332,7 +348,11 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
                   <View style={styles.feedback}>
                     {feedback === 'correct' ? <Check size={18} color={theme.grass} /> : <X size={18} color={theme.berryDeep} />}
                     <Text style={[styles.feedbackText, { color: feedback === 'correct' ? theme.grass : theme.berryDeep }]}>
-                      {feedback === 'correct' ? 'Nailed it!' : `It was ${currentItem?.answer}. Picture it once more.`}
+                    {feedback === 'correct'
+                      ? 'Nailed it!'
+                      : isSpelling
+                        ? `Check the spelling: ${spellingHint(currentItem?.answer ?? '', answer)}`
+                        : `It was ${currentItem?.answer}. Picture it once more, then try again.`}
                     </Text>
                   </View>
                 )}
@@ -340,7 +360,9 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
                   disabled={!answer.trim() && !feedback}
                   onPress={checkOrContinue}
                   style={[styles.quizButton, !answer.trim() && !feedback && styles.disabledButton]}>
-                  <Text style={styles.quizButtonText}>{feedback ? 'Next peg' : 'Check answer'}</Text>
+                  <Text style={styles.quizButtonText}>
+                    {feedback === 'wrong' ? 'Try this peg again' : feedback ? 'Next peg' : 'Check answer'}
+                  </Text>
                 </AnimatedPressable>
               </View>
               <Text style={styles.scoreText}>Score so far: {score} / {responses.length}</Text>

@@ -29,6 +29,15 @@ function normalizeAnswer(value: string) {
   return value.trim().replace(/\s+/g, ' ').toLocaleUpperCase();
 }
 
+function spellingHint(expected: string, actual: string) {
+  const expectedLetters = Array.from(expected.trim().toLocaleUpperCase());
+  const actualLetters = Array.from(actual.trim().toLocaleUpperCase());
+  const mismatch = expectedLetters.findIndex((letter, index) => letter !== actualLetters[index]);
+  if (mismatch >= 0) return `letter ${mismatch + 1} should be “${expectedLetters[mismatch]}”.`;
+  if (expectedLetters.length !== actualLetters.length) return `the ending — it needs ${expectedLetters.length} letters.`;
+  return 'the letter pattern once more.';
+}
+
 export default function PalaceMemorySessionScreen({ memorySetId, restart = false }: { memorySetId: string; restart?: boolean }) {
   const router = useRouter();
   const memorySetQuery = useMemorySet(memorySetId);
@@ -140,6 +149,7 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
 
   const memorySet = memorySetQuery.data;
   const scene = sceneQuery.data;
+  const isSpelling = memorySet.goalType === 'spelling';
   const active = placements[activeIndex];
   const recallComplete = mode === 'recall' && activeIndex >= placements.length;
 
@@ -161,6 +171,12 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
   const checkOrContinue = () => {
     if (!active) return;
     if (feedback) {
+      if (feedback === 'wrong') {
+        setFeedback(null);
+        setAnswer('');
+        setQuestionStartedAtMs(Date.now());
+        return;
+      }
       if (activeIndex === placements.length - 1) {
         const payload: PracticeAttemptInput = {
           clientAttemptId,
@@ -187,7 +203,7 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
       {
         memoryItemId: active.item.id,
         isCorrect,
-        attemptCount: 1,
+        attemptCount: current.filter((response) => response.memoryItemId === active.item.id).length + 1,
         responseMs: Math.max(0, Date.now() - questionStartedAtMs),
       },
     ]);
@@ -371,7 +387,9 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
                   <Text style={[styles.feedbackText, { color: feedback === 'correct' ? theme.grass : theme.berryDeep }]}>
                     {feedback === 'correct'
                       ? 'That is it!'
-                      : `It was ${active.item.answer}. See it at this locus once more.`}
+                      : isSpelling
+                        ? `Check the spelling: ${spellingHint(active.item.answer, answer)}`
+                        : `It was ${active.item.answer}. See it at this locus once more, then try again.`}
                   </Text>
                 </View>
               ) : null}
@@ -379,7 +397,9 @@ export default function PalaceMemorySessionScreen({ memorySetId, restart = false
                 disabled={!answer.trim() && !feedback}
                 onPress={checkOrContinue}
                 style={[styles.recallButton, !answer.trim() && !feedback && styles.disabled]}>
-                <Text style={styles.recallButtonText}>{feedback ? 'Next locus' : 'Check answer'}</Text>
+                <Text style={styles.recallButtonText}>
+                  {feedback === 'wrong' ? 'Try this locus again' : feedback ? 'Next locus' : 'Check answer'}
+                </Text>
               </AnimatedPressable>
               <Text style={styles.count}>Locus {activeIndex + 1} / {placements.length} · Score {score}</Text>
             </View>
