@@ -19,11 +19,11 @@ export const useNotificationObserver = (enabled: boolean = true) => {
         if (granted) {
           // 2. Sync hardware (Ensures future Push Notifications are set in the OS)
           await InAppNotificationSync.syncAllUpcoming();
-
-          // 3. Refresh In-App Inbox (Converts reviews that became due while
-          // the app was closed into visible rows in your Notifications table)
-          await InAppNotificationSync.refreshInAppInbox();
         }
+
+        // Refresh the in-app inbox regardless of OS push permission. Push is
+        // optional; review state inside MemoPal remains available either way.
+        await InAppNotificationSync.refreshInAppInbox();
       } catch (error) {
         console.warn('Notification observer initialization skipped:', error);
       }
