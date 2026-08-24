@@ -2,13 +2,14 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
+import { MemorySetRow } from '@/components/MemorySetRow';
 import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { usePalaceScenes } from '@/features/palace-scenes';
 import { Href, useRouter } from 'expo-router';
-import { ChevronRight, MapPinned, RefreshCcw } from 'lucide-react-native';
+import { MapPinned, RefreshCcw } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function PalaceHomeScreen() {
@@ -110,24 +111,14 @@ export default function PalaceHomeScreen() {
           />
         ) : memorySets.data?.length ? (
           memorySets.data.map((memorySet) => (
-            <AnimatedPressable
+            <MemorySetRow
               key={memorySet.id}
+              tone="palace"
+              title={memorySet.title}
+              badgeText={String(memorySet.items.length)}
+              subtitle={`${memorySet.items.length} ${memorySet.items.length === 1 ? 'locus' : 'loci'} · ${memorySet.status === 'draft' ? 'Keep placing' : 'Walk and recall'}`}
               onPress={() => router.push(`/palaces/memory/${memorySet.id}` as Href)}
-              style={styles.memoryCard}>
-              <View style={styles.memoryBadge}>
-                <Text style={styles.memoryBadgeText}>{memorySet.items.length}</Text>
-              </View>
-              <View style={styles.memoryMeta}>
-                <Text numberOfLines={1} style={styles.memoryTitle}>
-                  {memorySet.title}
-                </Text>
-                <Text style={styles.memorySub}>
-                  {memorySet.items.length} {memorySet.items.length === 1 ? 'locus' : 'loci'} ·{' '}
-                  {memorySet.status === 'draft' ? 'Keep placing' : 'Walk and recall'}
-                </Text>
-              </View>
-              <ChevronRight size={20} color={theme.inkSoft} />
-            </AnimatedPressable>
+            />
           ))
         ) : (
           <View style={styles.noticeCard}>
@@ -204,29 +195,6 @@ const styles = StyleSheet.create({
   sceneCopy: { position: 'absolute', left: 14, right: 14, bottom: 13 },
   sceneName: { color: 'white', fontSize: 16, fontWeight: '900' },
   sceneMeta: { color: '#E8F7F2', fontSize: 11, fontWeight: '700', marginTop: 3 },
-  memoryCard: {
-    minHeight: 76,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    padding: 13,
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  memoryBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 15,
-    backgroundColor: '#EEE9FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  memoryBadgeText: { color: theme.violetDeep, fontSize: 18, fontWeight: '900' },
-  memoryMeta: { flex: 1, marginHorizontal: 12 },
-  memoryTitle: { color: theme.ink, fontSize: 15, fontWeight: '900' },
-  memorySub: { color: theme.inkSoft, fontSize: 12, fontWeight: '700', marginTop: 3 },
   noticeCard: {
     borderWidth: 2,
     borderColor: theme.line,

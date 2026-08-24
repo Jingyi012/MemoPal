@@ -1,6 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
+import { MemorySetRow } from '@/components/MemorySetRow';
 import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { NumberPegItemCard } from '@/features/number-peg/components/NumberPegItemCard';
@@ -8,7 +9,7 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { useNumberPegOverview } from '@/features/number-peg/hooks/useNumberPegOverview';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, ChevronRight, RefreshCcw, Sparkles } from 'lucide-react-native';
+import { ArrowRight, RefreshCcw, Sparkles } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function NumberPegHomeScreen() {
@@ -87,24 +88,14 @@ export default function NumberPegHomeScreen() {
           </View>
         ) : memorySets.data?.length ? (
           memorySets.data.map((memorySet) => (
-            <AnimatedPressable
+            <MemorySetRow
               key={memorySet.id}
+              tone="peg"
+              title={memorySet.title}
+              badgeText={String(memorySet.items.length)}
+              subtitle={`${memorySet.items.length} ${memorySet.items.length === 1 ? 'item' : 'items'} · ${memorySet.status === 'draft' ? 'Keep building' : 'Ready to recall'}`}
               onPress={() => router.push(`/number-peg/${memorySet.id}` as Href)}
-              style={styles.memoryCard}>
-              <View style={styles.memoryBadge}>
-                <Text style={styles.memoryBadgeText}>{memorySet.items.length}</Text>
-              </View>
-              <View style={styles.memoryMeta}>
-                <Text numberOfLines={1} style={styles.memoryTitle}>
-                  {memorySet.title}
-                </Text>
-                <Text style={styles.memorySub}>
-                  {memorySet.items.length} {memorySet.items.length === 1 ? 'item' : 'items'} ·{' '}
-                  {memorySet.status === 'draft' ? 'Keep building' : 'Ready to recall'}
-                </Text>
-              </View>
-              <ChevronRight size={20} color={theme.inkSoft} />
-            </AnimatedPressable>
+            />
           ))
         ) : (
           <View style={styles.noticeCard}>
@@ -148,29 +139,6 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   pegRail: { marginHorizontal: -16, paddingLeft: 16 },
-  memoryCard: {
-    minHeight: 76,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    padding: 13,
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  memoryBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 15,
-    backgroundColor: '#FFF0F4',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  memoryBadgeText: { color: theme.berryDeep, fontSize: 18, fontWeight: '900' },
-  memoryMeta: { flex: 1, marginHorizontal: 12 },
-  memoryTitle: { color: theme.ink, fontSize: 15, fontWeight: '900' },
-  memorySub: { color: theme.inkSoft, fontSize: 12, fontWeight: '700', marginTop: 3 },
   noticeCard: {
     borderWidth: 2,
     borderColor: theme.line,
