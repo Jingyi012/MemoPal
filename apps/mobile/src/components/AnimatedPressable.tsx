@@ -28,13 +28,15 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: reduceMotion ? 1 : scale.value }],
   }));
+  const combinedStyle = style ? [style, animatedStyle] : animatedStyle;
+  const classNameProps = className ? { className } : {};
 
   return (
     <AnimatedPressableBase
       {...rest}
-      className={className}
+      {...classNameProps}
       accessibilityRole={accessibilityRole}
-      style={[style, animatedStyle]}
+      style={combinedStyle}
       onPressIn={() => {
         if (!reduceMotion) scale.value = withSpring(0.96, { stiffness: 300 });
       }}

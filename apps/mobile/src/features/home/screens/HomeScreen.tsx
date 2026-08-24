@@ -11,8 +11,9 @@ import { HomeHeader } from '@/features/home/components/Header/HomeHeader';
 import { useMemorySets } from '@/features/memory-sets';
 import { useDueMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
 import { useRouter } from 'expo-router';
+import { typography } from '@/theme/typography';
 import React, { useCallback, useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { DailyTip } from '../components/DailyTip';
 import { ContinueSessionCard } from '../components/ContinueSessionCard';
 import { HomeSyncStatusCard } from '../components/HomeSyncStatusCard';
@@ -181,8 +182,8 @@ const HomeScreen = () => {
               onPress={() =>
                 router.push({ pathname: '/(tabs)/achievements', params: { tab: 'missions' } })
               }
-              className="mt-3 items-center rounded-xl bg-[#2B2A3D] px-3 py-2">
-              <Text className="text-xs font-semibold text-white">Open Missions</Text>
+              style={styles.missionButton}>
+              <Text style={styles.missionButtonText}>Open Missions</Text>
             </AnimatedPressable>
           </BaseCard>
 
@@ -250,3 +251,16 @@ function startDueReview(router: ReturnType<typeof useRouter>, review: DueMemoryR
       : `/number-peg/${review.memorySetId}?mode=recall`,
   );
 }
+
+const styles = StyleSheet.create({
+  missionButton: {
+    minHeight: 42,
+    marginTop: 12,
+    borderRadius: 12,
+    backgroundColor: '#2B2A3D',
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  missionButtonText: { color: 'white', fontFamily: typography.bodyBold, fontSize: 12 },
+});

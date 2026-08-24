@@ -1,7 +1,8 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { getBaseCardClassName } from '@/components/BaseCard';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { typography } from '@/theme/typography';
 import React from 'react';
-import { Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 type QuickActionCardProps = {
   title: string;
@@ -13,12 +14,22 @@ export function QuickActionCard({ title, subtitle, onPress }: QuickActionCardPro
   return (
     <AnimatedPressable
       onPress={onPress}
-      className={getBaseCardClassName({
-        className: 'mb-2 border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4',
-        padding: 'none',
-      })}>
-      <Text className="font-bold text-[#2B2A3D]">{title}</Text>
-      <Text className="mt-0.5 text-xs text-[#6B6A80]">{subtitle}</Text>
+      style={styles.card}>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.subtitle}>{subtitle}</Text>
     </AnimatedPressable>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 8,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: theme.line,
+    backgroundColor: theme.paper,
+    padding: 16,
+  },
+  title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, marginTop: 2 },
+});
