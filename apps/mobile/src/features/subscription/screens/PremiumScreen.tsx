@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { CheckCircle2, Crown, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import TermsAndConditionSheet from '../components/TermsAndConditionSheet';
 
 const PremiumScreen: React.FC = () => {
@@ -241,9 +241,10 @@ const PremiumScreen: React.FC = () => {
           <AnimatedPressable
             onPress={handleSubscribePress}
             disabled={!config.subscribeButton.enabled}
+            style={config.subscribeButton.enabled ? styles.subscribeShadow : undefined}
             className={cn(
               'mt-8 rounded-xl',
-              config.subscribeButton.enabled ? 'shadow-xl shadow-[#FFE6A3]' : 'opacity-80'
+              !config.subscribeButton.enabled && 'opacity-80'
             )}>
             {config.subscribeButton.enabled ? (
               <LinearGradient
@@ -282,5 +283,15 @@ const PremiumScreen: React.FC = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  subscribeShadow: {
+    shadowColor: '#FFE6A3',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.9,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+});
 
 export default PremiumScreen;
