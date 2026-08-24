@@ -6,6 +6,7 @@ import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Archive, Brain, ChevronRight, MapPinned, MoreHorizontal, Plus, RefreshCcw, Shapes } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -66,6 +67,7 @@ export default function LibraryScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
+        eyebrow="Library"
         title="Library"
         description="Every memory you build, ready when you need it"
         hideBackButton
@@ -77,9 +79,14 @@ export default function LibraryScreen() {
         refreshControl={
           <RefreshControl refreshing={memorySets.isRefetching} onRefresh={memorySets.refetch} />
         }>
-        <View style={styles.summaryCard}>
+        <LinearGradient
+          colors={[theme.night, theme.nightDeep]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.summaryCard}>
+          <View style={styles.summaryGlow} />
           <View style={styles.summaryIcon}>
-            <Brain size={25} color="#36304D" />
+            <Brain size={25} color={theme.ink} />
           </View>
           <View style={styles.summaryCopy}>
             <Text style={styles.summaryEyebrow}>YOUR MEMORY COLLECTION</Text>
@@ -93,9 +100,9 @@ export default function LibraryScreen() {
             accessibilityLabel="Create a memory"
             onPress={() => router.push('/(tabs)/practice' as Href)}
             style={styles.addButton}>
-            <Plus size={21} color="#36304D" />
+            <Plus size={21} color={theme.ink} />
           </AnimatedPressable>
-        </View>
+        </LinearGradient>
 
         <View style={styles.filterRow}>
           {filters.map((item) => {
@@ -250,13 +257,14 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 40 },
   summaryCard: {
+    position: 'relative',
     borderRadius: 24,
-    backgroundColor: '#36304D',
     padding: 17,
     flexDirection: 'row',
     alignItems: 'center',
     overflow: 'hidden',
   },
+  summaryGlow: { position: 'absolute', width: 150, height: 150, borderRadius: 75, right: -30, top: -50, backgroundColor: 'rgba(255, 201, 60, 0.2)' },
   summaryIcon: {
     width: 48,
     height: 48,
@@ -291,8 +299,8 @@ const styles = StyleSheet.create({
   filterChipSelected: { borderColor: '#36304D', backgroundColor: '#36304D' },
   filterText: { color: theme.inkSoft, fontSize: 12, fontWeight: '800' },
   filterTextSelected: { color: 'white' },
-  actionNotice: { marginBottom: 14, borderRadius: 14, backgroundColor: '#E3F6ED', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 13, paddingVertical: 11 },
-  actionNoticeText: { color: '#247B67', fontSize: 12, lineHeight: 17, fontWeight: '800', textAlign: 'center' },
+  actionNotice: { marginBottom: 14, borderRadius: 14, backgroundColor: '#F1FBF5', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 13, paddingVertical: 11 },
+  actionNoticeText: { color: theme.grass, fontSize: 12, lineHeight: 17, fontWeight: '800', textAlign: 'center' },
   cardList: { gap: 10 },
   memoryCard: {
     minHeight: 90,
@@ -311,12 +319,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  palaceIcon: { backgroundColor: '#E3F6ED' },
+  palaceIcon: { backgroundColor: '#EEE9FF' },
   pegIcon: { backgroundColor: '#FFF0F4' },
   memoryCopy: { flex: 1, marginHorizontal: 12 },
   techniqueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   techniqueLabel: { fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
-  palaceLabel: { color: '#247B67' },
+  palaceLabel: { color: theme.violetDeep },
   pegLabel: { color: theme.berryDeep },
   updatedLabel: { color: '#9A97A7', fontSize: 10, fontWeight: '700' },
   memoryTitle: { color: theme.ink, fontSize: 15, fontWeight: '900', marginTop: 4 },
@@ -347,7 +355,7 @@ const styles = StyleSheet.create({
   emptyButton: {
     marginTop: 15,
     borderRadius: 13,
-    backgroundColor: '#36304D',
+    backgroundColor: theme.ink,
     paddingHorizontal: 15,
     paddingVertical: 11,
     flexDirection: 'row',
