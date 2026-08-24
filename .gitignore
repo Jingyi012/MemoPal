@@ -15,6 +15,7 @@ secrets/
 node_modules/
 .expo/
 dist/
+dist-ios-*/
 web-build/
 expo-env.d.ts
 .metro-health-check*
