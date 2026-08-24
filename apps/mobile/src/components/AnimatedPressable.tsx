@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Pressable, PressableProps, StyleProp, ViewStyle } from 'react-native';
 import { cssInterop } from 'nativewind';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 
 const AnimatedPressableBase = cssInterop(Animated.createAnimatedComponent(Pressable), {
   className: 'style',
@@ -23,9 +23,10 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   ...rest
 }) => {
   const scale = useSharedValue(1);
+  const reduceMotion = useReducedMotion();
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: reduceMotion ? 1 : scale.value }],
   }));
 
   return (
@@ -35,10 +36,10 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
       accessibilityRole={accessibilityRole}
       style={[style, animatedStyle]}
       onPressIn={() => {
-        scale.value = withSpring(0.96, { stiffness: 300 });
+        if (!reduceMotion) scale.value = withSpring(0.96, { stiffness: 300 });
       }}
       onPressOut={() => {
-        scale.value = withSpring(1);
+        if (!reduceMotion) scale.value = withSpring(1);
       }}
       onPress={(e) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
