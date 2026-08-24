@@ -2,6 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { RecallAnswerCard } from '@/components/RecallAnswerCard';
+import { NumberPegRehearsalCard } from '@/features/number-peg/components/NumberPegRehearsalCard';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
@@ -39,6 +40,7 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
   const memorySetQuery = useMemorySet(memorySetId);
   const pegs = useMemo(() => buildNumberPegItems(), []);
   const [tab, setTab] = useState<SessionTab>('scenes');
+  const [sceneIndex, setSceneIndex] = useState(0);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -167,6 +169,9 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
   const currentItem = isComplete ? null : memorySet.items[questionIndex];
   const currentBinding = currentItem ? findBinding(bindings, currentItem) : null;
   const currentPeg = currentBinding ? pegs[currentBinding.pegNumber - 1] : null;
+  const sceneItem = memorySet.items[sceneIndex] ?? memorySet.items[0];
+  const sceneBinding = sceneItem ? findBinding(bindings, sceneItem) : null;
+  const scenePeg = sceneBinding ? pegs[sceneBinding.pegNumber - 1] : pegs[sceneIndex];
 
   const checkOrContinue = () => {
     if (!currentItem) return;
@@ -242,26 +247,24 @@ export default function NumberPegSessionScreen({ memorySetId, restart = false }:
               <Text style={styles.coachBody}>Pause for a second. Make it move. Then continue down the list.</Text>
             </View>
           </View>
-          {memorySet.items.map((item, index) => {
-            const binding = findBinding(bindings, item);
-            const peg = binding ? pegs[binding.pegNumber - 1] : pegs[index];
-            return (
-              <View key={item.id} style={styles.sceneCard}>
-                <View style={styles.sceneBadge}><Text style={styles.sceneBadgeText}>{binding?.pegNumber ?? index + 1}</Text></View>
-                <View style={styles.sceneVisual}>
-                  <Text style={styles.pegEmoji}>{peg?.image ?? '✨'}</Text>
-                  <Text style={styles.sceneArrow}>→</Text>
-                  <Text numberOfLines={2} style={styles.answerWord}>{item.answer}</Text>
-                </View>
-                <Text style={styles.pegName}>PEG {binding?.pegNumber ?? index + 1} · {peg?.keyword.toUpperCase()}</Text>
-                <Text style={styles.sceneText}>{binding?.sceneText ?? `Picture ${item.answer} interacting with this peg.`}</Text>
-              </View>
-            );
-          })}
-          <AnimatedPressable onPress={() => openTab('recall')} style={styles.primaryButton}>
-            <Play size={19} color={theme.ink} />
-            <Text style={styles.primaryButtonText}>I can see them — start recall</Text>
-          </AnimatedPressable>
+          {sceneItem && scenePeg ? (
+            <NumberPegRehearsalCard
+              binding={sceneBinding ?? undefined}
+              index={sceneIndex}
+              item={sceneItem}
+              onNext={() => {
+                if (sceneIndex === memorySet.items.length - 1) {
+                  openTab('recall');
+                } else {
+                  setSceneIndex((current) => current + 1);
+                }
+              }}
+              onPrevious={() => setSceneIndex((current) => Math.max(0, current - 1))}
+              peg={scenePeg}
+              total={memorySet.items.length}
+            />
+          ) : null}
+          <Text style={styles.rehearsalHint}>You can revisit any scene before starting recall.</Text>
         </ScrollView>
       ) : (
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.recallContent}>
@@ -349,6 +352,7 @@ const styles = StyleSheet.create({
   coachEmoji: { fontSize: 28 },
   coachTitle: { color: theme.ink, fontSize: 14, fontWeight: '900' },
   coachBody: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, marginTop: 3, fontWeight: '600' },
+  rehearsalHint: { color: theme.inkSoft, fontSize: 11, fontWeight: '700', lineHeight: 17, marginTop: 11, textAlign: 'center' },
   sceneCard: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 22, padding: 14, marginBottom: 18, marginTop: 4 },
   sceneBadge: { position: 'absolute', top: -12, left: 14, zIndex: 2, minWidth: 32, height: 32, borderRadius: 16, paddingHorizontal: 5, backgroundColor: theme.berry, borderWidth: 3, borderColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
   sceneBadgeText: { color: 'white', fontSize: 13, fontWeight: '900' },
