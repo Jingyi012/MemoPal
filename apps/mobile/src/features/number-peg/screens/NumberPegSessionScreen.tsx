@@ -88,6 +88,24 @@ export default function NumberPegSessionScreen({
         return;
       }
 
+      if (startInRecall && snapshot.tab !== 'recall') {
+        void clearNumberPegSession(memorySet.id);
+        setTab('recall');
+        setQuestionIndex(0);
+        setAnswer('');
+        setFeedback(null);
+        setScore(0);
+        setClientAttemptId(Crypto.randomUUID());
+        setStartedAt(new Date().toISOString());
+        setStartedAtMs(Date.now());
+        setQuestionStartedAtMs(Date.now());
+        setResponses([]);
+        setLastPayload(null);
+        setHasRestoredSession(false);
+        sessionReadyRef.current = true;
+        return;
+      }
+
       setTab(snapshot.tab);
       setQuestionIndex(snapshot.questionIndex);
       setScore(snapshot.score);
@@ -99,7 +117,7 @@ export default function NumberPegSessionScreen({
       setHasRestoredSession(true);
       sessionReadyRef.current = true;
     });
-  }, [memorySetQuery.data, restart]);
+  }, [memorySetQuery.data, restart, startInRecall]);
 
   useEffect(() => {
     const memorySet = memorySetQuery.data;

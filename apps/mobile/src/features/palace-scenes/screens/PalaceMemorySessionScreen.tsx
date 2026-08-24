@@ -84,6 +84,24 @@ export default function PalaceMemorySessionScreen({
         return;
       }
 
+      if (startInRecall && snapshot.mode !== 'recall') {
+        void clearPalaceSession(memorySet.id);
+        setMode('recall');
+        setActiveIndex(0);
+        setAnswer('');
+        setFeedback(null);
+        setScore(0);
+        setClientAttemptId(Crypto.randomUUID());
+        setStartedAt(new Date().toISOString());
+        setStartedAtMs(Date.now());
+        setQuestionStartedAtMs(Date.now());
+        setResponses([]);
+        setLastPayload(null);
+        setHasRestoredSession(false);
+        sessionReadyRef.current = true;
+        return;
+      }
+
       setMode(snapshot.mode);
       setActiveIndex(snapshot.activeIndex);
       setScore(snapshot.score);
@@ -95,7 +113,7 @@ export default function PalaceMemorySessionScreen({
       setHasRestoredSession(true);
       sessionReadyRef.current = true;
     });
-  }, [memorySetQuery.data, restart]);
+  }, [memorySetQuery.data, restart, startInRecall]);
 
   useEffect(() => {
     const memorySet = memorySetQuery.data;
