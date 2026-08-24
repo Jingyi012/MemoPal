@@ -16,7 +16,6 @@ export const adminMenuItems: AdminMenuItem[] = [
     name: 'Content Setup',
     icon: 'content',
     routes: [
-      { path: adminPaths.palaces, name: 'Legacy Palaces' },
       { path: adminPaths.palaceScenes, name: 'Palace Scene Studio' },
     ],
   },

@@ -28,63 +28,49 @@ public class MissionQueryTests
             UpdatedAt = now
         });
 
-        db.SystemSettings.Add(new SystemSetting
+        db.MissionTemplates.Add(new MissionTemplate
         {
             Id = Guid.NewGuid().ToString("N"),
-            Key = SystemSettingKeys.GamificationMissionTemplates,
-            Value = JsonSerializer.Serialize(new[]
-            {
-                new MissionTemplateDto
-                {
-                    Key = "daily_review_rhythm",
-                    Title = "Daily Review Rhythm",
-                    MetricType = MissionMetricTypes.ReviewsCompleted,
-                    Period = MissionPeriods.Daily,
-                    TargetValue = 3,
-                    RewardXp = 20,
-                    SortOrder = 1,
-                    IsActive = true
-                }
-            }),
-            Description = "Mission templates",
+            Key = "daily_review_rhythm",
+            Title = "Daily Review Rhythm",
+            MetricType = MissionMetricTypes.ReviewsCompleted,
+            Period = MissionPeriods.Daily,
+            TargetValue = 3,
+            RewardXp = 20,
+            SortOrder = 1,
+            IsActive = true,
             CreatedAt = now,
             UpdatedAt = now
         });
 
-        db.ReviewSchedules.AddRange(
-            new ReviewSchedule
+        db.PracticeAttempts.AddRange(
+            new PracticeAttempt
             {
                 Id = Guid.NewGuid().ToString("N"),
                 UserId = "user-1",
-                LessonProgressId = "progress-1",
-                ReviewRound = 1,
-                DueDate = now.AddHours(-2),
-                Completed = true,
-                CompletedDate = now.AddHours(-1),
+                MemorySetId = "memory-set-1",
+                ClientAttemptId = "attempt-1",
+                CompletedAt = now.AddHours(-1),
                 CreatedAt = now.AddHours(-1),
                 UpdatedAt = now.AddHours(-1)
             },
-            new ReviewSchedule
+            new PracticeAttempt
             {
                 Id = Guid.NewGuid().ToString("N"),
                 UserId = "user-1",
-                LessonProgressId = "progress-2",
-                ReviewRound = 2,
-                DueDate = now.AddHours(-3),
-                Completed = true,
-                CompletedDate = now.AddHours(-2),
+                MemorySetId = "memory-set-2",
+                ClientAttemptId = "attempt-2",
+                CompletedAt = now.AddHours(-2),
                 CreatedAt = now.AddHours(-2),
                 UpdatedAt = now.AddHours(-2)
             },
-            new ReviewSchedule
+            new PracticeAttempt
             {
                 Id = Guid.NewGuid().ToString("N"),
                 UserId = "user-1",
-                LessonProgressId = "progress-3",
-                ReviewRound = 1,
-                DueDate = now.AddDays(-2),
-                Completed = true,
-                CompletedDate = now.AddDays(-2),
+                MemorySetId = "memory-set-3",
+                ClientAttemptId = "attempt-3",
+                CompletedAt = now.AddDays(-2),
                 CreatedAt = now.AddDays(-2),
                 UpdatedAt = now.AddDays(-2)
             });

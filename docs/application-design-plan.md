@@ -1,7 +1,7 @@
 # MemoPal full application design plan
 
 Status: redesigned MVP foundation implemented; production hardening continues  
-Scope: mobile app, backend domain/API, lightweight client persistence, both memory techniques, and delivery plan  
+Scope: monorepo, mobile app, backend domain/API, admin studio, lightweight client persistence, both memory techniques, and delivery plan
 Primary client: Expo SDK 54 / React Native 0.81  
 
 Implementation snapshot (2026-08-24):
@@ -16,7 +16,9 @@ Implementation snapshot (2026-08-24):
 - Native access and refresh tokens use SecureStore with one-time migration from legacy AsyncStorage; the web build retains its platform-appropriate fallback.
 - The old mobile Palace lesson/location/per-word-image feature and its coupled Community screen have been removed. The scene/locus Palace hub is the only active Palace entry point.
 - Backend migration history has been consolidated into one fresh redesign baseline. The API applies pending migrations on startup by default and can opt out through configuration.
-- The remaining roadmap sections describe validation, accessibility/E2E coverage, analytics, backend/admin legacy retirement, and later enhancements rather than prerequisites for the implemented vertical slices.
+- Mobile, admin, and API now live in one history-preserving monorepo under `apps/`, with one JavaScript lockfile, one .NET solution, root CI/deployment workflows, and repository skills under `.github/skills`.
+- Legacy Palace/Lesson/Location/Word endpoints, entities, admin editors, and tests have been removed. The fresh migration contains only the redesigned model.
+- The remaining roadmap sections describe validation, accessibility/E2E coverage, analytics, and later enhancements rather than prerequisites for the implemented vertical slices.
 
 ## 1. Executive decisions
 
@@ -36,22 +38,22 @@ The recommended decisions are:
 
 The redesign now has a coherent foundation:
 
-- `src/core/memory` defines the technique registry, feature flags, routes, and capabilities.
-- `src/features/number-peg` owns the 1–10 catalogue, composer, rehearsal/recall session, results, and direct API persistence.
-- `src/features/palace-scenes` owns the Palace hub, published scene catalogue, locus-based composer, walkthrough/recall session, and results.
-- `src/features/memory-sets` and `src/features/practice-attempts` provide the shared API/query layer used by both techniques.
+- `apps/mobile/src/core/memory` defines the technique registry, feature flags, routes, and capabilities.
+- `apps/mobile/src/features/number-peg` owns the 1–10 catalogue, composer, rehearsal/recall session, results, and direct API persistence.
+- `apps/mobile/src/features/palace-scenes` owns the Palace hub, published scene catalogue, locus-based composer, walkthrough/recall session, and results.
+- `apps/mobile/src/features/memory-sets` and `apps/mobile/src/features/practice-attempts` provide the shared API/query layer used by both techniques.
 - TanStack Query owns server state. AsyncStorage is limited to non-sensitive preferences and session metadata; native secrets use SecureStore.
 - There is no mobile relational database, local entity mirror, mutation queue, conflict resolver, or background synchronization loop.
 - The backend has technique-neutral audited aggregates, optimistic concurrency, idempotent attempts, and server-authoritative per-item reviews.
-- The old mobile Palace lesson/location implementation and Community experience have been removed; remaining legacy retirement is limited to backend/admin code that is not on the redesigned mobile path.
+- The old mobile and backend Palace lesson/location implementation, Community experience, and matching admin workspaces have been removed.
 
-The central backend constraint is more important than the folder structure:
+The retired backend constraint was more important than its folder structure:
 
 - `Lesson.PalaceId` is required.
 - `Word.LocationId` is required.
 - Progress and reviews are attached to a Palace-specific lesson graph.
 
-That model cannot cleanly support Number Peg. Adding nullable Palace and Location IDs would spread technique conditionals through the system. A shared neutral aggregate is cleaner and safer.
+That model could not cleanly support Number Peg. It has been replaced by the shared neutral aggregate rather than spreading nullable Palace and Location IDs and technique conditionals throughout the system.
 
 ## 3. Product definition
 

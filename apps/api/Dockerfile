@@ -3,7 +3,6 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy project files first for better layer caching
-COPY MemoPal.sln ./
 COPY src/MemoPal.Api/MemoPal.Api.csproj src/MemoPal.Api/
 COPY src/MemoPal.Application/MemoPal.Application.csproj src/MemoPal.Application/
 COPY src/MemoPal.Domain/MemoPal.Domain.csproj src/MemoPal.Domain/

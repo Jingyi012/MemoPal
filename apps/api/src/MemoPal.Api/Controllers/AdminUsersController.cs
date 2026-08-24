@@ -35,65 +35,6 @@ public sealed class AdminUsersController : ApiControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{userId}/data")]
-    public async Task<IActionResult> GetUserData(string userId, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new GetManagedUserDataQuery(userId), cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpGet("{userId}/data/overview")]
-    public async Task<IActionResult> GetUserDataOverview(string userId, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new GetManagedUserDataOverviewQuery(userId), cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpGet("{userId}/data/palaces")]
-    public async Task<IActionResult> GetUserDataPalaces(string userId, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new GetManagedUserPalacesQuery(userId), cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpGet("{userId}/data/palaces/paged")]
-    public async Task<IActionResult> GetUserDataPalacesPaged(
-        string userId,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20,
-        [FromQuery] bool? isCustom = null,
-        [FromQuery] bool requireUserLessons = false,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await Sender.Send(
-            new GetManagedUserPalacesPagedQuery(userId, pageNumber, pageSize, isCustom, requireUserLessons),
-            cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpGet("{userId}/data/lessons")]
-    public async Task<IActionResult> GetUserDataLessons(
-        string userId,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20,
-        [FromQuery] string? palaceId = null,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await Sender.Send(new GetManagedUserLessonsQuery(userId, pageNumber, pageSize, palaceId), cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpGet("{userId}/data/progresses")]
-    public async Task<IActionResult> GetUserDataProgresses(
-        string userId,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await Sender.Send(new GetManagedUserProgressesQuery(userId, pageNumber, pageSize), cancellationToken);
-        return Ok(result);
-    }
-
     [HttpGet("{userId}/data/xp-events")]
     public async Task<IActionResult> GetUserDataXpEvents(
         string userId,

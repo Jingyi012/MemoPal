@@ -88,188 +88,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.ToTable("BadgeDefinitions");
                 });
 
-            modelBuilder.Entity("MemoPal.Domain.Entities.Lesson", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Category")
-                        .HasColumnType("text");
-
-                    b.Property<bool?>("Completed")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<bool?>("IsCustom")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool?>("IsLocked")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool?>("IsPremium")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("PalaceId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Privacy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TagJson")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<int>("WordCount")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PalaceId");
-
-                    b.ToTable("Lessons");
-                });
-
-            modelBuilder.Entity("MemoPal.Domain.Entities.LessonProgress", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("FirstCompletedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastReviewDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LessonId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("MasteryLevel")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("TotalReviews")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("XpEarned")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LessonId");
-
-                    b.HasIndex("UserId", "LessonId")
-                        .IsUnique();
-
-                    b.ToTable("LessonProgresses");
-                });
-
-            modelBuilder.Entity("MemoPal.Domain.Entities.Location", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PalaceId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PalaceId", "Position")
-                        .IsUnique();
-
-                    b.ToTable("Locations");
-                });
-
             modelBuilder.Entity("MemoPal.Domain.Entities.MemoryItem", b =>
                 {
                     b.Property<string>("Id")
@@ -673,68 +491,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "IsRead", "IsDismissed");
 
                     b.ToTable("Notifications");
-                });
-
-            modelBuilder.Entity("MemoPal.Domain.Entities.Palace", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsCustom")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsLocked")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsPremium")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("LocationsCount")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Thumbnail")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UnlockedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Palaces");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.PalaceBinding", b =>
@@ -1380,64 +1136,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.ToTable("RefreshTokenSessions");
                 });
 
-            modelBuilder.Entity("MemoPal.Domain.Entities.ReviewSchedule", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("Completed")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("CompletedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("DueDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LessonProgressId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("ReviewRound")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LessonProgressId");
-
-                    b.HasIndex("UserId", "DueDate");
-
-                    b.HasIndex("UserId", "LessonProgressId", "ReviewRound")
-                        .IsUnique();
-
-                    b.ToTable("ReviewSchedules");
-                });
-
             modelBuilder.Entity("MemoPal.Domain.Entities.SystemSetting", b =>
                 {
                     b.Property<string>("Id")
@@ -1830,59 +1528,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.ToTable("UserMissions");
                 });
 
-            modelBuilder.Entity("MemoPal.Domain.Entities.UserPalace", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsOwner")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsUnlocked")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("PalaceId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UnlockedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PalaceId");
-
-                    b.HasIndex("UserId", "PalaceId")
-                        .IsUnique();
-
-                    b.ToTable("UserPalaces");
-                });
-
             modelBuilder.Entity("MemoPal.Domain.Entities.UserStats", b =>
                 {
                     b.Property<string>("UserId")
@@ -1999,56 +1644,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.ToTable("UserSubscriptions");
                 });
 
-            modelBuilder.Entity("MemoPal.Domain.Entities.Word", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LessonId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("LocationId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Meaning")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LessonId");
-
-                    b.HasIndex("LocationId");
-
-                    b.ToTable("Words");
-                });
-
             modelBuilder.Entity("MemoPal.Domain.Entities.XpEvent", b =>
                 {
                     b.Property<string>("Id")
@@ -2101,39 +1696,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "CreatedAt");
 
                     b.ToTable("XpEvents");
-                });
-
-            modelBuilder.Entity("MemoPal.Domain.Entities.Lesson", b =>
-                {
-                    b.HasOne("MemoPal.Domain.Entities.Palace", "Palace")
-                        .WithMany()
-                        .HasForeignKey("PalaceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Palace");
-                });
-
-            modelBuilder.Entity("MemoPal.Domain.Entities.LessonProgress", b =>
-                {
-                    b.HasOne("MemoPal.Domain.Entities.Lesson", "Lesson")
-                        .WithMany()
-                        .HasForeignKey("LessonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Lesson");
-                });
-
-            modelBuilder.Entity("MemoPal.Domain.Entities.Location", b =>
-                {
-                    b.HasOne("MemoPal.Domain.Entities.Palace", "Palace")
-                        .WithMany("Locations")
-                        .HasForeignKey("PalaceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Palace");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.MemoryItem", b =>
@@ -2288,17 +1850,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("MemoPal.Domain.Entities.ReviewSchedule", b =>
-                {
-                    b.HasOne("MemoPal.Domain.Entities.LessonProgress", "LessonProgress")
-                        .WithMany("ReviewSchedules")
-                        .HasForeignKey("LessonProgressId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("LessonProgress");
-                });
-
             modelBuilder.Entity("MemoPal.Domain.Entities.TechniquePlan", b =>
                 {
                     b.HasOne("MemoPal.Domain.Entities.MemorySet", "MemorySet")
@@ -2359,23 +1910,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("MemoPal.Domain.Entities.UserPalace", b =>
-                {
-                    b.HasOne("MemoPal.Domain.Entities.Palace", "Palace")
-                        .WithMany()
-                        .HasForeignKey("PalaceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MemoPal.Domain.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Palace");
-                });
-
             modelBuilder.Entity("MemoPal.Domain.Entities.UserStats", b =>
                 {
                     b.HasOne("MemoPal.Domain.Entities.User", "User")
@@ -2387,38 +1921,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("MemoPal.Domain.Entities.Word", b =>
-                {
-                    b.HasOne("MemoPal.Domain.Entities.Lesson", "Lesson")
-                        .WithMany("Words")
-                        .HasForeignKey("LessonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MemoPal.Domain.Entities.Location", "Location")
-                        .WithMany()
-                        .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Lesson");
-
-                    b.Navigation("Location");
-                });
-
             modelBuilder.Entity("MemoPal.Domain.Entities.BadgeDefinition", b =>
                 {
                     b.Navigation("UserBadges");
-                });
-
-            modelBuilder.Entity("MemoPal.Domain.Entities.Lesson", b =>
-                {
-                    b.Navigation("Words");
-                });
-
-            modelBuilder.Entity("MemoPal.Domain.Entities.LessonProgress", b =>
-                {
-                    b.Navigation("ReviewSchedules");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.MemorySet", b =>
@@ -2431,11 +1936,6 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("MemoPal.Domain.Entities.MilestoneDefinition", b =>
                 {
                     b.Navigation("UserMilestones");
-                });
-
-            modelBuilder.Entity("MemoPal.Domain.Entities.Palace", b =>
-                {
-                    b.Navigation("Locations");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.PalaceScene", b =>

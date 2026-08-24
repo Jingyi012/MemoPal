@@ -6,8 +6,8 @@ import {
 } from "@ant-design/pro-components";
 import { PortalPageContainer } from "../../../components/PortalPageContainer";
 import type { BadgeDefinitionDto } from "../../../types/config";
-import { ImageUploadField } from "../../content/components/ImageUploadField";
-import { MediaThumbnail } from "../../content/components/MediaThumbnail";
+import { ImageUploadField } from "../../../components/media/ImageUploadField";
+import { MediaThumbnail } from "../../../components/media/MediaThumbnail";
 import { DefinitionCrudTab } from "../components/DefinitionCrudTab";
 import { useAdminConfigsApi } from "../hooks/useAdminConfigsApi";
 

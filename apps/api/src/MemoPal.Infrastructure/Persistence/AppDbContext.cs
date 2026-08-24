@@ -19,13 +19,6 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<UserAuthIdentity> UserAuthIdentities => Set<UserAuthIdentity>();
     public DbSet<RefreshTokenSession> RefreshTokenSessions => Set<RefreshTokenSession>();
     public DbSet<UserStats> UserStats => Set<UserStats>();
-    public DbSet<Palace> Palaces => Set<Palace>();
-    public DbSet<UserPalace> UserPalaces => Set<UserPalace>();
-    public DbSet<Location> Locations => Set<Location>();
-    public DbSet<Lesson> Lessons => Set<Lesson>();
-    public DbSet<Word> Words => Set<Word>();
-    public DbSet<LessonProgress> LessonProgresses => Set<LessonProgress>();
-    public DbSet<ReviewSchedule> ReviewSchedules => Set<ReviewSchedule>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<BadgeDefinition> BadgeDefinitions => Set<BadgeDefinition>();
     public DbSet<UserBadge> UserBadges => Set<UserBadge>();
@@ -103,79 +96,6 @@ public class AppDbContext : DbContext, IAppDbContext
         {
             b.HasKey(x => x.UserId);
             b.Ignore(x => x.Id);
-        });
-
-        modelBuilder.Entity<Palace>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.Property(x => x.Name).HasMaxLength(200);
-            b.HasMany(x => x.Locations)
-                .WithOne(x => x.Palace)
-                .HasForeignKey(x => x.PalaceId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<UserPalace>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.HasIndex(x => new { x.UserId, x.PalaceId }).IsUnique();
-            b.HasOne(x => x.Palace)
-                .WithMany()
-                .HasForeignKey(x => x.PalaceId)
-                .OnDelete(DeleteBehavior.Cascade);
-            b.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(x => x.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<Location>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.HasIndex(x => new { x.PalaceId, x.Position }).IsUnique();
-        });
-
-        modelBuilder.Entity<Lesson>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.HasOne(x => x.Palace)
-                .WithMany()
-                .HasForeignKey(x => x.PalaceId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<Word>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.HasOne(x => x.Lesson)
-                .WithMany(x => x.Words)
-                .HasForeignKey(x => x.LessonId)
-                .OnDelete(DeleteBehavior.Cascade);
-            b.HasOne(x => x.Location)
-                .WithMany()
-                .HasForeignKey(x => x.LocationId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        modelBuilder.Entity<LessonProgress>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.HasIndex(x => new { x.UserId, x.LessonId }).IsUnique();
-            b.HasOne(x => x.Lesson)
-                .WithMany()
-                .HasForeignKey(x => x.LessonId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<ReviewSchedule>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.HasIndex(x => new { x.UserId, x.DueDate });
-            b.HasIndex(x => new { x.UserId, x.LessonProgressId, x.ReviewRound }).IsUnique();
-            b.HasOne(x => x.LessonProgress)
-                .WithMany(x => x.ReviewSchedules)
-                .HasForeignKey(x => x.LessonProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Notification>(b =>

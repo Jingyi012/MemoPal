@@ -2,7 +2,7 @@ using MemoPal.Domain.Common;
 
 namespace MemoPal.Domain.Entities;
 
-public sealed class XpEvent : UserOwnedSyncEntity
+public sealed class XpEvent : UserOwnedEntity
 {
     public string SourceType { get; set; } = string.Empty;
     public string? SourceId { get; set; }

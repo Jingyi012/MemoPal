@@ -175,15 +175,13 @@ public class XpEventTests
             SortOrder = 1,
             IsActive = true
         });
-        db.ReviewSchedules.Add(new ReviewSchedule
+        db.PracticeAttempts.Add(new PracticeAttempt
         {
             Id = Guid.NewGuid().ToString("N"),
             UserId = "user-1",
-            LessonProgressId = "progress-1",
-            ReviewRound = 1,
-            DueDate = now.AddMinutes(-30),
-            Completed = true,
-            CompletedDate = now.AddMinutes(-5),
+            MemorySetId = "memory-set-1",
+            ClientAttemptId = "attempt-1",
+            CompletedAt = now.AddMinutes(-5),
             CreatedAt = now.AddMinutes(-30),
             UpdatedAt = now.AddMinutes(-5)
         });
@@ -225,15 +223,13 @@ public class XpEventTests
             SortOrder = 1,
             IsActive = true
         });
-        db.ReviewSchedules.Add(new ReviewSchedule
+        db.PracticeAttempts.Add(new PracticeAttempt
         {
             Id = Guid.NewGuid().ToString("N"),
             UserId = "user-1",
-            LessonProgressId = "progress-1",
-            ReviewRound = 1,
-            DueDate = now.AddMinutes(-30),
-            Completed = true,
-            CompletedDate = now.AddMinutes(-5),
+            MemorySetId = "memory-set-1",
+            ClientAttemptId = "attempt-1",
+            CompletedAt = now.AddMinutes(-5),
             CreatedAt = now.AddMinutes(-30),
             UpdatedAt = now.AddMinutes(-5)
         });
@@ -363,15 +359,23 @@ public class XpEventTests
 
     private static void SeedMissionTemplateSetting(AppDbContext db, params MissionTemplateDto[] templates)
     {
-        db.SystemSettings.Add(new SystemSetting
+        var now = DateTime.UtcNow;
+        db.MissionTemplates.AddRange(templates.Select(template => new MissionTemplate
         {
             Id = Guid.NewGuid().ToString("N"),
-            Key = SystemSettingKeys.GamificationMissionTemplates,
-            Value = JsonSerializer.Serialize(templates),
-            Description = "Mission templates",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        });
+            Key = template.Key,
+            Title = template.Title,
+            Description = template.Description,
+            MetricType = template.MetricType,
+            Period = template.Period,
+            TargetValue = template.TargetValue,
+            RewardXp = template.RewardXp,
+            SortOrder = template.SortOrder,
+            IsActive = template.IsActive,
+            Version = 1,
+            CreatedAt = now,
+            UpdatedAt = now
+        }));
     }
 
     private sealed class LevelConfigSeedItem

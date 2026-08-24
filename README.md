@@ -31,11 +31,11 @@ npm install
 Common commands:
 
 ```bash
-npm run mobile:start
-npm run mobile:check
-npm run admin:dev
-npm run admin:check
-dotnet test MemoPal.sln
+npm run dev:mobile
+npm run check:mobile
+npm run dev:admin
+npm run check:admin
+dotnet test MemoPal.slnx
 ```
 
 Copy each checked-in `.env.example` to its local `.env` file as needed. Real

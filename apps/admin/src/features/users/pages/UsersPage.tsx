@@ -4,9 +4,7 @@ import type { ActionType } from "@ant-design/pro-components";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "antd";
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { PortalPageContainer } from "../../../components/PortalPageContainer";
-import { adminPaths } from "../../../navigation/adminPaths";
 import type { ManagedUserDto } from "../../../types/user";
 import { buildUserColumns } from "../components/userColumns";
 import { UserFormModal } from "../components/UserFormModal";
@@ -14,7 +12,6 @@ import { useAdminUsersApi } from "../hooks/useAdminUsersApi";
 import { useUserMutations } from "../hooks/useUserMutations";
 
 export default function UsersPage() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { listUsers } = useAdminUsersApi();
   const actionRef = useRef<ActionType | null>(null);
@@ -33,7 +30,6 @@ export default function UsersPage() {
         columns={buildUserColumns(
           (row) => setEditing(row),
           (id) => deleteMutation.mutate(id),
-          (id) => navigate(adminPaths.userData(id)),
         )}
         headerTitle="User Management"
         search={{ labelWidth: "auto" }}
@@ -93,4 +89,3 @@ export default function UsersPage() {
     </PortalPageContainer>
   );
 }
-

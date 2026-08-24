@@ -26,12 +26,12 @@ internal sealed class MissionProgressCalculator
 
         return metricType switch
         {
-            MissionMetricTypes.ReviewsCompleted => await CountCompletedReviews(userId, periodStart, cancellationToken),
-            MissionMetricTypes.LessonsCompleted => await CountCompletedLessons(userId, periodStart, cancellationToken),
+            MissionMetricTypes.ReviewsCompleted => await CountCompletedPracticeAttempts(userId, periodStart, cancellationToken),
+            MissionMetricTypes.LessonsCompleted => await CountPractisedMemorySets(userId, periodStart, cancellationToken),
             MissionMetricTypes.XpEarned => await SumXpEarned(userId, periodStart, cancellationToken),
             MissionMetricTypes.StreakDays => Math.Max(0, userStats?.CurrentStreak ?? 0),
-            MissionMetricTypes.MasteredLessons => await CountMasteredLessons(userId, periodStart, cancellationToken),
-            MissionMetricTypes.WordsLearned => Math.Max(0, userStats?.WordsLearned ?? 0),
+            MissionMetricTypes.MasteredLessons => await CountMasteredMemorySets(userId, periodStart, cancellationToken),
+            MissionMetricTypes.WordsLearned => await CountMemoryItems(userId, cancellationToken),
             _ => 0
         };
     }
@@ -66,34 +66,34 @@ internal sealed class MissionProgressCalculator
         return "all-time";
     }
 
-    private Task<int> CountCompletedReviews(string userId, DateTime? periodStart, CancellationToken cancellationToken)
+    private Task<int> CountCompletedPracticeAttempts(string userId, DateTime? periodStart, CancellationToken cancellationToken)
     {
-        var query = _db.ReviewSchedules
+        var query = _db.PracticeAttempts
             .AsNoTracking()
-            .Where(x => x.UserId == userId && !x.IsDeleted && x.Completed);
+            .Where(x => x.UserId == userId && !x.IsDeleted);
 
         if (periodStart.HasValue)
         {
             var start = periodStart.Value;
-            query = query.Where(x => x.CompletedDate.HasValue && x.CompletedDate.Value >= start);
+            query = query.Where(x => x.CompletedAt >= start);
         }
 
         return query.CountAsync(cancellationToken);
     }
 
-    private Task<int> CountCompletedLessons(string userId, DateTime? periodStart, CancellationToken cancellationToken)
+    private Task<int> CountPractisedMemorySets(string userId, DateTime? periodStart, CancellationToken cancellationToken)
     {
-        var query = _db.LessonProgresses
+        var query = _db.PracticeAttempts
             .AsNoTracking()
-            .Where(x => x.UserId == userId && !x.IsDeleted && x.FirstCompletedDate.HasValue);
+            .Where(x => x.UserId == userId && !x.IsDeleted);
 
         if (periodStart.HasValue)
         {
             var start = periodStart.Value;
-            query = query.Where(x => x.FirstCompletedDate!.Value >= start);
+            query = query.Where(x => x.CompletedAt >= start);
         }
 
-        return query.CountAsync(cancellationToken);
+        return query.Select(x => x.MemorySetId).Distinct().CountAsync(cancellationToken);
     }
 
     private async Task<int> SumXpEarned(string userId, DateTime? periodStart, CancellationToken cancellationToken)
@@ -112,19 +112,25 @@ internal sealed class MissionProgressCalculator
         return Math.Max(0, total ?? 0);
     }
 
-    private Task<int> CountMasteredLessons(string userId, DateTime? periodStart, CancellationToken cancellationToken)
+    private Task<int> CountMasteredMemorySets(string userId, DateTime? periodStart, CancellationToken cancellationToken)
     {
-        var query = _db.LessonProgresses
+        var query = _db.MemoryReviewSchedules
             .AsNoTracking()
-            .Where(x => x.UserId == userId && !x.IsDeleted && x.MasteryLevel == "mastered");
+            .Where(x => x.UserId == userId && !x.IsDeleted && x.ReviewCount >= 3 && x.LastResultCorrect);
 
         if (periodStart.HasValue)
         {
             var start = periodStart.Value;
-            query = query.Where(x => x.LastReviewDate.HasValue && x.LastReviewDate.Value >= start);
+            query = query.Where(x => x.UpdatedAt >= start);
         }
 
-        return query.CountAsync(cancellationToken);
+        return query.Select(x => x.MemorySetId).Distinct().CountAsync(cancellationToken);
     }
+
+    private Task<int> CountMemoryItems(string userId, CancellationToken cancellationToken) =>
+        _db.MemoryItems
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted && x.MemorySet != null && x.MemorySet.UserId == userId)
+            .CountAsync(cancellationToken);
 }
 

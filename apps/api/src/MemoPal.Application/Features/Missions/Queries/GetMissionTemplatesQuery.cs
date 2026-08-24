@@ -39,6 +39,11 @@ public sealed class GetMissionTemplatesQueryHandler
             })
             .ToListAsync(cancellationToken);
 
+        if (templates.Count == 0)
+        {
+            templates = MissionTemplateSerializer.GetDefaultTemplates().ToList();
+        }
+
         return ApiResponse<IReadOnlyList<MissionTemplateDto>>.Ok(templates);
     }
 }

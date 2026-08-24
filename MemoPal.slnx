@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/apps/" />
+  <Folder Name="/apps/api/" />
+  <Folder Name="/apps/api/src/">
+    <Project Path="apps/api/src/MemoPal.Api/MemoPal.Api.csproj" />
+    <Project Path="apps/api/src/MemoPal.Application/MemoPal.Application.csproj" />
+    <Project Path="apps/api/src/MemoPal.Domain/MemoPal.Domain.csproj" />
+    <Project Path="apps/api/src/MemoPal.Infrastructure/MemoPal.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/apps/api/tests/">
+    <Project Path="apps/api/tests/MemoPal.IntegrationTests/MemoPal.IntegrationTests.csproj" />
+    <Project Path="apps/api/tests/MemoPal.UnitTests/MemoPal.UnitTests.csproj" />
+  </Folder>
+</Solution>

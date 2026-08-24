@@ -2,7 +2,7 @@ using MemoPal.Domain.Common;
 
 namespace MemoPal.Domain.Entities;
 
-public sealed class Notification : UserOwnedSyncEntity
+public sealed class Notification : UserOwnedEntity
 {
     public string Type { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;

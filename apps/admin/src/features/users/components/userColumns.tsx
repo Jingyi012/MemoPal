@@ -1,12 +1,11 @@
-import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import { Button, Popconfirm, Tag } from 'antd';
 import type { ManagedUserDto } from '../../../types/user';
 
 export function buildUserColumns(
   onEdit: (row: ManagedUserDto) => void,
-  onDelete: (id: string) => void,
-  onViewData: (id: string) => void
+  onDelete: (id: string) => void
 ): ProColumns<ManagedUserDto>[] {
   return [
     { title: 'Display Name', dataIndex: 'displayName' },
@@ -22,7 +21,6 @@ export function buildUserColumns(
       title: 'Actions',
       valueType: 'option',
       render: (_, row) => [
-        <Button key="view" size="small" icon={<EyeOutlined />} onClick={() => onViewData(row.id)} />,
         <Button key="edit" size="small" icon={<EditOutlined />} onClick={() => onEdit(row)} />,
         <Popconfirm key="del" title="Delete this user?" onConfirm={() => onDelete(row.id)}>
           <Button size="small" danger icon={<DeleteOutlined />} />

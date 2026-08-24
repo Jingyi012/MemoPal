@@ -48,6 +48,11 @@ public sealed class GetUserMissionDashboardQueryHandler
             })
             .ToListAsync(cancellationToken);
 
+        if (templates.Count == 0)
+        {
+            templates = MissionTemplateSerializer.GetDefaultTemplates().ToList();
+        }
+
         var now = DateTime.UtcNow;
         var calculator = new MissionProgressCalculator(_db);
         var userStats = await _db.UserStats

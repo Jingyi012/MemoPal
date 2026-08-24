@@ -4,16 +4,8 @@ export const adminPaths = {
   forbidden: '/forbidden',
 
   users: '/admin/users',
-  userData: (userId: string) => `/admin/users/${userId}/data`,
-  userDataLessonWords: (userId: string, palaceId: string, lessonId: string) =>
-    `/admin/users/${userId}/data/palaces/${palaceId}/lessons/${lessonId}`,
-
   contentRoot: '/admin/content',
-  palaces: '/admin/content/palaces',
   palaceScenes: '/admin/content/palace-scenes',
-  palaceDetails: (palaceId: string) => `/admin/content/palaces/${palaceId}`,
-  lessonWords: (palaceId: string, lessonId: string) =>
-    `/admin/content/palaces/${palaceId}/lessons/${lessonId}`,
 
   configsRoot: '/admin/configs',
   configLimits: '/admin/configs/limits',
@@ -29,9 +21,4 @@ export const adminPaths = {
 
   subscriptions: '/admin/subscriptions',
   systemSettings: '/admin/system-settings',
-} as const;
-
-export const adminRouteParams = {
-  palaceId: ':palaceId',
-  lessonId: ':lessonId',
 } as const;

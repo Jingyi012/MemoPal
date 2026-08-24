@@ -5,7 +5,7 @@ import { AuthResponse } from '@/features/auth/types/auth';
 import { GeneralResponse } from '@/core/types/general';
 import { mapLocalhostForExpoGo, trimTrailingSlash } from '@/utils/network/localhost';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios, { AxiosInstance, InternalAxiosRequestConfig, isAxiosError } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, create, isAxiosError } from 'axios';
 import { router } from 'expo-router';
 import {
   clearAuthTokens,
@@ -47,7 +47,7 @@ if (__DEV__) {
   console.info('[MemoPal][API] baseURL:', resolvedBaseUrl);
 }
 
-const api: AxiosInstance = axios.create({
+const api: AxiosInstance = create({
   baseURL: resolvedBaseUrl,
   timeout: 10000,
   headers: {

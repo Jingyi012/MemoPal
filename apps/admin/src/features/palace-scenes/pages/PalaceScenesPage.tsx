@@ -4,8 +4,8 @@ import { App, Button, Card, Col, Empty, Flex, Form, Input, InputNumber, Modal, P
 import { useMemo, useState, type MouseEvent } from 'react';
 import { adminPalaceScenesApi } from '../../../api/adminPalaceScenesApi';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
-import { ImageUploadField } from '../../content/components/ImageUploadField';
-import { useAdminMediaApi } from '../../content/hooks/useAdminMediaApi';
+import { ImageUploadField } from '../../../components/media/ImageUploadField';
+import { useAdminMediaApi } from '../../../hooks/useAdminMediaApi';
 import type { PalaceLocusInput, PalaceSceneDto, PalaceSceneUpsertRequest } from '../../../types/palaceScene';
 
 const queryKey = ['admin-palace-scenes'] as const;

@@ -9,13 +9,6 @@ public interface IAppDbContext
     DbSet<UserAuthIdentity> UserAuthIdentities { get; }
     DbSet<RefreshTokenSession> RefreshTokenSessions { get; }
     DbSet<UserStats> UserStats { get; }
-    DbSet<Palace> Palaces { get; }
-    DbSet<UserPalace> UserPalaces { get; }
-    DbSet<Location> Locations { get; }
-    DbSet<Lesson> Lessons { get; }
-    DbSet<Word> Words { get; }
-    DbSet<LessonProgress> LessonProgresses { get; }
-    DbSet<ReviewSchedule> ReviewSchedules { get; }
     DbSet<Notification> Notifications { get; }
     DbSet<BadgeDefinition> BadgeDefinitions { get; }
     DbSet<UserBadge> UserBadges { get; }

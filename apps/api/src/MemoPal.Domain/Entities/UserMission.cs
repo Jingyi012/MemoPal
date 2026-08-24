@@ -2,7 +2,7 @@ using MemoPal.Domain.Common;
 
 namespace MemoPal.Domain.Entities;
 
-public sealed class UserMission : UserOwnedSyncEntity
+public sealed class UserMission : UserOwnedEntity
 {
     public string MissionKey { get; set; } = string.Empty;
     public string Period { get; set; } = string.Empty;
