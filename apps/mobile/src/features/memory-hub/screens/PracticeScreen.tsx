@@ -242,6 +242,7 @@ const PEG_ANCHORS = [
   { number: 7, emoji: '🌈', name: 'Rainbow' },
   { number: 8, emoji: '⛄', name: 'Snowman' },
   { number: 9, emoji: '🎈', name: 'Balloon' },
+  { number: 10, emoji: '⚾', name: 'Bat & ball' },
 ];
 
 const LESSONS: Lesson[] = [
