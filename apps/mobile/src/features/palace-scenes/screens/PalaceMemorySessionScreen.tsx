@@ -26,7 +26,7 @@ import {
 import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, ChevronRight, Footprints, List, MapPinned, RotateCcw, Sparkles, Target } from 'lucide-react-native';
+import { Footprints, List, MapPinned, Sparkles, Target } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -330,56 +330,24 @@ export default function PalaceMemorySessionScreen({
         ) : null}
 
         {mode === 'walk' && active ? (
-          <>
-          {active.locus ? (
+          active.locus ? (
             <PalaceFocusCard
               answer={active.item.answer}
               association={active.binding?.associationText}
               index={activeIndex}
               isLast={activeIndex === placements.length - 1}
               locus={active.locus}
+              onPrevious={() => setActiveIndex((value) => Math.max(0, value - 1))}
               onNext={() =>
                 activeIndex === placements.length - 1
                   ? setActiveIndex(0)
                   : setActiveIndex((value) => value + 1)
               }
+              onStartRecall={startRecall}
               scene={scene}
+              total={placements.length}
             />
-          ) : null}
-          <View style={styles.walkCard}>
-            <View style={styles.walkIcon}><Footprints size={22} color={theme.violetDeep} /></View>
-            <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}</Text>
-            <Text style={styles.walkAnswer}>{active.item.answer}</Text>
-            <Text style={styles.walkAssociation}>{active.binding?.associationText}</Text>
-            <View style={styles.walkActions}>
-              <AnimatedPressable
-                accessibilityLabel="Previous locus"
-                disabled={activeIndex === 0}
-                onPress={() => setActiveIndex((value) => Math.max(0, value - 1))}
-                style={[styles.roundButton, activeIndex === 0 && styles.disabled]}>
-                <ChevronLeft size={21} color={theme.ink} />
-              </AnimatedPressable>
-              <Text style={styles.count}>{activeIndex + 1} / {placements.length}</Text>
-              <AnimatedPressable
-                accessibilityLabel={activeIndex === placements.length - 1 ? 'Restart Palace walk' : 'Next locus'}
-                onPress={() =>
-                  activeIndex === placements.length - 1
-                    ? setActiveIndex(0)
-                    : setActiveIndex((value) => value + 1)
-                }
-                style={styles.roundButton}>
-                {activeIndex === placements.length - 1 ? (
-                  <RotateCcw size={19} color={theme.ink} />
-                ) : (
-                  <ChevronRight size={21} color={theme.ink} />
-                )}
-              </AnimatedPressable>
-            </View>
-            <AnimatedPressable onPress={startRecall} style={styles.secondaryButton}>
-              <Text style={styles.secondaryText}>Start recall challenge</Text>
-            </AnimatedPressable>
-          </View>
-          </>
+          ) : null
         ) : mode === 'recall' ? (
           recallComplete ? (
             <View style={styles.resultCard}>
@@ -496,6 +464,7 @@ const styles = StyleSheet.create({
   previewTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   previewIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },
   previewCopy: { flex: 1 },
+  eyebrow: { color: '#7A68E0', fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
   previewAnswer: { color: theme.ink, fontSize: 19, fontWeight: '900', marginTop: 4 },
   previewAssociation: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, fontWeight: '700', marginTop: 10 },
   itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 15, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 10, marginBottom: 8 },
@@ -508,15 +477,6 @@ const styles = StyleSheet.create({
   primaryText: { color: theme.ink, fontSize: 14, fontWeight: '900', textAlign: 'center' },
   secondaryButton: { width: '100%', minHeight: 49, borderRadius: 16, borderWidth: 2, borderColor: '#9B8CFF', backgroundColor: '#F7F5FF', alignItems: 'center', justifyContent: 'center', marginTop: 12, paddingHorizontal: 16 },
   secondaryText: { color: '#6654D9', fontSize: 14, fontWeight: '900' },
-  walkCard: { borderRadius: 23, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 22, alignItems: 'center' },
-  walkIcon: { width: 48, height: 48, borderRadius: 17, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  eyebrow: { color: '#7A68E0', fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
-  walkAnswer: { color: theme.ink, fontSize: 25, fontWeight: '900', textAlign: 'center', marginTop: 12 },
-  walkAssociation: { color: theme.inkSoft, fontSize: 13, lineHeight: 20, fontWeight: '700', textAlign: 'center', marginTop: 8 },
-  walkActions: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 22 },
-  roundButton: { width: 46, height: 46, borderRadius: 23, backgroundColor: theme.sun, alignItems: 'center', justifyContent: 'center' },
-  disabled: { opacity: 0.35 },
-  count: { color: theme.inkSoft, fontSize: 12, fontWeight: '900' },
   resultCard: { minHeight: 360, borderRadius: 23, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: theme.paper, padding: 24, alignItems: 'center', justifyContent: 'center' },
   resultEmoji: { fontSize: 52 },
   resultTitle: { color: theme.ink, fontSize: 22, fontWeight: '900', marginTop: 10 },

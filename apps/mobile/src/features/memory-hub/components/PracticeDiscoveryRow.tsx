@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { MapPinned } from 'lucide-react-native';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -58,8 +59,8 @@ export function PracticeDiscoveryRow({
 const styles = StyleSheet.create({
   section: { marginTop: 4 },
   headingRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  title: { color: theme.inkSoft, fontSize: 13, fontWeight: '900', letterSpacing: 0.4, marginBottom: 0, marginTop: 22, textTransform: 'uppercase' },
-  action: { color: theme.sky, fontSize: 11.5, fontWeight: '900', marginTop: 22 },
+  title: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, marginBottom: 0, marginTop: 22, textTransform: 'uppercase' },
+  action: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11.5, marginTop: 22 },
   list: { gap: 10, paddingRight: 12, paddingVertical: 10 },
   card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 2, padding: 8, width: 132 },
   art: { alignItems: 'center', borderRadius: 12, height: 76, justifyContent: 'center', overflow: 'hidden' },
@@ -67,8 +68,8 @@ const styles = StyleSheet.create({
   palaceBackground: { backgroundColor: '#EEE9FF' },
   image: { backgroundColor: '#BCAAF1', height: '100%', width: '100%' },
   emoji: { fontSize: 31 },
-  cardTitle: { color: theme.ink, fontSize: 11.5, fontWeight: '900', marginTop: 7 },
-  cardSubtitle: { color: theme.inkSoft, fontSize: 10.5, fontWeight: '700', marginTop: 2 },
+  cardTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11.5, marginTop: 7 },
+  cardSubtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, marginTop: 2 },
   empty: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 2, padding: 14 },
-  emptyText: { color: theme.inkSoft, fontSize: 12, fontWeight: '700' },
+  emptyText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
 });

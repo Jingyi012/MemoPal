@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { RefreshCcw } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -62,8 +63,8 @@ const styles = StyleSheet.create({
     width: 42,
   },
   emoji: { fontSize: 31, marginBottom: 9 },
-  title: { color: theme.ink, fontSize: 15, fontWeight: '900', textAlign: 'center' },
-  body: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' },
+  title: { color: theme.ink, fontFamily: typography.display, fontSize: 15, fontWeight: '900', textAlign: 'center' },
+  body: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' },
   retryButton: {
     alignItems: 'center',
     backgroundColor: theme.sun,
@@ -75,5 +76,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  retryText: { color: theme.ink, fontSize: 13, fontWeight: '900' },
+  retryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, fontWeight: '900' },
 });

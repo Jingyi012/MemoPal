@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { typography } from '@/theme/typography';
 import { ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
@@ -55,9 +56,9 @@ const styles = StyleSheet.create({
   heroIcon: { width: 52, height: 52, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
   pegIcon: { backgroundColor: theme.sun },
   palaceIcon: { backgroundColor: '#B9B1FF' },
-  heroEyebrow: { color: '#E3DFFF', fontSize: 11, fontWeight: '900', letterSpacing: 1.1 },
-  heroTitle: { color: 'white', fontSize: 25, fontWeight: '900', marginTop: 6 },
-  heroBody: { color: '#E8E5F4', fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 320 },
+  heroEyebrow: { color: '#E3DFFF', fontFamily: typography.bodyExtraBold, fontSize: 11, letterSpacing: 1.1 },
+  heroTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 25, marginTop: 6 },
+  heroBody: { color: '#E8E5F4', fontFamily: typography.body, fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 320 },
   primaryButton: { marginTop: 20, minHeight: 52, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, paddingHorizontal: 14, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
-  primaryButtonText: { color: theme.ink, fontSize: 15, fontWeight: '900', flex: 1, textAlign: 'center' },
+  primaryButtonText: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center' },
 });

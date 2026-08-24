@@ -1,6 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { MemorySet } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import { ArrowRight, Brain, Hash } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -36,7 +37,7 @@ const styles = StyleSheet.create({
   pegBackground: { backgroundColor: '#FFF0F4' },
   palaceBackground: { backgroundColor: '#EEE9FF' },
   copy: { flex: 1, minWidth: 0 },
-  title: { color: theme.ink, fontSize: 13.5, fontWeight: '900' },
-  subtitle: { color: theme.inkSoft, fontSize: 11.5, fontWeight: '700', marginTop: 3 },
-  technique: { color: theme.grass, fontSize: 9.5, fontWeight: '900', letterSpacing: 0.5 },
+  title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13.5 },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11.5, marginTop: 3 },
+  technique: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.5 },
 });

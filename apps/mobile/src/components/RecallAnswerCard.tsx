@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { typography } from '@/theme/typography';
 import { Check, X } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
@@ -83,15 +84,15 @@ const styles = StyleSheet.create({
   icon: { width: 50, height: 50, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   pegIcon: { backgroundColor: '#FFF0F4' },
   palaceIcon: { backgroundColor: '#EEE9FF' },
-  eyebrow: { fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
-  prompt: { color: theme.ink, fontSize: 20, fontWeight: '900', textAlign: 'center', marginTop: 12, marginBottom: 16 },
-  answerInput: { width: '100%', minHeight: 54, borderRadius: 14, borderWidth: 2.5, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 13, color: theme.ink, textAlign: 'center', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
+  eyebrow: { fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
+  prompt: { color: theme.ink, fontFamily: typography.display, fontSize: 20, textAlign: 'center', marginTop: 12, marginBottom: 16 },
+  answerInput: { width: '100%', minHeight: 54, borderRadius: 14, borderWidth: 2.5, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 13, color: theme.ink, textAlign: 'center', fontFamily: typography.bodyExtraBold, fontSize: 16, letterSpacing: 1 },
   correctInput: { borderColor: theme.grass, backgroundColor: '#F1FBF5' },
   wrongInput: { borderColor: theme.berry, backgroundColor: '#FFF1F4' },
   feedback: { marginTop: 12, flexDirection: 'row', gap: 7, alignItems: 'center' },
-  feedbackText: { flexShrink: 1, fontSize: 12, lineHeight: 18, fontWeight: '900', textAlign: 'center' },
+  feedbackText: { flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   actionButton: { width: '100%', minHeight: 48, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
-  actionText: { color: 'white', fontSize: 14, fontWeight: '900' },
+  actionText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 14 },
   disabledButton: { opacity: 0.4 },
-  score: { color: theme.inkSoft, fontSize: 12, fontWeight: '900', textAlign: 'center', marginTop: 15 },
+  score: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center', marginTop: 15 },
 });

@@ -6,6 +6,7 @@ import AnimatedPressable from './AnimatedPressable';
 import HomeButton from './HomeButton';
 import { NotificationBell } from './NotificationBell';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { typography } from '@/theme/typography';
 
 interface Actions {
   icon?: LucideIcon;
@@ -141,6 +142,7 @@ const styles = {
     paddingHorizontal: 9,
     paddingVertical: 3,
     fontSize: 10,
+    fontFamily: typography.display,
     fontWeight: '900' as const,
     letterSpacing: 0.5,
     textTransform: 'uppercase' as const,
@@ -149,12 +151,14 @@ const styles = {
   title: {
     color: theme.ink,
     fontSize: 19,
+    fontFamily: typography.displayExtraBold,
     fontWeight: '900' as const,
     letterSpacing: -0.2,
   },
   description: {
     color: theme.inkSoft,
     fontSize: 11.5,
+    fontFamily: typography.bodyBold,
     fontWeight: '700' as const,
     marginTop: 2,
   },

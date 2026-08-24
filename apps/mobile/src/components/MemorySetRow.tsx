@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { typography } from '@/theme/typography';
 import { ChevronRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -35,10 +36,10 @@ const styles = StyleSheet.create({
   badge: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   pegBadge: { backgroundColor: '#FFF0F4' },
   palaceBadge: { backgroundColor: '#EEE9FF' },
-  badgeText: { fontSize: 18, fontWeight: '900' },
+  badgeText: { fontFamily: typography.display, fontSize: 18 },
   pegText: { color: theme.berryDeep },
   palaceText: { color: theme.violetDeep },
   meta: { flex: 1, marginHorizontal: 12 },
-  title: { color: theme.ink, fontSize: 15, fontWeight: '900' },
-  subtitle: { color: theme.inkSoft, fontSize: 12, fontWeight: '700', marginTop: 3 },
+  title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, marginTop: 3 },
 });

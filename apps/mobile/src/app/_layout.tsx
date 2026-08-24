@@ -8,8 +8,10 @@ import { useSubscriptionGuard } from '@/features/subscription/hooks/useSubscript
 import { useGamificationBootstrap } from '@/features/gamification/shared/hooks/useGamificationBootstrap';
 import { QUERY_CACHE_BUSTER, queryClient, queryPersister } from '@/utils/queryClient';
 import { toastConfig } from '@/utils/toastConfig';
+import { fontAssets } from '@/theme/typography';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -19,6 +21,7 @@ import '../../global.css';
 
 function AppLayout() {
   const { colorScheme } = useColorScheme();
+  useFonts(fontAssets);
 
   useNotificationObserver(true);
   useGamificationBootstrap(true);

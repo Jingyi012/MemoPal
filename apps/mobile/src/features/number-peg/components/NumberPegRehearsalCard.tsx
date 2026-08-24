@@ -2,6 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
+import { typography } from '@/theme/typography';
 import { ArrowLeft, ArrowRight, Sparkles, WandSparkles } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -60,18 +61,18 @@ const styles = StyleSheet.create({
   headerRow: { alignItems: 'center', flexDirection: 'row', gap: 10 },
   icon: { alignItems: 'center', backgroundColor: '#FFF0F4', borderRadius: 13, height: 38, justifyContent: 'center', width: 38 },
   headerCopy: { flex: 1 },
-  eyebrow: { color: theme.berryDeep, fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
-  progress: { color: theme.inkSoft, fontSize: 11, fontWeight: '800', marginTop: 3 },
+  eyebrow: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
+  progress: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3 },
   sceneVisual: { alignItems: 'center', backgroundColor: '#FFFCF4', borderColor: '#EADFC4', borderRadius: 18, borderStyle: 'dashed', borderWidth: 1.5, flexDirection: 'row', gap: 12, justifyContent: 'center', marginTop: 15, minHeight: 135, padding: 14 },
   pegBubble: { alignItems: 'center', backgroundColor: '#FFF0F4', borderColor: '#FFD9E2', borderRadius: 45, borderWidth: 2, height: 88, justifyContent: 'center', width: 88 },
   pegEmoji: { fontSize: 36 },
-  pegNumber: { color: theme.berryDeep, fontSize: 10, fontWeight: '900', marginTop: 2 },
-  answer: { color: theme.ink, flexShrink: 1, fontSize: 18, fontWeight: '900', maxWidth: 145, textAlign: 'center' },
-  prompt: { color: theme.inkSoft, fontSize: 12, fontWeight: '800', marginTop: 14, textAlign: 'center' },
-  sceneText: { color: theme.ink, fontSize: 14, fontWeight: '700', lineHeight: 21, marginTop: 6, textAlign: 'center' },
+  pegNumber: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, marginTop: 2 },
+  answer: { color: theme.ink, flexShrink: 1, fontFamily: typography.display, fontSize: 18, maxWidth: 145, textAlign: 'center' },
+  prompt: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, marginTop: 14, textAlign: 'center' },
+  sceneText: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21, marginTop: 6, textAlign: 'center' },
   actions: { alignItems: 'center', flexDirection: 'row', gap: 9, marginTop: 17 },
   roundButton: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 23, height: 46, justifyContent: 'center', width: 46 },
   disabled: { opacity: 0.3 },
   nextButton: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 14, flex: 1, flexDirection: 'row', gap: 7, height: 46, justifyContent: 'center' },
-  nextText: { color: theme.ink, fontSize: 12, fontWeight: '900' },
+  nextText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
 });
