@@ -203,7 +203,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-if (adminBootstrapOptions.Enabled || adminBootstrapOptions.SeedGamificationMockData)
+if (adminBootstrapOptions.Enabled ||
+    adminBootstrapOptions.SeedGamificationMockData ||
+    adminBootstrapOptions.SeedStarterContent)
 {
     using var scope = app.Services.CreateScope();
     var bootstrapper = scope.ServiceProvider.GetRequiredService<AdminBootstrapper>();
