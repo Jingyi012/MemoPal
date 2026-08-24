@@ -21,6 +21,18 @@ export function parseComposerItems(value: string | string[] | undefined): string
   }
 }
 
+/**
+ * Turns pasted lines into reviewable items while ignoring blank rows and
+ * keeping the user's intentional spacing inside each item.
+ */
+export function parseBulkItems(value: string, maxItems = 100): string[] {
+  return value
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, maxItems);
+}
+
 export function parseComposerGoal(value: string | string[] | undefined): MemoryGoalType {
   const goal = firstParam(value);
   return goal === 'spelling' || goal === 'ordered-list' || goal === 'facts' || goal === 'names' || goal === 'custom'

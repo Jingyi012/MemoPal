@@ -3,10 +3,10 @@ import { CommonHeader } from '@/components/CommonHeader';
 import type { MemoryGoalType } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { Href, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, Hash, MapPinned, Plus, Sparkles, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, ClipboardList, Hash, MapPinned, Plus, Sparkles, Trash2 } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
+import { parseBulkItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import { buildTechniqueRoute, recommendTechnique, type TechniqueChoice } from '@/features/memory-composer/utils/techniqueRecommendation';
 
 type ComposerStep = 'content' | 'technique';
@@ -24,6 +24,8 @@ export default function MemoryComposerScreen() {
   const [title, setTitle] = useState('');
   const [goalType, setGoalType] = useState<MemoryGoalType>('spelling');
   const [newItem, setNewItem] = useState('');
+  const [bulkInput, setBulkInput] = useState('');
+  const [bulkMode, setBulkMode] = useState(false);
   const [items, setItems] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -38,6 +40,18 @@ export default function MemoryComposerScreen() {
     }
     setItems((current) => [...current, value]);
     setNewItem('');
+    setMessage(null);
+  };
+
+  const addBulkItems = () => {
+    const pastedItems = parseBulkItems(bulkInput, 100 - items.length);
+    if (!pastedItems.length) {
+      setMessage('Paste one item per line, then add them together.');
+      return;
+    }
+    setItems((current) => [...current, ...pastedItems]);
+    setBulkInput('');
+    setBulkMode(false);
     setMessage(null);
   };
 
@@ -108,6 +122,31 @@ export default function MemoryComposerScreen() {
               </View>
 
               <Text style={styles.label}>Add your items</Text>
+              <AnimatedPressable
+                accessibilityLabel={bulkMode ? 'Hide paste many items' : 'Paste many items'}
+                onPress={() => { setBulkMode((current) => !current); setMessage(null); }}
+                style={styles.bulkToggle}>
+                <ClipboardList size={15} color={theme.berryDeep} />
+                <Text style={styles.bulkToggleText}>{bulkMode ? 'Add one at a time' : 'Paste many items'}</Text>
+              </AnimatedPressable>
+              {bulkMode ? (
+                <View style={styles.bulkCard}>
+                  <Text style={styles.bulkTitle}>One item per line</Text>
+                  <TextInput
+                    value={bulkInput}
+                    onChangeText={setBulkInput}
+                    multiline
+                    maxLength={6000}
+                    placeholder={'rhythm\nseparate\ncalendar'}
+                    placeholderTextColor="#AAA7B5"
+                    style={[styles.input, styles.bulkInput]}
+                  />
+                  <AnimatedPressable onPress={addBulkItems} style={styles.bulkButton}>
+                    <Text style={styles.bulkButtonText}>Add lines to my list</Text>
+                    <ArrowRight size={16} color={theme.ink} />
+                  </AnimatedPressable>
+                </View>
+              ) : null}
               <View style={styles.addRow}>
                 <TextInput
                   value={newItem}
@@ -225,6 +264,13 @@ const styles = StyleSheet.create({
   cardTitle: { color: theme.ink, fontSize: 17, fontWeight: '900', marginTop: 10 },
   cardBody: { color: theme.inkSoft, fontSize: 12, lineHeight: 18, fontWeight: '600', marginTop: 4 },
   label: { color: theme.ink, fontSize: 13, fontWeight: '900', marginTop: 18, marginBottom: 8 },
+  bulkToggle: { alignSelf: 'flex-start', minHeight: 34, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -2, marginBottom: 8, paddingHorizontal: 2 },
+  bulkToggleText: { color: theme.berryDeep, fontSize: 11, fontWeight: '900' },
+  bulkCard: { borderRadius: 15, borderWidth: 1.5, borderColor: '#FFD2DC', backgroundColor: '#FFF7F9', padding: 10, marginBottom: 10 },
+  bulkTitle: { color: theme.ink, fontSize: 12, fontWeight: '900', marginBottom: 7 },
+  bulkInput: { minHeight: 105, paddingTop: 12, textAlignVertical: 'top', backgroundColor: 'white' },
+  bulkButton: { minHeight: 40, borderRadius: 11, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8 },
+  bulkButtonText: { color: theme.ink, fontSize: 12, fontWeight: '900' },
   optionalLabel: { color: theme.inkSoft, fontSize: 11, fontWeight: '700' },
   input: { minHeight: 49, borderRadius: 12, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 12, color: theme.ink, fontSize: 14, fontWeight: '700' },
   goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },

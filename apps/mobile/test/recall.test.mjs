@@ -10,6 +10,7 @@ import {
   recommendTechnique,
 } from '../src/features/memory-composer/utils/techniqueRecommendation.ts';
 import {
+  parseBulkItems,
   parseComposerGoal,
   parseComposerItems,
   suggestMemoryTitle,
@@ -85,6 +86,13 @@ test('parses a shared composer payload and creates a useful title', () => {
   assert.deepEqual(parseComposerItems(items), ['  planets ', '', 'moons']);
   assert.equal(parseComposerGoal('ordered-list'), 'ordered-list');
   assert.equal(suggestMemoryTitle('ordered-list', ['  planets ', '', 'moons']), 'Memory list · planets + 1 more');
+});
+
+test('turns pasted lines into bounded, non-empty memory items', () => {
+  assert.deepEqual(
+    parseBulkItems('  rhythm\n\n separate\r\ncalendar  ', 2),
+    ['rhythm', 'separate'],
+  );
 });
 
 test('keeps the peg map ordered and makes each scene vivid', () => {
