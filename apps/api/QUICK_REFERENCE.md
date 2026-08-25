@@ -1,4 +1,11 @@
-# MemoPal Backend - Quick Reference Guide
+# MemoPal Backend - Historical Quick Reference
+
+> Current coding conventions live in the
+> [backend instructions](../../docs/agent-instructions/backend/backend.md).
+> This document
+> contains older examples and product context; do not copy its repository,
+> offline-sync, controller-wrapping, or legacy lesson patterns into new work
+> without checking the current implementation first.
 
 ## Architecture Overview
 
