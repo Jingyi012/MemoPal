@@ -83,6 +83,23 @@ function configureGoogleSignin(module: GoogleSigninModule, config: GoogleSigninC
 }
 
 function mapGoogleSigninError(error: unknown, module: GoogleSigninModule | null): string {
+  const nativeError = error as { code?: unknown; message?: unknown } | null;
+  const errorCode = nativeError?.code;
+  const errorMessage = typeof nativeError?.message === 'string' ? nativeError.message : '';
+
+  // Google Play Services reports OAuth package/SHA mismatches as status 10
+  // (DEVELOPER_ERROR). Keep this actionable instead of exposing the opaque
+  // native error text to the user.
+  if (
+    errorCode === 10 ||
+    errorCode === '10' ||
+    errorMessage.toUpperCase().includes('DEVELOPER_ERROR')
+  ) {
+    return Platform.OS === 'android'
+      ? 'This Android build is not registered with Google. Add package com.memopal.app and this build\'s SHA-1 certificate to the Google OAuth Android client, then rebuild the app.'
+      : 'This app build is not registered with Google OAuth. Check the configured OAuth client and rebuild the app.';
+  }
+
   if (module && module.isErrorWithCode(error)) {
     if (error.code === module.statusCodes.SIGN_IN_CANCELLED) {
       return 'Authentication canceled.';

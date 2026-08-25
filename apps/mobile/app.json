@@ -28,6 +28,7 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/withAndroidMonorepoEntry",
       [
         "expo-splash-screen",
         {

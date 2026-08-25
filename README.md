@@ -33,11 +33,19 @@ Common commands:
 
 ```bash
 npm run dev:mobile
+npm run android
 npm run check:mobile
 npm run dev:admin
 npm run check:admin
 dotnet test MemoPal.slnx
 ```
+
+`npm run android` builds and installs the Android development client locally
+with Expo and the local Android SDK. It does not use EAS or a cloud build. The
+local build uses the debug signing certificate, so register that SHA-1 with
+Google OAuth when testing native Google Sign-In locally. EAS development and
+preview builds remain available separately through the profiles in
+`apps/mobile/eas.json`.
 
 Copy each checked-in `.env.example` to its local `.env` file as needed. Real
 credentials, runtime uploads, build output, and local databases must never be
