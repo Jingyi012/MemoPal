@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   copy: { padding: 14 },
   eyebrowRow: { alignItems: 'center', flexDirection: 'row', gap: 6 },
   eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.7 },
-  focusSparkleEmoji: { fontSize: 14 },
+  focusSparkleEmoji: { fontSize: 13 },
   answer: { color: theme.ink, fontFamily: typography.display, fontSize: 22, marginTop: 6 },
   hiddenAnswer: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 6 },
   association: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 7 },

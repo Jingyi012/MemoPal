@@ -100,7 +100,7 @@ export default function ProfileScreen() {
           <Text style={styles.planTitle}>{isPremium ? 'You are building a strong memory habit' : 'Unlock faster with MemoPal Pro'}</Text>
           <Text style={styles.planSubtitle}>{isPremium ? 'Keep your streak alive with every short practice session.' : 'More daily XP, exclusive palace themes, and no wait on peg unlocks'}</Text>
           <AnimatedPressable onPress={() => router.push('/premium')} style={styles.upgradeButton}>
-            <Text style={styles.upgradeButtonText}>{isPremium ? 'Manage plan' : '✨ Upgrade to Pro'}</Text>
+            <Text style={styles.upgradeButtonText}>{isPremium ? 'Manage plan' : 'Upgrade to Pro'}</Text>
           </AnimatedPressable>
         </NightEmphasisCard>
 
