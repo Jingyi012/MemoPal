@@ -36,6 +36,7 @@ export function useXpEvents(options?: { recentDays?: number }) {
   return {
     events: query.data ?? [],
     isLoading: query.isLoading,
+    isFetching: query.isFetching,
     isError: query.isError,
     refetch: query.refetch,
   };

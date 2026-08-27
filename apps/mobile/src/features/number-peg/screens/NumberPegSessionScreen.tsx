@@ -291,7 +291,7 @@ export default function NumberPegSessionScreen({
 
       {hasRestoredSession && tab === 'recall' && (
         <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
-          <Text style={styles.restoreNoticeText}>Welcome back — your recall round was restored.</Text>
+          <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
         </AnimatedPressable>
       )}
 
@@ -300,8 +300,8 @@ export default function NumberPegSessionScreen({
           <View style={styles.coachCard}>
             <Text style={styles.coachEmoji}>🎬</Text>
             <View style={{ flex: 1 }}>
-              <Text style={styles.coachTitle}>Play each scene like a tiny movie</Text>
-              <Text style={styles.coachBody}>Pause for a second. Make it move. Then continue down the list.</Text>
+              <Text style={styles.coachTitle}>{t('coachTitle')}</Text>
+              <Text style={styles.coachBody}>{t('coachBody')}</Text>
             </View>
           </View>
           {sceneItem && scenePeg ? (
@@ -321,7 +321,7 @@ export default function NumberPegSessionScreen({
               total={memorySet.items.length}
             />
           ) : null}
-          <Text style={styles.rehearsalHint}>You can revisit any scene before starting recall.</Text>
+          <Text style={styles.rehearsalHint}>{t('rehearsalHint')}</Text>
         </ScrollView>
       ) : (
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.recallContent}>
@@ -336,32 +336,36 @@ export default function NumberPegSessionScreen({
                 : t('niceWork')}
               saveStatus={
                 practiceAttempt.isPending ? (
-                  <Text style={styles.saveState}>Saving your progress…</Text>
+                  <Text style={styles.saveState}>{t('savingProgress')}</Text>
                 ) : practiceAttempt.isError ? (
                   <View style={styles.saveError}>
-                    <Text style={styles.saveErrorText}>Progress was not saved. Your result is still here.</Text>
+                    <Text style={styles.saveErrorText}>{t('progressNotSaved')}</Text>
                     <AnimatedPressable
                       accessibilityRole="button"
-                      accessibilityLabel="Retry saving progress"
+                      accessibilityLabel={t('retrySave')}
                       onPress={() => lastPayload && practiceAttempt.mutate(lastPayload)}
                       style={styles.retrySaveButton}>
-                      <Text style={styles.retrySaveText}>Retry save</Text>
+                      <Text style={styles.retrySaveText}>{t('retrySave')}</Text>
                     </AnimatedPressable>
                   </View>
                 ) : practiceAttempt.data ? (
                   <Text style={styles.saveSuccess}>
-                    Saved ✓ Next review {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : 'will appear in Today'}
+                    {t('saved')} ✓ {t('nextReview')} {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : t('willAppearInToday')}
                   </Text>
                 ) : null
               }
               onRetry={restartRecall}
+              retryLabel={t('tryAgain')}
+              retryAccessibilityLabel={t('tryAgain')}
               onReturnToToday={() => router.replace('/(tabs)')}
+              returnToTodayLabel={t('backToHome')}
+              returnToTodayAccessibilityLabel={t('backToHome')}
             />
           ) : (
             <>
               <View style={styles.recallProgressRow}>
-                <Text style={styles.recallProgressLabel}>RECALL ROUND</Text>
-                <Text style={styles.recallProgressCount}>{questionIndex + 1} of {memorySet.items.length}</Text>
+                <Text style={styles.recallProgressLabel}>{t('recallRound')}</Text>
+                <Text style={styles.recallProgressCount}>{questionIndex + 1} {t('of')} {memorySet.items.length}</Text>
               </View>
               <View style={styles.dots}>
                 {memorySet.items.map((item, index) => (
@@ -378,17 +382,19 @@ export default function NumberPegSessionScreen({
               <RecallAnswerCard
                 tone="peg"
                 icon={<Text style={styles.quizEmoji}>{currentPeg?.image ?? '✨'}</Text>}
-                eyebrow={`PEG ${currentBinding?.pegNumber ?? questionIndex + 1} · ${currentPeg?.keyword.toUpperCase()}`}
-                prompt="What was in your mini movie?"
+                eyebrow={`${t('pegLabel').toUpperCase()} ${currentBinding?.pegNumber ?? questionIndex + 1} · ${currentPeg?.keyword.toUpperCase()}`}
+                prompt={t('miniMoviePrompt')}
                 answer={answer}
                 feedback={feedback}
                 feedbackText={feedback === 'correct'
                   ? t('nailed')
                   : isSpelling
-                    ? `Check the spelling: ${getSpellingHint(currentItem?.answer ?? '', answer)}`
-                    : `It was ${currentItem?.answer}. Picture it once more, then try again.`}
+                    ? `${t('checkSpelling')} ${getSpellingHint(currentItem?.answer ?? '', answer)}`
+                    : `${t('itWas')} ${currentItem?.answer}. ${t('pictureOnceMore')}`}
                 actionLabel={feedback === 'wrong' ? t('retryPeg') : feedback ? t('next') : t('checkAnswer')}
-                scoreLabel={`Score so far: ${score} / ${responses.length}`}
+                scoreLabel={`${t('scoreSoFar')}: ${score} / ${responses.length}`}
+                answerAccessibilityLabel={t('typeYourAnswer')}
+                answerPlaceholder={t('typeYourAnswerPlaceholder')}
                 onAnswerChange={setAnswer}
                 onSubmit={checkOrContinue}
               />

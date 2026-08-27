@@ -7,6 +7,7 @@ import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
+import { WeeklyActivityCard } from '@/features/gamification/shared/components/WeeklyActivityCard';
 import type { Badge } from '@/features/gamification/shared/types/levelAndbadge';
 import { typography } from '@/theme/typography';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,7 +19,6 @@ import { BadgeDetailsModal } from '../components/BadgeDetailsModal';
 import { LevelProgressHeader } from '../components/LevelProgressHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
-const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 type BadgeWithEarned = Badge & { isEarned: boolean };
 
 export default function AchievementsScreen() {
@@ -43,26 +43,6 @@ export default function AchievementsScreen() {
       title: levelInfo?.currentLevelConfig?.title ?? 'Memory Apprentice',
     };
   }, [levelInfo, totalXp, user?.level]);
-
-  const activity = useMemo(() => {
-    const now = new Date();
-    const days = Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(now);
-      date.setHours(0, 0, 0, 0);
-      date.setDate(now.getDate() - (6 - index));
-      return date;
-    });
-    const values = days.map((day) => events
-      .filter((event) => {
-        const eventDate = new Date(event.createdAt);
-        return eventDate.getFullYear() === day.getFullYear()
-          && eventDate.getMonth() === day.getMonth()
-          && eventDate.getDate() === day.getDate();
-      })
-      .reduce((sum, event) => sum + Math.max(0, event.xpAmount), 0));
-    const max = Math.max(1, ...values);
-    return values.map((value, index) => ({ label: DAY_LABELS[index], percent: value ? Math.max(10, Math.round((value / max) * 100)) : 6, today: index === 6 }));
-  }, [events]);
 
   const unlockedPegs = getUnlockedPegCount(displayLevel.currentLevel);
   const palaceTotal = palaceScenes.data?.length ?? 0;
@@ -111,20 +91,7 @@ export default function AchievementsScreen() {
           <StatTile value={`${user?.stats?.longestStreak ?? 0}`} label={t('bestStreak')} />
         </View>
 
-        <Text style={styles.sectionLabel}>{t('weekActivity')}</Text>
-        <View style={styles.barChart}>
-          {activity.map((day, index) => (
-            <View key={`${day.label}-${index}`} style={styles.barColumn}>
-              <LinearGradient
-                colors={day.today ? ['#FFC93C', '#F2A900'] : ['#4FC0E8', '#3A9DC4']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={[styles.bar, { height: `${day.percent}%` }]}
-              />
-              <Text style={styles.barLabel}>{day.label}</Text>
-            </View>
-          ))}
-        </View>
+        <WeeklyActivityCard title={t('weekActivity')} events={events} />
 
         <ProgressLine
           label={t('pegProgress')}
@@ -207,10 +174,6 @@ const styles = StyleSheet.create({
   statValue: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 19 },
   statLabel: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10, textAlign: 'center', marginTop: 2 },
   sectionLabel: { color: '#6B6A80', fontFamily: typography.displayExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },
-  barChart: { height: 100, flexDirection: 'row', alignItems: 'flex-end', gap: 8, backgroundColor: '#FFFDF8', borderWidth: 2, borderColor: '#EEE9DC', borderRadius: 16, paddingHorizontal: 12, paddingTop: 14, paddingBottom: 10 },
-  barColumn: { flex: 1, height: '100%', alignItems: 'center', justifyContent: 'flex-end', gap: 5 },
-  bar: { width: '100%', borderRadius: 6 },
-  barLabel: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 9.5 },
   progressLine: { marginTop: 20 },
   progressLineHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 },
   progressSectionLabel: { color: '#6B6A80', fontFamily: typography.displayExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase' },

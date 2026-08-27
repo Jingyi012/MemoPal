@@ -1,5 +1,4 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { NewMemoryCard } from '@/components/NewMemoryCard';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useMemoryModuleAccess } from '@/core/memory';
@@ -7,10 +6,12 @@ import { useMemorySets } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets/types/memorySet.types';
 import { useDueMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
+import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
+import { WeeklyActivityCard } from '@/features/gamification/shared/components/WeeklyActivityCard';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight } from 'lucide-react-native';
+import { ArrowRight, Plus } from 'lucide-react-native';
 import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HomeHeader } from '../components/Header/HomeHeader';
@@ -25,12 +26,17 @@ export default function HomeScreen() {
   const { enabled: numberPegEnabled } = useMemoryModuleAccess('number-peg');
   const memorySets = useMemorySets();
   const dueReviews = useDueMemoryReviews();
+  const activityQuery = useXpEvents({ recentDays: 7 });
   const memorySet = (memorySets.data ?? [])
     .filter((item) => item.status !== 'archived')
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
   const streak = Math.max(0, user?.stats?.currentStreak ?? 0);
   const stats = user?.stats;
   const canStartNumberPeg = numberPegEnabled || !palaceEnabled;
+
+  const refreshHome = async () => {
+    await Promise.allSettled([memorySets.refetch(), activityQuery.refetch()]);
+  };
 
   return (
     <View style={styles.page}>
@@ -47,7 +53,7 @@ export default function HomeScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={memorySets.isRefetching} onRefresh={memorySets.refetch} />}
+        refreshControl={<RefreshControl refreshing={memorySets.isRefetching || activityQuery.isFetching} onRefresh={refreshHome} />}
         contentContainerStyle={styles.content}>
         <View style={styles.streakBanner}>
           <View style={styles.streakCopyRow}>
@@ -75,7 +81,14 @@ export default function HomeScreen() {
         ) : memorySet ? (
           <ContinueSessionCardShim memorySet={memorySet} onPress={() => router.push(`/memory-details/${memorySet.id}`)} />
         ) : (
-          <FirstMemoryCard onPress={() => router.push('/create-memory')} />
+          <ModuleNoticeCard
+            icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
+            title={t('newSession')}
+            body={t('newSessionBody')}
+            actionLabel={t('tapToStart')}
+            actionIcon={<Plus size={15} color="#2B2A3D" />}
+            onAction={() => router.push('/create-memory' as Href)}
+          />
         )}
 
         {dueReviews.data?.length ? (
@@ -111,6 +124,8 @@ export default function HomeScreen() {
           <StatTile value="—" label={t('accuracy')} />
         </View>
 
+        <WeeklyActivityCard title={t('weekActivity')} events={activityQuery.events} />
+
         <MemoryTipCard />
       </ScrollView>
     </View>
@@ -122,11 +137,6 @@ function openReview(router: ReturnType<typeof useRouter>, review: DueMemoryRevie
     ? `/palaces/memory/${review.memorySetId}?mode=recall`
     : `/number-peg/${review.memorySetId}?mode=recall`;
   router.push(route as Href);
-}
-
-function FirstMemoryCard({ onPress }: { onPress: () => void }) {
-  const { t } = useTranslation('home');
-  return <NewMemoryCard title={t('buildFirst')} body={t('buildFirstBody')} onPress={onPress} />;
 }
 
 const MEMORY_TIPS = [
@@ -195,6 +205,7 @@ const styles = StyleSheet.create({
   streakDots: { flexDirection: 'row', gap: 4 },
   streakDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#EEE9DC' },
   streakDotOn: { backgroundColor: '#F2A900' },
+  emptyIconEmoji: { fontSize: 24 },
   continueCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#FFFDF8', borderWidth: 2, borderColor: '#EEE9DC', borderRadius: 18, padding: 13, boxShadow: '0px 8px 20px rgba(43,42,61,0.08)' },
   techniqueBadge: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   techniqueEmoji: { fontSize: 21, lineHeight: 25 },

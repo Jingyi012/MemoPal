@@ -14,7 +14,11 @@ type RecallResultCardProps = {
   body: string;
   saveStatus?: ReactNode;
   onRetry: () => void;
+  retryLabel?: string;
+  retryAccessibilityLabel?: string;
   secondaryAction?: { label: string; onPress: () => void };
+  returnToTodayLabel?: string;
+  returnToTodayAccessibilityLabel?: string;
   onReturnToToday: () => void;
 };
 
@@ -27,7 +31,11 @@ export function RecallResultCard({
   body,
   saveStatus,
   onRetry,
+  retryLabel = 'Try another round',
+  retryAccessibilityLabel = 'Try another recall round',
   secondaryAction,
+  returnToTodayLabel,
+  returnToTodayAccessibilityLabel,
   onReturnToToday,
 }: RecallResultCardProps) {
   const isPeg = tone === 'peg';
@@ -42,11 +50,11 @@ export function RecallResultCard({
       <View style={styles.actionWrap}>
         <AnimatedPressable
           accessibilityRole="button"
-          accessibilityLabel="Try another recall round"
+          accessibilityLabel={retryAccessibilityLabel}
           onPress={onRetry}
           style={styles.primaryButton}>
           <RefreshCcw size={18} color={theme.ink} />
-          <Text style={styles.primaryText}>Try another round</Text>
+          <Text style={styles.primaryText}>{retryLabel}</Text>
         </AnimatedPressable>
       </View>
       {secondaryAction ? (
@@ -60,7 +68,11 @@ export function RecallResultCard({
           </AnimatedPressable>
         </View>
       ) : null}
-      <ReturnToTodayButton onPress={onReturnToToday} />
+      <ReturnToTodayButton
+        onPress={onReturnToToday}
+        label={returnToTodayLabel}
+        accessibilityLabel={returnToTodayAccessibilityLabel}
+      />
     </View>
   );
 }

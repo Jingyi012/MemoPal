@@ -3,11 +3,19 @@ import { Home } from 'lucide-react-native';
 import { Text } from 'react-native';
 import { typography } from '@/theme/typography';
 
-export function ReturnToTodayButton({ onPress }: { onPress: () => void }) {
+export function ReturnToTodayButton({
+  onPress,
+  label = 'Back to Home',
+  accessibilityLabel = 'Return to Today',
+}: {
+  onPress: () => void;
+  label?: string;
+  accessibilityLabel?: string;
+}) {
   return (
     <AnimatedPressable
       accessibilityRole="button"
-      accessibilityLabel="Return to Today"
+      accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       style={{
         minHeight: 44,
@@ -19,7 +27,7 @@ export function ReturnToTodayButton({ onPress }: { onPress: () => void }) {
       }}>
       <Home size={16} color="#6B6A80" />
       <Text style={{ color: '#6B6A80', fontFamily: typography.bodyExtraBold, fontSize: 12.5 }}>
-        Back to Home
+        {label}
       </Text>
     </AnimatedPressable>
   );

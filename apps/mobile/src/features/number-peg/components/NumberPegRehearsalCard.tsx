@@ -34,8 +34,8 @@ export function NumberPegRehearsalCard({
       <View style={styles.headerRow}>
         <View style={styles.icon}><Text style={styles.iconEmoji}>🎬</Text></View>
         <View style={styles.headerCopy}>
-          <Text style={styles.eyebrow}>PEG {peg.number} · {peg.keyword.toUpperCase()}</Text>
-          <Text style={styles.progress}>{index + 1} of {total}</Text>
+          <Text style={styles.eyebrow}>{t('pegLabel').toUpperCase()} {peg.number} · {peg.keyword.toUpperCase()}</Text>
+          <Text style={styles.progress}>{index + 1} {t('of')} {total}</Text>
         </View>
       </View>
       <View style={styles.sceneVisual}>

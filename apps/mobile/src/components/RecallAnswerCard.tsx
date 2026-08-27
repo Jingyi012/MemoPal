@@ -17,6 +17,8 @@ type RecallAnswerCardProps = {
   feedbackText: string;
   actionLabel: string;
   scoreLabel: string;
+  answerAccessibilityLabel?: string;
+  answerPlaceholder?: string;
   onAnswerChange: (value: string) => void;
   onSubmit: () => void;
 };
@@ -32,6 +34,8 @@ export function RecallAnswerCard({
   feedbackText,
   actionLabel,
   scoreLabel,
+  answerAccessibilityLabel = 'Type your answer',
+  answerPlaceholder = 'TYPE YOUR ANSWER',
   onAnswerChange,
   onSubmit,
 }: RecallAnswerCardProps) {
@@ -48,10 +52,10 @@ export function RecallAnswerCard({
         onChangeText={(value) => { if (!feedback) onAnswerChange(value); }}
         onSubmitEditing={onSubmit}
         editable={!feedback}
-        accessibilityLabel="Type your answer"
+        accessibilityLabel={answerAccessibilityLabel}
         autoCapitalize="characters"
         autoCorrect={false}
-        placeholder="TYPE YOUR ANSWER"
+        placeholder={answerPlaceholder}
         placeholderTextColor="#AAA7B5"
         style={[
           styles.answerInput,
