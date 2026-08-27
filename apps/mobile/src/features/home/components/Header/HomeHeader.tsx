@@ -1,19 +1,11 @@
-import { AppImage } from '@/components/AppImage';
-import AnimatedPressable from '@/components/AnimatedPressable';
-import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { User } from '@/features/profile/types/users';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { greetingByTime } from '@/utils/greeting';
-import { User2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { typography } from '@/theme/typography';
 import { CommonHeader } from '@/components/CommonHeader';
-import { NotificationBell } from '@/components/NotificationBell';
-import { useRouter } from 'expo-router';
-import { LevelProgress } from './LevelProgress';
-import { StreakBadge } from './StreakBadge';
-import { useMemo } from 'react';
+import AnimatedPressable from '@/components/AnimatedPressable';
 
 interface HomeHeaderProps {
   userData: User;
@@ -22,122 +14,54 @@ interface HomeHeaderProps {
 export function HomeHeader({ userData }: HomeHeaderProps) {
   const router = useRouter();
   const name = userData?.displayName ?? 'Welcome';
-  const isPremium = userData?.isPremium ?? false;
-  const avatar = userData?.avatarUrl;
-  const { levelInfo } = useLevelByXp(userData.totalXp, userData.level);
-
-  const displayLevelInfo = useMemo(() => {
-    if (!levelInfo) {
-      return {
-        currentLevel: Math.max(1, userData.level ?? 1),
-        xpInCurrentLevel: Math.max(0, userData.totalXp ?? 0),
-        xpToNextLevel: 0,
-        title: `Level ${Math.max(1, userData.level ?? 1)}`,
-      };
-    }
-    return {
-      currentLevel: levelInfo.currentLevel,
-      xpInCurrentLevel: levelInfo.xpInCurrentLevel,
-      xpToNextLevel: levelInfo.xpToNextLevel,
-      title: levelInfo.currentLevelConfig?.title || `Level ${levelInfo.currentLevel}`,
-    };
-  }, [levelInfo, userData.level, userData.totalXp]);
-
-  const level = levelInfo?.currentLevel ?? userData?.level ?? 1;
+  const level = Math.max(1, userData?.level ?? 1);
 
   return (
-    <CommonHeader
-      eyebrow="Today"
-      // Title
-      title={`${greetingByTime()}, ${name}!`}
-      // Description
-      description={
-        level !== undefined ? (
-          <Text style={styles.levelDescription}>
-            Level {level}
-            {isPremium && ' • 👑 Premium'}
-          </Text>
-        ) : (
-          <Text style={styles.levelDescription}>New here? Let&apos;s get started 🚀</Text>
-        )
-      }
-      // Actions (right side icons)
-      actions={[
-        {
-          component: <NotificationBell />,
-        },
-      ]}
-      // Back button slot replaced with avatar
-      leftComponent={
-        <AnimatedPressable onPress={() => router.push('/(tabs)/profile')} style={styles.avatarButton}>
-          {avatar ? (
-            <View className="h-10 w-10">
-              <AppImage
-                source={{ uri: avatar }}
-                style={{ width: '100%', height: '100%', borderRadius: 999 }}
-              />
-            </View>
-          ) : (
-            <View style={styles.avatarFallback}>
-              <User2 size={20} color={theme.berryDeep} />
-            </View>
-          )}
+    <>
+      <CommonHeader
+        eyebrow="MemoPal"
+        title="Home"
+        description="Your daily memory dashboard"
+        hideBackButton
+      />
+      <View style={styles.greetingRow}>
+        <View style={styles.greetingCopy}>
+          <Text style={styles.greetingTitle}>{greetingByTime()}, {name} 👋</Text>
+          <Text style={styles.greetingSubtitle}>Ready to lock in a few more words?</Text>
+        </View>
+        <AnimatedPressable
+          accessibilityLabel="Open profile"
+          onPress={() => router.push('/(tabs)/profile')}
+          style={styles.avatarRing}>
+          <LinearGradient colors={['#FFC93C', '#FF6F91']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatarGradient}>
+            <Text style={styles.avatarLevel}>{level}</Text>
+          </LinearGradient>
         </AnimatedPressable>
-      }
-      // Additional content below header
-      additionalContent={
-        <LinearGradient
-          colors={[theme.night, theme.nightDeep]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.progressCard}>
-          <View style={styles.progressGlow} />
-          <LevelProgress level={displayLevelInfo} />
-          <StreakBadge streak={userData.stats?.currentStreak ?? 0} />
-        </LinearGradient>
-      }
-    />
+      </View>
+    </>
   );
 }
 
 const styles = {
-  avatarButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  levelDescription: {
-    color: theme.inkSoft,
-    fontFamily: typography.bodyBold,
-    fontSize: 11.5,
-  },
-  avatarFallback: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  greetingRow: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 2,
+    flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    borderWidth: 2,
-    borderColor: '#FFD9E2',
-    backgroundColor: '#FFF0F4',
+    justifyContent: 'space-between' as const,
   },
-  progressCard: {
-    position: 'relative' as const,
+  greetingCopy: { flex: 1, paddingRight: 12 },
+  greetingTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 18 },
+  greetingSubtitle: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 12, marginTop: 2 },
+  avatarRing: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.25)',
     overflow: 'hidden' as const,
-    borderRadius: 22,
-    padding: 16,
-    shadowColor: theme.ink,
-    shadowOpacity: 0.16,
-    shadowRadius: 12,
-    elevation: 3,
   },
-  progressGlow: {
-    position: 'absolute' as const,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    right: -30,
-    top: -45,
-    backgroundColor: 'rgba(255, 201, 60, 0.2)',
-  },
+  avatarGradient: { flex: 1, width: '100%' as const, alignItems: 'center' as const, justifyContent: 'center' as const },
+  avatarLevel: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 16 },
 };

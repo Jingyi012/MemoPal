@@ -3,13 +3,16 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { BaseCard, getBaseCardClassName } from '@/components/BaseCard';
 import LoadingView from '@/components/LoadingView';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
-import { normalizePremiumSubscriptionConfig } from '@/features/subscription/hooks/usePremiumSubscriptionConfig';
+import {
+  DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG,
+  normalizePremiumSubscriptionConfig,
+} from '@/features/subscription/hooks/usePremiumSubscriptionConfig';
 import { PremiumSubscriptionConfig } from '@/features/subscription/types/premiumSubscriptionConfig';
 import { cn } from '@/utils/cn';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { CheckCircle2, Crown, X } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import TermsAndConditionSheet from '../components/TermsAndConditionSheet';
@@ -40,7 +43,11 @@ const PremiumScreen: React.FC = () => {
 
       const setting = await systemSettingsApi.getPremiumSubscriptionConfig();
       if (!setting?.value) {
-        throw new Error('Premium subscription config is unavailable.');
+        // Keep the page usable in a fresh environment before an admin has
+        // published the optional premium copy/configuration.
+        setConfig(DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG);
+        setLoadError(null);
+        return;
       }
 
       const parsed = JSON.parse(setting.value) as Partial<PremiumSubscriptionConfig>;
@@ -50,6 +57,10 @@ const PremiumScreen: React.FC = () => {
       const message =
         error?.message?.trim() ||
         'Could not load premium data. Check your connection and try again.';
+      // Premium configuration is presentation data, not an authorization
+      // source. Render the built-in copy when the API is unavailable so a
+      // transient/configuration issue cannot strand the user on an error page.
+      setConfig(DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG);
       setLoadError(message);
     } finally {
       setIsLoading(false);
@@ -86,7 +97,8 @@ const PremiumScreen: React.FC = () => {
       <View className="flex-1 bg-[#FFFDF8]">
         <LinearGradient
           colors={[theme.berry, theme.berryDeep]}
-          className="px-6 pb-10 pt-8 shadow-lg">
+          className="px-6 pb-10 pt-8"
+          style={{ boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.16)' }}>
           <View className="flex-row items-center justify-between">
             <Text className="text-2xl font-bold text-white">Premium</Text>
             <AnimatedPressable
@@ -136,11 +148,12 @@ const PremiumScreen: React.FC = () => {
 
         <LinearGradient
           colors={[theme.berry, theme.berryDeep]}
-          className="px-6 pb-16 pt-8 shadow-lg">
+          className="px-6 pb-16 pt-8"
+          style={{ boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.16)' }}>
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-4">
               <View className="rounded-2xl bg-white/20 p-3">
-                <Crown color="white" size={32} />
+                <Text className="text-3xl">👑</Text>
               </View>
               <View>
                 <Text className="text-3xl font-bold text-white">{config.hero.title}</Text>
@@ -165,7 +178,7 @@ const PremiumScreen: React.FC = () => {
               {features.map((feature) => (
                 <View key={feature.key} className="flex-row items-start gap-3">
                   <View className="mt-1">
-                    <CheckCircle2 color={theme.grass} size={20} />
+                    <Text className="text-lg">✅</Text>
                   </View>
                   <View className="flex-1">
                     <Text className="font-semibold text-[#2B2A3D]">{feature.title}</Text>
@@ -286,11 +299,7 @@ const PremiumScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   subscribeShadow: {
-    shadowColor: '#FFE6A3',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.9,
-    shadowRadius: 12,
-    elevation: 4,
+    boxShadow: '0px 8px 12px rgba(255, 230, 163, 0.9)',
   },
 });
 

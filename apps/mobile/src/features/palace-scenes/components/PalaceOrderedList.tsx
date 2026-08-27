@@ -1,7 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
-import { Check, ChevronRight, List } from 'lucide-react-native';
+import { Check, ChevronRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 export type PalaceOrderedItem = {
@@ -21,7 +21,7 @@ export function PalaceOrderedList({ items, activeIndex, onSelect }: PalaceOrdere
   return (
     <View style={styles.section}>
       <View style={styles.headingRow}>
-        <View style={styles.headingIcon}><List size={18} color={theme.violetDeep} /></View>
+        <View style={styles.headingIcon}><Text style={styles.headingEmoji}>📋</Text></View>
         <View style={styles.headingCopy}>
           <Text style={styles.eyebrow}>ACCESSIBLE ROUTE</Text>
           <Text style={styles.title}>Your Palace in order</Text>
@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
   section: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 20, borderWidth: 2, padding: 14 },
   headingRow: { alignItems: 'center', flexDirection: 'row', gap: 10 },
   headingIcon: { alignItems: 'center', backgroundColor: '#EEE9FF', borderRadius: 13, height: 38, justifyContent: 'center', width: 38 },
+  headingEmoji: { fontSize: 18 },
   headingCopy: { flex: 1 },
   eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
   title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 16, marginTop: 2 },

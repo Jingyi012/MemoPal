@@ -1,7 +1,7 @@
 import { DeleteOutlined, EditOutlined, EnvironmentOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { App, Button, Card, Col, Empty, Flex, Form, Input, InputNumber, Modal, Popconfirm, Row, Select, Space, Spin, Switch, Tag, Typography } from 'antd';
-import { useMemo, useState, type MouseEvent } from 'react';
+import { useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react';
 import { adminPalaceScenesApi } from '../../../api/adminPalaceScenesApi';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
 import { ImageUploadField } from '../../../components/media/ImageUploadField';
@@ -20,6 +20,8 @@ export default function PalaceScenesPage() {
   const [editing, setEditing] = useState<PalaceSceneDto | null>(null);
   const [draft, setDraft] = useState<PalaceSceneUpsertRequest>(blankDraft);
   const [selectedLocus, setSelectedLocus] = useState(0);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const draggingLocus = useRef<number | null>(null);
 
   const openEditor = (scene?: PalaceSceneDto) => {
     setEditing(scene ?? null);
@@ -44,21 +46,44 @@ export default function PalaceScenesPage() {
   });
 
   const imageUrl = useMemo(() => draft.imageUrl ? resolveMediaPath(draft.imageUrl) : '', [draft.imageUrl, resolveMediaPath]);
+  const getLocusPosition = (clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const bounds = canvas.getBoundingClientRect();
+    return {
+      xPercent: Math.max(0, Math.min(100, ((clientX - bounds.left) / bounds.width) * 100)),
+      yPercent: Math.max(0, Math.min(100, ((clientY - bounds.top) / bounds.height) * 100)),
+    };
+  };
+
   const placeLocus = (event: MouseEvent<HTMLDivElement>) => {
     if (!draft.imageUrl) return;
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const xPercent = Math.max(0, Math.min(100, ((event.clientX - bounds.left) / bounds.width) * 100));
-    const yPercent = Math.max(0, Math.min(100, ((event.clientY - bounds.top) / bounds.height) * 100));
+    const position = getLocusPosition(event.clientX, event.clientY);
+    if (!position) return;
     setDraft((current) => {
       const loci = [...current.loci];
-      if (loci[selectedLocus]) loci[selectedLocus] = { ...loci[selectedLocus], xPercent, yPercent };
-      else loci.push({ position: loci.length + 1, name: `Locus ${loci.length + 1}`, xPercent, yPercent, radiusPercent: 7 });
+      if (loci[selectedLocus]) loci[selectedLocus] = { ...loci[selectedLocus], ...position };
+      else loci.push({ position: loci.length + 1, name: `Locus ${loci.length + 1}`, ...position, radiusPercent: 7 });
       return { ...current, loci };
     });
   };
 
+  const moveDraggedLocus = (event: PointerEvent<HTMLDivElement>) => {
+    const index = draggingLocus.current;
+    if (index === null) return;
+    const position = getLocusPosition(event.clientX, event.clientY);
+    if (position) updateLocus(index, position);
+  };
+
+  const stopDragging = () => {
+    draggingLocus.current = null;
+  };
+
   const updateLocus = (index: number, values: Partial<PalaceLocusInput>) => setDraft((current) => ({ ...current, loci: current.loci.map((locus, i) => i === index ? { ...locus, ...values } : locus) }));
-  const removeLocus = (index: number) => setDraft((current) => ({ ...current, loci: current.loci.filter((_, i) => i !== index).map((locus, i) => ({ ...locus, position: i + 1 })) }));
+  const removeLocus = (index: number) => {
+    setDraft((current) => ({ ...current, loci: current.loci.filter((_, i) => i !== index).map((locus, i) => ({ ...locus, position: i + 1 })) }));
+    setSelectedLocus((current) => current > index ? current - 1 : Math.min(current, Math.max(0, draft.loci.length - 2)));
+  };
 
   return (
     <PortalPageContainer>
@@ -89,15 +114,15 @@ export default function PalaceScenesPage() {
           </Col>
           <Col xs={24} lg={15}>
             <Typography.Title level={5}>Locus canvas</Typography.Title>
-            <Typography.Paragraph type='secondary'>Select a locus below, then click the image to move it. Choose “Add locus” and click to place a new one.</Typography.Paragraph>
-            <div onClick={placeLocus} style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', borderRadius: 16, overflow: 'hidden', cursor: draft.imageUrl ? 'crosshair' : 'default', background: '#f1f5f9', border: '2px solid #ddd6fe' }}>
+            <Typography.Paragraph type='secondary'>Click the image to place or move the selected locus. Drag any marker for fine positioning, or use the X/Y fields below.</Typography.Paragraph>
+            <div ref={canvasRef} onClick={placeLocus} onPointerMove={moveDraggedLocus} onPointerUp={stopDragging} onPointerCancel={stopDragging} style={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', borderRadius: 16, overflow: 'hidden', cursor: draft.imageUrl ? 'crosshair' : 'default', background: '#f1f5f9', border: '2px solid #ddd6fe', touchAction: 'none' }}>
               {imageUrl ? <img src={imageUrl} alt='Locus canvas' style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Flex align='center' justify='center' style={{ height: '100%' }}><Typography.Text type='secondary'>Upload an image to start placing loci</Typography.Text></Flex>}
-              {draft.loci.map((locus, index) => <button type='button' key={locus.id ?? index} onClick={(e) => { e.stopPropagation(); setSelectedLocus(index); }} style={{ position: 'absolute', left: `${locus.xPercent}%`, top: `${locus.yPercent}%`, transform: 'translate(-50%, -50%)', width: 34, height: 34, borderRadius: '50%', border: selectedLocus === index ? '4px solid #facc15' : '3px solid white', color: 'white', background: '#8b5cf6', fontWeight: 800, boxShadow: '0 4px 10px rgba(0,0,0,.3)', cursor: 'pointer' }}>{index + 1}</button>)}
+              {draft.loci.map((locus, index) => <button type='button' key={locus.id ?? index} onPointerDown={(e) => { e.stopPropagation(); draggingLocus.current = index; setSelectedLocus(index); e.currentTarget.setPointerCapture?.(e.pointerId); }} onClick={(e) => { e.stopPropagation(); setSelectedLocus(index); }} style={{ position: 'absolute', left: `${locus.xPercent}%`, top: `${locus.yPercent}%`, transform: 'translate(-50%, -50%)', width: 34, height: 34, borderRadius: '50%', border: selectedLocus === index ? '4px solid #facc15' : '3px solid white', color: 'white', background: '#8b5cf6', fontWeight: 800, boxShadow: '0 4px 10px rgba(0,0,0,.3)', cursor: 'grab', touchAction: 'none' }}>{index + 1}</button>)}
             </div>
             <Flex justify='space-between' align='center' style={{ marginTop: 14, marginBottom: 8 }}><Typography.Text strong>{draft.loci.length} loci</Typography.Text><Button icon={<EnvironmentOutlined />} onClick={() => setSelectedLocus(draft.loci.length)}>Add locus, then click image</Button></Flex>
             <Space direction='vertical' style={{ width: '100%', maxHeight: 240, overflowY: 'auto' }}>
               {draft.loci.map((locus, index) => <Card key={locus.id ?? index} size='small' style={{ borderColor: selectedLocus === index ? '#8b5cf6' : undefined }} onClick={() => setSelectedLocus(index)}>
-                <Flex gap={8} align='center'><Tag color='purple'>{index + 1}</Tag><Input value={locus.name} onChange={(e) => updateLocus(index, { name: e.target.value })} placeholder='Locus name' /><InputNumber min={2} max={25} value={locus.radiusPercent} onChange={(value) => updateLocus(index, { radiusPercent: value ?? 7 })} addonAfter='%' style={{ width: 115 }} /><Button danger type='text' icon={<DeleteOutlined />} onClick={(e) => { e.stopPropagation(); removeLocus(index); }} /></Flex>
+                <Flex gap={8} align='center' wrap='wrap'><Tag color='purple'>{index + 1}</Tag><Input value={locus.name} onChange={(e) => updateLocus(index, { name: e.target.value })} placeholder='Locus name' style={{ flex: '1 1 180px' }} /><InputNumber min={0} max={100} precision={1} value={locus.xPercent} onChange={(value) => updateLocus(index, { xPercent: value ?? locus.xPercent })} addonBefore='X' addonAfter='%' style={{ width: 105 }} /><InputNumber min={0} max={100} precision={1} value={locus.yPercent} onChange={(value) => updateLocus(index, { yPercent: value ?? locus.yPercent })} addonBefore='Y' addonAfter='%' style={{ width: 105 }} /><InputNumber min={2} max={25} precision={1} value={locus.radiusPercent} onChange={(value) => updateLocus(index, { radiusPercent: value ?? 7 })} addonAfter='%' style={{ width: 105 }} /><Button danger type='text' icon={<DeleteOutlined />} onClick={(e) => { e.stopPropagation(); removeLocus(index); }} /></Flex>
               </Card>)}
             </Space>
           </Col>

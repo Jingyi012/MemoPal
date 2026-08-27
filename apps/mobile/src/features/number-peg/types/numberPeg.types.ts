@@ -1,4 +1,5 @@
-export type PegNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+/** Pegs are intentionally numeric so the library can grow from the starter ten to 1–100. */
+export type PegNumber = number;
 
 export type NumberPegItem = {
   id: string;

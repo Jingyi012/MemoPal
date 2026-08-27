@@ -13,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Brain } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -88,9 +87,10 @@ export const LoginScreen: React.FC = () => {
           colors={[theme.violetDeep, theme.berryDeep]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{ borderRadius: 10 }}
-          className="mb-6 h-20 w-20 items-center justify-center shadow-lg">
-          <Brain size={40} color="white" strokeWidth={1.5} />
+          style={{ borderRadius: 10, boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.16)' }}
+          className="mb-6 h-20 w-20 items-center justify-center"
+          >
+          <Text className="text-4xl">🧠</Text>
         </LinearGradient>
 
         <Text className="mb-2 text-2xl font-semibold text-[#2B2A3D]">Welcome to MemoPal</Text>

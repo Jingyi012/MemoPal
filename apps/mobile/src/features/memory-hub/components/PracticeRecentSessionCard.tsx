@@ -2,7 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import type { MemorySet } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
-import { ArrowRight, Brain, Hash } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 export function PracticeRecentSessionCard({ memorySet, onPress }: { memorySet: MemorySet; onPress: () => void }) {
@@ -10,7 +10,7 @@ export function PracticeRecentSessionCard({ memorySet, onPress }: { memorySet: M
   return (
     <AnimatedPressable onPress={onPress} style={styles.card}>
       <View style={[styles.badge, isPeg ? styles.pegBackground : styles.palaceBackground]}>
-        {isPeg ? <Hash size={20} color={theme.berryDeep} /> : <Brain size={20} color={theme.violetDeep} />}
+        <Text style={styles.techniqueEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
       </View>
       <View style={styles.copy}>
         <Text numberOfLines={1} style={styles.title}>{memorySet.title}</Text>
@@ -40,4 +40,5 @@ const styles = StyleSheet.create({
   title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13.5 },
   subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11.5, marginTop: 3 },
   technique: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.5 },
+  techniqueEmoji: { fontSize: 19 },
 });

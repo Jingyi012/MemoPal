@@ -1,6 +1,6 @@
 import { cn } from '@/utils/cn';
 import React from 'react';
-import { View, ViewProps } from 'react-native';
+import { View, ViewProps, ViewStyle } from 'react-native';
 
 type CardPadding = 'none' | 'sm' | 'md' | 'lg';
 type CardRadius = 'lg' | 'xl' | '2xl' | '3xl';
@@ -31,8 +31,14 @@ const CARD_RADIUS_CLASS: Record<CardRadius, string> = {
 
 const CARD_SHADOW_CLASS: Record<CardShadow, string> = {
   none: '',
-  sm: 'shadow-sm',
-  md: 'shadow',
+  sm: '',
+  md: '',
+};
+
+const CARD_SHADOW_STYLE: Record<CardShadow, ViewStyle | undefined> = {
+  none: undefined,
+  sm: { boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.08)' },
+  md: { boxShadow: '0px 4px 14px rgba(43, 42, 61, 0.12)' },
 };
 
 export const CARD_SURFACE_CLASS = 'bg-[#FFFDF8]';
@@ -67,6 +73,7 @@ export const BaseCard: React.FC<BaseCardProps> = ({
   radius = '2xl',
   shadow = 'sm',
   bordered = true,
+  style,
   ...props
 }) => (
   <View
@@ -77,6 +84,7 @@ export const BaseCard: React.FC<BaseCardProps> = ({
       shadow,
       bordered,
     })}
+    style={[CARD_SHADOW_STYLE[shadow], style]}
     {...props}>
     {children}
   </View>

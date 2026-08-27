@@ -9,8 +9,9 @@ export function QuoteCard({ todayQuote }: { todayQuote: string }) {
       end={{ x: 1, y: 1 }}
       style={{
         borderRadius: 10,
+        boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.08)',
       }}
-      className="mt-6 border-2 border-[#E0D9FF] p-4 shadow-sm">
+      className="mt-6 border-2 border-[#E0D9FF] p-4">
       <Text
         style={{
           color: '#6B6A80',

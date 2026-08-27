@@ -1,8 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
-import { MapPinned } from 'lucide-react-native';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
 
 export type PracticeDiscoveryItem = {
   key: string;
@@ -10,6 +9,7 @@ export type PracticeDiscoveryItem = {
   subtitle: string;
   tone: 'peg' | 'palace';
   imageUrl?: string | null;
+  imageSource?: ImageSourcePropType;
 };
 
 type PracticeDiscoveryRowProps = {
@@ -40,12 +40,19 @@ export function PracticeDiscoveryRow({
       {items.length ? (
         <ScrollView horizontal contentContainerStyle={styles.list} showsHorizontalScrollIndicator={false}>
           {items.map((item) => (
-            <AnimatedPressable key={item.key} onPress={() => onItemPress(item.key)} style={styles.card}>
-              <View style={[styles.art, item.tone === 'peg' ? styles.pegBackground : styles.palaceBackground]}>
-                {item.imageUrl ? <Image source={{ uri: item.imageUrl }} style={styles.image} resizeMode="cover" /> : item.tone === 'peg' ? <Text style={styles.emoji}>{item.subtitle}</Text> : <MapPinned size={22} color={theme.violetDeep} />}
-              </View>
-              <Text numberOfLines={1} style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardSubtitle}>{item.imageUrl ? item.subtitle : item.tone === 'peg' ? 'Anchor image' : item.subtitle}</Text>
+            <AnimatedPressable
+              key={item.key}
+              accessibilityLabel={item.title}
+              onPress={() => onItemPress(item.key)}
+              style={[styles.card, item.tone === 'peg' ? styles.pegCard : styles.palaceCard]}>
+              {item.imageSource || item.imageUrl ? (
+                <Image source={item.imageSource ?? { uri: item.imageUrl! }} style={styles.image} resizeMode="cover" />
+              ) : <Text style={styles.emoji}>{item.tone === 'peg' ? item.subtitle : '🏰'}</Text>}
+              {item.tone === 'palace' ? (
+                <View style={styles.palaceNameOverlay}>
+                  <Text numberOfLines={1} style={styles.palaceName}>{item.title}</Text>
+                </View>
+              ) : null}
             </AnimatedPressable>
           ))}
         </ScrollView>
@@ -57,19 +64,18 @@ export function PracticeDiscoveryRow({
 }
 
 const styles = StyleSheet.create({
-  section: { marginTop: 4 },
+  section: { marginTop: 22 },
   headingRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  title: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, marginBottom: 0, marginTop: 22, textTransform: 'uppercase' },
-  action: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11.5, marginTop: 22 },
-  list: { gap: 10, paddingRight: 12, paddingVertical: 10 },
-  card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 2, padding: 8, width: 132 },
-  art: { alignItems: 'center', borderRadius: 12, height: 76, justifyContent: 'center', overflow: 'hidden' },
-  pegBackground: { backgroundColor: '#FFF0F4' },
-  palaceBackground: { backgroundColor: '#EEE9FF' },
-  image: { backgroundColor: '#BCAAF1', height: '100%', width: '100%' },
-  emoji: { fontSize: 31 },
-  cardTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11.5, marginTop: 7 },
-  cardSubtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, marginTop: 2 },
+  title: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, marginBottom: 0, textTransform: 'uppercase' },
+  action: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11.5 },
+  list: { gap: 9, paddingRight: 12, paddingTop: 9, paddingBottom: 4 },
+  card: { position: 'relative', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 2, borderColor: theme.line },
+  pegCard: { width: 52, height: 52, borderRadius: 16, backgroundColor: theme.paper },
+  palaceCard: { width: 96, height: 64, borderRadius: 14, backgroundColor: '#BCAAF1', alignItems: 'stretch', justifyContent: 'flex-end' },
+  image: { height: '100%', width: '100%' },
+  emoji: { fontSize: 22 },
+  palaceNameOverlay: { position: 'absolute', left: 6, right: 6, bottom: 5 },
+  palaceName: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 10, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   empty: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 2, padding: 14 },
   emptyText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
 });

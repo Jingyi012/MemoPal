@@ -5,8 +5,6 @@ import { useAllBadges } from '@/features/gamification/shared/hooks/useBadges';
 import { useMilestones } from '@/features/gamification/shared/hooks/useMilestones';
 import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
 import { useRouter } from 'expo-router';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
-import { Award, Flag, Sparkles } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
@@ -203,11 +201,11 @@ export default function RewardsHistoryScreen() {
                               isXp ? 'bg-[#EEE9FF]' : isBadge ? 'bg-[#FFF7E0]' : 'bg-[#F1FBF5]'
                             }`}>
                             {isXp ? (
-                              <Sparkles size={16} color={theme.violetDeep} />
+                              <Text className="text-base">✨</Text>
                             ) : isBadge ? (
-                              <Award size={16} color={theme.sunDeep} />
+                              <Text className="text-base">🏅</Text>
                             ) : (
-                              <Flag size={16} color={theme.grass} />
+                              <Text className="text-base">🚩</Text>
                             )}
                           </View>
                           <View className="ml-3 flex-1">

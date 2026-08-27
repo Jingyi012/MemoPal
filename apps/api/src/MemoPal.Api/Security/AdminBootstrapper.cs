@@ -5,7 +5,6 @@ using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System.Text;
 
 namespace MemoPal.Api.Security;
 
@@ -51,10 +50,53 @@ public sealed class AdminBootstrapper
     private async Task EnsureStarterPalaceSceneAsync(CancellationToken cancellationToken)
     {
         const string starterName = "The Memory Room";
-        if (await _db.PalaceScenes.AnyAsync(
-                x => x.IsTemplate && x.Name == starterName && !x.IsDeleted,
-                cancellationToken))
+        var existing = await _db.PalaceScenes
+            .Include(x => x.Loci)
+            .FirstOrDefaultAsync(x => x.IsTemplate && x.Name == starterName && !x.IsDeleted, cancellationToken);
+        if (existing is not null)
         {
+            // Replace only the old generated SVG starter. Admin-authored edits
+            // remain authoritative after the first real-image upgrade.
+            if (existing.ImageUrl.StartsWith("data:image/svg+xml", StringComparison.OrdinalIgnoreCase))
+            {
+                var upgradeAt = DateTime.UtcNow;
+                existing.Description = "A warm study room with twelve clear furniture and décor landmarks.";
+                existing.ImageUrl = "/assets/palace-scenes/11-study-room.png";
+                existing.Version += 1;
+                existing.UpdatedAt = upgradeAt;
+                existing.UpdatedBy = "system";
+
+                var starterLoci = GetStarterLoci();
+                var existingLoci = existing.Loci.OrderBy(x => x.Position).ToList();
+                for (var index = 0; index < starterLoci.Length; index++)
+                {
+                    var (name, xPercent, yPercent) = starterLoci[index];
+                    var locus = index < existingLoci.Count ? existingLoci[index] : new PalaceLocus
+                    {
+                        Id = $"{existing.Id}-locus-{index + 1}",
+                        PalaceSceneId = existing.Id,
+                        CreatedAt = upgradeAt,
+                        CreatedBy = "system"
+                    };
+                    locus.Position = index + 1;
+                    locus.Name = name;
+                    locus.Description = $"A clear visual stop at the {name.ToLowerInvariant()}.";
+                    locus.XPercent = xPercent;
+                    locus.YPercent = yPercent;
+                    locus.RadiusPercent = 7m;
+                    locus.IsDeleted = false;
+                    locus.UpdatedAt = upgradeAt;
+                    locus.UpdatedBy = "system";
+                    if (index >= existingLoci.Count) existing.Loci.Add(locus);
+                }
+
+                foreach (var locus in existingLoci.Skip(starterLoci.Length))
+                {
+                    locus.IsDeleted = true;
+                    locus.UpdatedAt = upgradeAt;
+                    locus.UpdatedBy = "system";
+                }
+            }
             return;
         }
 
@@ -64,8 +106,8 @@ public sealed class AdminBootstrapper
         {
             Id = sceneId,
             Name = starterName,
-            Description = "A bright, familiar room with ten easy-to-spot loci.",
-            ImageUrl = BuildStarterSceneImageUrl(),
+            Description = "A warm study room with twelve clear furniture and décor landmarks.",
+            ImageUrl = "/assets/palace-scenes/11-study-room.png",
             Status = PalaceSceneStatuses.Published,
             IsTemplate = true,
             IsPremium = false,
@@ -76,19 +118,7 @@ public sealed class AdminBootstrapper
             UpdatedBy = "system"
         };
 
-        var loci = new[]
-        {
-            ("Entry bench", 14m, 78m),
-            ("Wall mirror", 31m, 62m),
-            ("Coffee table", 49m, 43m),
-            ("Window plant", 68m, 28m),
-            ("Reading chair", 86m, 52m),
-            ("Bookshelf", 78m, 78m),
-            ("Desk lamp", 58m, 61m),
-            ("Rug corner", 38m, 34m),
-            ("Door handle", 20m, 18m),
-            ("Ceiling light", 50m, 14m)
-        };
+        var loci = GetStarterLoci();
 
         for (var index = 0; index < loci.Length; index++)
         {
@@ -113,23 +143,21 @@ public sealed class AdminBootstrapper
         _db.PalaceScenes.Add(scene);
     }
 
-    private static string BuildStarterSceneImageUrl()
-    {
-        const string svg = """
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560">
-              <defs>
-                <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="plum"/><stop offset="1" stop-color="mediumpurple"/></linearGradient>
-                <linearGradient id="floor" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="goldenrod"/><stop offset="1" stop-color="gold"/></linearGradient>
-              </defs>
-              <rect width="900" height="560" fill="url(#sky)"/><rect y="340" width="900" height="220" fill="url(#floor)" opacity=".35"/>
-              <path d="M70 360h760M110 120v250M790 120v250M110 120h680" fill="none" stroke="ivory" stroke-width="12" opacity=".8"/>
-              <rect x="170" y="250" width="150" height="90" rx="18" fill="hotpink" opacity=".82"/><circle cx="550" cy="210" r="70" fill="mediumseagreen" opacity=".82"/><rect x="650" y="290" width="110" height="60" rx="14" fill="deepskyblue" opacity=".85"/>
-              <text x="450" y="78" fill="darkslateblue" font-family="Arial" font-size="32" font-weight="700" text-anchor="middle">The Memory Room</text>
-            </svg>
-            """;
-
-        return $"data:image/svg+xml;base64,{Convert.ToBase64String(Encoding.UTF8.GetBytes(svg))}";
-    }
+    private static (string Name, decimal XPercent, decimal YPercent)[] GetStarterLoci() =>
+    [
+        ("Framed landscape", 11m, 24m),
+        ("Desk lamp", 8m, 50m),
+        ("Desk surface", 27m, 57m),
+        ("Bookcase", 34m, 33m),
+        ("Desk chair", 31m, 71m),
+        ("Rug corner", 41m, 84m),
+        ("Window", 53m, 30m),
+        ("Reading chair", 63m, 60m),
+        ("Side table", 74m, 54m),
+        ("Wall clock", 80m, 25m),
+        ("Tall plant", 84m, 49m),
+        ("Side cabinet", 94m, 66m)
+    ];
 
     private async Task EnsureAdminUserAsync(CancellationToken cancellationToken)
     {

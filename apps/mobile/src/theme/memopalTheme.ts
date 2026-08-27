@@ -2,7 +2,7 @@ export const memopalTheme = {
   ink: '#2B2A3D',
   inkSoft: '#6B6A80',
   paper: '#FFFDF8',
-  canvas: '#F6F3EA',
+  canvas: '#FFFFFF',
   line: '#EEE9DC',
   sand: '#F6F3EA',
   berryTint: '#FFF0F4',

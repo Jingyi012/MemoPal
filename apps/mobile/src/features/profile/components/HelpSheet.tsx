@@ -5,7 +5,7 @@ import { useHelpFaqConfig } from '@/features/support/hooks/useHelpFaqConfig';
 import { HelpFaqItem } from '@/features/support/types/helpFaqConfig';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Router } from 'expo-router';
-import { Book, ChevronRight, Mail } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import Animated, {
@@ -58,7 +58,7 @@ const HelpSheet = forwardRef<Ref, HelpSheetProps>(({ router }, ref) => {
           }}
           className="mb-3 flex-row items-center gap-3 rounded-2xl border-2 border-[#BFE7D6] bg-[#F1FBF5] p-4">
           <View className="flex h-10 w-10 items-center justify-center rounded-full bg-[#BFE7D6]">
-            <Book className="h-5 w-5" color={theme.grass} />
+            <Text className="text-xl">📖</Text>
           </View>
           <View className="flex-1">
             <Text className="font-medium text-[#2B2A3D]">View Tutorial</Text>
@@ -91,7 +91,7 @@ const HelpSheet = forwardRef<Ref, HelpSheetProps>(({ router }, ref) => {
             }}
             className="mb-6 flex-row items-center gap-3 rounded-2xl border-2 border-[#DCD4FF] bg-[#EEE9FF] p-4">
             <View className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DCD4FF]">
-              <Mail className="h-5 w-5" color={theme.violetDeep} />
+              <Text className="text-xl">✉️</Text>
             </View>
             <View className="flex-1">
               <Text className="font-medium text-[#2B2A3D]">{support.emailButtonTitle}</Text>

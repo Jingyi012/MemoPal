@@ -1,5 +1,3 @@
-import { Check, Crown, Lock } from 'lucide-react-native';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { Text, View } from 'react-native';
 
 interface Props {
@@ -19,7 +17,7 @@ export const MilestoneRow: React.FC<Props> = ({ title, refs, rewardLabel, curren
       <View className="flex-row items-center">
         <View
           className={`mr-4 h-9 w-9 items-center justify-center rounded-full ${isCompleted ? 'bg-[#F1FBF5]' : 'bg-[#F6F3EA]'}`}>
-          {isAwarded ? <Check size={18} color={theme.grass} /> : <Lock size={18} color="#9A97A7" />}
+          <Text className="text-base">{isAwarded ? '✓' : '🔒'}</Text>
         </View>
         <View>
           <Text className={`text-sm font-bold ${isCompleted ? 'text-[#2B2A3D]' : 'text-[#9A97A7]'}`}>{title}</Text>
@@ -27,7 +25,7 @@ export const MilestoneRow: React.FC<Props> = ({ title, refs, rewardLabel, curren
           <Text className="text-xs text-[#9A97A7]">{refs} Friends required</Text>
         </View>
       </View>
-      {isAwarded && <Crown size={18} color={theme.sunDeep} />}
+      {isAwarded && <Text className="text-lg">👑</Text>}
     </View>
   );
 };

@@ -1,5 +1,3 @@
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
-import { Flame } from 'lucide-react-native';
 import { Text, View } from 'react-native';
 
 interface StreakBadgeProps {
@@ -11,7 +9,7 @@ export function StreakBadge({ streak }: StreakBadgeProps) {
     <View
       className="mt-3 flex-row items-center gap-2 rounded-xl bg-white/10 px-3 py-1.5"
       style={{ alignSelf: 'flex-start' }}>
-      <Flame size={16} color={theme.sunDeep} fill={theme.sun} />
+      <Text className="text-base">🔥</Text>
       <Text className="text-sm text-white">{streak} day streak!</Text>
     </View>
   );

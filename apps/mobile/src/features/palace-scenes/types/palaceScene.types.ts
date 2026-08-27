@@ -17,6 +17,8 @@ export type PalaceScene = {
   name: string;
   description: string;
   imageUrl: string;
+  /** Optional bundled source used only by local preview fixtures. */
+  imageSource?: number;
   status: 'draft' | 'published' | 'archived';
   isTemplate: boolean;
   isPremium: boolean;

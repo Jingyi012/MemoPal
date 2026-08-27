@@ -277,7 +277,91 @@
     font-size:10.5px;padding:5px 10px;border-radius:999px;display:flex;align-items:center;gap:4px;
   }
 
-  /* ---------------- level-up modal ---------------- */
+  /* ---------------- HOME dashboard ---------------- */
+  .greet-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .greet-hi{font-family:'Baloo 2';font-weight:800;font-size:18px;}
+  .greet-sub{font-size:12px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
+
+  .streak-banner{
+    display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#fff3d6,#ffe6ef);
+    border:2px solid #ffe3ae;border-radius:18px;padding:13px 15px;margin-bottom:16px;
+  }
+  .sb-left{display:flex;align-items:center;gap:10px;}
+  .sb-flame{font-size:26px;}
+  .sb-t{font-family:'Baloo 2';font-weight:800;font-size:13.5px;}
+  .sb-s{font-size:11px;color:var(--ink-soft);font-weight:700;}
+  .sb-days{display:flex;gap:4px;}
+  .sb-days .d{width:8px;height:8px;border-radius:50%;background:var(--line);}
+  .sb-days .d.on{background:var(--sun-deep);}
+
+  .continue-card{
+    display:flex;align-items:center;gap:12px;background:var(--paper);border:2px solid var(--line);
+    border-radius:18px;padding:13px;margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow);
+  }
+  .continue-card:active{transform:scale(.98);}
+  .cc-badge{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:21px;flex:0 0 auto;}
+  .cc-badge.palace{background:#eee9ff;}
+  .cc-body{flex:1;min-width:0;}
+  .cc-label{font-size:10.5px;color:var(--ink-soft);font-weight:700;}
+  .cc-title{font-family:'Baloo 2';font-weight:800;font-size:14px;margin:1px 0 6px;}
+  .cc-progress-track{height:6px;background:var(--line);border-radius:999px;overflow:hidden;}
+  .cc-progress-fill{height:100%;background:var(--violet);border-radius:999px;}
+  .cc-meta{font-size:10.5px;color:var(--ink-soft);font-weight:700;margin-top:5px;}
+  .cc-arrow{color:var(--ink-soft);font-size:16px;flex:0 0 auto;}
+
+  .today-card{
+    display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff7e0,#fff);
+    border:2px solid #ffe6a3;border-radius:18px;padding:13px;box-shadow:var(--shadow);
+  }
+  .today-ic{font-size:26px;}
+  .today-body{flex:1;min-width:0;}
+  .today-t{font-family:'Baloo 2';font-weight:800;font-size:13.5px;}
+  .today-s{font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
+
+  .stat-row{display:flex;gap:10px;margin-top:4px;}
+  .stat-tile{flex:1;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:14px 8px;text-align:center;}
+  .stat-n{font-family:'Baloo 2';font-weight:800;font-size:19px;color:var(--ink);}
+  .stat-l{font-size:10.5px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
+
+  /* ---------------- PROGRESS ---------------- */
+  .bar-chart{display:flex;align-items:flex-end;gap:8px;height:100px;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:14px 12px 10px;margin-bottom:20px;}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px;}
+  .bar-col .bar{width:100%;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,var(--sky),#3a9dc4);}
+  .bar-col .bar.today{background:linear-gradient(180deg,var(--sun),var(--sun-deep));}
+  .bar-col .lbl{font-size:9.5px;color:var(--ink-soft);font-weight:700;}
+
+  .progress-line{margin-bottom:16px;}
+  .pl-label{font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
+  .pl-track{height:9px;background:var(--line);border-radius:999px;overflow:hidden;}
+  .pl-fill{height:100%;border-radius:999px;}
+
+  .badge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .badge-tile{aspect-ratio:1;border-radius:16px;background:var(--paper);border:2px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;}
+  .badge-tile .e{font-size:22px;}
+  .badge-tile .t{font-size:8.5px;font-weight:800;font-family:'Baloo 2';color:var(--ink-soft);text-align:center;padding:0 4px;}
+  .badge-tile.earned{border-color:var(--sun-deep);background:linear-gradient(135deg,#fff7e0,#fff);}
+  .badge-tile.earned .t{color:var(--ink);}
+  .badge-tile:not(.earned) .e{filter:grayscale(1);opacity:.4;}
+
+  /* ---------------- PROFILE ---------------- */
+  .profile-head{text-align:center;padding:10px 0 20px;}
+  .profile-avatar{width:78px;height:78px;border-radius:50%;background:linear-gradient(135deg,var(--sun),var(--berry));display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 10px;box-shadow:0 8px 18px rgba(255,111,145,.28);}
+  .profile-name{font-family:'Baloo 2';font-weight:800;font-size:19px;}
+  .profile-sub{font-size:12px;color:var(--ink-soft);font-weight:700;margin-top:2px;}
+
+  .plan-card{background:linear-gradient(160deg,#3a3358,#241f38);border-radius:20px;padding:18px;color:#fff;margin-bottom:8px;}
+  .plan-badge{display:inline-block;background:rgba(255,255,255,.14);font-family:'Baloo 2';font-weight:800;font-size:10.5px;padding:4px 10px;border-radius:999px;margin-bottom:10px;}
+  .plan-title{font-family:'Baloo 2';font-weight:800;font-size:15px;}
+  .plan-sub{font-size:11.5px;color:#c9c5e0;font-weight:700;margin-top:5px;line-height:1.4;}
+
+  .settings-list{background:var(--paper);border:2px solid var(--line);border-radius:16px;overflow:hidden;}
+  .settings-row{display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .settings-row:last-child{border-bottom:none;}
+  .settings-row .ic{font-size:16px;flex:0 0 auto;}
+  .settings-row .t{flex:1;font-family:'Baloo 2';font-weight:700;font-size:13px;}
+  .settings-row .v{font-size:12px;color:var(--ink-soft);font-weight:700;}
+
+  /* ---------------- modal ---------------- */
   .modal-overlay{
     position:absolute;inset:0;background:rgba(20,18,32,.6);display:none;align-items:center;justify-content:center;
     z-index:50;padding:24px;
@@ -320,7 +404,7 @@
   <div class="screen" id="screen">
 
     <!-- ================= PRACTICE HOME ================= -->
-    <div class="view active" id="v-home">
+    <div class="view" id="v-home">
       <div class="xp-header">
         <div class="xp-top">
           <div class="avatar-ring" onclick="goTo('profile')"><span class="lvl" id="xpLevelBadge">3</span></div>
@@ -459,21 +543,115 @@
       <div id="palaceMapList"></div>
     </div>
 
-    <!-- ================= PROFILE (minimal) ================= -->
-    <div class="view" id="v-profile">
-      <div class="xp-header" style="margin-bottom:22px;">
+    <!-- ================= HOME (dashboard) ================= -->
+    <div class="view active" id="v-homefeed">
+      <div class="greet-row">
+        <div>
+          <div class="greet-hi">Good afternoon, jy 👋</div>
+          <div class="greet-sub">Ready to lock in a few more words?</div>
+        </div>
+        <div class="avatar-ring" onclick="goTabRoot('profile')"><span class="lvl">3</span></div>
+      </div>
+
+      <div class="streak-banner">
+        <div class="sb-left"><span class="sb-flame">🔥</span>
+          <div><div class="sb-t">4-day streak</div><div class="sb-s">Practice today to keep it alive</div></div>
+        </div>
+        <div class="sb-days" id="streakDays"></div>
+      </div>
+
+      <div class="continue-card" onclick="resumeFromHome()">
+        <div class="cc-badge palace">🏰</div>
+        <div class="cc-body">
+          <div class="cc-label">Continue where you left off</div>
+          <div class="cc-title">World History Dates</div>
+          <div class="cc-progress-track"><div class="cc-progress-fill" style="width:25%;"></div></div>
+          <div class="cc-meta">1 of 4 recalled</div>
+        </div>
+        <div class="cc-arrow">›</div>
+      </div>
+
+      <div class="section-label">Today's pick</div>
+      <div class="today-card" onclick="startLesson('l1')">
+        <div class="today-ic">🕯️</div>
+        <div class="today-body">
+          <div class="today-t">5 Tricky Spelling Words</div>
+          <div class="today-s">A fresh Number Peg set, ready in one tap</div>
+        </div>
+        <button class="btn-small" style="flex:none;padding:9px 14px;">Start</button>
+      </div>
+
+      <div class="section-label">This week</div>
+      <div class="stat-row">
+        <div class="stat-tile"><div class="stat-n">6</div><div class="stat-l">Sessions</div></div>
+        <div class="stat-tile"><div class="stat-n">38</div><div class="stat-l">Words</div></div>
+        <div class="stat-tile"><div class="stat-n">86%</div><div class="stat-l">Accuracy</div></div>
+      </div>
+    </div>
+
+    <!-- ================= PROGRESS ================= -->
+    <div class="view" id="v-progress">
+      <div class="xp-header">
         <div class="xp-top">
           <div class="avatar-ring"><span class="lvl">3</span></div>
-          <div class="xp-info">
-            <div class="name">Level 3 · Memory Apprentice</div>
-            <div class="sub">420 / 600 XP to Level 4</div>
-          </div>
+          <div class="xp-info"><div class="name">Level 3 · Memory Apprentice</div><div class="sub">420 / 600 XP to Level 4</div></div>
           <div class="streak">🔥 4</div>
         </div>
         <div class="xp-bar-track"><div class="xp-bar-fill" style="width:70%;"></div></div>
         <div class="xp-label"><span>Level 3</span><span>Level 4</span></div>
       </div>
-      <div class="hint">XP comes from finishing sessions, perfect-recall bonuses, and keeping your daily streak alive.</div>
+
+      <div class="stat-row">
+        <div class="stat-tile"><div class="stat-n">24</div><div class="stat-l">Sessions done</div></div>
+        <div class="stat-tile"><div class="stat-n">142</div><div class="stat-l">Words learned</div></div>
+        <div class="stat-tile"><div class="stat-n">9</div><div class="stat-l">Best streak</div></div>
+      </div>
+
+      <div class="section-label">This week's activity</div>
+      <div class="bar-chart" id="barChart"></div>
+
+      <div class="unlock-row">
+        <div class="section-label" style="margin:0;">Peg progress</div>
+        <div class="see-all" onclick="goTo('pegmap')">See all →</div>
+      </div>
+      <div class="progress-line"><div class="pl-label">9 / 20 pegs unlocked</div><div class="pl-track"><div class="pl-fill" style="width:45%;background:var(--berry);"></div></div></div>
+
+      <div class="unlock-row">
+        <div class="section-label" style="margin:0;">Palace progress</div>
+        <div class="see-all" onclick="goTo('palacemap')">See all →</div>
+      </div>
+      <div class="progress-line"><div class="pl-label">2 / 4 palaces unlocked</div><div class="pl-track"><div class="pl-fill" style="width:50%;background:var(--violet);"></div></div></div>
+
+      <div class="section-label">Badges</div>
+      <div class="badge-grid" id="badgeGrid"></div>
+    </div>
+
+    <!-- ================= PROFILE ================= -->
+    <div class="view" id="v-profile">
+      <div class="profile-head">
+        <div class="profile-avatar">🧑‍🎓</div>
+        <div class="profile-name">jy</div>
+        <div class="profile-sub">Level 3 · Memory Apprentice</div>
+        <button class="btn-ghost" style="width:auto;padding:8px 18px;margin-top:10px;">Edit profile</button>
+      </div>
+
+      <div class="plan-card">
+        <div class="plan-badge">Free plan</div>
+        <div class="plan-title">Unlock faster with MemoPal Pro</div>
+        <div class="plan-sub">More daily XP, exclusive palace themes, and no wait on peg unlocks</div>
+        <button class="btn-big" style="margin-top:12px;">✨ Upgrade to Pro</button>
+      </div>
+
+      <div class="section-label">Settings</div>
+      <div class="settings-list">
+        <div class="settings-row"><span class="ic">🔔</span><span class="t">Notifications</span><span class="v">On</span></div>
+        <div class="settings-row"><span class="ic">🔊</span><span class="t">Sound &amp; haptics</span><span class="v">On</span></div>
+        <div class="settings-row"><span class="ic">🌐</span><span class="t">Language</span><span class="v">English</span></div>
+        <div class="settings-row"><span class="ic">🌙</span><span class="t">Theme</span><span class="v">Light</span></div>
+        <div class="settings-row"><span class="ic">❓</span><span class="t">Help &amp; support</span><span class="v">›</span></div>
+        <div class="settings-row"><span class="ic">ℹ️</span><span class="t">About MemoPal</span><span class="v">›</span></div>
+      </div>
+      <button class="btn-ghost" style="margin-top:18px;color:var(--berry-deep);">Sign out</button>
     </div>
 
   </div>
@@ -492,11 +670,11 @@
     </div>
   </div>
 
-  <div class="tabbar">
-    <button class="tab" onclick="goTo('home')"><span class="ic">🏠</span>Home</button>
-    <button class="tab active" onclick="goTo('home')"><span class="ic">🧩</span>Practice</button>
-    <button class="tab" onclick="goTo('home')"><span class="ic">📈</span>Progress</button>
-    <button class="tab" onclick="goTo('profile')"><span class="ic">👤</span>Profile</button>
+  <div class="tabbar" id="tabbar">
+    <button class="tab" data-tabroot="homefeed" onclick="goTabRoot('homefeed')"><span class="ic">🏠</span>Home</button>
+    <button class="tab" data-tabroot="home" onclick="goTabRoot('home')"><span class="ic">🧩</span>Practice</button>
+    <button class="tab" data-tabroot="progress" onclick="goTabRoot('progress')"><span class="ic">📈</span>Progress</button>
+    <button class="tab" data-tabroot="profile" onclick="goTabRoot('profile')"><span class="ic">👤</span>Profile</button>
   </div>
 </div>
 
@@ -504,7 +682,7 @@
 /* ---------------- shared state ---------------- */
 let words = [];
 let flow = { skipChoose:false, technique:null };
-let stack = ['home'];
+let stack = ['homefeed'];
 
 const APPBAR = {
   home:   {eyebrow:'Practice', title:'Choose how to memorize', sub:'Pick a technique or jump back into a session', back:false},
@@ -516,6 +694,8 @@ const APPBAR = {
   pegmap: {eyebrow:'Your peg set', title:'Peg unlocks', sub:'Grows as you level up', back:true},
   palacemap: {eyebrow:'Your palaces', title:'Palace unlocks', sub:'New rooms as you level up', back:true},
   profile: {eyebrow:'Profile', title:'Your progress', sub:'Level, XP, and streak', back:false},
+  homefeed: {eyebrow:'MemoPal', title:'Home', sub:'Your daily memory dashboard', back:false},
+  progress: {eyebrow:'Progress', title:'Your growth', sub:'Levels, streaks, and badges', back:false},
 };
 
 /* ---------------- player / leveling state ---------------- */
@@ -534,6 +714,14 @@ const PALACE_UNLOCKS = [
   {name:'Space Station', tag:'Unlocks at Level 10', level:10, grad:'linear-gradient(135deg,#4fc0e8,#2d6fa8)'},
 ];
 
+const TAB_ROOTS = ['homefeed','home','progress','profile'];
+let currentRoot = 'homefeed';
+
+function goTabRoot(view){
+  stack = [view];
+  flow = { skipChoose:false, technique:null };
+  renderView(view);
+}
 function goTo(view, opts){
   if(opts) flow = Object.assign(flow, opts);
   stack.push(view);
@@ -542,7 +730,11 @@ function goTo(view, opts){
 function goBack(){
   if(stack.length > 1){ stack.pop(); renderView(stack[stack.length-1]); }
 }
+function updateTabActive(){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tabroot === currentRoot));
+}
 function renderView(view){
+  if(TAB_ROOTS.includes(view)) currentRoot = view;
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('v-'+view).classList.add('active');
   const meta = APPBAR[view];
@@ -551,6 +743,7 @@ function renderView(view){
   document.getElementById('appSub').textContent = meta.sub;
   document.getElementById('backBtn').classList.toggle('show', meta.back);
   document.getElementById('screen').scrollTop = 0;
+  updateTabActive();
 
   if(view === 'choose') renderChoose();
   if(view === 'peg') { renderScenes(); pegTab('scenes'); }
@@ -559,6 +752,45 @@ function renderView(view){
   if(view === 'detail') renderDetail();
   if(view === 'pegmap') renderPegMap();
   if(view === 'palacemap') renderPalaceMap();
+  if(view === 'homefeed') renderStreakDays();
+  if(view === 'progress') { renderBarChart(); renderBadges(); }
+}
+function resumeFromHome(){
+  const s = SESSIONS.find(x => x.id === 's2');
+  window.__activeSession = s;
+  goTo('detail');
+}
+function renderStreakDays(){
+  const el = document.getElementById('streakDays');
+  if(!el) return;
+  el.innerHTML = [1,1,1,1,0,0,0].map(on => `<div class="d ${on?'on':''}"></div>`).join('');
+}
+function renderBarChart(){
+  const el = document.getElementById('barChart');
+  const data = [{l:'M',v:40},{l:'T',v:70},{l:'W',v:55},{l:'T',v:20},{l:'F',v:85},{l:'S',v:60},{l:'S',v:0,today:true}];
+  el.innerHTML = data.map(d => `
+    <div class="bar-col">
+      <div class="bar ${d.today?'today':''}" style="height:${Math.max(d.v,6)}%;"></div>
+      <div class="lbl">${d.l}</div>
+    </div>`).join('');
+}
+const BADGES = [
+  {e:'🎯', t:'Perfect Recall', earned:true},
+  {e:'🔥', t:'7-Day Streak', earned:false},
+  {e:'🕯️', t:'Peg Master', earned:true},
+  {e:'🏰', t:'Palace Architect', earned:false},
+  {e:'📚', t:'50 Words', earned:true},
+  {e:'🌙', t:'Night Owl', earned:false},
+  {e:'⚡', t:'Speed Recall', earned:false},
+  {e:'🏆', t:'Level 5', earned:false},
+];
+function renderBadges(){
+  const el = document.getElementById('badgeGrid');
+  el.innerHTML = BADGES.map(b => `
+    <div class="badge-tile ${b.earned?'earned':''}">
+      <div class="e">${b.e}</div>
+      <div class="t">${b.t}</div>
+    </div>`).join('');
 }
 
 /* ---------------- XP header + unlock rows ---------------- */
@@ -886,6 +1118,7 @@ renderMiniUnlocks();
 renderLessons();
 renderFilters();
 renderSessions();
+renderView('homefeed');
 </script>
 </body>
 </html>

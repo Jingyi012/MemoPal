@@ -15,7 +15,6 @@ export const OnboardingScreen: React.FC = () => {
   const { completeOnboarding } = useUserState();
   const [index, setIndex] = useState(0);
   const slide = onboardingSlides[index];
-  const Icon = slide.icon;
 
   const finish = useCallback(async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -66,11 +65,10 @@ export const OnboardingScreen: React.FC = () => {
             className="items-center">
             <LinearGradient
               colors={slide.colors}
-              style={{
-                borderRadius: 64,
-              }}
-              className="mb-8 h-32 w-32 items-center justify-center shadow-lg">
-              <Icon size={64} color="white" strokeWidth={1.5} />
+              style={{ borderRadius: 64, boxShadow: '0px 4px 14px rgba(43, 42, 61, 0.18)' }}
+              className="mb-8 h-32 w-32 items-center justify-center"
+              >
+              <Text className="text-7xl">{slide.icon}</Text>
             </LinearGradient>
 
             <Text className="mb-4 px-4 text-center text-xl font-semibold text-[#2B2A3D]">

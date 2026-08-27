@@ -15,7 +15,12 @@ import {
   parseComposerItems,
   suggestMemoryTitle,
 } from '../src/features/memory-composer/utils/composerParams.ts';
-import { buildNumberPegItems, buildPegScene } from '../src/features/number-peg/utils/numberPegMap.ts';
+import {
+  buildAllNumberPegItems,
+  buildNumberPegItems,
+  buildPegScene,
+  getUnlockedPegCount,
+} from '../src/features/number-peg/utils/numberPegMap.ts';
 import {
   choosePalaceScene,
   getPalaceCapacityMessage,
@@ -98,7 +103,7 @@ test('recommends the right module for common memory goals', () => {
 
 test('builds a handoff route without losing the prepared list', () => {
   const route = buildTechniqueRoute('number-peg', 'Friday spelling', 'spelling', ['rhythm', 'separate']);
-  assert.match(route, /^\/number-peg\/create\?/);
+  assert.match(route, /^\/number-peg\/build\?/);
   assert.match(route, /title=Friday%20spelling/);
   assert.match(route, /items=%5B%22rhythm%22%2C%22separate%22%5D/);
 });
@@ -133,6 +138,17 @@ test('keeps the peg map ordered and makes each scene vivid', () => {
   assert.equal(pegs[9].number, 10);
   assert.match(scene, /swan/i);
   assert.match(scene, /apples/);
+});
+
+test('expands the peg library to 100 anchors with level-based unlocks', () => {
+  const pegs = buildAllNumberPegItems();
+
+  assert.equal(pegs.length, 100);
+  assert.equal(pegs[0].number, 1);
+  assert.equal(pegs[99].number, 100);
+  assert.equal(getUnlockedPegCount(0), 10);
+  assert.equal(getUnlockedPegCount(3), 30);
+  assert.equal(getUnlockedPegCount(99), 100);
 });
 
 test('chooses the smallest Palace that fits and explains overflow clearly', () => {

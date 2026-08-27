@@ -33,7 +33,7 @@ function AppLayout() {
       <BottomSheetModalProvider>
         <SafeAreaView
           edges={['left', 'right', 'bottom']}
-          className={colorScheme === 'dark' ? 'dark flex-1 bg-[#1E1A30]' : 'flex-1 bg-[#FFFDF8]'}
+          className={colorScheme === 'dark' ? 'dark flex-1 bg-[#1E1A30]' : 'flex-1 bg-white'}
           //style={palettes[colorScheme ?? 'light']}
         >
           <NetworkStatusBanner />
@@ -42,7 +42,7 @@ function AppLayout() {
             screenOptions={{
               headerShown: false,
               contentStyle: {
-                backgroundColor: '#FFFDF8',
+                backgroundColor: '#FFFFFF',
               },
             }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />

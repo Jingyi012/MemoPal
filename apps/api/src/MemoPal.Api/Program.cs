@@ -192,6 +192,15 @@ app.UseCors("MemoPalCors");
 var fileStorage = builder.Configuration.GetSection(FileStorageOptions.SectionName).Get<FileStorageOptions>() ?? new FileStorageOptions();
 var fileRoot = Path.GetFullPath(fileStorage.RootPath);
 Directory.CreateDirectory(fileRoot);
+var palaceAssetRoot = Path.Combine(app.Environment.ContentRootPath, "Assets", "PalaceScenes");
+if (Directory.Exists(palaceAssetRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(palaceAssetRoot),
+        RequestPath = "/assets/palace-scenes"
+    });
+}
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(fileRoot),

@@ -35,10 +35,7 @@ export function AchievementTabSwitcher({ activeTab, onTabChange }: AchievementTa
               style={
                 isActive
                   ? {
-                      shadowColor: '#000',
-                      shadowOpacity: 0.08,
-                      shadowRadius: 4,
-                      elevation: 2,
+                      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.08)',
                     }
                   : undefined
               }>

@@ -67,12 +67,14 @@ export function RecallAnswerCard({
           </Text>
         </View>
       ) : null}
-      <AnimatedPressable
-        disabled={!answer.trim() && !feedback}
-        onPress={onSubmit}
-        style={[styles.actionButton, !answer.trim() && !feedback && styles.disabledButton]}>
-        <Text style={styles.actionText}>{actionLabel}</Text>
-      </AnimatedPressable>
+      <View style={styles.actionButtonWrap}>
+        <AnimatedPressable
+          disabled={!answer.trim() && !feedback}
+          onPress={onSubmit}
+          style={[styles.actionButton, !answer.trim() && !feedback && styles.disabledButton]}>
+          <Text style={styles.actionText}>{actionLabel}</Text>
+        </AnimatedPressable>
+      </View>
       <Text style={styles.score}>{scoreLabel}</Text>
     </View>
   );
@@ -91,7 +93,8 @@ const styles = StyleSheet.create({
   wrongInput: { borderColor: theme.berry, backgroundColor: '#FFF1F4' },
   feedback: { marginTop: 12, flexDirection: 'row', gap: 7, alignItems: 'center' },
   feedbackText: { flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
-  actionButton: { width: '100%', minHeight: 48, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
+  actionButtonWrap: { alignSelf: 'stretch', marginTop: 16 },
+  actionButton: { width: '100%', minHeight: 48, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center' },
   actionText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 14 },
   disabledButton: { opacity: 0.4 },
   score: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center', marginTop: 15 },

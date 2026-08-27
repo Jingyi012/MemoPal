@@ -1,5 +1,4 @@
 import { Milestone } from '@/features/gamification/shared/types/levelAndbadge';
-import { CheckCircle2, Lock } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -42,11 +41,11 @@ export const MilestoneItem: React.FC<MilestoneItemProps> = ({ milestone, showCon
           </View>
           {isAchieved ? (
             <View className="rounded-full bg-[#F1FBF5] p-1.5">
-              <CheckCircle2 size={16} color="#3FB87F" />
+              <Text className="text-base">✅</Text>
             </View>
           ) : (
             <View className="rounded-full bg-[#F6F3EA] p-1.5">
-              <Lock size={14} color="#6B6A80" />
+              <Text className="text-sm">🔒</Text>
             </View>
           )}
         </View>

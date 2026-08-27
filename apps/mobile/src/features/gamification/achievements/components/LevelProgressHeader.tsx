@@ -1,10 +1,9 @@
-import { Colors } from '@/constants/colors';
+import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import { LevelXpProgressBar, getLevelProgressMetrics } from '@/components/LevelXpProgressBar';
+import { typography } from '@/theme/typography';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Trophy } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 
 interface Props {
   level: {
@@ -14,55 +13,56 @@ interface Props {
     totalXp: number;
     title: string;
   };
+  streak: number;
 }
 
-export const LevelProgressHeader: React.FC<Props> = ({ level }) => {
-  const { levelWindowXp, isMaxLevel } = getLevelProgressMetrics(
-    level.xpInCurrentLevel,
-    level.xpToNextLevel
-  );
+export const LevelProgressHeader: React.FC<Props> = ({ level, streak }) => {
+  const { levelWindowXp, isMaxLevel } = getLevelProgressMetrics(level.xpInCurrentLevel, level.xpToNextLevel);
 
   return (
-    <LinearGradient
-      colors={[theme.night, theme.nightDeep]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{ marginTop: 10, borderRadius: 22, padding: 16, overflow: 'hidden' }}>
-      <View style={{ position: 'absolute', width: 140, height: 140, borderRadius: 70, right: -30, top: -45, backgroundColor: 'rgba(255, 201, 60, 0.2)' }} />
-      <View className="flex-row items-center">
-        <LinearGradient
-          colors={[Colors.yellow300, Colors.orange600]}
-          start={[0, 0]}
-          end={[1, 1]}
-          style={{ borderRadius: 10 }}
-          className="h-14 w-14 items-center justify-center rounded-xl">
-          <Trophy size={26} color="white" />
-        </LinearGradient>
-
-        <View className="ml-3">
-          <Text className="text-base font-semibold text-white">Level {level.currentLevel}</Text>
-          <Text className="text-sm font-normal text-[#E3DFFF]">{level.title}</Text>
+    <NightEmphasisCard style={styles.card}>
+      <View style={styles.topRow}>
+        <View style={styles.avatarRing}>
+          <LinearGradient colors={['#FFC93C', '#FF6F91']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatarGradient}>
+            <Text style={styles.avatarLevel}>{level.currentLevel}</Text>
+          </LinearGradient>
         </View>
-
-        <View className="ml-auto items-end">
-          <Text className="text-sm font-semibold text-white">
-            {isMaxLevel ? 'MAX LEVEL' : `${level.xpInCurrentLevel}/${levelWindowXp} XP`}
-          </Text>
-          <Text className="text-sm text-[#E3DFFF]">
-            {isMaxLevel
-              ? `Total ${level.totalXp} XP`
-              : `${level.xpToNextLevel} XP to next level`}
+        <View style={styles.levelCopy}>
+          <Text style={styles.levelTitle}>Level {level.currentLevel} · {level.title}</Text>
+          <Text style={styles.levelSubtitle}>
+            {isMaxLevel ? `Total ${level.totalXp} XP` : `${level.xpInCurrentLevel} / ${levelWindowXp} XP to Level ${level.currentLevel + 1}`}
           </Text>
         </View>
+        <View style={styles.streakPill}><Text style={styles.streakText}>🔥 {streak}</Text></View>
       </View>
-
-      <View className="mt-3">
+      <View style={styles.progressTrack}>
         <LevelXpProgressBar
           xpInCurrentLevel={level.xpInCurrentLevel}
           xpToNextLevel={level.xpToNextLevel}
-          showPercent
+          trackClassName="h-2 overflow-hidden rounded-full bg-white/15"
+          fillClassName="h-full rounded-full bg-[#FFC93C]"
         />
       </View>
-    </LinearGradient>
+      <View style={styles.xpLabels}>
+        <Text style={styles.xpLabel}>Level {level.currentLevel}</Text>
+        <Text style={styles.xpLabel}>Level {level.currentLevel + 1}</Text>
+      </View>
+    </NightEmphasisCard>
   );
+};
+
+const styles = {
+  card: { marginBottom: 18 },
+  topRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12, zIndex: 1 as const },
+  avatarRing: { width: 52, height: 52, borderRadius: 26, borderWidth: 3, borderColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' as const },
+  avatarGradient: { flex: 1, width: '100%' as const, alignItems: 'center' as const, justifyContent: 'center' as const },
+  avatarLevel: { color: '#241F38', fontFamily: typography.displayExtraBold, fontSize: 16 },
+  levelCopy: { flex: 1 },
+  levelTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 14.5 },
+  levelSubtitle: { color: '#C9C5E0', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 1 },
+  streakPill: { backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
+  streakText: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 12 },
+  progressTrack: { marginTop: 13, zIndex: 1 as const },
+  xpLabels: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, marginTop: 6, zIndex: 1 as const },
+  xpLabel: { color: '#C9C5E0', fontFamily: typography.bodyBold, fontSize: 10.5 },
 };

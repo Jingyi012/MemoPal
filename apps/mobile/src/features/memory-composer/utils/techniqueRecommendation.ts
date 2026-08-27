@@ -13,6 +13,6 @@ export function buildTechniqueRoute(
   goalType: MemoryGoalType,
   items: string[],
 ) {
-  const path = technique === 'palace' ? '/palaces/create-memory' : '/number-peg/create';
+  const path = technique === 'palace' ? '/palaces/create-memory' : '/number-peg/build';
   return `${path}?title=${encodeURIComponent(title)}&goalType=${encodeURIComponent(goalType)}&items=${encodeURIComponent(JSON.stringify(items))}`;
 }

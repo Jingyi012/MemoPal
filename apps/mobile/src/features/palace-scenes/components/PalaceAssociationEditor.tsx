@@ -1,8 +1,9 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { SceneEditorCard } from '@/features/memory-composer/components/SceneEditorCard';
 import type { PalaceLocus } from '@/features/palace-scenes/types/palaceScene.types';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type PalaceAssociationEditorProps = {
   items: string[];
@@ -52,20 +53,18 @@ export function PalaceAssociationEditor({
           </AnimatedPressable>
         ))}
       </ScrollView>
-      <View style={styles.editorCard}>
-        <Text style={styles.location}>Locus {safeIndex + 1} · {activeLocus?.name ?? 'next spot'}</Text>
-        <Text style={styles.prompt}>What happens here?</Text>
-        <TextInput
-          accessibilityLabel={`Association for ${activeItem}`}
-          multiline
-          onChangeText={onChangeAssociation}
-          placeholder="Make it colourful, surprising, and impossible to ignore…"
-          placeholderTextColor="#AAA7B5"
-          style={styles.input}
-          textAlignVertical="top"
-          value={associations[safeIndex] ?? ''}
-        />
-      </View>
+      <SceneEditorCard
+        index={safeIndex}
+        total={items.length}
+        anchorLabel={`LOCUS ${safeIndex + 1} · ${activeLocus?.name ?? 'NEXT SPOT'}`}
+        itemLabel={activeItem}
+        visual={<Text style={styles.locationVisual}>📍 {activeLocus?.name ?? 'Next spot'}</Text>}
+        value={associations[safeIndex] ?? ''}
+        onChangeText={onChangeAssociation}
+        placeholder="Make it colourful, surprising, and impossible to ignore…"
+        accessibilityLabel={`Association for ${activeItem}`}
+        accent="palace"
+      />
     </View>
   );
 }
@@ -135,36 +134,5 @@ const styles = StyleSheet.create({
     backgroundColor: theme.sun,
     borderColor: theme.sunDeep,
   },
-  editorCard: {
-    backgroundColor: theme.paper,
-    borderColor: theme.line,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    padding: 13,
-  },
-  location: {
-    color: theme.violetDeep,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 10,
-    letterSpacing: 0.5,
-  },
-  prompt: {
-    color: theme.ink,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 13,
-    marginTop: 4,
-  },
-  input: {
-    backgroundColor: '#FFFDF8',
-    borderColor: theme.line,
-    borderRadius: 13,
-    borderWidth: 1.5,
-    color: theme.ink,
-    fontFamily: typography.bodySemibold,
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 9,
-    minHeight: 82,
-    padding: 12,
-  },
+  locationVisual: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
 });

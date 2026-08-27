@@ -65,6 +65,14 @@ export function resolveMediaUrl(rawPath?: string | null): string {
   if (!path) return '';
   if (/^(blob:|data:|file:|content:)/i.test(path)) return path;
 
+  // Bundled API assets (such as starter Palace scenes) are served from the
+  // API host rather than the user-upload media directory.
+  if (path.startsWith('/assets/')) {
+    const apiBase = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+    if (!apiBase) return path;
+    return mapLocalhostForExpoGo(`${trimTrailingSlash(apiBase)}${path}`);
+  }
+
   const baseUrl = resolveMediaBaseUrl();
   const { origin, pathPrefix } = getBaseInfo(baseUrl);
 
@@ -99,4 +107,3 @@ export function resolveMediaUrl(rawPath?: string | null): string {
   if (origin) return `${origin}${normalizedMediaPath}`;
   return `${baseUrl}${normalizedMediaPath}`;
 }
-

@@ -41,8 +41,7 @@ export const ForgettingCurveCard: React.FC<Props> = ({ className }) => {
       shadow="sm"
       padding="none"
       style={{
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
+        boxShadow: '0px 2px 10px rgba(43, 42, 61, 0.05)',
       }}>
       {/* Header with Icon Badge */}
       <View className="mb-5 flex-row items-center">

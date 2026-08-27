@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
+import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import LoadingView from '@/components/LoadingView';
 import { useMemorySetMutations, useMemorySets } from '@/features/memory-sets';
 import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
@@ -7,8 +8,7 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Archive, Brain, ChevronRight, MapPinned, MoreHorizontal, Plus, RefreshCcw, Shapes } from 'lucide-react-native';
+import { Archive, ChevronRight, MoreHorizontal, Plus, RefreshCcw } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -80,14 +80,9 @@ export default function LibraryScreen() {
         refreshControl={
           <RefreshControl refreshing={memorySets.isRefetching} onRefresh={memorySets.refetch} />
         }>
-        <LinearGradient
-          colors={[theme.night, theme.nightDeep]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.summaryCard}>
-          <View style={styles.summaryGlow} />
+        <NightEmphasisCard style={styles.summaryCard}>
           <View style={styles.summaryIcon}>
-            <Brain size={25} color={theme.ink} />
+            <Text style={styles.summaryEmoji}>🧠</Text>
           </View>
           <View style={styles.summaryCopy}>
             <Text style={styles.summaryEyebrow}>YOUR MEMORY COLLECTION</Text>
@@ -99,11 +94,11 @@ export default function LibraryScreen() {
           </View>
           <AnimatedPressable
             accessibilityLabel="Create a memory"
-            onPress={() => router.push('/(tabs)/practice' as Href)}
+            onPress={() => router.push('/create-memory' as Href)}
             style={styles.addButton}>
             <Plus size={21} color={theme.ink} />
           </AnimatedPressable>
-        </LinearGradient>
+        </NightEmphasisCard>
 
         <View style={styles.filterRow}>
           {filters.map((item) => {
@@ -166,7 +161,7 @@ export default function LibraryScreen() {
             </Text>
             {filter !== 'archived' && (
               <AnimatedPressable
-                onPress={() => router.push('/(tabs)/practice' as Href)}
+                onPress={() => router.push('/create-memory' as Href)}
                 style={styles.emptyButton}>
                 <Plus size={17} color="white" />
                 <Text style={styles.emptyButtonText}>Create memory</Text>
@@ -198,11 +193,7 @@ function MemoryCard({
   return (
     <AnimatedPressable onPress={onOpen} style={styles.memoryCard}>
       <View style={[styles.techniqueIcon, isPalace ? styles.palaceIcon : styles.pegIcon]}>
-        {isPalace ? (
-          <MapPinned size={23} color="#247B67" />
-        ) : (
-          <Shapes size={23} color={theme.berryDeep} />
-        )}
+        <Text style={styles.techniqueEmoji}>{isPalace ? '🏰' : '🕯️'}</Text>
       </View>
       <View style={styles.memoryCopy}>
         <View style={styles.techniqueRow}>
@@ -254,14 +245,10 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 40 },
   summaryCard: {
-    position: 'relative',
-    borderRadius: 24,
-    padding: 17,
+    minHeight: 112,
     flexDirection: 'row',
     alignItems: 'center',
-    overflow: 'hidden',
   },
-  summaryGlow: { position: 'absolute', width: 150, height: 150, borderRadius: 75, right: -30, top: -50, backgroundColor: 'rgba(255, 201, 60, 0.2)' },
   summaryIcon: {
     width: 48,
     height: 48,
@@ -270,6 +257,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  summaryEmoji: { fontSize: 24 },
   summaryCopy: { flex: 1, marginHorizontal: 13 },
   summaryEyebrow: { color: '#C9C5E0', fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.9 },
   summaryTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 20, marginTop: 3 },
@@ -316,6 +304,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  techniqueEmoji: { fontSize: 22 },
   palaceIcon: { backgroundColor: '#EEE9FF' },
   pegIcon: { backgroundColor: '#FFF0F4' },
   memoryCopy: { flex: 1, marginHorizontal: 12 },

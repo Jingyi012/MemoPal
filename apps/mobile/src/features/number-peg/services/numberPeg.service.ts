@@ -1,4 +1,4 @@
-import { buildNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
+import { buildAllNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
 
 export type NumberPegOverview = {
@@ -12,7 +12,7 @@ export function getNumberPegOverview(): NumberPegOverview {
   return {
     title: 'Number Peg',
     description:
-      'Learn the 1–10 peg system, then attach spelling words or shopping items to memorable cues.',
-    items: buildNumberPegItems(),
+      'Learn ten starter pegs, then unlock the full 1–100 set as your memory practice grows.',
+    items: buildAllNumberPegItems(),
   };
 }

@@ -1,8 +1,6 @@
 import { getBaseCardClassName } from '@/components/BaseCard';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Lightbulb } from 'lucide-react-native';
 
 const DAILY_TIPS = [
   {
@@ -67,10 +65,7 @@ export const DailyTip: React.FC<DailyTipProps> = ({ dayOfMonth }) => {
           <Text className="text-3xl">{tip.emoji}</Text>
         </View>
         <View className="flex-1">
-          <View className="mb-1 flex-row items-center gap-2">
-            <Lightbulb size={16} color={theme.violetDeep} />
-            <Text className="font-bold text-[#2B2A3D]">{tip.title}</Text>
-          </View>
+          <Text className="mb-1 font-bold text-[#2B2A3D]">{tip.title}</Text>
           <Text className="text-sm leading-5 text-[#6B6A80]">{tip.tip}</Text>
         </View>
       </View>

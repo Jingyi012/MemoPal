@@ -59,6 +59,6 @@ const styles = StyleSheet.create({
   heroEyebrow: { color: '#E3DFFF', fontFamily: typography.bodyExtraBold, fontSize: 11, letterSpacing: 1.1 },
   heroTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 25, marginTop: 6 },
   heroBody: { color: '#E8E5F4', fontFamily: typography.body, fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 320 },
-  primaryButton: { marginTop: 20, minHeight: 52, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, paddingHorizontal: 14, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
+  primaryButton: { marginTop: 20, minHeight: 52, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, paddingHorizontal: 14, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
   primaryButtonText: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center' },
 });

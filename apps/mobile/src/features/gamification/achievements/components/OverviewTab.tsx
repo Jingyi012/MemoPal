@@ -1,6 +1,4 @@
 import { BaseCard } from '@/components/BaseCard';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
-import { Award, Flag, Sparkles, Target } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -30,22 +28,20 @@ function SummaryCard({
   title,
   value,
   subtitle,
-  Icon,
-  iconColor,
+  icon,
   iconBgClass,
 }: {
   title: string;
   value: string;
   subtitle: string;
-  Icon: React.ComponentType<{ size?: number; color?: string }>;
-  iconColor: string;
+  icon: string;
   iconBgClass: string;
 }) {
   return (
     <BaseCard className="flex-1 flex-col border-2 border-[#EEE9DC] bg-[#FFFDF8] p-3" padding="none">
       <View className="flex-col items-center justify-between">
         <View className={`mb-3 rounded-full p-2 ${iconBgClass}`}>
-          <Icon size={14} color={iconColor} />
+          <Text className="text-sm">{icon}</Text>
         </View>
         <Text className="text-xs font-semibold uppercase tracking-wider text-[#6B6A80]">
           {title}
@@ -83,24 +79,21 @@ export function OverviewTab({
             title="Badges"
             value={`${totalBadgeEarned}`}
             subtitle="Earned so far"
-            Icon={Award}
-            iconColor={theme.sunDeep}
+            icon="🏅"
             iconBgClass="bg-[#FFF7E0]"
           />
           <SummaryCard
             title="Milestones"
             value={`${totalMilestonesAchieved}`}
             subtitle="Achieved"
-            Icon={Flag}
-            iconColor={theme.violetDeep}
+            icon="🚩"
             iconBgClass="bg-[#EEE9FF]"
           />
           <SummaryCard
             title="Missions"
             value={`${completedMissions}/${totalActiveMissions}`}
             subtitle={`${missionCompletionPercent}% completed`}
-            Icon={Target}
-            iconColor={theme.grass}
+            icon="🎯"
             iconBgClass="bg-[#F1FBF5]"
           />
         </View>
@@ -110,7 +103,7 @@ export function OverviewTab({
         <View className="flex-row items-center justify-between">
           <Text className="text-sm font-semibold text-[#2B2A3D]">Recent Badges</Text>
           <View className="rounded-full bg-[#FFF7E0] p-2">
-            <Sparkles size={14} color={theme.sunDeep} />
+            <Text className="text-sm">✨</Text>
           </View>
         </View>
         {recentBadges.length === 0 ? (

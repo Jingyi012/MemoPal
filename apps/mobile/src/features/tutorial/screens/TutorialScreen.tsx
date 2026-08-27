@@ -3,7 +3,7 @@ import { StepNavigationFooter } from '@/components/StepNavigationFooter';
 import { GradientColors } from '@/core/types/colors';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Brain, ChevronLeft, Eye, Play, Repeat, Trophy } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -17,7 +17,7 @@ import Animated, {
 interface TutorialStep {
   id: number;
   title: string;
-  icon: any;
+  icon: string;
   colors: GradientColors;
   content: string;
   example: string;
@@ -27,7 +27,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 1,
     title: 'What is a Memory Palace?',
-    icon: Brain,
+    icon: '🧠',
     colors: [theme.violetDeep, theme.berryDeep],
     content:
       "A Memory Palace is a mental journey through a familiar place. Each location becomes an anchor for memories. This ancient technique, used by memory champions, leverages your brain's natural ability to remember spaces.",
@@ -36,7 +36,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 2,
     title: 'Visualize & Associate',
-    icon: Eye,
+    icon: '👁️',
     colors: [theme.sky, theme.violetDeep],
     content:
       'The key is creating vivid, unusual mental images. The more bizarre and emotional the image, the better it sticks. Link each word to a specific location in your palace.',
@@ -45,7 +45,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 3,
     title: 'Mental Journey',
-    icon: Play,
+    icon: '▶️',
     colors: [theme.berry, theme.berryDeep],
     content:
       'Walk through your palace in the same order every time. Visit each location and recall the vivid image you created. This mental journey retrieves all your memories in sequence.',
@@ -54,7 +54,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 4,
     title: 'Spaced Repetition',
-    icon: Repeat,
+    icon: '🔁',
     colors: [theme.grass, '#247B67'],
     content:
       'Review at specific intervals (24h, 3d, 7d, 30d) to combat the forgetting curve. Each review strengthens the memory and moves it from short-term to long-term storage.',
@@ -63,7 +63,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 5,
     title: 'Practice & Master',
-    icon: Trophy,
+    icon: '🏆',
     colors: [theme.sun, theme.sunDeep],
     content:
       'Start with small palaces (10 locations) and gradually increase. Build muscle memory by using the same palace for different word sets. Consistency beats intensity!',
@@ -79,7 +79,6 @@ interface TutorialScreenProps {
 export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const step = tutorialSteps[currentStep];
-  const Icon = step.icon;
   const isLastStep = currentStep === tutorialSteps.length - 1;
 
   const translateX = useSharedValue(0);
@@ -134,7 +133,8 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
         colors={step.colors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        className="rounded-b-[40px] p-4 pb-8 shadow-lg">
+        className="rounded-b-[40px] p-4 pb-8"
+        style={{ boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.16)' }}>
         <View className="mb-6 mt-2 flex-row items-center">
           <TouchableOpacity
             onPress={onBack}
@@ -160,8 +160,8 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
         </View>
 
         <View className="mb-4 items-center">
-          <View className="h-24 w-24 items-center justify-center rounded-full bg-white shadow-xl">
-            <Icon size={48} color={theme.ink} />
+          <View className="h-24 w-24 items-center justify-center rounded-full bg-white" style={{ boxShadow: '0px 4px 14px rgba(43, 42, 61, 0.18)' }}>
+            <Text className="text-5xl">{step.icon}</Text>
           </View>
         </View>
 
@@ -184,7 +184,7 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
             radius="3xl"
             padding="lg"
             shadow="none">
-            <View className="mr-4 h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+            <View className="mr-4 h-10 w-10 items-center justify-center rounded-full bg-white" style={{ boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.08)' }}>
               <Text className="text-lg">i</Text>
             </View>
             <View className="flex-1">

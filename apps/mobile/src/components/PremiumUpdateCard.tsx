@@ -2,7 +2,6 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { cn } from '@/utils/cn';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Crown } from 'lucide-react-native';
 import { Text, View } from 'react-native';
 import AnimatedPressable from './AnimatedPressable';
 
@@ -20,10 +19,11 @@ export const PremiumUpdateCard: React.FC<Props> = ({ className }) => {
         end={{ x: 1, y: 0 }}
         style={{
           borderRadius: 10,
+          boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.16)',
         }}
-        className="p-4 shadow-lg">
+        className="p-4">
         <View className="flex-row items-center gap-3">
-          <Crown size={24} color="white" />
+          <Text className="text-2xl">👑</Text>
 
           <View className="flex-1">
             <Text className="font-semibold text-[#2B2A3D]">Upgrade to Premium</Text>

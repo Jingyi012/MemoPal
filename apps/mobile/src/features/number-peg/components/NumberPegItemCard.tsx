@@ -5,17 +5,19 @@ import { Text, View } from 'react-native';
 
 type Props = {
   item: NumberPegItem;
+  locked?: boolean;
+  compact?: boolean;
 };
 
-export function NumberPegItemCard({ item }: Props) {
+export function NumberPegItemCard({ item, locked = false, compact = false }: Props) {
   return (
     <View
       style={{
-        width: 92,
-        height: 116,
-        marginRight: 10,
-        padding: 10,
-        borderRadius: 18,
+        width: compact ? 78 : 92,
+        height: compact ? 94 : 116,
+        marginRight: compact ? 0 : 10,
+        padding: compact ? 6 : 10,
+        borderRadius: compact ? 14 : 18,
         backgroundColor: theme.paper,
         borderWidth: 2,
         borderColor: theme.line,
@@ -25,23 +27,23 @@ export function NumberPegItemCard({ item }: Props) {
       <View
         style={{
           position: 'absolute',
-          left: 7,
-          top: 7,
-          minWidth: 22,
-          height: 22,
-          paddingHorizontal: 5,
-          borderRadius: 11,
+          left: compact ? 5 : 7,
+          top: compact ? 5 : 7,
+          minWidth: compact ? 19 : 22,
+          height: compact ? 19 : 22,
+          paddingHorizontal: compact ? 4 : 5,
+          borderRadius: compact ? 10 : 11,
           backgroundColor: theme.berry,
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-        <Text style={{ fontFamily: typography.bodyExtraBold, fontSize: 11, color: 'white' }}>{item.number}</Text>
+        <Text style={{ fontFamily: typography.bodyExtraBold, fontSize: compact ? 9 : 11, color: 'white' }}>{item.number}</Text>
       </View>
-      <Text style={{ fontSize: 34 }}>{item.image}</Text>
+      <Text style={{ fontSize: compact ? 26 : 34, opacity: locked ? 0.35 : 1 }}>{locked ? '🔒' : item.image}</Text>
       <Text
         numberOfLines={1}
-        style={{ marginTop: 7, fontFamily: typography.bodyExtraBold, fontSize: 12, color: theme.ink }}>
-        {item.keyword}
+        style={{ marginTop: compact ? 4 : 7, fontFamily: typography.bodyExtraBold, fontSize: compact ? 10 : 12, color: locked ? theme.inkSoft : theme.ink }}>
+        {locked ? 'Locked' : item.keyword}
       </Text>
     </View>
   );

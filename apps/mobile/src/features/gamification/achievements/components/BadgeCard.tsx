@@ -5,7 +5,6 @@ import { GradientColors } from '@/core/types/colors';
 import { Badge } from '@/features/gamification/shared/types/levelAndbadge';
 import { iconMap } from '@/utils/IconMap';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Lock, Star } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -36,10 +35,7 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ badge, onPress }) => {
       style={
         !isLocked && rarityConfig.glow
           ? {
-              shadowColor: rarityConfig.gradient[1],
-              shadowOpacity: 0.3,
-              shadowRadius: 10,
-              elevation: 3,
+              boxShadow: `0px 3px 10px ${rarityConfig.gradient[1]}4D`,
             }
           : undefined
       }>
@@ -68,11 +64,7 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ badge, onPress }) => {
 
           <View
             className={`absolute -right-2 -top-2 rounded-full p-1 ${isLocked ? 'bg-[#D8D4C9]' : 'bg-[#3FB87F]'}`}>
-            {isLocked ? (
-              <Lock size={12} color="white" />
-            ) : (
-              <Star size={12} color="white" fill="white" />
-            )}
+            <Text className="text-xs">{isLocked ? '🔒' : '⭐'}</Text>
           </View>
         </View>
 

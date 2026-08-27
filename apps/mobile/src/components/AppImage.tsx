@@ -7,11 +7,13 @@ const DEFAULT_BLURHASH = 'L6PZfSaD00%L00kq{w^O}v9f00ay';
 
 interface AppImageProps extends ImageProps {
   imageUrl?: string;
+  imageSource?: ImageProps['source'];
   fallbackSource?: string | number;
 }
 
 export const AppImage = ({
   imageUrl,
+  imageSource,
   source,
   style,
   placeholder,
@@ -53,9 +55,9 @@ export const AppImage = ({
     return value;
   };
 
-  const resolvedSource: ImageProps['source'] = imageUrl
+  const resolvedSource: ImageProps['source'] = imageSource ?? (imageUrl
     ? { uri: mapUri(imageUrl) }
-    : normalizeSource(source);
+    : normalizeSource(source));
 
   const handleError: ImageProps['onError'] = (event) => {
     if (__DEV__) {

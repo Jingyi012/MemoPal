@@ -3,7 +3,7 @@ import { AppImage } from '@/components/AppImage';
 import type { PalaceLocus, PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
-import { ChevronLeft, ChevronRight, MapPin, RotateCcw, Sparkles, Target } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 type PalaceFocusCardProps = {
@@ -39,6 +39,7 @@ export function PalaceFocusCard({
       <View style={styles.focusWindow}>
         <AppImage
           imageUrl={scene.imageUrl}
+          imageSource={scene.imageSource}
           style={[
             styles.focusImage,
             {
@@ -51,7 +52,7 @@ export function PalaceFocusCard({
           transition={250}
         />
         <View style={styles.focusRing}>
-          <MapPin size={18} color={theme.ink} />
+          <Text style={styles.focusPinEmoji}>📍</Text>
         </View>
         <View style={styles.focusBadge}>
           <Text style={styles.focusBadgeText}>LOCUS {index + 1}</Text>
@@ -59,7 +60,7 @@ export function PalaceFocusCard({
       </View>
       <View style={styles.copy}>
         <View style={styles.eyebrowRow}>
-          <Sparkles size={14} color={theme.violetDeep} />
+          <Text style={styles.focusSparkleEmoji}>✨</Text>
           <Text style={styles.eyebrow}>{locus.name.toUpperCase()}</Text>
         </View>
         {showAnswer ? <Text style={styles.answer}>{answer}</Text> : <Text style={styles.hiddenAnswer}>What memory belongs here?</Text>}
@@ -86,7 +87,7 @@ export function PalaceFocusCard({
       ) : null}
       {onStartRecall ? (
         <AnimatedPressable accessibilityLabel="Start Palace recall" onPress={onStartRecall} style={styles.recallButton}>
-          <Target size={16} color={theme.violetDeep} />
+          <Text style={styles.recallEmoji}>🧠</Text>
           <Text style={styles.recallText}>Start recall challenge</Text>
         </AnimatedPressable>
       ) : null}
@@ -118,19 +119,17 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     borderRadius: 26,
     borderWidth: 4,
-    elevation: 5,
     height: 52,
     justifyContent: 'center',
     left: '50%',
     marginLeft: -26,
     marginTop: -26,
     position: 'absolute',
-    shadowColor: theme.ink,
-    shadowOpacity: 0.22,
-    shadowRadius: 7,
+    boxShadow: '0px 2px 7px rgba(43, 42, 61, 0.22)',
     top: '50%',
     width: 52,
   },
+  focusPinEmoji: { fontSize: 18 },
   focusBadge: {
     backgroundColor: 'rgba(36,31,56,.84)',
     borderRadius: 999,
@@ -144,6 +143,7 @@ const styles = StyleSheet.create({
   copy: { padding: 14 },
   eyebrowRow: { alignItems: 'center', flexDirection: 'row', gap: 6 },
   eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.7 },
+  focusSparkleEmoji: { fontSize: 14 },
   answer: { color: theme.ink, fontFamily: typography.display, fontSize: 22, marginTop: 6 },
   hiddenAnswer: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 6 },
   association: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 7 },
@@ -153,4 +153,5 @@ const styles = StyleSheet.create({
   position: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   recallButton: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#9B8CFF', borderRadius: 13, borderWidth: 2, flexDirection: 'row', gap: 7, justifyContent: 'center', marginHorizontal: 14, marginBottom: 14, minHeight: 45 },
   recallText: { color: '#6654D9', fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  recallEmoji: { fontSize: 15 },
 });

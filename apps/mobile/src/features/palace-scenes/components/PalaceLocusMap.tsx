@@ -1,9 +1,8 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import type { PalaceLocus, PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type PalaceLocusMapProps = {
   scene: PalaceScene;
@@ -20,16 +19,17 @@ export function PalaceLocusMap({
   placedCount,
   activeIndex = -1,
   onSelect,
-  height = 250,
+  height,
 }: PalaceLocusMapProps) {
   return (
-    <View style={[styles.canvas, { height }]}>
-      <AppImage imageUrl={scene.imageUrl} style={StyleSheet.absoluteFillObject} />
+    <View style={[styles.canvas, height ? { height } : undefined]}>
+      <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={StyleSheet.absoluteFillObject} />
+      <View pointerEvents="none" style={styles.floor} />
       {loci.map((locus, index) => {
         const isPlaced = index < placedCount;
         const isActive = index === activeIndex;
         return (
-          <AnimatedPressable
+          <Pressable
             key={locus.id}
             accessibilityLabel={`Locus ${index + 1}: ${locus.name}`}
             disabled={!onSelect}
@@ -41,7 +41,7 @@ export function PalaceLocusMap({
               { left: `${locus.xPercent}%`, top: `${locus.yPercent}%` },
             ]}>
             <Text style={styles.markerText}>{index + 1}</Text>
-          </AnimatedPressable>
+          </Pressable>
         );
       })}
     </View>
@@ -50,11 +50,26 @@ export function PalaceLocusMap({
 
 const styles = StyleSheet.create({
   canvas: {
-    borderColor: '#DCD4FF',
-    borderRadius: 22,
+    // Keep the canvas in the same 4:3 aspect ratio as authored Palace
+    // scenes. This prevents `cover` from cropping the image away from the
+    // percentage-based locus coordinates.
+    aspectRatio: 4 / 3,
+    borderColor: '#E3D7B3',
+    borderRadius: 20,
     borderWidth: 2,
-    backgroundColor: '#EAE5D8',
+    backgroundColor: '#F4EFE0',
     overflow: 'hidden',
+  },
+  floor: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    bottom: 14,
+    left: 14,
+    borderColor: '#CDBD8A',
+    borderRadius: 14,
+    borderWidth: 2,
+    borderStyle: 'dashed',
   },
   marker: {
     alignItems: 'center',
@@ -62,15 +77,12 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     borderRadius: 16,
     borderWidth: 3,
-    elevation: 4,
     height: 32,
     justifyContent: 'center',
     marginLeft: -16,
     marginTop: -16,
     position: 'absolute',
-    shadowColor: '#241F38',
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.18)',
     width: 32,
   },
   markerPlaced: {

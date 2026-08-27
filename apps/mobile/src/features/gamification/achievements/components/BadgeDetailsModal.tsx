@@ -6,7 +6,7 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { Badge } from '@/features/gamification/shared/types/levelAndbadge';
 import { iconMap } from '@/utils/IconMap';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Lock, Star, X, Brain } from 'lucide-react-native'; // Added default icon
+import { X, Brain } from 'lucide-react-native'; // Dynamic badge icons remain configurable.
 import React from 'react';
 import { Modal, ScrollView, Text, View, Pressable } from 'react-native';
 
@@ -89,11 +89,7 @@ export const BadgeDetailsModal: React.FC<BadgeDetailsModalProps> = ({
               className={`mt-3 flex-row items-center rounded-full px-3 py-1 ${
                 isLocked ? 'bg-[#F6F3EA]' : 'bg-[#F1FBF5]'
               }`}>
-              {isLocked ? (
-                <Lock size={12} color={theme.inkSoft} />
-              ) : (
-                <Star size={12} color={theme.grass} fill={theme.grass} />
-              )}
+              <Text className="text-xs">{isLocked ? '🔒' : '⭐'}</Text>
               <Text
                 className={`ml-1 text-xs font-semibold ${isLocked ? 'text-[#6B6A80]' : 'text-[#3FB87F]'}`}>
                 {isLocked ? 'Locked' : 'Earned'}

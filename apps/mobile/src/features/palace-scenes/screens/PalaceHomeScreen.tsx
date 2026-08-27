@@ -6,20 +6,18 @@ import { MemorySetRow } from '@/components/MemorySetRow';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
-import { useFeatureLimits } from '@/features/subscription/hooks/useFeatureLimits';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { Href, useRouter } from 'expo-router';
-import { Crown, ImagePlus, MapPinned, Pencil } from 'lucide-react-native';
+import { ChevronRight, Pencil } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function PalaceHomeScreen() {
   const router = useRouter();
   const memorySets = useMemorySets('palace');
   const scenes = usePalaceScenes();
-  const { limits } = useFeatureLimits();
   const isRefreshing = memorySets.isRefetching || scenes.isRefetching;
 
   const refresh = () => Promise.allSettled([memorySets.refetch(), scenes.refetch()]);
@@ -39,7 +37,7 @@ export default function PalaceHomeScreen() {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} />}>
         <TechniqueHeroCard
           tone="palace"
-          icon={<MapPinned size={27} color={theme.ink} />}
+          icon={<Text style={styles.heroEmoji}>🏰</Text>}
           eyebrow="SEE IT · PLACE IT · RECALL IT"
           title="Turn one place into a memory journey"
           body="Choose a scene, place each idea on a numbered locus, and follow the same visual path whenever you want to remember it."
@@ -48,14 +46,16 @@ export default function PalaceHomeScreen() {
         />
 
         <AnimatedPressable
-          accessibilityLabel={limits.customPalaces > 0 ? 'Create a custom Palace' : 'Unlock custom Palaces'}
-          onPress={() => router.push((limits.customPalaces > 0 ? '/palaces/create-custom' : '/premium') as Href)}
+          accessibilityLabel="Create a custom Palace"
+          // Let everyone open the editor to understand the workflow. The
+          // editor still enforces the server-backed Premium limit when saving.
+          onPress={() => router.push('/palaces/create-custom' as Href)}
           style={styles.customCard}>
           <View style={styles.customIcon}>
-            {limits.customPalaces > 0 ? <ImagePlus size={21} color={theme.violetDeep} /> : <Crown size={20} color={theme.sunDeep} />}
+            <Text style={styles.customEmoji}>🖼️</Text>
           </View>
           <View style={styles.customCopy}>
-            <Text style={styles.customEyebrow}>{limits.customPalaces > 0 ? 'MAKE IT PERSONAL' : 'PREMIUM'}</Text>
+            <Text style={styles.customEyebrow}>MAKE IT PERSONAL</Text>
             <Text style={styles.customTitle}>Use your own place</Text>
             <Text style={styles.customBody}>Upload one familiar photo and tap the spots you want to remember.</Text>
           </View>
@@ -63,11 +63,20 @@ export default function PalaceHomeScreen() {
         </AnimatedPressable>
 
         <View style={styles.sectionHeadingRow}>
-          <View>
+          <View style={styles.sectionHeadingCopy}>
             <Text style={styles.sectionEyebrow}>CHOOSE A FAMILIAR PATH</Text>
             <Text style={styles.sectionTitle}>Palace scenes</Text>
           </View>
-          {scenes.data?.length ? <Text style={styles.countPill}>{scenes.data.length}</Text> : null}
+          {scenes.data?.length ? (
+            <AnimatedPressable
+              accessibilityRole="button"
+              accessibilityLabel="See all Palace scenes"
+              onPress={() => router.push('/palaces/map' as Href)}
+              style={styles.seeAllButton}>
+              <Text style={styles.seeAllText}>See all</Text>
+              <ChevronRight size={15} color={theme.violetDeep} />
+            </AnimatedPressable>
+          ) : null}
         </View>
 
         {scenes.isLoading ? (
@@ -85,14 +94,14 @@ export default function PalaceHomeScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.sceneRail}>
-            {scenes.data.map((scene) => (
+            {scenes.data.slice(0, 4).map((scene) => (
               <View key={scene.id} style={styles.sceneCardWrap}>
                 <AnimatedPressable
                   onPress={() =>
                     router.push({ pathname: '/palaces/create-memory', params: { sceneId: scene.id } })
                   }
                   style={styles.sceneCard}>
-                  <AppImage imageUrl={scene.imageUrl} style={styles.sceneImage} />
+                  <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneImage} />
                   <View style={styles.sceneShade} />
                   <View style={styles.sceneCopy}>
                     <Text numberOfLines={1} style={styles.sceneName}>
@@ -156,6 +165,9 @@ export default function PalaceHomeScreen() {
             emoji="🗺️"
             title="Your first journey starts here"
             body="Try a school topic, a speech, or the steps of a new skill."
+            actionLabel="Build a Palace"
+            actionIcon={<ChevronRight size={16} color={theme.ink} />}
+            onAction={() => router.push('/palaces/create-memory' as Href)}
           />
         )}
       </ScrollView>
@@ -175,40 +187,35 @@ const styles = StyleSheet.create({
   },
   sectionEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
   sectionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 3 },
-  countPill: {
-    overflow: 'hidden',
-    color: theme.violetDeep,
-    backgroundColor: '#EEE9FF',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 11,
-  },
+  sectionHeadingCopy: { flex: 1, paddingRight: 10 },
+  seeAllButton: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: '#EEE9FF', paddingLeft: 11, paddingRight: 7 },
+  seeAllText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   sceneRail: { gap: 12, paddingRight: 8 },
-  sceneCardWrap: { width: 240, height: 148 },
+  sceneCardWrap: { width: 112, height: 76 },
   sceneCard: {
-    width: 240,
-    height: 148,
-    borderRadius: 20,
+    width: 112,
+    height: 72,
+    borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: '#DCD4FF',
+    backgroundColor: '#E3D7B3',
     borderWidth: 2,
-    borderColor: '#DCD4FF',
+    borderColor: '#EEE9DC',
   },
   sceneImage: { ...StyleSheet.absoluteFillObject },
   sceneShade: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 38, 43, 0.25)',
+    backgroundColor: 'rgba(43,42,61,0.25)',
   },
-  sceneCopy: { position: 'absolute', left: 14, right: 14, bottom: 13 },
-  sceneEditButton: { position: 'absolute', top: 10, right: 10, width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.9)', alignItems: 'center', justifyContent: 'center' },
-  sceneName: { color: 'white', fontFamily: typography.display, fontSize: 16 },
-  sceneMeta: { color: '#E8F7F2', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3 },
-  sceneLoading: { height: 148, overflow: 'hidden', borderRadius: 20 },
+  sceneCopy: { position: 'absolute', left: 7, right: 7, bottom: 6 },
+  sceneEditButton: { position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 8, backgroundColor: 'rgba(255,255,255,.9)', alignItems: 'center', justifyContent: 'center' },
+  sceneName: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 10, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
+  sceneMeta: { color: 'rgba(255,255,255,0.85)', fontFamily: typography.bodyBold, fontSize: 8.5, marginTop: 1 },
+  heroEmoji: { fontSize: 27 },
+  sceneLoading: { height: 72, overflow: 'hidden', borderRadius: 14 },
   memoryLoading: { height: 150, overflow: 'hidden', borderRadius: 20 },
   customCard: { marginTop: 14, borderRadius: 18, borderWidth: 1.5, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 13, flexDirection: 'row', alignItems: 'center', gap: 10 },
   customIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },
+  customEmoji: { fontSize: 20 },
   customCopy: { flex: 1 },
   customEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8 },
   customTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, marginTop: 2 },

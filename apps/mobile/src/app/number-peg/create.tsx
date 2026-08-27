@@ -1,3 +1,5 @@
-import NumberPegComposerScreen from '@/features/number-peg/screens/NumberPegComposerScreen';
+import MemoryComposerScreen from '@/features/memory-composer/screens/MemoryComposerScreen';
 
-export default NumberPegComposerScreen;
+export default function NumberPegCreateRoute() {
+  return <MemoryComposerScreen initialTechnique="number-peg" />;
+}

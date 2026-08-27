@@ -2,7 +2,7 @@ import { AppImage } from '@/components/AppImage';
 import { User } from '@/features/profile/types/users';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Crown, Pencil, User2 } from 'lucide-react-native';
+import { Pencil } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -33,7 +33,7 @@ const ProfileCard: React.FC<Props> = ({ user, onEdit }) => {
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-            <User2 size={25} color={theme.ink} />
+            <Text className="text-2xl">🙂</Text>
           </LinearGradient>
         )}
       </View>
@@ -44,7 +44,7 @@ const ProfileCard: React.FC<Props> = ({ user, onEdit }) => {
             <Text className="text-base font-semibold text-[#2B2A3D]">{user?.displayName}</Text>
             {user?.isPremium ? (
               <View className="ml-2 flex-row items-center rounded-full bg-[#FFF7E0] px-2 py-0.5">
-                <Crown size={12} color={theme.sunDeep} />
+                <Text className="text-xs">👑</Text>
                 <Text className="ml-1 text-[10px] font-bold uppercase text-[#F2A900]">Premium</Text>
               </View>
             ) : null}

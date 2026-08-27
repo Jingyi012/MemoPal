@@ -43,6 +43,15 @@ export function useMemorySet(memorySetId: string) {
     queryKey: MEMORY_SET_KEYS.detail(memorySetId),
     enabled: Boolean(memorySetId),
     queryFn: async () => {
+      // Preview memory sets are intentionally client-only and do not exist in
+      // the API database. Resolve those IDs before making a request so a
+      // normal preview tap does not produce an expected backend 404 (and does
+      // not trip a debugger configured to break on thrown exceptions).
+      if (isLocalPreviewEnabled) {
+        const previewMemorySet = getLocalPreviewMemorySet(memorySetId);
+        if (previewMemorySet) return previewMemorySet;
+      }
+
       try {
         return await memorySetApi.getById(memorySetId);
       } catch (error) {

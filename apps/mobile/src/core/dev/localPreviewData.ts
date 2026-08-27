@@ -13,8 +13,8 @@ function buildLoci(names: string[]): PalaceLocus[] {
     position: index + 1,
     name,
     description: `A clear visual stop at the ${name.toLowerCase()}.`,
-    xPercent: [14, 31, 49, 68, 86, 78, 58, 38, 20, 50][index] ?? 50,
-    yPercent: [78, 62, 43, 28, 52, 78, 61, 34, 18, 14][index] ?? 50,
+    xPercent: [11, 8, 27, 34, 31, 41, 53, 63, 74, 80, 84, 94][index] ?? 50,
+    yPercent: [24, 50, 57, 33, 71, 84, 30, 60, 54, 25, 49, 66][index] ?? 50,
     radiusPercent: 7,
     createdAt: PREVIEW_NOW,
     createdBy: PREVIEW_USER_ID,
@@ -23,47 +23,30 @@ function buildLoci(names: string[]): PalaceLocus[] {
   }));
 }
 
-const previewSceneSvg = encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560">
-    <defs>
-      <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0" stop-color="#DCD4FF"/><stop offset="1" stop-color="#9B8CFF"/>
-      </linearGradient>
-      <linearGradient id="floor" x1="0" x2="1" y1="0" y2="0">
-        <stop offset="0" stop-color="#F2A900"/><stop offset="1" stop-color="#FFC93C"/>
-      </linearGradient>
-    </defs>
-    <rect width="900" height="560" fill="url(#sky)"/>
-    <rect y="340" width="900" height="220" fill="url(#floor)" opacity=".35"/>
-    <path d="M70 360h760M110 120v250M790 120v250M110 120h680" fill="none" stroke="#FFFDF8" stroke-width="12" opacity=".8"/>
-    <rect x="170" y="250" width="150" height="90" rx="18" fill="#FF6F91" opacity=".82"/>
-    <circle cx="550" cy="210" r="70" fill="#3FB87F" opacity=".82"/>
-    <rect x="650" y="290" width="110" height="60" rx="14" fill="#4FC0E8" opacity=".85"/>
-    <text x="450" y="78" fill="#2B2A3D" font-family="Arial" font-size="32" font-weight="700" text-anchor="middle">The Memory Room</text>
-  </svg>
-`);
-
 export const LOCAL_PREVIEW_SCENES: PalaceScene[] = [
   {
     id: 'preview-scene-memory-room',
     name: 'The Memory Room',
-    description: 'A bright, familiar room with ten easy-to-spot loci.',
-    imageUrl: `data:image/svg+xml,${previewSceneSvg}`,
+    description: 'A warm study room with twelve clear furniture and décor landmarks.',
+    imageUrl: '/assets/palace-scenes/11-study-room.png',
+    imageSource: require('../../../assets/palaces/11-study-room.png'),
     status: 'published',
     isTemplate: true,
     isPremium: false,
     version: 1,
     loci: buildLoci([
-      'Entry bench',
-      'Wall mirror',
-      'Coffee table',
-      'Window plant',
-      'Reading chair',
-      'Bookshelf',
+      'Framed landscape',
       'Desk lamp',
+      'Desk surface',
+      'Bookcase',
+      'Desk chair',
       'Rug corner',
-      'Door handle',
-      'Ceiling light',
+      'Window',
+      'Reading chair',
+      'Side table',
+      'Wall clock',
+      'Tall plant',
+      'Side cabinet',
     ]),
     createdAt: PREVIEW_NOW,
     createdBy: PREVIEW_USER_ID,

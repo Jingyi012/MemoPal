@@ -10,7 +10,7 @@ import type { Notification } from '@/features/notifications/types/notification';
 import type { ReferralSummary } from '@/features/referral/types/referral';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import { Check, Copy, Crown, MessageCircle, Share2, Sparkles, Users } from 'lucide-react-native';
+import { Check, Copy, MessageCircle, Share2 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Linking,
@@ -275,17 +275,17 @@ const ReferralScreen: React.FC = () => {
 
         <View className="mb-8 flex-row gap-3">
           <StatBox
-            icon={<Users size={20} color={theme.violetDeep} />}
+            icon={<Text className="text-xl">👥</Text>}
             value={summary.successfulReferrals}
             label="Friends Joined"
           />
           <StatBox
-            icon={<Sparkles size={20} color={theme.sunDeep} />}
+            icon={<Text className="text-xl">✨</Text>}
             value={summary.totalXpEarned}
             label="Total XP Earned"
           />
           <StatBox
-            icon={<Crown size={20} color={theme.grass} />}
+            icon={<Text className="text-xl">👑</Text>}
             value={summary.totalPremiumDaysEarned}
             label="Premium Days"
           />
@@ -293,7 +293,7 @@ const ReferralScreen: React.FC = () => {
 
         <BaseCard className="mb-8 overflow-hidden rounded-3xl p-2">
           <View className="flex-row p-4">
-            <Crown size={20} color={theme.sunDeep} />
+            <Text className="text-xl">👑</Text>
             <Text className="ml-1 text-lg font-medium text-[#2B2A3D]">Milestones</Text>
           </View>
           {milestones.map((milestone, index) => {

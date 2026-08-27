@@ -97,11 +97,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     paddingVertical: 12,
     paddingHorizontal: 12,
-    shadowColor: Colors.slate900,
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    boxShadow: '0px 4px 12px rgba(15, 23, 42, 0.12)',
   },
   accent: {
     width: 4,

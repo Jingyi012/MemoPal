@@ -13,7 +13,7 @@ import { typography } from '@/theme/typography';
 import { firstParam } from '@/features/memory-composer/utils/composerParams';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { Check, Crown, ImagePlus, MapPinned, Plus, Trash2 } from 'lucide-react-native';
+import { Check, Plus, Trash2 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -221,7 +221,7 @@ export default function CustomPalaceEditorScreen() {
 
         {!canSave ? (
           <View style={styles.upgradeCard}>
-            <View style={styles.upgradeIcon}><Crown size={21} color={theme.sunDeep} /></View>
+            <View style={styles.upgradeIcon}><Text style={styles.upgradeEmoji}>👑</Text></View>
             <Text style={styles.upgradeTitle}>Custom Palaces are a Premium feature</Text>
             <Text style={styles.upgradeBody}>Use the starter scenes for free, or unlock your own photo-based routes.</Text>
             <AnimatedPressable onPress={() => router.push('/premium' as Href)} style={styles.upgradeButton}>
@@ -237,28 +237,29 @@ export default function CustomPalaceEditorScreen() {
 
         <Text style={styles.label}>Your scene image</Text>
         <AnimatedPressable onPress={chooseImage} style={styles.imageButton}>
-          {imageUri ? <AppImage source={{ uri: imageUri }} style={styles.imagePreview} /> : <><ImagePlus size={28} color={theme.violetDeep} /><Text style={styles.imageButtonTitle}>Choose a photo</Text><Text style={styles.imageButtonBody}>A room, route, desk, or any place you know well</Text></>}
+          {imageUri ? <AppImage source={{ uri: imageUri }} style={styles.imagePreview} /> : <><Text style={styles.imageButtonEmoji}>🖼️</Text><Text style={styles.imageButtonTitle}>Choose a photo</Text><Text style={styles.imageButtonBody}>A room, route, desk, or any place you know well</Text></>}
         </AnimatedPressable>
 
         <View style={styles.locusHeading}>
-          <View style={styles.flex}><Text style={styles.label}>Tap your loci</Text><Text style={styles.helper}>Select a marker to move it, or add a new one before tapping the image.</Text></View>
+          <View style={styles.flex}><Text style={styles.label}>Set up your loci</Text><Text style={styles.helper}>Select a marker, then tap the image to move it. Add a new marker for another memorable spot.</Text></View>
           <Text style={styles.counter}>{loci.length}/{maxLoci}</Text>
         </View>
         <View
           onLayout={(event) => setCanvasSize({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height })}
           style={styles.canvas}>
-          {imageUri ? <Pressable onPress={placeLocus} style={StyleSheet.absoluteFillObject}><AppImage source={{ uri: imageUri }} style={StyleSheet.absoluteFillObject} /></Pressable> : <View style={styles.canvasEmpty}><MapPinned size={24} color={theme.violetDeep} /><Text style={styles.canvasEmptyText}>Your loci will appear on the photo</Text></View>}
+          {imageUri ? <Pressable onPress={placeLocus} style={StyleSheet.absoluteFillObject}><AppImage source={{ uri: imageUri }} style={StyleSheet.absoluteFillObject} /></Pressable> : <View style={styles.canvasEmpty}><Text style={styles.canvasEmptyEmoji}>🗺️</Text><Text style={styles.canvasEmptyText}>Your loci will appear on the photo</Text></View>}
           {loci.map((locus, index) => (
-            <AnimatedPressable
+            <Pressable
               key={locus.id ?? index}
               accessibilityLabel={`Locus ${index + 1}: ${locus.name}`}
               onPress={(event) => { event.stopPropagation(); setSelectedIndex(index); }}
               style={[styles.marker, { left: `${locus.xPercent}%`, top: `${locus.yPercent}%` }, selectedIndex === index && styles.markerActive]}>
               <Text style={styles.markerText}>{index + 1}</Text>
-            </AnimatedPressable>
+            </Pressable>
           ))}
         </View>
         <AnimatedPressable onPress={addLocus} style={styles.addLocusButton}><Plus size={17} color={theme.violetDeep} /><Text style={styles.addLocusText}>{selectedIndex === loci.length ? 'Tap the image to place it' : 'Add a locus'}</Text></AnimatedPressable>
+        <Text style={styles.canvasMode}>{selectedIndex === loci.length ? 'Adding a new locus · tap the image' : selectedIndex !== null ? `Moving locus ${selectedIndex + 1} · tap the image` : 'Select a marker to edit its position'}</Text>
 
         <View style={styles.locusList}>
           {loci.map((locus, index) => (
@@ -289,6 +290,7 @@ const styles = StyleSheet.create({
   privacyBody: { color: '#3E7769', fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, marginTop: 3 },
   upgradeCard: { marginTop: 14, borderRadius: 19, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 15, alignItems: 'center' },
   upgradeIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: theme.sun, alignItems: 'center', justifyContent: 'center' },
+  upgradeEmoji: { fontSize: 20 },
   upgradeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center', marginTop: 8 },
   upgradeBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 3 },
   upgradeButton: { minHeight: 38, borderRadius: 11, backgroundColor: theme.ink, paddingHorizontal: 15, alignItems: 'center', justifyContent: 'center', marginTop: 11 },
@@ -297,9 +299,10 @@ const styles = StyleSheet.create({
   optional: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
   input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 14, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
   descriptionInput: { minHeight: 76, paddingTop: 12, textAlignVertical: 'top' },
-  imageButton: { height: 185, borderRadius: 20, borderWidth: 2, borderColor: '#DCD4FF', borderStyle: 'dashed', backgroundColor: '#F7F5FF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  imageButton: { width: '100%', height: 185, borderRadius: 20, borderWidth: 2, borderColor: '#DCD4FF', borderStyle: 'dashed', backgroundColor: '#F7F5FF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   imagePreview: { ...StyleSheet.absoluteFillObject },
   imageButtonTitle: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14, marginTop: 8 },
+  imageButtonEmoji: { fontSize: 28 },
   imageButtonBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3 },
   locusHeading: { flexDirection: 'row', alignItems: 'flex-end', marginTop: 5 },
   helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16 },
@@ -307,10 +310,12 @@ const styles = StyleSheet.create({
   canvas: { height: 240, marginTop: 5, borderRadius: 21, borderWidth: 2, borderColor: '#DCD4FF', overflow: 'hidden', backgroundColor: '#EEE9FF' },
   canvasEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
   canvasEmptyText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  marker: { position: 'absolute', width: 34, height: 34, marginLeft: -17, marginTop: -17, borderRadius: 17, borderWidth: 3, borderColor: 'white', backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center', elevation: 4 },
+  canvasEmptyEmoji: { fontSize: 24 },
+  canvasMode: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: 11, textAlign: 'center', marginTop: 7 },
+  marker: { position: 'absolute', width: 34, height: 34, marginLeft: -17, marginTop: -17, borderRadius: 17, borderWidth: 3, borderColor: 'white', backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center', boxShadow: '0px 2px 4px rgba(36, 31, 56, 0.25)' },
   markerActive: { backgroundColor: theme.sunDeep, borderWidth: 4, transform: [{ scale: 1.12 }] },
   markerText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  addLocusButton: { minHeight: 44, borderRadius: 13, borderWidth: 1.5, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 9 },
+  addLocusButton: { width: '100%', minHeight: 44, borderRadius: 13, borderWidth: 1.5, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 9 },
   addLocusText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   locusList: { marginTop: 8, gap: 7 },
   locusRow: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 14, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 9 },
@@ -321,7 +326,7 @@ const styles = StyleSheet.create({
   deleteButton: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   messageCard: { marginTop: 13, borderRadius: 14, borderWidth: 1.5, borderColor: '#FFD2DC', backgroundColor: '#FFF0F4', padding: 12 },
   messageText: { color: '#B53A5F', fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
-  saveButton: { minHeight: 54, marginTop: 18, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
+  saveButton: { width: '100%', minHeight: 54, marginTop: 18, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
   saveText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   disabled: { opacity: 0.55 },
 });

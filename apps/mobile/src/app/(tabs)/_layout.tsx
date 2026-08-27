@@ -1,7 +1,8 @@
 import { HapticTab } from '@/components/ui/haptic-tab';
+import { WebTabBar } from '@/components/WebTabBar';
 import { useAuth } from '@/contexts/AuthProvider';
 import { Redirect, Tabs } from 'expo-router';
-import { BookOpen, Home, Layers3, TrendingUp } from 'lucide-react-native';
+import { Platform, Text } from 'react-native';
 
 export default function TabsLayout() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -18,6 +19,7 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      tabBar={Platform.OS === 'web' ? (props) => <WebTabBar {...props} /> : undefined}
       screenOptions={{
         tabBarActiveTintColor: '#E8527A',
         tabBarInactiveTintColor: '#6B6A80',
@@ -34,37 +36,43 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Today',
-          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+          title: 'Home',
+          tabBarIcon: () => <Text style={styles.tabIcon}>🏠</Text>,
         }}
       />
       <Tabs.Screen
         name="practice"
         options={{
           title: 'Practice',
-          tabBarIcon: ({ color }) => <Layers3 size={24} color={color} />,
+          tabBarIcon: () => <Text style={styles.tabIcon}>🧩</Text>,
         }}
       />
       <Tabs.Screen
         name="library"
         options={{
           title: 'Library',
-          tabBarIcon: ({ color }) => <BookOpen size={24} color={color} />,
+          tabBarIcon: () => <Text style={styles.tabIcon}>📚</Text>,
         }}
       />
       <Tabs.Screen
         name="achievements"
         options={{
           title: 'Progress',
-          tabBarIcon: ({ color }) => <TrendingUp size={24} color={color} />,
+          tabBarIcon: () => <Text style={styles.tabIcon}>📈</Text>,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          href: null,
+          title: 'Profile',
+          tabBarIcon: () => <Text style={[styles.tabIcon, styles.profileTabIcon]}>👤</Text>,
         }}
       />
     </Tabs>
   );
 }
+
+const styles = {
+  tabIcon: { fontSize: 18, lineHeight: 22 },
+  profileTabIcon: { fontSize: 19 },
+};

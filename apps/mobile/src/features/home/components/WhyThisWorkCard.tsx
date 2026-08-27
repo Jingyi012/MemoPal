@@ -1,7 +1,5 @@
 import { getBaseCardClassName } from '@/components/BaseCard';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Brain } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -30,7 +28,7 @@ export const WhyThisWorkCard: React.FC = () => {
       })}>
       {/* Header */}
       <View className="mb-3 flex-row items-center gap-2">
-        <Brain size={20} color={theme.violetDeep} />
+        <Text className="text-xl">🧠</Text>
         <Text className="text-lg font-semibold text-[#2B2A3D]">Why This Works</Text>
       </View>
 

@@ -8,9 +8,11 @@ import type { PegNumber } from '@/features/number-peg/types/numberPeg.types';
 import { buildNumberPegItems, buildPegScene } from '@/features/number-peg/utils/numberPegMap';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, Check, Plus, Sparkles, Trash2, WandSparkles } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, Check, Plus, Trash2 } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { firstParam, parseComposerGoal, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
+import { ComposerProgress } from '@/features/memory-composer/components/ComposerProgress';
+import { SceneEditorCard } from '@/features/memory-composer/components/SceneEditorCard';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -145,7 +147,10 @@ export default function NumberPegComposerScreen() {
 
     setValidationMessage(null);
     createMemorySet.mutate(request, {
-      onSuccess: (created) => router.replace(`/number-peg/${created.id}` as Href),
+      onSuccess: (created) => {
+        const returnTo = fromSharedComposer ? 'practice' : 'number-peg';
+        router.replace(`/number-peg/${created.id}?returnTo=${returnTo}` as Href);
+      },
     });
   };
 
@@ -161,22 +166,33 @@ export default function NumberPegComposerScreen() {
         eyebrow="Number Peg"
         title={step === 'items' ? (fromSharedComposer ? 'Check your items' : 'Add what you need to remember') : 'Make tiny memory movies'}
         description={step === 'items' ? (fromSharedComposer ? `${items.length} items · Up to 10` : 'Step 1 of 2 · Up to 10 items') : 'One tiny movie per peg · Weird wins'}
-        backAction={() => (step === 'scenes' ? setStep('items') : router.back())}
+        backAction={() => {
+          if (step === 'scenes') {
+            // When launched from the shared chooser, return to technique
+            // selection so the user can compare the other method. Direct
+            // Number Peg entry still steps back to its item editor.
+            if (fromSharedComposer) {
+              router.back();
+            } else {
+              setStep('items');
+            }
+            return;
+          }
+          router.back();
+        }}
       />
 
       <ScrollView
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: step === 'items' ? '50%' : '100%' }]} />
-        </View>
+        <ComposerProgress currentStep={step === 'items' ? 1 : 2} firstLabel="Add items" secondLabel="Make scenes" />
 
         {step === 'items' ? (
           <>
             <View style={styles.tipCard}>
               <View style={styles.tipIcon}>
-                <Sparkles size={20} color={theme.berryDeep} />
+                <Text style={styles.tipEmoji}>📝</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.tipTitle}>Start small</Text>
@@ -271,7 +287,7 @@ export default function NumberPegComposerScreen() {
           <>
             <View style={styles.tipCard}>
               <View style={styles.tipIcon}>
-                <WandSparkles size={20} color={theme.berryDeep} />
+                <Text style={styles.tipEmoji}>🎬</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.tipTitle}>See it move, hear it, feel it</Text>
@@ -284,32 +300,27 @@ export default function NumberPegComposerScreen() {
             {scenes.map((scene, index) => {
               const peg = pegs[index];
               return (
-                <View key={`${scene.answer}-${index}`} style={styles.sceneCard}>
-                  <View style={styles.sceneBadge}>
-                    <Text style={styles.sceneBadgeText}>{index + 1}</Text>
-                  </View>
-                  <View style={styles.sceneVisual}>
-                    <Text style={styles.pegEmoji}>{peg.image}</Text>
-                    <Text style={styles.plusSign}>+</Text>
-                    <Text style={styles.answerVisual} numberOfLines={2}>
-                      {scene.answer}
-                    </Text>
-                  </View>
-                  <Text style={styles.pegLabel}>PEG {index + 1} · {peg.keyword.toUpperCase()}</Text>
-                  <TextInput
-                    value={scene.sceneText}
-                    onChangeText={(value) => updateScene(index, value)}
-                    multiline
-                    maxLength={1000}
-                    style={styles.sceneInput}
-                  />
-                  <AnimatedPressable
-                    onPress={() => makeSceneCrazier(index)}
-                    style={styles.crazierButton}>
-                    <WandSparkles size={16} color={theme.berryDeep} />
-                    <Text style={styles.crazierText}>Make it crazier</Text>
-                  </AnimatedPressable>
-                </View>
+                <SceneEditorCard
+                  key={`${scene.answer}-${index}`}
+                  index={index}
+                  total={scenes.length}
+                  anchorLabel={`PEG ${index + 1} · ${peg.keyword.toUpperCase()}`}
+                  itemLabel={scene.answer}
+                  visual={
+                    <>
+                      <Text style={styles.pegEmoji}>{peg.image}</Text>
+                      <Text style={styles.plusSign}>+</Text>
+                      <Text style={styles.answerVisual} numberOfLines={2}>{scene.answer}</Text>
+                    </>
+                  }
+                  value={scene.sceneText}
+                  onChangeText={(value) => updateScene(index, value)}
+                  placeholder="Make it colourful, surprising, and impossible to ignore…"
+                  maxLength={1000}
+                  accessibilityLabel={`Scene for ${scene.answer}`}
+                  actionLabel="Make it crazier"
+                  onAction={() => makeSceneCrazier(index)}
+                />
               );
             })}
           </>
@@ -370,6 +381,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   tipIcon: { width: 38, height: 38, borderRadius: 13, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  tipEmoji: { fontSize: 21 },
   tipTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   tipBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 3 },
   draftCard: { borderRadius: 16, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 13, marginBottom: 2 },
@@ -396,23 +408,15 @@ const styles = StyleSheet.create({
   itemNumberText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   itemText: { flex: 1, color: theme.ink, fontFamily: typography.bodyBold, fontSize: 14, marginHorizontal: 11 },
   deleteButton: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  sceneCard: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 22, padding: 14, marginBottom: 18, marginTop: 5 },
-  sceneBadge: { position: 'absolute', zIndex: 2, top: -12, left: 14, minWidth: 32, height: 32, paddingHorizontal: 6, borderRadius: 16, backgroundColor: theme.berry, borderWidth: 3, borderColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
-  sceneBadgeText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  sceneVisual: { minHeight: 104, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#EADFC4', backgroundColor: '#FFFCF4', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 12 },
   pegEmoji: { fontSize: 39 },
   plusSign: { color: theme.berryDeep, fontFamily: typography.display, fontSize: 22 },
   answerVisual: { maxWidth: 135, color: theme.ink, fontFamily: typography.display, fontSize: 17, textAlign: 'center' },
-  pegLabel: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8, marginTop: 11 },
-  sceneInput: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19, minHeight: 72, textAlignVertical: 'top', marginTop: 5, borderRadius: 13, borderWidth: 1.5, borderColor: theme.line, backgroundColor: 'white', padding: 11 },
-  crazierButton: { marginTop: 9, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', minHeight: 41, borderRadius: 12, borderWidth: 1.5, borderColor: '#FFD9E2', backgroundColor: '#FFF0F4' },
-  crazierText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   errorCard: { borderRadius: 14, backgroundColor: '#FFF0F4', borderWidth: 1.5, borderColor: '#FFD2DC', padding: 12, marginTop: 10 },
   errorText: { color: '#B53A5F', fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   actions: { marginTop: 18, flexDirection: 'row', gap: 9 },
   secondaryButton: { minHeight: 52, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 15, gap: 5 },
   secondaryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  continueButton: { flex: 1, minHeight: 52, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 14, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
+  continueButton: { flex: 1, minHeight: 52, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 14, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
   continueButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
   disabledButton: { opacity: 0.55 },
 });

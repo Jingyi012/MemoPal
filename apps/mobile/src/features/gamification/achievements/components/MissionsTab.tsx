@@ -5,7 +5,6 @@ import { getMissionClaimSourceId, useClaimMissionReward } from '@/features/gamif
 import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
 import { MissionProgress } from '@/features/gamification/shared/types/missions';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
-import { CheckCircle2, Clock3, Gift, Sparkles, Target } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -20,7 +19,7 @@ function resolveMissionStatus(mission: MissionProgress, isClaimed: boolean): Mis
 
 function statusMeta(status: MissionStatus): {
   label: string;
-  icon: React.ComponentType<{ size?: number; color?: string }>;
+  icon: string;
   textColor: string;
   bgClass: string;
 } {
@@ -28,21 +27,21 @@ function statusMeta(status: MissionStatus): {
     case 'claimable':
       return {
         label: 'Ready to claim',
-        icon: Gift,
+        icon: '🎁',
         textColor: theme.violetDeep,
         bgClass: 'bg-[#EEE9FF]',
       };
     case 'claimed':
       return {
         label: 'Claimed',
-        icon: CheckCircle2,
+        icon: '✅',
         textColor: theme.grass,
         bgClass: 'bg-[#F1FBF5]',
       };
     default:
       return {
         label: 'In progress',
-        icon: Clock3,
+        icon: '⏰',
         textColor: theme.inkSoft,
         bgClass: 'bg-[#F6F3EA]',
       };
@@ -81,7 +80,6 @@ function MissionCard({
 }) {
   const canClaim = status === 'claimable' && mission.rewardXp > 0;
   const meta = statusMeta(status);
-  const StatusIcon = meta.icon;
 
   return (
     <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
@@ -89,7 +87,7 @@ function MissionCard({
         <View className="flex-1 pr-3">
           <View className="mb-1 flex-row items-center gap-2">
               <View className="rounded-full bg-[#EEE9FF] p-1.5">
-              <Target size={12} color={theme.violetDeep} />
+              <Text className="text-xs">🎯</Text>
             </View>
             <Text className="text-base font-semibold text-[#2B2A3D]">{mission.title}</Text>
           </View>
@@ -104,7 +102,7 @@ function MissionCard({
 
       <View className="mt-3 flex-row items-center justify-between">
         <View className={`flex-row items-center gap-1 rounded-full px-2.5 py-1 ${meta.bgClass}`}>
-          <StatusIcon size={12} color={meta.textColor} />
+          <Text className="text-xs">{meta.icon}</Text>
           <Text className="text-xs font-semibold" style={{ color: meta.textColor }}>
             {meta.label}
           </Text>
@@ -295,7 +293,7 @@ export function MissionsTab({
 
       {isXpEventsLoading ? (
         <View className="mt-3 flex-row items-center gap-2">
-          <Sparkles size={14} color={theme.sunDeep} />
+          <Text className="text-sm">✨</Text>
           <Text className="text-sm text-[#6B6A80]">Syncing mission rewards...</Text>
         </View>
       ) : null}

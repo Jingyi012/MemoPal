@@ -4,7 +4,7 @@ import type { MemoryGoalType } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, ClipboardList, Hash, MapPinned, Plus, Sparkles, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, Plus, Trash2 } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { parseBulkItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
@@ -19,7 +19,12 @@ const goals: { key: MemoryGoalType; label: string; emoji: string }[] = [
   { key: 'custom', label: 'Something else', emoji: '✨' },
 ];
 
-export default function MemoryComposerScreen() {
+type MemoryComposerProps = {
+  /** Keep the shared content step while routing directly to one technique. */
+  initialTechnique?: TechniqueChoice;
+};
+
+export default function MemoryComposerScreen({ initialTechnique }: MemoryComposerProps = {}) {
   const router = useRouter();
   const [step, setStep] = useState<ComposerStep>('content');
   const [title, setTitle] = useState('');
@@ -61,13 +66,20 @@ export default function MemoryComposerScreen() {
       setMessage('Add at least one thing to remember.');
       return;
     }
-    if (!title.trim()) setTitle(suggestMemoryTitle(goalType, items));
+    const resolvedTitle = title.trim() || suggestMemoryTitle(goalType, items);
+    if (!title.trim()) setTitle(resolvedTitle);
     setMessage(null);
+
+    if (initialTechnique) {
+      openTechnique(initialTechnique, resolvedTitle);
+      return;
+    }
+
     setStep('technique');
   };
 
-  const openTechnique = (technique: TechniqueChoice) => {
-    router.push(buildTechniqueRoute(technique, title.trim(), goalType, items) as Href);
+  const openTechnique = (technique: TechniqueChoice, routeTitle = title.trim()) => {
+    router.push(buildTechniqueRoute(technique, routeTitle, goalType, items) as Href);
   };
 
   return (
@@ -92,7 +104,7 @@ export default function MemoryComposerScreen() {
         {step === 'content' ? (
           <>
             <View style={styles.inputCard}>
-              <View style={styles.cardIcon}><Sparkles size={19} color={theme.berryDeep} /></View>
+              <View style={styles.cardIcon}><Text style={styles.cardIconEmoji}>🧠</Text></View>
               <Text style={styles.cardTitle}>Start with something useful</Text>
               <Text style={styles.cardBody}>Spelling words, grocery lists, dates, names, or a few facts all make great first memories.</Text>
 
@@ -127,7 +139,7 @@ export default function MemoryComposerScreen() {
                 accessibilityLabel={bulkMode ? 'Hide paste many items' : 'Paste many items'}
                 onPress={() => { setBulkMode((current) => !current); setMessage(null); }}
                 style={styles.bulkToggle}>
-                <ClipboardList size={15} color={theme.berryDeep} />
+                <Text style={styles.bulkToggleEmoji}>📋</Text>
                 <Text style={styles.bulkToggleText}>{bulkMode ? 'Add one at a time' : 'Paste many items'}</Text>
               </AnimatedPressable>
               {bulkMode ? (
@@ -226,9 +238,9 @@ function TechniqueCard({ technique, recommended, onPress }: { technique: Techniq
       {recommended && <View style={styles.ribbon}><Text style={styles.ribbonText}>RECOMMENDED</Text></View>}
       <View style={styles.techniqueHead}>
         <View style={[styles.techniqueIcon, isPeg ? styles.pegIcon : styles.palaceIcon]}>
-          {isPeg ? <Hash size={25} color={theme.berryDeep} /> : <MapPinned size={25} color={theme.violetDeep} />}
+          <Text style={styles.techniqueIconEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={styles.techniqueMeta}>
           <Text style={styles.techniqueName}>{isPeg ? 'Number Peg' : 'Memory Palace'}</Text>
           <Text style={styles.techniqueTag}>{isPeg ? 'Fast · one movie per item' : 'Spatial · walk-through'}</Text>
         </View>
@@ -240,7 +252,7 @@ function TechniqueCard({ technique, recommended, onPress }: { technique: Techniq
           : 'Place each item at a spot in a room, then walk through it to recall everything in order. Choose a room with enough loci for your list.'}
       </Text>
       <View style={styles.bestForRow}>
-        {(isPeg ? ['Short lists', 'Spelling words', 'Up to 10'] : ['Longer lists', 'Sequences', 'Room capacity']).map((label) => (
+        {(isPeg ? ['Short lists', 'Spelling words', 'Up to 10'] : ['Longer lists', 'Sequences', 'No fixed limit']).map((label) => (
           <Text key={label} style={styles.bestFor}>{label}</Text>
         ))}
       </View>
@@ -260,13 +272,15 @@ const styles = StyleSheet.create({
   progressDotActive: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.2 }] },
   progressLine: { width: 70, height: 2, backgroundColor: theme.line, marginHorizontal: 7 },
   progressLineActive: { backgroundColor: theme.sunDeep },
-  inputCard: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 20, padding: 16, shadowColor: theme.ink, shadowOpacity: 0.08, shadowRadius: 12, elevation: 2 },
+  inputCard: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 20, padding: 16, boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.08)' },
   cardIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF0F4' },
+  cardIconEmoji: { fontSize: 21 },
   cardTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 10 },
   cardBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 },
   bulkToggle: { alignSelf: 'flex-start', minHeight: 34, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -2, marginBottom: 8, paddingHorizontal: 2 },
   bulkToggleText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  bulkToggleEmoji: { fontSize: 15 },
   bulkCard: { borderRadius: 15, borderWidth: 1.5, borderColor: '#FFD2DC', backgroundColor: '#FFF7F9', padding: 10, marginBottom: 10 },
   bulkTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginBottom: 7 },
   bulkInput: { minHeight: 105, paddingTop: 12, textAlignVertical: 'top', backgroundColor: 'white' },
@@ -290,7 +304,7 @@ const styles = StyleSheet.create({
   itemChipText: { flex: 1, color: theme.ink, fontFamily: typography.bodyBold, fontSize: 13 },
   itemChipRemove: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
   hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: 12 },
-  primaryButton: { minHeight: 53, marginTop: 16, borderRadius: 15, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
+  primaryButton: { minHeight: 53, marginTop: 16, borderRadius: 15, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
   primaryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
   messageCard: { marginTop: 13, borderRadius: 13, borderWidth: 1.5, borderColor: '#FFD2DC', backgroundColor: '#FFF0F4', padding: 11 },
   messageText: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
@@ -300,17 +314,19 @@ const styles = StyleSheet.create({
   recommendationBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17, marginTop: 3 },
   techniqueCard: { position: 'relative', borderWidth: 2, borderColor: theme.line, borderRadius: 20, backgroundColor: theme.paper, padding: 15, marginBottom: 13 },
   techniqueCardRecommended: { borderColor: theme.sunDeep, borderWidth: 2.5 },
-  ribbon: { position: 'absolute', right: 13, top: -11, borderRadius: 999, backgroundColor: theme.sun, paddingHorizontal: 10, paddingVertical: 4, shadowColor: theme.ink, shadowOpacity: 0.15, shadowRadius: 4, elevation: 2 },
+  ribbon: { position: 'absolute', right: 13, top: -11, borderRadius: 999, backgroundColor: theme.sun, paddingHorizontal: 10, paddingVertical: 4, boxShadow: '0px 2px 4px rgba(43, 42, 61, 0.15)' },
   ribbonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.4 },
-  techniqueHead: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+  techniqueHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 },
   techniqueIcon: { width: 47, height: 47, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   pegIcon: { backgroundColor: '#FFF0F4' },
   palaceIcon: { backgroundColor: '#EEE9FF' },
-  techniqueName: { color: theme.ink, fontFamily: typography.display, fontSize: 16 },
-  techniqueTag: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 2 },
-  techniqueDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12.5, lineHeight: 18, marginTop: 10 },
-  bestForRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
-  bestFor: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, backgroundColor: 'white', borderWidth: 1.5, borderColor: theme.line, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
+  techniqueIconEmoji: { fontSize: 25 },
+  techniqueMeta: { flex: 1, minWidth: 0, paddingTop: 2 },
+  techniqueName: { color: theme.ink, fontFamily: typography.display, fontSize: 16, lineHeight: 21 },
+  techniqueTag: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, marginTop: 2 },
+  techniqueDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12.5, lineHeight: 18, marginTop: 12 },
+  bestForRow: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 11 },
+  bestFor: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodyBold, fontSize: 10.5, backgroundColor: 'white', borderWidth: 1.5, borderColor: theme.line, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
   changeButton: { minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 2 },
   changeButtonText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
 });

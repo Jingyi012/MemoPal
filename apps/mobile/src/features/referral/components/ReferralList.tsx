@@ -1,7 +1,5 @@
 import { BaseCard } from '@/components/BaseCard';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { ReferralUser } from '@/features/referral/types/referral';
-import { Users } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -29,7 +27,7 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
   return (
     <BaseCard className="mb-8 rounded-3xl p-2">
       <View className="flex-row p-3">
-        <Users size={20} color={theme.violetDeep} />
+        <Text className="text-xl">👥</Text>
         <Text className="ml-1 text-lg font-medium text-[#2B2A3D]">Referral Friends</Text>
       </View>
       <Text className="px-3 pb-2 text-xs text-[#6B6A80]">

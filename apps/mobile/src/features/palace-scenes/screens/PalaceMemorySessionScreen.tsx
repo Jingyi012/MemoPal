@@ -27,9 +27,8 @@ import {
 import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Footprints, List, MapPinned, Sparkles, Target } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type SessionMode = 'browse' | 'walk' | 'list' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
@@ -38,10 +37,12 @@ export default function PalaceMemorySessionScreen({
   memorySetId,
   restart = false,
   startInRecall = false,
+  returnTo,
 }: {
   memorySetId: string;
   restart?: boolean;
   startInRecall?: boolean;
+  returnTo?: 'practice' | 'palaces';
 }) {
   const router = useRouter();
   const memorySetQuery = useMemorySet(memorySetId);
@@ -62,6 +63,17 @@ export default function PalaceMemorySessionScreen({
   const hydratedSessionRef = useRef<string | null>(null);
   const sessionReadyRef = useRef(false);
   const practiceAttempt = useCreatePracticeAttempt();
+  const leaveSession = () => {
+    if (returnTo === 'practice') {
+      router.replace('/(tabs)/practice');
+      return;
+    }
+    if (returnTo === 'palaces') {
+      router.replace('/palaces');
+      return;
+    }
+    router.back();
+  };
 
   useEffect(() => {
     const memorySet = memorySetQuery.data;
@@ -159,7 +171,7 @@ export default function PalaceMemorySessionScreen({
   if (!memorySetQuery.data || !sceneQuery.data) {
     return (
       <View style={styles.page}>
-        <CommonHeader title="Memory Palace" description="Scene unavailable" backAction={() => router.back()} />
+        <CommonHeader title="Memory Palace" description="Scene unavailable" backAction={leaveSession} />
         <View style={styles.empty}>
           <ModuleNoticeCard
             emoji="🏚️"
@@ -244,16 +256,17 @@ export default function PalaceMemorySessionScreen({
         eyebrow="Memory Palace"
         title={memorySet.title}
         description={`${scene.name} · ${placements.length} loci`}
-        backAction={() => router.back()}
+        backAction={leaveSession}
       />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
         {mode !== 'list' ? (
           <>
             <View style={styles.canvas}>
-              <AppImage imageUrl={scene.imageUrl} style={StyleSheet.absoluteFillObject} />
+              <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={StyleSheet.absoluteFillObject} />
+              <View pointerEvents="none" style={styles.floor} />
               {placements.map((placement, index) =>
                 placement.locus ? (
-                  <AnimatedPressable
+                  <Pressable
                     key={placement.item.id}
                     accessibilityLabel={`Locus ${index + 1}: ${placement.locus.name}`}
                     onPress={() => mode === 'browse' && setActiveIndex(index)}
@@ -263,7 +276,7 @@ export default function PalaceMemorySessionScreen({
                       index === activeIndex && styles.activeMarker,
                     ]}>
                     <Text style={styles.markerText}>{index + 1}</Text>
-                  </AnimatedPressable>
+                  </Pressable>
                 ) : null
               )}
             </View>
@@ -279,45 +292,49 @@ export default function PalaceMemorySessionScreen({
         ) : null}
 
         <View style={styles.modeRail}>
-          <AnimatedPressable
+          <Pressable
+            accessibilityRole="tab"
             accessibilityLabel="Open Palace map"
             accessibilityState={{ selected: mode === 'browse' }}
             onPress={() => { setMode('browse'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
             style={[styles.modeTab, mode === 'browse' && styles.modeTabActive]}>
-            <MapPinned size={16} color={mode === 'browse' ? theme.violetDeep : theme.inkSoft} />
+            <Text style={styles.modeEmoji}>🗺️</Text>
             <Text style={[styles.modeTabText, mode === 'browse' && styles.modeTabTextActive]}>Map</Text>
-          </AnimatedPressable>
-          <AnimatedPressable
+          </Pressable>
+          <Pressable
+            accessibilityRole="tab"
             accessibilityLabel="Start Palace walk"
             accessibilityState={{ selected: mode === 'walk' }}
             onPress={() => { setMode('walk'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
             style={[styles.modeTab, mode === 'walk' && styles.modeTabActive]}>
-            <Footprints size={16} color={mode === 'walk' ? theme.violetDeep : theme.inkSoft} />
+            <Text style={styles.modeEmoji}>🚶</Text>
             <Text style={[styles.modeTabText, mode === 'walk' && styles.modeTabTextActive]}>Walk</Text>
-          </AnimatedPressable>
-          <AnimatedPressable
+          </Pressable>
+          <Pressable
+            accessibilityRole="tab"
             accessibilityLabel="Open Palace ordered list"
             accessibilityState={{ selected: mode === 'list' }}
             onPress={() => { setMode('list'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
             style={[styles.modeTab, mode === 'list' && styles.modeTabActive]}>
-            <List size={16} color={mode === 'list' ? theme.violetDeep : theme.inkSoft} />
+            <Text style={styles.modeEmoji}>📋</Text>
             <Text style={[styles.modeTabText, mode === 'list' && styles.modeTabTextActive]}>List</Text>
-          </AnimatedPressable>
-          <AnimatedPressable
+          </Pressable>
+          <Pressable
+            accessibilityRole="tab"
             accessibilityLabel="Open Palace recall"
             accessibilityState={{ selected: mode === 'recall' }}
             onPress={startRecall}
             style={[styles.modeTab, mode === 'recall' && styles.modeTabActive]}>
-            <Target size={16} color={mode === 'recall' ? theme.violetDeep : theme.inkSoft} />
+            <Text style={styles.modeEmoji}>🧠</Text>
             <Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>Recall</Text>
-          </AnimatedPressable>
+          </Pressable>
         </View>
 
         {mode === 'browse' && active ? (
           <View style={styles.previewCard}>
             <View style={styles.previewTop}>
               <View style={styles.previewIcon}>
-                <Sparkles size={18} color={theme.violetDeep} />
+                <Text style={styles.sceneSparkle}>✨</Text>
               </View>
               <View style={styles.previewCopy}>
                 <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}</Text>
@@ -386,7 +403,7 @@ export default function PalaceMemorySessionScreen({
           ) : active ? (
             <RecallAnswerCard
               tone="palace"
-              icon={<Target size={23} color={theme.violetDeep} />}
+              icon={<Text style={styles.recallEmoji}>🧠</Text>}
               eyebrow={`LOCUS ${activeIndex + 1} · ${active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}`}
               prompt="What did you place here?"
               answer={answer}
@@ -446,18 +463,20 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 42 },
   flex: { flex: 1 },
-  canvas: { height: 300, borderRadius: 23, overflow: 'hidden', borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#EAE5D8' },
-  marker: { position: 'absolute', width: 34, height: 34, marginLeft: -17, marginTop: -17, borderRadius: 17, backgroundColor: '#9B8CFF', borderWidth: 3, borderColor: 'white', alignItems: 'center', justifyContent: 'center', elevation: 4 },
+  canvas: { aspectRatio: 4 / 3, borderRadius: 20, overflow: 'hidden', borderWidth: 2, borderColor: '#E3D7B3', backgroundColor: '#F4EFE0' },
+  floor: { position: 'absolute', top: 14, right: 14, bottom: 14, left: 14, borderWidth: 2, borderStyle: 'dashed', borderColor: '#CDBD8A', borderRadius: 14 },
+  marker: { position: 'absolute', width: 34, height: 34, marginLeft: -17, marginTop: -17, borderRadius: 17, backgroundColor: '#9B8CFF', borderWidth: 2.5, borderColor: 'white', alignItems: 'center', justifyContent: 'center', boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.18)' },
   activeMarker: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.18 }] },
   markerText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 12 },
   hint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, textAlign: 'center', marginVertical: 12 },
   restoreNotice: { marginBottom: 10, borderRadius: 12, backgroundColor: '#E3F6ED', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 12, paddingVertical: 9 },
   restoreNoticeText: { color: '#247B67', fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
-  modeRail: { flexDirection: 'row', gap: 7, padding: 5, borderRadius: 17, backgroundColor: '#EEE9FF', marginBottom: 12 },
-  modeTab: { flex: 1, minHeight: 38, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  modeTabActive: { backgroundColor: 'white', shadowColor: theme.ink, shadowOpacity: 0.08, shadowRadius: 5, elevation: 1 },
-  modeTabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  modeTabTextActive: { color: theme.violetDeep },
+  modeRail: { flexDirection: 'row', gap: 6, marginBottom: 12 },
+  modeTab: { flex: 1, minWidth: 0, minHeight: 42, borderRadius: 11, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 3 },
+  modeTabActive: { backgroundColor: theme.ink, borderColor: theme.ink, boxShadow: '0px 3px 0px rgba(43,42,61,0.12)' },
+  modeEmoji: { fontSize: 15 },
+  modeTabText: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 11.5 },
+  modeTabTextActive: { color: 'white' },
   previewCard: { borderRadius: 20, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 14, marginBottom: 12 },
   previewTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   previewIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },
@@ -465,13 +484,15 @@ const styles = StyleSheet.create({
   eyebrow: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
   previewAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 19, marginTop: 4 },
   previewAssociation: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, marginTop: 10 },
+  sceneSparkle: { fontSize: 18 },
+  recallEmoji: { fontSize: 22 },
   itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 15, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 10, marginBottom: 8 },
   activeRow: { borderColor: '#9B8CFF', backgroundColor: '#F7F5FF' },
   itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center' },
   itemNumberText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 11 },
   itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   itemLocus: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginTop: 2 },
-  primaryButton: { width: '100%', minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, alignItems: 'center', justifyContent: 'center', marginTop: 10, paddingHorizontal: 16, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
+  primaryButton: { width: '100%', minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, alignItems: 'center', justifyContent: 'center', marginTop: 10, paddingHorizontal: 16, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
   primaryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
   secondaryButton: { width: '100%', minHeight: 49, borderRadius: 16, borderWidth: 2, borderColor: '#9B8CFF', backgroundColor: '#F7F5FF', alignItems: 'center', justifyContent: 'center', marginTop: 12, paddingHorizontal: 16 },
   secondaryText: { color: '#6654D9', fontFamily: typography.bodyExtraBold, fontSize: 14 },

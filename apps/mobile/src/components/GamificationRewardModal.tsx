@@ -3,7 +3,6 @@ import { RewardHighlights } from '@/components/rewards/RewardHighlights';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Award, History, Trophy } from 'lucide-react-native';
 import React from 'react';
 import { Modal, ScrollView, Text, View } from 'react-native';
 
@@ -38,9 +37,9 @@ export default function GamificationRewardModal({
         <View className="absolute left-[-20] top-[-20] h-48 w-48 rounded-full bg-white/10" />
         <View className="absolute bottom-10 right-[-30] h-64 w-64 rounded-full bg-black/10" />
 
-        <View className="w-full max-w-md items-center rounded-[40px] bg-white/95 p-8 shadow-2xl">
-          <View className="absolute -top-12 h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-[#FFC93C] shadow-xl">
-            <Award size={42} color="white" />
+        <View className="w-full max-w-md items-center rounded-[40px] bg-white/95 p-8" style={{ boxShadow: '0px 8px 24px rgba(43, 42, 61, 0.22)' }}>
+          <View className="absolute -top-12 h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-[#FFC93C]" style={{ boxShadow: '0px 4px 14px rgba(43, 42, 61, 0.18)' }}>
+            <Text className="text-4xl">🏅</Text>
           </View>
 
           <View className="mt-10 items-center">
@@ -76,8 +75,9 @@ export default function GamificationRewardModal({
 
           <AnimatedPressable
             onPress={onClose}
-            className="mt-5 w-full flex-row items-center justify-center rounded-2xl bg-[#FFC93C] py-5 shadow-lg">
-            <Trophy size={16} color={theme.ink} />
+            className="mt-5 w-full flex-row items-center justify-center rounded-2xl bg-[#FFC93C] py-5"
+            style={{ boxShadow: '0px 5px 0px rgba(242, 169, 0, 0.2)' }}>
+            <Text className="text-base">🏆</Text>
             <Text className="ml-2 text-lg font-black text-[#2B2A3D]">CONTINUE</Text>
           </AnimatedPressable>
 
@@ -87,7 +87,7 @@ export default function GamificationRewardModal({
               router.push('/rewards-history');
             }}
             className="mt-3 w-full flex-row items-center justify-center rounded-2xl bg-[#F6F3EA] py-4">
-            <History size={18} color={theme.inkSoft} />
+            <Text className="text-base">🕘</Text>
             <Text className="ml-2 text-base font-bold text-[#6B6A80]">View Reward History</Text>
           </AnimatedPressable>
 

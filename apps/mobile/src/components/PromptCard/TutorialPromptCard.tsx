@@ -1,7 +1,7 @@
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Brain, ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 import AnimatedPressable from '../AnimatedPressable';
@@ -34,7 +34,7 @@ const TutorialPromptCard: React.FC<TutorialCardProps> = ({
                 borderRadius: 30,
               }}
               className="h-10 w-10 items-center justify-center">
-              <Brain size={20} color="white" />
+              <Text className="text-xl">🧠</Text>
             </LinearGradient>
 
             <View className="flex-1">

@@ -1,7 +1,7 @@
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Router } from 'expo-router';
-import { ChevronRight, Gift } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 import AnimatedPressable from '../AnimatedPressable';
@@ -23,7 +23,7 @@ const ReferrerPromptCard: React.FC<TutorialCardProps> = ({ router }) => {
               borderRadius: 30,
             }}
             className="h-10 w-10 items-center justify-center">
-            <Gift size={20} color="white" />
+            <Text className="text-xl">🎁</Text>
           </LinearGradient>
 
           {/* Text */}

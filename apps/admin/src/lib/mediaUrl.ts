@@ -19,6 +19,16 @@ export function resolveMediaUrl(
     return value;
   }
 
+  // Starter Palace assets are served from the API's static asset path, not
+  // from the upload/CDN directory used for user media.
+  if (value.startsWith('/assets/')) {
+    try {
+      return `${new URL((fallbackBaseUrl || '').trim()).origin}${value}`;
+    } catch {
+      return value;
+    }
+  }
+
   const baseUrl = (MEDIA_BASE_URL || fallbackBaseUrl || "")
     .trim()
     .replace(/\/+$/, "");

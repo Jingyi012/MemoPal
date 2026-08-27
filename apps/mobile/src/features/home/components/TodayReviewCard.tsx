@@ -2,7 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import type { DueMemoryReview } from '@/features/practice-attempts';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
-import { ArrowRight, Clock3, Hash, MapPinned } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 type TodayReviewCardProps = {
@@ -15,7 +15,7 @@ export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewC
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <View style={styles.headerIcon}><Clock3 size={20} color={theme.violetDeep} /></View>
+        <View style={styles.headerIcon}><Text style={styles.headerEmoji}>⏰</Text></View>
         <View style={{ flex: 1 }}>
           <Text style={styles.eyebrow}>TODAY’S MEMORY WALK</Text>
           <Text style={styles.title}>{reviews.length} review{reviews.length === 1 ? '' : 's'} waiting for you</Text>
@@ -28,7 +28,7 @@ export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewC
           return (
             <AnimatedPressable key={review.id} onPress={() => onOpen(review)} style={styles.reviewRow}>
               <View style={[styles.reviewIcon, isPeg ? styles.pegIcon : styles.palaceIcon]}>
-                {isPeg ? <Hash size={16} color={theme.berryDeep} /> : <MapPinned size={16} color={theme.violetDeep} />}
+                <Text style={styles.reviewEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
               </View>
               <View style={styles.reviewCopy}>
                 <Text numberOfLines={1} style={styles.reviewTitle}>{review.memorySetTitle}</Text>
@@ -57,12 +57,14 @@ const styles = StyleSheet.create({
   card: { marginTop: 12, borderRadius: 21, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 14 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },
+  headerEmoji: { fontSize: 21 },
   eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.7 },
   title: { color: theme.ink, fontFamily: typography.display, fontSize: 15, marginTop: 3 },
   subtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 3 },
   reviewList: { gap: 7, marginTop: 12 },
   reviewRow: { minHeight: 54, borderRadius: 14, backgroundColor: 'white', paddingHorizontal: 9, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 9 },
   reviewIcon: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  reviewEmoji: { fontSize: 15 },
   pegIcon: { backgroundColor: '#FFF0F4' },
   palaceIcon: { backgroundColor: '#EEE9FF' },
   reviewCopy: { flex: 1, minWidth: 0 },

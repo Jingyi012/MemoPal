@@ -4,13 +4,17 @@ import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useEnabledMemoryModules } from '@/core/memory';
 import { useMemorySets } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
+import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { PracticeDiscoveryRow } from '@/features/memory-hub/components/PracticeDiscoveryRow';
 import { PracticeRecentSessionCard } from '@/features/memory-hub/components/PracticeRecentSessionCard';
+import { LevelProgressHeader } from '@/features/gamification/achievements/components/LevelProgressHeader';
+import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, Hash, MapPinned, Plus, RefreshCcw, Sparkles } from 'lucide-react-native';
+import { Plus, RefreshCcw } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -20,6 +24,17 @@ export default function PracticeScreen() {
   const numberPegEnabled = modules.some((module) => module.key === 'number-peg');
   const palaceEnabled = modules.some((module) => module.key === 'palace');
   const memorySets = useMemorySets();
+  const { user } = useCurrentUser();
+  const totalXp = Math.max(0, user?.totalXp ?? 0);
+  const { levelInfo } = useLevelByXp(totalXp, user?.level);
+  const practiceLevel = {
+    currentLevel: Math.max(1, levelInfo?.currentLevel ?? user?.level ?? 1),
+    xpInCurrentLevel: Math.max(0, levelInfo?.xpInCurrentLevel ?? totalXp),
+    xpToNextLevel: Math.max(0, levelInfo?.xpToNextLevel ?? 0),
+    totalXp,
+    title: levelInfo?.currentLevelConfig?.title ?? 'Memory Apprentice',
+  };
+  const unlockedPegCount = getUnlockedPegCount(user?.level ?? 1);
   const palaceScenes = usePalaceScenes();
   const [filter, setFilter] = useState<'all' | 'number-peg' | 'palace'>('all');
   const recentSets = useMemo(
@@ -38,16 +53,15 @@ export default function PracticeScreen() {
         description="Pick a technique or jump back into a session"
         hideBackButton
       />
+      <View style={styles.progressHeaderWrap}>
+        <LevelProgressHeader level={practiceLevel} streak={user?.stats?.currentStreak ?? 0} />
+      </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <AnimatedPressable onPress={() => router.push('/create-memory' as Href)} style={styles.newSessionCard}>
           <Text style={styles.newSessionEmoji}>➕</Text>
           <Text style={styles.newSessionTitle}>New session</Text>
-          <Text style={styles.newSessionBody}>Add your content, then we’ll suggest a technique</Text>
-          <View style={styles.newSessionAction}>
-            <Text style={styles.newSessionActionText}>Start with a list</Text>
-            <ArrowRight size={16} color={theme.ink} />
-          </View>
+          <Text style={styles.newSessionBody}>Add your content, then we&apos;ll suggest a technique</Text>
         </AnimatedPressable>
 
         <Text style={styles.sectionLabel}>Jump straight to a technique</Text>
@@ -55,16 +69,15 @@ export default function PracticeScreen() {
           {modules.map((module) => {
             const isPeg = module.key === 'number-peg';
             return (
-              <AnimatedPressable
-                key={module.key}
-                onPress={() => router.push(module.route as Href)}
-                style={styles.techniqueJump}>
-                <View style={[styles.techniqueJumpIcon, isPeg ? styles.pegBackground : styles.palaceBackground]}>
-                  {isPeg ? <Hash size={25} color={theme.berryDeep} /> : <MapPinned size={25} color={theme.violetDeep} />}
-                </View>
-                <Text style={styles.techniqueJumpName}>{module.title}</Text>
-                <Text style={styles.techniqueJumpLink}>Skip to this →</Text>
-              </AnimatedPressable>
+              <View key={module.key} style={styles.techniqueJumpWrap}>
+                <AnimatedPressable
+                  onPress={() => router.push(module.route as Href)}
+                  style={styles.techniqueJump}>
+                  <Text style={styles.techniqueJumpEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
+                  <Text style={styles.techniqueJumpName}>{module.title}</Text>
+                  <Text style={styles.techniqueJumpLink}>Skip to this →</Text>
+                </AnimatedPressable>
+              </View>
             );
           })}
         </View>
@@ -73,14 +86,14 @@ export default function PracticeScreen() {
           <PracticeDiscoveryRow
             title="Your peg set"
             actionLabel="See all →"
-            onAction={() => router.push('/number-peg' as Href)}
-            items={PEG_ANCHORS.map((peg) => ({
+            onAction={() => router.push('/number-peg/map' as Href)}
+            items={PEG_ANCHORS.slice(0, Math.min(10, unlockedPegCount)).map((peg) => ({
               key: String(peg.number),
               title: `${peg.number}. ${peg.name}`,
               subtitle: peg.emoji,
               tone: 'peg' as const,
             }))}
-            onItemPress={() => router.push('/number-peg' as Href)}
+            onItemPress={() => router.push('/number-peg/map' as Href)}
           />
         ) : null}
 
@@ -88,12 +101,13 @@ export default function PracticeScreen() {
           <PracticeDiscoveryRow
             title="Your palaces"
             actionLabel="See all →"
-            onAction={() => router.push('/palaces' as Href)}
+            onAction={() => router.push('/palaces/map' as Href)}
             items={(palaceScenes.data ?? []).slice(0, 4).map((scene) => ({
               key: scene.id,
               title: scene.name,
               subtitle: `${scene.loci.length} loci`,
               imageUrl: scene.imageUrl,
+              imageSource: scene.imageSource,
               tone: 'palace' as const,
             }))}
             onItemPress={(sceneId) =>
@@ -164,7 +178,7 @@ export default function PracticeScreen() {
           </View>
         ) : (
           <ModuleNoticeCard
-            icon={<Sparkles size={24} color={theme.sunDeep} />}
+            icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
             title="Your first memory starts here"
             body="Add a small list and turn it into a tiny movie or a walk through a room."
             actionLabel="Create memory"
@@ -186,7 +200,7 @@ type Lesson = {
 };
 
 function openLesson(router: ReturnType<typeof useRouter>, lesson: Lesson) {
-  const path = lesson.technique === 'palace' ? '/palaces/create-memory' : '/number-peg/create';
+  const path = lesson.technique === 'palace' ? '/palaces/create-memory' : '/number-peg/build';
   router.push(`${path}?title=${encodeURIComponent(lesson.title)}&goalType=${lesson.goalType}&items=${encodeURIComponent(JSON.stringify(lesson.items))}` as Href);
 }
 
@@ -197,25 +211,23 @@ function openMemorySet(router: ReturnType<typeof useRouter>, memorySet: MemorySe
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#FFFFFF' },
   content: { padding: 16, paddingBottom: 42 },
-  newSessionCard: { borderRadius: 20, borderWidth: 2, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 18, alignItems: 'center', shadowColor: theme.ink, shadowOpacity: 0.08, shadowRadius: 12, elevation: 2 },
-  newSessionEmoji: { fontSize: 30 },
-  newSessionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 7 },
-  newSessionBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12.5, textAlign: 'center', marginTop: 3 },
-  newSessionAction: { minHeight: 36, borderRadius: 11, backgroundColor: theme.sun, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
-  newSessionActionText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  progressHeaderWrap: { paddingHorizontal: 16, paddingTop: 10 },
+  newSessionCard: { minHeight: 126, borderRadius: 20, borderWidth: 2, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 18, alignItems: 'center', justifyContent: 'center', boxShadow: '0px 8px 20px rgba(43, 42, 61, 0.08)' },
+  newSessionEmoji: { fontSize: 32, lineHeight: 36 },
+  newSessionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16.5, marginTop: 8 },
+  newSessionBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12.5, textAlign: 'center', marginTop: 4 },
   sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },
-  techniqueRow: { flexDirection: 'row', gap: 10 },
-  techniqueJump: { flex: 1, minHeight: 135, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 12, alignItems: 'center' },
-  techniqueJumpIcon: { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  pegBackground: { backgroundColor: '#FFF0F4' },
-  palaceBackground: { backgroundColor: '#EEE9FF' },
+  techniqueRow: { width: '100%', flexDirection: 'row', gap: 8 },
+  techniqueJumpWrap: { flex: 1, minWidth: 0, minHeight: 104 },
+  techniqueJump: { width: '100%', minHeight: 104, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingVertical: 12, paddingHorizontal: 10, alignItems: 'center' },
+  techniqueJumpEmoji: { fontSize: 26, lineHeight: 30 },
   techniqueJumpName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5, textAlign: 'center', marginTop: 7 },
   techniqueJumpLink: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 10.5, marginTop: 3 },
   sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 1 },
-  discoverySection: { marginTop: 4 },
-  discoveryTitle: { marginBottom: 0 },
-  lessonHint: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 22 },
-  lessonList: { gap: 10, paddingVertical: 10, paddingRight: 12 },
+  discoverySection: { marginTop: 24 },
+  discoveryTitle: { marginTop: 0, marginBottom: 0 },
+  lessonHint: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 0 },
+  lessonList: { gap: 10, paddingTop: 10, paddingBottom: 10, paddingRight: 12 },
   lessonCard: { width: 150, minHeight: 148, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 11 },
   lessonEmoji: { fontSize: 27 },
   lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5, lineHeight: 16, marginTop: 6 },
@@ -229,6 +241,7 @@ const styles = StyleSheet.create({
   filterChipTextActive: { color: 'white' },
   seeAll: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11.5, marginTop: 22 },
   sessionList: { gap: 10 },
+  emptyIconEmoji: { fontSize: 24 },
   sessionCard: { minHeight: 70, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 10 },
   emptyCard: { borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 20, alignItems: 'center' },
   emptyBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 4 },

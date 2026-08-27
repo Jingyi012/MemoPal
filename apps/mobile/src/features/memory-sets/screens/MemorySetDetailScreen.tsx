@@ -9,7 +9,7 @@ import { typography } from '@/theme/typography';
 import { usePracticeAttemptHistory } from '@/features/practice-attempts';
 import type { PracticeAttempt } from '@/features/practice-attempts';
 import { Href, useRouter } from 'expo-router';
-import { AlertCircle, ArrowRight, Check, Circle, Hash, MapPinned, RefreshCcw, X } from 'lucide-react-native';
+import { AlertCircle, ArrowRight, Check, Circle, RefreshCcw, X } from 'lucide-react-native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: string }) {
@@ -100,7 +100,7 @@ function SummaryCard({ memorySet, latestAttempt }: { memorySet: MemorySet; lates
   return (
     <View style={styles.summaryCard}>
       <View style={[styles.summaryIcon, isPalace ? styles.summaryIconPalace : styles.summaryIconPeg]}>
-        {isPalace ? <MapPinned size={25} color={theme.violetDeep} /> : <Hash size={25} color={theme.berryDeep} />}
+        <Text style={styles.techniqueEmoji}>{isPalace ? '🏰' : '🕯️'}</Text>
       </View>
       <View style={styles.summaryCopy}>
         <Text style={[styles.techniqueLabel, isPalace ? styles.palaceLabel : styles.pegLabel]}>
@@ -153,6 +153,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 42 },
   summaryCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 21, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 15 },
   summaryIcon: { width: 52, height: 52, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  techniqueEmoji: { fontSize: 25 },
   summaryIconPalace: { backgroundColor: '#EEE9FF' },
   summaryIconPeg: { backgroundColor: '#FFF0F4' },
   summaryCopy: { flex: 1, marginLeft: 13 },
@@ -176,7 +177,7 @@ const styles = StyleSheet.create({
   readyText: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   needsReviewText: { color: theme.berryDeep },
   notTriedText: { color: theme.inkSoft },
-  primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18, shadowColor: theme.sunDeep, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
+  primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
   primaryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
   secondaryButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 4 },
   secondaryButtonText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
