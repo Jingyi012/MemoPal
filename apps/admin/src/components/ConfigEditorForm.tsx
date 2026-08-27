@@ -41,6 +41,14 @@ const ArrayFieldTemplate = (props: any) => {
       return `Level ${levelValue}`;
     }
 
+    const numberValue = Number(data.number);
+    if (Number.isInteger(numberValue) && numberValue >= 1) {
+      const pegName = typeof data.name === "string" ? data.name.trim() : "";
+      return pegName
+        ? `${numberValue} - ${pegName}${data.icon}`
+        : String(numberValue);
+    }
+
     if (typeof data.key === "string" && data.key.trim().length > 0) {
       return data.key.trim();
     }
@@ -234,7 +242,9 @@ export const ConfigEditorForm: React.FC<ConfigEditorFormProps> = ({
       message.success("Configuration updated successfully");
     } catch (error) {
       console.error("Submission error:", error);
-      message.error(extractApiErrorMessage(error, "Failed to save configuration"));
+      message.error(
+        extractApiErrorMessage(error, "Failed to save configuration"),
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -20,6 +20,7 @@ const ARRAY_WRAPPER_BY_KEY: Record<string, string> = {
   "xp.configs": "configs",
   "level.configs": "levels",
   "gamification.missions.templates": "templates",
+  "number-peg.definitions": "pegs",
 };
 
 function getConfigItems(

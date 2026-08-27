@@ -15,6 +15,7 @@ export function useGamificationBootstrap(enabled: boolean) {
 
     const bootstrap = async () => {
       await Promise.allSettled([
+        systemSettingsService.initializeSystemSettings(),
         xpConfigService.getXpConfigs(),
         levelConfigService.getLevelConfigs(),
         badgeService.getAllBadges(),

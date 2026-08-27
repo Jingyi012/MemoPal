@@ -3,6 +3,7 @@ import type { SystemSettingDto } from '@/core/settings/types/systemSettings';
 import type { GamificationMobileUiConfig } from '@/features/gamification/shared/types/gamificationUiConfig';
 import type { PrivacyPolicyConfig } from '@/features/profile/types/privacyPolicyConfig';
 import type { HelpFaqConfig } from '@/features/support/types/helpFaqConfig';
+import { applyNumberPegDefinitions } from '@/features/number-peg/utils/numberPegMap';
 
 type FeatureLimitsTier = { free?: number; premium?: number };
 type FeatureLimitsSettingPayload = {
@@ -54,11 +55,19 @@ function resolveTier(
 }
 
 export async function initializeSystemSettings(): Promise<void> {
-  await systemSettingsApi.fetchAllSettings();
+  const settings = await systemSettingsApi.fetchAllSettings();
+  applyNumberPegSetting(settings);
+}
+
+function applyNumberPegSetting(settings: SystemSettingDto[]): void {
+  const pegSetting = settings.find((setting) => setting.key === 'number-peg.definitions');
+  const payload = settingPayload<unknown>(pegSetting);
+  if (payload) applyNumberPegDefinitions(payload);
 }
 
 export async function refreshSettingsGroup(_pattern: string): Promise<void> {
-  await systemSettingsApi.fetchAllSettings();
+  const settings = await systemSettingsApi.fetchAllSettings();
+  applyNumberPegSetting(settings);
 }
 
 export async function getFeatureLimits(isPremium = false) {
@@ -105,6 +114,12 @@ export async function getPrivacyPolicyConfig(): Promise<Partial<PrivacyPolicyCon
   return settingPayload<Partial<PrivacyPolicyConfig>>(
     await systemSettingsApi.getPrivacyPolicyConfig()
   );
+}
+
+export async function getNumberPegDefinitions(): Promise<void> {
+  const setting = await systemSettingsApi.getNumberPegDefinitions();
+  const payload = settingPayload<unknown>(setting);
+  if (payload) applyNumberPegDefinitions(payload);
 }
 
 function getSilentFallbackLimits(isPremium = false) {

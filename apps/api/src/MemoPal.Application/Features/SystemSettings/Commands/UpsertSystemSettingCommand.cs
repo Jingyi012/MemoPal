@@ -34,6 +34,10 @@ public sealed class UpsertSystemSettingCommandHandler
         {
             normalizedValue = NormalizeLevelConfigValue(normalizedValue);
         }
+        else if (string.Equals(key, SystemSettingKeys.NumberPegDefinitions, StringComparison.Ordinal))
+        {
+            normalizedValue = NormalizeNumberPegDefinitionsValue(normalizedValue);
+        }
 
         var entity = await _db.SystemSettings.FirstOrDefaultAsync(x => x.Key == key, cancellationToken);
 
@@ -173,5 +177,69 @@ public sealed class UpsertSystemSettingCommandHandler
         }
 
         return 0;
+    }
+
+    private static string NormalizeNumberPegDefinitionsValue(string rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return "{\"pegs\":[]}";
+        }
+
+        try
+        {
+            JsonNode? root = JsonNode.Parse(rawValue);
+            for (var i = 0; i < 3; i++)
+            {
+                if (root is not JsonValue valueNode || !valueNode.TryGetValue<string>(out var nestedJson))
+                {
+                    break;
+                }
+
+                if (string.IsNullOrWhiteSpace(nestedJson)) break;
+                root = JsonNode.Parse(nestedJson);
+            }
+
+            var source = root switch
+            {
+                JsonArray direct => direct,
+                JsonObject obj when obj["pegs"] is JsonArray pegs => pegs,
+                JsonObject obj when obj["definitions"] is JsonArray definitions => definitions,
+                _ => new JsonArray(),
+            };
+
+            var normalized = source
+                .OfType<JsonObject>()
+                .Select(item => new
+                {
+                    number = ToInt(item["number"]),
+                    name = item["name"]?.GetValue<string>()?.Trim(),
+                    icon = (item["icon"] ?? item["image"])?.GetValue<string>()?.Trim(),
+                    description = item["description"]?.GetValue<string>()?.Trim(),
+                })
+                .Where(item => item.number is >= 1 and <= 100 &&
+                               !string.IsNullOrWhiteSpace(item.name) &&
+                               !string.IsNullOrWhiteSpace(item.icon) &&
+                               !string.IsNullOrWhiteSpace(item.description))
+                .GroupBy(item => item.number)
+                .Select(group => group.First())
+                .OrderBy(item => item.number)
+                .ToList();
+
+            return JsonSerializer.Serialize(new
+            {
+                pegs = normalized.Select(item => new
+                {
+                    item.number,
+                    name = item.name,
+                    icon = item.icon,
+                    description = item.description,
+                }),
+            });
+        }
+        catch
+        {
+            return rawValue;
+        }
     }
 }

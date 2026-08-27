@@ -40,6 +40,14 @@ export const systemSettingsApi = {
     return response.data.data;
   },
 
+  async getNumberPegDefinitions(): Promise<SystemSettingDto | null> {
+    const response = await api.get<GeneralResponse<SystemSettingDto>>(
+      '/system-settings/number-peg-definitions'
+    );
+    if (!response.data.success || !response.data.data) return null;
+    return response.data.data;
+  },
+
   async getGamificationMobileUiConfig(): Promise<SystemSettingDto | null> {
     const response = await api.get<GeneralResponse<SystemSettingDto>>(
       '/system-settings/gamification/mobile-ui-config'

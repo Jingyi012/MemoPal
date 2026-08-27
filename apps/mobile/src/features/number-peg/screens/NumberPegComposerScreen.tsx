@@ -27,11 +27,11 @@ import {
 type ComposerStep = 'items' | 'scenes';
 type SceneDraft = { answer: string; sceneText: string; variant: number };
 
-const goals: { key: MemoryGoalType; label: string; emoji: string }[] = [
-  { key: 'spelling', label: 'Spelling', emoji: '✏️' },
-  { key: 'ordered-list', label: 'A list', emoji: '🛒' },
-  { key: 'facts', label: 'Facts', emoji: '💡' },
-  { key: 'custom', label: 'Something else', emoji: '✨' },
+const goals: { key: MemoryGoalType; translationKey: 'goalSpelling' | 'goalList' | 'goalFacts' | 'goalOther'; emoji: string }[] = [
+  { key: 'spelling', translationKey: 'goalSpelling', emoji: '✏️' },
+  { key: 'ordered-list', translationKey: 'goalList', emoji: '🛒' },
+  { key: 'facts', translationKey: 'goalFacts', emoji: '💡' },
+  { key: 'custom', translationKey: 'goalOther', emoji: '✨' },
 ];
 
 export default function NumberPegComposerScreen() {
@@ -60,7 +60,7 @@ export default function NumberPegComposerScreen() {
     const answer = newItem.trim();
     if (!answer) return;
     if (items.length >= 10) {
-      setValidationMessage('Number Peg is strongest with 10 items or fewer.');
+      setValidationMessage(t('maxItemsMessage'));
       return;
     }
     setItems((current) => [...current, answer]);
@@ -77,7 +77,7 @@ export default function NumberPegComposerScreen() {
 
   const continueToScenes = () => {
     if (!items.length) {
-      setValidationMessage('Add at least one thing to remember.');
+      setValidationMessage(t('addThingMessage'));
       return;
     }
     if (!title.trim()) setTitle(suggestMemoryTitle(goalType, items));
@@ -120,7 +120,7 @@ export default function NumberPegComposerScreen() {
 
   const save = () => {
     if (scenes.some((scene) => !scene.sceneText.trim())) {
-      setValidationMessage('Every peg needs a vivid scene before recall begins.');
+      setValidationMessage(t('sceneRequiredMessage'));
       return;
     }
 
@@ -157,7 +157,7 @@ export default function NumberPegComposerScreen() {
   };
 
   const errorMessage = createMemorySet.isError
-    ? getNumberPegErrorMessage(createMemorySet.error, 'We could not save this memory. Try again.')
+    ? getNumberPegErrorMessage(createMemorySet.error, t('saveError'))
     : null;
 
   return (
@@ -167,7 +167,7 @@ export default function NumberPegComposerScreen() {
       <CommonHeader
         eyebrow={t('eyebrow')}
         title={step === 'items' ? (fromSharedComposer ? t('checkItems') : t('addItems')) : t('memoryMovies')}
-        description={step === 'items' ? (fromSharedComposer ? `${items.length} items · Up to 10` : 'Step 1 of 2 · Up to 10 items') : 'One tiny movie per peg · Weird wins'}
+        description={step === 'items' ? (fromSharedComposer ? `${items.length} ${t('items')} · ${t('upToTen')}` : t('itemsStepDescription')) : t('scenesStepDescription')}
         backAction={() => {
           if (step === 'scenes') {
             // When launched from the shared chooser, return to technique
@@ -188,7 +188,7 @@ export default function NumberPegComposerScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}>
-        <ComposerProgress currentStep={step === 'items' ? 1 : 2} firstLabel="Add items" secondLabel="Make scenes" />
+        <ComposerProgress currentStep={step === 'items' ? 1 : 2} firstLabel={t('addItemsStep')} secondLabel={t('makeScenesStep')} />
 
         {step === 'items' ? (
           <>
@@ -199,7 +199,7 @@ export default function NumberPegComposerScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.tipTitle}>{t('startSmall')}</Text>
                 <Text style={styles.tipBody}>
-                  Five clear items make a great first round. You can always create another set.
+                  {t('startSmallBody')}
                 </Text>
               </View>
             </View>
@@ -208,7 +208,7 @@ export default function NumberPegComposerScreen() {
               <View style={styles.draftCard}>
                 <Text style={styles.draftEyebrow}>{t('sessionReady')}</Text>
                 <Text numberOfLines={1} style={styles.draftTitle}>{title}</Text>
-                <Text style={styles.draftMeta}>{goalLabel(goalType)} · {items.length} items</Text>
+                <Text style={styles.draftMeta}>{t(goalLabelKey(goalType))} · {items.length} {t('items')}</Text>
               </View>
             ) : (
               <>
@@ -223,7 +223,7 @@ export default function NumberPegComposerScreen() {
                         style={[styles.goalChip, selected && styles.goalChipSelected]}>
                         <Text style={styles.goalEmoji}>{goal.emoji}</Text>
                         <Text style={[styles.goalLabel, selected && styles.goalLabelSelected]}>
-                          {goal.label}
+                          {t(goal.translationKey)}
                         </Text>
                       </AnimatedPressable>
                     );
@@ -276,7 +276,7 @@ export default function NumberPegComposerScreen() {
                   </View>
                   <Text style={styles.itemText}>{item}</Text>
                   <AnimatedPressable
-                    accessibilityLabel={`Remove ${item}`}
+                    accessibilityLabel={`${t('removeAccessibility')} ${item}`}
                     onPress={() => removeItem(index)}
                     style={styles.deleteButton}>
                     <Trash2 size={17} color={theme.inkSoft} />
@@ -294,7 +294,7 @@ export default function NumberPegComposerScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.tipTitle}>{t('vividPrompt')}</Text>
                 <Text style={styles.tipBody}>
-                  Edit any suggestion. Funny, loud, impossible scenes are easier to recall.
+                  {t('vividPromptBody')}
                 </Text>
               </View>
             </View>
@@ -306,7 +306,7 @@ export default function NumberPegComposerScreen() {
                   key={`${scene.answer}-${index}`}
                   index={index}
                   total={scenes.length}
-                  anchorLabel={`PEG ${index + 1} · ${peg.keyword.toUpperCase()}`}
+                  anchorLabel={`${t('pegLabel')} ${index + 1} · ${peg.keyword.toUpperCase()}`}
                   itemLabel={scene.answer}
                   visual={
                     <>
@@ -319,7 +319,7 @@ export default function NumberPegComposerScreen() {
                   onChangeText={(value) => updateScene(index, value)}
                   placeholder={t('associationPlaceholder')}
                   maxLength={1000}
-                  accessibilityLabel={`Scene for ${scene.answer}`}
+                  accessibilityLabel={`${t('sceneFor')} ${scene.answer}`}
                   actionLabel={t('makeCrazier')}
                   onAction={() => makeSceneCrazier(index)}
                 />
@@ -348,12 +348,12 @@ export default function NumberPegComposerScreen() {
             {step === 'scenes' ? <Check size={19} color={theme.ink} /> : null}
             <Text style={styles.continueButtonText}>
               {createMemorySet.isPending
-                ? 'Saving…'
+                ? t('saving')
                 : step === 'items'
-                  ? 'Build my scenes'
+                  ? t('buildScenes')
                   : errorMessage
-                    ? 'Try saving again'
-                    : 'Save and open scenes'}
+                    ? t('trySavingAgain')
+                    : t('saveAndOpenScenes')}
             </Text>
             {step === 'items' ? <ArrowRight size={19} color={theme.ink} /> : null}
           </AnimatedPressable>
@@ -363,8 +363,8 @@ export default function NumberPegComposerScreen() {
   );
 }
 
-function goalLabel(goalType: MemoryGoalType) {
-  return goals.find((goal) => goal.key === goalType)?.label ?? 'Something to remember';
+function goalLabelKey(goalType: MemoryGoalType): 'goalSpelling' | 'goalList' | 'goalFacts' | 'goalOther' {
+  return goals.find((goal) => goal.key === goalType)?.translationKey ?? 'goalOther';
 }
 
 const styles = StyleSheet.create({

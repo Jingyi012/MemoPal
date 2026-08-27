@@ -51,8 +51,29 @@ const EXTENDED_PEG_DEFINITIONS: readonly (readonly [string, string])[] = [
   ['Unicorn', '🦄'], ['Crown jewel', '💠'], ['Jackpot', '🎰'], ['Treasure chest', '🧰'], ['World map', '🗺️'],
 ] as const;
 
+/** Mutable runtime overrides loaded from the admin-managed system setting. */
+export const numberPegMap = starterPegMap as Record<number, Omit<NumberPegItem, 'id' | 'number'>>;
+
+export function applyNumberPegDefinitions(value: unknown): void {
+  const source = value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>).pegs
+    : value;
+  if (!Array.isArray(source)) return;
+
+  for (const item of source) {
+    if (!item || typeof item !== 'object') continue;
+    const entry = item as Record<string, unknown>;
+    const number = Number(entry.number);
+    const keyword = String(entry.name ?? entry.keyword ?? '').trim();
+    const image = String(entry.icon ?? entry.image ?? '').trim();
+    const description = String(entry.description ?? '').trim();
+    if (!Number.isInteger(number) || number < 1 || number > MAX_NUMBER_PEGS || !keyword || !image || !description) continue;
+    numberPegMap[number] = { keyword, image, description };
+  }
+}
+
 export function getNumberPegDefinition(number: PegNumber): Omit<NumberPegItem, 'id' | 'number'> {
-  if (starterPegMap[number]) return starterPegMap[number];
+  if (numberPegMap[number]) return numberPegMap[number];
   const extended = EXTENDED_PEG_DEFINITIONS[number - 1];
   if (extended) {
     return {
@@ -63,9 +84,6 @@ export function getNumberPegDefinition(number: PegNumber): Omit<NumberPegItem, '
   }
   return { keyword: `Peg ${number}`, image: '🔢', description: `Create a vivid image for number ${number}.` };
 }
-
-/** Starter definitions remain exported for callers that want to render familiar anchors. */
-export const numberPegMap = starterPegMap as Record<number, Omit<NumberPegItem, 'id' | 'number'>>;
 
 export function buildAllNumberPegItems(): NumberPegItem[] {
   return PEG_NUMBERS.map((number) => ({

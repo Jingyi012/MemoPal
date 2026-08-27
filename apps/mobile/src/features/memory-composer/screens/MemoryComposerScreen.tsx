@@ -13,11 +13,11 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 
 type ComposerStep = 'content' | 'technique';
 
-const goals: { key: MemoryGoalType; label: string; emoji: string }[] = [
-  { key: 'spelling', label: 'Spelling', emoji: '✏️' },
-  { key: 'ordered-list', label: 'A list', emoji: '🛒' },
-  { key: 'facts', label: 'Facts', emoji: '💡' },
-  { key: 'custom', label: 'Something else', emoji: '✨' },
+const goals: { key: MemoryGoalType; translationKey: 'goalSpelling' | 'goalList' | 'goalFacts' | 'goalOther'; emoji: string }[] = [
+  { key: 'spelling', translationKey: 'goalSpelling', emoji: '✏️' },
+  { key: 'ordered-list', translationKey: 'goalList', emoji: '🛒' },
+  { key: 'facts', translationKey: 'goalFacts', emoji: '💡' },
+  { key: 'custom', translationKey: 'goalOther', emoji: '✨' },
 ];
 
 type MemoryComposerProps = {
@@ -43,7 +43,7 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
     const value = newItem.trim();
     if (!value) return;
     if (items.length >= 100) {
-      setMessage('Keep a memory to 100 items or fewer so it stays comfortable to review.');
+      setMessage(t('maxItemsMessage'));
       return;
     }
     setItems((current) => [...current, value]);
@@ -54,7 +54,7 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
   const addBulkItems = () => {
     const pastedItems = parseBulkItems(bulkInput, 100 - items.length);
     if (!pastedItems.length) {
-      setMessage('Paste one item per line, then add them together.');
+      setMessage(t('pasteManyMessage'));
       return;
     }
     setItems((current) => [...current, ...pastedItems]);
@@ -65,7 +65,7 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
 
   const continueToTechniques = () => {
     if (!items.length) {
-      setMessage('Add at least one thing to remember.');
+      setMessage(t('addThingMessage'));
       return;
     }
     const resolvedTitle = title.trim() || suggestMemoryTitle(goalType, items);
@@ -130,7 +130,7 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
                       onPress={() => setGoalType(goal.key)}
                       style={[styles.goalChip, selected && styles.goalChipSelected]}>
                       <Text style={styles.goalEmoji}>{goal.emoji}</Text>
-                      <Text style={[styles.goalLabel, selected && styles.goalLabelSelected]}>{goal.label}</Text>
+                      <Text style={[styles.goalLabel, selected && styles.goalLabelSelected]}>{t(goal.translationKey)}</Text>
                     </AnimatedPressable>
                   );
                 })}
@@ -138,7 +138,7 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
 
               <Text style={styles.label}>{t('addItems')}</Text>
               <AnimatedPressable
-                accessibilityLabel={bulkMode ? 'Hide paste many items' : 'Paste many items'}
+                accessibilityLabel={bulkMode ? t('hidePasteMany') : t('pasteManyAccessibility')}
                 onPress={() => { setBulkMode((current) => !current); setMessage(null); }}
                 style={styles.bulkToggle}>
                 <Text style={styles.bulkToggleEmoji}>📋</Text>
@@ -173,7 +173,7 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
                   placeholderTextColor="#AAA7B5"
                   style={[styles.input, styles.addInput]}
                 />
-                <AnimatedPressable accessibilityLabel="Add item" onPress={addItem} style={styles.addButton}>
+                <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} style={styles.addButton}>
                   <Plus size={21} color="white" />
                 </AnimatedPressable>
               </View>
@@ -184,7 +184,7 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
                     <View style={styles.itemChipNumber}><Text style={styles.itemChipNumberText}>{index + 1}</Text></View>
                     <Text numberOfLines={1} style={styles.itemChipText}>{item}</Text>
                     <AnimatedPressable
-                      accessibilityLabel={`Remove ${item}`}
+                      accessibilityLabel={`${t('removeAccessibility')} ${item}`}
                       onPress={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))}
                       style={styles.itemChipRemove}>
                       <Trash2 size={13} color={theme.inkSoft} />
@@ -234,27 +234,29 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
 }
 
 function TechniqueCard({ technique, recommended, onPress }: { technique: TechniqueChoice; recommended: boolean; onPress: () => void }) {
+  const { t } = useTranslation('memoryComposer');
   const isPeg = technique === 'number-peg';
+  const bestFor = isPeg
+    ? [t('pegShortLists'), t('pegSpellingWords'), t('pegUpToTen')]
+    : [t('palaceLongerLists'), t('palaceSequences'), t('palaceNoFixedLimit')];
   return (
     <AnimatedPressable onPress={onPress} style={[styles.techniqueCard, recommended && styles.techniqueCardRecommended]}>
-      {recommended && <View style={styles.ribbon}><Text style={styles.ribbonText}>RECOMMENDED</Text></View>}
+      {recommended && <View style={styles.ribbon}><Text style={styles.ribbonText}>{t('recommended')}</Text></View>}
       <View style={styles.techniqueHead}>
         <View style={[styles.techniqueIcon, isPeg ? styles.pegIcon : styles.palaceIcon]}>
           <Text style={styles.techniqueIconEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
         </View>
         <View style={styles.techniqueMeta}>
-          <Text style={styles.techniqueName}>{isPeg ? 'Number Peg' : 'Memory Palace'}</Text>
-          <Text style={styles.techniqueTag}>{isPeg ? 'Fast · one movie per item' : 'Spatial · walk-through'}</Text>
+          <Text style={styles.techniqueName}>{isPeg ? t('numberPegName') : t('memoryPalaceName')}</Text>
+          <Text style={styles.techniqueTag}>{isPeg ? t('numberPegTag') : t('memoryPalaceTag')}</Text>
         </View>
         <ArrowRight size={18} color={theme.inkSoft} />
       </View>
       <Text style={styles.techniqueDescription}>
-        {isPeg
-          ? 'Each number has a fixed anchor image. Picture it doing something wild to your word to lock it in.'
-          : 'Place each item at a spot in a room, then walk through it to recall everything in order. Choose a room with enough loci for your list.'}
+        {isPeg ? t('numberPegDescription') : t('memoryPalaceDescription')}
       </Text>
       <View style={styles.bestForRow}>
-        {(isPeg ? ['Short lists', 'Spelling words', 'Up to 10'] : ['Longer lists', 'Sequences', 'No fixed limit']).map((label) => (
+        {bestFor.map((label) => (
           <Text key={label} style={styles.bestFor}>{label}</Text>
         ))}
       </View>

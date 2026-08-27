@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { App, Button, Tabs } from "antd";
 import { useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PortalPageContainer } from "../../../components/PortalPageContainer";
 import type {
   SystemSettingDto,
@@ -16,7 +17,22 @@ import AuthLoginMethodsConfigTab from "../../configs/components/AuthLoginMethods
 import HelpFaqConfigTab from "../../configs/components/HelpFaqConfigTab";
 import PrivacyPolicyConfigTab from "../../configs/components/PrivacyPolicyConfigTab";
 import PremiumSubscriptionConfigTab from "../../configs/components/PremiumSubscriptionConfigTab";
+import NumberPegDefinitionsConfigTab from "../../configs/components/NumberPegDefinitionsConfigTab";
 import { useAdminSystemSettingsApi } from "../hooks/useAdminSystemSettingsApi";
+
+const SYSTEM_SETTINGS_SECTIONS = [
+  "gamification",
+  "feature-limits",
+  "referral-program",
+  "auth-login-methods",
+  "help-faq",
+  "privacy-policy",
+  "premium-subscription",
+  "number-peg-definitions",
+  "advanced",
+] as const;
+
+type SystemSettingsSection = (typeof SYSTEM_SETTINGS_SECTIONS)[number];
 
 export default function SystemSettingsPage() {
   const { message } = App.useApp();
@@ -24,6 +40,24 @@ export default function SystemSettingsPage() {
   const { listSystemSettings, upsertSystemSetting } = useAdminSystemSettingsApi();
   const actionRef = useRef<ActionType | null>(null);
   const [open, setOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const requestedSection = searchParams.get("section");
+  const activeSection = SYSTEM_SETTINGS_SECTIONS.includes(
+    requestedSection as SystemSettingsSection,
+  )
+    ? (requestedSection as SystemSettingsSection)
+    : SYSTEM_SETTINGS_SECTIONS[0];
+
+  const handleSectionChange = (section: string) => {
+    if (!SYSTEM_SETTINGS_SECTIONS.includes(section as SystemSettingsSection)) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("section", section);
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const upsertMutation = useMutation({
     mutationFn: upsertSystemSetting,
@@ -44,6 +78,8 @@ export default function SystemSettingsPage() {
   return (
     <PortalPageContainer>
       <Tabs
+        activeKey={activeSection}
+        onChange={handleSectionChange}
         tabPosition="left"
         tabBarStyle={{
           backgroundColor: "white",
@@ -84,6 +120,11 @@ export default function SystemSettingsPage() {
             key: "premium-subscription",
             label: "Premium Subscription",
             children: <PremiumSubscriptionConfigTab />,
+          },
+          {
+            key: "number-peg-definitions",
+            label: "Number Peg Definitions",
+            children: <NumberPegDefinitionsConfigTab />,
           },
           {
             key: "advanced",

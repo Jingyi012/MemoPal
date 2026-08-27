@@ -12,6 +12,7 @@ public static class SystemSettingKeys
     public const string LevelConfigs = "level.configs";
     public const string GrowthReferralProgramConfig = "growth.referral.program_config";
     public const string AuthLoginMethods = "auth.login_methods";
+    public const string NumberPegDefinitions = "number-peg.definitions";
 }
 
 public static class SystemSettingDefaults

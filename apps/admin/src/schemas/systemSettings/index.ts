@@ -31,6 +31,10 @@ import {
   PREMIUM_SUBSCRIPTION_CONFIG_DEFAULT,
   PREMIUM_SUBSCRIPTION_CONFIG_SCHEMA,
 } from "./premiumSubscriptionConfigSchema";
+import {
+  NUMBER_PEG_DEFINITIONS_DEFAULT,
+  NUMBER_PEG_DEFINITIONS_SCHEMA,
+} from "./numberPegDefinitionsSchema";
 
 export * from "./gamificationUiConfigSchema";
 export * from "./featureLimitsSchema";
@@ -41,6 +45,7 @@ export * from "./levelConfigsSchema";
 export * from "./helpFaqConfigSchema";
 export * from "./privacyPolicyConfigSchema";
 export * from "./premiumSubscriptionConfigSchema";
+export * from "./numberPegDefinitionsSchema";
 
 export interface ConfigSchema {
   key: string;
@@ -103,5 +108,11 @@ export const ALL_CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
     title: "Premium Subscription Configuration",
     schema: PREMIUM_SUBSCRIPTION_CONFIG_SCHEMA,
     default: PREMIUM_SUBSCRIPTION_CONFIG_DEFAULT,
+  },
+  number_peg_definitions: {
+    key: "number-peg.definitions",
+    title: "Number Peg Definitions",
+    schema: NUMBER_PEG_DEFINITIONS_SCHEMA,
+    default: NUMBER_PEG_DEFINITIONS_DEFAULT,
   },
 };

@@ -101,4 +101,16 @@ public sealed class SystemSettingsController : ApiControllerBase
         var result = await Sender.Send(new GetSystemSettingsByKeyQuery(SystemSettingKeys.LevelConfigs), cancellationToken);
         return Ok(result);
     }
+
+    /// <summary>
+    /// Fetch the editable 1–100 Number Peg definitions.
+    /// </summary>
+    [HttpGet("number-peg-definitions")]
+    public async Task<IActionResult> GetNumberPegDefinitions(CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new GetSystemSettingsByKeyQuery(SystemSettingKeys.NumberPegDefinitions),
+            cancellationToken);
+        return Ok(result);
+    }
 }

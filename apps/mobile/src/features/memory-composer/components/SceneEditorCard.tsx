@@ -3,6 +3,7 @@ import { typography } from '@/theme/typography';
 import { ReactNode } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 type SceneEditorCardProps = {
   index: number;
@@ -36,6 +37,7 @@ export function SceneEditorCard({
   onAction,
   accent = 'peg',
 }: SceneEditorCardProps) {
+  const { t } = useTranslation('memoryComposer');
   const isPalace = accent === 'palace';
 
   return (
@@ -53,7 +55,7 @@ export function SceneEditorCard({
 
       {visual ? <View style={[styles.visual, isPalace ? styles.palaceVisual : styles.pegVisual]}>{visual}</View> : null}
 
-      <Text style={styles.inputLabel}>Memory scene</Text>
+      <Text style={styles.inputLabel}>{t('memoryScene')}</Text>
       <TextInput
         accessibilityLabel={accessibilityLabel}
         multiline
