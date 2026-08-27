@@ -1,6 +1,7 @@
 import { BaseCard } from '@/components/BaseCard';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 interface BadgePill {
   id: string;
@@ -61,6 +62,7 @@ export function OverviewTab({
   recentBadges,
   upcomingMilestones,
 }: OverviewTabProps) {
+  const { t } = useTranslation('achievements');
   const missionCompletionPercent =
     totalActiveMissions > 0
       ? Math.max(0, Math.min(100, Math.round((completedMissions / totalActiveMissions) * 100)))
@@ -69,30 +71,30 @@ export function OverviewTab({
   return (
     <View className="gap-3">
       <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
-        <Text className="text-base font-bold text-[#2B2A3D]">Overview</Text>
+        <Text className="text-base font-bold text-[#2B2A3D]">{t('overview')}</Text>
         <Text className="mt-1 text-sm text-[#6B6A80]">
-          Quick view of your current progress and nearest wins.
+          {t('overviewBody')}
         </Text>
 
         <View className="mt-4 flex-row gap-2">
           <SummaryCard
-            title="Badges"
+            title={t('badges')}
             value={`${totalBadgeEarned}`}
-            subtitle="Earned so far"
+            subtitle={t('earnedSoFar')}
             icon="🏅"
             iconBgClass="bg-[#FFF7E0]"
           />
           <SummaryCard
-            title="Milestones"
+            title={t('milestones')}
             value={`${totalMilestonesAchieved}`}
-            subtitle="Achieved"
+            subtitle={t('achieved')}
             icon="🚩"
             iconBgClass="bg-[#EEE9FF]"
           />
           <SummaryCard
-            title="Missions"
+            title={t('missions')}
             value={`${completedMissions}/${totalActiveMissions}`}
-            subtitle={`${missionCompletionPercent}% completed`}
+            subtitle={`${missionCompletionPercent}% ${t('completed')}`}
             icon="🎯"
             iconBgClass="bg-[#F1FBF5]"
           />
@@ -101,13 +103,13 @@ export function OverviewTab({
 
       <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
         <View className="flex-row items-center justify-between">
-          <Text className="text-sm font-semibold text-[#2B2A3D]">Recent Badges</Text>
+          <Text className="text-sm font-semibold text-[#2B2A3D]">{t('recentBadges')}</Text>
           <View className="rounded-full bg-[#FFF7E0] p-2">
             <Text className="text-sm">✨</Text>
           </View>
         </View>
         {recentBadges.length === 0 ? (
-          <Text className="mt-2 text-sm text-[#6B6A80]">No badges earned yet. Keep going.</Text>
+          <Text className="mt-2 text-sm text-[#6B6A80]">{t('noBadges')}</Text>
         ) : (
           <View className="mt-3 flex-row flex-wrap gap-2">
             {recentBadges.map((badge) => (
@@ -123,11 +125,11 @@ export function OverviewTab({
 
       <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4" padding="none">
         <View className="flex-row items-center justify-between">
-          <Text className="text-sm font-semibold text-[#2B2A3D]">Upcoming Milestones</Text>
-          <Text className="text-xs text-[#6B6A80]">Closest first</Text>
+          <Text className="text-sm font-semibold text-[#2B2A3D]">{t('upcomingMilestones')}</Text>
+          <Text className="text-xs text-[#6B6A80]">{t('closestFirst')}</Text>
         </View>
         {upcomingMilestones.length === 0 ? (
-          <Text className="mt-2 text-sm text-[#6B6A80]">All milestones are completed.</Text>
+          <Text className="mt-2 text-sm text-[#6B6A80]">{t('allMilestones')}</Text>
         ) : (
           <View className="mt-3 gap-2">
             {upcomingMilestones.map((milestone) => {

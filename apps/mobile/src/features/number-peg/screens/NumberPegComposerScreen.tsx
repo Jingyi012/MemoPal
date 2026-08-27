@@ -10,6 +10,7 @@ import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegE
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Check, Plus, Trash2 } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import { firstParam, parseComposerGoal, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import { ComposerProgress } from '@/features/memory-composer/components/ComposerProgress';
 import { SceneEditorCard } from '@/features/memory-composer/components/SceneEditorCard';
@@ -34,6 +35,7 @@ const goals: { key: MemoryGoalType; label: string; emoji: string }[] = [
 ];
 
 export default function NumberPegComposerScreen() {
+  const { t } = useTranslation('numberPeg');
   const router = useRouter();
   const params = useLocalSearchParams<{ title?: string | string[]; items?: string | string[]; goalType?: string | string[] }>();
   const { createMemorySet } = useMemorySetMutations();
@@ -163,8 +165,8 @@ export default function NumberPegComposerScreen() {
       style={styles.page}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <CommonHeader
-        eyebrow="Number Peg"
-        title={step === 'items' ? (fromSharedComposer ? 'Check your items' : 'Add what you need to remember') : 'Make tiny memory movies'}
+        eyebrow={t('eyebrow')}
+        title={step === 'items' ? (fromSharedComposer ? t('checkItems') : t('addItems')) : t('memoryMovies')}
         description={step === 'items' ? (fromSharedComposer ? `${items.length} items · Up to 10` : 'Step 1 of 2 · Up to 10 items') : 'One tiny movie per peg · Weird wins'}
         backAction={() => {
           if (step === 'scenes') {
@@ -195,7 +197,7 @@ export default function NumberPegComposerScreen() {
                 <Text style={styles.tipEmoji}>📝</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.tipTitle}>Start small</Text>
+                <Text style={styles.tipTitle}>{t('startSmall')}</Text>
                 <Text style={styles.tipBody}>
                   Five clear items make a great first round. You can always create another set.
                 </Text>
@@ -204,13 +206,13 @@ export default function NumberPegComposerScreen() {
 
             {fromSharedComposer && title.trim() ? (
               <View style={styles.draftCard}>
-                <Text style={styles.draftEyebrow}>SESSION READY</Text>
+                <Text style={styles.draftEyebrow}>{t('sessionReady')}</Text>
                 <Text numberOfLines={1} style={styles.draftTitle}>{title}</Text>
                 <Text style={styles.draftMeta}>{goalLabel(goalType)} · {items.length} items</Text>
               </View>
             ) : (
               <>
-                <Text style={styles.label}>What is this for?</Text>
+                <Text style={styles.label}>{t('whatFor')}</Text>
                 <View style={styles.goalGrid}>
                   {goals.map((goal) => {
                     const selected = goal.key === goalType;
@@ -228,7 +230,7 @@ export default function NumberPegComposerScreen() {
                   })}
                 </View>
 
-                <Text style={styles.label}>Name this memory <Text style={styles.optionalLabel}>optional</Text></Text>
+                <Text style={styles.label}>{t('nameMemory')} <Text style={styles.optionalLabel}>{t('optional')}</Text></Text>
                 <TextInput
                   value={title}
                   onChangeText={(value) => {
@@ -236,7 +238,7 @@ export default function NumberPegComposerScreen() {
                     setValidationMessage(null);
                   }}
                   maxLength={200}
-                  placeholder="e.g. Friday spelling test"
+                  placeholder={t('namePlaceholder')}
                   placeholderTextColor="#AAA7B5"
                   style={styles.input}
                 />
@@ -244,7 +246,7 @@ export default function NumberPegComposerScreen() {
             )}
 
             <View style={styles.labelRow}>
-              <Text style={styles.label}>Add your items</Text>
+                <Text style={styles.label}>{t('addItems')}</Text>
               <Text style={styles.itemCount}>{items.length}/10</Text>
             </View>
             <View style={styles.addRow}>
@@ -254,12 +256,12 @@ export default function NumberPegComposerScreen() {
                 onSubmitEditing={addItem}
                 returnKeyType="done"
                 maxLength={500}
-                placeholder="Type a word, item, or short fact"
+                placeholder={t('itemPlaceholder')}
                 placeholderTextColor="#AAA7B5"
                 style={[styles.input, styles.addInput]}
               />
               <AnimatedPressable
-                accessibilityLabel="Add item"
+                accessibilityLabel={t('addItem')}
                 onPress={addItem}
                 style={styles.addButton}>
                 <Plus size={22} color="white" />
@@ -290,7 +292,7 @@ export default function NumberPegComposerScreen() {
                 <Text style={styles.tipEmoji}>🎬</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.tipTitle}>See it move, hear it, feel it</Text>
+                <Text style={styles.tipTitle}>{t('vividPrompt')}</Text>
                 <Text style={styles.tipBody}>
                   Edit any suggestion. Funny, loud, impossible scenes are easier to recall.
                 </Text>
@@ -315,10 +317,10 @@ export default function NumberPegComposerScreen() {
                   }
                   value={scene.sceneText}
                   onChangeText={(value) => updateScene(index, value)}
-                  placeholder="Make it colourful, surprising, and impossible to ignore…"
+                  placeholder={t('associationPlaceholder')}
                   maxLength={1000}
                   accessibilityLabel={`Scene for ${scene.answer}`}
-                  actionLabel="Make it crazier"
+                  actionLabel={t('makeCrazier')}
                   onAction={() => makeSceneCrazier(index)}
                 />
               );
@@ -336,7 +338,7 @@ export default function NumberPegComposerScreen() {
           {step === 'scenes' && (
             <AnimatedPressable onPress={() => setStep('items')} style={styles.secondaryButton}>
               <ArrowLeft size={18} color={theme.ink} />
-              <Text style={styles.secondaryButtonText}>Items</Text>
+              <Text style={styles.secondaryButtonText}>{t('itemsLabel')}</Text>
             </AnimatedPressable>
           )}
           <AnimatedPressable

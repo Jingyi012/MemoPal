@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { forwardRef, useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 interface Props {
   initialName?: string;
@@ -22,6 +23,7 @@ type Ref = BottomSheetModal;
 
 export const EditProfileSheet = forwardRef<Ref, Props>(
   ({ initialName = '', initialEmail = '', initialAvatarUrl = '', onSave }, ref) => {
+    const { t } = useTranslation('profile');
     const [displayName, setDisplayName] = useState(initialName);
     const [email, setEmail] = useState(initialEmail);
     const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
@@ -48,19 +50,19 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
     return (
       <CustomBottomSheetModal ref={ref} snapPoints={['75%']} enableDynamicSizing={false}>
         <View className="p-6">
-          <Text className="text-xl font-bold text-[#2B2A3D]">Edit Profile</Text>
-          <Text className="mt-1 text-sm text-[#6B6A80]">Update your profile details</Text>
+          <Text className="text-xl font-bold text-[#2B2A3D]">{t('editProfile')}</Text>
+          <Text className="mt-1 text-sm text-[#6B6A80]">{t('editDetails')}</Text>
 
           <TextInput
             className="mt-4 rounded-xl border-2 border-[#EEE9DC] bg-[#FFFDF8] px-4 py-3"
-            placeholder="Display Name"
+            placeholder={t('displayName')}
             value={displayName}
             onChangeText={setDisplayName}
           />
 
           <TextInput
             className="mt-3 rounded-xl border-2 border-[#EEE9DC] bg-[#F6F3EA] px-4 py-3 text-[#9A97A7]"
-            placeholder="Email"
+            placeholder={t('email')}
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
@@ -68,18 +70,18 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
             selectTextOnFocus={false}
           />
           <Text className="mt-1 text-xs text-[#6B6A80]">
-            Email cannot be changed from mobile profile settings.
+            {t('emailImmutable')}
           </Text>
 
-          <Text className="mt-4 text-xs font-bold uppercase text-[#6B6A80]">Profile Picture</Text>
+          <Text className="mt-4 text-xs font-bold uppercase text-[#6B6A80]">{t('profilePicture')}</Text>
           <AnimatedPressable
             onPress={async () => {
               const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
               if (!permission.granted) {
                 Toast.show({
                   type: 'error',
-                  text1: 'Permission needed',
-                  text2: 'Please allow photo access.',
+                  text1: t('permissionNeeded'),
+                  text2: t('allowPhoto'),
                 });
                 return;
               }
@@ -103,14 +105,14 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
                 contentFit="cover"
               />
             </View>
-            <Text className="p-3 text-center text-sm text-[#7A68E0]">Tap to choose image</Text>
+            <Text className="p-3 text-center text-sm text-[#7A68E0]">{t('chooseImage')}</Text>
           </AnimatedPressable>
 
           <View className="mt-5 flex-row gap-3">
             <AnimatedPressable
               onPress={close}
               className="flex-1 items-center rounded-xl bg-[#F6F3EA] py-3">
-              <Text className="font-semibold text-[#6B6A80]">Cancel</Text>
+              <Text className="font-semibold text-[#6B6A80]">{t('cancel')}</Text>
             </AnimatedPressable>
             <AnimatedPressable
               onPress={async () => {
@@ -123,15 +125,15 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
                     error instanceof Error ? error.message : 'Unable to update profile.';
                   Toast.show({
                     type: 'error',
-                    text1: 'Update failed',
-                    text2: message,
+                    text1: t('updateFailed'),
+                    text2: message || t('unableUpdate'),
                   });
                 } finally {
                   setSaving(false);
                 }
               }}
               className="flex-1 items-center rounded-xl bg-[#FFC93C] py-3">
-              <Text className="font-semibold text-[#2B2A3D]">{saving ? 'Saving...' : 'Save'}</Text>
+              <Text className="font-semibold text-[#2B2A3D]">{saving ? t('saving') : t('save')}</Text>
             </AnimatedPressable>
           </View>
         </View>

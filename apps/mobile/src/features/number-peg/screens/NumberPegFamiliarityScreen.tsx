@@ -7,11 +7,13 @@ import { Href, useRouter } from 'expo-router';
 import { ArrowRight, Check, RefreshCcw, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 type Feedback = 'correct' | 'wrong' | null;
 
 export default function NumberPegFamiliarityScreen() {
   const router = useRouter();
+  const { t } = useTranslation('numberPeg');
   const pegs = useMemo(() => buildNumberPegItems(), []);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -49,29 +51,29 @@ export default function NumberPegFamiliarityScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow="Number Peg"
-        title="Learn your anchors"
-        description="A tiny familiarity round before your first memory"
+        eyebrow={t('eyebrow')}
+        title={t('anchors')}
+        description={t('familiarityDescription')}
         backAction={() => router.back()}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {isComplete ? (
           <View style={styles.completeCard}>
             <Text style={styles.completeEmoji}>{score === pegs.length ? '🎉' : '🌟'}</Text>
-            <Text style={styles.completeTitle}>Your anchors are getting sticky</Text>
+            <Text style={styles.completeTitle}>{t('familiarityComplete')}</Text>
             <Text style={styles.completeScore}>{score} / {pegs.length}</Text>
             <Text style={styles.completeBody}>
               You can now use the fixed pictures as quick hooks for spelling words, grocery lists, and short facts.
             </Text>
             <View style={styles.primaryButtonWrap}>
               <AnimatedPressable onPress={() => router.push('/number-peg/create' as Href)} style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>Build a memory</Text>
+                <Text style={styles.primaryButtonText}>{t('buildMemory')}</Text>
                 <ArrowRight size={18} color={theme.ink} />
               </AnimatedPressable>
             </View>
             <AnimatedPressable onPress={restart} style={styles.secondaryButton}>
               <RefreshCcw size={16} color={theme.inkSoft} />
-              <Text style={styles.secondaryButtonText}>Practice anchors again</Text>
+              <Text style={styles.secondaryButtonText}>{t('practiceAgain')}</Text>
             </AnimatedPressable>
           </View>
         ) : (
@@ -79,8 +81,8 @@ export default function NumberPegFamiliarityScreen() {
             <View style={styles.tipCard}>
               <View style={styles.tipIcon}><Text style={styles.tipEmoji}>🧠</Text></View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.tipTitle}>Make the picture automatic</Text>
-                <Text style={styles.tipBody}>Tap the image that belongs to each number. Ten quick answers and you’re ready to build scenes.</Text>
+                <Text style={styles.tipTitle}>{t('pictureAutomatic')}</Text>
+                <Text style={styles.tipBody}>{t('pictureAutomaticBody')}</Text>
               </View>
             </View>
 

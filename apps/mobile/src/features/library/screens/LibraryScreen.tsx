@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
+import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import LoadingView from '@/components/LoadingView';
 import { useMemorySetMutations, useMemorySets } from '@/features/memory-sets';
@@ -11,18 +12,20 @@ import { Href, useRouter } from 'expo-router';
 import { Archive, ChevronRight, MoreHorizontal, Plus, RefreshCcw } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 type LibraryFilter = 'all' | MemoryTechniqueKey | 'archived';
 
-const filters: { key: LibraryFilter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'palace', label: 'Palaces' },
-  { key: 'number-peg', label: 'Number Peg' },
-  { key: 'archived', label: 'Archived' },
+const filters: { key: LibraryFilter }[] = [
+  { key: 'all' },
+  { key: 'palace' },
+  { key: 'number-peg' },
+  { key: 'archived' },
 ];
 
 export default function LibraryScreen() {
   const router = useRouter();
+  const { t } = useTranslation('library');
   const memorySets = useMemorySets();
   const { duplicateMemorySet, setMemorySetArchived } = useMemorySetMutations();
   const [filter, setFilter] = useState<LibraryFilter>('all');
@@ -68,9 +71,9 @@ export default function LibraryScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow="Library"
-        title="Library"
-        description="Every memory you build, ready when you need it"
+        eyebrow={t('eyebrow')}
+        title={t('title')}
+        description={t('description')}
         hideBackButton
       />
 
@@ -85,15 +88,15 @@ export default function LibraryScreen() {
             <Text style={styles.summaryEmoji}>🧠</Text>
           </View>
           <View style={styles.summaryCopy}>
-            <Text style={styles.summaryEyebrow}>YOUR MEMORY COLLECTION</Text>
+            <Text style={styles.summaryEyebrow}>{t('collection')}</Text>
             <Text style={styles.summaryTitle}>
               {activeCount}{' '}
-              {activeCount === 1 ? 'memory' : 'memories'}
+              {activeCount === 1 ? t('memory') : t('memories')}
             </Text>
-            <Text style={styles.summaryBody}>Small practice sessions make these paths stronger.</Text>
+            <Text style={styles.summaryBody}>{t('collectionBody')}</Text>
           </View>
           <AnimatedPressable
-            accessibilityLabel="Create a memory"
+            accessibilityLabel={t('create')}
             onPress={() => router.push('/create-memory' as Href)}
             style={styles.addButton}>
             <Plus size={21} color={theme.ink} />
@@ -109,7 +112,7 @@ export default function LibraryScreen() {
                 onPress={() => setFilter(item.key)}
                 style={[styles.filterChip, selected && styles.filterChipSelected]}>
                 <Text style={[styles.filterText, selected && styles.filterTextSelected]}>
-                  {item.label}
+                  {item.key === 'all' ? t('all') : item.key === 'palace' ? t('palaces') : item.key === 'number-peg' ? t('numberPeg') : t('archived')}
                 </Text>
               </AnimatedPressable>
             );
@@ -124,17 +127,17 @@ export default function LibraryScreen() {
 
         {memorySets.isLoading ? (
           <View style={styles.loadingFrame}>
-            <LoadingView description="Opening your Library…" />
+            <LoadingView description={t('loading')} />
           </View>
         ) : memorySets.isError ? (
           <View style={styles.noticeCard}>
-            <Text style={styles.noticeTitle}>Your Library is out of reach</Text>
+            <Text style={styles.noticeTitle}>{t('unavailable')}</Text>
             <Text style={styles.noticeBody}>
               {getNumberPegErrorMessage(memorySets.error, 'Check your connection and try again.')}
             </Text>
             <AnimatedPressable onPress={() => memorySets.refetch()} style={styles.retryButton}>
               <RefreshCcw size={16} color={theme.ink} />
-              <Text style={styles.retryText}>Try again</Text>
+              <Text style={styles.retryText}>{t('retry')}</Text>
             </AnimatedPressable>
           </View>
         ) : visibleSets.length ? (
@@ -148,23 +151,32 @@ export default function LibraryScreen() {
               />
             ))}
           </View>
+        ) : filter === 'all' ? (
+          <ModuleNoticeCard
+            icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
+            title={t('newSession')}
+            body={t('newSessionBody')}
+            actionLabel={t('tapToStart')}
+            actionIcon={<Plus size={15} color={theme.ink} />}
+            onAction={() => router.push('/create-memory' as Href)}
+          />
         ) : (
           <View style={styles.noticeCard}>
             <Text style={styles.emptyEmoji}>{filter === 'palace' ? '🏡' : filter === 'number-peg' ? '🦢' : filter === 'archived' ? '📦' : '✨'}</Text>
             <Text style={styles.noticeTitle}>
-              {filter === 'all' ? 'Build your first memory' : filter === 'archived' ? 'Your archive is empty' : 'Nothing in this collection yet'}
+              {filter === 'archived' ? t('archiveEmpty') : t('collectionEmpty')}
             </Text>
             <Text style={styles.noticeBody}>
               {filter === 'archived'
-                ? 'Memories you archive will wait here until you want them again.'
-                : 'Choose a technique in Practice and turn something useful into a playful memory.'}
+                ? t('archiveBody')
+                : t('buildFirstBody')}
             </Text>
             {filter !== 'archived' && (
               <AnimatedPressable
                 onPress={() => router.push('/create-memory' as Href)}
                 style={styles.emptyButton}>
                 <Plus size={17} color="white" />
-                <Text style={styles.emptyButtonText}>Create memory</Text>
+                <Text style={styles.emptyButtonText}>{t('create')}</Text>
               </AnimatedPressable>
             )}
           </View>
@@ -337,6 +349,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   retryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  emptyIconEmoji: { fontSize: 24 },
   emptyEmoji: { fontSize: 32, marginBottom: 9 },
   emptyButton: {
     marginTop: 15,

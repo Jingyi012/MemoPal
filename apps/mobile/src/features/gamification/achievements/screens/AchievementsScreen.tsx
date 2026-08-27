@@ -16,12 +16,14 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BadgeDetailsModal } from '../components/BadgeDetailsModal';
 import { LevelProgressHeader } from '../components/LevelProgressHeader';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 type BadgeWithEarned = Badge & { isEarned: boolean };
 
 export default function AchievementsScreen() {
   const router = useRouter();
+  const { t } = useTranslation('achievements');
   const { user, isLoading: userLoading, refetch: refetchUser } = useCurrentUser();
   const { badges, isLoading: badgesLoading, refetch: refetchBadges } = useAllBadges();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
@@ -85,14 +87,14 @@ export default function AchievementsScreen() {
     }
   }, [palaceScenes, refetchBadges, refetchEvents, refetchLevel, refetchUser]);
 
-  if (userLoading || badgesLoading || levelLoading) return <LoadingView description="Loading your progress…" />;
+  if (userLoading || badgesLoading || levelLoading) return <LoadingView description={t('loading')} />;
 
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow="Progress"
-        title="Your growth"
-        description="Levels, streaks, and badges"
+        eyebrow={t('eyebrow')}
+        title={t('title')}
+        description={t('description')}
         hideBackButton
         actions={[{ icon: History, onPress: () => router.push('/rewards-history'), accessibilityLabel: 'Open rewards history' }]}
       />
@@ -104,12 +106,12 @@ export default function AchievementsScreen() {
         <LevelProgressHeader level={displayLevel} streak={user?.stats?.currentStreak ?? 0} />
 
         <View style={styles.statRow}>
-          <StatTile value={`${user?.stats?.lessonsCompleted ?? 0}`} label="Sessions done" />
-          <StatTile value={`${user?.stats?.wordsLearned ?? 0}`} label="Words learned" />
-          <StatTile value={`${user?.stats?.longestStreak ?? 0}`} label="Best streak" />
+          <StatTile value={`${user?.stats?.lessonsCompleted ?? 0}`} label={t('sessionsDone')} />
+          <StatTile value={`${user?.stats?.wordsLearned ?? 0}`} label={t('wordsLearned')} />
+          <StatTile value={`${user?.stats?.longestStreak ?? 0}`} label={t('bestStreak')} />
         </View>
 
-        <Text style={styles.sectionLabel}>This week&apos;s activity</Text>
+        <Text style={styles.sectionLabel}>{t('weekActivity')}</Text>
         <View style={styles.barChart}>
           {activity.map((day, index) => (
             <View key={`${day.label}-${index}`} style={styles.barColumn}>
@@ -125,21 +127,21 @@ export default function AchievementsScreen() {
         </View>
 
         <ProgressLine
-          label="Peg progress"
-          value={`${unlockedPegs} / 100 pegs unlocked`}
+          label={t('pegProgress')}
+          value={`${unlockedPegs} / 100 ${t('pegsUnlocked')}`}
           percent={(unlockedPegs / 100) * 100}
           color="#FF6F91"
           onPress={() => router.push('/number-peg/map')}
         />
         <ProgressLine
-          label="Palace progress"
-          value={`${palaceUnlocked} / ${Math.max(1, palaceTotal)} palaces unlocked`}
+          label={t('palaceProgress')}
+          value={`${palaceUnlocked} / ${Math.max(1, palaceTotal)} ${t('palacesUnlocked')}`}
           percent={palaceTotal ? (palaceUnlocked / palaceTotal) * 100 : 0}
           color="#9B8CFF"
           onPress={() => router.push('/palaces/map')}
         />
 
-        <Text style={styles.sectionLabel}>Badges</Text>
+        <Text style={styles.sectionLabel}>{t('badges')}</Text>
         <View style={styles.badgeGrid}>
           {orderedBadges.map((badge) => {
             const earned = Boolean(badge.earnedAt);
@@ -156,7 +158,7 @@ export default function AchievementsScreen() {
             );
           })}
         </View>
-        {orderedBadges.length === 0 ? <Text style={styles.emptyText}>Keep practising to earn your first badge.</Text> : null}
+        {orderedBadges.length === 0 ? <Text style={styles.emptyText}>{t('emptyBadges')}</Text> : null}
       </ScrollView>
 
       <BadgeDetailsModal badge={selectedBadge} visible={Boolean(selectedBadge)} onClose={() => setSelectedBadge(null)} />
@@ -169,12 +171,13 @@ function StatTile({ value, label }: { value: string; label: string }) {
 }
 
 function ProgressLine({ label, value, percent, color, onPress }: { label: string; value: string; percent: number; color: string; onPress: () => void }) {
+  const { t } = useTranslation('achievements');
   return (
     <View style={styles.progressLine}>
       <View style={styles.progressLineHeader}>
         <Text style={styles.progressSectionLabel}>{label}</Text>
         <AnimatedPressable accessibilityLabel={`See all ${label}`} onPress={onPress} style={styles.seeAll}>
-          <View style={styles.seeAllRow}><Text style={styles.seeAllText}>See all</Text><ArrowRight size={12} color="#4FC0E8" /></View>
+          <View style={styles.seeAllRow}><Text style={styles.seeAllText}>{t('seeAll')}</Text><ArrowRight size={12} color="#4FC0E8" /></View>
         </AnimatedPressable>
       </View>
       <Text style={styles.progressLabel}>{value}</Text>

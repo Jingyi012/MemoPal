@@ -1,3 +1,5 @@
+export type AppLanguage = 'system' | 'en' | 'zh';
+
 export interface UserState {
   isFirstTime: boolean;
   hasCompletedOnboarding: boolean;
@@ -13,7 +15,7 @@ export interface UserState {
   preferences: {
     reviewTime: string;
     theme: 'light' | 'dark' | 'auto';
-    language: string;
+    language: AppLanguage;
     soundEnabled: boolean;
     hapticsEnabled: boolean;
   };
@@ -46,7 +48,7 @@ export const defaultUserState: UserState = {
   preferences: {
     reviewTime: '09:00',
     theme: 'light',
-    language: 'en',
+    language: 'system',
     soundEnabled: true,
     hapticsEnabled: true,
   },

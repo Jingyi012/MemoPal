@@ -11,9 +11,11 @@ import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegE
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 export default function PalaceMapScreen() {
   const router = useRouter();
+  const { t } = useTranslation('palace');
   const { user } = useCurrentUser();
   const scenes = usePalaceScenes();
   const isPremium = Boolean(user?.isPremium);
@@ -22,9 +24,9 @@ export default function PalaceMapScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow="Your palaces"
-        title="Palace unlocks"
-        description="Choose a room, then place your items"
+        eyebrow={t('yourPalaces')}
+        title={t('palaceUnlocks')}
+        description={t('mapDescription')}
         backAction={() => router.back()}
       />
       <ScrollView
@@ -48,10 +50,10 @@ export default function PalaceMapScreen() {
         </View>
 
         {scenes.isLoading ? (
-          <View style={styles.loadingFrame}><LoadingView description="Opening the Palace doors…" /></View>
+          <View style={styles.loadingFrame}><LoadingView description={t('loading')} /></View>
         ) : scenes.isError ? (
           <ModuleNoticeCard
-            title="The Palace doors are stuck"
+            title={t('doorsStuck')}
             body={getNumberPegErrorMessage(scenes.error, 'Check your connection and try again.')}
             onAction={scenes.refetch}
           />
@@ -78,8 +80,8 @@ export default function PalaceMapScreen() {
           </View>
         ) : (
           <ModuleNoticeCard
-            title="No Palace scenes yet"
-            body="Publish a scene and its loci from the admin studio to start building journeys."
+            title={t('noScenes')}
+            body={t('publishScene')}
             onAction={scenes.refetch}
           />
         )}

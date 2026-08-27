@@ -16,9 +16,11 @@ import { X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import TermsAndConditionSheet from '../components/TermsAndConditionSheet';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 const PremiumScreen: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation('subscription');
   const termsRef = useRef<BottomSheetModal>(null);
   const [config, setConfig] = useState<PremiumSubscriptionConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -111,7 +113,7 @@ const PremiumScreen: React.FC = () => {
 
         <View className="flex-1 items-center justify-center px-6">
           <Text className="mb-2 text-center text-base font-semibold text-[#2B2A3D]">
-            Premium data is unavailable right now.
+            {t('premiumUnavailable')}
           </Text>
           <Text className="mb-5 text-center text-sm text-[#6B6A80]">
             {loadError ?? 'Please try again in a moment.'}
@@ -119,7 +121,7 @@ const PremiumScreen: React.FC = () => {
           <TouchableOpacity
             className="rounded-xl bg-[#FFC93C] px-5 py-3"
             onPress={() => void loadPremiumConfig()}>
-            <Text className="font-semibold text-[#2B2A3D]">Try Again</Text>
+            <Text className="font-semibold text-[#2B2A3D]">{t('tryAgain')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -129,7 +131,7 @@ const PremiumScreen: React.FC = () => {
   const handleSubscribePress = () => {
     if (!config.subscribeButton.enabled) return;
 
-    Alert.alert('Subscription Unavailable', config.subscribeButton.pendingMessage);
+    Alert.alert(t('subscriptionUnavailable'), config.subscribeButton.pendingMessage);
   };
 
   return (
@@ -140,7 +142,7 @@ const PremiumScreen: React.FC = () => {
         {loadError ? (
           <View className="mx-6 mt-3 rounded-2xl border-2 border-[#FFD9E2] bg-[#FFF0F4] px-4 py-3">
             <Text className="text-sm font-semibold text-[#E8527A]">
-              Unable to refresh premium data
+              {t('refreshUnavailable')}
             </Text>
             <Text className="mt-1 text-sm text-[#E8527A]">{loadError}</Text>
           </View>

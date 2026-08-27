@@ -11,22 +11,24 @@ import type { PracticeAttempt } from '@/features/practice-attempts';
 import { Href, useRouter } from 'expo-router';
 import { AlertCircle, ArrowRight, Check, Circle, RefreshCcw, X } from 'lucide-react-native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: string }) {
   const router = useRouter();
+  const { t } = useTranslation('memoryDetails');
   const query = useMemorySet(memorySetId);
   const historyQuery = usePracticeAttemptHistory(memorySetId);
 
-  if (query.isLoading) return <LoadingView description="Opening your session…" />;
+  if (query.isLoading) return <LoadingView description={t('title')} />;
 
   if (query.isError || !query.data) {
     return (
       <View style={styles.page}>
-        <CommonHeader eyebrow="Session" title="Session details" description="Memory unavailable" backAction={() => router.back()} />
+        <CommonHeader eyebrow={t('eyebrow')} title={t('title')} description={t('unavailable')} backAction={() => router.back()} />
         <View style={styles.centerState}>
           <ModuleNoticeCard
             emoji="🧩"
-            title="This memory did not load"
+            title={t('loadError')}
             body="Check your connection and try again."
             onAction={() => query.refetch()}
           />
@@ -45,8 +47,8 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow="Session"
-        title="Session details"
+        eyebrow={t('eyebrow')}
+        title={t('title')}
         description={`${isPalace ? 'Memory Palace' : 'Number Peg'} · ${memorySet.items.length} items`}
         backAction={() => router.back()}
       />

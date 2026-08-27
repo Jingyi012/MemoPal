@@ -1,11 +1,11 @@
 import { User } from '@/features/profile/types/users';
-import { greetingByTime } from '@/utils/greeting';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { typography } from '@/theme/typography';
 import { CommonHeader } from '@/components/CommonHeader';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 interface HomeHeaderProps {
   userData: User;
@@ -13,24 +13,27 @@ interface HomeHeaderProps {
 
 export function HomeHeader({ userData }: HomeHeaderProps) {
   const router = useRouter();
-  const name = userData?.displayName ?? 'Welcome';
+  const { t } = useTranslation('home');
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? t('greetingMorning') : hour < 18 ? t('greetingAfternoon') : t('greetingEvening');
+  const name = userData?.displayName?.trim() || t('welcome');
   const level = Math.max(1, userData?.level ?? 1);
 
   return (
     <>
       <CommonHeader
         eyebrow="MemoPal"
-        title="Home"
-        description="Your daily memory dashboard"
+        title={t('title')}
+        description={t('description')}
         hideBackButton
       />
       <View style={styles.greetingRow}>
         <View style={styles.greetingCopy}>
-          <Text style={styles.greetingTitle}>{greetingByTime()}, {name} 👋</Text>
-          <Text style={styles.greetingSubtitle}>Ready to lock in a few more words?</Text>
+          <Text style={styles.greetingTitle}>{greeting}, {name} 👋</Text>
+          <Text style={styles.greetingSubtitle}>{t('ready')}</Text>
         </View>
         <AnimatedPressable
-          accessibilityLabel="Open profile"
+          accessibilityLabel={t('title')}
           onPress={() => router.push('/(tabs)/profile')}
           style={styles.avatarRing}>
           <LinearGradient colors={['#FFC93C', '#FF6F91']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatarGradient}>

@@ -1,10 +1,12 @@
 import { HapticTab } from '@/components/ui/haptic-tab';
 import { WebTabBar } from '@/components/WebTabBar';
 import { useAuth } from '@/contexts/AuthProvider';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import { Redirect, Tabs } from 'expo-router';
 import { Platform, Text } from 'react-native';
 
 export default function TabsLayout() {
+  const { t } = useTranslation('navigation');
   const { isAuthenticated, isLoading } = useAuth();
   const isLocalDevMode =
     String(process.env.EXPO_PUBLIC_LOCAL_DEV_MODE).trim().toLowerCase() === 'true';
@@ -36,35 +38,35 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('home'),
           tabBarIcon: () => <Text style={styles.tabIcon}>🏠</Text>,
         }}
       />
       <Tabs.Screen
         name="practice"
         options={{
-          title: 'Practice',
+          title: t('practice'),
           tabBarIcon: () => <Text style={styles.tabIcon}>🧩</Text>,
         }}
       />
       <Tabs.Screen
         name="library"
         options={{
-          title: 'Library',
+          title: t('library'),
           tabBarIcon: () => <Text style={styles.tabIcon}>📚</Text>,
         }}
       />
       <Tabs.Screen
         name="achievements"
         options={{
-          title: 'Progress',
+          title: t('progress'),
           tabBarIcon: () => <Text style={styles.tabIcon}>📈</Text>,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('profile'),
           tabBarIcon: () => <Text style={[styles.tabIcon, styles.profileTabIcon]}>👤</Text>,
         }}
       />

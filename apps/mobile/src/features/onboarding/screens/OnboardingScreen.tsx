@@ -9,12 +9,19 @@ import { Pressable, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { onboardingSlides } from '../components/onboardingSlides';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 export const OnboardingScreen: React.FC = () => {
   const router = useRouter();
   const { completeOnboarding } = useUserState();
+  const { t } = useTranslation('onboarding');
   const [index, setIndex] = useState(0);
   const slide = onboardingSlides[index];
+  const localizedSlide = {
+    ...slide,
+    title: t(`slide${index + 1}Title` as 'slide1Title'),
+    description: t(`slide${index + 1}Description` as 'slide1Description'),
+  };
 
   const finish = useCallback(async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -51,7 +58,7 @@ export const OnboardingScreen: React.FC = () => {
       {/* Skip */}
       <View className="items-end p-6">
         <AnimatedPressable onPress={finish}>
-          <Text className="font-semibold text-[#6B6A80]">Skip</Text>
+          <Text className="font-semibold text-[#6B6A80]">{t('skip')}</Text>
         </AnimatedPressable>
       </View>
 
@@ -64,18 +71,18 @@ export const OnboardingScreen: React.FC = () => {
             exiting={FadeOutLeft.duration(300)}
             className="items-center">
             <LinearGradient
-              colors={slide.colors}
+              colors={localizedSlide.colors}
               style={{ borderRadius: 64, boxShadow: '0px 4px 14px rgba(43, 42, 61, 0.18)' }}
               className="mb-8 h-32 w-32 items-center justify-center"
               >
-              <Text className="text-7xl">{slide.icon}</Text>
+              <Text className="text-7xl">{localizedSlide.icon}</Text>
             </LinearGradient>
 
             <Text className="mb-4 px-4 text-center text-xl font-semibold text-[#2B2A3D]">
-              {slide.title}
+              {localizedSlide.title}
             </Text>
 
-            <Text className="text-center leading-relaxed text-[#6B6A80]">{slide.description}</Text>
+            <Text className="text-center leading-relaxed text-[#6B6A80]">{localizedSlide.description}</Text>
           </Animated.View>
         </View>
       </GestureDetector>
@@ -98,7 +105,7 @@ export const OnboardingScreen: React.FC = () => {
           onPress={next}
           className="flex-row items-center justify-center gap-2 rounded-2xl bg-[#FFC93C] py-4">
           <Text className="font-semibold text-[#2B2A3D]">
-            {index === onboardingSlides.length - 1 ? 'Get Started' : 'Next'}
+            {index === onboardingSlides.length - 1 ? t('getStarted') : t('continue')}
           </Text>
           <ChevronRight size={20} color="#2B2A3D" />
         </AnimatedPressable>

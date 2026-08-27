@@ -15,9 +15,11 @@ import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegE
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight, ChevronRight } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 export default function NumberPegHomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation('numberPeg');
   const { items } = useNumberPegOverview();
   const { user } = useCurrentUser();
   const memorySets = useMemorySets('number-peg');
@@ -31,9 +33,9 @@ export default function NumberPegHomeScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow="Number Peg"
-        title="Number Peg"
-        description="Turn a short list into unforgettable mini movies"
+        eyebrow={t('eyebrow')}
+        title={t('title')}
+        description={t('description')}
         backAction={() => router.back()}
       />
 
@@ -46,33 +48,33 @@ export default function NumberPegHomeScreen() {
         <TechniqueHeroCard
           tone="peg"
           icon={<Text style={styles.heroEmoji}>🕯️</Text>}
-          eyebrow="FAST, PLAYFUL, POWERFUL"
-          title="Build a memory in minutes"
-          body="Add a list and pair each item with a fixed number shape. Start with ten anchors, then unlock more as you level up."
-          actionLabel="Make a new memory"
+          eyebrow={t('eyebrow')}
+          title={t('memoryMovies')}
+          body={t('heroBody')}
+          actionLabel={t('makeMemory')}
           onAction={() => router.push('/number-peg/create' as Href)}
         />
 
         <AnimatedPressable onPress={() => router.push('/number-peg/familiarity' as Href)} style={styles.familiarityCard}>
           <View style={styles.familiarityIcon}><Text style={styles.familiarityEmoji}>🧠</Text></View>
           <View style={styles.familiarityCopy}>
-            <Text style={styles.familiarityTitle}>Learn your 1–100 anchors</Text>
-            <Text style={styles.familiarityBody}>A quick picture quiz makes your first memory feel easier.</Text>
+            <Text style={styles.familiarityTitle}>{t('familiarityTitle')}</Text>
+            <Text style={styles.familiarityBody}>{t('familiarityBody')}</Text>
           </View>
           <ArrowRight size={18} color={theme.inkSoft} />
         </AnimatedPressable>
 
         <View style={styles.sectionHeadingRow}>
           <View style={styles.sectionHeadingCopy}>
-            <Text style={styles.sectionEyebrow}>YOUR PEG SET</Text>
-            <Text style={styles.sectionTitle}>Your unlocked anchors</Text>
+            <Text style={styles.sectionEyebrow}>{t('pegSet')}</Text>
+            <Text style={styles.sectionTitle}>{t('unlockedAnchors')}</Text>
           </View>
           <AnimatedPressable
             accessibilityRole="button"
             accessibilityLabel="See all peg anchors"
             onPress={() => router.push('/number-peg/map' as Href)}
             style={styles.seeAllButton}>
-            <Text style={styles.seeAllText}>See all</Text>
+              <Text style={styles.seeAllText}>{t('seeAll')}</Text>
             <ChevronRight size={15} color={theme.berryDeep} />
           </AnimatedPressable>
         </View>
@@ -90,18 +92,18 @@ export default function NumberPegHomeScreen() {
 
         <View style={styles.sectionHeadingRow}>
           <View style={styles.sectionHeadingCopy}>
-            <Text style={styles.sectionEyebrow}>YOUR MEMORIES</Text>
-            <Text style={styles.sectionTitle}>Ready for a quick recall?</Text>
+            <Text style={styles.sectionEyebrow}>{t('memoriesSection')}</Text>
+            <Text style={styles.sectionTitle}>{t('quickRecall')}</Text>
           </View>
         </View>
 
         {memorySets.isLoading ? (
           <View style={styles.loadingFrame}>
-            <LoadingView description="Finding your memories…" />
+            <LoadingView description={t('loading')} />
           </View>
         ) : memorySets.isError ? (
           <ModuleNoticeCard
-            title="We could not reach MemoPal"
+            title={t('unavailable')}
             body={getNumberPegErrorMessage(memorySets.error, 'Check your connection and try again.')}
             onAction={() => memorySets.refetch()}
           />
@@ -119,9 +121,9 @@ export default function NumberPegHomeScreen() {
         ) : (
           <ModuleNoticeCard
             emoji="🎒"
-            title="Your memory bag is empty"
-            body="Start with a spelling test, a grocery list, or five fun facts."
-            actionLabel="Make a memory"
+            title={t('empty')}
+            body={t('emptyBody')}
+            actionLabel={t('makeMemory')}
             actionIcon={<ArrowRight size={16} color={theme.ink} />}
             onAction={() => router.push('/number-peg/create' as Href)}
           />

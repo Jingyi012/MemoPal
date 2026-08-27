@@ -5,6 +5,7 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { typography } from '@/theme/typography';
 import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 type PalaceFocusCardProps = {
   scene: PalaceScene;
@@ -33,6 +34,7 @@ export function PalaceFocusCard({
   onStartRecall,
   isLast = false,
 }: PalaceFocusCardProps) {
+  const { t } = useTranslation('palace');
   const zoom = 2.15;
   return (
     <View style={styles.card}>
@@ -63,13 +65,13 @@ export function PalaceFocusCard({
           <Text style={styles.focusSparkleEmoji}>✨</Text>
           <Text style={styles.eyebrow}>{locus.name.toUpperCase()}</Text>
         </View>
-        {showAnswer ? <Text style={styles.answer}>{answer}</Text> : <Text style={styles.hiddenAnswer}>What memory belongs here?</Text>}
+        {showAnswer ? <Text style={styles.answer}>{answer}</Text> : <Text style={styles.hiddenAnswer}>{t('hiddenMemory')}</Text>}
         {showAnswer && association ? <Text style={styles.association}>{association}</Text> : null}
       </View>
       {onPrevious || onNext ? (
         <View style={styles.navigationRow}>
           <AnimatedPressable
-            accessibilityLabel="Previous locus"
+            accessibilityLabel={t('previousLocus')}
             disabled={!onPrevious || index === 0}
             onPress={onPrevious}
             style={[styles.roundButton, (!onPrevious || index === 0) && styles.disabledButton]}>
@@ -77,7 +79,7 @@ export function PalaceFocusCard({
           </AnimatedPressable>
           <Text style={styles.position}>{total ? `${index + 1} / ${total}` : `Locus ${index + 1}`}</Text>
           <AnimatedPressable
-            accessibilityLabel={isLast ? 'Restart Palace walk' : 'Next locus'}
+            accessibilityLabel={isLast ? t('restartWalk') : t('nextLocus')}
             disabled={!onNext}
             onPress={onNext}
             style={styles.roundButton}>
@@ -86,9 +88,9 @@ export function PalaceFocusCard({
         </View>
       ) : null}
       {onStartRecall ? (
-        <AnimatedPressable accessibilityLabel="Start Palace recall" onPress={onStartRecall} style={styles.recallButton}>
+        <AnimatedPressable accessibilityLabel={t('recallChallenge')} onPress={onStartRecall} style={styles.recallButton}>
           <Text style={styles.recallEmoji}>🧠</Text>
-          <Text style={styles.recallText}>Start recall challenge</Text>
+          <Text style={styles.recallText}>{t('recallChallenge')}</Text>
         </AnimatedPressable>
       ) : null}
     </View>

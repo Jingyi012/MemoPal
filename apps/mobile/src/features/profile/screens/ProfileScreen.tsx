@@ -21,12 +21,17 @@ import { EditProfileSheet } from '../components/EditProfileSheet';
 import HelpSheet from '../components/HelpSheet';
 import PrivacyPolicySheet from '../components/PrivacyPolicySheet';
 import { ReviewScheduleSheet } from '../components/ReviewScheduleSheet';
+import type { AppLanguage } from '@/features/onboarding/types/userState';
+import { LanguageSheet } from '../components/LanguageSheet';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
   const { userState, updateState, updatePreferences } = useUserState();
+  const { t } = useTranslation('profile');
+  const { t: languageT } = useTranslation('language');
   const { logout } = useAuth();
   const updateProfileMutation = useUpdateProfile();
   const [showLogout, setShowLogout] = useState(false);
@@ -35,6 +40,10 @@ export default function ProfileScreen() {
   const privacyRef = useRef<any>(null);
   const reviewScheduleRef = useRef<any>(null);
   const editProfileRef = useRef<any>(null);
+  const languageRef = useRef<any>(null);
+  const languageLabel = userState.preferences.language === 'system'
+    ? `${languageT('followSystem')} · ${languageT('english')}/${languageT('chinese')}`
+    : userState.preferences.language === 'zh' ? languageT('chinese') : languageT('english');
 
   useEffect(() => {
     setDailyLearningEnabled(userState.notifications.dailyLearningReminder);
@@ -74,10 +83,11 @@ export default function ProfileScreen() {
   const displayName = user?.displayName?.trim() || 'Memory learner';
   const level = Math.max(1, user?.level ?? 1);
   const isPremium = Boolean(user?.isPremium);
+  const selectedLanguage = (userState.preferences.language as AppLanguage) ?? 'system';
 
   return (
     <View style={styles.page}>
-      <CommonHeader eyebrow="Profile" title="Your progress" description="Level, XP, and streak" hideBackButton />
+      <CommonHeader eyebrow={t('title')} title={t('yourProgress')} description={t('levelXpStreak')} hideBackButton />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.profileHead}>
           <View style={styles.avatar}>
@@ -88,35 +98,35 @@ export default function ProfileScreen() {
             )}
           </View>
           <Text style={styles.profileName}>{displayName}</Text>
-          <Text style={styles.profileSubtitle}>Level {level} · Memory Apprentice</Text>
+          <Text style={styles.profileSubtitle}>Level {level} · {t('memoryApprentice')}</Text>
           <AnimatedPressable onPress={() => editProfileRef.current?.present()} style={styles.editButton}>
             <Pencil size={14} color="#2B2A3D" />
-            <Text style={styles.editButtonText}>Edit profile</Text>
+            <Text style={styles.editButtonText}>{t('editProfile')}</Text>
           </AnimatedPressable>
         </View>
 
         <NightEmphasisCard style={styles.planCard}>
-          <Text style={styles.planBadge}>{isPremium ? 'Premium plan' : 'Free plan'}</Text>
-          <Text style={styles.planTitle}>{isPremium ? 'You are building a strong memory habit' : 'Unlock faster with MemoPal Pro'}</Text>
-          <Text style={styles.planSubtitle}>{isPremium ? 'Keep your streak alive with every short practice session.' : 'More daily XP, exclusive palace themes, and no wait on peg unlocks'}</Text>
+          <Text style={styles.planBadge}>{isPremium ? t('premiumPlan') : t('freePlan')}</Text>
+          <Text style={styles.planTitle}>{isPremium ? t('strongMemoryHabit') : t('unlockFaster')}</Text>
+          <Text style={styles.planSubtitle}>{isPremium ? t('keepStreak') : t('premiumBenefits')}</Text>
           <AnimatedPressable onPress={() => router.push('/premium')} style={styles.upgradeButton}>
-            <Text style={styles.upgradeButtonText}>{isPremium ? 'Manage plan' : 'Upgrade to Pro'}</Text>
+            <Text style={styles.upgradeButtonText}>{isPremium ? t('managePlan') : t('upgradePro')}</Text>
           </AnimatedPressable>
         </NightEmphasisCard>
 
-        <Text style={styles.sectionLabel}>Settings</Text>
+        <Text style={styles.sectionLabel}>{t('settings')}</Text>
         <View style={styles.settingsList}>
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🔔</Text>} title="Notifications" value={dailyLearningEnabled ? 'On' : 'Off'} right={<Switch value={dailyLearningEnabled} onValueChange={saveDailyLearningReminder} />} />
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🔊</Text>} title="Sound & haptics" value="On" />
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌐</Text>} title="Language" value="English" />
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌙</Text>} title="Theme" value="Light" />
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>❓</Text>} title="Help & support" value="›" onPress={() => helpRef.current?.present()} />
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>ℹ️</Text>} title="About MemoPal" value="›" onPress={() => privacyRef.current?.present()} />
+          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🔔</Text>} title={t('notifications')} value={dailyLearningEnabled ? t('on') : t('off')} right={<Switch value={dailyLearningEnabled} onValueChange={saveDailyLearningReminder} />} />
+          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🔊</Text>} title={t('soundHaptics')} value={t('on')} />
+          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌐</Text>} title={t('language')} value={languageLabel} onPress={() => languageRef.current?.present()} />
+          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌙</Text>} title={t('theme')} value={t('light')} />
+          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>❓</Text>} title={t('helpSupport')} value="›" onPress={() => helpRef.current?.present()} />
+          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>ℹ️</Text>} title={t('about')} value="›" onPress={() => privacyRef.current?.present()} />
         </View>
 
         <AnimatedPressable onPress={() => setShowLogout(true)} style={styles.signOutButton}>
           <LogOut size={18} color={theme.berryDeep} />
-          <Text style={styles.signOutText}>Sign out</Text>
+          <Text style={styles.signOutText}>{t('signOut')}</Text>
         </AnimatedPressable>
       </ScrollView>
 
@@ -128,6 +138,11 @@ export default function ProfileScreen() {
           if (userState.notifications.dailyLearningReminder) await PushNotificationService.scheduleDailyLearning(time);
           reviewScheduleRef.current?.dismiss();
         }}
+      />
+      <LanguageSheet
+        ref={languageRef}
+        currentLanguage={selectedLanguage}
+        onSave={(language) => updatePreferences({ ...userState.preferences, language })}
       />
       <EditProfileSheet
         ref={editProfileRef}
@@ -142,7 +157,7 @@ export default function ProfileScreen() {
       />
       <HelpSheet ref={helpRef} router={router} />
       <PrivacyPolicySheet ref={privacyRef} />
-      <ActionSheet isVisible={showLogout} onClose={() => setShowLogout(false)} onAction={logout} title="Sign Out" description="Are you sure you want to sign out? You can sign back in anytime." actionLabel="Sign Out" cancelLabel="Cancel" variant="destructive" Icon={LogOut} />
+      <ActionSheet isVisible={showLogout} onClose={() => setShowLogout(false)} onAction={logout} title={t('signOutTitle')} description={t('signOutDescription')} actionLabel={t('signOutTitle')} cancelLabel={t('cancel')} variant="destructive" Icon={LogOut} />
     </View>
   );
 }

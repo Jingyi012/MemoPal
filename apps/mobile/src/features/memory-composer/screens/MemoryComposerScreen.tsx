@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { parseBulkItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import { buildTechniqueRoute, recommendTechnique, type TechniqueChoice } from '@/features/memory-composer/utils/techniqueRecommendation';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 type ComposerStep = 'content' | 'technique';
 
@@ -26,6 +27,7 @@ type MemoryComposerProps = {
 
 export default function MemoryComposerScreen({ initialTechnique }: MemoryComposerProps = {}) {
   const router = useRouter();
+  const { t } = useTranslation('memoryComposer');
   const [step, setStep] = useState<ComposerStep>('content');
   const [title, setTitle] = useState('');
   const [goalType, setGoalType] = useState<MemoryGoalType>('spelling');
@@ -85,9 +87,9 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <CommonHeader
-        eyebrow="New session"
-        title={step === 'content' ? 'Add your content' : 'Pick a technique'}
-        description={step === 'content' ? 'A word, a fact, a date — anything short' : 'Based on your list, we have a suggestion'}
+        eyebrow={t('eyebrow')}
+        title={step === 'content' ? t('addContent') : t('pickTechnique')}
+        description={step === 'content' ? t('contentDescription') : t('techniqueDescription')}
         backAction={() => (step === 'technique' ? setStep('content') : router.back())}
       />
 
@@ -105,20 +107,20 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
           <>
             <View style={styles.inputCard}>
               <View style={styles.cardIcon}><Text style={styles.cardIconEmoji}>🧠</Text></View>
-              <Text style={styles.cardTitle}>Start with something useful</Text>
-              <Text style={styles.cardBody}>Spelling words, grocery lists, dates, names, or a few facts all make great first memories.</Text>
+              <Text style={styles.cardTitle}>{t('startUseful')}</Text>
+              <Text style={styles.cardBody}>{t('startUsefulBody')}</Text>
 
-              <Text style={styles.label}>Name this session <Text style={styles.optionalLabel}>optional</Text></Text>
+              <Text style={styles.label}>{t('sessionName')} <Text style={styles.optionalLabel}>{t('optional')}</Text></Text>
               <TextInput
                 value={title}
                 onChangeText={(value) => { setTitle(value); setMessage(null); }}
                 maxLength={200}
-                placeholder="e.g. Monday spelling test"
+                placeholder={t('sessionPlaceholder')}
                 placeholderTextColor="#AAA7B5"
                 style={styles.input}
               />
 
-              <Text style={styles.label}>What is this for?</Text>
+              <Text style={styles.label}>{t('whatFor')}</Text>
               <View style={styles.goalGrid}>
                 {goals.map((goal) => {
                   const selected = goal.key === goalType;
@@ -134,17 +136,17 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
                 })}
               </View>
 
-              <Text style={styles.label}>Add your items</Text>
+              <Text style={styles.label}>{t('addItems')}</Text>
               <AnimatedPressable
                 accessibilityLabel={bulkMode ? 'Hide paste many items' : 'Paste many items'}
                 onPress={() => { setBulkMode((current) => !current); setMessage(null); }}
                 style={styles.bulkToggle}>
                 <Text style={styles.bulkToggleEmoji}>📋</Text>
-                <Text style={styles.bulkToggleText}>{bulkMode ? 'Add one at a time' : 'Paste many items'}</Text>
+                <Text style={styles.bulkToggleText}>{bulkMode ? t('addOne') : t('pasteMany')}</Text>
               </AnimatedPressable>
               {bulkMode ? (
                 <View style={styles.bulkCard}>
-                  <Text style={styles.bulkTitle}>One item per line</Text>
+                  <Text style={styles.bulkTitle}>{t('onePerLine')}</Text>
                   <TextInput
                     value={bulkInput}
                     onChangeText={setBulkInput}
@@ -155,7 +157,7 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
                     style={[styles.input, styles.bulkInput]}
                   />
                   <AnimatedPressable onPress={addBulkItems} style={styles.bulkButton}>
-                    <Text style={styles.bulkButtonText}>Add lines to my list</Text>
+                    <Text style={styles.bulkButtonText}>{t('addLines')}</Text>
                     <ArrowRight size={16} color={theme.ink} />
                   </AnimatedPressable>
                 </View>
@@ -167,7 +169,7 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
                   onSubmitEditing={addItem}
                   returnKeyType="done"
                   maxLength={500}
-                  placeholder="Type a word or fact…"
+                  placeholder={t('itemPlaceholder')}
                   placeholderTextColor="#AAA7B5"
                   style={[styles.input, styles.addInput]}
                 />
@@ -190,12 +192,12 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
                   </View>
                 ))}
               </View>
-              <Text style={styles.hint}>Leave the name blank and we’ll suggest one from your list.</Text>
+              <Text style={styles.hint}>{t('techniqueDescription')}</Text>
             </View>
 
             {message && <MessageCard message={message} />}
             <AnimatedPressable onPress={continueToTechniques} style={styles.primaryButton}>
-              <Text style={styles.primaryButtonText}>Continue</Text>
+              <Text style={styles.primaryButtonText}>{t('continue')}</Text>
               <ArrowRight size={18} color={theme.ink} />
             </AnimatedPressable>
           </>
@@ -204,8 +206,8 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
             <View style={styles.recommendationBanner}>
               <Text style={styles.recommendationEmoji}>✨</Text>
               <View style={{ flex: 1 }}>
-                <Text style={styles.recommendationTitle}>Your suggested path</Text>
-                <Text style={styles.recommendationBody}>You can always choose the other technique if it feels more natural.</Text>
+                <Text style={styles.recommendationTitle}>{t('suggestedPath')}</Text>
+                <Text style={styles.recommendationBody}>{t('suggestedBody')}</Text>
               </View>
             </View>
 
@@ -222,7 +224,7 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
 
             <AnimatedPressable onPress={() => setStep('content')} style={styles.changeButton}>
               <ArrowLeft size={16} color={theme.inkSoft} />
-              <Text style={styles.changeButtonText}>Change my list</Text>
+              <Text style={styles.changeButtonText}>{t('changeList')}</Text>
             </AnimatedPressable>
           </>
         )}

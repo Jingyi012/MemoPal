@@ -4,6 +4,7 @@ import { typography } from '@/theme/typography';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 interface Props {
   level: {
@@ -17,7 +18,22 @@ interface Props {
 }
 
 export const LevelProgressHeader: React.FC<Props> = ({ level, streak }) => {
+  const { t } = useTranslation('achievements');
   const { levelWindowXp, isMaxLevel } = getLevelProgressMetrics(level.xpInCurrentLevel, level.xpToNextLevel);
+  const localizedTitles: Record<string, string> = {
+    'Memory Apprentice': t('memoryApprentice'),
+    Novice: t('levelNovice'),
+    Apprentice: t('levelApprentice'),
+    Scholar: t('levelScholar'),
+    Navigator: t('levelNavigator'),
+    Strategist: t('levelStrategist'),
+    Mnemonist: t('levelMnemonist'),
+    Archivist: t('levelArchivist'),
+    'Mind Architect': t('levelMindArchitect'),
+    'Memory Master': t('levelMemoryMaster'),
+    'Palace Sage': t('levelPalaceSage'),
+  };
+  const localizedTitle = localizedTitles[level.title] ?? level.title;
 
   return (
     <NightEmphasisCard style={styles.card}>
@@ -28,9 +44,11 @@ export const LevelProgressHeader: React.FC<Props> = ({ level, streak }) => {
           </LinearGradient>
         </View>
         <View style={styles.levelCopy}>
-          <Text style={styles.levelTitle}>Level {level.currentLevel} · {level.title}</Text>
+          <Text style={styles.levelTitle}>{t('level')} {level.currentLevel} · {localizedTitle}</Text>
           <Text style={styles.levelSubtitle}>
-            {isMaxLevel ? `Total ${level.totalXp} XP` : `${level.xpInCurrentLevel} / ${levelWindowXp} XP to Level ${level.currentLevel + 1}`}
+            {isMaxLevel
+              ? `${t('total')} ${level.totalXp} XP`
+              : `${level.xpInCurrentLevel} / ${levelWindowXp} XP ${t('toLevel')} ${level.currentLevel + 1}`}
           </Text>
         </View>
         <View style={styles.streakPill}><Text style={styles.streakText}>🔥 {streak}</Text></View>
@@ -44,8 +62,8 @@ export const LevelProgressHeader: React.FC<Props> = ({ level, streak }) => {
         />
       </View>
       <View style={styles.xpLabels}>
-        <Text style={styles.xpLabel}>Level {level.currentLevel}</Text>
-        <Text style={styles.xpLabel}>Level {level.currentLevel + 1}</Text>
+        <Text style={styles.xpLabel}>{t('level')} {level.currentLevel}</Text>
+        <Text style={styles.xpLabel}>{t('level')} {level.currentLevel + 1}</Text>
       </View>
     </NightEmphasisCard>
   );

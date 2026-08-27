@@ -9,9 +9,11 @@ import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { typography } from '@/theme/typography';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 export default function NumberPegMapScreen() {
   const router = useRouter();
+  const { t } = useTranslation('numberPeg');
   const { user } = useCurrentUser();
   const level = Math.max(1, user?.level ?? 1);
   const unlockedCount = getUnlockedPegCount(level);
@@ -20,9 +22,9 @@ export default function NumberPegMapScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow="Your peg set"
-        title="Peg unlocks"
-        description="Grows as you level up"
+        eyebrow={t('eyebrow')}
+        title={t('pegUnlocks')}
+        description={t('levelDescription')}
         backAction={() => router.back()}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

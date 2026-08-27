@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { NewMemoryCard } from '@/components/NewMemoryCard';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useMemoryModuleAccess } from '@/core/memory';
@@ -14,9 +15,11 @@ import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HomeHeader } from '../components/Header/HomeHeader';
 import { TodayReviewCard } from '../components/TodayReviewCard';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation('home');
   const { user } = useCurrentUser();
   const { enabled: palaceEnabled } = useMemoryModuleAccess('palace');
   const { enabled: numberPegEnabled } = useMemoryModuleAccess('number-peg');
@@ -50,8 +53,8 @@ export default function HomeScreen() {
           <View style={styles.streakCopyRow}>
             <Text style={styles.streakFlame}>🔥</Text>
             <View>
-              <Text style={styles.streakTitle}>{streak}-day streak</Text>
-              <Text style={styles.streakSubtitle}>Practice today to keep it alive</Text>
+            <Text style={styles.streakTitle}>{streak} {t('streak')}</Text>
+              <Text style={styles.streakSubtitle}>{t('streakSubtitle')}</Text>
             </View>
           </View>
           <View style={styles.streakDots} accessibilityLabel={`${streak} day streak`}>
@@ -62,11 +65,11 @@ export default function HomeScreen() {
         </View>
 
         {memorySets.isLoading ? (
-          <View style={styles.loadingFrame}><LoadingView description="Finding your latest memory…" /></View>
+          <View style={styles.loadingFrame}><LoadingView description={t('loading')} /></View>
         ) : memorySets.isError ? (
           <ModuleNoticeCard
-            title="Your recent memory is out of reach"
-            body="Check your connection and try again."
+            title={t('recentError')}
+            body={t('retry')}
             onAction={memorySets.refetch}
           />
         ) : memorySet ? (
@@ -83,29 +86,29 @@ export default function HomeScreen() {
           />
         ) : null}
 
-        <Text style={styles.sectionLabel}>Today&apos;s pick</Text>
+        <Text style={styles.sectionLabel}>{t('todaysPick')}</Text>
         <AnimatedPressable
           onPress={() => router.push(canStartNumberPeg ? '/number-peg/create' : '/palaces/create-memory')}
           style={styles.todayCard}>
           <LinearGradient colors={['#FFF7E0', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.todayGradient}>
             <Text style={styles.todayIcon}>🕯️</Text>
             <View style={styles.todayBody}>
-              <Text style={styles.todayTitle}>5 Tricky Spelling Words</Text>
+              <Text style={styles.todayTitle}>{t('todayTitle')}</Text>
               <Text style={styles.todaySubtitle}>
-                A fresh {canStartNumberPeg ? 'Number Peg' : 'Memory Palace'} set, ready in one tap
+                {canStartNumberPeg ? t('todaySubtitlePeg') : t('todaySubtitlePalace')}
               </Text>
             </View>
             <View style={styles.startButton}>
-              <Text style={styles.startButtonText}>Start</Text>
+              <Text style={styles.startButtonText}>{t('start')}</Text>
             </View>
           </LinearGradient>
         </AnimatedPressable>
 
-        <Text style={styles.sectionLabel}>This week</Text>
+        <Text style={styles.sectionLabel}>{t('thisWeek')}</Text>
         <View style={styles.statRow}>
-          <StatTile value={`${stats?.lessonsCompleted ?? 0}`} label="Sessions" />
-          <StatTile value={`${stats?.wordsLearned ?? 0}`} label="Words" />
-          <StatTile value="—" label="Accuracy" />
+          <StatTile value={`${stats?.lessonsCompleted ?? 0}`} label={t('sessions')} />
+          <StatTile value={`${stats?.wordsLearned ?? 0}`} label={t('words')} />
+          <StatTile value="—" label={t('accuracy')} />
         </View>
 
         <MemoryTipCard />
@@ -122,16 +125,8 @@ function openReview(router: ReturnType<typeof useRouter>, review: DueMemoryRevie
 }
 
 function FirstMemoryCard({ onPress }: { onPress: () => void }) {
-  return (
-    <AnimatedPressable onPress={onPress} style={styles.firstMemoryCard}>
-      <LinearGradient colors={['#EEE9FF', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.firstMemoryGradient}>
-        <Text style={styles.firstMemoryEmoji}>🧠</Text>
-        <Text style={styles.firstMemoryTitle}>Build your first memory</Text>
-        <Text style={styles.firstMemoryBody}>Turn five words into a tiny story in under two minutes.</Text>
-        <View style={styles.firstMemoryButton}><Text style={styles.firstMemoryButtonText}>Create a memory</Text><ArrowRight size={16} color="#2B2A3D" /></View>
-      </LinearGradient>
-    </AnimatedPressable>
-  );
+  const { t } = useTranslation('home');
+  return <NewMemoryCard title={t('buildFirst')} body={t('buildFirstBody')} onPress={onPress} />;
 }
 
 const MEMORY_TIPS = [
@@ -142,20 +137,23 @@ const MEMORY_TIPS = [
 ];
 
 function MemoryTipCard() {
+  const { t } = useTranslation('home');
   const tip = MEMORY_TIPS[(new Date().getDate() - 1) % MEMORY_TIPS.length];
+  const tipIndex = (new Date().getDate() - 1) % MEMORY_TIPS.length + 1;
   return (
     <View style={styles.tipCard}>
       <Text style={styles.tipEmoji}>{tip.emoji}</Text>
       <View style={styles.tipCopy}>
-        <Text style={styles.tipEyebrow}>MEMORY TIP</Text>
-        <Text style={styles.tipTitle}>{tip.title}</Text>
-        <Text style={styles.tipBody}>{tip.body}</Text>
+      <Text style={styles.tipEyebrow}>{t('memoryTip')}</Text>
+        <Text style={styles.tipTitle}>{t(`tip${tipIndex}Title` as 'tip1Title')}</Text>
+        <Text style={styles.tipBody}>{t(`tip${tipIndex}Body` as 'tip1Body')}</Text>
       </View>
     </View>
   );
 }
 
 function ContinueSessionCardShim({ memorySet, onPress }: { memorySet: MemorySet; onPress: () => void }) {
+  const { t } = useTranslation('home');
   const isPalace = memorySet.techniqueKey === 'palace';
   const progress = memorySet.status === 'draft' ? 25 : 100;
 
@@ -165,11 +163,11 @@ function ContinueSessionCardShim({ memorySet, onPress }: { memorySet: MemorySet;
         <Text style={styles.techniqueEmoji}>{isPalace ? '🏰' : '🕯️'}</Text>
       </View>
       <View style={styles.continueBody}>
-        <Text style={styles.continueLabel}>Continue where you left off</Text>
+        <Text style={styles.continueLabel}>{t('continue')}</Text>
         <Text numberOfLines={1} style={styles.continueTitle}>{memorySet.title}</Text>
         <View style={styles.continueTrack}><View style={[styles.continueFill, { width: `${progress}%` }]} /></View>
         <Text style={styles.continueMeta}>
-          {memorySet.status === 'draft' ? 'Keep building' : `1 of ${memorySet.items.length} recalled`}
+          {memorySet.status === 'draft' ? t('keepBuilding') : `1 of ${memorySet.items.length} ${t('recalled')}`}
         </Text>
       </View>
       <ArrowRight size={18} color="#6B6A80" />
@@ -222,13 +220,6 @@ const styles = StyleSheet.create({
   statValue: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 19 },
   statLabel: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 2 },
   loadingFrame: { height: 145, borderRadius: 18, overflow: 'hidden' },
-  firstMemoryCard: { borderWidth: 2, borderColor: '#E0D9FF', borderRadius: 20, overflow: 'hidden', boxShadow: '0px 8px 20px rgba(43,42,61,0.08)' },
-  firstMemoryGradient: { alignItems: 'center', paddingHorizontal: 18, paddingVertical: 18 },
-  firstMemoryEmoji: { fontSize: 30, lineHeight: 36 },
-  firstMemoryTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 16.5, marginTop: 5 },
-  firstMemoryBody: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 12, textAlign: 'center', marginTop: 3 },
-  firstMemoryButton: { minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: '#FFC93C', borderRadius: 12, paddingHorizontal: 14, marginTop: 13 },
-  firstMemoryButtonText: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 12 },
   tipCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: '#F7F5FF', borderWidth: 2, borderColor: '#E0D9FF', borderRadius: 18, padding: 14, marginTop: 22 },
   tipEmoji: { fontSize: 24, lineHeight: 30 },
   tipCopy: { flex: 1 },

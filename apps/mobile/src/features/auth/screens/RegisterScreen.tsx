@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 const DEFAULT_LOGIN_METHODS: LoginMethods = {
   emailPassword: true,
@@ -27,6 +28,7 @@ const DEFAULT_LOGIN_METHODS: LoginMethods = {
 
 export default function Register() {
   const router = useRouter();
+  const { t } = useTranslation('auth');
   const { register, loginWithGoogle, loginWithFacebook } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -102,8 +104,8 @@ export default function Register() {
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: 'Registration failed',
-        text2: error?.message || 'Please try again.',
+        text1: t('registrationFailed'),
+        text2: error?.message || t('tryAgain'),
       });
     } finally {
       setIsSubmitting(false);
@@ -123,15 +125,15 @@ export default function Register() {
           <Text className="text-4xl">🧠</Text>
         </LinearGradient>
 
-        <Text className="mb-2 text-2xl font-semibold text-[#2B2A3D]">Create your MemoPal account</Text>
+        <Text className="mb-2 text-2xl font-semibold text-[#2B2A3D]">{t('signUp')}</Text>
 
         <Text className="mb-8 max-w-sm text-center text-[#6B6A80]">
-          Set up your account to sync your progress and unlock premium features
+          {t('createDescription')}
         </Text>
 
         {!hasEnabledMethod && (
           <Text className="mb-4 max-w-sm text-center text-sm text-[#E8527A]">
-            Registration is temporarily unavailable. Please contact support.
+            {t('registrationUnavailable')}
           </Text>
         )}
 
@@ -141,14 +143,14 @@ export default function Register() {
               <TextInput
                 value={displayName}
                 onChangeText={setDisplayName}
-                placeholder="Display name"
+                placeholder={t('displayName')}
                 className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
                 autoCapitalize="words"
               />
               <TextInput
                 value={email}
                 onChangeText={setEmail}
-                placeholder="Email"
+                placeholder={t('email')}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
@@ -156,14 +158,14 @@ export default function Register() {
               <TextInput
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Password (min 6 chars)"
+                placeholder={t('passwordHint')}
                 secureTextEntry
                 className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
               />
               <TextInput
                 value={referralCode}
                 onChangeText={setReferralCode}
-                placeholder="Referral code (optional)"
+                placeholder={t('referralCode')}
                 autoCapitalize="characters"
                 className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
               />
@@ -174,7 +176,7 @@ export default function Register() {
               disabled={!canSubmit || isSubmitting}
               className={`mb-3 w-full max-w-sm items-center justify-center rounded-2xl px-6 py-4 ${!canSubmit || isSubmitting ? 'bg-[#D8D4C9]' : 'bg-[#FFC93C]'}`}>
               <Text className={`font-medium ${!canSubmit || isSubmitting ? 'text-[#9A97A7]' : 'text-[#2B2A3D]'}`}>
-                {isSubmitting ? 'Creating account...' : 'Create account'}
+                {isSubmitting ? t('creatingAccount') : t('signUp')}
               </Text>
             </AnimatedPressable>
           </>
@@ -214,7 +216,7 @@ export default function Register() {
               style={{ width: 18, height: 18 }}
               contentFit="contain"
             />
-            <Text className="font-medium text-[#2B2A3D]">Continue with Google</Text>
+            <Text className="font-medium text-[#2B2A3D]">{t('continueGoogle')}</Text>
           </AnimatedPressable>
         )}
 
@@ -247,12 +249,12 @@ export default function Register() {
             disabled={isSubmitting}
             className="mb-3 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#EEE9DC] bg-white px-6 py-4">
             <Ionicons name="logo-facebook" size={18} color="#1877F2" />
-            <Text className="font-medium text-[#2B2A3D]">Continue with Facebook</Text>
+            <Text className="font-medium text-[#2B2A3D]">{t('continueFacebook')}</Text>
           </AnimatedPressable>
         )}
 
         <AnimatedPressable onPress={() => router.replace('/login')} className="mb-4">
-          <Text className="text-[#7A68E0]">Already have an account? Sign in</Text>
+          <Text className="text-[#7A68E0]">{t('hasAccount')}</Text>
         </AnimatedPressable>
       </View>
 

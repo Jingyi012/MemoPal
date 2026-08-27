@@ -7,6 +7,7 @@ import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 type RewardFilter = 'all' | 'xp' | 'badge' | 'milestone';
 
@@ -62,6 +63,7 @@ function getDayLabel(dateIso: string): string {
 
 export default function RewardsHistoryScreen() {
   const router = useRouter();
+  const { t } = useTranslation('rewards');
   const historyWindowDays = 30;
   const { events: xpEvents, isLoading: isLoadingXp } = useXpEvents({ recentDays: historyWindowDays });
   const { badges, isLoading: isLoadingBadges } = useAllBadges();
@@ -142,8 +144,8 @@ export default function RewardsHistoryScreen() {
   return (
     <View className="flex-1 bg-[#FFFDF8]">
       <CommonHeader
-        title="Reward History"
-        description="Track XP, badges, and milestones over time"
+        title={t('title')}
+        description={t('description')}
         hideBackButton={false}
         backAction={() => router.back()}
       />

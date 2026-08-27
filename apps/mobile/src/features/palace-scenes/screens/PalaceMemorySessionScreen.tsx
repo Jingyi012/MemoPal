@@ -27,6 +27,7 @@ import {
 import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -45,6 +46,7 @@ export default function PalaceMemorySessionScreen({
   returnTo?: 'practice' | 'palaces';
 }) {
   const router = useRouter();
+  const { t } = useTranslation('palace');
   const memorySetQuery = useMemorySet(memorySetId);
   const sceneId = memorySetQuery.data?.techniquePlan?.palaceSceneId ?? '';
   const sceneQuery = usePalaceScene(sceneId);
@@ -165,17 +167,17 @@ export default function PalaceMemorySessionScreen({
   }, [memorySetQuery.data, sceneQuery.data]);
 
   if (memorySetQuery.isLoading || (sceneId && sceneQuery.isLoading)) {
-    return <LoadingView description="Opening your Palace…" />;
+    return <LoadingView description={t('loading')} />;
   }
 
   if (!memorySetQuery.data || !sceneQuery.data) {
     return (
       <View style={styles.page}>
-        <CommonHeader title="Memory Palace" description="Scene unavailable" backAction={leaveSession} />
+        <CommonHeader title={t('title')} description={t('sceneUnavailable')} backAction={leaveSession} />
         <View style={styles.empty}>
           <ModuleNoticeCard
             emoji="🏚️"
-            title="This Palace could not open"
+            title={t('sceneUnavailable')}
             body="Refresh your connection or choose another memory."
             onAction={() => void Promise.allSettled([memorySetQuery.refetch(), sceneQuery.refetch()])}
           />
@@ -253,7 +255,7 @@ export default function PalaceMemorySessionScreen({
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow="Memory Palace"
+        eyebrow={t('eyebrow')}
         title={memorySet.title}
         description={`${scene.name} · ${placements.length} loci`}
         backAction={leaveSession}
@@ -287,7 +289,7 @@ export default function PalaceMemorySessionScreen({
         ) : null}
         {hasRestoredSession ? (
           <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
-            <Text style={styles.restoreNoticeText}>Welcome back — your Palace session was restored.</Text>
+            <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
           </AnimatedPressable>
         ) : null}
 
@@ -299,7 +301,7 @@ export default function PalaceMemorySessionScreen({
             onPress={() => { setMode('browse'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
             style={[styles.modeTab, mode === 'browse' && styles.modeTabActive]}>
             <Text style={styles.modeEmoji}>🗺️</Text>
-            <Text style={[styles.modeTabText, mode === 'browse' && styles.modeTabTextActive]}>Map</Text>
+            <Text style={[styles.modeTabText, mode === 'browse' && styles.modeTabTextActive]}>{t('map')}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="tab"
@@ -308,7 +310,7 @@ export default function PalaceMemorySessionScreen({
             onPress={() => { setMode('walk'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
             style={[styles.modeTab, mode === 'walk' && styles.modeTabActive]}>
             <Text style={styles.modeEmoji}>🚶</Text>
-            <Text style={[styles.modeTabText, mode === 'walk' && styles.modeTabTextActive]}>Walk</Text>
+            <Text style={[styles.modeTabText, mode === 'walk' && styles.modeTabTextActive]}>{t('walk')}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="tab"
@@ -317,7 +319,7 @@ export default function PalaceMemorySessionScreen({
             onPress={() => { setMode('list'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
             style={[styles.modeTab, mode === 'list' && styles.modeTabActive]}>
             <Text style={styles.modeEmoji}>📋</Text>
-            <Text style={[styles.modeTabText, mode === 'list' && styles.modeTabTextActive]}>List</Text>
+            <Text style={[styles.modeTabText, mode === 'list' && styles.modeTabTextActive]}>{t('list')}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="tab"
@@ -326,7 +328,7 @@ export default function PalaceMemorySessionScreen({
             onPress={startRecall}
             style={[styles.modeTab, mode === 'recall' && styles.modeTabActive]}>
             <Text style={styles.modeEmoji}>🧠</Text>
-            <Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>Recall</Text>
+            <Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>{t('recall')}</Text>
           </Pressable>
         </View>
 
@@ -370,7 +372,7 @@ export default function PalaceMemorySessionScreen({
           recallComplete ? (
             <RecallResultCard
               tone="palace"
-              title="Palace recalled!"
+              title={t('title')}
               score={score}
               total={placements.length}
               body={score === placements.length
@@ -447,10 +449,10 @@ export default function PalaceMemorySessionScreen({
             <AnimatedPressable
               onPress={() => { setActiveIndex(0); setMode('walk'); }}
               style={styles.primaryButton}>
-              <Text style={styles.primaryText}>🚶 Walk through my Palace</Text>
+              <Text style={styles.primaryText}>🚶 {t('walkThrough')}</Text>
             </AnimatedPressable>
             <AnimatedPressable onPress={startRecall} style={styles.secondaryButton}>
-              <Text style={styles.secondaryText}>Start recall challenge</Text>
+              <Text style={styles.secondaryText}>{t('recallChallenge')}</Text>
             </AnimatedPressable>
           </>
         )}

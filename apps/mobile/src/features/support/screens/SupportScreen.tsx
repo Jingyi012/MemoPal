@@ -6,22 +6,24 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 export default function Support() {
   const router = useRouter();
+  const { t } = useTranslation('support');
   const { config } = useHelpFaqConfig();
   const [subject, setSubject] = useState('MemoPal Support Request');
   const [message, setMessage] = useState('');
   const supportEmail = config.support.email;
   const supportEnabled = config.support.showEmailSupport;
-  const supportButtonTitle = config.support.emailButtonTitle || 'Contact Support';
+  const supportButtonTitle = config.support.emailButtonTitle || t('contactSupport');
 
   const handleSend = async () => {
     if (!supportEnabled) {
       Toast.show({
         type: 'info',
-        text1: 'Email support unavailable',
-        text2: 'Email support is currently disabled.',
+        text1: t('emailUnavailable'),
+        text2: t('emailDisabledBody'),
       });
       return;
     }
@@ -29,8 +31,8 @@ export default function Support() {
     if (!message.trim()) {
       Toast.show({
         type: 'error',
-        text1: 'Message required',
-        text2: 'Please describe your issue before sending.',
+        text1: t('messageRequired'),
+        text2: t('messageRequiredBody'),
       });
       return;
     }
@@ -41,8 +43,8 @@ export default function Support() {
     if (!canOpen) {
       Toast.show({
         type: 'error',
-        text1: 'No email app found',
-        text2: `Please email ${supportEmail} manually.`,
+        text1: t('noEmailApp'),
+        text2: `${t('emailManually')} ${supportEmail}.`,
       });
       return;
     }
@@ -52,26 +54,26 @@ export default function Support() {
 
   return (
     <View className="flex-1 bg-[#FFFDF8]">
-      <CommonHeader title="Support" description={undefined} backAction={() => router.back()} />
+      <CommonHeader title={t('title')} description={undefined} backAction={() => router.back()} />
 
       <View className="gap-4 p-5">
         <Text className="text-[#6B6A80]">
           {supportEnabled
-            ? `Need help? Send us a message and we'll get back to you at ${supportEmail}.`
-            : 'Email support is currently disabled.'}
+            ? `${t('needHelp')} ${supportEmail}.`
+            : t('emailDisabled')}
         </Text>
 
         <TextInput
           value={subject}
           onChangeText={setSubject}
-          placeholder="Subject"
+          placeholder={t('subject')}
           className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
         />
 
         <TextInput
           value={message}
           onChangeText={setMessage}
-          placeholder="Describe your issue"
+          placeholder={t('describeIssue')}
           multiline
           numberOfLines={6}
           textAlignVertical="top"

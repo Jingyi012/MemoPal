@@ -1,6 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import { useHelpFaqConfig } from '@/features/support/hooks/useHelpFaqConfig';
 import { HelpFaqItem } from '@/features/support/types/helpFaqConfig';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -25,6 +26,7 @@ const HelpSheet = forwardRef<Ref, HelpSheetProps>(({ router }, ref) => {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const { config } = useHelpFaqConfig();
+  const { t } = useTranslation('support');
   const faqItems = config.faqItems;
   const support = config.support;
 
@@ -36,7 +38,7 @@ const HelpSheet = forwardRef<Ref, HelpSheetProps>(({ router }, ref) => {
 
   return (
     <CustomBottomSheetModal ref={bottomSheetRef} snapPoints={['95%']} enableDynamicSizing={false}>
-      <Text className="px-6 pb-4 pt-3 text-xl font-bold">Help & FAQ</Text>
+      <Text className="px-6 pb-4 pt-3 text-xl font-bold">{t('helpFaq')}</Text>
       <BottomSheetScrollView className="px-6 py-4">
         {/* FAQ Section */}
         {faqItems.map((item, index) => (
@@ -48,40 +50,8 @@ const HelpSheet = forwardRef<Ref, HelpSheetProps>(({ router }, ref) => {
           />
         ))}
 
-        {/* Contact / Tutorial Options */}
-        <Text className="mb-3 mt-4 text-lg font-bold text-[#2B2A3D]">Still need help?</Text>
-
-        <AnimatedPressable
-          onPress={() => {
-            bottomSheetRef.current?.dismiss();
-            router.push('/tutorial');
-          }}
-          className="mb-3 flex-row items-center gap-3 rounded-2xl border-2 border-[#BFE7D6] bg-[#F1FBF5] p-4">
-          <View className="flex h-10 w-10 items-center justify-center rounded-full bg-[#BFE7D6]">
-            <Text className="text-xl">📖</Text>
-          </View>
-          <View className="flex-1">
-            <Text className="font-medium text-[#2B2A3D]">View Tutorial</Text>
-            <Text className="text-sm text-[#6B6A80]">Learn the basics</Text>
-          </View>
-          <ChevronRight className="h-5 w-5" color={theme.inkSoft} />
-        </AnimatedPressable>
-
-        {/* <AnimatedPressable
-          onPress={() => {
-            bottomSheetRef.current?.dismiss();
-            router.push('/chat');
-          }}
-          className="mb-3 flex-row items-center gap-3 rounded-xl bg-gray-50 p-4">
-          <View className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
-            <MessageCircle className="h-5 w-5 " color={Colors.purple600} />
-          </View>
-          <View className="flex-1">
-            <Text className="font-medium text-slate-900">Live Chat</Text>
-            <Text className="text-sm text-slate-600">Get instant help</Text>
-          </View>
-          <ChevronRight className="h-5 w-5" color={Colors.slate400} />
-        </AnimatedPressable> */}
+        {/* Contact options */}
+        <Text className="mb-3 mt-4 text-lg font-bold text-[#2B2A3D]">{t('stillNeedHelp')}</Text>
 
         {support.showEmailSupport ? (
           <AnimatedPressable

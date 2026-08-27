@@ -13,9 +13,11 @@ import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes'
 import { Href, useRouter } from 'expo-router';
 import { ChevronRight, Pencil } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 export default function PalaceHomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation('palace');
   const memorySets = useMemorySets('palace');
   const scenes = usePalaceScenes();
   const isRefreshing = memorySets.isRefetching || scenes.isRefetching;
@@ -25,9 +27,9 @@ export default function PalaceHomeScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow="Memory Palace"
-        title="Memory Palace"
-        description="Place memories on one scene, then walk the route"
+        eyebrow={t('eyebrow')}
+        title={t('title')}
+        description={t('description')}
         backAction={() => router.back()}
       />
 
@@ -38,8 +40,8 @@ export default function PalaceHomeScreen() {
         <TechniqueHeroCard
           tone="palace"
           icon={<Text style={styles.heroEmoji}>🏰</Text>}
-          eyebrow="SEE IT · PLACE IT · RECALL IT"
-          title="Turn one place into a memory journey"
+          eyebrow={t('memoryTip')}
+          title={t('description')}
           body="Choose a scene, place each idea on a numbered locus, and follow the same visual path whenever you want to remember it."
           actionLabel="Build a new Palace"
           onAction={() => router.push('/palaces/create-memory' as Href)}
@@ -81,12 +83,12 @@ export default function PalaceHomeScreen() {
 
         {scenes.isLoading ? (
           <View style={styles.sceneLoading}>
-            <LoadingView description="Opening the Palace doors…" />
+            <LoadingView description={t('loading')} />
           </View>
         ) : scenes.isError ? (
           <ModuleNoticeCard
-            title="The Palace doors are stuck"
-            body={getNumberPegErrorMessage(scenes.error, 'Check your connection and try again.')}
+            title={t('doorsStuck')}
+            body={getNumberPegErrorMessage(scenes.error, t('connection'))}
             onAction={scenes.refetch}
           />
         ) : scenes.data?.length ? (
@@ -126,8 +128,8 @@ export default function PalaceHomeScreen() {
           </ScrollView>
         ) : (
           <ModuleNoticeCard
-            title="No Palace scenes yet"
-            body="Publish a scene and its loci from the admin studio to start building journeys."
+            title={t('noScenes')}
+            body={t('publishScene')}
             onAction={scenes.refetch}
           />
         )}
@@ -141,12 +143,12 @@ export default function PalaceHomeScreen() {
 
         {memorySets.isLoading ? (
           <View style={styles.memoryLoading}>
-            <LoadingView description="Finding your Palaces…" />
+            <LoadingView description={t('finding')} />
           </View>
         ) : memorySets.isError ? (
           <ModuleNoticeCard
-            title="We could not reach MemoPal"
-            body={getNumberPegErrorMessage(memorySets.error, 'Check your connection and try again.')}
+            title={t('doorsStuck')}
+            body={getNumberPegErrorMessage(memorySets.error, t('connection'))}
             onAction={memorySets.refetch}
           />
         ) : memorySets.data?.length ? (
@@ -163,7 +165,7 @@ export default function PalaceHomeScreen() {
         ) : (
           <ModuleNoticeCard
             emoji="🗺️"
-            title="Your first journey starts here"
+            title={t('firstJourney')}
             body="Try a school topic, a speech, or the steps of a new skill."
             actionLabel="Build a Palace"
             actionIcon={<ChevronRight size={16} color={theme.ink} />}

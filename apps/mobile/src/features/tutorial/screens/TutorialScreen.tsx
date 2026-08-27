@@ -13,6 +13,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 interface TutorialStep {
   id: number;
@@ -77,8 +78,15 @@ interface TutorialScreenProps {
 }
 
 export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
+  const { t } = useTranslation('tutorial');
   const [currentStep, setCurrentStep] = useState(0);
   const step = tutorialSteps[currentStep];
+  const localizedStep = {
+    ...step,
+    title: t(`step${currentStep + 1}Title` as 'step1Title'),
+    content: t(`step${currentStep + 1}Content` as 'step1Content'),
+    example: t(`step${currentStep + 1}Example` as 'step1Example'),
+  };
   const isLastStep = currentStep === tutorialSteps.length - 1;
 
   const translateX = useSharedValue(0);
@@ -141,7 +149,7 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
             className="h-10 w-10 items-center justify-center rounded-full bg-white/20">
             <ChevronLeft size={24} color="white" />
           </TouchableOpacity>
-          <Text className="ml-4 text-lg font-bold text-white">Tutorial</Text>
+          <Text className="ml-4 text-lg font-bold text-white">{t('title')}</Text>
         </View>
 
         <View className="mb-6 flex-row items-center justify-center gap-2">
@@ -166,7 +174,7 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
         </View>
 
         <Text className="text-center text-xl font-bold text-white">
-          Step {currentStep + 1}: {step.title}
+          {t('step')} {currentStep + 1}: {localizedStep.title}
         </Text>
       </LinearGradient>
 
@@ -176,7 +184,7 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
         style={animatedContentStyle}>
         <View className="space-y-6 pb-10">
           <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8]" radius="3xl" padding="lg" shadow="sm">
-            <Text className="text-base leading-6 text-[#6B6A80]">{step.content}</Text>
+            <Text className="text-base leading-6 text-[#6B6A80]">{localizedStep.content}</Text>
           </BaseCard>
 
           <BaseCard
@@ -188,8 +196,8 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
               <Text className="text-lg">i</Text>
             </View>
             <View className="flex-1">
-              <Text className="mb-1 font-bold text-[#7A68E0]">Example</Text>
-              <Text className="text-sm leading-5 text-[#6B6A80]">{step.example}</Text>
+              <Text className="mb-1 font-bold text-[#7A68E0]">{t('example')}</Text>
+              <Text className="text-sm leading-5 text-[#6B6A80]">{localizedStep.example}</Text>
             </View>
           </BaseCard>
 
@@ -199,7 +207,7 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
               radius="3xl"
               padding="lg"
               shadow="none">
-              <Text className="mb-3 font-bold text-[#247B67]">Visualization Tips</Text>
+              <Text className="mb-3 font-bold text-[#247B67]">{t('tips')}</Text>
               {[
                 'Make it exaggerated',
                 'Add unusual colors',
@@ -235,4 +243,3 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
     </View>
   );
 }
-

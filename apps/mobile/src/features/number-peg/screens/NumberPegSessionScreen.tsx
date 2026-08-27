@@ -28,6 +28,7 @@ import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type SessionTab = 'scenes' | 'recall';
@@ -49,6 +50,7 @@ export default function NumberPegSessionScreen({
   returnTo?: 'practice' | 'number-peg';
 }) {
   const router = useRouter();
+  const { t } = useTranslation('numberPeg');
   const memorySetQuery = useMemorySet(memorySetId);
   const pegs = useMemo(() => buildNumberPegItems(), []);
   const [tab, setTab] = useState<SessionTab>(startInRecall ? 'recall' : 'scenes');
@@ -182,17 +184,17 @@ export default function NumberPegSessionScreen({
     if (nextTab === 'recall' && tab !== 'recall' && !hasRestoredSession) restartRecall();
   };
 
-  if (memorySetQuery.isLoading) return <LoadingView description="Building your memory scenes…" />;
+  if (memorySetQuery.isLoading) return <LoadingView description={t('loading')} />;
 
   if (memorySetQuery.isError || !memorySetQuery.data) {
     return (
       <View style={styles.page}>
-        <CommonHeader title="Number Peg" description="Memory unavailable" backAction={leaveSession} />
+        <CommonHeader title={t('title')} description={t('unavailable')} backAction={leaveSession} />
         <View style={styles.centerState}>
           <ModuleNoticeCard
             emoji="🧩"
-            title="This memory did not load"
-            body={getNumberPegErrorMessage(memorySetQuery.error, 'Check your connection and try again.')}
+            title={t('unavailable')}
+            body={getNumberPegErrorMessage(memorySetQuery.error, t('connection'))}
             onAction={() => memorySetQuery.refetch()}
           />
         </View>
@@ -258,32 +260,32 @@ export default function NumberPegSessionScreen({
 
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <CommonHeader eyebrow="Number Peg" title={memorySet.title} description={`${memorySet.items.length} items · Number Peg`} backAction={leaveSession} />
+      <CommonHeader eyebrow={t('eyebrow')} title={memorySet.title} description={`${memorySet.items.length} ${t('items')} · ${t('title')}`} backAction={leaveSession} />
       <View style={styles.tabs}>
         <View style={styles.tabWrap}>
           <AnimatedPressable
-            accessibilityLabel="Review Number Peg scenes"
+            accessibilityLabel={t('reviewScenes')}
             accessibilityState={{ selected: tab === 'scenes' }}
             onPress={() => openTab('scenes')}
             style={[styles.tab, tab === 'scenes' && styles.activeTab]}>
             <Text style={styles.tabEmoji}>🎨</Text>
-            <Text style={[styles.tabText, tab === 'scenes' && styles.activeTabText]}>Scenes</Text>
+            <Text style={[styles.tabText, tab === 'scenes' && styles.activeTabText]}>{t('scenes')}</Text>
           </AnimatedPressable>
         </View>
         <View style={styles.tabWrap}>
           <AnimatedPressable
-            accessibilityLabel="Start Number Peg recall"
+            accessibilityLabel={t('startRecall')}
             accessibilityState={{ selected: tab === 'recall' }}
             onPress={() => openTab('recall')}
             style={[styles.tab, tab === 'recall' && styles.activeTab]}>
             <Text style={styles.tabEmoji}>🧠</Text>
-            <Text style={[styles.tabText, tab === 'recall' && styles.activeTabText]}>Recall</Text>
+            <Text style={[styles.tabText, tab === 'recall' && styles.activeTabText]}>{t('recall')}</Text>
           </AnimatedPressable>
         </View>
       </View>
       <View style={styles.tabHint}>
         <Text style={styles.tabHintText}>
-          {tab === 'scenes' ? 'Review each scene, then start recall.' : 'Type what each peg was holding.'}
+          {tab === 'scenes' ? t('sceneHint') : t('recallHint')}
         </Text>
       </View>
 
@@ -326,12 +328,12 @@ export default function NumberPegSessionScreen({
           {isComplete ? (
             <RecallResultCard
               tone="peg"
-              title="Round complete!"
+              title={t('roundComplete')}
               score={score}
               total={memorySet.items.length}
               body={score === memorySet.items.length
-                ? 'Perfect recall. Your scenes are doing their job!'
-                : 'Nice work. Replay the scenes you missed, then try once more.'}
+                ? t('perfect')
+                : t('niceWork')}
               saveStatus={
                 practiceAttempt.isPending ? (
                   <Text style={styles.saveState}>Saving your progress…</Text>
@@ -381,11 +383,11 @@ export default function NumberPegSessionScreen({
                 answer={answer}
                 feedback={feedback}
                 feedbackText={feedback === 'correct'
-                  ? 'Nailed it!'
+                  ? t('nailed')
                   : isSpelling
                     ? `Check the spelling: ${getSpellingHint(currentItem?.answer ?? '', answer)}`
                     : `It was ${currentItem?.answer}. Picture it once more, then try again.`}
-                actionLabel={feedback === 'wrong' ? 'Try this peg again' : feedback ? 'Next peg' : 'Check answer'}
+                actionLabel={feedback === 'wrong' ? t('retryPeg') : feedback ? t('next') : t('checkAnswer')}
                 scoreLabel={`Score so far: ${score} / ${responses.length}`}
                 onAnswerChange={setAnswer}
                 onSubmit={checkOrContinue}

@@ -10,6 +10,7 @@ import { PracticeRecentSessionCard } from '@/features/memory-hub/components/Prac
 import { LevelProgressHeader } from '@/features/gamification/achievements/components/LevelProgressHeader';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
 import { typography } from '@/theme/typography';
@@ -20,6 +21,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function PracticeScreen() {
   const router = useRouter();
+  const { t } = useTranslation('practice');
   const modules = useEnabledMemoryModules();
   const numberPegEnabled = modules.some((module) => module.key === 'number-peg');
   const palaceEnabled = modules.some((module) => module.key === 'palace');
@@ -48,9 +50,9 @@ export default function PracticeScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow="Practice"
-        title="Choose how to memorize"
-        description="Pick a technique or jump back into a session"
+        eyebrow={t('eyebrow')}
+        title={t('title')}
+        description={t('description')}
         hideBackButton
       />
       <View style={styles.progressHeaderWrap}>
@@ -58,13 +60,16 @@ export default function PracticeScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <AnimatedPressable onPress={() => router.push('/create-memory' as Href)} style={styles.newSessionCard}>
-          <Text style={styles.newSessionEmoji}>➕</Text>
-          <Text style={styles.newSessionTitle}>New session</Text>
-          <Text style={styles.newSessionBody}>Add your content, then we&apos;ll suggest a technique</Text>
-        </AnimatedPressable>
+        <ModuleNoticeCard
+          icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
+          title={t('newSession')}
+          body={t('newSessionBody')}
+          actionLabel={t('tapToStart')}
+          actionIcon={<Plus size={15} color={theme.ink} />}
+          onAction={() => router.push('/create-memory' as Href)}
+        />
 
-        <Text style={styles.sectionLabel}>Jump straight to a technique</Text>
+        <Text style={styles.sectionLabel}>{t('jumpTechnique')}</Text>
         <View style={styles.techniqueRow}>
           {modules.map((module) => {
             const isPeg = module.key === 'number-peg';
@@ -74,8 +79,8 @@ export default function PracticeScreen() {
                   onPress={() => router.push(module.route as Href)}
                   style={styles.techniqueJump}>
                   <Text style={styles.techniqueJumpEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
-                  <Text style={styles.techniqueJumpName}>{module.title}</Text>
-                  <Text style={styles.techniqueJumpLink}>Skip to this →</Text>
+                  <Text style={styles.techniqueJumpName}>{isPeg ? t('numberPeg') : t('palace')}</Text>
+                  <Text style={styles.techniqueJumpLink}>{t('tapToStart')} →</Text>
                 </AnimatedPressable>
               </View>
             );
@@ -84,8 +89,8 @@ export default function PracticeScreen() {
 
         {numberPegEnabled ? (
           <PracticeDiscoveryRow
-            title="Your peg set"
-            actionLabel="See all →"
+            title={t('yourPegSet')}
+            actionLabel={`${t('seeAll')} →`}
             onAction={() => router.push('/number-peg/map' as Href)}
             items={PEG_ANCHORS.slice(0, Math.min(10, unlockedPegCount)).map((peg) => ({
               key: String(peg.number),
@@ -99,8 +104,8 @@ export default function PracticeScreen() {
 
         {palaceEnabled ? (
           <PracticeDiscoveryRow
-            title="Your palaces"
-            actionLabel="See all →"
+            title={t('yourPalaces')}
+            actionLabel={`${t('seeAll')} →`}
             onAction={() => router.push('/palaces/map' as Href)}
             items={(palaceScenes.data ?? []).slice(0, 4).map((scene) => ({
               key: scene.id,
@@ -113,14 +118,14 @@ export default function PracticeScreen() {
             onItemPress={(sceneId) =>
               router.push({ pathname: '/palaces/create-memory', params: { sceneId } })
             }
-            emptyLabel={palaceScenes.isLoading ? 'Opening your palace shelf…' : 'Build your first palace'}
+            emptyLabel={palaceScenes.isLoading ? t('yourPalaces') : t('palace')}
           />
         ) : null}
 
         <View style={styles.discoverySection}>
           <View style={styles.sectionHeadingRow}>
-            <Text style={[styles.sectionLabel, styles.discoveryTitle]}>Try a lesson</Text>
-            <Text style={styles.lessonHint}>Tap to start</Text>
+            <Text style={[styles.sectionLabel, styles.discoveryTitle]}>{t('tryLesson')}</Text>
+            <Text style={styles.lessonHint}>{t('tapToStart')}</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.lessonList}>
             {LESSONS.filter((lesson) => lesson.technique === 'palace' ? palaceEnabled : numberPegEnabled).map((lesson) => (
@@ -132,7 +137,7 @@ export default function PracticeScreen() {
                 <Text numberOfLines={2} style={styles.lessonTitle}>{lesson.title}</Text>
                 <Text style={styles.lessonCount}>{lesson.items.length} items</Text>
                 <Text style={[styles.lessonTechnique, lesson.technique === 'palace' && styles.lessonTechniquePalace]}>
-                  {lesson.technique === 'palace' ? 'Memory Palace' : 'Number Peg'}
+                  {lesson.technique === 'palace' ? t('palace') : t('numberPeg')}
                 </Text>
               </AnimatedPressable>
             ))}
@@ -140,9 +145,9 @@ export default function PracticeScreen() {
         </View>
 
         <View style={styles.sectionHeadingRow}>
-          <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>Recent sessions</Text>
+          <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>{t('recent')}</Text>
           <AnimatedPressable onPress={() => router.push('/(tabs)/library' as Href)}>
-            <Text style={styles.seeAll}>See all →</Text>
+            <Text style={styles.seeAll}>{t('seeAll')} →</Text>
           </AnimatedPressable>
         </View>
 
@@ -152,18 +157,20 @@ export default function PracticeScreen() {
               key={option.key}
               onPress={() => setFilter(option.key)}
               style={[styles.filterChip, filter === option.key && styles.filterChipActive]}>
-              <Text style={[styles.filterChipText, filter === option.key && styles.filterChipTextActive]}>{option.label}</Text>
+              <Text style={[styles.filterChipText, filter === option.key && styles.filterChipTextActive]}>
+                {option.key === 'all' ? t('all') : option.key === 'number-peg' ? t('numberPeg') : t('palace')}
+              </Text>
             </AnimatedPressable>
           ))}
         </View>
 
         {memorySets.isLoading ? (
-          <View style={styles.emptyCard}><Text style={styles.emptyBody}>Opening your recent sessions…</Text></View>
+          <View style={styles.emptyCard}><Text style={styles.emptyBody}>{t('recent')}</Text></View>
         ) : memorySets.isError ? (
           <ModuleNoticeCard
             icon={<RefreshCcw size={22} color={theme.inkSoft} />}
-            title="Your sessions are out of reach"
-            body="Check your connection and try again."
+            title={t('recent')}
+            body={t('description')}
             onAction={() => memorySets.refetch()}
           />
         ) : recentSets.length ? (
@@ -179,9 +186,9 @@ export default function PracticeScreen() {
         ) : (
           <ModuleNoticeCard
             icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
-            title="Your first memory starts here"
-            body="Add a small list and turn it into a tiny movie or a walk through a room."
-            actionLabel="Create memory"
+            title={t('newSession')}
+            body={t('newSessionBody')}
+            actionLabel={t('tapToStart')}
             actionIcon={<Plus size={15} color={theme.ink} />}
             onAction={() => router.push('/create-memory' as Href)}
           />
@@ -212,10 +219,6 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#FFFFFF' },
   content: { padding: 16, paddingBottom: 42 },
   progressHeaderWrap: { paddingHorizontal: 16, paddingTop: 10 },
-  newSessionCard: { minHeight: 126, borderRadius: 20, borderWidth: 2, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 18, alignItems: 'center', justifyContent: 'center', boxShadow: '0px 8px 20px rgba(43, 42, 61, 0.08)' },
-  newSessionEmoji: { fontSize: 32, lineHeight: 36 },
-  newSessionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16.5, marginTop: 8 },
-  newSessionBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12.5, textAlign: 'center', marginTop: 4 },
   sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },
   techniqueRow: { width: '100%', flexDirection: 'row', gap: 8 },
   techniqueJumpWrap: { flex: 1, minWidth: 0, minHeight: 104 },
@@ -267,8 +270,8 @@ const LESSONS: Lesson[] = [
   { title: 'Grocery run', emoji: '🕯️', technique: 'number-peg', goalType: 'ordered-list', items: ['milk', 'eggs', 'bread', 'apples', 'toothpaste'] },
 ];
 
-const SESSION_FILTERS: { key: 'all' | 'number-peg' | 'palace'; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'number-peg', label: 'Number Peg' },
-  { key: 'palace', label: 'Memory Palace' },
+const SESSION_FILTERS: { key: 'all' | 'number-peg' | 'palace' }[] = [
+  { key: 'all' },
+  { key: 'number-peg' },
+  { key: 'palace' },
 ];

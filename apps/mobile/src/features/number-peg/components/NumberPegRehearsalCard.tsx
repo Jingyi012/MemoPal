@@ -5,6 +5,7 @@ import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types'
 import { typography } from '@/theme/typography';
 import { ArrowLeft, ArrowRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 type NumberPegRehearsalCardProps = {
   item: MemoryItem;
@@ -25,6 +26,7 @@ export function NumberPegRehearsalCard({
   onPrevious,
   onNext,
 }: NumberPegRehearsalCardProps) {
+  const { t } = useTranslation('numberPeg');
   const isFirst = index === 0;
   const isLast = index === total - 1;
   return (
@@ -41,16 +43,16 @@ export function NumberPegRehearsalCard({
         <Text style={styles.sceneSparkle}>✨</Text>
         <Text numberOfLines={3} style={styles.answer}>{item.answer}</Text>
       </View>
-      <Text style={styles.prompt}>Pause and play the scene in your head.</Text>
-      <Text style={styles.sceneText}>{binding?.sceneText ?? `Picture ${item.answer} interacting with this peg.`}</Text>
+      <Text style={styles.prompt}>{t('promptPause')}</Text>
+      <Text style={styles.sceneText}>{binding?.sceneText ?? `${t('sceneInteraction')} (${item.answer})`}</Text>
       <View style={styles.wordTag}><Text style={styles.wordTagText}>{item.answer}</Text></View>
       <View style={styles.actions}>
-        <AnimatedPressable accessibilityLabel="Previous peg" disabled={isFirst} onPress={onPrevious} style={[styles.roundButton, isFirst && styles.disabled]}>
+        <AnimatedPressable accessibilityLabel={t('previousPeg')} disabled={isFirst} onPress={onPrevious} style={[styles.roundButton, isFirst && styles.disabled]}>
           <ArrowLeft size={19} color={theme.ink} />
         </AnimatedPressable>
         <View style={styles.nextButtonWrap}>
           <AnimatedPressable onPress={onNext} style={styles.nextButton}>
-            <Text style={styles.nextText}>{isLast ? 'Start recall' : 'Next peg'}</Text>
+            <Text style={styles.nextText}>{isLast ? t('startRecall') : t('next')}</Text>
             <ArrowRight size={17} color={theme.ink} />
           </AnimatedPressable>
         </View>

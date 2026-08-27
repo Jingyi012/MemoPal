@@ -6,6 +6,7 @@ import type { MemorySetUpsertRequest } from '@/features/memory-sets';
 import { PalaceAssociationEditor } from '@/features/palace-scenes/components/PalaceAssociationEditor';
 import { PalaceLocusMap } from '@/features/palace-scenes/components/PalaceLocusMap';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
@@ -31,6 +32,7 @@ import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 type ComposerStep = 'setup' | 'place';
 
 export default function PalaceMemoryComposerScreen() {
+  const { t } = useTranslation('palace');
   const router = useRouter();
   const params = useLocalSearchParams<{
     title?: string | string[];
@@ -80,7 +82,7 @@ export default function PalaceMemoryComposerScreen() {
     if (!value) return;
     if (selectedScene && items.length >= loci.length) {
       setMessage(
-        `This scene has ${loci.length} clear loci. Choose a larger scene or create a second memory.`
+        `${t('sceneHas')} ${loci.length} ${t('loci')}. ${t('chooseLargerScene')}`
       );
       return;
     }
@@ -97,15 +99,15 @@ export default function PalaceMemoryComposerScreen() {
 
   const continueToPlacement = () => {
     if (!selectedScene) {
-      setMessage('Choose a scene before placing your memories.');
+      setMessage(t('chooseSceneBeforePlace'));
       return;
     }
     if (!items.length) {
-      setMessage('Add at least one thing to remember.');
+      setMessage(t('addThingToRemember'));
       return;
     }
     if (items.length > loci.length) {
-      setMessage(capacityMessage ?? `This scene only has ${loci.length} loci.`);
+      setMessage(capacityMessage ?? `${t('sceneOnlyHas')} ${loci.length} ${t('loci')}.`);
       return;
     }
     setMessage(null);
@@ -114,10 +116,10 @@ export default function PalaceMemoryComposerScreen() {
   };
 
   const save = () => {
-    if (!selectedScene) return setMessage('Choose a scene for your Palace.');
-    if (!items.length) return setMessage('Add at least one thing to remember.');
+    if (!selectedScene) return setMessage(t('chooseSceneForPalace'));
+    if (!items.length) return setMessage(t('addThingToRemember'));
     if (items.length > loci.length) {
-      return setMessage(capacityMessage ?? `This scene only has ${loci.length} loci.`);
+      return setMessage(capacityMessage ?? `${t('sceneOnlyHas')} ${loci.length} ${t('loci')}.`);
     }
     const normalizedTitle = title.trim() || suggestMemoryTitle('custom', items);
     if (!title.trim()) setTitle(normalizedTitle);
@@ -152,17 +154,17 @@ export default function PalaceMemoryComposerScreen() {
   };
 
   const error = createMemorySet.isError
-    ? getNumberPegErrorMessage(createMemorySet.error, 'Could not save this Palace. Try again.')
+    ? getNumberPegErrorMessage(createMemorySet.error, t('couldNotSave'))
     : scenesQuery.isError
-      ? getNumberPegErrorMessage(scenesQuery.error, 'Could not load Palace scenes.')
+      ? getNumberPegErrorMessage(scenesQuery.error, t('couldNotLoad'))
       : null;
 
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow="Memory Palace"
-        title={step === 'setup' ? 'Build a Memory Palace' : 'Place your memories'}
-        description={step === 'setup' ? 'Choose a room and add your list' : 'Make each item vivid on its own locus'}
+        eyebrow={t('eyebrow')}
+        title={step === 'setup' ? t('makePlace') : t('placeMemories')}
+        description={t('description')}
         backAction={() => {
           if (step === 'place') {
             setMessage(null);
@@ -173,33 +175,35 @@ export default function PalaceMemoryComposerScreen() {
         }}
       />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-        <ComposerProgress currentStep={step === 'setup' ? 1 : 2} firstLabel="Choose a room" secondLabel="Place memories" />
+        <ComposerProgress currentStep={step === 'setup' ? 1 : 2} firstLabel={t('chooseRoom')} secondLabel={t('placeMemoriesStep')} />
         <View style={styles.infoCard}>
-          <Text style={styles.infoEmoji}>🏡</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.infoTitle}>{step === 'setup' ? 'One room. One memorable route.' : 'Make every stop impossible to forget.'}</Text>
-            <Text style={styles.infoText}>{step === 'setup' ? 'Choose a familiar scene and add the words, facts, or steps you want to remember.' : 'Tap a marker, then describe the strange little scene that connects your item to that spot.'}</Text>
+          <View style={styles.infoIcon}>
+            <Text style={styles.infoEmoji}>🏡</Text>
+          </View>
+          <View style={styles.infoCopy}>
+            <Text style={styles.infoTitle}>{step === 'setup' ? t('routeTitle') : t('placeTitle')}</Text>
+            <Text style={styles.infoText}>{step === 'setup' ? t('routeBody') : t('placeBody')}</Text>
           </View>
         </View>
 
         {step === 'setup' && fromSharedComposer && title.trim() ? (
           <View style={styles.draftCard}>
-            <Text style={styles.draftEyebrow}>SESSION READY</Text>
+            <Text style={styles.draftEyebrow}>{t('sessionReady')}</Text>
             <Text numberOfLines={1} style={styles.draftTitle}>{title}</Text>
-            <Text style={styles.draftMeta}>{items.length} items · Choose a scene to place them</Text>
+            <Text style={styles.draftMeta}>{items.length} {t('items')} · {t('chooseSceneToPlace')}</Text>
           </View>
         ) : step === 'setup' ? (
           <>
-            <Text style={styles.label}>Name this memory <Text style={styles.optionalLabel}>optional</Text></Text>
-            <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Biology chapter 4" placeholderTextColor="#AAA7B5" style={styles.input} />
+            <Text style={styles.label}>{t('nameMemory')} <Text style={styles.optionalLabel}>{t('optional')}</Text></Text>
+            <TextInput value={title} onChangeText={setTitle} placeholder={t('titlePlaceholder')} placeholderTextColor="#AAA7B5" style={styles.input} />
           </>
          ) : null}
 
-        {step === 'setup' && <Text style={styles.label}>Choose your scene</Text>}
+        {step === 'setup' && <Text style={styles.label}>{t('chooseScene')}</Text>}
         {step === 'setup' && (
           <>
         {scenesQuery.isLoading ? (
-          <Text style={styles.helper}>Loading your scenes…</Text>
+          <Text style={styles.helper}>{t('loadingScenes')}</Text>
         ) : scenesQuery.data?.length ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sceneRail}>
             {scenesQuery.data.map((scene) => {
@@ -218,14 +222,14 @@ export default function PalaceMemoryComposerScreen() {
                     setMessage(
                       fits
                         ? null
-                        : `This scene has ${scene.loci.length} loci. Remove ${items.length - scene.loci.length} item${items.length - scene.loci.length === 1 ? '' : 's'} or choose a larger scene.`
+                        : `${t('sceneHas')} ${scene.loci.length} ${t('loci')}. ${t('removeItemsOrChoose')}`
                     );
                   }}
                   style={[styles.sceneOption, active && styles.sceneOptionActive, !fits && styles.sceneOptionLimited]}>
                   <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneThumb} />
                   <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
                   <Text style={styles.sceneMeta}>
-                    {scene.loci.length} loci{scene.isPremium ? ' · Premium' : ''}{!fits ? ' · Too small' : ''}
+                    {scene.loci.length} {t('loci')}{scene.isPremium ? ` · ${t('premium')}` : ''}{!fits ? ` · ${t('tooSmall')}` : ''}
                   </Text>
                 </AnimatedPressable>
               );
@@ -234,8 +238,8 @@ export default function PalaceMemoryComposerScreen() {
         ) : (
           <View style={styles.emptyScenes}>
             <Text style={styles.sceneImageEmoji}>🖼️</Text>
-            <Text style={styles.helper}>No published scenes yet. Add one in Admin, then refresh.</Text>
-            <AnimatedPressable onPress={() => scenesQuery.refetch()} style={styles.refreshButton}><RefreshCcw size={15} color={theme.ink} /><Text style={styles.refreshText}>Refresh</Text></AnimatedPressable>
+              <Text style={styles.helper}>{t('noPublishedScenes')}</Text>
+              <AnimatedPressable onPress={() => scenesQuery.refetch()} style={styles.refreshButton}><RefreshCcw size={15} color={theme.ink} /><Text style={styles.refreshText}>{t('refresh')}</Text></AnimatedPressable>
           </View>
         )}
           </>
@@ -245,10 +249,10 @@ export default function PalaceMemoryComposerScreen() {
           <>
             <View style={styles.previewHeader}>
               <View>
-                <Text style={styles.previewEyebrow}>SCENE PREVIEW</Text>
+                <Text style={styles.previewEyebrow}>{t('preview')}</Text>
                 <Text style={styles.previewTitle}>{selectedScene.name}</Text>
               </View>
-              <Text style={styles.previewCount}>{items.length}/{loci.length} placed</Text>
+              <Text style={styles.previewCount}>{items.length}/{loci.length} {t('placed')}</Text>
             </View>
             <PalaceLocusMap
               activeIndex={activeLocusIndex}
@@ -260,11 +264,11 @@ export default function PalaceMemoryComposerScreen() {
               scene={selectedScene}
             />
             <Text style={styles.canvasHint}>
-              Markers show the order your memory will follow. Add an item to place it on the next marker.
+              {t('canvasHint')}
             </Text>
             {capacityMessage && (
               <View style={styles.capacityCard}>
-                <Text style={styles.capacityTitle}>This room needs more space</Text>
+              <Text style={styles.capacityTitle}>{t('capacity')}</Text>
                 <Text style={styles.capacityText}>{capacityMessage}</Text>
               </View>
             )}
@@ -285,17 +289,17 @@ export default function PalaceMemoryComposerScreen() {
 
         {step === 'setup' ? (
           <>
-            <View style={styles.labelRow}><Text style={styles.label}>Add your items</Text><Text style={styles.counter}>{items.length}/{loci.length || '—'}</Text></View>
+            <View style={styles.labelRow}><Text style={styles.label}>{t('addItems')}</Text><Text style={styles.counter}>{items.length}/{loci.length || '—'}</Text></View>
             <View style={styles.addRow}>
-              <TextInput value={newItem} onChangeText={setNewItem} onSubmitEditing={addItem} placeholder="A word, fact, name, or step" placeholderTextColor="#AAA7B5" style={[styles.input, { flex: 1 }]} />
-              <AnimatedPressable accessibilityLabel="Add item" onPress={addItem} style={styles.addButton}><Plus size={21} color="white" /></AnimatedPressable>
+              <TextInput value={newItem} onChangeText={setNewItem} onSubmitEditing={addItem} placeholder={t('itemPlaceholder')} placeholderTextColor="#AAA7B5" style={[styles.input, { flex: 1 }]} />
+              <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} style={styles.addButton}><Plus size={21} color="white" /></AnimatedPressable>
             </View>
             {items.map((item, index) => (
               <View key={`${item}-${index}`} style={styles.itemRow}>
                 <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
-                <View style={{ flex: 1 }}><Text style={styles.itemText}>{item}</Text><Text style={styles.locusText}>{loci[index]?.name ?? 'Choose a scene to assign a locus'}</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.itemText}>{item}</Text><Text style={styles.locusText}>{loci[index]?.name ?? t('chooseSceneAssignLocus')}</Text></View>
                 <AnimatedPressable
-                  accessibilityLabel={`Remove ${item}`}
+                  accessibilityLabel={`${t('removeAccessibility')} ${item}`}
                   onPress={() => {
                     setItems((current) => current.filter((_, i) => i !== index));
                     setAssociations((current) => current.filter((_, i) => i !== index));
@@ -308,7 +312,7 @@ export default function PalaceMemoryComposerScreen() {
             ))}
             <View style={styles.fullWidthButton}>
               <AnimatedPressable onPress={continueToPlacement} style={styles.continueButton}>
-                <Text style={styles.continueText}>Continue to place memories</Text>
+              <Text style={styles.continueText}>{t('continuePlace')}</Text>
                 <ArrowRight size={18} color={theme.ink} />
               </AnimatedPressable>
             </View>
@@ -316,7 +320,7 @@ export default function PalaceMemoryComposerScreen() {
         ) : (
           <View style={styles.fullWidthButton}>
             <AnimatedPressable onPress={() => setStep('setup')} style={styles.editSetupButton}>
-              <Text style={styles.editSetupText}>Edit items or choose another room</Text>
+              <Text style={styles.editSetupText}>{t('editSetup')}</Text>
               <ArrowLeft size={16} color={theme.violetDeep} />
             </AnimatedPressable>
           </View>
@@ -326,7 +330,7 @@ export default function PalaceMemoryComposerScreen() {
         {step === 'place' && (
           <View style={styles.fullWidthButton}>
             <AnimatedPressable disabled={createMemorySet.isPending} onPress={save} style={[styles.saveButton, createMemorySet.isPending && { opacity: 0.5 }]}>
-              <Check size={19} color={theme.ink} /><Text style={styles.saveText}>{createMemorySet.isPending ? 'Saving…' : error ? 'Try saving again' : 'Save my Palace'}</Text><ArrowRight size={18} color={theme.ink} />
+              <Check size={19} color={theme.ink} /><Text style={styles.saveText}>{createMemorySet.isPending ? t('saving') : error ? t('trySavingAgain') : t('savePalace')}</Text><ArrowRight size={18} color={theme.ink} />
             </AnimatedPressable>
           </View>
         )}
@@ -337,8 +341,9 @@ export default function PalaceMemoryComposerScreen() {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas }, content: { padding: 16, paddingBottom: 42 },
-  infoCard: { flexDirection: 'row', gap: 12, borderRadius: 19, backgroundColor: '#EEE9FF', borderWidth: 1.5, borderColor: '#DCD4FF', padding: 14 },
-  infoEmoji: { fontSize: 28 }, infoTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 }, infoText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 3 },
+  infoCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 19, backgroundColor: '#EEE9FF', borderWidth: 1.5, borderColor: '#DCD4FF', padding: 14 },
+  infoIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white' },
+  infoEmoji: { fontSize: 25, lineHeight: 30 }, infoCopy: { flex: 1, minWidth: 0 }, infoTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 19 }, infoText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
   sceneImageEmoji: { fontSize: 24 },
   draftCard: { borderRadius: 16, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 13 }, draftEyebrow: { color: theme.sunDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 }, draftTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 16, marginTop: 4 }, draftMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3 },
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 }, optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 18 },

@@ -1,6 +1,7 @@
 import { referralApi } from '@/features/referral/api/referral';
 import { BaseCard } from '@/components/BaseCard';
 import { CommonHeader } from '@/components/CommonHeader';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import LoadingView from '@/components/LoadingView';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { NotificationType } from '@/enums/notificationType';
@@ -31,6 +32,7 @@ import { StatBox } from '../components/StatBox';
 
 const ReferralScreen: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation('referral');
   const { data: notifications = [] } = useNotifications();
   const { markAsRead } = useNotificationMutations();
   const [summary, setSummary] = useState<ReferralSummary | null>(null);
@@ -193,15 +195,15 @@ const ReferralScreen: React.FC = () => {
   };
 
   if (loading) {
-    return <LoadingView description="Loading referral rewards" />;
+    return <LoadingView description={t('description')} />;
   }
 
   if (!summary) {
     return (
       <View className="flex-1 bg-[#FFFDF8]">
         <CommonHeader
-          title="Refer & Earn"
-          description="Invite friends and unlock rewards"
+          title={t('title')}
+          description={t('description')}
           backAction={() => router.back()}
         />
         <View className="flex-1 items-center justify-center px-6">
@@ -214,7 +216,7 @@ const ReferralScreen: React.FC = () => {
           <TouchableOpacity
             className="rounded-xl bg-[#FFC93C] px-4 py-3"
             onPress={() => void loadSummary()}>
-            <Text className="font-semibold text-[#2B2A3D]">Try Again</Text>
+            <Text className="font-semibold text-[#2B2A3D]">{t('retry')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -224,8 +226,8 @@ const ReferralScreen: React.FC = () => {
   return (
     <View className="flex-1 bg-[#FFFDF8]">
       <CommonHeader
-        title="Refer & Earn"
-        description="Invite friends and earn premium rewards"
+        title={t('title')}
+        description={t('description')}
         backAction={() => router.back()}
       />
 
@@ -294,7 +296,7 @@ const ReferralScreen: React.FC = () => {
         <BaseCard className="mb-8 overflow-hidden rounded-3xl p-2">
           <View className="flex-row p-4">
             <Text className="text-xl">👑</Text>
-            <Text className="ml-1 text-lg font-medium text-[#2B2A3D]">Milestones</Text>
+            <Text className="ml-1 text-lg font-medium text-[#2B2A3D]">{t('milestones')}</Text>
           </View>
           {milestones.map((milestone, index) => {
             const fallbackReward = `${milestone.rewardXp} XP + ${milestone.rewardPremiumDays} premium days`;
@@ -333,7 +335,7 @@ const ReferralScreen: React.FC = () => {
               </Text>
               <TextInput
                 autoCapitalize="characters"
-                placeholder="Enter referral code"
+                placeholder={t('referralCode')}
                 value={redeemCode}
                 onChangeText={setRedeemCode}
                 className="mt-4 rounded-xl border-2 border-[#EEE9DC] bg-white px-4 py-3 text-base text-[#2B2A3D]"
@@ -374,7 +376,7 @@ const ReferralScreen: React.FC = () => {
             <TouchableOpacity
               className="mt-6 rounded-xl bg-[#FFC93C] px-4 py-3"
               onPress={() => void closeRewardPopup()}>
-              <Text className="text-center font-semibold text-[#2B2A3D]">Got it</Text>
+              <Text className="text-center font-semibold text-[#2B2A3D]">{t('gotIt')}</Text>
             </TouchableOpacity>
           </BaseCard>
         </View>

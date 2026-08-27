@@ -1,4 +1,5 @@
 import { CommonHeader } from '@/components/CommonHeader';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import LoadingView from '@/components/LoadingView';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { NotificationType } from '@/enums/notificationType';
@@ -57,6 +58,7 @@ type NotificationListRow =
 
 const NotificationScreen = () => {
   const router = useRouter();
+  const { t } = useTranslation('notifications');
   const { data: notifications = [], isLoading, refetch, isRefetching } = useNotifications();
   const { markAsRead, dismiss, restore, markAllAsRead } = useNotificationMutations();
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -106,7 +108,7 @@ const NotificationScreen = () => {
       rows.push({
         type: 'header',
         id: 'header-unread',
-        title: 'Unread',
+        title: t('unread'),
         count: unreadNotifications.length,
       });
       rows.push(
@@ -122,7 +124,7 @@ const NotificationScreen = () => {
       rows.push({
         type: 'header',
         id: 'header-earlier',
-        title: unreadNotifications.length > 0 ? 'Earlier' : 'Recent',
+        title: unreadNotifications.length > 0 ? t('earlier') : t('recent'),
         count: readNotifications.length,
       });
       rows.push(
@@ -135,7 +137,7 @@ const NotificationScreen = () => {
     }
 
     return rows;
-  }, [activeNotifications, isSelectionMode, readNotifications, unreadNotifications]);
+  }, [activeNotifications, isSelectionMode, readNotifications, unreadNotifications, t]);
 
   const selectedCount = selectedNotificationIds.length;
   const isAllSelected = allSelectableIds.length > 0 && selectedCount === allSelectableIds.length;
@@ -431,7 +433,7 @@ const NotificationScreen = () => {
   return (
     <View className="flex-1 bg-[#FFFDF8]">
       <CommonHeader
-        title="Notifications"
+        title={t('title')}
         description={
           isSelectionMode
             ? selectedCount > 0
