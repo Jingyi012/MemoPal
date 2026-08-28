@@ -67,9 +67,13 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
                 cancellationToken);
         if (existing is not null)
         {
+            var existingResponseItemIds = existing.Responses.Select(response => response.MemoryItemId).ToList();
             var existingNextDue = await _db.MemoryReviewSchedules
                 .AsNoTracking()
-                .Where(x => x.UserId == userId && x.LastAttemptId == existing.Id && !x.IsDeleted)
+                .Where(x => x.UserId == userId &&
+                            x.MemorySetId == existing.MemorySetId &&
+                            existingResponseItemIds.Contains(x.MemoryItemId) &&
+                            !x.IsDeleted)
                 .Select(x => (DateTime?)x.DueAt)
                 .MinAsync(cancellationToken);
             return ToDto(existing, existingNextDue);
@@ -124,41 +128,50 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
             .Where(x => x.UserId == userId && responseIds.Contains(x.MemoryItemId) && !x.IsDeleted)
             .ToListAsync(cancellationToken);
 
-        DateTime? nextReviewAt = null;
-        foreach (var response in input.Responses)
+        DateTime? nextReviewAt = schedules.Count == 0 ? null : schedules.Min(schedule => schedule.DueAt);
+        if (input.Mode == PracticeModes.Recall)
         {
-            var schedule = schedules.FirstOrDefault(x => x.MemoryItemId == response.MemoryItemId);
-            if (schedule is null)
+            foreach (var response in input.Responses)
             {
-                schedule = new MemoryReviewSchedule
+                var schedule = schedules.FirstOrDefault(x => x.MemoryItemId == response.MemoryItemId);
+                if (schedule is null)
                 {
-                    Id = Guid.NewGuid().ToString("D"),
-                    UserId = userId,
-                    MemorySetId = memorySet.Id,
-                    MemoryItemId = response.MemoryItemId
-                };
-                await _db.MemoryReviewSchedules.AddAsync(schedule, cancellationToken);
-                schedules.Add(schedule);
-            }
+                    schedule = new MemoryReviewSchedule
+                    {
+                        Id = Guid.NewGuid().ToString("D"),
+                        UserId = userId,
+                        MemorySetId = memorySet.Id,
+                        MemoryItemId = response.MemoryItemId
+                    };
+                    await _db.MemoryReviewSchedules.AddAsync(schedule, cancellationToken);
+                    schedules.Add(schedule);
+                }
 
-            schedule.LastAttemptId = attempt.Id;
-            schedule.LastResultCorrect = response.IsCorrect;
-            if (response.IsCorrect)
-            {
-                schedule.ReviewCount += 1;
-                schedule.IntervalDays = RecallIntervalsDays[Math.Min(schedule.ReviewCount - 1, RecallIntervalsDays.Length - 1)];
-                schedule.DueAt = now.AddDays(schedule.IntervalDays);
+                schedule.LastAttemptId = attempt.Id;
+                schedule.LastResultCorrect = response.IsCorrect;
+                var isEarlyCorrectRecall = response.IsCorrect && schedule.DueAt > now;
+                if (isEarlyCorrectRecall)
+                {
+                    // An early success is useful practice, but must not let a
+                    // user fast-forward the spaced-repetition schedule.
+                }
+                else if (response.IsCorrect)
+                {
+                    schedule.ReviewCount += 1;
+                    schedule.IntervalDays = RecallIntervalsDays[Math.Min(schedule.ReviewCount - 1, RecallIntervalsDays.Length - 1)];
+                    schedule.DueAt = now.AddDays(schedule.IntervalDays);
+                }
+                else
+                {
+                    schedule.ReviewCount = 0;
+                    schedule.IntervalDays = 0;
+                    schedule.DueAt = now.AddMinutes(10);
+                }
+                schedule.UpdatedAt = now;
+                nextReviewAt = nextReviewAt is null || schedule.DueAt < nextReviewAt
+                    ? schedule.DueAt
+                    : nextReviewAt;
             }
-            else
-            {
-                schedule.ReviewCount = 0;
-                schedule.IntervalDays = 0;
-                schedule.DueAt = now.AddMinutes(10);
-            }
-            schedule.UpdatedAt = now;
-            nextReviewAt = nextReviewAt is null || schedule.DueAt < nextReviewAt
-                ? schedule.DueAt
-                : nextReviewAt;
         }
 
         await _db.SaveChangesAsync(cancellationToken);

@@ -69,9 +69,15 @@ export default function PalaceMemorySessionScreen({
   const sessionReadyRef = useRef(false);
   const sessionSheetRef = useRef<BottomSheet>(null);
   const sessionSnapPoints = useMemo<(number | string)[]>(() => {
-    if (!bodyHeight || !mapHeight) return ['38%', '88%'];
+    // Keep a compact map visible even when the detail sheet is expanded. The
+    // sheet content is independently scrollable, so it does not need to cover
+    // the whole session to reveal long lists or the recall answer card.
+    if (!bodyHeight || !mapHeight) return ['38%', '76%'];
     const collapsedHeight = Math.max(180, Math.min(bodyHeight - 160, bodyHeight - mapHeight));
-    return [collapsedHeight, '88%'];
+    const minimumMapVisible = Math.min(240, Math.max(180, mapHeight * 0.75));
+    const maxExpandedHeight = Math.max(collapsedHeight + 48, bodyHeight - minimumMapVisible);
+    const expandedHeight = Math.min(bodyHeight * 0.78, maxExpandedHeight);
+    return [collapsedHeight, Math.max(collapsedHeight + 1, expandedHeight)];
   }, [bodyHeight, mapHeight]);
   const practiceAttempt = useCreatePracticeAttempt();
   const leaveSession = () => {
@@ -265,22 +271,66 @@ export default function PalaceMemorySessionScreen({
     sessionSheetRef.current?.snapToIndex(1);
   };
 
-  const renderModeRail = () => (
-    <View style={styles.modeRail}>
-      <Pressable accessibilityRole="tab" accessibilityLabel="Open Palace map" accessibilityState={{ selected: mode === 'browse' }} onPress={() => { setMode('browse'); setActiveIndex(0); setFeedback(null); setAnswer(''); }} style={[styles.modeTab, mode === 'browse' && styles.modeTabActive]}>
-        <Text style={styles.modeEmoji}>🗺️</Text><Text style={[styles.modeTabText, mode === 'browse' && styles.modeTabTextActive]}>{t('map')}</Text>
-      </Pressable>
-      <Pressable accessibilityRole="tab" accessibilityLabel="Start Palace walk" accessibilityState={{ selected: mode === 'walk' }} onPress={() => { setMode('walk'); setActiveIndex(0); setFeedback(null); setAnswer(''); }} style={[styles.modeTab, mode === 'walk' && styles.modeTabActive]}>
-        <Text style={styles.modeEmoji}>🚶</Text><Text style={[styles.modeTabText, mode === 'walk' && styles.modeTabTextActive]}>{t('walk')}</Text>
-      </Pressable>
-      <Pressable accessibilityRole="tab" accessibilityLabel="Open Palace ordered list" accessibilityState={{ selected: mode === 'list' }} onPress={() => { setMode('list'); setActiveIndex(0); setFeedback(null); setAnswer(''); }} style={[styles.modeTab, mode === 'list' && styles.modeTabActive]}>
-        <Text style={styles.modeEmoji}>📋</Text><Text style={[styles.modeTabText, mode === 'list' && styles.modeTabTextActive]}>{t('list')}</Text>
-      </Pressable>
-      <Pressable accessibilityRole="tab" accessibilityLabel="Open Palace recall" accessibilityState={{ selected: mode === 'recall' }} onPress={startRecall} style={[styles.modeTab, mode === 'recall' && styles.modeTabActive]}>
-        <Text style={styles.modeEmoji}>🧠</Text><Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>{t('recall')}</Text>
-      </Pressable>
-    </View>
-  );
+  const renderModeRail = () => {
+    const isRehearsing = mode !== 'recall';
+    const openRehearsalView = (nextMode: 'browse' | 'walk' | 'list') => {
+      setMode(nextMode);
+      setActiveIndex(0);
+      setFeedback(null);
+      setAnswer('');
+    };
+
+    return (
+      <>
+        <View style={styles.modeRail}>
+          <Pressable
+            accessibilityRole="tab"
+            accessibilityLabel={t('rehearseMode')}
+            accessibilityState={{ selected: isRehearsing }}
+            onPress={() => { if (!isRehearsing) openRehearsalView('browse'); }}
+            style={[styles.modeCard, isRehearsing && styles.modeCardActive]}>
+            <Text style={styles.modeEmoji}>👀</Text>
+            <View style={styles.modeCardCopy}>
+              <Text style={[styles.modeTabText, isRehearsing && styles.modeTabTextActive]}>{t('rehearseMode')}</Text>
+              <Text style={[styles.modeTabBody, isRehearsing && styles.modeTabBodyActive]}>{t('rehearseModeBody')}</Text>
+            </View>
+          </Pressable>
+          <Pressable
+            accessibilityRole="tab"
+            accessibilityLabel={t('recallMode')}
+            accessibilityState={{ selected: mode === 'recall' }}
+            onPress={startRecall}
+            style={[styles.modeCard, mode === 'recall' && styles.modeCardActive]}>
+            <Text style={styles.modeEmoji}>🧠</Text>
+            <View style={styles.modeCardCopy}>
+              <Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>{t('recallMode')}</Text>
+              <Text style={[styles.modeTabBody, mode === 'recall' && styles.modeTabBodyActive]}>{t('recallModeBody')}</Text>
+            </View>
+          </Pressable>
+        </View>
+        {isRehearsing ? (
+          <View style={styles.subModeRail}>
+            {([
+              ['browse', '🗺️', t('map')],
+              ['walk', '🚶', t('walk')],
+              ['list', '📋', t('list')],
+            ] as const).map(([nextMode, emoji, label]) => (
+              <Pressable
+                key={nextMode}
+                accessibilityRole="tab"
+                accessibilityLabel={label}
+                accessibilityState={{ selected: mode === nextMode }}
+                onPress={() => openRehearsalView(nextMode)}
+                style={[styles.subModeTab, mode === nextMode && styles.subModeTabActive]}>
+                <Text style={styles.subModeEmoji}>{emoji}</Text>
+                <Text style={[styles.subModeText, mode === nextMode && styles.subModeTextActive]}>{label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+      </>
+    );
+  };
 
   const renderRecallPanel = () => (
     recallComplete ? (
@@ -499,12 +549,21 @@ const styles = StyleSheet.create({
   hint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, textAlign: 'center', marginVertical: 12 },
   restoreNotice: { marginBottom: 10, borderRadius: 12, backgroundColor: '#E3F6ED', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 12, paddingVertical: 9 },
   restoreNoticeText: { color: '#247B67', fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
-  modeRail: { flexDirection: 'row', gap: 6, marginBottom: 12 },
-  modeTab: { flex: 1, minWidth: 0, minHeight: 42, borderRadius: 11, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 3 },
-  modeTabActive: { backgroundColor: theme.ink, borderColor: theme.ink, boxShadow: '0px 3px 0px rgba(43,42,61,0.12)' },
+  modeRail: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  modeCard: { flex: 1, minWidth: 0, minHeight: 70, borderRadius: 15, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 9 },
+  modeCardActive: { backgroundColor: theme.ink, borderColor: theme.ink, boxShadow: '0px 3px 0px rgba(43,42,61,0.12)' },
   modeEmoji: { fontSize: 15 },
   modeTabText: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 11.5 },
   modeTabTextActive: { color: 'white' },
+  modeCardCopy: { flex: 1, minWidth: 0 },
+  modeTabBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9.5, lineHeight: 13, marginTop: 2 },
+  modeTabBodyActive: { color: 'rgba(255,255,255,0.78)' },
+  subModeRail: { flexDirection: 'row', gap: 6, marginBottom: 12 },
+  subModeTab: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#DCD4FF', borderRadius: 11, borderWidth: 1.5, flex: 1, flexDirection: 'row', gap: 4, justifyContent: 'center', minHeight: 38, paddingHorizontal: 5 },
+  subModeTabActive: { backgroundColor: '#EEE9FF', borderColor: '#9B8CFF' },
+  subModeEmoji: { fontSize: 13 },
+  subModeText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  subModeTextActive: { color: theme.violetDeep },
   previewCard: { borderRadius: 20, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 14, marginBottom: 12 },
   previewTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   previewIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },

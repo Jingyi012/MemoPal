@@ -8,6 +8,7 @@ import { useUserState } from '@/contexts/UserStateContext';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
+import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { useQueryClient } from '@tanstack/react-query';
@@ -35,6 +36,7 @@ export default function ProfileScreen() {
   const { logout } = useAuth();
   const updateProfileMutation = useUpdateProfile();
   const [showLogout, setShowLogout] = useState(false);
+  const [reviewRemindersEnabled, setReviewRemindersEnabled] = useState(userState.notifications.reviewReminders);
   const [dailyLearningEnabled, setDailyLearningEnabled] = useState(userState.notifications.dailyLearningReminder);
   const helpRef = useRef<any>(null);
   const privacyRef = useRef<any>(null);
@@ -46,8 +48,9 @@ export default function ProfileScreen() {
     : userState.preferences.language === 'zh' ? languageT('chinese') : languageT('english');
 
   useEffect(() => {
+    setReviewRemindersEnabled(userState.notifications.reviewReminders);
     setDailyLearningEnabled(userState.notifications.dailyLearningReminder);
-  }, [userState.notifications.dailyLearningReminder]);
+  }, [userState.notifications.dailyLearningReminder, userState.notifications.reviewReminders]);
 
   const persistDailyLearningPreference = async (enabled: boolean) => {
     await updateState({
@@ -77,6 +80,33 @@ export default function ProfileScreen() {
       setDailyLearningEnabled(previousValue);
       await persistDailyLearningPreference(previousValue);
       Toast.show({ type: 'error', text1: 'Reminder update failed', text2: error instanceof Error ? error.message : 'Unable to update daily reminder.' });
+    }
+  };
+
+  const saveReviewReminders = async (enabled: boolean) => {
+    const previousValue = reviewRemindersEnabled;
+    setReviewRemindersEnabled(enabled);
+    try {
+      if (!enabled) {
+        await PushNotificationService.cancelAllReviewNotifications();
+        await updateState({ notifications: { ...userState.notifications, reviewReminders: false } });
+        return;
+      }
+
+      const granted = await PushNotificationService.requestPermissions();
+      if (!granted) {
+        setReviewRemindersEnabled(false);
+        await updateState({ notifications: { ...userState.notifications, reviewReminders: false } });
+        Toast.show({ type: 'error', text1: 'Notifications disabled', text2: 'Enable notification permission to use review reminders.' });
+        return;
+      }
+
+      await InAppNotificationSync.syncAllUpcoming(true);
+      await updateState({ notifications: { ...userState.notifications, reviewReminders: true } });
+    } catch (error) {
+      setReviewRemindersEnabled(previousValue);
+      await updateState({ notifications: { ...userState.notifications, reviewReminders: previousValue } });
+      Toast.show({ type: 'error', text1: 'Reminder update failed', text2: error instanceof Error ? error.message : 'Unable to update review reminders.' });
     }
   };
 
@@ -116,7 +146,8 @@ export default function ProfileScreen() {
 
         <Text style={styles.sectionLabel}>{t('settings')}</Text>
         <View style={styles.settingsList}>
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🔔</Text>} title={t('notifications')} value={dailyLearningEnabled ? t('on') : t('off')} right={<Switch value={dailyLearningEnabled} onValueChange={saveDailyLearningReminder} />} />
+          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🔔</Text>} title={t('reviewReminders')} value={reviewRemindersEnabled ? t('on') : t('off')} right={<Switch value={reviewRemindersEnabled} onValueChange={saveReviewReminders} />} />
+          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>📚</Text>} title={t('dailyLearning')} value={dailyLearningEnabled ? t('on') : t('off')} right={<Switch value={dailyLearningEnabled} onValueChange={saveDailyLearningReminder} />} />
           <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🔊</Text>} title={t('soundHaptics')} value={t('on')} />
           <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌐</Text>} title={t('language')} value={languageLabel} onPress={() => languageRef.current?.present()} />
           <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌙</Text>} title={t('theme')} value={t('light')} />

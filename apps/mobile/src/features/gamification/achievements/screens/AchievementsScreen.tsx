@@ -3,7 +3,7 @@ import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { useAllBadges } from '@/features/gamification/shared/hooks/useBadges';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
-import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
+import { usePracticeStats } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
@@ -28,7 +28,7 @@ export default function AchievementsScreen() {
   const { badges, isLoading: badgesLoading, refetch: refetchBadges } = useAllBadges();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
   const { levelInfo, isLoading: levelLoading, refetch: refetchLevel } = useLevelByXp(totalXp, user?.level);
-  const { events, refetch: refetchEvents } = useXpEvents({ recentDays: 7 });
+  const { data: practiceStats, refetch: refetchPracticeStats } = usePracticeStats();
   const palaceScenes = usePalaceScenes();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<BadgeWithEarned | null>(null);
@@ -59,13 +59,13 @@ export default function AchievementsScreen() {
         refetchUser(),
         refetchBadges(),
         refetchLevel(),
-        refetchEvents(),
+        refetchPracticeStats(),
         palaceScenes.refetch(),
       ]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [palaceScenes, refetchBadges, refetchEvents, refetchLevel, refetchUser]);
+  }, [palaceScenes, refetchBadges, refetchLevel, refetchPracticeStats, refetchUser]);
 
   if (userLoading || badgesLoading || levelLoading) return <LoadingView description={t('loading')} />;
 
@@ -86,12 +86,12 @@ export default function AchievementsScreen() {
         <LevelProgressHeader level={displayLevel} streak={user?.stats?.currentStreak ?? 0} />
 
         <View style={styles.statRow}>
-          <StatTile value={`${user?.stats?.lessonsCompleted ?? 0}`} label={t('sessionsDone')} />
-          <StatTile value={`${user?.stats?.wordsLearned ?? 0}`} label={t('wordsLearned')} />
+          <StatTile value={`${practiceStats?.sessionsCompleted ?? 0}`} label={t('sessionsDone')} />
+          <StatTile value={`${practiceStats?.wordsLearned ?? 0}`} label={t('wordsLearned')} />
           <StatTile value={`${user?.stats?.longestStreak ?? 0}`} label={t('bestStreak')} />
         </View>
 
-        <WeeklyActivityCard title={t('weekActivity')} events={events} />
+        <WeeklyActivityCard title={t('weekActivity')} activity={practiceStats?.weeklyActivity} />
 
         <ProgressLine
           label={t('pegProgress')}

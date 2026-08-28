@@ -41,8 +41,10 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
   const memorySet = query.data;
   const isPalace = memorySet.techniqueKey === 'palace';
   const latestAttempt = historyQuery.data?.[0] ?? null;
+  const reviewDue = isReviewDue(latestAttempt);
   const responseByItemId = new Map(latestAttempt?.responses.map((response) => [response.memoryItemId, response]) ?? []);
   const playerRoute = (isPalace ? `/palaces/memory/${memorySet.id}` : `/number-peg/${memorySet.id}`) as Href;
+  const recallRoute = (isPalace ? `/palaces/memory/${memorySet.id}?mode=recall` : `/number-peg/${memorySet.id}?mode=recall`) as Href;
   const retryRoute = (isPalace ? `/palaces/memory/${memorySet.id}?restart=1` : `/number-peg/${memorySet.id}?restart=1`) as Href;
 
   return (
@@ -84,10 +86,26 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
           })}
         </View>
 
-        <AnimatedPressable onPress={() => router.push(playerRoute)} style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>{t('resumeSession')}</Text>
-          <ArrowRight size={18} color={theme.ink} />
-        </AnimatedPressable>
+        <View style={styles.modeSection}>
+          <Text style={styles.modeSectionTitle}>{t('chooseMode')}</Text>
+          <Text style={styles.modeSectionBody}>{t('chooseModeBody')}</Text>
+          <AnimatedPressable onPress={() => router.push(playerRoute)} style={[styles.modeCard, styles.rehearseCard]}>
+            <View style={[styles.modeIcon, styles.rehearseIcon]}><Text style={styles.modeEmoji}>👀</Text></View>
+            <View style={styles.modeCopy}>
+              <Text style={styles.modeTitle}>{t('rehearse')}</Text>
+              <Text style={styles.modeBody}>{t('rehearseBody')}</Text>
+              <View style={styles.modeActionRow}><Text style={styles.modeAction}>{t('startRehearse')}</Text><ArrowRight size={14} color={theme.violetDeep} /></View>
+            </View>
+          </AnimatedPressable>
+          <AnimatedPressable onPress={() => router.push(recallRoute)} style={[styles.modeCard, styles.recallCard, reviewDue && styles.recallCardDue]}>
+            <View style={[styles.modeIcon, styles.recallIcon]}><Text style={styles.modeEmoji}>🧠</Text></View>
+            <View style={styles.modeCopy}>
+              <View style={styles.modeTitleRow}><Text style={styles.modeTitle}>{t('recallMode')}</Text>{reviewDue ? <Text style={styles.dueBadge}>{t('recommended')}</Text> : null}</View>
+              <Text style={styles.modeBody}>{t('recallBody')}</Text>
+              <View style={styles.modeActionRow}><Text style={styles.modeAction}>{t('startRecall')}</Text><ArrowRight size={14} color={theme.berryDeep} /></View>
+            </View>
+          </AnimatedPressable>
+        </View>
         <AnimatedPressable onPress={() => router.push(retryRoute)} style={styles.secondaryButton}>
           <RefreshCcw size={16} color={theme.inkSoft} />
           <Text style={styles.secondaryButtonText}>{t('retryFromScratch')}</Text>
@@ -117,8 +135,11 @@ function SummaryCard({
         <Text style={[styles.techniqueLabel, isPalace ? styles.palaceLabel : styles.pegLabel]}>
           {isPalace ? t('techniquePalace') : t('techniqueNumberPeg')}
         </Text>
-        <Text style={styles.summaryTitle}>{memorySet.title}</Text>
-        <Text style={styles.summaryMeta}>{summaryMeta}</Text>
+      <Text style={styles.summaryTitle}>{memorySet.title}</Text>
+      <Text style={styles.summaryMeta}>{summaryMeta}</Text>
+      <Text style={[styles.reviewSchedule, isReviewDue(latestAttempt) && styles.reviewScheduleDue]}>
+        {getReviewScheduleLabel(latestAttempt, t)}
+      </Text>
       </View>
     </View>
   );
@@ -182,6 +203,19 @@ function getSummaryMeta(
   return `${recalledCount}/${memorySet.items.length} ${t('recalled')} · ${t('keepPracticing')}`;
 }
 
+function isReviewDue(latestAttempt: PracticeAttempt | null) {
+  return Boolean(latestAttempt?.nextReviewAt && new Date(latestAttempt.nextReviewAt).getTime() <= Date.now());
+}
+
+function getReviewScheduleLabel(
+  latestAttempt: PracticeAttempt | null,
+  t: (key: TranslationKey<'memoryDetails'>) => string,
+) {
+  if (!latestAttempt?.nextReviewAt) return t('notScheduled');
+  if (isReviewDue(latestAttempt)) return t('reviewDue');
+  return `${t('nextReview')}: ${new Date(latestAttempt.nextReviewAt).toLocaleString()}`;
+}
+
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 42 },
@@ -196,6 +230,26 @@ const styles = StyleSheet.create({
   pegLabel: { color: theme.berryDeep },
   summaryTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 18, marginTop: 4 },
   summaryMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, marginTop: 3 },
+  reviewSchedule: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 6 },
+  reviewScheduleDue: { color: theme.berryDeep },
+  modeSection: { marginTop: 24 },
+  modeSectionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 18 },
+  modeSectionBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4, marginBottom: 11 },
+  modeCard: { alignItems: 'center', borderRadius: 18, borderWidth: 2, flexDirection: 'row', marginBottom: 10, minHeight: 92, padding: 13 },
+  rehearseCard: { backgroundColor: '#F4F0FF', borderColor: '#DAD0FF' },
+  recallCard: { backgroundColor: '#FFF6D9', borderColor: '#FFDF83' },
+  recallCardDue: { borderColor: theme.berry },
+  modeIcon: { alignItems: 'center', borderRadius: 15, height: 52, justifyContent: 'center', width: 52 },
+  rehearseIcon: { backgroundColor: '#E4DBFF' },
+  recallIcon: { backgroundColor: '#FFE9A6' },
+  modeEmoji: { fontSize: 25 },
+  modeCopy: { flex: 1, marginLeft: 12 },
+  modeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
+  modeTitleRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  dueBadge: { backgroundColor: '#FFE3EA', borderRadius: 999, color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, paddingHorizontal: 7, paddingVertical: 3 },
+  modeBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11.5, lineHeight: 16, marginTop: 2 },
+  modeActionRow: { alignItems: 'center', flexDirection: 'row', gap: 4, marginTop: 7 },
+  modeAction: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 24, marginBottom: 10 },
   itemList: { borderRadius: 19, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 13 },
   itemRow: { minHeight: 67, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line },

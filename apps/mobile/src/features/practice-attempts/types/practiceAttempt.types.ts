@@ -47,3 +47,15 @@ export type DueMemoryReview = Auditable & {
   reviewCount: number;
   lastResultCorrect: boolean;
 };
+
+export type PracticeActivityDay = {
+  date: string;
+  sessions: number;
+};
+
+export type PracticeStats = {
+  sessionsCompleted: number;
+  wordsLearned: number;
+  accuracyPercent: number;
+  weeklyActivity: PracticeActivityDay[];
+};

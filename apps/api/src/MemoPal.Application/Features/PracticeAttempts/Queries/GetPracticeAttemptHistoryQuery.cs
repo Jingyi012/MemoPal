@@ -41,6 +41,14 @@ public sealed class GetPracticeAttemptHistoryQueryHandler
         }
 
         var attemptIds = attempts.Select(attempt => attempt.Id).ToList();
+        var currentNextReviewAt = await _db.MemoryReviewSchedules
+            .AsNoTracking()
+            .Where(schedule =>
+                schedule.UserId == request.UserId &&
+                schedule.MemorySetId == request.MemorySetId &&
+                !schedule.IsDeleted)
+            .Select(schedule => (DateTime?)schedule.DueAt)
+            .MinAsync(cancellationToken);
         var nextReviews = await _db.MemoryReviewSchedules
             .AsNoTracking()
             .Where(schedule =>
@@ -52,10 +60,15 @@ public sealed class GetPracticeAttemptHistoryQueryHandler
             .Select(group => new { AttemptId = group.Key, NextReviewAt = group.Min(schedule => schedule.DueAt) })
             .ToDictionaryAsync(item => item.AttemptId, item => (DateTime?)item.NextReviewAt, cancellationToken);
 
+        var latestAttemptId = attempts[0].Id;
         var history = attempts
             .Select(attempt => ToDto(
                 attempt,
-                nextReviews.TryGetValue(attempt.Id, out var nextReviewAt) ? nextReviewAt : null))
+                nextReviews.TryGetValue(attempt.Id, out var nextReviewAt)
+                    ? nextReviewAt
+                    : attempt.Id == latestAttemptId
+                        ? currentNextReviewAt
+                        : null))
             .ToList();
 
         return ApiResponse<IReadOnlyList<PracticeAttemptDto>>.Ok(history);

@@ -3,8 +3,10 @@ import { PushNotificationService } from '@/features/notifications/services/pushN
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
+import { useUserState } from '@/contexts/UserStateContext';
 
 export const useNotificationObserver = (enabled: boolean = true) => {
+  const { userState } = useUserState();
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
 
@@ -16,9 +18,11 @@ export const useNotificationObserver = (enabled: boolean = true) => {
         // 1. Ensure permissions
         const granted = await PushNotificationService.requestPermissions({ prompt: false });
 
-        if (granted) {
+        if (granted && userState.notifications.reviewReminders) {
           // 2. Sync hardware (Ensures future Push Notifications are set in the OS)
-          await InAppNotificationSync.syncAllUpcoming();
+          await InAppNotificationSync.syncAllUpcoming(true);
+        } else if (granted) {
+          await InAppNotificationSync.syncAllUpcoming(false);
         }
 
         // Refresh the in-app inbox regardless of OS push permission. Push is
@@ -60,5 +64,5 @@ export const useNotificationObserver = (enabled: boolean = true) => {
       if (notificationListener.current) notificationListener.current.remove();
       if (responseListener.current) responseListener.current.remove();
     };
-  }, [enabled]);
+  }, [enabled, userState.notifications.reviewReminders]);
 };

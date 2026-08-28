@@ -115,6 +115,182 @@ public sealed class PracticeAttemptTests
         Assert.Equal(userId, due.CreatedBy);
     }
 
+    [Fact]
+    public async Task Rehearsal_Should_Not_Advance_Review_Schedule()
+    {
+        const string userId = "rehearsal-user";
+        await using var db = CreateDbContext(userId);
+        SeedMemorySet(db, userId, "set-rehearsal", "item-rehearsal");
+        var dueAt = DateTime.UtcNow.AddDays(2);
+        db.MemoryReviewSchedules.Add(new MemoryReviewSchedule
+        {
+            Id = "schedule-rehearsal",
+            UserId = userId,
+            MemorySetId = "set-rehearsal",
+            MemoryItemId = "item-rehearsal",
+            DueAt = dueAt,
+            IntervalDays = 3,
+            ReviewCount = 2,
+            LastResultCorrect = true
+        });
+        await db.SaveChangesAsync();
+
+        var result = await new CreatePracticeAttemptBatchCommandHandler(db).Handle(
+            new CreatePracticeAttemptBatchCommand(userId, new PracticeAttemptBatchRequest
+            {
+                Attempts =
+                [
+                    new PracticeAttemptInput
+                    {
+                        ClientAttemptId = "rehearsal-attempt-1",
+                        MemorySetId = "set-rehearsal",
+                        Mode = PracticeModes.Rehearsal,
+                        DurationMs = 1000,
+                        Responses = [new PracticeResponseInput { MemoryItemId = "item-rehearsal", IsCorrect = true }]
+                    }
+                ]
+            }), default);
+
+        var attempt = Assert.Single(result.Data!);
+        Assert.Equal(dueAt, attempt.NextReviewAt);
+        var schedule = await db.MemoryReviewSchedules.SingleAsync();
+        Assert.Equal(dueAt, schedule.DueAt);
+        Assert.Equal(2, schedule.ReviewCount);
+        Assert.Null(schedule.LastAttemptId);
+    }
+
+    [Fact]
+    public async Task Early_Correct_Recall_Should_Preserve_The_Existing_Due_Date()
+    {
+        const string userId = "early-recall-user";
+        await using var db = CreateDbContext(userId);
+        SeedMemorySet(db, userId, "set-early", "item-early");
+        var dueAt = DateTime.UtcNow.AddDays(1);
+        db.MemoryReviewSchedules.Add(new MemoryReviewSchedule
+        {
+            Id = "schedule-early",
+            UserId = userId,
+            MemorySetId = "set-early",
+            MemoryItemId = "item-early",
+            DueAt = dueAt,
+            IntervalDays = 1,
+            ReviewCount = 1,
+            LastResultCorrect = true
+        });
+        await db.SaveChangesAsync();
+
+        var result = await new CreatePracticeAttemptBatchCommandHandler(db).Handle(
+            new CreatePracticeAttemptBatchCommand(userId, new PracticeAttemptBatchRequest
+            {
+                Attempts =
+                [
+                    new PracticeAttemptInput
+                    {
+                        ClientAttemptId = "early-recall-attempt-1",
+                        MemorySetId = "set-early",
+                        Mode = PracticeModes.Recall,
+                        DurationMs = 1000,
+                        Responses = [new PracticeResponseInput { MemoryItemId = "item-early", IsCorrect = true }]
+                    }
+                ]
+            }), default);
+
+        var attempt = Assert.Single(result.Data!);
+        Assert.Equal(dueAt, attempt.NextReviewAt);
+        var schedule = await db.MemoryReviewSchedules.SingleAsync();
+        Assert.Equal(dueAt, schedule.DueAt);
+        Assert.Equal(1, schedule.ReviewCount);
+        Assert.Equal(1, schedule.IntervalDays);
+        Assert.True(schedule.LastResultCorrect);
+        Assert.Equal(attempt.Id, schedule.LastAttemptId);
+    }
+
+    [Fact]
+    public async Task UpcomingReviewQuery_Should_Return_Future_Items_Within_Window()
+    {
+        const string userId = "upcoming-user";
+        await using var db = CreateDbContext(userId);
+        SeedMemorySet(db, userId, "set-upcoming", "item-soon", "item-later");
+        db.MemoryReviewSchedules.AddRange(
+            new MemoryReviewSchedule
+            {
+                Id = "schedule-soon",
+                UserId = userId,
+                MemorySetId = "set-upcoming",
+                MemoryItemId = "item-soon",
+                DueAt = DateTime.UtcNow.AddDays(2),
+                IntervalDays = 3,
+                ReviewCount = 2,
+                LastResultCorrect = true
+            },
+            new MemoryReviewSchedule
+            {
+                Id = "schedule-later",
+                UserId = userId,
+                MemorySetId = "set-upcoming",
+                MemoryItemId = "item-later",
+                DueAt = DateTime.UtcNow.AddDays(10),
+                IntervalDays = 7,
+                ReviewCount = 3,
+                LastResultCorrect = true
+            });
+        await db.SaveChangesAsync();
+
+        var result = await new GetUpcomingMemoryReviewsQueryHandler(db)
+            .Handle(new GetUpcomingMemoryReviewsQuery(userId, 5), default);
+
+        var upcoming = Assert.Single(result.Data!);
+        Assert.Equal("item-soon", upcoming.MemoryItemId);
+    }
+
+    [Fact]
+    public async Task PracticeStatsQuery_Should_Aggregate_Sessions_Words_Accuracy_And_Weekly_Activity()
+    {
+        const string userId = "stats-user";
+        await using var db = CreateDbContext(userId);
+        var now = DateTime.UtcNow;
+        db.PracticeAttempts.AddRange(
+            new PracticeAttempt
+            {
+                Id = "stats-attempt-1",
+                UserId = userId,
+                MemorySetId = "stats-set",
+                ClientAttemptId = "stats-client-1",
+                CompletedAt = now,
+                CorrectCount = 2,
+                TotalCount = 3,
+                Responses =
+                [
+                    new PracticeResponse { Id = "stats-response-1", MemoryItemId = "word-1", IsCorrect = true },
+                    new PracticeResponse { Id = "stats-response-2", MemoryItemId = "word-2", IsCorrect = true },
+                    new PracticeResponse { Id = "stats-response-3", MemoryItemId = "word-3", IsCorrect = false }
+                ]
+            },
+            new PracticeAttempt
+            {
+                Id = "stats-attempt-2",
+                UserId = userId,
+                MemorySetId = "stats-set",
+                ClientAttemptId = "stats-client-2",
+                CompletedAt = now.AddDays(-1),
+                CorrectCount = 1,
+                TotalCount = 1,
+                Responses =
+                [new PracticeResponse { Id = "stats-response-4", MemoryItemId = "word-1", IsCorrect = true }]
+            });
+        await db.SaveChangesAsync();
+
+        var result = await new GetPracticeStatsQueryHandler(db)
+            .Handle(new GetPracticeStatsQuery(userId), default);
+
+        Assert.True(result.Success);
+        Assert.Equal(2, result.Data!.SessionsCompleted);
+        Assert.Equal(3, result.Data.WordsLearned);
+        Assert.Equal(75, result.Data.AccuracyPercent);
+        Assert.Equal(1, result.Data.WeeklyActivity[^1].Sessions);
+        Assert.Equal(2, result.Data.WeeklyActivity.Sum(day => day.Sessions));
+    }
+
     private static AppDbContext CreateDbContext(string userId)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()

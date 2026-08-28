@@ -278,7 +278,10 @@ export default function NumberPegSessionScreen({
             onPress={() => openTab('scenes')}
             style={[styles.tab, tab === 'scenes' && styles.activeTab]}>
             <Text style={styles.tabEmoji}>🎨</Text>
-            <Text style={[styles.tabText, tab === 'scenes' && styles.activeTabText]}>{t('scenes')}</Text>
+            <View style={styles.tabCopy}>
+              <Text style={[styles.tabText, tab === 'scenes' && styles.activeTabText]}>{t('rehearseTab')}</Text>
+              <Text style={[styles.tabSubtext, tab === 'scenes' && styles.activeTabSubtext]}>{t('rehearseTabBody')}</Text>
+            </View>
           </AnimatedPressable>
         </View>
         <View style={styles.tabWrap}>
@@ -288,7 +291,10 @@ export default function NumberPegSessionScreen({
             onPress={() => openTab('recall')}
             style={[styles.tab, tab === 'recall' && styles.activeTab]}>
             <Text style={styles.tabEmoji}>🧠</Text>
-            <Text style={[styles.tabText, tab === 'recall' && styles.activeTabText]}>{t('recall')}</Text>
+            <View style={styles.tabCopy}>
+              <Text style={[styles.tabText, tab === 'recall' && styles.activeTabText]}>{t('recallTab')}</Text>
+              <Text style={[styles.tabSubtext, tab === 'recall' && styles.activeTabSubtext]}>{t('recallTabBody')}</Text>
+            </View>
           </AnimatedPressable>
         </View>
       </View>
@@ -419,11 +425,14 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
   tabs: { flexDirection: 'row', gap: 6, marginHorizontal: 16, marginTop: 10 },
   tabWrap: { flex: 1, minWidth: 0 },
-  tab: { width: '100%', minHeight: 42, borderRadius: 11, borderWidth: 2, borderColor: theme.line, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'white' },
+  tab: { width: '100%', minHeight: 58, borderRadius: 14, borderWidth: 2, borderColor: theme.line, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: 'white', paddingHorizontal: 9 },
   activeTab: { backgroundColor: theme.ink, borderColor: theme.ink, boxShadow: '0px 3px 0px rgba(43,42,61,0.12)' },
   tabEmoji: { fontSize: 15 },
   tabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
   activeTabText: { color: 'white' },
+  tabCopy: { flex: 1, minWidth: 0 },
+  tabSubtext: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9.5, lineHeight: 13, marginTop: 2 },
+  activeTabSubtext: { color: 'rgba(255,255,255,0.78)' },
   tabHint: { marginHorizontal: 18, marginTop: 7, marginBottom: 1 },
   tabHintText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, textAlign: 'center' },
   restoreNotice: { marginHorizontal: 16, marginTop: 9, borderRadius: 12, backgroundColor: '#E3F6ED', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 12, paddingVertical: 9 },

@@ -3,7 +3,7 @@ import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useMemorySets } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets/types/memorySet.types';
-import { useDueMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
+import { useDueMemoryReviews, usePracticeAttemptHistory, usePracticeStats, useUpcomingMemoryReviews, type DueMemoryReview, type PracticeAttempt } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
 import { WeeklyActivityCard } from '@/features/gamification/shared/components/WeeklyActivityCard';
@@ -15,6 +15,7 @@ import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HomeHeader } from '../components/Header/HomeHeader';
 import { TodayReviewCard } from '../components/TodayReviewCard';
+import { UpcomingReviewCard } from '../components/UpcomingReviewCard';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
 export default function HomeScreen() {
@@ -23,19 +24,22 @@ export default function HomeScreen() {
   const { user } = useCurrentUser();
   const memorySets = useMemorySets();
   const dueReviews = useDueMemoryReviews();
+  const upcomingReviews = useUpcomingMemoryReviews(30);
   const activityQuery = useXpEvents({ recentDays: 7 });
+  const practiceStatsQuery = usePracticeStats();
   const activeMemorySets = (memorySets.data ?? [])
     .filter((item) => item.status !== 'archived')
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
   const memorySet = activeMemorySets[0];
+  const latestAttemptQuery = usePracticeAttemptHistory(memorySet?.id ?? '');
+  const latestAttempt = latestAttemptQuery.data?.[0] ?? null;
   const todayPickMemorySet = activeMemorySets.length > 1
     ? activeMemorySets[activeMemorySets.length - 1]
     : undefined;
   const streak = Math.max(0, user?.stats?.currentStreak ?? 0);
-  const stats = user?.stats;
 
   const refreshHome = async () => {
-    await Promise.allSettled([memorySets.refetch(), activityQuery.refetch()]);
+    await Promise.allSettled([memorySets.refetch(), activityQuery.refetch(), practiceStatsQuery.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]);
   };
 
   const openTodayPick = () => {
@@ -83,7 +87,7 @@ export default function HomeScreen() {
             onAction={memorySets.refetch}
           />
         ) : memorySet ? (
-          <ContinueSessionCardShim memorySet={memorySet} onPress={() => router.push(`/memory-details/${memorySet.id}`)} />
+          <ContinueSessionCardShim memorySet={memorySet} latestAttempt={latestAttempt} onPress={() => router.push(`/memory-details/${memorySet.id}`)} />
         ) : (
           <ModuleNoticeCard
             icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
@@ -101,6 +105,10 @@ export default function HomeScreen() {
             onOpen={(review) => openReview(router, review)}
             onStartReview={(review) => openReview(router, review)}
           />
+        ) : null}
+
+        {upcomingReviews.data?.length ? (
+          <UpcomingReviewCard reviews={upcomingReviews.data} onOpen={(review) => openReview(router, review)} />
         ) : null}
 
         {todayPickMemorySet ? (
@@ -125,12 +133,12 @@ export default function HomeScreen() {
 
         <Text style={styles.sectionLabel}>{t('thisWeek')}</Text>
         <View style={styles.statRow}>
-          <StatTile value={`${stats?.lessonsCompleted ?? 0}`} label={t('sessions')} />
-          <StatTile value={`${stats?.wordsLearned ?? 0}`} label={t('words')} />
-          <StatTile value="—" label={t('accuracy')} />
+          <StatTile value={`${practiceStatsQuery.data?.sessionsCompleted ?? 0}`} label={t('sessions')} />
+          <StatTile value={`${practiceStatsQuery.data?.wordsLearned ?? 0}`} label={t('words')} />
+          <StatTile value={`${practiceStatsQuery.data?.accuracyPercent ?? 0}%`} label={t('accuracy')} />
         </View>
 
-        <WeeklyActivityCard title={t('weekActivity')} events={activityQuery.events} />
+        <WeeklyActivityCard title={t('weekActivity')} activity={practiceStatsQuery.data?.weeklyActivity} events={activityQuery.events} />
 
         <MemoryTipCard />
       </ScrollView>
@@ -168,10 +176,17 @@ function MemoryTipCard() {
   );
 }
 
-function ContinueSessionCardShim({ memorySet, onPress }: { memorySet: MemorySet; onPress: () => void }) {
+function ContinueSessionCardShim({ memorySet, latestAttempt, onPress }: { memorySet: MemorySet; latestAttempt: PracticeAttempt | null; onPress: () => void }) {
   const { t } = useTranslation('home');
   const isPalace = memorySet.techniqueKey === 'palace';
-  const progress = memorySet.status === 'draft' ? 25 : 100;
+  const recalledCount = latestAttempt?.mode === 'recall'
+    ? Math.min(memorySet.items.length, Math.max(0, latestAttempt.correctCount))
+    : 0;
+  const progress = memorySet.status === 'draft'
+    ? 25
+    : memorySet.items.length
+      ? (recalledCount / memorySet.items.length) * 100
+      : 0;
 
   return (
     <AnimatedPressable onPress={onPress} style={styles.continueCard}>
@@ -183,7 +198,11 @@ function ContinueSessionCardShim({ memorySet, onPress }: { memorySet: MemorySet;
         <Text numberOfLines={1} style={styles.continueTitle}>{memorySet.title}</Text>
         <View style={styles.continueTrack}><View style={[styles.continueFill, { width: `${progress}%` }]} /></View>
         <Text style={styles.continueMeta}>
-          {memorySet.status === 'draft' ? t('keepBuilding') : `1 of ${memorySet.items.length} ${t('recalled')}`}
+          {memorySet.status === 'draft'
+            ? t('keepBuilding')
+            : latestAttempt?.mode === 'recall'
+              ? `${recalledCount}/${memorySet.items.length} ${t('itemsRecalled')}`
+              : `${memorySet.items.length} ${t('itemsReady')}`}
         </Text>
       </View>
       <ArrowRight size={18} color="#6B6A80" />

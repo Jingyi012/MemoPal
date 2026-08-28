@@ -53,6 +53,16 @@ public sealed record PracticeAttemptDto(
     string? CreatedBy,
     string? UpdatedBy);
 
+public sealed record PracticeActivityDayDto(
+    string Date,
+    int Sessions);
+
+public sealed record PracticeStatsDto(
+    int SessionsCompleted,
+    int WordsLearned,
+    int AccuracyPercent,
+    IReadOnlyList<PracticeActivityDayDto> WeeklyActivity);
+
 public sealed record DueMemoryReviewDto(
     string Id,
     string MemorySetId,

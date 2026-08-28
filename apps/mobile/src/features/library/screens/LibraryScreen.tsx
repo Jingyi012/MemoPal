@@ -5,15 +5,17 @@ import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import LoadingView from '@/components/LoadingView';
 import { useMemorySetMutations, useMemorySets } from '@/features/memory-sets';
 import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
+import { MemorySetCard } from '@/components/MemorySetCard';
+import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practice-attempts';
+import type { DueMemoryReview } from '@/features/practice-attempts';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
-import { Archive, ChevronRight, MoreHorizontal, Plus, RefreshCcw } from 'lucide-react-native';
+import { Plus, RefreshCcw } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import type { TranslationKey } from '@/core/i18n/i18n';
 
 type LibraryFilter = 'all' | MemoryTechniqueKey | 'archived';
 
@@ -28,6 +30,8 @@ export default function LibraryScreen() {
   const router = useRouter();
   const { t } = useTranslation('library');
   const memorySets = useMemorySets();
+  const dueReviews = useDueMemoryReviews();
+  const upcomingReviews = useUpcomingMemoryReviews(30);
   const { duplicateMemorySet, setMemorySetArchived } = useMemorySetMutations();
   const [filter, setFilter] = useState<LibraryFilter>('all');
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -44,6 +48,16 @@ export default function LibraryScreen() {
   }, [filter, memorySets.data]);
 
   const activeCount = memorySets.data?.filter((memorySet) => memorySet.status !== 'archived').length ?? 0;
+  const reviewByMemorySetId = useMemo(() => {
+    const nextReviewBySet = new Map<string, DueMemoryReview>();
+    [...(dueReviews.data ?? []), ...(upcomingReviews.data ?? [])].forEach((review) => {
+      const current = nextReviewBySet.get(review.memorySetId);
+      if (!current || Date.parse(review.dueAt) < Date.parse(current.dueAt)) {
+        nextReviewBySet.set(review.memorySetId, review);
+      }
+    });
+    return nextReviewBySet;
+  }, [dueReviews.data, upcomingReviews.data]);
 
   const showActions = (memorySet: MemorySet) => {
     const isArchived = memorySet.status === 'archived';
@@ -82,7 +96,10 @@ export default function LibraryScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={memorySets.isRefetching} onRefresh={memorySets.refetch} />
+          <RefreshControl
+            refreshing={memorySets.isRefetching || dueReviews.isRefetching || upcomingReviews.isRefetching}
+            onRefresh={() => { void Promise.allSettled([memorySets.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
+          />
         }>
         <NightEmphasisCard style={styles.summaryCard}>
           <View style={styles.summaryIcon}>
@@ -144,10 +161,10 @@ export default function LibraryScreen() {
         ) : visibleSets.length ? (
           <View style={styles.cardList}>
             {visibleSets.map((memorySet) => (
-              <MemoryCard
+              <MemorySetCard
                 key={memorySet.id}
                 memorySet={memorySet}
-                t={t}
+                reviewAt={reviewByMemorySetId.get(memorySet.id)?.dueAt}
                 onOpen={() => openSet(router, memorySet)}
                 onActions={() => showActions(memorySet)}
               />
@@ -190,71 +207,6 @@ export default function LibraryScreen() {
 
 function openSet(router: ReturnType<typeof useRouter>, memorySet: MemorySet) {
   router.push(`/memory-details/${memorySet.id}` as Href);
-}
-
-function MemoryCard({
-  memorySet,
-  onOpen,
-  onActions,
-  t,
-}: {
-  memorySet: MemorySet;
-  onOpen: () => void;
-  onActions: () => void;
-  t: (key: TranslationKey<'library'>) => string;
-}) {
-  const isPalace = memorySet.techniqueKey === 'palace';
-  const updatedLabel = formatUpdatedAt(memorySet.updatedAt, t);
-
-  return (
-    <AnimatedPressable onPress={onOpen} style={styles.memoryCard}>
-      <View style={[styles.techniqueIcon, isPalace ? styles.palaceIcon : styles.pegIcon]}>
-        <Text style={styles.techniqueEmoji}>{isPalace ? '🏰' : '🕯️'}</Text>
-      </View>
-      <View style={styles.memoryCopy}>
-        <View style={styles.techniqueRow}>
-          <Text style={[styles.techniqueLabel, isPalace ? styles.palaceLabel : styles.pegLabel]}>
-            {isPalace ? t('techniquePalace') : t('techniqueNumberPeg')}
-          </Text>
-          <Text style={styles.updatedLabel}>{updatedLabel}</Text>
-        </View>
-        <Text numberOfLines={1} style={styles.memoryTitle}>
-          {memorySet.title}
-        </Text>
-        <Text style={styles.memoryMeta}>
-          {memorySet.items.length} {memorySet.items.length === 1 ? t('item') : t('items')} ·{' '}
-          {memorySet.status === 'archived'
-            ? t('statusArchived')
-            : memorySet.status === 'draft'
-              ? t('statusDraft')
-              : t('statusReady')}
-        </Text>
-      </View>
-      <AnimatedPressable
-        accessibilityLabel={`${t('moreActions')} ${memorySet.title}`}
-        onPress={(event) => {
-          event.stopPropagation();
-          onActions();
-        }}
-        style={styles.moreButton}>
-        {memorySet.status === 'archived'
-          ? <Archive size={18} color={theme.inkSoft} />
-          : <MoreHorizontal size={20} color={theme.inkSoft} />}
-      </AnimatedPressable>
-      <ChevronRight size={18} color={theme.inkSoft} />
-    </AnimatedPressable>
-  );
-}
-
-function formatUpdatedAt(value: string, t: (key: TranslationKey<'library'>) => string): string {
-  const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) return '';
-
-  const days = Math.max(0, Math.floor((Date.now() - timestamp) / 86_400_000));
-  if (days === 0) return t('today');
-  if (days === 1) return t('yesterday');
-  if (days < 7) return `${days}${t('daysAgo')}`;
-  return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 const styles = StyleSheet.create({
@@ -303,35 +255,6 @@ const styles = StyleSheet.create({
   actionNotice: { marginBottom: 14, borderRadius: 14, backgroundColor: '#F1FBF5', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 13, paddingVertical: 11 },
   actionNoticeText: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
   cardList: { gap: 10 },
-  memoryCard: {
-    minHeight: 90,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    padding: 13,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  techniqueIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  techniqueEmoji: { fontSize: 22 },
-  palaceIcon: { backgroundColor: '#EEE9FF' },
-  pegIcon: { backgroundColor: '#FFF0F4' },
-  memoryCopy: { flex: 1, marginHorizontal: 12 },
-  techniqueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  techniqueLabel: { fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.8 },
-  palaceLabel: { color: theme.violetDeep },
-  pegLabel: { color: theme.berryDeep },
-  updatedLabel: { color: '#9A97A7', fontFamily: typography.bodyBold, fontSize: 10 },
-  memoryTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, marginTop: 4 },
-  memoryMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3 },
-  moreButton: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   noticeCard: {
     borderWidth: 2,
     borderColor: theme.line,

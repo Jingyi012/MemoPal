@@ -4,6 +4,7 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { typography } from '@/theme/typography';
 import { ArrowRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 type TodayReviewCardProps = {
   reviews: DueMemoryReview[];
@@ -12,6 +13,7 @@ type TodayReviewCardProps = {
 };
 
 export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewCardProps) {
+  const { t } = useTranslation('home');
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
@@ -32,7 +34,9 @@ export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewC
               </View>
               <View style={styles.reviewCopy}>
                 <Text numberOfLines={1} style={styles.reviewTitle}>{review.memorySetTitle}</Text>
-                <Text numberOfLines={1} style={styles.reviewMeta}>Item {review.itemPosition} · {review.prompt}</Text>
+                <Text numberOfLines={1} style={[styles.reviewMeta, isOverdue(review.dueAt) && styles.overdueText]}>
+                  {isOverdue(review.dueAt) ? t('overdue') : t('dueToday')} · {review.prompt}
+                </Text>
               </View>
               <ArrowRight size={16} color={theme.inkSoft} />
             </AnimatedPressable>
@@ -53,6 +57,10 @@ export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewC
   );
 }
 
+function isOverdue(dueAt: string) {
+  return new Date(dueAt).getTime() < Date.now();
+}
+
 const styles = StyleSheet.create({
   card: { marginTop: 12, borderRadius: 21, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 14 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -70,6 +78,7 @@ const styles = StyleSheet.create({
   reviewCopy: { flex: 1, minWidth: 0 },
   reviewTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
   reviewMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 2 },
+  overdueText: { color: theme.berryDeep },
   startButton: { minHeight: 44, borderRadius: 13, backgroundColor: theme.sun, marginTop: 10, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   startButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
 });

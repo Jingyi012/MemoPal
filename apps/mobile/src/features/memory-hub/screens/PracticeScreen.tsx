@@ -4,9 +4,11 @@ import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useEnabledMemoryModules } from '@/core/memory';
 import { useMemorySets } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
+import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practice-attempts';
+import type { DueMemoryReview } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { PracticeDiscoveryRow } from '@/features/memory-hub/components/PracticeDiscoveryRow';
-import { PracticeRecentSessionCard } from '@/features/memory-hub/components/PracticeRecentSessionCard';
+import { MemorySetCard } from '@/components/MemorySetCard';
 import { LevelProgressHeader } from '@/features/gamification/achievements/components/LevelProgressHeader';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
@@ -26,6 +28,8 @@ export default function PracticeScreen() {
   const numberPegEnabled = modules.some((module) => module.key === 'number-peg');
   const palaceEnabled = modules.some((module) => module.key === 'palace');
   const memorySets = useMemorySets();
+  const dueReviews = useDueMemoryReviews();
+  const upcomingReviews = useUpcomingMemoryReviews(30);
   const { user } = useCurrentUser();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
   const { levelInfo } = useLevelByXp(totalXp, user?.level);
@@ -46,6 +50,16 @@ export default function PracticeScreen() {
       .slice(0, 4),
     [filter, memorySets.data]
   );
+  const reviewByMemorySetId = useMemo(() => {
+    const nextReviewBySet = new Map<string, DueMemoryReview>();
+    [...(dueReviews.data ?? []), ...(upcomingReviews.data ?? [])].forEach((review) => {
+      const current = nextReviewBySet.get(review.memorySetId);
+      if (!current || Date.parse(review.dueAt) < Date.parse(current.dueAt)) {
+        nextReviewBySet.set(review.memorySetId, review);
+      }
+    });
+    return nextReviewBySet;
+  }, [dueReviews.data, upcomingReviews.data]);
 
   return (
     <View style={styles.page}>
@@ -176,10 +190,11 @@ export default function PracticeScreen() {
         ) : recentSets.length ? (
           <View style={styles.sessionList}>
             {recentSets.map((memorySet) => (
-                <PracticeRecentSessionCard
+                <MemorySetCard
                 key={memorySet.id}
                 memorySet={memorySet}
-                onPress={() => openMemorySet(router, memorySet)}
+                reviewAt={reviewByMemorySetId.get(memorySet.id)?.dueAt}
+                onOpen={() => openMemorySet(router, memorySet)}
               />
             ))}
           </View>

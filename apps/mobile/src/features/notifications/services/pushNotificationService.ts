@@ -14,6 +14,15 @@ Notifications.setNotificationHandler({
 });
 
 export const DAILY_LEARNING_NOTIFICATION_ID = 'daily-learning-reminder';
+export const REVIEW_NOTIFICATION_PREFIX = 'review-';
+
+type ReviewNotification = {
+  id: string;
+  memorySetId: string;
+  memorySetTitle: string;
+  techniqueKey: 'palace' | 'number-peg';
+  dueAt: string;
+};
 
 type PermissionOptions = {
   prompt?: boolean;
@@ -46,12 +55,16 @@ export const PushNotificationService = {
   // Schedule a specific review based on your Schema
   async scheduleReview(params: {
     reviewId: string; // From reviewSchedules.id
-    lessonId: string; // From lessons.id
-    lessonName: string;
+    memorySetId: string;
+    memorySetTitle: string;
+    techniqueKey: 'palace' | 'number-peg';
     dueDate: string;
   }) {
     const date = new Date(params.dueDate);
     if (date.getTime() <= Date.now()) return;
+
+    const identifier = `${REVIEW_NOTIFICATION_PREFIX}${params.reviewId}`;
+    await Notifications.cancelScheduledNotificationAsync(identifier).catch(() => undefined);
 
     const trigger: DateTriggerInput = {
       type: SchedulableTriggerInputTypes.DATE,
@@ -60,13 +73,15 @@ export const PushNotificationService = {
     };
 
     return await Notifications.scheduleNotificationAsync({
-      identifier: params.reviewId,
+      identifier,
       content: {
-        title: 'Memory Palace: Time to Review! 🧠',
-        body: `Your lesson "${params.lessonName}" is ready for review.`,
+        title: 'MemoPal: Time to review 🧠',
+        body: `"${params.memorySetTitle}" is ready for review.`,
         data: {
-          lessonId: params.lessonId,
-          url: `/lessons/${params.lessonId}`,
+          memorySetId: params.memorySetId,
+          url: params.techniqueKey === 'palace'
+            ? `/palaces/memory/${params.memorySetId}?mode=recall`
+            : `/number-peg/${params.memorySetId}?mode=recall`,
         },
         badge: 1,
       },
@@ -75,7 +90,37 @@ export const PushNotificationService = {
   },
 
   async cancelReview(reviewId: string) {
-    await Notifications.cancelScheduledNotificationAsync(reviewId);
+    await Notifications.cancelScheduledNotificationAsync(`${REVIEW_NOTIFICATION_PREFIX}${reviewId}`);
+  },
+
+  async syncReviewNotifications(reviews: ReviewNotification[]) {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    await Promise.all(
+      scheduled
+        .filter((request) => request.identifier.startsWith(REVIEW_NOTIFICATION_PREFIX))
+        .map((request) => Notifications.cancelScheduledNotificationAsync(request.identifier).catch(() => undefined))
+    );
+
+    await Promise.all(
+      reviews
+        .slice(0, 50)
+        .map((review) => this.scheduleReview({
+          reviewId: review.id,
+          memorySetId: review.memorySetId,
+          memorySetTitle: review.memorySetTitle,
+          techniqueKey: review.techniqueKey,
+          dueDate: review.dueAt,
+        }))
+    );
+  },
+
+  async cancelAllReviewNotifications() {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    await Promise.all(
+      scheduled
+        .filter((request) => request.identifier.startsWith(REVIEW_NOTIFICATION_PREFIX))
+        .map((request) => Notifications.cancelScheduledNotificationAsync(request.identifier).catch(() => undefined))
+    );
   },
 
   async scheduleDailyLearning(time: string) {

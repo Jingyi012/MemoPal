@@ -58,8 +58,8 @@ const tutorialSteps: TutorialStep[] = [
     icon: '🔁',
     colors: [theme.grass, '#247B67'],
     content:
-      'Review at specific intervals (24h, 3d, 7d, 30d) to combat the forgetting curve. Each review strengthens the memory and moves it from short-term to long-term storage.',
-    example: 'Complete all 4 reviews to achieve 90%+ retention rate.',
+      'Review at specific intervals (1d, 3d, 7d, 14d, 30d) to combat the forgetting curve. Each review strengthens the memory and moves it from short-term to long-term storage.',
+    example: 'Complete all 5 reviews to build a stronger long-term memory.',
   },
   {
     id: 5,
