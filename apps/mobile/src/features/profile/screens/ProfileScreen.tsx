@@ -147,7 +147,18 @@ export default function ProfileScreen() {
         <Text style={styles.sectionLabel}>{t('settings')}</Text>
         <View style={styles.settingsList}>
           <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🔔</Text>} title={t('reviewReminders')} value={reviewRemindersEnabled ? t('on') : t('off')} right={<Switch value={reviewRemindersEnabled} onValueChange={saveReviewReminders} />} />
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>📚</Text>} title={t('dailyLearning')} value={dailyLearningEnabled ? t('on') : t('off')} right={<Switch value={dailyLearningEnabled} onValueChange={saveDailyLearningReminder} />} />
+          <ProfileSettingsRow
+            icon={<Text style={styles.settingsEmoji}>📚</Text>}
+            title={t('dailyLearning')}
+            value={userState.preferences.reviewTime}
+            right={(
+              <View style={styles.reminderControl}>
+                <Text style={styles.settingsValue}>{userState.preferences.reviewTime}</Text>
+                <Switch value={dailyLearningEnabled} onValueChange={saveDailyLearningReminder} />
+              </View>
+            )}
+            onPress={() => reviewScheduleRef.current?.present()}
+          />
           <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🔊</Text>} title={t('soundHaptics')} value={t('on')} />
           <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌐</Text>} title={t('language')} value={languageLabel} onPress={() => languageRef.current?.present()} />
           <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌙</Text>} title={t('theme')} value={t('light')} />
@@ -165,7 +176,7 @@ export default function ProfileScreen() {
         ref={reviewScheduleRef}
         currentTime={userState.preferences.reviewTime}
         onSave={async (time) => {
-          await updatePreferences({ ...userState.preferences, reviewTime: time });
+          await updatePreferences({ reviewTime: time });
           if (userState.notifications.dailyLearningReminder) await PushNotificationService.scheduleDailyLearning(time);
           reviewScheduleRef.current?.dismiss();
         }}
@@ -230,6 +241,7 @@ const styles = StyleSheet.create({
   settingsEmoji: { fontSize: 16, lineHeight: 20 },
   settingsTitle: { flex: 1, color: '#2B2A3D', fontFamily: typography.display, fontSize: 13 },
   settingsValue: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 12 },
+  reminderControl: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   signOutButton: { minHeight: 46, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 2, borderColor: '#FFD2DC', borderRadius: 13, backgroundColor: '#FFF0F4', marginTop: 18 },
   signOutText: { color: '#E8527A', fontFamily: typography.display, fontSize: 13.5 },
 });
