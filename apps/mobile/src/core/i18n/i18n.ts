@@ -125,6 +125,9 @@ export const translations = {
       all: 'All',
       numberPeg: 'Number Peg',
       palace: 'Memory Palace',
+      techniquePeg: 'PEG', techniquePalace: 'PALACE', item: 'item', items: 'items', loci: 'loci',
+      readyToPractice: 'Ready to practice', updatedToday: 'Updated today', updatedYesterday: 'Updated yesterday',
+      updated: 'Updated', daysAgo: 'd ago',
     },
     library: {
       eyebrow: 'Library',
@@ -447,6 +450,7 @@ export const translations = {
       memoryDetails: {
        eyebrow: 'Session', title: 'Session details', unavailable: 'Memory unavailable', loadError: 'This memory did not load',
        techniquePalace: 'Memory Palace', techniqueNumberPeg: 'Number Peg', item: 'item', items: 'items',
+       recallLocus: 'Recall locus', recallItem: 'Recall item', spellItem: 'Spell item',
        yourMemoryItems: 'Your memory items', checkConnection: 'Check your connection and try again.',
        resumeSession: 'Resume session', retryFromScratch: 'Retry from scratch',
        statusRecalled: 'Recalled', statusReview: 'Review', statusNotTried: 'Not tried', statusReady: 'Ready',
@@ -576,6 +580,9 @@ export const translations = {
       all: '全部',
       numberPeg: '数字挂钩',
       palace: '记忆宫殿',
+      techniquePeg: '挂钩', techniquePalace: '宫殿', item: '项', items: '项', loci: '个位置',
+      readyToPractice: '准备练习', updatedToday: '今天更新', updatedYesterday: '昨天更新',
+      updated: '更新于', daysAgo: '天前',
     },
     library: {
       eyebrow: '记忆库',
@@ -596,6 +603,7 @@ export const translations = {
       archiveEmpty: '你的归档还是空的', collectionEmpty: '这个收藏中还没有内容', archiveBody: '你归档的记忆会留在这里，直到你想再次使用。',
        all: '全部', palaces: '宫殿', numberPeg: '数字挂钩', archived: '已归档',
        techniquePalace: '记忆宫殿', techniqueNumberPeg: '数字挂钩', item: '项', items: '项',
+       recallLocus: '回忆位置', recallItem: '回忆项目', spellItem: '拼写项目',
        statusArchived: '已归档', statusDraft: '草稿', statusReady: '准备练习',
        today: '今天', yesterday: '昨天', daysAgo: '天前',
        actionsDescription: '整理你的记忆库，或复制一份来重复使用。', duplicate: '复制',

@@ -1,4 +1,7 @@
-import type { MemorySet, MemorySetUpsertRequest } from '@/features/memory-sets/types/memorySet.types';
+import type {
+  MemorySet,
+  MemorySetUpsertRequest,
+} from '@/features/memory-sets/types/memorySet.types';
 import type { PalaceLocus, PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
 
 export const isLocalPreviewEnabled =
@@ -212,8 +215,15 @@ export function updateLocalPreviewMemorySet(memorySetId: string, request: Memory
 export function archiveLocalPreviewMemorySet(memorySetId: string, isArchived: boolean) {
   const current = getLocalPreviewMemorySet(memorySetId);
   if (!current) throw new Error('Preview memory not found.');
-  const updated = { ...current, status: isArchived ? 'archived' : 'ready', version: current.version + 1, updatedAt: new Date().toISOString() } as MemorySet;
-  localPreviewMemorySets = localPreviewMemorySets.map((memorySet) => memorySet.id === memorySetId ? updated : memorySet);
+  const updated = {
+    ...current,
+    status: isArchived ? 'archived' : 'ready',
+    version: current.version + 1,
+    updatedAt: new Date().toISOString(),
+  } as MemorySet;
+  localPreviewMemorySets = localPreviewMemorySets.map((memorySet) =>
+    memorySet.id === memorySetId ? updated : memorySet
+  );
   return updated;
 }
 
@@ -227,18 +237,36 @@ export function duplicateLocalPreviewMemorySet(memorySetId: string) {
     techniqueKey: current.techniqueKey,
     status: 'ready',
     visibility: current.visibility,
-    items: current.items.map(({ position, prompt, answer, hint, pronunciationAudioUrl }) => ({ position, prompt, answer, hint, pronunciationAudioUrl })),
+    items: current.items.map(({ position, prompt, answer, hint, pronunciationAudioUrl }) => ({
+      position,
+      prompt,
+      answer,
+      hint,
+      pronunciationAudioUrl,
+    })),
     techniquePlan: current.techniquePlan
       ? {
           schemaVersion: current.techniquePlan.schemaVersion,
           palaceSceneId: current.techniquePlan.palaceSceneId,
-          pegBindings: current.techniquePlan.pegBindings.map(({ memoryItemId: _memoryItemId, id: _id, ...binding }, index) => ({ ...binding, itemPosition: index + 1 })),
-          palaceBindings: current.techniquePlan.palaceBindings.map(({ memoryItemId: _memoryItemId, id: _id, ...binding }, index) => ({ ...binding, itemPosition: index + 1 })),
+          pegBindings: current.techniquePlan.pegBindings.map(
+            ({ memoryItemId: _memoryItemId, id: _id, ...binding }, index) => ({
+              ...binding,
+              itemPosition: index + 1,
+            })
+          ),
+          palaceBindings: current.techniquePlan.palaceBindings.map(
+            ({ memoryItemId: _memoryItemId, id: _id, ...binding }, index) => ({
+              ...binding,
+              itemPosition: index + 1,
+            })
+          ),
         }
       : null,
   });
 }
 
 export function deleteLocalPreviewMemorySet(memorySetId: string) {
-  localPreviewMemorySets = localPreviewMemorySets.filter((memorySet) => memorySet.id !== memorySetId);
+  localPreviewMemorySets = localPreviewMemorySets.filter(
+    (memorySet) => memorySet.id !== memorySetId
+  );
 }

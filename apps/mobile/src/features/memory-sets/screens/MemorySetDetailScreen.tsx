@@ -67,7 +67,7 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
                 <Text style={styles.itemNumberText}>{item.position}</Text>
               </View>
               <View style={styles.itemCopy}>
-                <Text style={styles.itemPrompt}>{item.prompt}</Text>
+                <Text style={styles.itemPrompt}>{localizeItemPrompt(item.prompt, item.position, t)}</Text>
                 <Text numberOfLines={1} style={styles.itemAnswer}>{item.answer}</Text>
               </View>
               <View style={styles.readyBadge}>
@@ -139,6 +139,24 @@ function statusLabel(status: ItemStatus, t: (key: TranslationKey<'memoryDetails'
     case 'not-tried': return t('statusNotTried');
     default: return t('statusReady');
   }
+}
+
+function localizeItemPrompt(
+  prompt: string,
+  position: number,
+  t: (key: TranslationKey<'memoryDetails'>) => string,
+) {
+  const normalizedPrompt = prompt.trim().toLowerCase();
+  if (normalizedPrompt.startsWith('recall locus')) {
+    return `${t('recallLocus')} ${position}`;
+  }
+  if (normalizedPrompt.startsWith('spell item')) {
+    return `${t('spellItem')} ${position}`;
+  }
+  if (normalizedPrompt.startsWith('recall item')) {
+    return `${t('recallItem')} ${position}`;
+  }
+  return prompt;
 }
 
 function getSummaryMeta(

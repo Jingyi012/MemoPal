@@ -1,6 +1,5 @@
 import { authApi } from '@/features/auth/api/auth';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { useAuth } from '@/contexts/AuthProvider';
 import {
   getFacebookAccessToken,
@@ -11,7 +10,6 @@ import {
 import { LoginMethods } from '@/features/auth/types/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
@@ -85,15 +83,16 @@ export const LoginScreen: React.FC = () => {
   return (
     <View className="flex-1 bg-[#FFFDF8]">
       <View className="flex-1 items-center justify-center px-8">
-        <LinearGradient
-          colors={[theme.violetDeep, theme.berryDeep]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ borderRadius: 10, boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.16)' }}
-          className="mb-6 h-20 w-20 items-center justify-center"
-          >
-          <Text className="text-4xl">🧠</Text>
-        </LinearGradient>
+        <View
+          accessibilityLabel="MemoPal app icon"
+          className="mb-6 h-24 w-24 overflow-hidden rounded-[26px]"
+          style={{ boxShadow: '0px 5px 12px rgba(43, 38, 65, 0.22)' }}>
+          <Image
+            source={require('../../../../assets/images/icon.png')}
+            style={{ width: '100%', height: '100%' }}
+            contentFit="cover"
+          />
+        </View>
 
         <Text className="mb-2 text-2xl font-semibold text-[#2B2A3D]">{t('welcome')}</Text>
 

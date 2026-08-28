@@ -110,7 +110,7 @@ export default function PracticeScreen() {
             items={(palaceScenes.data ?? []).slice(0, 4).map((scene) => ({
               key: scene.id,
               title: scene.name,
-              subtitle: `${scene.loci.length} loci`,
+              subtitle: `${scene.loci.length} ${t('loci')}`,
               imageUrl: scene.imageUrl,
               imageSource: scene.imageSource,
               tone: 'palace' as const,
@@ -135,7 +135,7 @@ export default function PracticeScreen() {
                 style={styles.lessonCard}>
                 <Text style={styles.lessonEmoji}>{lesson.emoji}</Text>
                 <Text numberOfLines={2} style={styles.lessonTitle}>{lesson.title}</Text>
-                <Text style={styles.lessonCount}>{lesson.items.length} items</Text>
+                <Text style={styles.lessonCount}>{lesson.items.length} {lesson.items.length === 1 ? t('item') : t('items')}</Text>
                 <Text style={[styles.lessonTechnique, lesson.technique === 'palace' && styles.lessonTechniquePalace]}>
                   {lesson.technique === 'palace' ? t('palace') : t('numberPeg')}
                 </Text>

@@ -4,8 +4,11 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { typography } from '@/theme/typography';
 import { ArrowRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
+import type { TranslationKey } from '@/core/i18n/i18n';
 
 export function PracticeRecentSessionCard({ memorySet, onPress }: { memorySet: MemorySet; onPress: () => void }) {
+  const { t } = useTranslation('practice');
   const isPeg = memorySet.techniqueKey === 'number-peg';
   return (
     <AnimatedPressable onPress={onPress} style={styles.card}>
@@ -14,21 +17,23 @@ export function PracticeRecentSessionCard({ memorySet, onPress }: { memorySet: M
       </View>
       <View style={styles.copy}>
         <Text numberOfLines={1} style={styles.title}>{memorySet.title}</Text>
-        <Text style={styles.subtitle}>{memorySet.items.length} items · {formatUpdatedAt(memorySet.updatedAt)}</Text>
+        <Text style={styles.subtitle}>
+          {memorySet.items.length} {memorySet.items.length === 1 ? t('item') : t('items')} · {formatUpdatedAt(memorySet.updatedAt, t)}
+        </Text>
       </View>
-      <Text style={styles.technique}>{isPeg ? 'PEG' : 'PALACE'}</Text>
+      <Text style={styles.technique}>{isPeg ? t('techniquePeg') : t('techniquePalace')}</Text>
       <ArrowRight size={16} color={theme.inkSoft} />
     </AnimatedPressable>
   );
 }
 
-function formatUpdatedAt(value: string) {
+function formatUpdatedAt(value: string, t: (key: TranslationKey<'practice'>) => string) {
   const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) return 'Ready to practice';
+  if (!Number.isFinite(timestamp)) return t('readyToPractice');
   const days = Math.max(0, Math.floor((Date.now() - timestamp) / 86_400_000));
-  if (days === 0) return 'Updated today';
-  if (days === 1) return 'Updated yesterday';
-  return `Updated ${days}d ago`;
+  if (days === 0) return t('updatedToday');
+  if (days === 1) return t('updatedYesterday');
+  return `${t('updated')} ${days}${t('daysAgo')}`;
 }
 
 const styles = StyleSheet.create({
