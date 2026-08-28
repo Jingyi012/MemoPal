@@ -24,7 +24,7 @@ import {
 } from '@/features/palace-scenes/utils/palaceAuthoring';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Check, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { firstParam, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import { ComposerProgress } from '@/features/memory-composer/components/ComposerProgress';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -51,6 +51,11 @@ export default function PalaceMemoryComposerScreen() {
   const [activeLocusIndex, setActiveLocusIndex] = useState(0);
   const [selectedSceneId, setSelectedSceneId] = useState(() => firstParam(params.sceneId) ?? '');
   const [message, setMessage] = useState<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: 0, animated: false }));
+  }, [step]);
 
   useEffect(() => {
     if (!scenesQuery.data?.length) return;
@@ -174,17 +179,19 @@ export default function PalaceMemoryComposerScreen() {
           router.back();
         }}
       />
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-        <ComposerProgress currentStep={step === 'setup' ? 1 : 2} firstLabel={t('chooseRoom')} secondLabel={t('placeMemoriesStep')} />
-        <View style={styles.infoCard}>
-          <View style={styles.infoIcon}>
-            <Text style={styles.infoEmoji}>🏡</Text>
+      <ScrollView ref={scrollRef} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+        {step === 'setup' && <ComposerProgress currentStep={1} firstLabel={t('chooseRoom')} secondLabel={t('placeMemoriesStep')} />}
+        {step === 'setup' && (
+          <View style={styles.infoCard}>
+            <View style={styles.infoIcon}>
+              <Text style={styles.infoEmoji}>🏡</Text>
+            </View>
+            <View style={styles.infoCopy}>
+              <Text style={styles.infoTitle}>{t('routeTitle')}</Text>
+              <Text style={styles.infoText}>{t('routeBody')}</Text>
+            </View>
           </View>
-          <View style={styles.infoCopy}>
-            <Text style={styles.infoTitle}>{step === 'setup' ? t('routeTitle') : t('placeTitle')}</Text>
-            <Text style={styles.infoText}>{step === 'setup' ? t('routeBody') : t('placeBody')}</Text>
-          </View>
-        </View>
+        )}
 
         {step === 'setup' && fromSharedComposer && title.trim() ? (
           <View style={styles.draftCard}>
@@ -247,13 +254,6 @@ export default function PalaceMemoryComposerScreen() {
 
         {step === 'place' && selectedScene && (
           <>
-            <View style={styles.previewHeader}>
-              <View>
-                <Text style={styles.previewEyebrow}>{t('preview')}</Text>
-                <Text style={styles.previewTitle}>{selectedScene.name}</Text>
-              </View>
-              <Text style={styles.previewCount}>{items.length}/{loci.length} {t('placed')}</Text>
-            </View>
             <PalaceLocusMap
               activeIndex={activeLocusIndex}
               loci={loci}
@@ -379,7 +379,6 @@ const styles = StyleSheet.create({
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 }, optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 18 },
   input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 14, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
   sceneRail: { marginHorizontal: -16, paddingLeft: 16 }, sceneOption: { width: 172, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8, marginRight: 10 }, sceneOptionActive: { borderColor: '#7A68E0', backgroundColor: '#F7F5FF' }, sceneOptionLimited: { opacity: 0.72 }, sceneThumb: { height: 92, borderRadius: 12 }, sceneName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 8 }, sceneMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 2 },
-  previewHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 19, marginBottom: 9 }, previewEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.9 }, previewTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, marginTop: 3 }, previewCount: { color: theme.violetDeep, backgroundColor: '#EEE9FF', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   canvasHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, textAlign: 'center', marginTop: 8 }, capacityCard: { marginTop: 11, borderRadius: 14, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 12 }, capacityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 }, capacityText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 3 },
   emptyScenes: { borderWidth: 2, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.paper, padding: 18, alignItems: 'center' }, helper: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center' }, refreshButton: { marginTop: 10, flexDirection: 'row', gap: 6, backgroundColor: theme.sun, borderRadius: 11, paddingHorizontal: 12, paddingVertical: 8 }, refreshText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   addRow: { flexDirection: 'row', gap: 9 }, addButton: { width: 50, height: 50, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center' },

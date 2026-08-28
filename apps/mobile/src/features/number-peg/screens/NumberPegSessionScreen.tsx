@@ -38,6 +38,12 @@ function findBinding(bindings: PegBinding[], memoryItem: MemoryItem) {
   return bindings.find((binding) => binding.memoryItemId === memoryItem.id);
 }
 
+function countCorrectResponses(responses: PracticeResponseInput[]) {
+  return new Set(
+    responses.filter((response) => response.isCorrect).map((response) => response.memoryItemId),
+  ).size;
+}
+
 export default function NumberPegSessionScreen({
   memorySetId,
   restart = false,
@@ -58,12 +64,13 @@ export default function NumberPegSessionScreen({
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<Feedback>(null);
-  const [score, setScore] = useState(0);
   const [clientAttemptId, setClientAttemptId] = useState(() => Crypto.randomUUID());
   const [startedAt, setStartedAt] = useState(() => new Date().toISOString());
   const [startedAtMs, setStartedAtMs] = useState(() => Date.now());
   const [questionStartedAtMs, setQuestionStartedAtMs] = useState(() => Date.now());
   const [responses, setResponses] = useState<PracticeResponseInput[]>([]);
+  const score = countCorrectResponses(responses);
+  const checkingAnswerRef = useRef(false);
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
   const [hasRestoredSession, setHasRestoredSession] = useState(false);
   const hydratedSessionRef = useRef<string | null>(null);
@@ -106,11 +113,11 @@ export default function NumberPegSessionScreen({
 
       if (startInRecall && snapshot.tab !== 'recall') {
         void clearNumberPegSession(memorySet.id);
+        checkingAnswerRef.current = false;
         setTab('recall');
         setQuestionIndex(0);
         setAnswer('');
         setFeedback(null);
-        setScore(0);
         setClientAttemptId(Crypto.randomUUID());
         setStartedAt(new Date().toISOString());
         setStartedAtMs(Date.now());
@@ -124,12 +131,12 @@ export default function NumberPegSessionScreen({
 
       setTab(snapshot.tab);
       setQuestionIndex(snapshot.questionIndex);
-      setScore(snapshot.score);
       setClientAttemptId(snapshot.clientAttemptId);
       setStartedAt(snapshot.startedAt);
       setStartedAtMs(snapshot.startedAtMs);
       setQuestionStartedAtMs(snapshot.questionStartedAtMs);
       setResponses(snapshot.responses);
+      checkingAnswerRef.current = false;
       setHasRestoredSession(true);
       sessionReadyRef.current = true;
     });
@@ -164,10 +171,10 @@ export default function NumberPegSessionScreen({
   }, [clientAttemptId, memorySetQuery.data, questionIndex, questionStartedAtMs, responses, score, startedAt, startedAtMs, tab]);
 
   const restartRecall = () => {
+    checkingAnswerRef.current = false;
     setQuestionIndex(0);
     setAnswer('');
     setFeedback(null);
-    setScore(0);
     setClientAttemptId(Crypto.randomUUID());
     setStartedAt(new Date().toISOString());
     setStartedAtMs(Date.now());
@@ -217,6 +224,7 @@ export default function NumberPegSessionScreen({
     if (!currentItem) return;
     if (feedback) {
       if (feedback === 'wrong') {
+        checkingAnswerRef.current = false;
         setFeedback(null);
         setAnswer('');
         setQuestionStartedAtMs(Date.now());
@@ -234,6 +242,7 @@ export default function NumberPegSessionScreen({
         setLastPayload(payload);
         practiceAttempt.mutate(payload);
       }
+      checkingAnswerRef.current = false;
       setQuestionIndex((current) => current + 1);
       setAnswer('');
       setFeedback(null);
@@ -241,7 +250,8 @@ export default function NumberPegSessionScreen({
       return;
     }
 
-    if (!answer.trim()) return;
+    if (!answer.trim() || checkingAnswerRef.current) return;
+    checkingAnswerRef.current = true;
     const isCorrect = normalizeRecallAnswer(answer) === normalizeRecallAnswer(currentItem.answer);
     setResponses((current) => upsertRecallResponse(
       current,
@@ -251,7 +261,6 @@ export default function NumberPegSessionScreen({
     ));
     setFeedback(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) {
-      setScore((current) => current + 1);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -392,7 +401,7 @@ export default function NumberPegSessionScreen({
                     ? `${t('checkSpelling')} ${getSpellingHint(currentItem?.answer ?? '', answer)}`
                     : `${t('itWas')} ${currentItem?.answer}. ${t('pictureOnceMore')}`}
                 actionLabel={feedback === 'wrong' ? t('retryPeg') : feedback ? t('next') : t('checkAnswer')}
-                scoreLabel={`${t('scoreSoFar')}: ${score} / ${responses.length}`}
+                scoreLabel={`${t('scoreSoFar')}: ${score} / ${memorySet.items.length}`}
                 answerAccessibilityLabel={t('typeYourAnswer')}
                 answerPlaceholder={t('typeYourAnswerPlaceholder')}
                 onAnswerChange={setAnswer}

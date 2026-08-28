@@ -19,6 +19,8 @@ type SceneEditorCardProps = {
   actionLabel?: string;
   onAction?: () => void;
   accent?: 'peg' | 'palace';
+  inputLabel?: string;
+  readOnly?: boolean;
 };
 
 /** The shared scene-writing surface used by both memory techniques. */
@@ -36,6 +38,8 @@ export function SceneEditorCard({
   actionLabel,
   onAction,
   accent = 'peg',
+  inputLabel,
+  readOnly = false,
 }: SceneEditorCardProps) {
   const { t } = useTranslation('memoryComposer');
   const isPalace = accent === 'palace';
@@ -55,9 +59,10 @@ export function SceneEditorCard({
 
       {visual ? <View style={[styles.visual, isPalace ? styles.palaceVisual : styles.pegVisual]}>{visual}</View> : null}
 
-      <Text style={styles.inputLabel}>{t('memoryScene')}</Text>
+      <Text style={styles.inputLabel}>{inputLabel ?? t('memoryScene')}</Text>
       <TextInput
         accessibilityLabel={accessibilityLabel}
+        editable={!readOnly}
         multiline
         onChangeText={onChangeText}
         maxLength={maxLength}
