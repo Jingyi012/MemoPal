@@ -5,8 +5,9 @@ import { useMemorySetMutations } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import type { PegNumber } from '@/features/number-peg/types/numberPeg.types';
-import { buildNumberPegItems, buildPegScene } from '@/features/number-peg/utils/numberPegMap';
+import { buildAllNumberPegItems, buildPegScene, getUnlockedPegCount, MAX_NUMBER_PEGS } from '@/features/number-peg/utils/numberPegMap';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
+import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Check, Plus, Trash2 } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
@@ -39,18 +40,20 @@ export default function NumberPegComposerScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ title?: string | string[]; items?: string | string[]; goalType?: string | string[] }>();
   const { createMemorySet } = useMemorySetMutations();
-  const pegs = useMemo(() => buildNumberPegItems(), []);
+  const { user } = useCurrentUser();
+  const unlockedPegCount = getUnlockedPegCount(user?.level ?? 1);
+  const pegs = useMemo(() => buildAllNumberPegItems(), []);
   const prefilledItems = useMemo(() => parseComposerItems(params.items), [params.items]);
   const fromSharedComposer = prefilledItems.length > 0;
   const [step, setStep] = useState<ComposerStep>(() => (prefilledItems.length ? 'scenes' : 'items'));
   const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
   const [goalType, setGoalType] = useState<MemoryGoalType>(() => parseComposerGoal(params.goalType));
   const [newItem, setNewItem] = useState('');
-  const [items, setItems] = useState<string[]>(() => prefilledItems.slice(0, 10));
+  const [items, setItems] = useState<string[]>(() => prefilledItems.slice(0, MAX_NUMBER_PEGS));
   const [scenes, setScenes] = useState<SceneDraft[]>(() =>
-    prefilledItems.slice(0, 10).map((answer, index) => ({
+    prefilledItems.slice(0, MAX_NUMBER_PEGS).map((answer, index) => ({
       answer,
-      sceneText: buildPegScene((index + 1) as PegNumber, answer),
+      sceneText: buildPegScene(getComposerPegNumber(index, unlockedPegCount) as PegNumber, answer),
       variant: 0,
     }))
   );
@@ -59,7 +62,7 @@ export default function NumberPegComposerScreen() {
   const addItem = () => {
     const answer = newItem.trim();
     if (!answer) return;
-    if (items.length >= 10) {
+    if (items.length >= MAX_NUMBER_PEGS) {
       setValidationMessage(t('maxItemsMessage'));
       return;
     }
@@ -84,11 +87,12 @@ export default function NumberPegComposerScreen() {
 
     setScenes(
       items.map((answer, index) => {
-        const existing = scenes[index];
-        if (existing?.answer === answer) return existing;
+      const existing = scenes[index];
+      if (existing?.answer === answer) return existing;
+        const pegNumber = getComposerPegNumber(index, unlockedPegCount);
         return {
           answer,
-          sceneText: buildPegScene((index + 1) as PegNumber, answer),
+          sceneText: buildPegScene(pegNumber as PegNumber, answer),
           variant: 0,
         };
       })
@@ -103,10 +107,11 @@ export default function NumberPegComposerScreen() {
       current.map((scene, sceneIndex) => {
         if (sceneIndex !== index) return scene;
         const variant = scene.variant + 1;
+        const pegNumber = getComposerPegNumber(index, unlockedPegCount);
         return {
           ...scene,
           variant,
-          sceneText: buildPegScene((index + 1) as PegNumber, scene.answer, variant),
+          sceneText: buildPegScene(pegNumber as PegNumber, scene.answer, variant),
         };
       })
     );
@@ -124,36 +129,55 @@ export default function NumberPegComposerScreen() {
       return;
     }
 
-    const request: MemorySetUpsertRequest = {
-      title: title.trim(),
-      goalType,
-      techniqueKey: 'number-peg',
-      status: 'ready',
-      visibility: 'private',
-      items: items.map((answer, index) => ({
-        position: index + 1,
-        prompt: goalType === 'spelling' ? `Spell item ${index + 1}` : `Recall item ${index + 1}`,
-        answer,
-      })),
-      techniquePlan: {
-        schemaVersion: 1,
-        palaceBindings: [],
-        pegBindings: scenes.map((scene, index) => ({
-          itemPosition: index + 1,
-          pegNumber: index + 1,
-          sceneText: scene.sceneText.trim(),
-          isCustomScene: true,
-        })),
-      },
-    };
-
     setValidationMessage(null);
-    createMemorySet.mutate(request, {
-      onSuccess: (created) => {
-        const returnTo = fromSharedComposer ? 'practice' : 'number-peg';
-        router.replace(`/number-peg/${created.id}?returnTo=${returnTo}` as Href);
-      },
+    const chunkSize = Math.max(1, Math.min(unlockedPegCount, MAX_NUMBER_PEGS));
+    const chunks = Array.from({ length: Math.ceil(items.length / chunkSize) }, (_, chunkIndex) => {
+      const start = chunkIndex * chunkSize;
+      return { chunkIndex, answers: items.slice(start, start + chunkSize), sceneDrafts: scenes.slice(start, start + chunkSize) };
     });
+
+    void (async () => {
+      try {
+        const createdSets = [];
+        for (const chunk of chunks) {
+          const suffix = chunks.length > 1 ? ` · ${chunk.chunkIndex + 1}/${chunks.length}` : '';
+          const chunkTitle = suffix
+            ? `${title.trim().slice(0, Math.max(1, 200 - suffix.length))}${suffix}`
+            : title.trim();
+          const request: MemorySetUpsertRequest = {
+            title: chunkTitle,
+            goalType,
+            techniqueKey: 'number-peg',
+            status: 'ready',
+            visibility: 'private',
+            items: chunk.answers.map((answer, index) => ({
+              position: index + 1,
+              prompt: goalType === 'spelling' ? `Spell item ${index + 1}` : `Recall item ${index + 1}`,
+              answer,
+            })),
+            techniquePlan: {
+              schemaVersion: 1,
+              palaceBindings: [],
+              pegBindings: chunk.sceneDrafts.map((scene, index) => ({
+                itemPosition: index + 1,
+                pegNumber: index + 1,
+                sceneText: scene.sceneText.trim(),
+                isCustomScene: true,
+              })),
+            },
+          };
+          createdSets.push(await createMemorySet.mutateAsync(request));
+        }
+        const first = createdSets[0];
+        if (first) {
+          const returnTo = fromSharedComposer ? 'practice' : 'number-peg';
+          router.replace(`/number-peg/${first.id}?returnTo=${returnTo}` as Href);
+        }
+      } catch {
+        // The mutation's error is rendered below; keep the composer in place so
+        // the user can retry without losing their scenes.
+      }
+    })();
   };
 
   const errorMessage = createMemorySet.isError
@@ -247,7 +271,7 @@ export default function NumberPegComposerScreen() {
 
             <View style={styles.labelRow}>
                 <Text style={styles.label}>{t('addItems')}</Text>
-              <Text style={styles.itemCount}>{items.length}/10</Text>
+              <Text style={styles.itemCount}>{items.length}/{MAX_NUMBER_PEGS}</Text>
             </View>
             <View style={styles.addRow}>
               <TextInput
@@ -284,6 +308,12 @@ export default function NumberPegComposerScreen() {
                 </View>
               ))}
             </View>
+            {items.length > unlockedPegCount ? (
+              <View style={styles.overflowCard}>
+                <Text style={styles.overflowTitle}>{t('splitMemoryTitle')}</Text>
+                <Text style={styles.overflowText}>{t('splitMemoryBody').replace('{count}', String(unlockedPegCount)).replace('{parts}', String(Math.ceil(items.length / unlockedPegCount)))}</Text>
+              </View>
+            ) : null}
           </>
         ) : (
           <>
@@ -300,13 +330,14 @@ export default function NumberPegComposerScreen() {
             </View>
 
             {scenes.map((scene, index) => {
-              const peg = pegs[index];
+              const peg = pegs[getComposerPegNumber(index, unlockedPegCount) - 1];
+              const pegNumber = getComposerPegNumber(index, unlockedPegCount);
               return (
                 <SceneEditorCard
                   key={`${scene.answer}-${index}`}
                   index={index}
                   total={scenes.length}
-                  anchorLabel={`${t('pegLabel')} ${index + 1} · ${peg.keyword.toUpperCase()}`}
+                  anchorLabel={`${t('pegLabel')} ${pegNumber} · ${peg.keyword.toUpperCase()}`}
                   itemLabel={scene.answer}
                   visual={
                     <>
@@ -325,6 +356,12 @@ export default function NumberPegComposerScreen() {
                 />
               );
             })}
+            {items.length > unlockedPegCount ? (
+              <View style={styles.overflowCard}>
+                <Text style={styles.overflowTitle}>{t('splitMemoryTitle')}</Text>
+                <Text style={styles.overflowText}>{t('splitMemoryBody').replace('{count}', String(unlockedPegCount)).replace('{parts}', String(Math.ceil(items.length / unlockedPegCount)))}</Text>
+              </View>
+            ) : null}
           </>
         )}
 
@@ -353,7 +390,7 @@ export default function NumberPegComposerScreen() {
                   ? t('buildScenes')
                   : errorMessage
                     ? t('trySavingAgain')
-                    : t('saveAndOpenScenes')}
+                    : items.length > unlockedPegCount ? t('saveAsMultiple') : t('saveAndOpenScenes')}
             </Text>
             {step === 'items' ? <ArrowRight size={19} color={theme.ink} /> : null}
           </AnimatedPressable>
@@ -365,6 +402,10 @@ export default function NumberPegComposerScreen() {
 
 function goalLabelKey(goalType: MemoryGoalType): 'goalSpelling' | 'goalList' | 'goalFacts' | 'goalOther' {
   return goals.find((goal) => goal.key === goalType)?.translationKey ?? 'goalOther';
+}
+
+function getComposerPegNumber(index: number, unlockedPegCount: number) {
+  return (index % Math.max(1, unlockedPegCount)) + 1;
 }
 
 const styles = StyleSheet.create({
@@ -410,6 +451,9 @@ const styles = StyleSheet.create({
   itemNumberText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   itemText: { flex: 1, color: theme.ink, fontFamily: typography.bodyBold, fontSize: 14, marginHorizontal: 11 },
   deleteButton: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  overflowCard: { marginTop: 14, borderRadius: 16, borderWidth: 1.5, borderColor: '#FFDB7A', backgroundColor: '#FFF7E0', padding: 13 },
+  overflowTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  overflowText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
   pegEmoji: { fontSize: 39 },
   plusSign: { color: theme.berryDeep, fontFamily: typography.display, fontSize: 22 },
   answerVisual: { maxWidth: 135, color: theme.ink, fontFamily: typography.display, fontSize: 17, textAlign: 'center' },

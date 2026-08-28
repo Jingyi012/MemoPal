@@ -50,6 +50,10 @@ public sealed class PracticeAttemptTests
         Assert.All(firstAttempt.Responses, response => Assert.Equal(userId, response.CreatedBy));
         Assert.Equal(1, await db.PracticeAttempts.CountAsync());
         Assert.Equal(2, await db.PracticeResponses.CountAsync());
+        var userStats = await db.UserStats.SingleAsync(x => x.UserId == userId);
+        Assert.Equal(1, userStats.CurrentStreak);
+        Assert.Equal(1, userStats.LongestStreak);
+        Assert.NotNull(userStats.LastActiveDate);
 
         var schedules = await db.MemoryReviewSchedules.OrderBy(x => x.MemoryItemId).ToListAsync();
         Assert.Equal(2, schedules.Count);

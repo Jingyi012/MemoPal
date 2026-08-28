@@ -14,7 +14,6 @@ import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegE
 import {
   choosePalaceScene,
   getPalaceCapacity,
-  getPalaceCapacityMessage,
   getPalaceLoci,
   sceneFitsPalaceItems,
 } from '@/features/palace-scenes/utils/palaceCapacity';
@@ -31,6 +30,7 @@ import { ComposerProgress } from '@/features/memory-composer/components/Composer
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type ComposerStep = 'setup' | 'place';
+const MAX_PALACE_ITEMS = 100;
 
 export default function PalaceMemoryComposerScreen() {
   const { t } = useTranslation('palace');
@@ -75,8 +75,9 @@ export default function PalaceMemoryComposerScreen() {
   );
   const loci = useMemo(() => getPalaceLoci(selectedScene), [selectedScene]);
   const selectedSceneCapacity = getPalaceCapacity(selectedScene);
-  const capacityMessage = selectedScene
-    ? getPalaceCapacityMessage(items.length, selectedSceneCapacity)
+  const overflowCount = Math.max(0, items.length - selectedSceneCapacity);
+  const capacityMessage = selectedScene && overflowCount > 0
+    ? t('splitMemoryBody').replace('{capacity}', String(selectedSceneCapacity)).replace('{parts}', String(Math.ceil(items.length / Math.max(1, selectedSceneCapacity))))
     : null;
 
   const matchingScenes = useMemo(() => {
@@ -103,16 +104,15 @@ export default function PalaceMemoryComposerScreen() {
   const addItem = () => {
     const value = newItem.trim();
     if (!value) return;
-    if (selectedScene && items.length >= loci.length) {
-      setMessage(
-        `${t('sceneHas')} ${loci.length} ${t('loci')}. ${t('chooseLargerScene')}`
-      );
+    if (items.length >= MAX_PALACE_ITEMS) {
+      setMessage(t('maxItemsMessage'));
       return;
     }
     setItems((current) => [...current, value]);
+    const locus = loci.length ? loci[items.length % loci.length] : undefined;
     setAssociations((current) => [
       ...current,
-      createPalaceAssociation(value, loci[items.length]?.name ?? `locus ${items.length + 1}`),
+      createPalaceAssociation(value, locus?.name ?? `locus ${(items.length % Math.max(1, loci.length)) + 1}`),
     ]);
     setActiveLocusIndex(items.length);
     setNewItem('');
@@ -129,10 +129,6 @@ export default function PalaceMemoryComposerScreen() {
       setMessage(t('addThingToRemember'));
       return;
     }
-    if (items.length > loci.length) {
-      setMessage(capacityMessage ?? `${t('sceneOnlyHas')} ${loci.length} ${t('loci')}.`);
-      return;
-    }
     setMessage(null);
     setActiveLocusIndex(0);
     setStep('place');
@@ -142,9 +138,10 @@ export default function PalaceMemoryComposerScreen() {
     const fits = sceneFitsPalaceItems(scene, items.length);
     setSelectedSceneId(scene.id);
     const sceneLoci = getPalaceLoci(scene);
-    setAssociations(items.map((item, index) =>
-      createPalaceAssociation(item, sceneLoci[index]?.name ?? `locus ${index + 1}`),
-    ));
+    setAssociations(items.map((item, index) => {
+      const locus = sceneLoci.length ? sceneLoci[index % sceneLoci.length] : undefined;
+      return createPalaceAssociation(item, locus?.name ?? `locus ${(index % Math.max(1, sceneLoci.length)) + 1}`);
+    }));
     setActiveLocusIndex(0);
     setMessage(
       fits
@@ -156,39 +153,58 @@ export default function PalaceMemoryComposerScreen() {
   const save = () => {
     if (!selectedScene) return setMessage(t('chooseSceneForPalace'));
     if (!items.length) return setMessage(t('addThingToRemember'));
-    if (items.length > loci.length) {
-      return setMessage(capacityMessage ?? `${t('sceneOnlyHas')} ${loci.length} ${t('loci')}.`);
-    }
+    if (!loci.length) return setMessage(t('sceneOnlyHas') + ' 0 ' + t('loci'));
     const normalizedTitle = title.trim() || suggestMemoryTitle('custom', items);
     if (!title.trim()) setTitle(normalizedTitle);
 
-    const request: MemorySetUpsertRequest = {
-      title: normalizedTitle,
-      goalType: items.length > 10 ? 'facts' : 'ordered-list',
-      techniqueKey: 'palace',
-      status: 'ready',
-      visibility: 'private',
-      items: items.map((answer, index) => ({ position: index + 1, prompt: `Recall locus ${index + 1}`, answer })),
-      techniquePlan: {
-        schemaVersion: 1,
-        palaceSceneId: selectedScene.id,
-        pegBindings: [],
-        palaceBindings: items.map((answer, index) => ({
-          itemPosition: index + 1,
-          locusId: loci[index].id,
-          associationText: getAssociationText(associations, index, answer, loci[index]),
-          isCustomScene: true,
-        })),
-      },
-    };
-
     setMessage(null);
-    createMemorySet.mutate(request, {
-      onSuccess: (created) => {
-        const returnTo = fromSharedComposer ? 'practice' : 'palaces';
-        router.replace(`/palaces/memory/${created.id}?returnTo=${returnTo}` as Href);
-      },
+    const chunkSize = Math.max(1, selectedSceneCapacity);
+    const chunks = Array.from({ length: Math.ceil(items.length / chunkSize) }, (_, chunkIndex) => {
+      const start = chunkIndex * chunkSize;
+      return { chunkIndex, answers: items.slice(start, start + chunkSize), associationOffset: start };
     });
+
+    void (async () => {
+      try {
+        const createdSets = [];
+        for (const chunk of chunks) {
+          const suffix = chunks.length > 1 ? ` · ${chunk.chunkIndex + 1}/${chunks.length}` : '';
+          const chunkTitle = suffix
+            ? `${normalizedTitle.slice(0, Math.max(1, 200 - suffix.length))}${suffix}`
+            : normalizedTitle;
+          const request: MemorySetUpsertRequest = {
+            title: chunkTitle,
+            goalType: items.length > 10 ? 'facts' : 'ordered-list',
+            techniqueKey: 'palace',
+            status: 'ready',
+            visibility: 'private',
+            items: chunk.answers.map((answer, index) => ({ position: index + 1, prompt: `Recall locus ${index + 1}`, answer })),
+            techniquePlan: {
+              schemaVersion: 1,
+              palaceSceneId: selectedScene.id,
+              pegBindings: [],
+              palaceBindings: chunk.answers.map((answer, index) => {
+                const locus = loci[index];
+                return {
+                  itemPosition: index + 1,
+                  locusId: locus.id,
+                  associationText: getAssociationText(associations, chunk.associationOffset + index, answer, locus),
+                  isCustomScene: true,
+                };
+              }),
+            },
+          };
+          createdSets.push(await createMemorySet.mutateAsync(request));
+        }
+        const first = createdSets[0];
+        if (first) {
+          const returnTo = fromSharedComposer ? 'practice' : 'palaces';
+          router.replace(`/palaces/memory/${first.id}?returnTo=${returnTo}` as Href);
+        }
+      } catch {
+        // Keep the authored items and associations visible so saving can be retried.
+      }
+    })();
   };
 
   const error = createMemorySet.isError
@@ -335,7 +351,7 @@ export default function PalaceMemoryComposerScreen() {
         {step === 'place' && selectedScene && (
           <>
             <PalaceLocusMap
-              activeIndex={activeLocusIndex}
+              activeIndex={loci.length ? activeLocusIndex % loci.length : 0}
               loci={loci}
               onSelect={(index) => {
                 if (index < items.length) setActiveLocusIndex(index);
@@ -369,7 +385,7 @@ export default function PalaceMemoryComposerScreen() {
 
         {step === 'setup' ? (
           <>
-            <View style={styles.labelRow}><Text style={styles.label}>{t('addItems')}</Text><Text style={styles.counter}>{items.length}/{loci.length || '—'}</Text></View>
+            <View style={styles.labelRow}><Text style={styles.label}>{t('addItems')}</Text><Text style={styles.counter}>{items.length}/{MAX_PALACE_ITEMS}</Text></View>
             <View style={styles.addRow}>
               <TextInput value={newItem} onChangeText={setNewItem} onSubmitEditing={addItem} placeholder={t('itemPlaceholder')} placeholderTextColor="#AAA7B5" style={[styles.input, { flex: 1 }]} />
               <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} style={styles.addButton}><Plus size={21} color="white" /></AnimatedPressable>
@@ -377,7 +393,7 @@ export default function PalaceMemoryComposerScreen() {
             {items.map((item, index) => (
               <View key={`${item}-${index}`} style={styles.itemRow}>
                 <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
-                <View style={{ flex: 1 }}><Text style={styles.itemText}>{item}</Text><Text style={styles.locusText}>{loci[index]?.name ?? t('chooseSceneAssignLocus')}</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.itemText}>{item}</Text><Text style={styles.locusText}>{loci.length ? loci[index % loci.length]?.name : t('chooseSceneAssignLocus')}</Text></View>
                 <AnimatedPressable
                   accessibilityLabel={`${t('removeAccessibility')} ${item}`}
                   onPress={() => {
@@ -410,7 +426,7 @@ export default function PalaceMemoryComposerScreen() {
         {step === 'place' && (
           <View style={styles.fullWidthButton}>
             <AnimatedPressable disabled={createMemorySet.isPending} onPress={save} style={[styles.saveButton, createMemorySet.isPending && { opacity: 0.5 }]}>
-              <Check size={19} color={theme.ink} /><Text style={styles.saveText}>{createMemorySet.isPending ? t('saving') : error ? t('trySavingAgain') : t('savePalace')}</Text><ArrowRight size={18} color={theme.ink} />
+              <Check size={19} color={theme.ink} /><Text style={styles.saveText}>{createMemorySet.isPending ? t('saving') : error ? t('trySavingAgain') : overflowCount > 0 ? t('saveAsMultiple') : t('savePalace')}</Text><ArrowRight size={18} color={theme.ink} />
             </AnimatedPressable>
           </View>
         )}

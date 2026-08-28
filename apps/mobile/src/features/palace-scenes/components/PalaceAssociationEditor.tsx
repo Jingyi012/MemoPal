@@ -33,8 +33,13 @@ export function PalaceAssociationEditor({
   const hasItems = items.length > 0;
   const safeIndex = hasItems ? Math.min(Math.max(activeIndex, 0), items.length - 1) : 0;
   const activeItem = items[safeIndex] ?? '';
-  const activeLocus = loci[safeIndex];
+  // A route can contain more items than one room has loci. In that case the
+  // composer creates linked memories in batches, reusing the same route. Keep
+  // the editor usable for every item by mapping each item to its batch locus.
+  const activeLocusIndex = loci.length ? safeIndex % loci.length : 0;
+  const activeLocus = loci[activeLocusIndex];
   const previewIndex = safeIndex < items.length - 1 ? safeIndex + 1 : safeIndex > 0 ? safeIndex - 1 : -1;
+  const previewLocus = loci.length ? previewIndex >= 0 ? loci[previewIndex % loci.length] : undefined : undefined;
   const translateX = useSharedValue(0);
   const rotation = useSharedValue(0);
 
@@ -111,9 +116,9 @@ export function PalaceAssociationEditor({
             <SceneEditorCard
               index={previewIndex}
               total={items.length}
-              anchorLabel={`${t('locusLabel')} ${previewIndex + 1}`}
+              anchorLabel={`${t('locusLabel')} ${loci.length ? (previewIndex % loci.length) + 1 : previewIndex + 1}`}
               itemLabel={items[previewIndex]}
-              visual={renderLocationVisual(loci[previewIndex], previewIndex)}
+              visual={renderLocationVisual(previewLocus, previewIndex)}
               value={associations[previewIndex] ?? ''}
               onChangeText={() => undefined}
               placeholder={memoryT('associationPlaceholder')}
@@ -131,7 +136,7 @@ export function PalaceAssociationEditor({
             <SceneEditorCard
               index={safeIndex}
               total={items.length}
-              anchorLabel={`${t('locusLabel')} ${safeIndex + 1}`}
+              anchorLabel={`${t('locusLabel')} ${loci.length ? activeLocusIndex + 1 : safeIndex + 1}`}
               itemLabel={activeItem}
               visual={renderLocationVisual(activeLocus, safeIndex)}
               value={associations[safeIndex] ?? ''}

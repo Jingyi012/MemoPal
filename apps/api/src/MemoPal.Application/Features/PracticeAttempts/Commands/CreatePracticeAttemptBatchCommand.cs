@@ -174,8 +174,50 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
             }
         }
 
+        // A completed practice attempt is the authoritative learning activity
+        // event. Update the persisted streak here so every client (including a
+        // freshly logged-in device) sees the same value on the next profile
+        // request; relying on client-side counters made the Home banner stay at
+        // zero after a successful session.
+        await UpdateUserStreakAsync(userId, now, cancellationToken);
+
         await _db.SaveChangesAsync(cancellationToken);
         return ToDto(attempt, nextReviewAt);
+    }
+
+    private async Task UpdateUserStreakAsync(
+        string userId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var stats = await _db.UserStats
+            .FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+
+        if (stats is null)
+        {
+            stats = new UserStats
+            {
+                UserId = userId,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            await _db.UserStats.AddAsync(stats, cancellationToken);
+        }
+
+        var lastActiveDay = stats.LastActiveDate?.Date;
+        var dayGap = lastActiveDay is null ? null : (int?)(now.Date - lastActiveDay.Value).TotalDays;
+        stats.CurrentStreak = dayGap switch
+        {
+            null => 1,
+            <= 0 => Math.Max(1, stats.CurrentStreak),
+            1 => Math.Max(1, stats.CurrentStreak + 1),
+            _ => 1
+        };
+        stats.LongestStreak = Math.Max(stats.LongestStreak, stats.CurrentStreak);
+        stats.LastActiveDate = now;
+        stats.UpdatedAt = now;
+        stats.IsDeleted = false;
+        stats.DeletedAt = null;
     }
 
     private static void ValidateInput(PracticeAttemptInput input)

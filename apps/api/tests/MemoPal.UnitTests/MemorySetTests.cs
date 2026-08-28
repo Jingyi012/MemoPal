@@ -74,12 +74,12 @@ public sealed class MemorySetTests
     }
 
     [Fact]
-    public async Task NumberPeg_Should_Reject_More_Than_Ten_Items()
+    public async Task NumberPeg_Should_Reject_More_Than_One_Hundred_Items()
     {
         const string userId = "user-limit";
         await using var db = CreateDbContext(userId);
         var request = BuildNumberPegRequest();
-        request.Items = Enumerable.Range(1, 11)
+        request.Items = Enumerable.Range(1, 101)
             .Select(position => new MemoryItemInput
             {
                 Position = position,
@@ -94,7 +94,7 @@ public sealed class MemorySetTests
         var exception = await Assert.ThrowsAsync<ValidationAppException>(() =>
             handler.Handle(new CreateMemorySetCommand(userId, request), default));
 
-        Assert.Contains("up to 10", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("more than 100", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

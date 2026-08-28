@@ -9,6 +9,9 @@ import type {
 } from '@/features/practice-attempts/types/practiceAttempt.types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useUserState } from '@/contexts/UserStateContext';
+import { CURRENT_USER_KEYS } from '@/features/profile/hooks/useCurrentUser';
+import { AUTH_STORAGE_KEY } from '@/features/auth/constants/auth';
+import { resolveNextStreak } from '@/features/gamification/shared/utils/streak';
 
 export const PRACTICE_KEYS = {
   all: ['practice-attempts'] as const,
@@ -28,6 +31,7 @@ export function useCreatePracticeAttempt() {
       if (isLocalPreviewEnabled) {
         const created = createLocalPreviewAttempt(attempt);
         await saveLocalPreviewAttempt(created);
+        await updateLocalPreviewStreak();
         return created;
       }
       const results = await practiceAttemptApi.createBatch([attempt]);
@@ -42,9 +46,34 @@ export function useCreatePracticeAttempt() {
       void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.upcoming() });
       void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.history(attempt.memorySetId) });
       void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.stats() });
+      void queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
       void InAppNotificationSync.syncAllUpcoming(userState.notifications.reviewReminders);
     },
   });
+}
+
+async function updateLocalPreviewStreak() {
+  const raw = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+  if (!raw) return;
+  try {
+    const user = JSON.parse(raw) as {
+      stats?: { currentStreak?: number; longestStreak?: number; lastActiveDate?: string | null };
+    };
+    const next = resolveNextStreak({
+      currentStreak: user.stats?.currentStreak ?? 0,
+      longestStreak: user.stats?.longestStreak ?? 0,
+      lastActiveDate: user.stats?.lastActiveDate,
+    });
+    user.stats = {
+      ...user.stats,
+      ...next,
+      lastActiveDate: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+  } catch {
+    // Preview data is best effort; a failed local profile update must not
+    // prevent the practice result from being shown.
+  }
 }
 
 export function usePracticeStats() {

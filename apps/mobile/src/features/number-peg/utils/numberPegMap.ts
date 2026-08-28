@@ -93,7 +93,7 @@ export function buildAllNumberPegItems(): NumberPegItem[] {
   }));
 }
 
-/** The composer and familiarity lesson start with the ten beginner anchors. */
+/** The familiarity lesson starts with the ten beginner anchors. */
 export function buildNumberPegItems(): NumberPegItem[] {
   return buildAllNumberPegItems().slice(0, 10);
 }

@@ -68,9 +68,9 @@ internal static class MemorySetAggregate
             throw new ValidationAppException("Add at least one item before starting a memory set.");
         }
 
-        if (request.TechniqueKey == MemoryTechniqueKeys.NumberPeg && request.Items.Count > 10)
+        if (request.TechniqueKey == MemoryTechniqueKeys.NumberPeg && request.Items.Count > 100)
         {
-            throw new ValidationAppException("Number Peg supports up to 10 items. Choose Memory Palace for longer sets.");
+            throw new ValidationAppException("Number Peg supports up to 100 items. Split longer sets into multiple memories.");
         }
 
         if (isDraft && request.TechniquePlan is null)
@@ -118,9 +118,9 @@ internal static class MemorySetAggregate
                 throw new ValidationAppException("Each Peg binding must reference one unique memory item.");
             }
 
-            if (binding.PegNumber is < 1 or > 10 || !pegNumbers.Add(binding.PegNumber))
+            if (binding.PegNumber is < 1 or > 100 || !pegNumbers.Add(binding.PegNumber))
             {
-                throw new ValidationAppException("Peg numbers must be unique values from 1 to 10.");
+                throw new ValidationAppException("Peg numbers must be unique values from 1 to 100.");
             }
 
             if (string.IsNullOrWhiteSpace(binding.SceneText))
