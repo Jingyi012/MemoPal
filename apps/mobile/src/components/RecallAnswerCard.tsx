@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Check, X } from 'lucide-react-native';
@@ -19,6 +20,8 @@ type RecallAnswerCardProps = {
   scoreLabel: string;
   answerAccessibilityLabel?: string;
   answerPlaceholder?: string;
+  onAnswerFocus?: () => void;
+  useBottomSheetInput?: boolean;
   onAnswerChange: (value: string) => void;
   onSubmit: () => void;
 };
@@ -36,18 +39,21 @@ export function RecallAnswerCard({
   scoreLabel,
   answerAccessibilityLabel = 'Type your answer',
   answerPlaceholder = 'TYPE YOUR ANSWER',
+  onAnswerFocus,
+  useBottomSheetInput = false,
   onAnswerChange,
   onSubmit,
 }: RecallAnswerCardProps) {
   const isPeg = tone === 'peg';
   const accent = isPeg ? theme.berryDeep : theme.violetDeep;
+  const AnswerInput = useBottomSheetInput ? BottomSheetTextInput : TextInput;
 
   return (
     <View style={[styles.card, !isPeg && styles.palaceCard]}>
       <View style={[styles.icon, isPeg ? styles.pegIcon : styles.palaceIcon]}>{icon}</View>
       <Text style={[styles.eyebrow, { color: accent }]}>{eyebrow}</Text>
       <Text style={styles.prompt}>{prompt}</Text>
-      <TextInput
+      <AnswerInput
         value={answer}
         onChangeText={(value) => { if (!feedback) onAnswerChange(value); }}
         onSubmitEditing={onSubmit}
@@ -55,6 +61,7 @@ export function RecallAnswerCard({
         accessibilityLabel={answerAccessibilityLabel}
         autoCapitalize="characters"
         autoCorrect={false}
+        onFocus={onAnswerFocus}
         placeholder={answerPlaceholder}
         placeholderTextColor="#AAA7B5"
         style={[

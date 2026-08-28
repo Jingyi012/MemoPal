@@ -6,6 +6,7 @@ import type { MemorySetUpsertRequest } from '@/features/memory-sets';
 import { PalaceAssociationEditor } from '@/features/palace-scenes/components/PalaceAssociationEditor';
 import { PalaceLocusMap } from '@/features/palace-scenes/components/PalaceLocusMap';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
+import type { PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
@@ -23,7 +24,7 @@ import {
   getAssociationText,
 } from '@/features/palace-scenes/utils/palaceAuthoring';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, Check, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, Check, Plus, RefreshCcw, Search, Trash2 } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { firstParam, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import { ComposerProgress } from '@/features/memory-composer/components/ComposerProgress';
@@ -51,6 +52,8 @@ export default function PalaceMemoryComposerScreen() {
   const [activeLocusIndex, setActiveLocusIndex] = useState(0);
   const [selectedSceneId, setSelectedSceneId] = useState(() => firstParam(params.sceneId) ?? '');
   const [message, setMessage] = useState<string | null>(null);
+  const [showAllScenes, setShowAllScenes] = useState(false);
+  const [sceneSearch, setSceneSearch] = useState('');
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -75,6 +78,21 @@ export default function PalaceMemoryComposerScreen() {
   const capacityMessage = selectedScene
     ? getPalaceCapacityMessage(items.length, selectedSceneCapacity)
     : null;
+
+  const matchingScenes = useMemo(() => {
+    const query = sceneSearch.trim().toLocaleLowerCase();
+    if (!query) return scenesQuery.data ?? [];
+    return (scenesQuery.data ?? []).filter((scene) =>
+      `${scene.name} ${scene.description}`.toLocaleLowerCase().includes(query),
+    );
+  }, [sceneSearch, scenesQuery.data]);
+
+  const visibleScenes = useMemo(() => {
+    if (showAllScenes || sceneSearch.trim()) return matchingScenes;
+    const selected = matchingScenes.find((scene) => scene.id === selectedSceneId);
+    const remaining = matchingScenes.filter((scene) => scene.id !== selectedSceneId);
+    return selected ? [selected, ...remaining].slice(0, 4) : remaining.slice(0, 4);
+  }, [matchingScenes, sceneSearch, selectedSceneId, showAllScenes]);
 
   useEffect(() => {
     if (!loci.length || !items.length) return;
@@ -118,6 +136,21 @@ export default function PalaceMemoryComposerScreen() {
     setMessage(null);
     setActiveLocusIndex(0);
     setStep('place');
+  };
+
+  const selectScene = (scene: PalaceScene) => {
+    const fits = sceneFitsPalaceItems(scene, items.length);
+    setSelectedSceneId(scene.id);
+    const sceneLoci = getPalaceLoci(scene);
+    setAssociations(items.map((item, index) =>
+      createPalaceAssociation(item, sceneLoci[index]?.name ?? `locus ${index + 1}`),
+    ));
+    setActiveLocusIndex(0);
+    setMessage(
+      fits
+        ? null
+        : `${t('sceneHas')} ${scene.loci.length} ${t('loci')}. ${t('removeItemsOrChoose')}`
+    );
   };
 
   const save = () => {
@@ -206,42 +239,89 @@ export default function PalaceMemoryComposerScreen() {
           </>
          ) : null}
 
-        {step === 'setup' && <Text style={styles.label}>{t('chooseScene')}</Text>}
+        {step === 'setup' && (
+          <View style={styles.sceneHeadingRow}>
+            <View style={styles.sceneHeadingCopy}>
+              <Text style={[styles.label, styles.sceneLabel]}>{t('chooseScene')}</Text>
+              {scenesQuery.data?.length ? <Text style={styles.sceneCount}>{scenesQuery.data.length} {t('sceneCount')}</Text> : null}
+            </View>
+            {scenesQuery.data && scenesQuery.data.length > 4 ? (
+              <AnimatedPressable
+                accessibilityRole="button"
+                accessibilityLabel={showAllScenes ? t('hideScenes') : t('seeAllScenes')}
+                onPress={() => {
+                  if (showAllScenes) setSceneSearch('');
+                  setShowAllScenes((current) => !current);
+                }}
+                style={styles.seeAllScenesButton}>
+                <Text style={styles.seeAllScenesText}>{showAllScenes ? t('hideScenes') : t('seeAllScenes')}</Text>
+              </AnimatedPressable>
+            ) : null}
+          </View>
+        )}
         {step === 'setup' && (
           <>
         {scenesQuery.isLoading ? (
           <Text style={styles.helper}>{t('loadingScenes')}</Text>
         ) : scenesQuery.data?.length ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sceneRail}>
-            {scenesQuery.data.map((scene) => {
-              const active = scene.id === selectedSceneId;
-              const fits = sceneFitsPalaceItems(scene, items.length);
-              return (
-                <AnimatedPressable
-                  key={scene.id}
-                  onPress={() => {
-                    setSelectedSceneId(scene.id);
-                    const sceneLoci = getPalaceLoci(scene);
-                    setAssociations(items.map((item, index) =>
-                      createPalaceAssociation(item, sceneLoci[index]?.name ?? `locus ${index + 1}`),
-                    ));
-                    setActiveLocusIndex(0);
-                    setMessage(
-                      fits
-                        ? null
-                        : `${t('sceneHas')} ${scene.loci.length} ${t('loci')}. ${t('removeItemsOrChoose')}`
+          <>
+            {showAllScenes && scenesQuery.data.length > 4 ? (
+              <View style={styles.sceneSearchWrap}>
+                <Search size={17} color={theme.inkSoft} />
+                <TextInput
+                  accessibilityLabel={t('searchScenes')}
+                  onChangeText={setSceneSearch}
+                  placeholder={t('searchScenes')}
+                  placeholderTextColor="#AAA7B5"
+                  style={styles.sceneSearchInput}
+                  value={sceneSearch}
+                />
+              </View>
+            ) : null}
+            {visibleScenes.length ? (
+              showAllScenes || sceneSearch.trim() ? (
+                <View style={styles.sceneGrid}>
+                  {visibleScenes.map((scene) => {
+                    const active = scene.id === selectedSceneId;
+                    const fits = sceneFitsPalaceItems(scene, items.length);
+                    return (
+                      <AnimatedPressable
+                        key={scene.id}
+                        onPress={() => selectScene(scene)}
+                        style={[styles.sceneOption, styles.sceneOptionGrid, active && styles.sceneOptionActive, !fits && styles.sceneOptionLimited]}>
+                        <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneThumb} />
+                        <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
+                        <Text style={styles.sceneMeta}>
+                          {scene.loci.length} {t('loci')}{scene.isPremium ? ` · ${t('premium')}` : ''}{!fits ? ` · ${t('tooSmall')}` : ''}
+                        </Text>
+                      </AnimatedPressable>
                     );
-                  }}
-                  style={[styles.sceneOption, active && styles.sceneOptionActive, !fits && styles.sceneOptionLimited]}>
-                  <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneThumb} />
-                  <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
-                  <Text style={styles.sceneMeta}>
-                    {scene.loci.length} {t('loci')}{scene.isPremium ? ` · ${t('premium')}` : ''}{!fits ? ` · ${t('tooSmall')}` : ''}
-                  </Text>
-                </AnimatedPressable>
-              );
-            })}
-          </ScrollView>
+                  })}
+                </View>
+              ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sceneRail}>
+                  {visibleScenes.map((scene) => {
+                    const active = scene.id === selectedSceneId;
+                    const fits = sceneFitsPalaceItems(scene, items.length);
+                    return (
+                      <AnimatedPressable
+                        key={scene.id}
+                        onPress={() => selectScene(scene)}
+                        style={[styles.sceneOption, active && styles.sceneOptionActive, !fits && styles.sceneOptionLimited]}>
+                        <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneThumb} />
+                        <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
+                        <Text style={styles.sceneMeta}>
+                          {scene.loci.length} {t('loci')}{scene.isPremium ? ` · ${t('premium')}` : ''}{!fits ? ` · ${t('tooSmall')}` : ''}
+                        </Text>
+                      </AnimatedPressable>
+                    );
+                  })}
+                </ScrollView>
+              )
+            ) : (
+              <Text style={styles.noMatchingScenes}>{t('noMatchingScenes')}</Text>
+            )}
+          </>
         ) : (
           <View style={styles.emptyScenes}>
             <Text style={styles.sceneImageEmoji}>🖼️</Text>
@@ -377,6 +457,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 }, optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 18 },
+  sceneHeadingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between' }, sceneHeadingCopy: { flex: 1 }, sceneLabel: { marginBottom: 2 }, sceneCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginBottom: 9 }, seeAllScenesButton: { alignItems: 'center', backgroundColor: '#EEE9FF', borderRadius: 999, marginBottom: 8, minHeight: 44, justifyContent: 'center', paddingHorizontal: 11 }, seeAllScenesText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 }, sceneSearchWrap: { alignItems: 'center', backgroundColor: 'white', borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 8, marginBottom: 10, paddingHorizontal: 12 }, sceneSearchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13, minHeight: 44 }, sceneGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }, sceneOptionGrid: { marginRight: 0, marginBottom: 10, width: '48%' }, noMatchingScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, paddingVertical: 16, textAlign: 'center' },
   input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 14, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
   sceneRail: { marginHorizontal: -16, paddingLeft: 16 }, sceneOption: { width: 172, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8, marginRight: 10 }, sceneOptionActive: { borderColor: '#7A68E0', backgroundColor: '#F7F5FF' }, sceneOptionLimited: { opacity: 0.72 }, sceneThumb: { height: 92, borderRadius: 12 }, sceneName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 8 }, sceneMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 2 },
   canvasHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, textAlign: 'center', marginTop: 8 }, capacityCard: { marginTop: 11, borderRadius: 14, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 12 }, capacityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 }, capacityText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 3 },

@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -29,7 +30,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 type SessionMode = 'browse' | 'walk' | 'list' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
@@ -62,8 +63,16 @@ export default function PalaceMemorySessionScreen({
   const [responses, setResponses] = useState<PracticeResponseInput[]>([]);
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
   const [hasRestoredSession, setHasRestoredSession] = useState(false);
+  const [bodyHeight, setBodyHeight] = useState(0);
+  const [mapHeight, setMapHeight] = useState(0);
   const hydratedSessionRef = useRef<string | null>(null);
   const sessionReadyRef = useRef(false);
+  const sessionSheetRef = useRef<BottomSheet>(null);
+  const sessionSnapPoints = useMemo<(number | string)[]>(() => {
+    if (!bodyHeight || !mapHeight) return ['38%', '88%'];
+    const collapsedHeight = Math.max(180, Math.min(bodyHeight - 160, bodyHeight - mapHeight));
+    return [collapsedHeight, '88%'];
+  }, [bodyHeight, mapHeight]);
   const practiceAttempt = useCreatePracticeAttempt();
   const leaveSession = () => {
     if (returnTo === 'practice') {
@@ -252,218 +261,235 @@ export default function PalaceMemorySessionScreen({
     }
   };
 
+  const expandRecallSheet = () => {
+    sessionSheetRef.current?.snapToIndex(1);
+  };
+
+  const renderModeRail = () => (
+    <View style={styles.modeRail}>
+      <Pressable accessibilityRole="tab" accessibilityLabel="Open Palace map" accessibilityState={{ selected: mode === 'browse' }} onPress={() => { setMode('browse'); setActiveIndex(0); setFeedback(null); setAnswer(''); }} style={[styles.modeTab, mode === 'browse' && styles.modeTabActive]}>
+        <Text style={styles.modeEmoji}>🗺️</Text><Text style={[styles.modeTabText, mode === 'browse' && styles.modeTabTextActive]}>{t('map')}</Text>
+      </Pressable>
+      <Pressable accessibilityRole="tab" accessibilityLabel="Start Palace walk" accessibilityState={{ selected: mode === 'walk' }} onPress={() => { setMode('walk'); setActiveIndex(0); setFeedback(null); setAnswer(''); }} style={[styles.modeTab, mode === 'walk' && styles.modeTabActive]}>
+        <Text style={styles.modeEmoji}>🚶</Text><Text style={[styles.modeTabText, mode === 'walk' && styles.modeTabTextActive]}>{t('walk')}</Text>
+      </Pressable>
+      <Pressable accessibilityRole="tab" accessibilityLabel="Open Palace ordered list" accessibilityState={{ selected: mode === 'list' }} onPress={() => { setMode('list'); setActiveIndex(0); setFeedback(null); setAnswer(''); }} style={[styles.modeTab, mode === 'list' && styles.modeTabActive]}>
+        <Text style={styles.modeEmoji}>📋</Text><Text style={[styles.modeTabText, mode === 'list' && styles.modeTabTextActive]}>{t('list')}</Text>
+      </Pressable>
+      <Pressable accessibilityRole="tab" accessibilityLabel="Open Palace recall" accessibilityState={{ selected: mode === 'recall' }} onPress={startRecall} style={[styles.modeTab, mode === 'recall' && styles.modeTabActive]}>
+        <Text style={styles.modeEmoji}>🧠</Text><Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>{t('recall')}</Text>
+      </Pressable>
+    </View>
+  );
+
+  const renderRecallPanel = () => (
+    recallComplete ? (
+      <RecallResultCard
+        tone="palace"
+        title={t('title')}
+        score={score}
+        total={placements.length}
+        body={score === placements.length
+          ? 'Every locus led you to the right memory.'
+          : 'Walk through the missed loci once more, then try another round.'}
+        saveStatus={
+          practiceAttempt.isPending ? (
+            <Text style={styles.saveState}>Saving your progress…</Text>
+          ) : practiceAttempt.isError ? (
+            <View style={styles.saveError}>
+              <Text style={styles.saveErrorText}>Progress was not saved. Your result is still here.</Text>
+              <AnimatedPressable
+                accessibilityRole="button"
+                accessibilityLabel="Retry saving progress"
+                onPress={() => lastPayload && practiceAttempt.mutate(lastPayload)}
+                style={styles.retrySaveButton}>
+                <Text style={styles.retrySaveText}>Retry save</Text>
+              </AnimatedPressable>
+            </View>
+          ) : practiceAttempt.data ? (
+            <Text style={styles.saveSuccess}>
+              Saved ✓ Next review {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : 'will appear in Today'}
+            </Text>
+          ) : null
+        }
+        onRetry={startRecall}
+        secondaryAction={{ label: 'Walk the Palace again', onPress: () => { setMode('walk'); setActiveIndex(0); } }}
+        onReturnToToday={() => router.replace('/(tabs)')}
+      />
+    ) : active ? (
+      <RecallAnswerCard
+        tone="palace"
+        icon={<Text style={styles.recallEmoji}>🧠</Text>}
+        eyebrow={`LOCUS ${activeIndex + 1} · ${active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}`}
+        prompt="What did you place here?"
+        answer={answer}
+        feedback={feedback}
+        feedbackText={feedback === 'correct'
+          ? 'That is it!'
+          : isSpelling
+            ? `Check the spelling: ${getSpellingHint(active.item.answer, answer)}`
+            : `It was ${active.item.answer}. See it at this locus once more, then try again.`}
+        actionLabel={feedback === 'wrong' ? 'Try this locus again' : feedback ? 'Next locus' : 'Check answer'}
+        scoreLabel={`Locus ${activeIndex + 1} / ${placements.length} · Score ${score}`}
+        onAnswerFocus={expandRecallSheet}
+        useBottomSheetInput
+        onAnswerChange={setAnswer}
+        onSubmit={checkOrContinue}
+      />
+    ) : null
+  );
+
+  const renderMap = () => (
+    <View style={styles.mapStage} onLayout={(event) => setMapHeight(event.nativeEvent.layout.height)}>
+      <View style={styles.canvas}>
+        <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={StyleSheet.absoluteFillObject} />
+        <View pointerEvents="none" style={styles.floor} />
+        {placements.map((placement, index) =>
+          placement.locus ? (
+            <Pressable
+              key={placement.item.id}
+              accessibilityLabel={`Locus ${index + 1}: ${placement.locus.name}`}
+              onPress={() => mode === 'browse' && setActiveIndex(index)}
+              style={[
+                styles.marker,
+                { left: `${placement.locus.xPercent}%`, top: `${placement.locus.yPercent}%` },
+                index === activeIndex && styles.activeMarker,
+              ]}>
+              <Text style={styles.markerText}>{index + 1}</Text>
+            </Pressable>
+          ) : null
+        )}
+      </View>
+    </View>
+  );
+
+  const renderSessionPanel = () => (
+    <>
+      {mode === 'browse' && active ? (
+        <View style={styles.previewCard}>
+          <View style={styles.previewTop}>
+            <View style={styles.previewIcon}>
+              <Text style={styles.sceneSparkle}>✨</Text>
+            </View>
+            <View style={styles.previewCopy}>
+              <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}</Text>
+              <Text style={styles.previewAnswer}>{active.item.answer}</Text>
+            </View>
+          </View>
+          <Text style={styles.previewAssociation}>
+            {active.binding?.associationText ?? 'This is the memory attached to this spot.'}
+          </Text>
+        </View>
+      ) : null}
+
+      {mode === 'walk' && active ? (
+        active.locus ? (
+          <PalaceFocusCard
+            answer={active.item.answer}
+            association={active.binding?.associationText}
+            index={activeIndex}
+            isLast={activeIndex === placements.length - 1}
+            locus={active.locus}
+            onPrevious={() => setActiveIndex((value) => Math.max(0, value - 1))}
+            onNext={() =>
+              activeIndex === placements.length - 1
+                ? setActiveIndex(0)
+                : setActiveIndex((value) => value + 1)
+            }
+            onStartRecall={startRecall}
+            scene={scene}
+            total={placements.length}
+          />
+        ) : null
+      ) : mode === 'recall' ? (
+        renderRecallPanel()
+      ) : mode === 'list' ? (
+        <PalaceOrderedList
+          activeIndex={activeIndex}
+          items={placements.map((placement) => ({
+            id: placement.item.id,
+            answer: placement.item.answer,
+            association: placement.binding?.associationText,
+            locusName: placement.locus?.name,
+          }))}
+          onSelect={setActiveIndex}
+        />
+      ) : (
+        <>
+          {placements.map((placement, index) => (
+            <AnimatedPressable
+              key={placement.item.id}
+              onPress={() => setActiveIndex(index)}
+              style={[styles.itemRow, index === activeIndex && styles.activeRow]}>
+              <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
+              <View style={styles.flex}>
+                <Text style={styles.itemAnswer}>{placement.item.answer}</Text>
+                <Text style={styles.itemLocus}>{placement.locus?.name}</Text>
+              </View>
+            </AnimatedPressable>
+          ))}
+          <AnimatedPressable
+            onPress={() => { setActiveIndex(0); setMode('walk'); }}
+            style={styles.primaryButton}>
+            <Text style={styles.primaryText}>🚶 {t('walkThrough')}</Text>
+          </AnimatedPressable>
+          <AnimatedPressable onPress={startRecall} style={styles.secondaryButton}>
+            <Text style={styles.secondaryText}>{t('recallChallenge')}</Text>
+          </AnimatedPressable>
+        </>
+      )}
+    </>
+  );
+
   return (
-    <View style={styles.page}>
+    <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <CommonHeader
         eyebrow={t('eyebrow')}
         title={memorySet.title}
         description={`${scene.name} · ${placements.length} loci`}
         backAction={leaveSession}
       />
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-        {mode !== 'list' ? (
-          <>
-            <View style={styles.canvas}>
-              <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={StyleSheet.absoluteFillObject} />
-              <View pointerEvents="none" style={styles.floor} />
-              {placements.map((placement, index) =>
-                placement.locus ? (
-                  <Pressable
-                    key={placement.item.id}
-                    accessibilityLabel={`Locus ${index + 1}: ${placement.locus.name}`}
-                    onPress={() => mode === 'browse' && setActiveIndex(index)}
-                    style={[
-                      styles.marker,
-                      { left: `${placement.locus.xPercent}%`, top: `${placement.locus.yPercent}%` },
-                      index === activeIndex && styles.activeMarker,
-                    ]}>
-                    <Text style={styles.markerText}>{index + 1}</Text>
-                  </Pressable>
-                ) : null
-              )}
-            </View>
+      <View style={styles.sessionBody} onLayout={(event) => setBodyHeight(event.nativeEvent.layout.height)}>
+        {renderMap()}
+        <BottomSheet
+          ref={sessionSheetRef}
+          index={0}
+          snapPoints={sessionSnapPoints}
+          enableDynamicSizing={false}
+          enablePanDownToClose={false}
+          keyboardBehavior="interactive"
+          keyboardBlurBehavior="restore"
+          android_keyboardInputMode="adjustResize"
+          backgroundStyle={styles.sessionSheet}
+          handleIndicatorStyle={styles.sessionSheetHandle}>
+          <BottomSheetScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.sheetContent}>
             <Text style={styles.hint}>
               {mode === 'recall' ? 'Use the active locus as your cue.' : 'Tap a marker, or walk through every locus in order.'}
             </Text>
-          </>
-        ) : null}
-        {hasRestoredSession ? (
-          <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
-            <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
-          </AnimatedPressable>
-        ) : null}
-
-        <View style={styles.modeRail}>
-          <Pressable
-            accessibilityRole="tab"
-            accessibilityLabel="Open Palace map"
-            accessibilityState={{ selected: mode === 'browse' }}
-            onPress={() => { setMode('browse'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
-            style={[styles.modeTab, mode === 'browse' && styles.modeTabActive]}>
-            <Text style={styles.modeEmoji}>🗺️</Text>
-            <Text style={[styles.modeTabText, mode === 'browse' && styles.modeTabTextActive]}>{t('map')}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="tab"
-            accessibilityLabel="Start Palace walk"
-            accessibilityState={{ selected: mode === 'walk' }}
-            onPress={() => { setMode('walk'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
-            style={[styles.modeTab, mode === 'walk' && styles.modeTabActive]}>
-            <Text style={styles.modeEmoji}>🚶</Text>
-            <Text style={[styles.modeTabText, mode === 'walk' && styles.modeTabTextActive]}>{t('walk')}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="tab"
-            accessibilityLabel="Open Palace ordered list"
-            accessibilityState={{ selected: mode === 'list' }}
-            onPress={() => { setMode('list'); setActiveIndex(0); setFeedback(null); setAnswer(''); }}
-            style={[styles.modeTab, mode === 'list' && styles.modeTabActive]}>
-            <Text style={styles.modeEmoji}>📋</Text>
-            <Text style={[styles.modeTabText, mode === 'list' && styles.modeTabTextActive]}>{t('list')}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="tab"
-            accessibilityLabel="Open Palace recall"
-            accessibilityState={{ selected: mode === 'recall' }}
-            onPress={startRecall}
-            style={[styles.modeTab, mode === 'recall' && styles.modeTabActive]}>
-            <Text style={styles.modeEmoji}>🧠</Text>
-            <Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>{t('recall')}</Text>
-          </Pressable>
-        </View>
-
-        {mode === 'browse' && active ? (
-          <View style={styles.previewCard}>
-            <View style={styles.previewTop}>
-              <View style={styles.previewIcon}>
-                <Text style={styles.sceneSparkle}>✨</Text>
-              </View>
-              <View style={styles.previewCopy}>
-                <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}</Text>
-                <Text style={styles.previewAnswer}>{active.item.answer}</Text>
-              </View>
-            </View>
-            <Text style={styles.previewAssociation}>
-              {active.binding?.associationText ?? 'This is the memory attached to this spot.'}
-            </Text>
-          </View>
-        ) : null}
-
-        {mode === 'walk' && active ? (
-          active.locus ? (
-            <PalaceFocusCard
-              answer={active.item.answer}
-              association={active.binding?.associationText}
-              index={activeIndex}
-              isLast={activeIndex === placements.length - 1}
-              locus={active.locus}
-              onPrevious={() => setActiveIndex((value) => Math.max(0, value - 1))}
-              onNext={() =>
-                activeIndex === placements.length - 1
-                  ? setActiveIndex(0)
-                  : setActiveIndex((value) => value + 1)
-              }
-              onStartRecall={startRecall}
-              scene={scene}
-              total={placements.length}
-            />
-          ) : null
-        ) : mode === 'recall' ? (
-          recallComplete ? (
-            <RecallResultCard
-              tone="palace"
-              title={t('title')}
-              score={score}
-              total={placements.length}
-              body={score === placements.length
-                ? 'Every locus led you to the right memory.'
-                : 'Walk through the missed loci once more, then try another round.'}
-              saveStatus={
-                practiceAttempt.isPending ? (
-                  <Text style={styles.saveState}>Saving your progress…</Text>
-                ) : practiceAttempt.isError ? (
-                  <View style={styles.saveError}>
-                    <Text style={styles.saveErrorText}>Progress was not saved. Your result is still here.</Text>
-                    <AnimatedPressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Retry saving progress"
-                      onPress={() => lastPayload && practiceAttempt.mutate(lastPayload)}
-                      style={styles.retrySaveButton}>
-                      <Text style={styles.retrySaveText}>Retry save</Text>
-                    </AnimatedPressable>
-                  </View>
-                ) : practiceAttempt.data ? (
-                  <Text style={styles.saveSuccess}>
-                    Saved ✓ Next review {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : 'will appear in Today'}
-                  </Text>
-                ) : null
-              }
-              onRetry={startRecall}
-              secondaryAction={{ label: 'Walk the Palace again', onPress: () => { setMode('walk'); setActiveIndex(0); } }}
-              onReturnToToday={() => router.replace('/(tabs)')}
-            />
-          ) : active ? (
-            <RecallAnswerCard
-              tone="palace"
-              icon={<Text style={styles.recallEmoji}>🧠</Text>}
-              eyebrow={`LOCUS ${activeIndex + 1} · ${active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}`}
-              prompt="What did you place here?"
-              answer={answer}
-              feedback={feedback}
-              feedbackText={feedback === 'correct'
-                ? 'That is it!'
-                : isSpelling
-                  ? `Check the spelling: ${getSpellingHint(active.item.answer, answer)}`
-                  : `It was ${active.item.answer}. See it at this locus once more, then try again.`}
-              actionLabel={feedback === 'wrong' ? 'Try this locus again' : feedback ? 'Next locus' : 'Check answer'}
-              scoreLabel={`Locus ${activeIndex + 1} / ${placements.length} · Score ${score}`}
-              onAnswerChange={setAnswer}
-              onSubmit={checkOrContinue}
-            />
-          ) : null
-        ) : mode === 'list' ? (
-          <PalaceOrderedList
-            activeIndex={activeIndex}
-            items={placements.map((placement) => ({
-              id: placement.item.id,
-              answer: placement.item.answer,
-              association: placement.binding?.associationText,
-              locusName: placement.locus?.name,
-            }))}
-            onSelect={setActiveIndex}
-          />
-        ) : (
-          <>
-            {placements.map((placement, index) => (
-              <AnimatedPressable
-                key={placement.item.id}
-                onPress={() => setActiveIndex(index)}
-                style={[styles.itemRow, index === activeIndex && styles.activeRow]}>
-                <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
-                <View style={styles.flex}>
-                  <Text style={styles.itemAnswer}>{placement.item.answer}</Text>
-                  <Text style={styles.itemLocus}>{placement.locus?.name}</Text>
-                </View>
+            {hasRestoredSession ? (
+              <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
+                <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
               </AnimatedPressable>
-            ))}
-            <AnimatedPressable
-              onPress={() => { setActiveIndex(0); setMode('walk'); }}
-              style={styles.primaryButton}>
-              <Text style={styles.primaryText}>🚶 {t('walkThrough')}</Text>
-            </AnimatedPressable>
-            <AnimatedPressable onPress={startRecall} style={styles.secondaryButton}>
-              <Text style={styles.secondaryText}>{t('recallChallenge')}</Text>
-            </AnimatedPressable>
-          </>
-        )}
-      </ScrollView>
-    </View>
+            ) : null}
+            {renderModeRail()}
+            {renderSessionPanel()}
+          </BottomSheetScrollView>
+        </BottomSheet>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
-  content: { padding: 16, paddingBottom: 42 },
+  sessionBody: { flex: 1, position: 'relative' },
+  mapStage: { padding: 16, paddingBottom: 24 },
+  sessionSheet: { backgroundColor: theme.paper, borderColor: '#DCD4FF', borderWidth: 2, borderBottomWidth: 0, borderTopLeftRadius: 26, borderTopRightRadius: 26 },
+  sessionSheetHandle: { backgroundColor: '#BEB5EE', width: 44 },
+  sheetContent: { padding: 16, paddingBottom: 42 },
   flex: { flex: 1 },
   canvas: { aspectRatio: 4 / 3, borderRadius: 20, overflow: 'hidden', borderWidth: 2, borderColor: '#E3D7B3', backgroundColor: '#F4EFE0' },
   floor: { position: 'absolute', top: 14, right: 14, bottom: 14, left: 14, borderWidth: 2, borderStyle: 'dashed', borderColor: '#CDBD8A', borderRadius: 14 },

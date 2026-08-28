@@ -388,7 +388,7 @@ export const translations = {
       setupLoci: 'Set up your loci',
       lociOnPhoto: 'Your loci will appear on the photo',
       spotName: 'Name this spot',
-      sessionReady: 'SESSION READY', nameMemory: 'Name this memory', chooseScene: 'Choose your scene', loadingScenes: 'Loading your scenes…', noPublishedScenes: 'No published scenes yet. Add one in Admin, then refresh.', refresh: 'Refresh', preview: 'SCENE PREVIEW', capacity: 'This room needs more space', addItems: 'Add your items', itemPlaceholder: 'A word, fact, name, or step', continuePlace: 'Continue to place memories', editSetup: 'Edit items or choose another room',
+      sessionReady: 'SESSION READY', nameMemory: 'Name this memory', chooseScene: 'Choose your scene', sceneCount: 'scenes', seeAllScenes: 'See all', hideScenes: 'Show less', searchScenes: 'Search scenes', noMatchingScenes: 'No scenes match that search.', loadingScenes: 'Loading your scenes…', noPublishedScenes: 'No published scenes yet. Add one in Admin, then refresh.', refresh: 'Refresh', preview: 'SCENE PREVIEW', capacity: 'This room needs more space', addItems: 'Add your items', itemPlaceholder: 'A word, fact, name, or step', continuePlace: 'Continue to place memories', editSetup: 'Edit items or choose another room',
     },
     onboarding: {
       welcome: 'Welcome to MemoPal',
@@ -851,7 +851,7 @@ export const translations = {
       setupLoci: '设置位置',
       lociOnPhoto: '你的位置会显示在照片上',
       spotName: '为这个位置命名',
-      sessionReady: '练习准备好了', nameMemory: '为这项记忆命名', chooseScene: '选择你的场景', loadingScenes: '正在加载场景…', noPublishedScenes: '还没有已发布的场景。请在管理后台添加后刷新。', refresh: '刷新', preview: '场景预览', capacity: '这个房间需要更多空间', addItems: '加入项目', itemPlaceholder: '词语、事实、姓名或步骤', continuePlace: '继续放置记忆', editSetup: '编辑项目或选择其他房间',
+      sessionReady: '练习准备好了', nameMemory: '为这项记忆命名', chooseScene: '选择你的场景', sceneCount: '个场景', seeAllScenes: '查看全部', hideScenes: '收起', searchScenes: '搜索场景', noMatchingScenes: '没有符合搜索条件的场景。', loadingScenes: '正在加载场景…', noPublishedScenes: '还没有已发布的场景。请在管理后台添加后刷新。', refresh: '刷新', preview: '场景预览', capacity: '这个房间需要更多空间', addItems: '加入项目', itemPlaceholder: '词语、事实、姓名或步骤', continuePlace: '继续放置记忆', editSetup: '编辑项目或选择其他房间',
     },
     onboarding: {
       welcome: '欢迎来到 MemoPal',
