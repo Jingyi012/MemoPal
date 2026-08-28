@@ -1,7 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
-import { useMemoryModuleAccess } from '@/core/memory';
 import { useMemorySets } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets/types/memorySet.types';
 import { useDueMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
@@ -22,20 +21,25 @@ export default function HomeScreen() {
   const router = useRouter();
   const { t } = useTranslation('home');
   const { user } = useCurrentUser();
-  const { enabled: palaceEnabled } = useMemoryModuleAccess('palace');
-  const { enabled: numberPegEnabled } = useMemoryModuleAccess('number-peg');
   const memorySets = useMemorySets();
   const dueReviews = useDueMemoryReviews();
   const activityQuery = useXpEvents({ recentDays: 7 });
-  const memorySet = (memorySets.data ?? [])
+  const activeMemorySets = (memorySets.data ?? [])
     .filter((item) => item.status !== 'archived')
-    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
+    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+  const memorySet = activeMemorySets[0];
+  const todayPickMemorySet = activeMemorySets.length > 1
+    ? activeMemorySets[activeMemorySets.length - 1]
+    : undefined;
   const streak = Math.max(0, user?.stats?.currentStreak ?? 0);
   const stats = user?.stats;
-  const canStartNumberPeg = numberPegEnabled || !palaceEnabled;
 
   const refreshHome = async () => {
     await Promise.allSettled([memorySets.refetch(), activityQuery.refetch()]);
+  };
+
+  const openTodayPick = () => {
+    if (todayPickMemorySet) router.push(`/memory-details/${todayPickMemorySet.id}` as Href);
   };
 
   return (
@@ -99,23 +103,25 @@ export default function HomeScreen() {
           />
         ) : null}
 
-        <Text style={styles.sectionLabel}>{t('todaysPick')}</Text>
-        <AnimatedPressable
-          onPress={() => router.push(canStartNumberPeg ? '/number-peg/create' : '/palaces/create-memory')}
-          style={styles.todayCard}>
-          <LinearGradient colors={['#FFF7E0', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.todayGradient}>
-            <Text style={styles.todayIcon}>🕯️</Text>
-            <View style={styles.todayBody}>
-              <Text style={styles.todayTitle}>{t('todayTitle')}</Text>
-              <Text style={styles.todaySubtitle}>
-                {canStartNumberPeg ? t('todaySubtitlePeg') : t('todaySubtitlePalace')}
-              </Text>
-            </View>
-            <View style={styles.startButton}>
-              <Text style={styles.startButtonText}>{t('start')}</Text>
-            </View>
-          </LinearGradient>
-        </AnimatedPressable>
+        {todayPickMemorySet ? (
+          <>
+            <Text style={styles.sectionLabel}>{t('todaysPick')}</Text>
+            <AnimatedPressable onPress={openTodayPick} style={styles.todayCard}>
+              <LinearGradient colors={['#FFF7E0', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.todayGradient}>
+                <Text style={styles.todayIcon}>🕯️</Text>
+                <View style={styles.todayBody}>
+                  <Text numberOfLines={1} style={styles.todayTitle}>{todayPickMemorySet.title}</Text>
+                  <Text style={styles.todaySubtitle}>
+                    {todayPickMemorySet.status === 'draft' ? t('todaySubtitleDraft') : t('todaySubtitleExisting')}
+                  </Text>
+                </View>
+                <View style={styles.startButton}>
+                  <Text style={styles.startButtonText}>{t('todayActionExisting')}</Text>
+                </View>
+              </LinearGradient>
+            </AnimatedPressable>
+          </>
+        ) : null}
 
         <Text style={styles.sectionLabel}>{t('thisWeek')}</Text>
         <View style={styles.statRow}>

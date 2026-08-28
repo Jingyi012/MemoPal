@@ -1,7 +1,8 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppImage } from '@/components/AppImage';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
-import { Image, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export type PracticeDiscoveryItem = {
   key: string;
@@ -9,7 +10,7 @@ export type PracticeDiscoveryItem = {
   subtitle: string;
   tone: 'peg' | 'palace';
   imageUrl?: string | null;
-  imageSource?: ImageSourcePropType;
+  imageSource?: number;
 };
 
 type PracticeDiscoveryRowProps = {
@@ -46,7 +47,7 @@ export function PracticeDiscoveryRow({
               onPress={() => onItemPress(item.key)}
               style={[styles.card, item.tone === 'peg' ? styles.pegCard : styles.palaceCard]}>
               {item.imageSource || item.imageUrl ? (
-                <Image source={item.imageSource ?? { uri: item.imageUrl! }} style={styles.image} resizeMode="cover" />
+                <AppImage imageUrl={item.imageUrl ?? undefined} imageSource={item.imageSource} style={styles.image} />
               ) : <Text style={styles.emoji}>{item.tone === 'peg' ? item.subtitle : '🏰'}</Text>}
               {item.tone === 'palace' ? (
                 <View style={styles.palaceNameOverlay}>
