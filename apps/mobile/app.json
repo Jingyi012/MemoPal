@@ -15,7 +15,7 @@
     "android": {
       "package": "com.memopal.app",
       "adaptiveIcon": {
-        "backgroundColor": "#7A68E0",
+        "backgroundColor": "#2B2641",
         "foregroundImage": "./assets/images/icon-foreground.png"
       },
       "edgeToEdgeEnabled": true,
@@ -32,8 +32,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/icon.png",
-          "imageWidth": 200,
+          "image": "./assets/images/splash.png",
+          "imageWidth": 260,
           "resizeMode": "contain",
           "backgroundColor": "#FFFDF8",
           "dark": {
