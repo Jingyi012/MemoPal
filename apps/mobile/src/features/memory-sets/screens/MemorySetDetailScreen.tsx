@@ -12,6 +12,7 @@ import { Href, useRouter } from 'expo-router';
 import { AlertCircle, ArrowRight, Check, Circle, RefreshCcw, X } from 'lucide-react-native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import type { TranslationKey } from '@/core/i18n/i18n';
 
 export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: string }) {
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
           <ModuleNoticeCard
             emoji="🧩"
             title={t('loadError')}
-            body="Check your connection and try again."
+            body={t('checkConnection')}
             onAction={() => query.refetch()}
           />
         </View>
@@ -49,13 +50,13 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
       <CommonHeader
         eyebrow={t('eyebrow')}
         title={t('title')}
-        description={`${isPalace ? 'Memory Palace' : 'Number Peg'} · ${memorySet.items.length} items`}
+        description={`${isPalace ? t('techniquePalace') : t('techniqueNumberPeg')} · ${memorySet.items.length} ${memorySet.items.length === 1 ? t('item') : t('items')}`}
         backAction={() => router.back()}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SummaryCard memorySet={memorySet} latestAttempt={latestAttempt} />
+        <SummaryCard memorySet={memorySet} latestAttempt={latestAttempt} t={t} />
 
-        <Text style={styles.sectionLabel}>Your memory items</Text>
+        <Text style={styles.sectionLabel}>{t('yourMemoryItems')}</Text>
         <View style={styles.itemList}>
           {memorySet.items.map((item) => {
             const response = responseByItemId.get(item.id);
@@ -75,7 +76,7 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
                 {status === 'not-tried' ? <AlertCircle size={13} color={theme.inkSoft} /> : null}
                 {status === 'ready' ? <Circle size={11} color={theme.inkSoft} /> : null}
                 <Text style={[styles.readyText, status === 'needs-review' && styles.needsReviewText, status === 'not-tried' && styles.notTriedText]}>
-                  {statusLabel(status)}
+                  {statusLabel(status, t)}
                 </Text>
               </View>
             </View>
@@ -84,21 +85,29 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
         </View>
 
         <AnimatedPressable onPress={() => router.push(playerRoute)} style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>Resume session</Text>
+          <Text style={styles.primaryButtonText}>{t('resumeSession')}</Text>
           <ArrowRight size={18} color={theme.ink} />
         </AnimatedPressable>
         <AnimatedPressable onPress={() => router.push(retryRoute)} style={styles.secondaryButton}>
           <RefreshCcw size={16} color={theme.inkSoft} />
-          <Text style={styles.secondaryButtonText}>Retry from scratch</Text>
+          <Text style={styles.secondaryButtonText}>{t('retryFromScratch')}</Text>
         </AnimatedPressable>
       </ScrollView>
     </View>
   );
 }
 
-function SummaryCard({ memorySet, latestAttempt }: { memorySet: MemorySet; latestAttempt: PracticeAttempt | null }) {
+function SummaryCard({
+  memorySet,
+  latestAttempt,
+  t,
+}: {
+  memorySet: MemorySet;
+  latestAttempt: PracticeAttempt | null;
+  t: (key: TranslationKey<'memoryDetails'>) => string;
+}) {
   const isPalace = memorySet.techniqueKey === 'palace';
-  const summaryMeta = getSummaryMeta(memorySet, latestAttempt);
+  const summaryMeta = getSummaryMeta(memorySet, latestAttempt, t);
   return (
     <View style={styles.summaryCard}>
       <View style={[styles.summaryIcon, isPalace ? styles.summaryIconPalace : styles.summaryIconPeg]}>
@@ -106,7 +115,7 @@ function SummaryCard({ memorySet, latestAttempt }: { memorySet: MemorySet; lates
       </View>
       <View style={styles.summaryCopy}>
         <Text style={[styles.techniqueLabel, isPalace ? styles.palaceLabel : styles.pegLabel]}>
-          {isPalace ? 'MEMORY PALACE' : 'NUMBER PEG'}
+          {isPalace ? t('techniquePalace') : t('techniqueNumberPeg')}
         </Text>
         <Text style={styles.summaryTitle}>{memorySet.title}</Text>
         <Text style={styles.summaryMeta}>{summaryMeta}</Text>
@@ -123,31 +132,36 @@ function getItemStatus(response: { isCorrect: boolean } | undefined, hasAttempt:
   return response.isCorrect ? 'recalled' : 'needs-review';
 }
 
-function statusLabel(status: ItemStatus) {
+function statusLabel(status: ItemStatus, t: (key: TranslationKey<'memoryDetails'>) => string) {
   switch (status) {
-    case 'recalled': return 'Recalled';
-    case 'needs-review': return 'Review';
-    case 'not-tried': return 'Not tried';
-    default: return 'Ready';
+    case 'recalled': return t('statusRecalled');
+    case 'needs-review': return t('statusReview');
+    case 'not-tried': return t('statusNotTried');
+    default: return t('statusReady');
   }
 }
 
-function getSummaryMeta(memorySet: MemorySet, latestAttempt: PracticeAttempt | null) {
-  if (!latestAttempt) return `${memorySet.items.length} items · Ready to practice`;
+function getSummaryMeta(
+  memorySet: MemorySet,
+  latestAttempt: PracticeAttempt | null,
+  t: (key: TranslationKey<'memoryDetails'>) => string,
+) {
+  const itemLabel = memorySet.items.length === 1 ? t('item') : t('items');
+  if (!latestAttempt) return `${memorySet.items.length} ${itemLabel} · ${t('readyToPractice')}`;
   const latestResponseByItem = new Map(
     latestAttempt.responses.map((response) => [response.memoryItemId, response]),
   );
   const recalledCount = Array.from(latestResponseByItem.values()).filter((response) => response.isCorrect).length;
   const retryCount = latestAttempt.responses.filter((response) => response.attemptCount > 1).length;
   if (latestResponseByItem.size < memorySet.items.length) {
-    return `${recalledCount}/${memorySet.items.length} recalled · In progress`;
+    return `${recalledCount}/${memorySet.items.length} ${t('recalled')} · ${t('inProgress')}`;
   }
   if (recalledCount === memorySet.items.length) {
     return retryCount > 0
-      ? `${recalledCount}/${memorySet.items.length} recalled · ${retryCount} retried`
-      : `${recalledCount}/${memorySet.items.length} recalled · Last round perfect`;
+      ? `${recalledCount}/${memorySet.items.length} ${t('recalled')} · ${retryCount} ${t('retried')}`
+      : `${recalledCount}/${memorySet.items.length} ${t('recalled')} · ${t('lastRoundPerfect')}`;
   }
-  return `${recalledCount}/${memorySet.items.length} recalled · Keep practicing`;
+  return `${recalledCount}/${memorySet.items.length} ${t('recalled')} · ${t('keepPracticing')}`;
 }
 
 const styles = StyleSheet.create({

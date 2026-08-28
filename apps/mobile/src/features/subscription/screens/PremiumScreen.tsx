@@ -1,26 +1,28 @@
 import { systemSettingsApi } from '@/core/settings/api/systemSettings';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { BaseCard, getBaseCardClassName } from '@/components/BaseCard';
+import { BaseCard } from '@/components/BaseCard';
 import LoadingView from '@/components/LoadingView';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { typography } from '@/theme/typography';
 import {
   DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG,
   normalizePremiumSubscriptionConfig,
 } from '@/features/subscription/hooks/usePremiumSubscriptionConfig';
 import { PremiumSubscriptionConfig } from '@/features/subscription/types/premiumSubscriptionConfig';
-import { cn } from '@/utils/cn';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { X } from 'lucide-react-native';
+import { Check, Crown, Sparkles, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TermsAndConditionSheet from '../components/TermsAndConditionSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
 const PremiumScreen: React.FC = () => {
   const router = useRouter();
   const { t } = useTranslation('subscription');
+  const insets = useSafeAreaInsets();
   const termsRef = useRef<BottomSheetModal>(null);
   const [config, setConfig] = useState<PremiumSubscriptionConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,35 +96,36 @@ const PremiumScreen: React.FC = () => {
     return <LoadingView />;
   }
 
+  const topBar = (
+    <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+      <View style={styles.topBarPill}>
+        <Sparkles size={14} color={theme.berryDeep} strokeWidth={2.5} />
+        <Text style={styles.topBarLabel}>{t('upgrade')}</Text>
+      </View>
+      <AnimatedPressable
+        accessibilityLabel="Close premium page"
+        onPress={() => router.back()}
+        style={styles.closeButton}>
+        <X size={19} color={theme.inkSoft} />
+      </AnimatedPressable>
+    </View>
+  );
+
   if (!config) {
     return (
-      <View className="flex-1 bg-[#FFFDF8]">
-        <LinearGradient
-          colors={[theme.berry, theme.berryDeep]}
-          className="px-6 pb-10 pt-8"
-          style={{ boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.16)' }}>
-          <View className="flex-row items-center justify-between">
-            <Text className="text-2xl font-bold text-white">Premium</Text>
-            <AnimatedPressable
-              onPress={() => router.back()}
-              className="rounded-full bg-white/20 p-2">
-              <X size={20} color="white" />
-            </AnimatedPressable>
+      <View style={styles.page}>
+        {topBar}
+        <View style={styles.unavailableContent}>
+          <View style={styles.unavailableIcon}>
+            <Sparkles size={24} color={theme.violetDeep} />
           </View>
-        </LinearGradient>
-
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="mb-2 text-center text-base font-semibold text-[#2B2A3D]">
-            {t('premiumUnavailable')}
-          </Text>
-          <Text className="mb-5 text-center text-sm text-[#6B6A80]">
+          <Text style={styles.unavailableTitle}>{t('premiumUnavailable')}</Text>
+          <Text style={styles.unavailableBody}>
             {loadError ?? 'Please try again in a moment.'}
           </Text>
-          <TouchableOpacity
-            className="rounded-xl bg-[#FFC93C] px-5 py-3"
-            onPress={() => void loadPremiumConfig()}>
-            <Text className="font-semibold text-[#2B2A3D]">{t('tryAgain')}</Text>
-          </TouchableOpacity>
+          <AnimatedPressable style={styles.retryButton} onPress={() => void loadPremiumConfig()}>
+            <Text style={styles.retryButtonText}>{t('tryAgain')}</Text>
+          </AnimatedPressable>
         </View>
       </View>
     );
@@ -135,63 +138,67 @@ const PremiumScreen: React.FC = () => {
   };
 
   return (
-    <View className="flex-1 bg-[#FFFDF8]">
+    <View style={styles.page}>
+      {topBar}
       <ScrollView
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}>
         {loadError ? (
-          <View className="mx-6 mt-3 rounded-2xl border-2 border-[#FFD9E2] bg-[#FFF0F4] px-4 py-3">
-            <Text className="text-sm font-semibold text-[#E8527A]">
-              {t('refreshUnavailable')}
-            </Text>
-            <Text className="mt-1 text-sm text-[#E8527A]">{loadError}</Text>
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorTitle}>{t('refreshUnavailable')}</Text>
+            <Text style={styles.errorBody}>{loadError}</Text>
           </View>
         ) : null}
 
         <LinearGradient
-          colors={[theme.berry, theme.berryDeep]}
-          className="px-6 pb-16 pt-8"
-          style={{ boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.16)' }}>
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-4">
-              <View className="rounded-2xl bg-white/20 p-3">
-                <Text className="text-3xl">👑</Text>
-              </View>
-              <View>
-                <Text className="text-3xl font-bold text-white">{config.hero.title}</Text>
-                <Text className="text-white/80">{config.hero.subtitle}</Text>
-              </View>
+          colors={[theme.night, theme.nightDeep]}
+          start={[0, 0]}
+          end={[1, 1]}
+          style={styles.heroCard}>
+          <View pointerEvents="none" style={styles.heroGlow} />
+          <View style={styles.heroHeader}>
+            <View style={styles.heroIcon}>
+              <Crown size={27} color={theme.sun} strokeWidth={2.4} />
             </View>
-
-            <AnimatedPressable
-              onPress={() => router.back()}
-              className="rounded-full bg-white/20 p-2">
-              <X size={20} color="white" />
-            </AnimatedPressable>
+            <View style={styles.heroTag}>
+              <Sparkles size={13} color={theme.sun} strokeWidth={2.5} />
+              <Text style={styles.heroTagText}>{t('title')}</Text>
+            </View>
+          </View>
+          <Text style={styles.heroTitle}>{config.hero.title}</Text>
+          <Text style={styles.heroSubtitle}>{config.hero.subtitle}</Text>
+          <View style={styles.heroRule} />
+          <View style={styles.heroPromise}>
+            <Check size={15} color={theme.sun} strokeWidth={3} />
+            <Text style={styles.heroPromiseText}>{config.sections.includedTitle}</Text>
           </View>
         </LinearGradient>
 
-        <View className="-mt-8 px-6">
-          <BaseCard radius="3xl" padding="lg" shadow="sm">
-            <Text className="mb-4 text-xs font-bold uppercase tracking-widest text-[#6B6A80]">
-              {config.sections.includedTitle}
-            </Text>
-            <View className="gap-y-4">
+        <View style={styles.body}>
+          <BaseCard radius="3xl" padding="lg" shadow="sm" style={styles.featuresCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{config.sections.includedTitle}</Text>
+              <View style={styles.sectionMarker}>
+                <Check size={14} color={theme.violetDeep} strokeWidth={3} />
+              </View>
+            </View>
+            <View style={styles.featureList}>
               {features.map((feature) => (
-                <View key={feature.key} className="flex-row items-start gap-3">
-                  <View className="mt-1">
-                    <Text className="text-lg">✅</Text>
+                <View key={feature.key} style={styles.featureRow}>
+                  <View style={styles.featureIcon}>
+                    <Check size={15} color={theme.violetDeep} strokeWidth={3} />
                   </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-[#2B2A3D]">{feature.title}</Text>
-                    <Text className="text-sm leading-4 text-[#6B6A80]">{feature.description}</Text>
+                  <View style={styles.featureCopy}>
+                    <Text style={styles.featureTitle}>{feature.title}</Text>
+                    <Text style={styles.featureDescription}>{feature.description}</Text>
                   </View>
                 </View>
               ))}
             </View>
           </BaseCard>
 
-          <View className="mt-8 gap-4">
+          <View style={styles.planList}>
             {plans.map((plan) => {
               const selected = plan.key === selectedPlan?.key;
               return (
@@ -199,53 +206,39 @@ const PremiumScreen: React.FC = () => {
                   key={plan.key}
                   activeOpacity={0.8}
                   onPress={() => setSelectedPlanId(plan.key)}
-                  className={getBaseCardClassName({
-                    padding: 'lg',
-                    radius: '3xl',
-                    className: cn(
-                      'relative border-2',
-                      selected ? 'border-[#FF6F91]' : 'border-[#EEE9DC]'
-                    ),
-                  })}>
+                  style={[
+                    styles.planCard,
+                    plan.isBestValue && styles.planCardBestValue,
+                    selected && styles.planCardSelected,
+                  ]}>
                   {plan.isBestValue && (
-                    <View className="absolute -top-3 right-6">
+                    <View style={styles.bestValueBadge}>
                       <LinearGradient
                         colors={[theme.sun, theme.sunDeep]}
                         start={[0, 0]}
                         end={[1, 0]}
-                        style={{ borderRadius: 10 }}
-                        className="px-4 py-1">
-                        <Text className="text-[10px] font-black uppercase text-white">
-                          Best Value
-                        </Text>
+                        style={styles.bestValueGradient}>
+                        <Text style={styles.bestValueText}>BEST VALUE</Text>
                       </LinearGradient>
                     </View>
                   )}
 
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-3">
-                      <View
-                        className={`h-6 w-6 items-center justify-center rounded-full border-2 ${
-                          selected ? 'border-[#FF6F91]' : 'border-[#D8D4C9]'
-                        }`}>
-                        {selected && <View className="h-3 w-3 rounded-full bg-[#FF6F91]" />}
-                      </View>
-                      <View>
-                        <Text
-                          className={`text-lg font-bold ${selected ? 'text-[#E8527A]' : 'text-[#2B2A3D]'}`}>
-                          {plan.name}
-                        </Text>
-                        {!!plan.savings && (
-                          <Text className="text-xs font-bold text-[#3FB87F]">{plan.savings}</Text>
-                        )}
-                        {!!plan.subtext && (
-                          <Text className="text-xs text-[#6B6A80]">{plan.subtext}</Text>
-                        )}
-                      </View>
+                  <View style={styles.planRow}>
+                    <View style={[styles.radio, selected && styles.radioSelected]}>
+                      {selected && <View style={styles.radioDot} />}
                     </View>
-                    <View className="items-end">
-                      <Text className="text-2xl font-black text-[#2B2A3D]">{plan.price}</Text>
-                      <Text className="px-2 text-xs text-[#6B6A80]">{plan.label}</Text>
+                    <View style={styles.planDetails}>
+                      <Text
+                        numberOfLines={1}
+                        style={[styles.planName, selected && styles.planNameSelected]}>
+                        {plan.name}
+                      </Text>
+                      {!!plan.savings && <Text style={styles.planSavings}>{plan.savings}</Text>}
+                      {!!plan.subtext && <Text style={styles.planSubtext}>{plan.subtext}</Text>}
+                    </View>
+                    <View style={styles.priceBlock}>
+                      <Text style={styles.planPrice}>{plan.price}</Text>
+                      <Text style={styles.planLabel}>{plan.label}</Text>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -256,40 +249,31 @@ const PremiumScreen: React.FC = () => {
           <AnimatedPressable
             onPress={handleSubscribePress}
             disabled={!config.subscribeButton.enabled}
-            style={config.subscribeButton.enabled ? styles.subscribeShadow : undefined}
-            className={cn(
-              'mt-8 rounded-xl',
-              !config.subscribeButton.enabled && 'opacity-80'
-            )}>
+            style={[
+              styles.subscribeButton,
+              config.subscribeButton.enabled ? styles.subscribeShadow : styles.subscribeDisabled,
+            ]}>
             {config.subscribeButton.enabled ? (
               <LinearGradient
                 colors={[theme.sun, theme.sunDeep]}
                 start={[0, 0]}
                 end={[1, 0]}
-                style={{ borderRadius: 10 }}
-                className="py-5">
-                <Text className="text-center text-lg font-bold text-[#2B2A3D]">
-                  {config.subscribeButton.label}
-                </Text>
+                style={styles.subscribeGradient}>
+                <Text style={styles.subscribeText}>{config.subscribeButton.label}</Text>
+                <Check size={18} color={theme.ink} strokeWidth={3} />
               </LinearGradient>
             ) : (
-              <View className="rounded-xl bg-[#D8D4C9] py-5">
-                <Text className="text-center text-lg font-bold text-[#6B6A80]">
-                  {config.subscribeButton.disabledLabel}
-                </Text>
+              <View style={styles.disabledInner}>
+                <Text style={styles.disabledText}>{config.subscribeButton.disabledLabel}</Text>
               </View>
             )}
           </AnimatedPressable>
 
-          <View className="mb-10 mt-6 items-center">
-            <Text className="text-center text-xs text-[#9A97A7]">{config.footer.finePrint}</Text>
-            <View className="mt-2 flex-row gap-4">
-              <TouchableOpacity onPress={() => termsRef.current?.present()}>
-                <Text className="text-xs font-medium text-[#E8527A] underline">
-                  {config.terms.buttonLabel}
-                </Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.footer}>
+            <Text style={styles.finePrint}>{config.footer.finePrint}</Text>
+            <TouchableOpacity onPress={() => termsRef.current?.present()}>
+              <Text style={styles.termsLink}>{config.terms.buttonLabel}</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -300,9 +284,72 @@ const PremiumScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  subscribeShadow: {
-    boxShadow: '0px 8px 12px rgba(255, 230, 163, 0.9)',
-  },
+  page: { flex: 1, backgroundColor: theme.canvas },
+  topBar: { minHeight: 64, paddingHorizontal: 16, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: theme.canvas, borderBottomWidth: 1, borderBottomColor: theme.line },
+  topBarPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, borderWidth: 1.3, borderColor: theme.berryLine, backgroundColor: theme.berryTint, paddingHorizontal: 10, paddingVertical: 5 },
+  topBarLabel: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase' },
+  closeButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.sand },
+  scrollContent: { paddingBottom: 36 },
+  errorBanner: { marginHorizontal: 16, marginTop: 12, borderRadius: 16, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, paddingHorizontal: 14, paddingVertical: 11 },
+  errorTitle: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  errorBody: { color: theme.berryDeep, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, marginTop: 3 },
+  heroCard: { minHeight: 214, marginHorizontal: 16, marginTop: 16, borderRadius: 26, padding: 20, overflow: 'hidden', boxShadow: '0px 8px 16px rgba(43, 38, 65, 0.22)' },
+  heroGlow: { position: 'absolute', width: 190, height: 190, borderRadius: 95, top: -76, right: -48, backgroundColor: 'rgba(255, 201, 60, 0.2)' },
+  heroHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  heroIcon: { width: 52, height: 52, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255, 201, 60, 0.16)', borderWidth: 1, borderColor: 'rgba(255, 201, 60, 0.3)' },
+  heroTag: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 10, paddingVertical: 6 },
+  heroTagText: { color: '#FFFFFF', fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.5 },
+  heroTitle: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 28, lineHeight: 34, marginTop: 18 },
+  heroSubtitle: { color: 'rgba(255,255,255,0.78)', fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19, marginTop: 4, maxWidth: '88%' },
+  heroRule: { height: 1, backgroundColor: 'rgba(255,255,255,0.14)', marginTop: 17 },
+  heroPromise: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 12 },
+  heroPromiseText: { color: '#FFFFFF', fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  body: { paddingHorizontal: 16 },
+  featuresCard: { marginTop: 16 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  sectionTitle: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase' },
+  sectionMarker: { width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEE9FF' },
+  featureList: { gap: 15 },
+  featureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  featureIcon: { width: 27, height: 27, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEE9FF' },
+  featureCopy: { flex: 1, minWidth: 0 },
+  featureTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, lineHeight: 18 },
+  featureDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, marginTop: 2 },
+  planList: { gap: 12, marginTop: 20 },
+  planCard: { position: 'relative', borderRadius: 20, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 16, paddingVertical: 17 },
+  planCardBestValue: { paddingTop: 38 },
+  planCardSelected: { borderColor: theme.violet, backgroundColor: '#F7F5FF', boxShadow: '0px 4px 10px rgba(122, 104, 224, 0.13)' },
+  bestValueBadge: { position: 'absolute', zIndex: 2, top: 11, right: 16, borderRadius: 999, overflow: 'hidden' },
+  bestValueGradient: { borderRadius: 999, paddingHorizontal: 11, paddingVertical: 5 },
+  bestValueText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.5 },
+  planRow: { flexDirection: 'row', alignItems: 'center' },
+  radio: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: '#D8D4C9', alignItems: 'center', justifyContent: 'center', marginRight: 11 },
+  radioSelected: { borderColor: theme.violetDeep },
+  radioDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: theme.violetDeep },
+  planDetails: { flex: 1, minWidth: 0 },
+  planName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, lineHeight: 20 },
+  planNameSelected: { color: theme.violetDeep },
+  planSavings: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 11, lineHeight: 16, marginTop: 1 },
+  planSubtext: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, lineHeight: 15, marginTop: 1 },
+  priceBlock: { alignItems: 'flex-end', marginLeft: 10 },
+  planPrice: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 21, lineHeight: 25 },
+  planLabel: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 1 },
+  subscribeButton: { width: '100%', minHeight: 56, borderRadius: 18, marginTop: 20, overflow: 'visible' },
+  subscribeShadow: { boxShadow: '0px 6px 0px rgba(242, 169, 0, 0.9)' },
+  subscribeGradient: { minHeight: 56, borderRadius: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16 },
+  subscribeText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
+  subscribeDisabled: { opacity: 0.78 },
+  disabledInner: { minHeight: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.line },
+  disabledText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 15 },
+  footer: { alignItems: 'center', marginTop: 19, marginBottom: 12 },
+  finePrint: { color: '#9A97A7', fontFamily: typography.bodySemibold, fontSize: 10, lineHeight: 15, textAlign: 'center' },
+  termsLink: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 8, textDecorationLine: 'underline' },
+  unavailableContent: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 },
+  unavailableIcon: { width: 56, height: 56, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEE9FF', marginBottom: 14 },
+  unavailableTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 16, lineHeight: 22, textAlign: 'center' },
+  unavailableBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 7, marginBottom: 18 },
+  retryButton: { borderRadius: 14, backgroundColor: theme.sun, paddingHorizontal: 22, paddingVertical: 12, boxShadow: '0px 4px 0px rgba(242, 169, 0, 0.8)' },
+  retryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
 });
 
 export default PremiumScreen;

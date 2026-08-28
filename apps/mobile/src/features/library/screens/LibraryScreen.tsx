@@ -13,6 +13,7 @@ import { Archive, ChevronRight, MoreHorizontal, Plus, RefreshCcw } from 'lucide-
 import { useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import type { TranslationKey } from '@/core/i18n/i18n';
 
 type LibraryFilter = 'all' | MemoryTechniqueKey | 'archived';
 
@@ -46,25 +47,25 @@ export default function LibraryScreen() {
 
   const showActions = (memorySet: MemorySet) => {
     const isArchived = memorySet.status === 'archived';
-    Alert.alert(memorySet.title, 'Keep your Library tidy or make a copy to reuse this memory.', [
+    Alert.alert(memorySet.title, t('actionsDescription'), [
       {
-        text: 'Duplicate',
+        text: t('duplicate'),
         onPress: () => duplicateMemorySet.mutate(memorySet.id, {
-          onSuccess: (copy) => setActionMessage(`“${copy.title}” is ready in your Library.`),
-          onError: (error) => setActionMessage(getNumberPegErrorMessage(error, 'Could not duplicate this memory.')),
+          onSuccess: (copy) => setActionMessage(`“${copy.title}” ${t('readyInLibrary')}`),
+          onError: (error) => setActionMessage(getNumberPegErrorMessage(error, t('duplicateError'))),
         }),
       },
       {
-        text: isArchived ? 'Restore' : 'Archive',
+        text: isArchived ? t('restore') : t('archive'),
         onPress: () => setMemorySetArchived.mutate(
           { memorySetId: memorySet.id, isArchived: !isArchived },
           {
-            onSuccess: () => setActionMessage(isArchived ? 'Memory restored.' : 'Memory moved to Archived.'),
-            onError: (error) => setActionMessage(getNumberPegErrorMessage(error, 'Could not update this memory.')),
+            onSuccess: () => setActionMessage(isArchived ? t('memoryRestored') : t('memoryArchived')),
+            onError: (error) => setActionMessage(getNumberPegErrorMessage(error, t('updateError'))),
           }
         ),
       },
-      { text: 'Cancel', style: 'cancel' },
+      { text: t('cancel'), style: 'cancel' },
     ]);
   };
 
@@ -133,7 +134,7 @@ export default function LibraryScreen() {
           <View style={styles.noticeCard}>
             <Text style={styles.noticeTitle}>{t('unavailable')}</Text>
             <Text style={styles.noticeBody}>
-              {getNumberPegErrorMessage(memorySets.error, 'Check your connection and try again.')}
+              {getNumberPegErrorMessage(memorySets.error, t('connectionRetry'))}
             </Text>
             <AnimatedPressable onPress={() => memorySets.refetch()} style={styles.retryButton}>
               <RefreshCcw size={16} color={theme.ink} />
@@ -146,6 +147,7 @@ export default function LibraryScreen() {
               <MemoryCard
                 key={memorySet.id}
                 memorySet={memorySet}
+                t={t}
                 onOpen={() => openSet(router, memorySet)}
                 onActions={() => showActions(memorySet)}
               />
@@ -194,13 +196,15 @@ function MemoryCard({
   memorySet,
   onOpen,
   onActions,
+  t,
 }: {
   memorySet: MemorySet;
   onOpen: () => void;
   onActions: () => void;
+  t: (key: TranslationKey<'library'>) => string;
 }) {
   const isPalace = memorySet.techniqueKey === 'palace';
-  const updatedLabel = formatUpdatedAt(memorySet.updatedAt);
+  const updatedLabel = formatUpdatedAt(memorySet.updatedAt, t);
 
   return (
     <AnimatedPressable onPress={onOpen} style={styles.memoryCard}>
@@ -210,7 +214,7 @@ function MemoryCard({
       <View style={styles.memoryCopy}>
         <View style={styles.techniqueRow}>
           <Text style={[styles.techniqueLabel, isPalace ? styles.palaceLabel : styles.pegLabel]}>
-            {isPalace ? 'MEMORY PALACE' : 'NUMBER PEG'}
+            {isPalace ? t('techniquePalace') : t('techniqueNumberPeg')}
           </Text>
           <Text style={styles.updatedLabel}>{updatedLabel}</Text>
         </View>
@@ -218,16 +222,16 @@ function MemoryCard({
           {memorySet.title}
         </Text>
         <Text style={styles.memoryMeta}>
-          {memorySet.items.length} {memorySet.items.length === 1 ? 'item' : 'items'} ·{' '}
+          {memorySet.items.length} {memorySet.items.length === 1 ? t('item') : t('items')} ·{' '}
           {memorySet.status === 'archived'
-            ? 'Archived'
+            ? t('statusArchived')
             : memorySet.status === 'draft'
-              ? 'Draft'
-              : 'Ready to practice'}
+              ? t('statusDraft')
+              : t('statusReady')}
         </Text>
       </View>
       <AnimatedPressable
-        accessibilityLabel={`More actions for ${memorySet.title}`}
+        accessibilityLabel={`${t('moreActions')} ${memorySet.title}`}
         onPress={(event) => {
           event.stopPropagation();
           onActions();
@@ -242,14 +246,14 @@ function MemoryCard({
   );
 }
 
-function formatUpdatedAt(value: string): string {
+function formatUpdatedAt(value: string, t: (key: TranslationKey<'library'>) => string): string {
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) return '';
 
   const days = Math.max(0, Math.floor((Date.now() - timestamp) / 86_400_000));
-  if (days === 0) return 'Today';
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return `${days}d ago`;
+  if (days === 0) return t('today');
+  if (days === 1) return t('yesterday');
+  if (days < 7) return `${days}${t('daysAgo')}`;
   return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
