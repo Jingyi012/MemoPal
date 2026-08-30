@@ -1,9 +1,9 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { ReturnToTodayButton } from '@/components/ReturnToTodayButton';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import { LevelUpModal } from '@/components/LevelUpModal';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
-import { RefreshCcw } from 'lucide-react-native';
+import { Home, RefreshCcw } from 'lucide-react-native';
 import React from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -23,9 +23,8 @@ type RecallResultCardProps = {
   retryLabel?: string;
   retryAccessibilityLabel?: string;
   secondaryAction?: { label: string; onPress: () => void };
-  returnToTodayLabel?: string;
-  returnToTodayAccessibilityLabel?: string;
-  onReturnToToday: () => void;
+  returnHomeLabel: string;
+  onReturnHome: () => void;
 };
 
 /** Shared completion surface for both memory technique players. */
@@ -44,10 +43,10 @@ export function RecallResultCard({
   retryLabel = 'Try another round',
   retryAccessibilityLabel = 'Try another recall round',
   secondaryAction,
-  returnToTodayLabel,
-  returnToTodayAccessibilityLabel,
-  onReturnToToday,
+  returnHomeLabel,
+  onReturnHome,
 }: RecallResultCardProps) {
+  const { t } = useTranslation('achievements');
   const isPeg = tone === 'peg';
   const [levelUpVisible, setLevelUpVisible] = React.useState(Boolean(levelUpTo));
 
@@ -75,7 +74,7 @@ export function RecallResultCard({
       {xpEarned > 0 ? (
         <View style={styles.xpPill} accessibilityLiveRegion="polite">
           <Text style={styles.xpText}>+{xpEarned} XP</Text>
-          {levelUpTo ? <Text style={styles.levelText}>LEVEL {levelUpTo}</Text> : null}
+          {levelUpTo ? <Text style={styles.levelText}>{t('level').toUpperCase()} {levelUpTo}</Text> : null}
         </View>
       ) : null}
       {saveStatus}
@@ -100,11 +99,14 @@ export function RecallResultCard({
           </AnimatedPressable>
         </View>
       ) : null}
-      <ReturnToTodayButton
-        onPress={onReturnToToday}
-        label={returnToTodayLabel}
-        accessibilityLabel={returnToTodayAccessibilityLabel}
-      />
+      <AnimatedPressable
+        accessibilityRole="button"
+        accessibilityLabel={returnHomeLabel}
+        onPress={onReturnHome}
+        style={styles.returnHomeButton}>
+        <Home size={16} color={theme.inkSoft} />
+        <Text style={styles.returnHomeText}>{returnHomeLabel}</Text>
+      </AnimatedPressable>
     </View>
   );
 }
@@ -130,4 +132,6 @@ const styles = StyleSheet.create({
   primaryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
   secondaryButton: { width: '100%', minHeight: 49, borderRadius: 16, borderWidth: 2, borderColor: '#9B8CFF', backgroundColor: '#F7F5FF', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
   secondaryText: { color: '#6654D9', fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  returnHomeButton: { minHeight: 44, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
+  returnHomeText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
 });

@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { Check, ChevronRight } from 'lucide-react-native';
@@ -18,30 +19,37 @@ type PalaceOrderedListProps = {
 };
 
 export function PalaceOrderedList({ items, activeIndex, onSelect }: PalaceOrderedListProps) {
+  const { t } = useTranslation('palace');
+
   return (
     <View style={styles.section}>
       <View style={styles.headingRow}>
         <View style={styles.headingIcon}><Text style={styles.headingEmoji}>📋</Text></View>
         <View style={styles.headingCopy}>
-          <Text style={styles.eyebrow}>ACCESSIBLE ROUTE</Text>
-          <Text style={styles.title}>Your Palace in order</Text>
+          <Text style={styles.eyebrow}>{t('accessibleRoute')}</Text>
+          <Text style={styles.title}>{t('palaceInOrder')}</Text>
         </View>
       </View>
-      <Text style={styles.helper}>Every locus has a named, numbered alternative to the image map.</Text>
+      <Text style={styles.helper}>{t('accessibleRouteHelper')}</Text>
       <View style={styles.list}>
         {items.map((item, index) => {
           const active = index === activeIndex;
           return (
             <AnimatedPressable
               key={item.id}
-              accessibilityLabel={`Locus ${index + 1}, ${item.locusName ?? 'memory spot'}: ${item.answer}`}
+              accessibilityLabel={t('orderedLocusAccessibility')
+                .replace('{number}', String(index + 1))
+                .replace('{name}', item.locusName ?? t('memorySpot'))
+                .replace('{answer}', item.answer)}
               onPress={() => onSelect(index)}
               style={[styles.row, active && styles.rowActive]}>
               <View style={[styles.number, active && styles.numberActive]}>
                 {active ? <Check size={14} color={theme.ink} /> : <Text style={styles.numberText}>{index + 1}</Text>}
               </View>
               <View style={styles.rowCopy}>
-                <Text style={styles.locus}>{item.locusName ?? `Locus ${index + 1}`}</Text>
+                <Text style={styles.locus}>
+                  {item.locusName ?? `${t('locusLabel')} ${index + 1}`}
+                </Text>
                 <Text style={styles.answer} numberOfLines={2}>{item.answer}</Text>
                 {item.association ? <Text style={styles.association} numberOfLines={2}>{item.association}</Text> : null}
               </View>

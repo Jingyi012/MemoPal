@@ -457,9 +457,8 @@ export default function NumberPegSessionScreen({
               onRetry={restartRecall}
               retryLabel={t('tryAgain')}
               retryAccessibilityLabel={t('tryAgain')}
-              onReturnToToday={() => router.replace('/(tabs)')}
-              returnToTodayLabel={t('backToHome')}
-              returnToTodayAccessibilityLabel={t('backToHome')}
+              onReturnHome={() => router.replace('/(tabs)')}
+              returnHomeLabel={t('backToHome')}
             />
           ) : (
             <>

@@ -57,7 +57,7 @@ export function PalaceFocusCard({
           <Text style={styles.focusPinEmoji}>📍</Text>
         </View>
         <View style={styles.focusBadge}>
-          <Text style={styles.focusBadgeText}>LOCUS {index + 1}</Text>
+          <Text style={styles.focusBadgeText}>{t('locusLabel').toUpperCase()} {index + 1}</Text>
         </View>
       </View>
       <View style={styles.copy}>
@@ -77,7 +77,9 @@ export function PalaceFocusCard({
             style={[styles.roundButton, (!onPrevious || index === 0) && styles.disabledButton]}>
             <ChevronLeft size={21} color={theme.ink} />
           </AnimatedPressable>
-          <Text style={styles.position}>{total ? `${index + 1} / ${total}` : `Locus ${index + 1}`}</Text>
+          <Text style={styles.position}>
+            {total ? `${index + 1} / ${total}` : `${t('locusLabel')} ${index + 1}`}
+          </Text>
           <AnimatedPressable
             accessibilityLabel={isLast ? t('restartWalk') : t('nextLocus')}
             disabled={!onNext}

@@ -61,7 +61,7 @@ export default function PalaceMemorySessionScreen({
   const [questionStartedAtMs, setQuestionStartedAtMs] = useState(() => Date.now());
   const [responses, setResponses] = useState<PracticeResponseInput[]>([]);
   const recalledFirstTry = responses.filter(
-    (response) => response.isCorrect && response.attemptCount === 1,
+    (response) => response.isCorrect && response.attemptCount === 1
   ).length;
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
   const [hasRestoredSession, setHasRestoredSession] = useState(false);
@@ -143,7 +143,11 @@ export default function PalaceMemorySessionScreen({
         return;
       }
 
-      if (!snapshot || snapshot.memorySetVersion !== memorySet.version || snapshot.activeIndex > memorySet.items.length) {
+      if (
+        !snapshot ||
+        snapshot.memorySetVersion !== memorySet.version ||
+        snapshot.activeIndex > memorySet.items.length
+      ) {
         if (snapshot) void clearPalaceSession(memorySet.id);
         sessionReadyRef.current = true;
         return;
@@ -186,7 +190,12 @@ export default function PalaceMemorySessionScreen({
 
   useEffect(() => {
     const memorySet = memorySetQuery.data;
-    if (!memorySet || !sessionReadyRef.current || hydratedSessionRef.current !== `${memorySet.id}:${memorySet.version}`) return;
+    if (
+      !memorySet ||
+      !sessionReadyRef.current ||
+      hydratedSessionRef.current !== `${memorySet.id}:${memorySet.version}`
+    )
+      return;
 
     if (activeIndex >= memorySet.items.length) {
       void clearPalaceSession(memorySet.id);
@@ -206,7 +215,17 @@ export default function PalaceMemorySessionScreen({
       responses,
       savedAt: new Date().toISOString(),
     });
-  }, [activeIndex, clientAttemptId, memorySetQuery.data, mode, questionStartedAtMs, recalledFirstTry, responses, startedAt, startedAtMs]);
+  }, [
+    activeIndex,
+    clientAttemptId,
+    memorySetQuery.data,
+    mode,
+    questionStartedAtMs,
+    recalledFirstTry,
+    responses,
+    startedAt,
+    startedAtMs,
+  ]);
 
   const placements = useMemo(() => {
     const memorySet = memorySetQuery.data;
@@ -226,13 +245,19 @@ export default function PalaceMemorySessionScreen({
   if (!memorySetQuery.data || !sceneQuery.data) {
     return (
       <View style={styles.page}>
-        <CommonHeader title={t('title')} description={t('sceneUnavailable')} backAction={leaveSession} />
+        <CommonHeader
+          title={t('title')}
+          description={t('sceneUnavailable')}
+          backAction={leaveSession}
+        />
         <View style={styles.empty}>
           <ModuleNoticeCard
             emoji="🏚️"
             title={t('sceneUnavailable')}
-            body="Refresh your connection or choose another memory."
-            onAction={() => void Promise.allSettled([memorySetQuery.refetch(), sceneQuery.refetch()])}
+            body={t('refreshOrChooseAnother')}
+            onAction={() =>
+              void Promise.allSettled([memorySetQuery.refetch(), sceneQuery.refetch()])
+            }
           />
         </View>
       </View>
@@ -282,13 +307,16 @@ export default function PalaceMemorySessionScreen({
         };
         setLastPayload(payload);
         setIsFinishing(true);
-        void practiceAttempt.mutateAsync(payload).catch(() => undefined).finally(() => {
-          setIsFinishing(false);
-          setActiveIndex((value) => value + 1);
-          setAnswer('');
-          setFeedback(null);
-          setQuestionStartedAtMs(Date.now());
-        });
+        void practiceAttempt
+          .mutateAsync(payload)
+          .catch(() => undefined)
+          .finally(() => {
+            setIsFinishing(false);
+            setActiveIndex((value) => value + 1);
+            setAnswer('');
+            setFeedback(null);
+            setQuestionStartedAtMs(Date.now());
+          });
         return;
       }
       setActiveIndex((value) => value + 1);
@@ -300,12 +328,14 @@ export default function PalaceMemorySessionScreen({
 
     if (!answer.trim()) return;
     const isCorrect = normalizeRecallAnswer(answer) === normalizeRecallAnswer(active.item.answer);
-    setResponses((current) => upsertRecallResponse(
-      current,
-      active.item.id,
-      isCorrect,
-      Math.max(0, Date.now() - questionStartedAtMs),
-    ));
+    setResponses((current) =>
+      upsertRecallResponse(
+        current,
+        active.item.id,
+        isCorrect,
+        Math.max(0, Date.now() - questionStartedAtMs)
+      )
+    );
     setFeedback(isCorrect ? 'correct' : 'wrong');
     playSound(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) {
@@ -363,12 +393,18 @@ export default function PalaceMemorySessionScreen({
             accessibilityRole="tab"
             accessibilityLabel={t('rehearseMode')}
             accessibilityState={{ selected: isRehearsing }}
-            onPress={() => { if (!isRehearsing) openRehearsalView('browse'); }}
+            onPress={() => {
+              if (!isRehearsing) openRehearsalView('browse');
+            }}
             style={[styles.modeCard, isRehearsing && styles.modeCardActive]}>
             <Text style={styles.modeEmoji}>👀</Text>
             <View style={styles.modeCardCopy}>
-              <Text style={[styles.modeTabText, isRehearsing && styles.modeTabTextActive]}>{t('rehearseMode')}</Text>
-              <Text style={[styles.modeTabBody, isRehearsing && styles.modeTabBodyActive]}>{t('rehearseModeBody')}</Text>
+              <Text style={[styles.modeTabText, isRehearsing && styles.modeTabTextActive]}>
+                {t('rehearseMode')}
+              </Text>
+              <Text style={[styles.modeTabBody, isRehearsing && styles.modeTabBodyActive]}>
+                {t('rehearseModeBody')}
+              </Text>
             </View>
           </Pressable>
           <Pressable
@@ -379,18 +415,24 @@ export default function PalaceMemorySessionScreen({
             style={[styles.modeCard, mode === 'recall' && styles.modeCardActive]}>
             <Text style={styles.modeEmoji}>🧠</Text>
             <View style={styles.modeCardCopy}>
-              <Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>{t('recallMode')}</Text>
-              <Text style={[styles.modeTabBody, mode === 'recall' && styles.modeTabBodyActive]}>{t('recallModeBody')}</Text>
+              <Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>
+                {t('recallMode')}
+              </Text>
+              <Text style={[styles.modeTabBody, mode === 'recall' && styles.modeTabBodyActive]}>
+                {t('recallModeBody')}
+              </Text>
             </View>
           </Pressable>
         </View>
         {isRehearsing ? (
           <View style={styles.subModeRail}>
-            {([
-              ['browse', '🗺️', t('map')],
-              ['walk', '🚶', t('walk')],
-              ['list', '📋', t('list')],
-            ] as const).map(([nextMode, emoji, label]) => (
+            {(
+              [
+                ['browse', '🗺️', t('map')],
+                ['walk', '🚶', t('walk')],
+                ['list', '📋', t('list')],
+              ] as const
+            ).map(([nextMode, emoji, label]) => (
               <Pressable
                 key={nextMode}
                 accessibilityRole="tab"
@@ -399,7 +441,9 @@ export default function PalaceMemorySessionScreen({
                 onPress={() => openRehearsalView(nextMode)}
                 style={[styles.subModeTab, mode === nextMode && styles.subModeTabActive]}>
                 <Text style={styles.subModeEmoji}>{emoji}</Text>
-                <Text style={[styles.subModeText, mode === nextMode && styles.subModeTextActive]}>{label}</Text>
+                <Text style={[styles.subModeText, mode === nextMode && styles.subModeTextActive]}>
+                  {label}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -408,7 +452,7 @@ export default function PalaceMemorySessionScreen({
     );
   };
 
-  const renderRecallPanel = () => (
+  const renderRecallPanel = () =>
     recallComplete ? (
       <RecallResultCard
         tone="palace"
@@ -418,12 +462,17 @@ export default function PalaceMemorySessionScreen({
         recalledLabel={t('recalledFirstTry')}
         needsPracticeLabel={t('needsPractice')}
         xpEarned={practiceAttempt.data?.xpEarned}
-        levelUpTo={practiceAttempt.data && practiceAttempt.data.currentLevel > practiceAttempt.data.previousLevel
-          ? practiceAttempt.data.currentLevel
-          : undefined}
-        body={recalledFirstTry === placements.length
-          ? t('recallPerfectBody')
-          : t('recallNeedsPracticeBody')}
+        levelUpTo={
+          practiceAttempt.data &&
+          practiceAttempt.data.currentLevel > practiceAttempt.data.previousLevel
+            ? practiceAttempt.data.currentLevel
+            : undefined
+        }
+        body={
+          recalledFirstTry === placements.length
+            ? t('recallPerfectBody')
+            : t('recallNeedsPracticeBody')
+        }
         saveStatus={
           practiceAttempt.isPending ? (
             <Text style={styles.saveState}>{t('savingProgress')}</Text>
@@ -440,13 +489,25 @@ export default function PalaceMemorySessionScreen({
             </View>
           ) : practiceAttempt.data ? (
             <Text style={styles.saveSuccess}>
-              {t('saved')} ✓ {t('nextReview')} {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : t('willAppearToday')}
+              {t('saved')} ✓ {t('nextReview')}{' '}
+              {practiceAttempt.data.nextReviewAt
+                ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString()
+                : t('willAppearToday')}
             </Text>
           ) : null
         }
         onRetry={startRecall}
-        secondaryAction={{ label: t('walkAgain'), onPress: () => { setMode('walk'); setActiveIndex(0); } }}
-        onReturnToToday={() => router.replace('/(tabs)')}
+        retryLabel={t('tryAgain')}
+        retryAccessibilityLabel={t('tryAgain')}
+        secondaryAction={{
+          label: t('walkAgain'),
+          onPress: () => {
+            setMode('walk');
+            setActiveIndex(0);
+          },
+        }}
+        onReturnHome={() => router.replace('/(tabs)')}
+        returnHomeLabel={t('backToHome')}
       />
     ) : active ? (
       <RecallAnswerCard
@@ -456,33 +517,53 @@ export default function PalaceMemorySessionScreen({
         prompt={t('recallPrompt')}
         answer={answer}
         feedback={feedback}
-        feedbackText={feedback === 'correct'
-          ? t('correctFeedback')
-          : isSpelling
-            ? `Check the spelling: ${getSpellingHint(active.item.answer, answer)}`
-            : `It was ${active.item.answer}. See it at this locus once more, then try again.`}
-        actionLabel={isFinishing ? t('savingProgress') : feedback === 'wrong' ? t('tryLocusAgain') : feedback ? t('nextLocusAction') : t('checkAnswer')}
+        feedbackText={
+          feedback === 'correct'
+            ? t('correctFeedback')
+            : isSpelling
+              ? t('checkSpellingFeedback').replace(
+                  '{hint}',
+                  getSpellingHint(active.item.answer, answer)
+                )
+              : t('wrongAnswerFeedback').replace('{answer}', active.item.answer)
+        }
+        actionLabel={
+          isFinishing
+            ? t('savingProgress')
+            : feedback === 'wrong'
+              ? t('tryLocusAgain')
+              : feedback
+                ? t('nextLocusAction')
+                : t('checkAnswer')
+        }
         actionDisabled={isFinishing}
         progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${placements.length}`}
         cue={renderRecallCue()}
         onAnswerFocus={queueRecallInputScroll}
-        actionAreaRef={(view) => { recallActionRef.current = view; }}
+        actionAreaRef={(view) => {
+          recallActionRef.current = view;
+        }}
         onAnswerChange={setAnswer}
         onSubmit={checkOrContinue}
       />
-    ) : null
-  );
+    ) : null;
 
   const renderMap = () => (
     <View style={styles.mapStage}>
       <View style={styles.canvas}>
-        <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={StyleSheet.absoluteFillObject} />
+        <AppImage
+          imageUrl={scene.imageUrl}
+          imageSource={scene.imageSource}
+          style={StyleSheet.absoluteFillObject}
+        />
         <View pointerEvents="none" style={styles.floor} />
         {placements.map((placement, index) =>
           placement.locus ? (
             <Pressable
               key={placement.item.id}
-              accessibilityLabel={`Locus ${index + 1}: ${placement.locus.name}`}
+              accessibilityLabel={t('locusAccessibility')
+                .replace('{number}', String(index + 1))
+                .replace('{name}', placement.locus.name)}
               onPress={() => mode === 'browse' && setActiveIndex(index)}
               style={[
                 styles.marker,
@@ -506,12 +587,15 @@ export default function PalaceMemorySessionScreen({
               <Text style={styles.sceneSparkle}>✨</Text>
             </View>
             <View style={styles.previewCopy}>
-              <Text style={styles.eyebrow}>LOCUS {activeIndex + 1} · {active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}</Text>
+              <Text style={styles.eyebrow}>
+                {t('locusLabel').toUpperCase()} {activeIndex + 1} ·{' '}
+                {active.locus?.name?.toUpperCase() ?? t('memorySpot')}
+              </Text>
               <Text style={styles.previewAnswer}>{active.item.answer}</Text>
             </View>
           </View>
           <Text style={styles.previewAssociation}>
-            {active.binding?.associationText ?? 'This is the memory attached to this spot.'}
+            {active.binding?.associationText ?? t('associationFallback')}
           </Text>
         </View>
       ) : null}
@@ -555,7 +639,9 @@ export default function PalaceMemorySessionScreen({
               key={placement.item.id}
               onPress={() => setActiveIndex(index)}
               style={[styles.itemRow, index === activeIndex && styles.activeRow]}>
-              <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
+              <View style={styles.itemNumber}>
+                <Text style={styles.itemNumberText}>{index + 1}</Text>
+              </View>
               <View style={styles.flex}>
                 <Text style={styles.itemAnswer}>{placement.item.answer}</Text>
                 <Text style={styles.itemLocus}>{placement.locus?.name}</Text>
@@ -563,7 +649,10 @@ export default function PalaceMemorySessionScreen({
             </AnimatedPressable>
           ))}
           <AnimatedPressable
-            onPress={() => { setActiveIndex(0); setMode('walk'); }}
+            onPress={() => {
+              setActiveIndex(0);
+              setMode('walk');
+            }}
             style={styles.primaryButton}>
             <Text style={styles.primaryText}>🚶 {t('walkThrough')}</Text>
           </AnimatedPressable>
@@ -581,14 +670,18 @@ export default function PalaceMemorySessionScreen({
         compact
         eyebrow={t('eyebrow')}
         title={memorySet.title}
-        description={`${scene.name} · ${placements.length} loci`}
+        description={`${scene.name} · ${placements.length} ${t(
+          placements.length === 1 ? 'locusSingular' : 'lociPlural'
+        )}`}
         backAction={leaveSession}
       />
       <ScrollView
         ref={recallScrollRef}
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
-        onScroll={(event) => { recallScrollOffsetRef.current = event.nativeEvent.contentOffset.y; }}
+        onScroll={(event) => {
+          recallScrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+        }}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
@@ -600,10 +693,14 @@ export default function PalaceMemorySessionScreen({
         {mode !== 'recall' ? renderMap() : null}
         <View style={styles.sessionPanel}>
           <Text style={styles.hint}>
-            {mode === 'recall' ? 'Use the active locus as your cue.' : 'Tap a marker, or walk through every locus in order.'}
+            {mode === 'recall'
+              ? t('activeLocusHint')
+              : t('routeNavigationHint')}
           </Text>
           {hasRestoredSession && mode !== 'recall' ? (
-            <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
+            <AnimatedPressable
+              onPress={() => setHasRestoredSession(false)}
+              style={styles.restoreNotice}>
               <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
             </AnimatedPressable>
           ) : null}
@@ -621,61 +718,292 @@ const styles = StyleSheet.create({
   sessionPanel: { paddingHorizontal: 16, paddingBottom: 24 },
   mapStage: { padding: 16, paddingBottom: 24 },
   flex: { flex: 1 },
-  canvas: { aspectRatio: 4 / 3, borderRadius: 20, overflow: 'hidden', borderWidth: 2, borderColor: '#E3D7B3', backgroundColor: '#F4EFE0' },
-  floor: { position: 'absolute', top: 14, right: 14, bottom: 14, left: 14, borderWidth: 2, borderStyle: 'dashed', borderColor: '#CDBD8A', borderRadius: 14 },
-  marker: { position: 'absolute', width: 34, height: 34, marginLeft: -17, marginTop: -17, borderRadius: 17, backgroundColor: '#9B8CFF', borderWidth: 2.5, borderColor: 'white', alignItems: 'center', justifyContent: 'center', boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.18)' },
+  canvas: {
+    aspectRatio: 4 / 3,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#E3D7B3',
+    backgroundColor: '#F4EFE0',
+  },
+  floor: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    bottom: 14,
+    left: 14,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#CDBD8A',
+    borderRadius: 14,
+  },
+  marker: {
+    position: 'absolute',
+    width: 34,
+    height: 34,
+    marginLeft: -17,
+    marginTop: -17,
+    borderRadius: 17,
+    backgroundColor: '#9B8CFF',
+    borderWidth: 2.5,
+    borderColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.18)',
+  },
   activeMarker: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.18 }] },
   markerText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  hint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, textAlign: 'center', marginVertical: 12 },
-  restoreNotice: { marginBottom: 10, borderRadius: 12, backgroundColor: '#E3F6ED', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 12, paddingVertical: 9 },
-  restoreNoticeText: { color: '#247B67', fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
+  hint: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodyBold,
+    fontSize: 11,
+    lineHeight: 17,
+    textAlign: 'center',
+    marginVertical: 12,
+  },
+  restoreNotice: {
+    marginBottom: 10,
+    borderRadius: 12,
+    backgroundColor: '#E3F6ED',
+    borderWidth: 1.5,
+    borderColor: '#BFE7D6',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  restoreNoticeText: {
+    color: '#247B67',
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: 'center',
+  },
   modeRail: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  modeCard: { flex: 1, minWidth: 0, minHeight: 70, borderRadius: 15, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 9 },
-  modeCardActive: { backgroundColor: theme.ink, borderColor: theme.ink, boxShadow: '0px 3px 0px rgba(43,42,61,0.12)' },
+  modeCard: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 70,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: theme.line,
+    backgroundColor: 'white',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: 9,
+  },
+  modeCardActive: {
+    backgroundColor: theme.ink,
+    borderColor: theme.ink,
+    boxShadow: '0px 3px 0px rgba(43,42,61,0.12)',
+  },
   modeEmoji: { fontSize: 15 },
-  modeTabText: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 11.5 },
+  modeTabText: {
+    color: theme.inkSoft,
+    flexShrink: 1,
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 11.5,
+  },
   modeTabTextActive: { color: 'white' },
   modeCardCopy: { flex: 1, minWidth: 0 },
-  modeTabBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9.5, lineHeight: 13, marginTop: 2 },
+  modeTabBody: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodySemibold,
+    fontSize: 9.5,
+    lineHeight: 13,
+    marginTop: 2,
+  },
   modeTabBodyActive: { color: 'rgba(255,255,255,0.78)' },
   subModeRail: { flexDirection: 'row', gap: 6, marginBottom: 12 },
-  subModeTab: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#DCD4FF', borderRadius: 11, borderWidth: 1.5, flex: 1, flexDirection: 'row', gap: 4, justifyContent: 'center', minHeight: 38, paddingHorizontal: 5 },
+  subModeTab: {
+    alignItems: 'center',
+    backgroundColor: '#F7F5FF',
+    borderColor: '#DCD4FF',
+    borderRadius: 11,
+    borderWidth: 1.5,
+    flex: 1,
+    flexDirection: 'row',
+    gap: 4,
+    justifyContent: 'center',
+    minHeight: 38,
+    paddingHorizontal: 5,
+  },
   subModeTabActive: { backgroundColor: '#EEE9FF', borderColor: '#9B8CFF' },
   subModeEmoji: { fontSize: 13 },
   subModeText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   subModeTextActive: { color: theme.violetDeep },
-  previewCard: { borderRadius: 20, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 14, marginBottom: 12 },
+  previewCard: {
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#DCD4FF',
+    backgroundColor: '#F7F5FF',
+    padding: 14,
+    marginBottom: 12,
+  },
   previewTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  previewIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },
+  previewIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    backgroundColor: '#EEE9FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   previewCopy: { flex: 1 },
-  eyebrow: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
-  previewAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 19, marginTop: 4 },
-  previewAssociation: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, marginTop: 10 },
+  eyebrow: {
+    color: '#7A68E0',
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 10,
+    letterSpacing: 0.8,
+  },
+  previewAnswer: {
+    color: theme.ink,
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 19,
+    marginTop: 4,
+  },
+  previewAssociation: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodyBold,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 10,
+  },
   sceneSparkle: { fontSize: 18 },
   recallEmoji: { fontSize: 22 },
   recallCue: { width: '100%' },
-  recallCueWindow: { aspectRatio: 2.15, borderColor: '#DCD4FF', borderRadius: 16, borderWidth: 2, overflow: 'hidden', position: 'relative', backgroundColor: '#EEE9FF' },
+  recallCueWindow: {
+    aspectRatio: 2.15,
+    borderColor: '#DCD4FF',
+    borderRadius: 16,
+    borderWidth: 2,
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#EEE9FF',
+  },
   recallCueImage: { position: 'absolute' },
-  recallCueTarget: { alignItems: 'center', backgroundColor: theme.sun, borderColor: 'white', borderRadius: 20, borderWidth: 3, height: 40, justifyContent: 'center', left: '50%', marginLeft: -20, marginTop: -20, position: 'absolute', top: '50%', width: 40, boxShadow: '0px 2px 6px rgba(43, 42, 61, 0.22)' },
+  recallCueTarget: {
+    alignItems: 'center',
+    backgroundColor: theme.sun,
+    borderColor: 'white',
+    borderRadius: 20,
+    borderWidth: 3,
+    height: 40,
+    justifyContent: 'center',
+    left: '50%',
+    marginLeft: -20,
+    marginTop: -20,
+    position: 'absolute',
+    top: '50%',
+    width: 40,
+    boxShadow: '0px 2px 6px rgba(43, 42, 61, 0.22)',
+  },
   recallCuePin: { fontSize: 14 },
-  recallCueLabel: { backgroundColor: 'rgba(36,31,56,.84)', borderRadius: 999, left: 10, paddingHorizontal: 8, paddingVertical: 5, position: 'absolute', top: 10 },
-  recallCueLabelText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.5 },
-  recallCueCaption: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, lineHeight: 15, marginTop: 7, textAlign: 'center' },
-  itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 15, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 10, marginBottom: 8 },
+  recallCueLabel: {
+    backgroundColor: 'rgba(36,31,56,.84)',
+    borderRadius: 999,
+    left: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    position: 'absolute',
+    top: 10,
+  },
+  recallCueLabelText: {
+    color: 'white',
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 9,
+    letterSpacing: 0.5,
+  },
+  recallCueCaption: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodySemibold,
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 7,
+    textAlign: 'center',
+  },
+  itemRow: {
+    minHeight: 62,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: theme.line,
+    backgroundColor: theme.paper,
+    padding: 10,
+    marginBottom: 8,
+  },
   activeRow: { borderColor: '#9B8CFF', backgroundColor: '#F7F5FF' },
-  itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center' },
+  itemNumber: {
+    width: 29,
+    height: 29,
+    borderRadius: 15,
+    backgroundColor: '#9B8CFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   itemNumberText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 11 },
   itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   itemLocus: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginTop: 2 },
-  primaryButton: { width: '100%', minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, alignItems: 'center', justifyContent: 'center', marginTop: 10, paddingHorizontal: 16, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
-  primaryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
-  secondaryButton: { width: '100%', minHeight: 49, borderRadius: 16, borderWidth: 2, borderColor: '#9B8CFF', backgroundColor: '#F7F5FF', alignItems: 'center', justifyContent: 'center', marginTop: 12, paddingHorizontal: 16 },
+  primaryButton: {
+    width: '100%',
+    minHeight: 53,
+    borderRadius: 16,
+    backgroundColor: theme.sun,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    paddingHorizontal: 16,
+    boxShadow: `0px 5px 0px ${theme.sunDeep}`,
+  },
+  primaryText: {
+    color: theme.ink,
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  secondaryButton: {
+    width: '100%',
+    minHeight: 49,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#9B8CFF',
+    backgroundColor: '#F7F5FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    paddingHorizontal: 16,
+  },
   secondaryText: { color: '#6654D9', fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  saveState: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, marginBottom: 8 },
-  saveSuccess: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center', marginBottom: 8 },
+  saveState: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodyBold,
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  saveSuccess: {
+    color: theme.grass,
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
   saveError: { width: '100%', alignItems: 'center', marginBottom: 8 },
-  saveErrorText: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
-  retrySaveButton: { marginTop: 8, borderRadius: 12, backgroundColor: '#FFE3EA', paddingHorizontal: 14, paddingVertical: 9 },
+  saveErrorText: {
+    color: theme.berryDeep,
+    fontFamily: typography.bodyBold,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
+  },
+  retrySaveButton: {
+    marginTop: 8,
+    borderRadius: 12,
+    backgroundColor: '#FFE3EA',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
   retrySaveText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
 });
