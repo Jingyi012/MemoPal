@@ -30,8 +30,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target_env || 'uat' }}
     env:
-      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
-      IMAGE_OWNER: ${{ vars.IMAGE_OWNER }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH }}
+      IMAGE_OWNER: ${{ vars.IMAGE_OWNER || secrets.IMAGE_OWNER }}
+      VITE_API_BASE_URL: ${{ vars.MEMOPAL_MOBILE_API_BASE_URL || secrets.MEMOPAL_MOBILE_API_BASE_URL || vars.VITE_API_BASE_URL || secrets.VITE_API_BASE_URL }}
+      VITE_MEDIA_BASE_URL: ${{ vars.MEMOPAL_MOBILE_MEDIA_BASE_URL || secrets.MEMOPAL_MOBILE_MEDIA_BASE_URL || vars.VITE_MEDIA_BASE_URL || secrets.VITE_MEDIA_BASE_URL }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
       VPS_USER: ${{ secrets.VPS_USER }}
@@ -46,12 +48,12 @@ jobs:
             echo "DEPLOY_PATH is required. Set it in GitHub Environment variables."
             exit 1
           fi
-          if [ -z "${{ vars.MEMOPAL_MOBILE_API_BASE_URL }}" ]; then
-            echo "MEMOPAL_MOBILE_API_BASE_URL is required. Set it in GitHub Environment variables."
+          if [ -z "${VITE_API_BASE_URL}" ]; then
+            echo "An admin API URL is required. Set MEMOPAL_MOBILE_API_BASE_URL (or VITE_API_BASE_URL) in the selected GitHub Environment variables or secrets."
             exit 1
           fi
-          if [ -z "${{ vars.MEMOPAL_MOBILE_MEDIA_BASE_URL }}" ]; then
-            echo "MEMOPAL_MOBILE_MEDIA_BASE_URL is required. Set it in GitHub Environment variables."
+          if [ -z "${VITE_MEDIA_BASE_URL}" ]; then
+            echo "An admin media URL is required. Set MEMOPAL_MOBILE_MEDIA_BASE_URL (or VITE_MEDIA_BASE_URL) in the selected GitHub Environment variables or secrets."
             exit 1
           fi
 
@@ -78,8 +80,8 @@ jobs:
           file: ./apps/admin/Dockerfile
           push: true
           build-args: |
-            VITE_API_BASE_URL=${{ vars.MEMOPAL_MOBILE_API_BASE_URL }}
-            VITE_MEDIA_BASE_URL=${{ vars.MEMOPAL_MOBILE_MEDIA_BASE_URL }}
+            VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}
+            VITE_MEDIA_BASE_URL=${{ env.VITE_MEDIA_BASE_URL }}
           tags: |
             ghcr.io/${{ env.RESOLVED_IMAGE_OWNER }}/memopal-admin:latest
             ghcr.io/${{ env.RESOLVED_IMAGE_OWNER }}/memopal-admin:${{ github.sha }}

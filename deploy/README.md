@@ -43,10 +43,15 @@ API and admin images. They deliberately do not overwrite the server's private
 Create a GitHub Environment named `uat` (and `prod` if needed) with:
 
 - `DEPLOY_PATH`: absolute deployment directory on the VPS, for example
-  `/opt/memopal`.
+  `/opt/memopal` (an environment variable is recommended; a secret with the
+  same name is also accepted).
 - `IMAGE_OWNER` (optional): GHCR user or organization; defaults to the
-  repository owner.
-- `VITE_API_BASE_URL` and `VITE_MEDIA_BASE_URL` for the admin workflow.
+  repository owner. It can be stored as either an environment variable or a
+  secret.
+- `MEMOPAL_MOBILE_API_BASE_URL` and `MEMOPAL_MOBILE_MEDIA_BASE_URL` for the
+  admin workflow (environment variables are recommended; environment secrets
+  are also supported). The legacy names `VITE_API_BASE_URL` and
+  `VITE_MEDIA_BASE_URL` are accepted as fallbacks.
 
 Configure environment secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, and the
 optional `VPS_PORT` (defaults to `22`). The deployment user must be allowed to

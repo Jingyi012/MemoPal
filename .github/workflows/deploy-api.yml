@@ -52,8 +52,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target_env || 'uat' }}
     env:
-      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
-      IMAGE_OWNER: ${{ vars.IMAGE_OWNER }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH }}
+      IMAGE_OWNER: ${{ vars.IMAGE_OWNER || secrets.IMAGE_OWNER }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
       VPS_USER: ${{ secrets.VPS_USER }}
