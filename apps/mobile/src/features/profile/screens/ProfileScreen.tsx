@@ -38,6 +38,7 @@ export default function ProfileScreen() {
   const [showLogout, setShowLogout] = useState(false);
   const [reviewRemindersEnabled, setReviewRemindersEnabled] = useState(userState.notifications.reviewReminders);
   const [dailyLearningEnabled, setDailyLearningEnabled] = useState(userState.notifications.dailyLearningReminder);
+  const [reviewTime, setReviewTime] = useState(userState.preferences.reviewTime);
   const [soundEnabled, setSoundEnabled] = useState(userState.preferences.soundEnabled);
   const helpRef = useRef<any>(null);
   const privacyRef = useRef<any>(null);
@@ -51,8 +52,9 @@ export default function ProfileScreen() {
   useEffect(() => {
     setReviewRemindersEnabled(userState.notifications.reviewReminders);
     setDailyLearningEnabled(userState.notifications.dailyLearningReminder);
+    setReviewTime(userState.preferences.reviewTime);
     setSoundEnabled(userState.preferences.soundEnabled);
-  }, [userState.notifications.dailyLearningReminder, userState.notifications.reviewReminders, userState.preferences.soundEnabled]);
+  }, [userState.notifications.dailyLearningReminder, userState.notifications.reviewReminders, userState.preferences.reviewTime, userState.preferences.soundEnabled]);
 
   const saveSoundPreference = async (enabled: boolean) => {
     setSoundEnabled(enabled);
@@ -78,15 +80,15 @@ export default function ProfileScreen() {
       if (!granted) {
         setDailyLearningEnabled(false);
         await persistDailyLearningPreference(false);
-        Toast.show({ type: 'error', text1: 'Notifications disabled', text2: 'Enable notification permission to use daily reminders.' });
+        Toast.show({ type: 'error', text1: t('notificationsDisabled'), text2: t('enableDailyReminders') });
         return;
       }
-      await PushNotificationService.scheduleDailyLearning(userState.preferences.reviewTime);
+      await PushNotificationService.scheduleDailyLearning(reviewTime);
       await persistDailyLearningPreference(true);
     } catch (error) {
       setDailyLearningEnabled(previousValue);
       await persistDailyLearningPreference(previousValue);
-      Toast.show({ type: 'error', text1: 'Reminder update failed', text2: error instanceof Error ? error.message : 'Unable to update daily reminder.' });
+      Toast.show({ type: 'error', text1: t('reminderUpdateFailed'), text2: error instanceof Error ? error.message : t('unableUpdateDailyReminder') });
     }
   };
 
@@ -104,7 +106,7 @@ export default function ProfileScreen() {
       if (!granted) {
         setReviewRemindersEnabled(false);
         await updateState({ notifications: { ...userState.notifications, reviewReminders: false } });
-        Toast.show({ type: 'error', text1: 'Notifications disabled', text2: 'Enable notification permission to use review reminders.' });
+        Toast.show({ type: 'error', text1: t('notificationsDisabled'), text2: t('enableReviewReminders') });
         return;
       }
 
@@ -113,7 +115,7 @@ export default function ProfileScreen() {
     } catch (error) {
       setReviewRemindersEnabled(previousValue);
       await updateState({ notifications: { ...userState.notifications, reviewReminders: previousValue } });
-      Toast.show({ type: 'error', text1: 'Reminder update failed', text2: error instanceof Error ? error.message : 'Unable to update review reminders.' });
+      Toast.show({ type: 'error', text1: t('reminderUpdateFailed'), text2: error instanceof Error ? error.message : t('unableUpdateReviewReminders') });
     }
   };
 
@@ -121,6 +123,42 @@ export default function ProfileScreen() {
   const level = Math.max(1, user?.level ?? 1);
   const isPremium = Boolean(user?.isPremium);
   const selectedLanguage = (userState.preferences.language as AppLanguage) ?? 'system';
+
+  const saveReviewTime = (time: string) => {
+    const previousTime = reviewTime;
+
+    // Update the visible setting and close the sheet immediately. Persistence
+    // and native notification scheduling should not delay the interaction.
+    setReviewTime(time);
+    reviewScheduleRef.current?.dismiss();
+
+    void (async () => {
+      try {
+        await updatePreferences({ reviewTime: time });
+      } catch (error) {
+        setReviewTime(previousTime);
+        await updatePreferences({ reviewTime: previousTime }).catch(() => undefined);
+        Toast.show({
+          type: 'error',
+          text1: t('reminderUpdateFailed'),
+          text2: error instanceof Error ? error.message : t('unableSaveReminderTime'),
+        });
+        return;
+      }
+
+      if (!dailyLearningEnabled) return;
+
+      try {
+        await PushNotificationService.scheduleDailyLearning(time);
+      } catch (error) {
+        Toast.show({
+          type: 'error',
+          text1: t('reminderUpdateFailed'),
+          text2: error instanceof Error ? error.message : t('timeSavedScheduleFailed'),
+        });
+      }
+    })();
+  };
 
   return (
     <View style={styles.page}>
@@ -157,10 +195,10 @@ export default function ProfileScreen() {
           <ProfileSettingsRow
             icon={<Text style={styles.settingsEmoji}>📚</Text>}
             title={t('dailyLearning')}
-            value={userState.preferences.reviewTime}
+            value={reviewTime}
             right={(
               <View style={styles.reminderControl}>
-                <Text style={styles.settingsValue}>{userState.preferences.reviewTime}</Text>
+                <Text style={styles.settingsValue}>{reviewTime}</Text>
                 <Switch value={dailyLearningEnabled} onValueChange={saveDailyLearningReminder} />
               </View>
             )}
@@ -186,12 +224,8 @@ export default function ProfileScreen() {
 
       <ReviewScheduleSheet
         ref={reviewScheduleRef}
-        currentTime={userState.preferences.reviewTime}
-        onSave={async (time) => {
-          await updatePreferences({ reviewTime: time });
-          if (userState.notifications.dailyLearningReminder) await PushNotificationService.scheduleDailyLearning(time);
-          reviewScheduleRef.current?.dismiss();
-        }}
+        currentTime={reviewTime}
+        onSave={saveReviewTime}
       />
       <LanguageSheet
         ref={languageRef}

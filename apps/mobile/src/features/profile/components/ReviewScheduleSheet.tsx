@@ -2,13 +2,20 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { typography } from '@/theme/typography';
-import { BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
-import type { BottomSheetFlatListMethods } from '@gorhom/bottom-sheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Clock3 } from 'lucide-react-native';
-import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
-import { NativeScrollEvent, NativeSyntheticEvent, StyleSheet, Text, View } from 'react-native';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NativeViewGestureHandler } from 'react-native-gesture-handler';
 
 interface ReviewScheduleSheetProps {
   currentTime: string;
@@ -27,22 +34,29 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
     const insets = useSafeAreaInsets();
     const { t } = useTranslation('profile');
     const [selectedTime, setSelectedTime] = useState(normalizeTime(currentTime));
+    const selectedTimeRef = useRef(normalizeTime(currentTime));
     const [hour, minute] = splitTime(selectedTime);
-    const hourListRef = useRef<BottomSheetFlatListMethods>(null);
-    const minuteListRef = useRef<BottomSheetFlatListMethods>(null);
+    const hourListRef = useRef<ScrollView>(null);
+    const minuteListRef = useRef<ScrollView>(null);
     const hours = useMemo(() => Array.from({ length: 24 }, (_, value) => value), []);
     const minutes = useMemo(() => Array.from({ length: 12 }, (_, value) => value * 5), []);
 
+    const selectTime = useCallback((time: string) => {
+      const normalized = normalizeTime(time);
+      selectedTimeRef.current = normalized;
+      setSelectedTime(normalized);
+    }, []);
+
     useEffect(() => {
-      setSelectedTime(normalizeTime(currentTime));
-    }, [currentTime]);
+      selectTime(currentTime);
+    }, [currentTime, selectTime]);
 
     const scrollToSelection = (
-      list: React.RefObject<BottomSheetFlatListMethods | null>,
+      list: React.RefObject<ScrollView | null>,
       index: number
     ) => {
       requestAnimationFrame(() =>
-        list.current?.scrollToOffset({ offset: index * ITEM_HEIGHT, animated: false })
+        list.current?.scrollTo({ y: index * ITEM_HEIGHT, animated: false })
       );
     };
 
@@ -55,12 +69,15 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
       if (ref && 'current' in ref) ref.current?.dismiss();
     };
 
+    const resetSelection = () => selectTime(currentTime);
+
     const updateHour = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const index = clampIndex(
         Math.round(event.nativeEvent.contentOffset.y / ITEM_HEIGHT),
         hours.length
       );
-      setSelectedTime(formatTime(hours[index], minute));
+      const [, currentMinute] = splitTime(selectedTimeRef.current);
+      selectTime(formatTime(hours[index], currentMinute));
     };
 
     const updateMinute = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -68,11 +85,17 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
         Math.round(event.nativeEvent.contentOffset.y / ITEM_HEIGHT),
         minutes.length
       );
-      setSelectedTime(formatTime(hour, minutes[index]));
+      const [currentHour] = splitTime(selectedTimeRef.current);
+      selectTime(formatTime(currentHour, minutes[index]));
     };
 
     return (
-      <CustomBottomSheetModal ref={ref} snapPoints={['65%']} enableDynamicSizing={false}>
+      <CustomBottomSheetModal
+        ref={ref}
+        snapPoints={['75%']}
+        enableDynamicSizing={false}
+        enableContentPanningGesture={false}
+        onDismiss={resetSelection}>
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 8 }]}>
           <View style={styles.header}>
             <View style={styles.headerIcon}>
@@ -115,7 +138,7 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
             {QUICK_TIMES.map((time) => (
               <AnimatedPressable
                 key={time}
-                onPress={() => setSelectedTime(time)}
+                onPress={() => selectTime(time)}
                 style={[styles.quickPill, selectedTime === time && styles.quickPillSelected]}>
                 <Text style={[styles.quickText, selectedTime === time && styles.quickTextSelected]}>
                   {time}
@@ -132,7 +155,9 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
             </View>
             <View style={styles.buttonSlot}>
               <AnimatedPressable
-                onPress={() => { void onSave(selectedTime); }}
+                onPress={() => {
+                  void onSave(selectedTimeRef.current);
+                }}
                 style={styles.saveButton}>
                 <Text style={styles.saveText}>{t('saveTime')}</Text>
               </AnimatedPressable>
@@ -155,35 +180,34 @@ function WheelColumn({
 }: {
   data: number[];
   value: number;
-  listRef: React.RefObject<BottomSheetFlatListMethods | null>;
+  listRef: React.RefObject<ScrollView | null>;
   formatValue: (value: number) => string;
   onScrollEnd: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }) {
   return (
-    <BottomSheetFlatList
-      ref={listRef}
-      style={styles.wheelList}
-      data={data}
-      keyExtractor={(item) => String(item)}
-      getItemLayout={(_, index) => ({ length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index })}
-      initialScrollIndex={data.indexOf(value)}
-      snapToInterval={ITEM_HEIGHT}
-      nestedScrollEnabled
-      scrollEnabled
-      showsVerticalScrollIndicator={false}
-      onMomentumScrollEnd={onScrollEnd}
-      onScrollEndDrag={(event) => {
-        if (!event.nativeEvent.velocity?.y) onScrollEnd(event);
-      }}
-      contentContainerStyle={{ paddingVertical: WHEEL_PADDING }}
-      renderItem={({ item }) => (
-        <View style={styles.wheelItem}>
-          <Text style={[styles.wheelText, item === value && styles.wheelTextSelected]}>
-            {formatValue(item)}
-          </Text>
-        </View>
-      )}
-    />
+    <NativeViewGestureHandler disallowInterruption>
+      <ScrollView
+        ref={listRef}
+        style={styles.wheelList}
+        snapToInterval={ITEM_HEIGHT}
+        decelerationRate="fast"
+        nestedScrollEnabled
+        scrollEnabled
+        showsVerticalScrollIndicator={false}
+        onMomentumScrollEnd={onScrollEnd}
+        onScrollEndDrag={(event) => {
+          if (!event.nativeEvent.velocity?.y) onScrollEnd(event);
+        }}
+        contentContainerStyle={{ paddingVertical: WHEEL_PADDING }}>
+        {data.map((item) => (
+          <View key={item} style={styles.wheelItem}>
+            <Text style={[styles.wheelText, item === value && styles.wheelTextSelected]}>
+              {formatValue(item)}
+            </Text>
+          </View>
+        ))}
+      </ScrollView>
+    </NativeViewGestureHandler>
   );
 }
 
@@ -311,7 +335,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 2,
     flexDirection: 'row',
     gap: 10,
-    marginTop: 14,
+    marginTop: 'auto',
     paddingTop: 13,
     paddingBottom: 5,
   },
