@@ -5,6 +5,7 @@ import { typography } from '@/theme/typography';
 import { Check, X } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
+import type { LayoutChangeEvent } from 'react-native';
 
 export type RecallFeedback = 'correct' | 'wrong' | null;
 
@@ -19,6 +20,9 @@ type RecallAnswerCardProps = {
   actionLabel: string;
   actionDisabled?: boolean;
   progressLabel: string;
+  cue?: ReactNode;
+  onLayout?: (event: LayoutChangeEvent) => void;
+  onAnswerLayout?: (event: LayoutChangeEvent) => void;
   answerAccessibilityLabel?: string;
   answerPlaceholder?: string;
   onAnswerFocus?: () => void;
@@ -39,6 +43,9 @@ export function RecallAnswerCard({
   actionLabel,
   actionDisabled = false,
   progressLabel,
+  cue,
+  onLayout,
+  onAnswerLayout,
   answerAccessibilityLabel = 'Type your answer',
   answerPlaceholder = 'TYPE YOUR ANSWER',
   onAnswerFocus,
@@ -51,10 +58,11 @@ export function RecallAnswerCard({
   const AnswerInput = useBottomSheetInput ? BottomSheetTextInput : TextInput;
 
   return (
-    <View style={[styles.card, !isPeg && styles.palaceCard]}>
+    <View onLayout={onLayout} style={[styles.card, !isPeg && styles.palaceCard]}>
       <View style={[styles.icon, isPeg ? styles.pegIcon : styles.palaceIcon]}>{icon}</View>
       <Text style={[styles.eyebrow, { color: accent }]}>{eyebrow}</Text>
       <Text style={styles.prompt}>{prompt}</Text>
+      {cue ? <View style={styles.cue}>{cue}</View> : null}
       <AnswerInput
         value={answer}
         onChangeText={(value) => { if (!feedback) onAnswerChange(value); }}
@@ -64,6 +72,7 @@ export function RecallAnswerCard({
         autoCapitalize="characters"
         autoCorrect={false}
         onFocus={onAnswerFocus}
+        onLayout={onAnswerLayout}
         placeholder={answerPlaceholder}
         placeholderTextColor="#AAA7B5"
         style={[
@@ -101,6 +110,7 @@ const styles = StyleSheet.create({
   palaceIcon: { backgroundColor: '#EEE9FF' },
   eyebrow: { fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
   prompt: { color: theme.ink, fontFamily: typography.display, fontSize: 20, textAlign: 'center', marginTop: 12, marginBottom: 16 },
+  cue: { alignSelf: 'stretch', marginBottom: 14 },
   answerInput: { width: '100%', minHeight: 54, borderRadius: 14, borderWidth: 2.5, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 13, color: theme.ink, textAlign: 'center', fontFamily: typography.bodyExtraBold, fontSize: 16, letterSpacing: 1 },
   correctInput: { borderColor: theme.grass, backgroundColor: '#F1FBF5' },
   wrongInput: { borderColor: theme.berry, backgroundColor: '#FFF1F4' },

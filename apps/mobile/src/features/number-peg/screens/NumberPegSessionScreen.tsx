@@ -79,6 +79,7 @@ export default function NumberPegSessionScreen({
   const [isFinishing, setIsFinishing] = useState(false);
   const hydratedSessionRef = useRef<string | null>(null);
   const sessionReadyRef = useRef(false);
+  const recallScrollRef = useRef<ScrollView | null>(null);
   const practiceAttempt = useCreatePracticeAttempt();
   const leaveSession = () => {
     if (returnTo === 'practice') {
@@ -284,7 +285,10 @@ export default function NumberPegSessionScreen({
   };
 
   return (
-    <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={styles.page}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
       <CommonHeader eyebrow={t('eyebrow')} title={memorySet.title} description={`${memorySet.items.length} ${t('items')} · ${t('title')}`} backAction={leaveSession} />
       <View style={styles.tabs}>
         <View style={styles.tabWrap}>
@@ -355,7 +359,11 @@ export default function NumberPegSessionScreen({
           <Text style={styles.rehearsalHint}>{t('rehearsalHint')}</Text>
         </ScrollView>
       ) : (
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.recallContent}>
+        <ScrollView
+          ref={recallScrollRef}
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.recallContent}>
           {isComplete ? (
             <RecallResultCard
               tone="peg"
@@ -433,6 +441,9 @@ export default function NumberPegSessionScreen({
                 progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${memorySet.items.length}`}
                 answerAccessibilityLabel={t('typeYourAnswer')}
                 answerPlaceholder={t('typeYourAnswerPlaceholder')}
+                onAnswerFocus={() => {
+                  requestAnimationFrame(() => recallScrollRef.current?.scrollToEnd({ animated: true }));
+                }}
                 onAnswerChange={setAnswer}
                 onSubmit={checkOrContinue}
               />
@@ -476,7 +487,7 @@ const styles = StyleSheet.create({
   pegName: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8, marginTop: 11 },
   sceneText: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, marginTop: 5 },
   primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, boxShadow: `0px 5px 0px ${theme.sunDeep}`, marginTop: 4 },
-  recallContent: { padding: 18, paddingTop: 16, paddingBottom: 48, flexGrow: 1 },
+  recallContent: { padding: 18, paddingTop: 16, paddingBottom: 120, flexGrow: 1 },
   recallProgressRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, paddingHorizontal: 2 },
   recallProgressLabel: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
   recallProgressCount: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },

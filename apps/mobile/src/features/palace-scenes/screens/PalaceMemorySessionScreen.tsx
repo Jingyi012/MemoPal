@@ -1,5 +1,4 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -30,7 +29,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type SessionMode = 'browse' | 'walk' | 'list' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
@@ -66,23 +65,43 @@ export default function PalaceMemorySessionScreen({
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
   const [hasRestoredSession, setHasRestoredSession] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
-  const [bodyHeight, setBodyHeight] = useState(0);
-  const [mapHeight, setMapHeight] = useState(0);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [scrollViewportHeight, setScrollViewportHeight] = useState(0);
+  const [sessionPanelY, setSessionPanelY] = useState(0);
+  const [recallCardY, setRecallCardY] = useState(0);
+  const [recallInputY, setRecallInputY] = useState(0);
   const hydratedSessionRef = useRef<string | null>(null);
   const sessionReadyRef = useRef(false);
-  const sessionSheetRef = useRef<BottomSheet>(null);
-  const sessionSnapPoints = useMemo<(number | string)[]>(() => {
-    // Keep a compact map visible even when the detail sheet is expanded. The
-    // sheet content is independently scrollable, so it does not need to cover
-    // the whole session to reveal long lists or the recall answer card.
-    if (!bodyHeight || !mapHeight) return ['38%', '76%'];
-    const collapsedHeight = Math.max(180, Math.min(bodyHeight - 160, bodyHeight - mapHeight));
-    const minimumMapVisible = Math.min(240, Math.max(180, mapHeight * 0.75));
-    const maxExpandedHeight = Math.max(collapsedHeight + 48, bodyHeight - minimumMapVisible);
-    const expandedHeight = Math.min(bodyHeight * 0.78, maxExpandedHeight);
-    return [collapsedHeight, Math.max(collapsedHeight + 1, expandedHeight)];
-  }, [bodyHeight, mapHeight]);
+  const sessionScrollRef = useRef<ScrollView | null>(null);
   const practiceAttempt = useCreatePracticeAttempt();
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      'keyboardDidShow',
+      (event) => setKeyboardHeight(event.endCoordinates.height),
+    );
+    const hideSubscription = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardHeight(0),
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!keyboardHeight) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!scrollViewportHeight) return;
+        const inputContentY = sessionPanelY + recallCardY + recallInputY;
+        const targetOffset = Math.max(0, inputContentY - Math.max(0, scrollViewportHeight - 130));
+        sessionScrollRef.current?.scrollTo({ y: targetOffset, animated: true });
+      });
+    });
+  }, [keyboardHeight, recallCardY, recallInputY, scrollViewportHeight, sessionPanelY]);
   const leaveSession = () => {
     if (returnTo === 'practice') {
       router.replace('/(tabs)/practice');
@@ -276,8 +295,47 @@ export default function PalaceMemorySessionScreen({
     }
   };
 
-  const expandRecallSheet = () => {
-    sessionSheetRef.current?.snapToIndex(1);
+  const focusRecallInput = () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!scrollViewportHeight) return;
+        const inputContentY = sessionPanelY + recallCardY + recallInputY;
+        const targetOffset = Math.max(0, inputContentY - Math.max(0, scrollViewportHeight - 130));
+        sessionScrollRef.current?.scrollTo({ y: targetOffset, animated: true });
+      });
+    });
+  };
+
+  const renderRecallCue = () => {
+    if (!active?.locus) return null;
+    const zoom = 2.15;
+    return (
+      <View style={styles.recallCue}>
+        <View style={styles.recallCueWindow}>
+          <AppImage
+            imageUrl={scene.imageUrl}
+            imageSource={scene.imageSource}
+            style={[
+              styles.recallCueImage,
+              {
+                height: `${zoom * 100}%`,
+                left: `${50 - zoom * active.locus.xPercent}%`,
+                top: `${50 - zoom * active.locus.yPercent}%`,
+                width: `${zoom * 100}%`,
+              },
+            ]}
+            transition={250}
+          />
+          <View style={styles.recallCueTarget}>
+            <Text style={styles.recallCuePin}>📍</Text>
+          </View>
+          <View style={styles.recallCueLabel}>
+            <Text style={styles.recallCueLabelText}>{active.locus.name}</Text>
+          </View>
+        </View>
+        <Text style={styles.recallCueCaption}>{t('recallCueHint')}</Text>
+      </View>
+    );
   };
 
   const renderModeRail = () => {
@@ -397,8 +455,10 @@ export default function PalaceMemorySessionScreen({
         actionLabel={isFinishing ? t('savingProgress') : feedback === 'wrong' ? t('tryLocusAgain') : feedback ? t('nextLocusAction') : t('checkAnswer')}
         actionDisabled={isFinishing}
         progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${placements.length}`}
-        onAnswerFocus={expandRecallSheet}
-        useBottomSheetInput
+        cue={renderRecallCue()}
+        onLayout={(event) => setRecallCardY(event.nativeEvent.layout.y)}
+        onAnswerLayout={(event) => setRecallInputY(event.nativeEvent.layout.y)}
+        onAnswerFocus={focusRecallInput}
         onAnswerChange={setAnswer}
         onSubmit={checkOrContinue}
       />
@@ -406,7 +466,7 @@ export default function PalaceMemorySessionScreen({
   );
 
   const renderMap = () => (
-    <View style={styles.mapStage} onLayout={(event) => setMapHeight(event.nativeEvent.layout.height)}>
+    <View style={styles.mapStage}>
       <View style={styles.canvas}>
         <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={StyleSheet.absoluteFillObject} />
         <View pointerEvents="none" style={styles.floor} />
@@ -508,54 +568,46 @@ export default function PalaceMemorySessionScreen({
   );
 
   return (
-    <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={styles.page}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
       <CommonHeader
         eyebrow={t('eyebrow')}
         title={memorySet.title}
         description={`${scene.name} · ${placements.length} loci`}
         backAction={leaveSession}
       />
-      <View style={styles.sessionBody} onLayout={(event) => setBodyHeight(event.nativeEvent.layout.height)}>
-        {renderMap()}
-        <BottomSheet
-          ref={sessionSheetRef}
-          index={0}
-          snapPoints={sessionSnapPoints}
-          enableDynamicSizing={false}
-          enablePanDownToClose={false}
-          keyboardBehavior="interactive"
-          keyboardBlurBehavior="restore"
-          android_keyboardInputMode="adjustResize"
-          backgroundStyle={styles.sessionSheet}
-          handleIndicatorStyle={styles.sessionSheetHandle}>
-          <BottomSheetScrollView
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.sheetContent}>
-            <Text style={styles.hint}>
-              {mode === 'recall' ? 'Use the active locus as your cue.' : 'Tap a marker, or walk through every locus in order.'}
-            </Text>
-            {hasRestoredSession ? (
-              <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
-                <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
-              </AnimatedPressable>
-            ) : null}
-            {renderModeRail()}
-            {renderSessionPanel()}
-          </BottomSheetScrollView>
-        </BottomSheet>
-      </View>
+      <ScrollView
+        ref={sessionScrollRef}
+        onLayout={(event) => setScrollViewportHeight(event.nativeEvent.layout.height)}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.sessionContent}>
+        {mode !== 'recall' ? renderMap() : null}
+        <View onLayout={(event) => setSessionPanelY(event.nativeEvent.layout.y)} style={styles.sessionPanel}>
+          <Text style={styles.hint}>
+            {mode === 'recall' ? 'Use the active locus as your cue.' : 'Tap a marker, or walk through every locus in order.'}
+          </Text>
+          {hasRestoredSession ? (
+            <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
+              <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
+            </AnimatedPressable>
+          ) : null}
+          {renderModeRail()}
+          {renderSessionPanel()}
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
-  sessionBody: { flex: 1, position: 'relative' },
+  sessionContent: { paddingBottom: 120 },
+  sessionPanel: { paddingHorizontal: 16, paddingBottom: 24 },
   mapStage: { padding: 16, paddingBottom: 24 },
-  sessionSheet: { backgroundColor: theme.paper, borderColor: '#DCD4FF', borderWidth: 2, borderBottomWidth: 0, borderTopLeftRadius: 26, borderTopRightRadius: 26 },
-  sessionSheetHandle: { backgroundColor: '#BEB5EE', width: 44 },
-  sheetContent: { padding: 16, paddingBottom: 42 },
   flex: { flex: 1 },
   canvas: { aspectRatio: 4 / 3, borderRadius: 20, overflow: 'hidden', borderWidth: 2, borderColor: '#E3D7B3', backgroundColor: '#F4EFE0' },
   floor: { position: 'absolute', top: 14, right: 14, bottom: 14, left: 14, borderWidth: 2, borderStyle: 'dashed', borderColor: '#CDBD8A', borderRadius: 14 },
@@ -589,6 +641,14 @@ const styles = StyleSheet.create({
   previewAssociation: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, marginTop: 10 },
   sceneSparkle: { fontSize: 18 },
   recallEmoji: { fontSize: 22 },
+  recallCue: { width: '100%' },
+  recallCueWindow: { aspectRatio: 2.15, borderColor: '#DCD4FF', borderRadius: 16, borderWidth: 2, overflow: 'hidden', position: 'relative', backgroundColor: '#EEE9FF' },
+  recallCueImage: { position: 'absolute' },
+  recallCueTarget: { alignItems: 'center', backgroundColor: theme.sun, borderColor: 'white', borderRadius: 20, borderWidth: 3, height: 40, justifyContent: 'center', left: '50%', marginLeft: -20, marginTop: -20, position: 'absolute', top: '50%', width: 40, boxShadow: '0px 2px 6px rgba(43, 42, 61, 0.22)' },
+  recallCuePin: { fontSize: 14 },
+  recallCueLabel: { backgroundColor: 'rgba(36,31,56,.84)', borderRadius: 999, left: 10, paddingHorizontal: 8, paddingVertical: 5, position: 'absolute', top: 10 },
+  recallCueLabelText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.5 },
+  recallCueCaption: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, lineHeight: 15, marginTop: 7, textAlign: 'center' },
   itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 15, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 10, marginBottom: 8 },
   activeRow: { borderColor: '#9B8CFF', backgroundColor: '#F7F5FF' },
   itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center' },
