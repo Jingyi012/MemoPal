@@ -1,11 +1,9 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Check, X } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import type { LayoutChangeEvent } from 'react-native';
 
 export type RecallFeedback = 'correct' | 'wrong' | null;
 
@@ -21,12 +19,10 @@ type RecallAnswerCardProps = {
   actionDisabled?: boolean;
   progressLabel: string;
   cue?: ReactNode;
-  onLayout?: (event: LayoutChangeEvent) => void;
-  onAnswerLayout?: (event: LayoutChangeEvent) => void;
   answerAccessibilityLabel?: string;
   answerPlaceholder?: string;
   onAnswerFocus?: () => void;
-  useBottomSheetInput?: boolean;
+  actionAreaRef?: (view: View | null) => void;
   onAnswerChange: (value: string) => void;
   onSubmit: () => void;
 };
@@ -44,35 +40,34 @@ export function RecallAnswerCard({
   actionDisabled = false,
   progressLabel,
   cue,
-  onLayout,
-  onAnswerLayout,
   answerAccessibilityLabel = 'Type your answer',
   answerPlaceholder = 'TYPE YOUR ANSWER',
   onAnswerFocus,
-  useBottomSheetInput = false,
+  actionAreaRef,
   onAnswerChange,
   onSubmit,
 }: RecallAnswerCardProps) {
   const isPeg = tone === 'peg';
   const accent = isPeg ? theme.berryDeep : theme.violetDeep;
-  const AnswerInput = useBottomSheetInput ? BottomSheetTextInput : TextInput;
 
   return (
-    <View onLayout={onLayout} style={[styles.card, !isPeg && styles.palaceCard]}>
+    <View style={[styles.card, !isPeg && styles.palaceCard]}>
       <View style={[styles.icon, isPeg ? styles.pegIcon : styles.palaceIcon]}>{icon}</View>
       <Text style={[styles.eyebrow, { color: accent }]}>{eyebrow}</Text>
       <Text style={styles.prompt}>{prompt}</Text>
       {cue ? <View style={styles.cue}>{cue}</View> : null}
-      <AnswerInput
+      <TextInput
         value={answer}
         onChangeText={(value) => { if (!feedback) onAnswerChange(value); }}
         onSubmitEditing={onSubmit}
-        editable={!feedback}
+        // Keep focus and the keyboard between questions. The change handler
+        // still locks the submitted answer while feedback is visible.
+        editable
+        caretHidden={Boolean(feedback)}
+        onFocus={onAnswerFocus}
         accessibilityLabel={answerAccessibilityLabel}
         autoCapitalize="characters"
         autoCorrect={false}
-        onFocus={onAnswerFocus}
-        onLayout={onAnswerLayout}
         placeholder={answerPlaceholder}
         placeholderTextColor="#AAA7B5"
         style={[
@@ -89,7 +84,7 @@ export function RecallAnswerCard({
           </Text>
         </View>
       ) : null}
-      <View style={styles.actionButtonWrap}>
+      <View ref={actionAreaRef} style={styles.actionButtonWrap}>
         <AnimatedPressable
           disabled={actionDisabled || (!answer.trim() && !feedback)}
           onPress={onSubmit}

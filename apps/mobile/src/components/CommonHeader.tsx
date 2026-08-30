@@ -28,6 +28,8 @@ interface HeaderProps {
   backAction?: () => void;
   showNotification?: boolean;
   showHomeButton?: boolean;
+  /** Use a shorter header for focused practice sessions. */
+  compact?: boolean;
 }
 
 export const CommonHeader: React.FC<HeaderProps> = ({
@@ -41,13 +43,14 @@ export const CommonHeader: React.FC<HeaderProps> = ({
   backAction,
   showNotification = false,
   showHomeButton = false,
+  compact = false,
 }) => {
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.header}>
-      <View style={[styles.headerInner, { paddingTop: insets.top + 8 }]}>
-        <View style={styles.row}>
+      <View style={[styles.headerInner, compact && styles.compactHeaderInner, { paddingTop: insets.top + (compact ? 4 : 8) }]}>
+        <View style={[styles.row, compact && styles.compactRow]}>
           {/* Back button slot */}
           {!hideBackButton ? (
             leftComponent ? (
@@ -57,8 +60,8 @@ export const CommonHeader: React.FC<HeaderProps> = ({
                 accessibilityLabel="Go back"
                 hitSlop={4}
                 onPress={backAction}
-                style={styles.backButton}>
-                <ChevronLeft size={20} color={theme.ink} />
+                style={[styles.backButton, compact && styles.compactBackButton]}>
+                <ChevronLeft size={compact ? 18 : 20} color={theme.ink} />
               </AnimatedPressable>
             )
           ) : (
@@ -67,9 +70,9 @@ export const CommonHeader: React.FC<HeaderProps> = ({
 
           {/* Title + description */}
           <View style={styles.titleBlock}>
-            {eyebrow && <Text style={styles.eyebrow}>{eyebrow}</Text>}
-            <Text style={styles.title}>{title}</Text>
-            {description && <Text style={styles.description}>{description}</Text>}
+            {eyebrow && <Text style={[styles.eyebrow, compact && styles.compactEyebrow]}>{eyebrow}</Text>}
+            <Text style={[styles.title, compact && styles.compactTitle]} numberOfLines={1}>{title}</Text>
+            {description && <Text style={[styles.description, compact && styles.compactDescription]} numberOfLines={1}>{description}</Text>}
           </View>
 
           {/* Actions */}
@@ -87,8 +90,8 @@ export const CommonHeader: React.FC<HeaderProps> = ({
                       hitSlop={4}
                       key={index}
                       onPress={action.onPress}
-                      style={styles.actionButton}>
-                      <Icon size={20} color={theme.ink} />
+                      style={[styles.actionButton, compact && styles.compactActionButton]}>
+                      <Icon size={compact ? 18 : 20} color={theme.ink} />
                     </AnimatedPressable>
                   );
                 }
@@ -115,11 +118,19 @@ const styles = {
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
+  compactHeaderInner: {
+    paddingHorizontal: 14,
+    paddingBottom: 7,
+  },
   row: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 10,
     minHeight: 44,
+  },
+  compactRow: {
+    gap: 8,
+    minHeight: 36,
   },
   backButton: {
     width: 40,
@@ -128,6 +139,11 @@ const styles = {
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     backgroundColor: theme.sand,
+  },
+  compactBackButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
   },
   titleBlock: {
     flex: 1,
@@ -147,17 +163,31 @@ const styles = {
     textTransform: 'uppercase' as const,
     marginBottom: 4,
   },
+  compactEyebrow: {
+    fontSize: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    marginBottom: 2,
+  },
   title: {
     color: theme.ink,
     fontSize: 19,
     fontFamily: typography.displayExtraBold,
     letterSpacing: -0.2,
   },
+  compactTitle: {
+    fontSize: 16,
+    letterSpacing: -0.1,
+  },
   description: {
     color: theme.inkSoft,
     fontSize: 11.5,
     fontFamily: typography.bodyBold,
     marginTop: 2,
+  },
+  compactDescription: {
+    fontSize: 10,
+    marginTop: 0,
   },
   actions: {
     flexDirection: 'row' as const,
@@ -170,6 +200,11 @@ const styles = {
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     backgroundColor: theme.sand,
+  },
+  compactActionButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
   },
   additionalContent: {
     marginTop: 10,

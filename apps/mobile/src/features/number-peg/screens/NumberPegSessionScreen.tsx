@@ -7,6 +7,7 @@ import { RecallResultCard } from '@/components/RecallResultCard';
 import { NumberPegRehearsalCard } from '@/features/number-peg/components/NumberPegRehearsalCard';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
+import { useSoundEffects } from '@/core/audio/useSoundEffects';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { buildNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
@@ -28,9 +29,9 @@ import {
 import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type SessionTab = 'scenes' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
@@ -80,7 +81,51 @@ export default function NumberPegSessionScreen({
   const hydratedSessionRef = useRef<string | null>(null);
   const sessionReadyRef = useRef(false);
   const recallScrollRef = useRef<ScrollView | null>(null);
+  const recallActionRef = useRef<View | null>(null);
+  const recallScrollOffsetRef = useRef(0);
+  const recallScrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [recallKeyboardInset, setRecallKeyboardInset] = useState(0);
   const practiceAttempt = useCreatePracticeAttempt();
+  const { playSound } = useSoundEffects();
+
+  const scrollRecallInputIntoView = useCallback(() => {
+    const scrollView = recallScrollRef.current;
+    const actionArea = recallActionRef.current;
+    const keyboard = Keyboard.metrics();
+    if (!scrollView || !actionArea || !keyboard) return;
+
+    actionArea.measureInWindow((_x, y, _width, height) => {
+      const overlap = y + height + 14 - keyboard.screenY;
+      if (overlap <= 0) return;
+      scrollView.scrollTo({
+        y: Math.max(0, recallScrollOffsetRef.current + overlap),
+        animated: true,
+      });
+    });
+  }, []);
+
+  const queueRecallInputScroll = useCallback(() => {
+    if (recallScrollTimerRef.current) clearTimeout(recallScrollTimerRef.current);
+    recallScrollTimerRef.current = setTimeout(() => {
+      recallScrollTimerRef.current = null;
+      scrollRecallInputIntoView();
+    }, 80);
+  }, [scrollRecallInputIntoView]);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', (event) => {
+      setRecallKeyboardInset(event.endCoordinates.height);
+      queueRecallInputScroll();
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setRecallKeyboardInset(0);
+    });
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+      if (recallScrollTimerRef.current) clearTimeout(recallScrollTimerRef.current);
+    };
+  }, [queueRecallInputScroll]);
   const leaveSession = () => {
     if (returnTo === 'practice') {
       router.replace('/(tabs)/practice');
@@ -146,6 +191,12 @@ export default function NumberPegSessionScreen({
       sessionReadyRef.current = true;
     });
   }, [memorySetQuery.data, restart, startInRecall]);
+
+  useEffect(() => {
+    if (!hasRestoredSession) return;
+    const timer = setTimeout(() => setHasRestoredSession(false), 2400);
+    return () => clearTimeout(timer);
+  }, [hasRestoredSession]);
 
   useEffect(() => {
     const memorySet = memorySetQuery.data;
@@ -239,6 +290,7 @@ export default function NumberPegSessionScreen({
         return;
       }
       if (questionIndex === memorySet.items.length - 1) {
+        playSound('complete');
         const payload: PracticeAttemptInput = {
           clientAttemptId,
           memorySetId: memorySet.id,
@@ -277,6 +329,7 @@ export default function NumberPegSessionScreen({
       Math.max(0, Date.now() - questionStartedAtMs),
     ));
     setFeedback(isCorrect ? 'correct' : 'wrong');
+    playSound(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
@@ -285,11 +338,8 @@ export default function NumberPegSessionScreen({
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.page}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
-      <CommonHeader eyebrow={t('eyebrow')} title={memorySet.title} description={`${memorySet.items.length} ${t('items')} · ${t('title')}`} backAction={leaveSession} />
+    <View style={styles.page}>
+      <CommonHeader compact eyebrow={t('eyebrow')} title={memorySet.title} description={`${memorySet.items.length} ${t('items')} · ${t('title')}`} backAction={leaveSession} />
       <View style={styles.tabs}>
         <View style={styles.tabWrap}>
           <AnimatedPressable
@@ -324,7 +374,7 @@ export default function NumberPegSessionScreen({
         </Text>
       </View>
 
-      {hasRestoredSession && tab === 'recall' && (
+      {hasRestoredSession && tab !== 'recall' && (
         <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
           <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
         </AnimatedPressable>
@@ -363,7 +413,12 @@ export default function NumberPegSessionScreen({
           ref={recallScrollRef}
           keyboardDismissMode="interactive"
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.recallContent}>
+          onScroll={(event) => { recallScrollOffsetRef.current = event.nativeEvent.contentOffset.y; }}
+          scrollEventThrottle={16}
+          contentContainerStyle={[
+            styles.recallContent,
+            recallKeyboardInset > 0 ? { paddingBottom: recallKeyboardInset + 24 } : null,
+          ]}>
           {isComplete ? (
             <RecallResultCard
               tone="peg"
@@ -441,9 +496,8 @@ export default function NumberPegSessionScreen({
                 progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${memorySet.items.length}`}
                 answerAccessibilityLabel={t('typeYourAnswer')}
                 answerPlaceholder={t('typeYourAnswerPlaceholder')}
-                onAnswerFocus={() => {
-                  requestAnimationFrame(() => recallScrollRef.current?.scrollToEnd({ animated: true }));
-                }}
+                onAnswerFocus={queueRecallInputScroll}
+                actionAreaRef={(view) => { recallActionRef.current = view; }}
                 onAnswerChange={setAnswer}
                 onSubmit={checkOrContinue}
               />
@@ -451,7 +505,7 @@ export default function NumberPegSessionScreen({
           )}
         </ScrollView>
       )}
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -487,7 +541,7 @@ const styles = StyleSheet.create({
   pegName: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8, marginTop: 11 },
   sceneText: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, marginTop: 5 },
   primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, boxShadow: `0px 5px 0px ${theme.sunDeep}`, marginTop: 4 },
-  recallContent: { padding: 18, paddingTop: 16, paddingBottom: 120, flexGrow: 1 },
+  recallContent: { padding: 18, paddingTop: 16, paddingBottom: 56, flexGrow: 1 },
   recallProgressRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, paddingHorizontal: 2 },
   recallProgressLabel: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
   recallProgressCount: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },

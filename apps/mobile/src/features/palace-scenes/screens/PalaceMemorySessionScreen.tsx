@@ -8,6 +8,7 @@ import { RecallResultCard } from '@/components/RecallResultCard';
 import { PalaceFocusCard } from '@/features/palace-scenes/components/PalaceFocusCard';
 import { PalaceOrderedList } from '@/features/palace-scenes/components/PalaceOrderedList';
 import { useMemorySet } from '@/features/memory-sets';
+import { useSoundEffects } from '@/core/audio/useSoundEffects';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { usePalaceScene } from '@/features/palace-scenes/hooks/usePalaceScenes';
@@ -28,8 +29,8 @@ import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type SessionMode = 'browse' | 'walk' | 'list' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
@@ -65,43 +66,54 @@ export default function PalaceMemorySessionScreen({
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
   const [hasRestoredSession, setHasRestoredSession] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [scrollViewportHeight, setScrollViewportHeight] = useState(0);
-  const [sessionPanelY, setSessionPanelY] = useState(0);
-  const [recallCardY, setRecallCardY] = useState(0);
-  const [recallInputY, setRecallInputY] = useState(0);
   const hydratedSessionRef = useRef<string | null>(null);
   const sessionReadyRef = useRef(false);
-  const sessionScrollRef = useRef<ScrollView | null>(null);
+  const recallScrollRef = useRef<ScrollView | null>(null);
+  const recallActionRef = useRef<View | null>(null);
+  const recallScrollOffsetRef = useRef(0);
+  const recallScrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [recallKeyboardInset, setRecallKeyboardInset] = useState(0);
   const practiceAttempt = useCreatePracticeAttempt();
+  const { playSound } = useSoundEffects();
+
+  const scrollRecallInputIntoView = useCallback(() => {
+    const scrollView = recallScrollRef.current;
+    const actionArea = recallActionRef.current;
+    const keyboard = Keyboard.metrics();
+    if (!scrollView || !actionArea || !keyboard) return;
+
+    actionArea.measureInWindow((_x, y, _width, height) => {
+      const overlap = y + height + 14 - keyboard.screenY;
+      if (overlap <= 0) return;
+      scrollView.scrollTo({
+        y: Math.max(0, recallScrollOffsetRef.current + overlap),
+        animated: true,
+      });
+    });
+  }, []);
+
+  const queueRecallInputScroll = useCallback(() => {
+    if (recallScrollTimerRef.current) clearTimeout(recallScrollTimerRef.current);
+    recallScrollTimerRef.current = setTimeout(() => {
+      recallScrollTimerRef.current = null;
+      scrollRecallInputIntoView();
+    }, 80);
+  }, [scrollRecallInputIntoView]);
 
   useEffect(() => {
-    const showSubscription = Keyboard.addListener(
-      'keyboardDidShow',
-      (event) => setKeyboardHeight(event.endCoordinates.height),
-    );
-    const hideSubscription = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => setKeyboardHeight(0),
-    );
-
+    const showSubscription = Keyboard.addListener('keyboardDidShow', (event) => {
+      setRecallKeyboardInset(event.endCoordinates.height);
+      queueRecallInputScroll();
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setRecallKeyboardInset(0);
+    });
     return () => {
       showSubscription.remove();
       hideSubscription.remove();
+      if (recallScrollTimerRef.current) clearTimeout(recallScrollTimerRef.current);
     };
-  }, []);
-
-  useEffect(() => {
-    if (!keyboardHeight) return;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!scrollViewportHeight) return;
-        const inputContentY = sessionPanelY + recallCardY + recallInputY;
-        const targetOffset = Math.max(0, inputContentY - Math.max(0, scrollViewportHeight - 130));
-        sessionScrollRef.current?.scrollTo({ y: targetOffset, animated: true });
-      });
-    });
-  }, [keyboardHeight, recallCardY, recallInputY, scrollViewportHeight, sessionPanelY]);
+  }, [queueRecallInputScroll]);
   const leaveSession = () => {
     if (returnTo === 'practice') {
       router.replace('/(tabs)/practice');
@@ -165,6 +177,12 @@ export default function PalaceMemorySessionScreen({
       sessionReadyRef.current = true;
     });
   }, [memorySetQuery.data, restart, startInRecall]);
+
+  useEffect(() => {
+    if (!hasRestoredSession) return;
+    const timer = setTimeout(() => setHasRestoredSession(false), 2400);
+    return () => clearTimeout(timer);
+  }, [hasRestoredSession]);
 
   useEffect(() => {
     const memorySet = memorySetQuery.data;
@@ -253,6 +271,7 @@ export default function PalaceMemorySessionScreen({
         return;
       }
       if (activeIndex === placements.length - 1) {
+        playSound('complete');
         const payload: PracticeAttemptInput = {
           clientAttemptId,
           memorySetId: memorySet.id,
@@ -288,22 +307,12 @@ export default function PalaceMemorySessionScreen({
       Math.max(0, Date.now() - questionStartedAtMs),
     ));
     setFeedback(isCorrect ? 'correct' : 'wrong');
+    playSound(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     }
-  };
-
-  const focusRecallInput = () => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!scrollViewportHeight) return;
-        const inputContentY = sessionPanelY + recallCardY + recallInputY;
-        const targetOffset = Math.max(0, inputContentY - Math.max(0, scrollViewportHeight - 130));
-        sessionScrollRef.current?.scrollTo({ y: targetOffset, animated: true });
-      });
-    });
   };
 
   const renderRecallCue = () => {
@@ -456,9 +465,8 @@ export default function PalaceMemorySessionScreen({
         actionDisabled={isFinishing}
         progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${placements.length}`}
         cue={renderRecallCue()}
-        onLayout={(event) => setRecallCardY(event.nativeEvent.layout.y)}
-        onAnswerLayout={(event) => setRecallInputY(event.nativeEvent.layout.y)}
-        onAnswerFocus={focusRecallInput}
+        onAnswerFocus={queueRecallInputScroll}
+        actionAreaRef={(view) => { recallActionRef.current = view; }}
         onAnswerChange={setAnswer}
         onSubmit={checkOrContinue}
       />
@@ -568,29 +576,33 @@ export default function PalaceMemorySessionScreen({
   );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.page}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
+    <View style={styles.page}>
       <CommonHeader
+        compact
         eyebrow={t('eyebrow')}
         title={memorySet.title}
         description={`${scene.name} · ${placements.length} loci`}
         backAction={leaveSession}
       />
       <ScrollView
-        ref={sessionScrollRef}
-        onLayout={(event) => setScrollViewportHeight(event.nativeEvent.layout.height)}
+        ref={recallScrollRef}
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
+        onScroll={(event) => { recallScrollOffsetRef.current = event.nativeEvent.contentOffset.y; }}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.sessionContent}>
+        contentContainerStyle={[
+          styles.sessionContent,
+          mode === 'recall' && recallKeyboardInset > 0
+            ? { paddingBottom: recallKeyboardInset + 24 }
+            : null,
+        ]}>
         {mode !== 'recall' ? renderMap() : null}
-        <View onLayout={(event) => setSessionPanelY(event.nativeEvent.layout.y)} style={styles.sessionPanel}>
+        <View style={styles.sessionPanel}>
           <Text style={styles.hint}>
             {mode === 'recall' ? 'Use the active locus as your cue.' : 'Tap a marker, or walk through every locus in order.'}
           </Text>
-          {hasRestoredSession ? (
+          {hasRestoredSession && mode !== 'recall' ? (
             <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
               <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
             </AnimatedPressable>
@@ -599,13 +611,13 @@ export default function PalaceMemorySessionScreen({
           {renderSessionPanel()}
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
-  sessionContent: { paddingBottom: 120 },
+  sessionContent: { paddingBottom: 56 },
   sessionPanel: { paddingHorizontal: 16, paddingBottom: 24 },
   mapStage: { padding: 16, paddingBottom: 24 },
   flex: { flex: 1 },

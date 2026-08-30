@@ -19,6 +19,7 @@
         "foregroundImage": "./assets/images/icon-foreground.png"
       },
       "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -57,7 +58,8 @@
           "iosUrlScheme": "com.googleusercontent.apps.458572178451-q0toa23kaimdebtrhihst5hroo9eqnab"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,

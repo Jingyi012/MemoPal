@@ -59,6 +59,8 @@ const makeScene = (id, locusCount) => ({
 
 test('normalizes recall answers for case and whitespace differences', () => {
   assert.equal(normalizeRecallAnswer('  Solar   System '), 'SOLAR SYSTEM');
+  assert.equal(normalizeRecallAnswer('iPhone'), normalizeRecallAnswer('iphone'));
+  assert.equal(normalizeRecallAnswer('Mixed Case'), normalizeRecallAnswer('MIXED CASE'));
 });
 
 test('gives a useful first-letter spelling hint', () => {

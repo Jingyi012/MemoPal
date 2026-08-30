@@ -38,6 +38,7 @@ export default function ProfileScreen() {
   const [showLogout, setShowLogout] = useState(false);
   const [reviewRemindersEnabled, setReviewRemindersEnabled] = useState(userState.notifications.reviewReminders);
   const [dailyLearningEnabled, setDailyLearningEnabled] = useState(userState.notifications.dailyLearningReminder);
+  const [soundEnabled, setSoundEnabled] = useState(userState.preferences.soundEnabled);
   const helpRef = useRef<any>(null);
   const privacyRef = useRef<any>(null);
   const reviewScheduleRef = useRef<any>(null);
@@ -50,7 +51,13 @@ export default function ProfileScreen() {
   useEffect(() => {
     setReviewRemindersEnabled(userState.notifications.reviewReminders);
     setDailyLearningEnabled(userState.notifications.dailyLearningReminder);
-  }, [userState.notifications.dailyLearningReminder, userState.notifications.reviewReminders]);
+    setSoundEnabled(userState.preferences.soundEnabled);
+  }, [userState.notifications.dailyLearningReminder, userState.notifications.reviewReminders, userState.preferences.soundEnabled]);
+
+  const saveSoundPreference = async (enabled: boolean) => {
+    setSoundEnabled(enabled);
+    await updatePreferences({ soundEnabled: enabled });
+  };
 
   const persistDailyLearningPreference = async (enabled: boolean) => {
     await updateState({
@@ -159,7 +166,12 @@ export default function ProfileScreen() {
             )}
             onPress={() => reviewScheduleRef.current?.present()}
           />
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🔊</Text>} title={t('soundHaptics')} value={t('on')} />
+          <ProfileSettingsRow
+            icon={<Text style={styles.settingsEmoji}>🔊</Text>}
+            title={t('soundHaptics')}
+            value={soundEnabled ? t('on') : t('off')}
+            right={<Switch value={soundEnabled} onValueChange={saveSoundPreference} />}
+          />
           <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌐</Text>} title={t('language')} value={languageLabel} onPress={() => languageRef.current?.present()} />
           <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌙</Text>} title={t('theme')} value={t('light')} />
           <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>❓</Text>} title={t('helpSupport')} value="›" onPress={() => helpRef.current?.present()} />

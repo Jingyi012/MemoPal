@@ -44,8 +44,8 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
           if (!reduceMotion) scale.value = withSpring(1);
         }}
         onPress={(e) => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           onPress?.(e);
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }}>
         {children}
       </PressableBase>
