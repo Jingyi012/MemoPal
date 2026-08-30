@@ -4,7 +4,7 @@ import { practiceAttemptApi } from '@/features/practice-attempts/api/practiceAtt
 import { PushNotificationService } from './pushNotificationService';
 
 export const InAppNotificationSync = {
-  async syncAllUpcoming(shouldSchedule = true) {
+  async syncAllUpcoming(shouldSchedule = true, language?: string | null) {
     await queryClient.invalidateQueries({ queryKey: ['practice-attempts'] });
     if (isLocalPreviewEnabled) return;
 
@@ -13,14 +13,14 @@ export const InAppNotificationSync = {
       return;
     }
 
-    const granted = await PushNotificationService.requestPermissions({ prompt: false });
+    const granted = await PushNotificationService.requestPermissions({ prompt: false, language });
     if (!granted) return;
 
     const [due, upcoming] = await Promise.all([
       practiceAttemptApi.getDueReviews(),
       practiceAttemptApi.getUpcomingReviews(30),
     ]);
-    await PushNotificationService.syncReviewNotifications([...due, ...upcoming]);
+    await PushNotificationService.syncReviewNotifications([...due, ...upcoming], language);
   },
 
   async refreshInAppInbox() {

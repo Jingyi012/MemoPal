@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { DateTriggerInput, SchedulableTriggerInputTypes } from 'expo-notifications';
 import { Platform } from 'react-native';
+import { getLocalizedNotificationCopy } from '@/features/notifications/utils/localizedNotificationCopy';
 
 // Configure how notifications behave when the app is foregrounded
 Notifications.setNotificationHandler({
@@ -26,13 +27,14 @@ type ReviewNotification = {
 
 type PermissionOptions = {
   prompt?: boolean;
+  language?: string | null;
 };
 
 export const PushNotificationService = {
   // Check permissions at startup without unexpectedly opening a system dialog.
   // Settings can call this with the default prompt behavior when the user
   // explicitly enables a reminder.
-  async requestPermissions({ prompt = true }: PermissionOptions = {}) {
+  async requestPermissions({ prompt = true, language }: PermissionOptions = {}) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     if (prompt && existingStatus !== 'granted') {
@@ -41,8 +43,9 @@ export const PushNotificationService = {
     }
 
     if (Platform.OS === 'android') {
+      const copy = getLocalizedNotificationCopy(language);
       await Notifications.setNotificationChannelAsync('review-reminders', {
-        name: 'Review Reminders',
+        name: copy.reviewChannelName,
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#FF231F7C',
@@ -59,12 +62,14 @@ export const PushNotificationService = {
     memorySetTitle: string;
     techniqueKey: 'palace' | 'number-peg';
     dueDate: string;
+    language?: string | null;
   }) {
     const date = new Date(params.dueDate);
     if (date.getTime() <= Date.now()) return;
 
     const identifier = `${REVIEW_NOTIFICATION_PREFIX}${params.reviewId}`;
     await Notifications.cancelScheduledNotificationAsync(identifier).catch(() => undefined);
+    const copy = getLocalizedNotificationCopy(params.language);
 
     const trigger: DateTriggerInput = {
       type: SchedulableTriggerInputTypes.DATE,
@@ -75,8 +80,8 @@ export const PushNotificationService = {
     return await Notifications.scheduleNotificationAsync({
       identifier,
       content: {
-        title: 'MemoPal: Time to review 🧠',
-        body: `"${params.memorySetTitle}" is ready for review.`,
+        title: copy.reviewTitle,
+        body: copy.reviewBody(params.memorySetTitle),
         data: {
           memorySetId: params.memorySetId,
           url: params.techniqueKey === 'palace'
@@ -93,7 +98,7 @@ export const PushNotificationService = {
     await Notifications.cancelScheduledNotificationAsync(`${REVIEW_NOTIFICATION_PREFIX}${reviewId}`);
   },
 
-  async syncReviewNotifications(reviews: ReviewNotification[]) {
+  async syncReviewNotifications(reviews: ReviewNotification[], language?: string | null) {
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
     await Promise.all(
       scheduled
@@ -110,6 +115,7 @@ export const PushNotificationService = {
           memorySetTitle: review.memorySetTitle,
           techniqueKey: review.techniqueKey,
           dueDate: review.dueAt,
+          language,
         }))
     );
   },
@@ -123,17 +129,18 @@ export const PushNotificationService = {
     );
   },
 
-  async scheduleDailyLearning(time: string) {
+  async scheduleDailyLearning(time: string, language?: string | null) {
     const [h, m] = time.split(':').map((x) => Number(x));
     if (Number.isNaN(h) || Number.isNaN(m)) return;
 
     await Notifications.cancelScheduledNotificationAsync(DAILY_LEARNING_NOTIFICATION_ID).catch(() => undefined);
+    const copy = getLocalizedNotificationCopy(language);
 
     return Notifications.scheduleNotificationAsync({
       identifier: DAILY_LEARNING_NOTIFICATION_ID,
       content: {
-        title: 'Daily Learning Time 📚',
-        body: 'A quick practice today keeps your memory strong.',
+        title: copy.dailyLearningTitle,
+        body: copy.dailyLearningBody,
         data: { url: '/(tabs)' },
       },
       trigger: {

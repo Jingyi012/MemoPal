@@ -938,6 +938,11 @@ export const translations = {
       recent: 'Recent',
       markAll: 'Mark all as read',
       empty: 'You’re all caught up',
+      reviewReminderTitle: 'MemoPal: Time to review 🧠',
+      reviewReminderBody: '"{memorySetTitle}" is ready for review.',
+      dailyLearningTitle: 'Daily learning time 📚',
+      dailyLearningBody: 'A quick practice today keeps your memory strong.',
+      reviewChannelName: 'Review reminders',
     },
     memoryDetails: {
       eyebrow: 'Memory',
@@ -1898,6 +1903,11 @@ export const translations = {
       recent: '最近',
       markAll: '全部标记为已读',
       empty: '你已经看完所有通知了',
+      reviewReminderTitle: 'MemoPal：复习时间到了 🧠',
+      reviewReminderBody: '“{memorySetTitle}”可以复习了。',
+      dailyLearningTitle: '每日学习时间 📚',
+      dailyLearningBody: '今天练习几分钟，让记忆保持牢固。',
+      reviewChannelName: '复习提醒',
     },
     memoryDetails: {
       eyebrow: '记忆',

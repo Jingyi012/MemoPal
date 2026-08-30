@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { getLocalizedNotificationCopy } from './localizedNotificationCopy';
 
 export type ReviewDelay = { unit: 'hours'; value: number } | { unit: 'days'; value: number };
 
@@ -20,18 +21,20 @@ export const scheduleReviewNotification = async (
   lessonId: string,
   lessonName: string,
   delay: ReviewDelay,
-  reviewNumber: number
+  reviewNumber: number,
+  language?: string | null,
 ): Promise<string> => {
   const trigger: Notifications.TimeIntervalTriggerInput = {
     type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
     seconds: delayToSeconds(delay),
   };
+  const copy = getLocalizedNotificationCopy(language);
 
   return Notifications.scheduleNotificationAsync({
     identifier: `${lessonId}-review-${reviewNumber}`,
     content: {
-      title: 'Memory Palace Review',
-      body: `Time to review: ${lessonName}`,
+      title: copy.reviewTitle,
+      body: copy.reviewBody(lessonName),
       data: {
         lessonId,
         reviewNumber,

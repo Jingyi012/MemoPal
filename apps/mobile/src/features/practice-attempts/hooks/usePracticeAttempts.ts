@@ -57,7 +57,10 @@ export function useCreatePracticeAttempt() {
       void queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
       void queryClient.invalidateQueries({ queryKey: XP_KEYS.all });
       void queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.all });
-      void InAppNotificationSync.syncAllUpcoming(userState.notifications.reviewReminders);
+      void InAppNotificationSync.syncAllUpcoming(
+        userState.notifications.reviewReminders,
+        userState.preferences.language,
+      );
     },
   });
 }

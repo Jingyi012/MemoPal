@@ -100,7 +100,7 @@ export default function ProfileScreen() {
         });
         return;
       }
-      await PushNotificationService.scheduleDailyLearning(reviewTime);
+      await PushNotificationService.scheduleDailyLearning(reviewTime, userState.preferences.language);
       await persistDailyLearningPreference(true);
     } catch (error) {
       setDailyLearningEnabled(previousValue);
@@ -139,7 +139,7 @@ export default function ProfileScreen() {
         return;
       }
 
-      await InAppNotificationSync.syncAllUpcoming(true);
+      await InAppNotificationSync.syncAllUpcoming(true, userState.preferences.language);
       await updateState({ notifications: { ...userState.notifications, reviewReminders: true } });
     } catch (error) {
       setReviewRemindersEnabled(previousValue);
@@ -184,7 +184,7 @@ export default function ProfileScreen() {
       if (!dailyLearningEnabled) return;
 
       try {
-        await PushNotificationService.scheduleDailyLearning(time);
+        await PushNotificationService.scheduleDailyLearning(time, userState.preferences.language);
       } catch (error) {
         Toast.show({
           type: 'error',

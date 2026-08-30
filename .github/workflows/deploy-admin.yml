@@ -46,12 +46,12 @@ jobs:
             echo "DEPLOY_PATH is required. Set it in GitHub Environment variables."
             exit 1
           fi
-          if [ -z "${{ vars.VITE_API_BASE_URL }}" ]; then
-            echo "VITE_API_BASE_URL is required. Set it in GitHub Environment variables."
+          if [ -z "${{ vars.MEMOPAL_MOBILE_API_BASE_URL }}" ]; then
+            echo "MEMOPAL_MOBILE_API_BASE_URL is required. Set it in GitHub Environment variables."
             exit 1
           fi
-          if [ -z "${{ vars.VITE_MEDIA_BASE_URL }}" ]; then
-            echo "VITE_MEDIA_BASE_URL is required. Set it in GitHub Environment variables."
+          if [ -z "${{ vars.MEMOPAL_MOBILE_MEDIA_BASE_URL }}" ]; then
+            echo "MEMOPAL_MOBILE_MEDIA_BASE_URL is required. Set it in GitHub Environment variables."
             exit 1
           fi
 
@@ -78,8 +78,8 @@ jobs:
           file: ./apps/admin/Dockerfile
           push: true
           build-args: |
-            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
-            VITE_MEDIA_BASE_URL=${{ vars.VITE_MEDIA_BASE_URL }}
+            VITE_API_BASE_URL=${{ vars.MEMOPAL_MOBILE_API_BASE_URL }}
+            VITE_MEDIA_BASE_URL=${{ vars.MEMOPAL_MOBILE_MEDIA_BASE_URL }}
           tags: |
             ghcr.io/${{ env.RESOLVED_IMAGE_OWNER }}/memopal-admin:latest
             ghcr.io/${{ env.RESOLVED_IMAGE_OWNER }}/memopal-admin:${{ github.sha }}

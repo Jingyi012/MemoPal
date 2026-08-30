@@ -16,13 +16,25 @@ export const useNotificationObserver = (enabled: boolean = true) => {
     const initializeNotifications = async () => {
       try {
         // 1. Ensure permissions
-        const granted = await PushNotificationService.requestPermissions({ prompt: false });
+        const granted = await PushNotificationService.requestPermissions({
+          prompt: false,
+          language: userState.preferences.language,
+        });
 
         if (granted && userState.notifications.reviewReminders) {
           // 2. Sync hardware (Ensures future Push Notifications are set in the OS)
-          await InAppNotificationSync.syncAllUpcoming(true);
+          await InAppNotificationSync.syncAllUpcoming(true, userState.preferences.language);
         } else if (granted) {
           await InAppNotificationSync.syncAllUpcoming(false);
+        }
+
+        if (granted && userState.notifications.dailyLearningReminder) {
+          await PushNotificationService.scheduleDailyLearning(
+            userState.preferences.reviewTime,
+            userState.preferences.language,
+          );
+        } else {
+          await PushNotificationService.cancelDailyLearning();
         }
 
         // Refresh the in-app inbox regardless of OS push permission. Push is
@@ -64,5 +76,11 @@ export const useNotificationObserver = (enabled: boolean = true) => {
       if (notificationListener.current) notificationListener.current.remove();
       if (responseListener.current) responseListener.current.remove();
     };
-  }, [enabled, userState.notifications.reviewReminders]);
+  }, [
+    enabled,
+    userState.notifications.dailyLearningReminder,
+    userState.notifications.reviewReminders,
+    userState.preferences.language,
+    userState.preferences.reviewTime,
+  ]);
 };

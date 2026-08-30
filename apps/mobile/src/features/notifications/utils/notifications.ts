@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { delayToSeconds, ReviewDelay } from './scheduler';
+import { getLocalizedNotificationCopy } from './localizedNotificationCopy';
 
 // Request notification permissions
 export async function requestNotificationPermissions(): Promise<boolean> {
@@ -12,19 +13,21 @@ export const scheduleReviewNotification = async (
   lessonId: string,
   lessonName: string,
   delay: ReviewDelay,
-  reviewNumber: number
+  reviewNumber: number,
+  language?: string | null,
 ): Promise<string> => {
   const trigger: Notifications.TimeIntervalTriggerInput = {
     type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
     seconds: delayToSeconds(delay),
   };
+  const copy = getLocalizedNotificationCopy(language);
 
   return Notifications.scheduleNotificationAsync({
     // Using a specific identifier helps prevent duplicate notifications for the same review step
     identifier: `${lessonId}-review-${reviewNumber}`,
     content: {
-      title: 'Memory Palace Review',
-      body: `Time to review: ${lessonName}`,
+      title: copy.reviewTitle,
+      body: copy.reviewBody(lessonName),
       data: {
         lessonId,
         reviewNumber,
