@@ -173,8 +173,8 @@ export default function LibraryScreen() {
         ) : filter === 'all' ? (
           <ModuleNoticeCard
             icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
-            title={t('newSession')}
-            body={t('newSessionBody')}
+            title={t('newMemory')}
+            body={t('newMemoryBody')}
             actionLabel={t('tapToStart')}
             actionIcon={<Plus size={15} color={theme.ink} />}
             onAction={() => router.push('/create-memory' as Href)}

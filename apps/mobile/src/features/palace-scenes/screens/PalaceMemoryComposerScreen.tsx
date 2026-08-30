@@ -244,7 +244,7 @@ export default function PalaceMemoryComposerScreen() {
 
         {step === 'setup' && fromSharedComposer && title.trim() ? (
           <View style={styles.draftCard}>
-            <Text style={styles.draftEyebrow}>{t('sessionReady')}</Text>
+            <Text style={styles.draftEyebrow}>{t('memoryReady')}</Text>
             <Text numberOfLines={1} style={styles.draftTitle}>{title}</Text>
             <Text style={styles.draftMeta}>{items.length} {t('items')} · {t('chooseSceneToPlace')}</Text>
           </View>

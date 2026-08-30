@@ -133,7 +133,7 @@ export const PushNotificationService = {
       identifier: DAILY_LEARNING_NOTIFICATION_ID,
       content: {
         title: 'Daily Learning Time 📚',
-        body: 'A quick session today keeps your memory palace strong.',
+        body: 'A quick practice today keeps your memory strong.',
         data: { url: '/(tabs)' },
       },
       trigger: {

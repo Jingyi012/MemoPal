@@ -231,7 +231,7 @@ export default function NumberPegComposerScreen() {
 
             {fromSharedComposer && title.trim() ? (
               <View style={styles.draftCard}>
-                <Text style={styles.draftEyebrow}>{t('sessionReady')}</Text>
+                <Text style={styles.draftEyebrow}>{t('memoryReady')}</Text>
                 <Text numberOfLines={1} style={styles.draftTitle}>{title}</Text>
                 <Text style={styles.draftMeta}>{t(goalLabelKey(goalType))} · {items.length} {t('items')}</Text>
               </View>

@@ -110,12 +110,12 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
               <Text style={styles.cardTitle}>{t('startUseful')}</Text>
               <Text style={styles.cardBody}>{t('startUsefulBody')}</Text>
 
-              <Text style={styles.label}>{t('sessionName')} <Text style={styles.optionalLabel}>{t('optional')}</Text></Text>
+              <Text style={styles.label}>{t('memoryName')} <Text style={styles.optionalLabel}>{t('optional')}</Text></Text>
               <TextInput
                 value={title}
                 onChangeText={(value) => { setTitle(value); setMessage(null); }}
                 maxLength={200}
-                placeholder={t('sessionPlaceholder')}
+                placeholder={t('memoryPlaceholder')}
                 placeholderTextColor="#AAA7B5"
                 style={styles.input}
               />

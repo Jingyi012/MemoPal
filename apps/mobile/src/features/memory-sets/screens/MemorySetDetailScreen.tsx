@@ -108,7 +108,7 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
         </View>
         <AnimatedPressable onPress={() => router.push(retryRoute)} style={styles.secondaryButton}>
           <RefreshCcw size={16} color={theme.inkSoft} />
-          <Text style={styles.secondaryButtonText}>{t('retryFromScratch')}</Text>
+          <Text style={styles.secondaryButtonText}>{t('restartPractice')}</Text>
         </AnimatedPressable>
       </ScrollView>
     </View>

@@ -96,8 +96,8 @@ export default function HomeScreen() {
         ) : (
           <ModuleNoticeCard
             icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
-            title={t('newSession')}
-            body={t('newSessionBody')}
+            title={t('newMemory')}
+            body={t('newMemoryBody')}
             actionLabel={t('tapToStart')}
             actionIcon={<Plus size={15} color="#2B2A3D" />}
             onAction={() => router.push('/create-memory' as Href)}
@@ -138,7 +138,7 @@ export default function HomeScreen() {
 
         <Text style={styles.sectionLabel}>{t('thisWeek')}</Text>
         <View style={styles.statRow}>
-          <StatTile value={`${practiceStatsQuery.data?.sessionsCompleted ?? 0}`} label={t('sessions')} />
+          <StatTile value={`${practiceStatsQuery.data?.sessionsCompleted ?? 0}`} label={t('practiceSessions')} />
           <StatTile value={`${practiceStatsQuery.data?.wordsLearned ?? 0}`} label={t('words')} />
           <StatTile value={`${practiceStatsQuery.data?.firstAttemptRecallPercent ?? 0}%`} label={t('firstTryRecall')} />
         </View>

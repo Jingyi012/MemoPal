@@ -76,8 +76,8 @@ export default function PracticeScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ModuleNoticeCard
           icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
-          title={t('newSession')}
-          body={t('newSessionBody')}
+          title={t('newMemory')}
+          body={t('newMemoryBody')}
           actionLabel={t('tapToStart')}
           actionIcon={<Plus size={15} color={theme.ink} />}
           onAction={() => router.push('/create-memory' as Href)}
@@ -159,7 +159,7 @@ export default function PracticeScreen() {
         </View>
 
         <View style={styles.sectionHeadingRow}>
-          <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>{t('recent')}</Text>
+          <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>{t('recentPractice')}</Text>
           <AnimatedPressable onPress={() => router.push('/(tabs)/library' as Href)}>
             <Text style={styles.seeAll}>{t('seeAll')} →</Text>
           </AnimatedPressable>
@@ -179,11 +179,11 @@ export default function PracticeScreen() {
         </View>
 
         {memorySets.isLoading ? (
-          <View style={styles.emptyCard}><Text style={styles.emptyBody}>{t('recent')}</Text></View>
+          <View style={styles.emptyCard}><Text style={styles.emptyBody}>{t('recentPractice')}</Text></View>
         ) : memorySets.isError ? (
           <ModuleNoticeCard
             icon={<RefreshCcw size={22} color={theme.inkSoft} />}
-            title={t('recent')}
+            title={t('recentPractice')}
             body={t('description')}
             onAction={() => memorySets.refetch()}
           />
@@ -201,8 +201,8 @@ export default function PracticeScreen() {
         ) : (
           <ModuleNoticeCard
             icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
-            title={t('newSession')}
-            body={t('newSessionBody')}
+            title={t('newMemory')}
+            body={t('newMemoryBody')}
             actionLabel={t('tapToStart')}
             actionIcon={<Plus size={15} color={theme.ink} />}
             onAction={() => router.push('/create-memory' as Href)}

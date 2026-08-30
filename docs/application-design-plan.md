@@ -26,13 +26,25 @@ MemoPal should be organized around the user's goal—"I need to remember this"�
 
 The recommended decisions are:
 
-1. **Adopt the strongest parts of `memopal-app-flow.html`.** Keep content-first creation, clear technique recommendations, scene/recall separation, recent sessions, warm colors, rounded shapes, tactile buttons, and small celebrations.
+1. **Adopt the strongest parts of `memopal-app-flow.html`.** Keep content-first creation, clear technique recommendations, scene/recall separation, recent practice, warm colors, rounded shapes, tactile buttons, and small celebrations.
 2. **Do not copy the prototype literally.** Simplify its crowded Practice home, make navigation task-based, remove inconsistent peg definitions/unlocks, replace the Palace placeholder, and design accessibility and offline states explicitly.
 3. **Ship Number Peg as a focused Number-Shape system using 1–10 anchors.** Version and localize the anchor catalogue. Do not unlock 11–20 until recall testing proves that expansion helps.
 4. **Redesign Palace around scene images with coordinate-based loci.** A palace has one or more scene images; loci are normalized markers on those images. Per-locus close-ups are optional. Do not require one new image per word.
 5. **Replace Palace-coupled `Lesson`/`Word` concepts with technique-neutral `MemorySet`/`MemoryItem`.** Technique details live in `PegPlan` or `PalacePlan`.
 6. **Remove the mobile SQLite replica and sync engine.** Screens call the backend through typed API functions and TanStack Query owns server-state caching. SecureStore owns tokens; a small key-value store may hold preferences, drafts, and active-session recovery only. There is no local entity graph, mutation outbox, conflict resolver, or background synchronization loop.
 7. **Treat the redesign as the new product baseline.** No production user-data compatibility contract is assumed. Remove superseded features instead of maintaining dual reads, and generate deployment databases from the fresh redesign migration.
+
+### Product terminology
+
+Use **memory** for the reusable content a person creates: a named list of
+items plus its Number Peg or Memory Palace associations. The API and database
+continue to call this aggregate `MemorySet` for precision.
+
+Use **practice** or **review** for a person working through a memory. A
+**practice session** is one run, and a `PracticeAttempt` is the recorded run
+returned by the API. The UI should therefore say “New memory”, “Memory
+details”, and “Recent practice”; it should reserve “session” for progress,
+history, recovery, and analytics where the run itself is being discussed.
 
 ## 2. What the current code says
 
