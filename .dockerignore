@@ -1,0 +1,12 @@
+.git
+.github/skills
+**/node_modules
+**/dist
+**/.expo
+**/.vscode
+**/bin
+**/obj
+**/TestResults
+palaceData
+secrets
+*.log

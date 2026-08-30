@@ -1,0 +1,292 @@
+import { ApiClientError, authApi, RegisterRequest } from '@/features/auth/api/auth';
+import { AUTH_STORAGE_KEY } from '@/features/auth/constants/auth';
+import { USER_STATE_STORAGE_KEY } from '@/core/storage/constants';
+import { CURRENT_USER_KEYS } from '@/features/profile/hooks/useCurrentUser';
+import {
+  clearAuthTokens,
+  getAccessToken,
+  getRefreshToken,
+  setAccessToken,
+  setRefreshToken,
+} from '@/features/auth/services/user.service';
+import { LoginRequest } from '@/features/auth/types/auth';
+import { User } from '@/features/profile/types/users';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQueryClient } from '@tanstack/react-query';
+import { clearPersistedQueryCache } from '@/utils/queryClient';
+import { useRouter } from 'expo-router';
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+
+export type AuthContextType = {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+
+  login: (req: LoginRequest) => Promise<void>;
+  register: (req: RegisterRequest) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
+  loginWithFacebook: (accessToken: string) => Promise<void>;
+  updateAuthenticatedUser: (nextUser: User) => Promise<void>;
+  logout: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const isLocalPreviewEnabled =
+  String(process.env.EXPO_PUBLIC_LOCAL_DEV_MODE).trim().toLowerCase() === 'true';
+
+// Development-only seed data keeps the feature routes inspectable when the API is not running.
+// Production builds keep the normal token-based auth path because this flag is false there.
+const LOCAL_PREVIEW_USER: User = {
+  id: 'local-preview-user',
+  displayName: 'Preview Player',
+  email: 'preview@local',
+  totalXp: 840,
+  level: 9,
+  isPremium: false,
+};
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const isAuthenticated = !!user;
+
+  const normalizeUser = useCallback((candidate: Partial<User> | null | undefined): User | null => {
+    if (!candidate?.id || !candidate.displayName) {
+      return null;
+    }
+
+    return {
+      ...candidate,
+      id: candidate.id,
+      displayName: candidate.displayName,
+      email: candidate.email ?? 'player@example.com',
+      avatarUrl: candidate.avatarUrl ?? undefined,
+      totalXp: Math.max(0, candidate.totalXp ?? 0),
+      level: Math.max(1, candidate.level ?? 1),
+      isPremium: !!candidate.isPremium,
+    };
+  }, []);
+
+  const loadCachedSessionUser = useCallback(async (): Promise<User | null> => {
+    const raw = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as Partial<User>;
+        const normalized = normalizeUser(parsed);
+        if (normalized) {
+          return normalized;
+        }
+      } catch {
+        // Ignore malformed session cache.
+      }
+    }
+
+    return null;
+  }, [normalizeUser]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadUser = async () => {
+      try {
+        const token = await getAccessToken();
+        if (!token) {
+          if (isLocalPreviewEnabled) {
+            await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(LOCAL_PREVIEW_USER));
+            if (!cancelled) {
+              setUser(LOCAL_PREVIEW_USER);
+            }
+            return;
+          }
+
+          // Keep this branch side-effect free to avoid racing with an in-flight login
+          // that may persist tokens moments later.
+          if (!cancelled) {
+            setUser(null);
+          }
+          return;
+        }
+
+        const refreshToken = await getRefreshToken();
+        if (!refreshToken) {
+          await Promise.allSettled([
+            AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
+            clearAuthTokens(),
+          ]);
+          if (!cancelled) {
+            setUser(null);
+          }
+          return;
+        }
+
+        const cachedUser = await loadCachedSessionUser();
+        if (cachedUser && !cancelled) {
+          setUser(cachedUser);
+        }
+
+        try {
+          const remoteUser = await authApi.getCurrentProfile();
+          await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(remoteUser));
+          if (!cancelled) {
+            setUser(remoteUser);
+          }
+          await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
+        } catch (error) {
+          const statusCode = (error as ApiClientError | undefined)?.statusCode;
+          const shouldInvalidateSession = statusCode === 401 || statusCode === 403;
+
+          if (shouldInvalidateSession) {
+            await Promise.allSettled([
+              AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
+              clearAuthTokens(),
+            ]);
+            await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
+            if (!cancelled) {
+              setUser(null);
+            }
+            return;
+          }
+
+          if (cachedUser) {
+            // Offline mode: keep last known authenticated user.
+            if (!cancelled) {
+              setUser(cachedUser);
+            }
+            return;
+          }
+          if (!cancelled) {
+            setUser(null);
+          }
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadUser();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadCachedSessionUser, queryClient]);
+
+  const setSession = async (sessionUser: User, token: string, refreshToken: string) => {
+    if (!token || !token.trim()) {
+      throw new Error('Missing access token from login response.');
+    }
+
+    if (!refreshToken || !refreshToken.trim()) {
+      throw new Error('Missing refresh token from login response.');
+    }
+
+    // A login can happen without an explicit logout (for example after an
+    // account switch). Never let the previous account's persisted reads leak
+    // into the new session.
+    if (user?.id && user.id !== sessionUser.id) {
+      await clearPersistedQueryCache();
+    }
+
+    await Promise.all([
+      AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionUser)),
+      setAccessToken(token),
+      setRefreshToken(refreshToken),
+    ]);
+
+    setUser(sessionUser);
+    await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
+  };
+
+  const login = async (req: LoginRequest) => {
+    const auth = await authApi.login(req);
+    await setSession(auth.user, auth.token, auth.refreshToken);
+  };
+
+  const register = async (req: RegisterRequest) => {
+    const auth = await authApi.register(req);
+    await setSession(auth.user, auth.token, auth.refreshToken);
+  };
+
+  const loginWithGoogle = async (idToken: string) => {
+    const auth = await authApi.googleLogin(idToken);
+    await setSession(auth.user, auth.token, auth.refreshToken);
+  };
+
+  const loginWithFacebook = async (accessToken: string) => {
+    const auth = await authApi.facebookLogin(accessToken);
+    await setSession(auth.user, auth.token, auth.refreshToken);
+  };
+
+  const logout = async () => {
+    let refreshToken: string | null = null;
+    let accessToken: string | null = null;
+    try {
+      [refreshToken, accessToken] = await Promise.all([getRefreshToken(), getAccessToken()]);
+    } catch {
+      // A damaged or unavailable secure-store entry must not trap the user in
+      // an authenticated screen.
+    }
+
+    // Signing out is a local action first. Update auth state and navigation
+    // immediately instead of making the user wait for the revoke endpoint.
+    setUser(null);
+    queryClient.clear();
+    router.replace('/login');
+
+    await Promise.allSettled([
+      AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
+      clearAuthTokens(),
+      clearPersistedQueryCache(),
+    ]);
+
+    if (refreshToken) {
+      void authApi.logout({ refreshToken, accessToken: accessToken ?? undefined }).catch(() => {
+        // The local session is already gone. Server-side revoke is best effort
+        // so offline users can always sign out.
+      });
+    }
+  };
+
+  const updateAuthenticatedUser = async (nextUser: User) => {
+    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser));
+    setUser(nextUser);
+    queryClient.setQueryData(CURRENT_USER_KEYS.all, nextUser);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        login,
+        register,
+        loginWithGoogle,
+        loginWithFacebook,
+        updateAuthenticatedUser,
+        logout,
+      }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+};

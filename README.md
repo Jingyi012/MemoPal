@@ -1,50 +1,62 @@
-# Welcome to your Expo app 👋
+# MemoPal
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+MemoPal is a playful memory-training application built around two techniques:
+Memory Palace and Number Peg. This repository is the single source of truth for
+the mobile app, administration portal, API, deployment configuration, product
+documentation, and contributor guidance.
 
-## Get started
+## Repository layout
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+apps/
+  mobile/       Expo / React Native application
+  admin/        React administration portal
+  api/          ASP.NET Core API and tests
+.github/
+  skills/       Reusable technology/workflow skills
+  workflows/    CI and deployment automation
+AGENTS.md       Repository-wide coding-agent instructions
+deploy/         Shared Docker Compose and nginx configuration
+docs/           Product and architecture documentation
+palaceData/     Palace authoring source imagery (Git LFS)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Development
 
-## Learn more
+Install JavaScript dependencies once from the repository root:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm install
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Common commands:
 
-## Join the community
+```bash
+npm run dev:mobile
+npm run android
+npm run check:mobile
+npm run dev:admin
+npm run check:admin
+dotnet test MemoPal.slnx
+```
 
-Join our community of developers creating universal apps.
+`npm run android` builds and installs the Android development client locally
+with Expo and the local Android SDK. It does not use EAS or a cloud build. The
+local build uses the debug signing certificate, so register that SHA-1 with
+Google OAuth when testing native Google Sign-In locally. EAS development and
+preview builds remain available separately through the profiles in
+`apps/mobile/eas.json`.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Copy each checked-in `.env.example` to its local `.env` file as needed. Real
+credentials, runtime uploads, build output, and local databases must never be
+committed.
+
+Coding-agent conventions are centralized under
+[`docs/agent-instructions/`](docs/agent-instructions/README.md). Start with
+[`AGENTS.md`](AGENTS.md), then read the relevant document before editing
+mobile, admin, or API code. The instruction index is available at
+[`docs/agent-instructions/README.md`](docs/agent-instructions/README.md).
+
+The API applies pending EF Core migrations at startup by default. Set
+`Database__ApplyMigrationsOnStartup=false` when migrations are owned by a
+deployment job instead.

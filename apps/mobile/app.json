@@ -1,0 +1,75 @@
+{
+  "expo": {
+    "name": "MemoPal",
+    "slug": "MemoPal",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "memopal",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.memopal.app"
+    },
+    "android": {
+      "package": "com.memopal.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#2B2641",
+        "foregroundImage": "./assets/images/icon-foreground.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "resize",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "./plugins/withAndroidMonorepoEntry",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash.png",
+          "imageWidth": 260,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFDF8",
+          "dark": {
+            "backgroundColor": "#1E1A30"
+          }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#ffffff",
+          "defaultChannel": "default",
+          "sounds": [],
+          "enableBackgroundRemoteNotifications": false
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.458572178451-q0toa23kaimdebtrhihst5hroo9eqnab"
+        }
+      ],
+      "expo-secure-store",
+      "expo-audio"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "83cd8118-ee76-4f01-a596-5415bd8dde7b"
+      }
+    }
+  }
+}
