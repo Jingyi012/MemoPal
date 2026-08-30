@@ -17,11 +17,11 @@
   },
   "overrides": {
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.2.8"
   },
   "engines": {
     "node": ">=22"
