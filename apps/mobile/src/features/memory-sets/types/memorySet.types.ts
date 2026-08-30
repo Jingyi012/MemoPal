@@ -91,7 +91,7 @@ export type PegBindingInput = {
 };
 
 export type PegSceneRecipe = {
-  schemaVersion: 2;
+  schemaVersion: 1;
   associationSource: 'suggested' | 'customized' | 'user-written';
   caption: string;
   actionPreset: 'crash' | 'bounce' | 'wrap' | 'explode' | 'melt' | 'chase' | 'swallow' | 'stretch' | 'spin' | 'launch';

@@ -198,7 +198,7 @@ internal static class MemorySetAggregate
     private static void ValidateSceneRecipe(PegSceneRecipeDto? recipe, int pegNumber)
     {
         if (recipe is null) return;
-        if (recipe.SchemaVersion != 2)
+        if (recipe.SchemaVersion != 1)
             throw new ValidationAppException($"Peg {pegNumber} has an unsupported scene recipe version.");
         if (string.IsNullOrWhiteSpace(recipe.Caption) || recipe.Caption.Trim().Length > 1000)
             throw new ValidationAppException($"Peg {pegNumber} needs a readable scene caption.");

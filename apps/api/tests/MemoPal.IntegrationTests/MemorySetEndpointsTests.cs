@@ -44,7 +44,7 @@ public sealed class MemorySetEndpointsTests : IClassFixture<CustomWebApplication
             },
             techniquePlan = new
             {
-                schemaVersion = 2,
+                schemaVersion = 1,
                 palaceBindings = Array.Empty<object>(),
                 pegBindings = new[]
                 {
@@ -56,7 +56,7 @@ public sealed class MemorySetEndpointsTests : IClassFixture<CustomWebApplication
                         isCustomScene = false,
                         sceneRecipe = new
                         {
-                            schemaVersion = 2,
+                            schemaVersion = 1,
                             associationSource = "suggested",
                             caption = "A candle launches apples into the sky.",
                             actionPreset = "launch",
@@ -85,6 +85,7 @@ public sealed class MemorySetEndpointsTests : IClassFixture<CustomWebApplication
         var memorySetId = created.GetProperty("id").GetString();
         var createdRecipe = created.GetProperty("techniquePlan").GetProperty("pegBindings")[0]
             .GetProperty("sceneRecipe");
+        createdRecipe.GetProperty("schemaVersion").GetInt32().Should().Be(1);
         createdRecipe.GetProperty("actionPreset").GetString().Should().Be("launch");
         createdRecipe.GetProperty("anchorSnapshot").GetProperty("keyword").GetString()
             .Should().Be("Candle");

@@ -53,7 +53,7 @@ export function buildSceneCandidates(
       emoji,
       sceneText,
       recipe: {
-        schemaVersion: 2,
+        schemaVersion: 1,
         associationSource: 'suggested',
         caption: sceneText,
         actionPreset,

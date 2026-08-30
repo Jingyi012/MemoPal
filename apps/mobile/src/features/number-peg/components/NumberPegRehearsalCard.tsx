@@ -154,7 +154,7 @@ export function NumberPegRehearsalCard({
 
 function fallbackRecipe(item: string, peg: NumberPegItem) {
   return {
-    schemaVersion: 2 as const,
+    schemaVersion: 1 as const,
     associationSource: 'suggested' as const,
     caption: `${peg.keyword} ${item}`,
     actionPreset: 'bounce' as const,

@@ -61,7 +61,7 @@ import { NumberPegMovieStage } from '@/features/number-peg/components/NumberPegM
 
 type SceneDraft = { answer: string; sceneText: string; recipe: PegSceneRecipe };
 type StudioDraft = {
-  schemaVersion: 2;
+  schemaVersion: 1;
   kind: 'number-peg-studio';
   step: 'items' | 'studio';
   title: string;
@@ -225,7 +225,7 @@ export default function NumberPegComposerScreen() {
       void AsyncStorage.setItem(
         draftKey,
         JSON.stringify({
-          schemaVersion: 2,
+          schemaVersion: 1,
           kind: 'number-peg-studio',
           step,
           title,
@@ -497,7 +497,7 @@ export default function NumberPegComposerScreen() {
             answer: value,
           })),
           techniquePlan: {
-            schemaVersion: 2,
+            schemaVersion: 1,
             palaceBindings: [],
             pegBindings: chunk.scenes.map((s, i) => ({
               itemPosition: i + 1,
@@ -749,7 +749,7 @@ function isValidStudioDraft(value: unknown): value is StudioDraft {
   if (!value || typeof value !== 'object') return false;
   const draft = value as Partial<StudioDraft>;
   if (
-    draft.schemaVersion !== 2 ||
+    draft.schemaVersion !== 1 ||
     draft.kind !== 'number-peg-studio' ||
     !Array.isArray(draft.items) ||
     !Array.isArray(draft.scenes)
@@ -792,7 +792,7 @@ function isValidRecipe(recipe: unknown): recipe is PegSceneRecipe {
     snapshot.image.length > 0 &&
     typeof snapshot.description === 'string';
   return (
-    value.schemaVersion === 2 &&
+    value.schemaVersion === 1 &&
     ['suggested', 'customized', 'user-written'].includes(value.associationSource) &&
     typeof value.caption === 'string' &&
     value.caption.length <= 1000 &&
