@@ -17,6 +17,7 @@ public sealed record PegBindingDto(
     string MemoryItemId,
     int PegNumber,
     string SceneText,
+    PegSceneRecipeDto? SceneRecipe,
     bool IsCustomScene,
     string? SceneAssetUrl,
     DateTime CreatedAt,
@@ -99,9 +100,31 @@ public sealed class PegBindingInput
     public int ItemPosition { get; set; }
     public int PegNumber { get; set; }
     public string SceneText { get; set; } = string.Empty;
+    public PegSceneRecipeDto? SceneRecipe { get; set; }
     public bool IsCustomScene { get; set; }
     public string? SceneAssetUrl { get; set; }
 }
+
+public sealed record PegSceneTargetVisualDto(string Kind, string Value);
+
+public sealed record PegSceneAnchorSnapshotDto(
+    int PegNumber,
+    string CatalogueVersion,
+    string Keyword,
+    string Image,
+    string Description);
+
+public sealed record PegSceneRecipeDto(
+    int SchemaVersion,
+    string AssociationSource,
+    string Caption,
+    string ActionPreset,
+    string? VisualEffectPreset,
+    string? SoundPreset,
+    string? HapticPreset,
+    IReadOnlyList<string> SensoryBoosters,
+    PegSceneTargetVisualDto? TargetVisual,
+    PegSceneAnchorSnapshotDto? AnchorSnapshot = null);
 
 public sealed class PalaceBindingInput
 {

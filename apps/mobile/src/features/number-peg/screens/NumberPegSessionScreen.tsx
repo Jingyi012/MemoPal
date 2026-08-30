@@ -10,7 +10,7 @@ import type { MemoryItem, PegBinding } from '@/features/memory-sets';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
-import { buildNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
+import { buildAllNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
 import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import {
@@ -40,6 +40,19 @@ function findBinding(bindings: PegBinding[], memoryItem: MemoryItem) {
   return bindings.find((binding) => binding.memoryItemId === memoryItem.id);
 }
 
+function resolvePeg(pegs: ReturnType<typeof buildAllNumberPegItems>, binding: PegBinding) {
+  const livePeg = pegs[binding.pegNumber - 1];
+  const snapshot = binding.sceneRecipe?.anchorSnapshot;
+  if (!snapshot) return livePeg;
+  return {
+    id: livePeg?.id ?? `peg-${binding.pegNumber}`,
+    number: binding.pegNumber,
+    keyword: snapshot.keyword,
+    image: snapshot.image,
+    description: snapshot.description,
+  };
+}
+
 function countFirstAttemptRecalls(responses: PracticeResponseInput[]) {
   return new Set(
     responses
@@ -62,7 +75,7 @@ export default function NumberPegSessionScreen({
   const router = useRouter();
   const { t } = useTranslation('numberPeg');
   const memorySetQuery = useMemorySet(memorySetId);
-  const pegs = useMemo(() => buildNumberPegItems(), []);
+  const pegs = useMemo(() => buildAllNumberPegItems(), []);
   const [tab, setTab] = useState<SessionTab>(startInRecall ? 'recall' : 'scenes');
   const [sceneIndex, setSceneIndex] = useState(0);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -86,7 +99,7 @@ export default function NumberPegSessionScreen({
   const recallScrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [recallKeyboardInset, setRecallKeyboardInset] = useState(0);
   const practiceAttempt = useCreatePracticeAttempt();
-  const { playSound } = useSoundEffects();
+  const { playSound, feedbackEnabled } = useSoundEffects();
 
   const scrollRecallInputIntoView = useCallback(() => {
     const scrollView = recallScrollRef.current;
@@ -272,11 +285,11 @@ export default function NumberPegSessionScreen({
   const isComplete = questionIndex >= memorySet.items.length;
   const currentItem = isComplete ? null : memorySet.items[questionIndex];
   const currentBinding = currentItem ? findBinding(bindings, currentItem) : null;
-  const currentPeg = currentBinding ? pegs[currentBinding.pegNumber - 1] : null;
+  const currentPeg = currentBinding ? resolvePeg(pegs, currentBinding) : null;
   const localizedCurrentPeg = currentPeg ? localizeNumberPeg(currentPeg, t) : null;
   const sceneItem = memorySet.items[sceneIndex] ?? memorySet.items[0];
   const sceneBinding = sceneItem ? findBinding(bindings, sceneItem) : null;
-  const scenePeg = sceneBinding ? pegs[sceneBinding.pegNumber - 1] : pegs[sceneIndex];
+  const scenePeg = sceneBinding ? resolvePeg(pegs, sceneBinding) : pegs[sceneIndex];
 
   const checkOrContinue = () => {
     if (!currentItem) return;
@@ -330,9 +343,9 @@ export default function NumberPegSessionScreen({
     ));
     setFeedback(isCorrect ? 'correct' : 'wrong');
     playSound(isCorrect ? 'correct' : 'wrong');
-    if (isCorrect) {
+    if (isCorrect && feedbackEnabled) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
+    } else if (feedbackEnabled) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     }
   };

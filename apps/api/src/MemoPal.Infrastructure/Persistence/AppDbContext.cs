@@ -276,6 +276,7 @@ public class AppDbContext : DbContext, IAppDbContext
         {
             b.HasKey(x => x.Id);
             b.Property(x => x.SceneText).HasMaxLength(1000);
+            b.Property(x => x.SceneRecipeJson).HasMaxLength(8000);
             b.Property(x => x.SceneAssetUrl).HasMaxLength(2048);
             b.HasIndex(x => new { x.TechniquePlanId, x.PegNumber })
                 .IsUnique()

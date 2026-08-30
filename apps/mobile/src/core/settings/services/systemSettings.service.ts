@@ -61,7 +61,7 @@ export async function initializeSystemSettings(): Promise<void> {
 function applyNumberPegSetting(settings: SystemSettingDto[]): void {
   const pegSetting = settings.find((setting) => setting.key === 'number-peg.definitions');
   const payload = settingPayload<unknown>(pegSetting);
-  if (payload) applyNumberPegDefinitions(payload);
+  if (payload) applyNumberPegDefinitions(payload, pegSetting?.updatedAt);
 }
 
 export async function refreshSettingsGroup(_pattern: string): Promise<void> {
@@ -112,7 +112,7 @@ export async function getPrivacyPolicyConfig(): Promise<Partial<PrivacyPolicyCon
 export async function getNumberPegDefinitions(): Promise<void> {
   const setting = await systemSettingsApi.getNumberPegDefinitions();
   const payload = settingPayload<unknown>(setting);
-  if (payload) applyNumberPegDefinitions(payload);
+  if (payload) applyNumberPegDefinitions(payload, setting?.updatedAt);
 }
 
 function getSilentFallbackLimits(isPremium = false) {

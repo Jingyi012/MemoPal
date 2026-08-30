@@ -167,6 +167,7 @@ export function createLocalPreviewMemorySet(request: MemorySetUpsertRequest): Me
           memoryItemId: items[binding.itemPosition - 1]?.id ?? '',
           pegNumber: binding.pegNumber,
           sceneText: binding.sceneText,
+          sceneRecipe: binding.sceneRecipe ?? null,
           isCustomScene: binding.isCustomScene,
           sceneAssetUrl: binding.sceneAssetUrl ?? null,
         })),

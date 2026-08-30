@@ -147,6 +147,12 @@ Recommendation v1:
 
 ## 5. Number Peg module design
 
+The detailed future composer, scene-recipe, interaction, and staged
+implementation specification is maintained in
+[`number-peg-memory-movie-plan.md`](number-peg-memory-movie-plan.md). It records
+the decision that every item binds independently to its peg; an optional
+ordered recap must not turn pegs 1–10 into one recall-dependent story.
+
 ### Product decision
 
 Call the method **Number Peg** in navigation and explain it as a **number-shape system** during onboarding. Ship one canonical 1–10 catalogue. The current code and HTML disagree on anchor names, whether zero is included, and unlock behavior; those inconsistencies must be resolved before producing final art or educational copy.

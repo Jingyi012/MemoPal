@@ -11,12 +11,14 @@ const PressableBase = cssInterop(Pressable, {
 interface AnimatedPressableProps extends PressableProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  containerStyle?: StyleProp<ViewStyle>;
   className?: string;
 }
 
 const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   children,
   style,
+  containerStyle,
   onPress,
   className,
   accessibilityRole = 'button',
@@ -31,7 +33,7 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   const classNameProps = className ? { className } : {};
 
   return (
-    <Animated.View style={animatedStyle}>
+    <Animated.View style={[containerStyle, animatedStyle]}>
       <PressableBase
         {...rest}
         {...classNameProps}

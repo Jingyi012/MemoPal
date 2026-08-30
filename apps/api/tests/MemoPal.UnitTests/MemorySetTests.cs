@@ -163,6 +163,89 @@ public sealed class MemorySetTests
     }
 
     [Fact]
+    public async Task NumberPeg_Should_Persist_Versioned_Scene_Recipe_And_Fallback_Text()
+    {
+        const string userId = "user-recipe";
+        await using var db = CreateDbContext(userId);
+        db.Users.Add(CreateUser(userId));
+        await db.SaveChangesAsync();
+        var request = BuildNumberPegRequest();
+        request.TechniquePlan!.PegBindings[0].SceneRecipe = new PegSceneRecipeDto(
+            2, "suggested", "The candle launches apples", "launch", "launch", "complete", "impact", ["giant"],
+            new PegSceneTargetVisualDto("word", "apples"),
+            new PegSceneAnchorSnapshotDto(1, "catalogue-v1", "Candle", "🕯️", "A candle looks like one."));
+
+        var result = await new CreateMemorySetCommandHandler(db).Handle(new CreateMemorySetCommand(userId, request), default);
+
+        Assert.True(result.Success);
+        var binding = result.Data!.TechniquePlan!.PegBindings.Single(x => x.PegNumber == 1);
+        Assert.Equal(request.TechniquePlan.PegBindings[0].SceneText, binding.SceneText);
+        Assert.Equal(2, binding.SceneRecipe!.SchemaVersion);
+        Assert.Equal("launch", binding.SceneRecipe.ActionPreset);
+        Assert.Equal("apples", binding.SceneRecipe.TargetVisual!.Value);
+        Assert.Equal("catalogue-v1", binding.SceneRecipe.AnchorSnapshot!.CatalogueVersion);
+    }
+
+    [Fact]
+    public async Task NumberPeg_Should_Reject_Multiple_Sensory_Boosters()
+    {
+        await using var db = CreateDbContext("user-recipe-invalid");
+        var request = BuildNumberPegRequest();
+        request.TechniquePlan!.PegBindings[0].SceneRecipe = new PegSceneRecipeDto(
+            2, "suggested", "A scene", "launch", null, null, null, ["loud", "giant"], null);
+
+        var exception = await Assert.ThrowsAsync<ValidationAppException>(() =>
+            new CreateMemorySetCommandHandler(db).Handle(new CreateMemorySetCommand("user-recipe-invalid", request), default));
+
+        Assert.Contains("at most one", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task NumberPeg_Should_Reject_Unknown_Recipe_Preset()
+    {
+        await using var db = CreateDbContext("user-recipe-preset");
+        var request = BuildNumberPegRequest();
+        request.TechniquePlan!.PegBindings[0].SceneRecipe = new PegSceneRecipeDto(
+            2, "suggested", "A scene", "launch", "not-a-real-effect", null, null, [], null);
+
+        var exception = await Assert.ThrowsAsync<ValidationAppException>(() =>
+            new CreateMemorySetCommandHandler(db).Handle(new CreateMemorySetCommand("user-recipe-preset", request), default));
+
+        Assert.Contains("visual effect", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task NumberPeg_Should_Reject_Oversized_Recipe_Caption_Before_Persistence()
+    {
+        await using var db = CreateDbContext("user-recipe-size");
+        var request = BuildNumberPegRequest();
+        request.TechniquePlan!.PegBindings[0].SceneRecipe = new PegSceneRecipeDto(
+            2, "suggested", new string('x', 1001), "launch", null, null, null, [], null);
+
+        var exception = await Assert.ThrowsAsync<ValidationAppException>(() =>
+            new CreateMemorySetCommandHandler(db).Handle(new CreateMemorySetCommand("user-recipe-size", request), default));
+
+        Assert.Contains("caption", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task NumberPeg_Should_Reject_Anchor_Snapshot_For_Another_Peg()
+    {
+        await using var db = CreateDbContext("user-recipe-anchor");
+        var request = BuildNumberPegRequest();
+        request.TechniquePlan!.PegBindings[0].SceneRecipe = new PegSceneRecipeDto(
+            2, "suggested", "A scene", "launch", "launch", "complete", "impact", [],
+            new PegSceneTargetVisualDto("word", "apples"),
+            new PegSceneAnchorSnapshotDto(2, "catalogue-v1", "Swan", "🦢", "A swan looks like two."));
+
+        var exception = await Assert.ThrowsAsync<ValidationAppException>(() =>
+            new CreateMemorySetCommandHandler(db).Handle(
+                new CreateMemorySetCommand("user-recipe-anchor", request), default));
+
+        Assert.Contains("anchor snapshot", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task LibraryActions_Should_Archive_Restore_And_Duplicate_With_Audit_Metadata()
     {
         const string userId = "user-library";

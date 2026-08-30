@@ -21,6 +21,7 @@ export type PegBinding = {
   memoryItemId: string;
   pegNumber: number;
   sceneText: string;
+  sceneRecipe?: PegSceneRecipe | null;
   isCustomScene: boolean;
   sceneAssetUrl?: string | null;
   createdAt?: string;
@@ -84,8 +85,28 @@ export type PegBindingInput = {
   itemPosition: number;
   pegNumber: number;
   sceneText: string;
+  sceneRecipe?: PegSceneRecipe | null;
   isCustomScene: boolean;
   sceneAssetUrl?: string | null;
+};
+
+export type PegSceneRecipe = {
+  schemaVersion: 2;
+  associationSource: 'suggested' | 'customized' | 'user-written';
+  caption: string;
+  actionPreset: 'crash' | 'bounce' | 'wrap' | 'explode' | 'melt' | 'chase' | 'swallow' | 'stretch' | 'spin' | 'launch';
+  visualEffectPreset?: string | null;
+  soundPreset?: 'complete' | 'correct' | 'wrong' | null;
+  hapticPreset?: 'impact' | 'success' | null;
+  sensoryBoosters: string[];
+  targetVisual?: { kind: 'emoji' | 'sticker' | 'word'; value: string } | null;
+  anchorSnapshot?: {
+    pegNumber: number;
+    catalogueVersion: string;
+    keyword: string;
+    image: string;
+    description: string;
+  } | null;
 };
 
 export type PalaceBindingInput = {

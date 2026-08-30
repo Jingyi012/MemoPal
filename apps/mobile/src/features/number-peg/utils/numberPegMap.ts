@@ -2,6 +2,8 @@ import type { NumberPegItem, PegNumber } from '@/features/number-peg/types/numbe
 
 const PEG_NUMBERS = Array.from({ length: 100 }, (_, index) => index + 1) as PegNumber[];
 export const MAX_NUMBER_PEGS = 100;
+const BUILT_IN_CATALOGUE_VERSION = 'builtin-number-shape-v1';
+let activeCatalogueVersion = BUILT_IN_CATALOGUE_VERSION;
 
 export function getUnlockedPegCount(level: number): number {
   return Math.min(MAX_NUMBER_PEGS, Math.max(1, Math.floor(level)) * 10);
@@ -54,11 +56,13 @@ const EXTENDED_PEG_DEFINITIONS: readonly (readonly [string, string])[] = [
 /** Mutable runtime overrides loaded from the admin-managed system setting. */
 export const numberPegMap = starterPegMap as Record<number, Omit<NumberPegItem, 'id' | 'number'>>;
 
-export function applyNumberPegDefinitions(value: unknown): void {
+export function applyNumberPegDefinitions(value: unknown, catalogueVersion?: string): void {
   const source = value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>).pegs
     : value;
   if (!Array.isArray(source)) return;
+
+  activeCatalogueVersion = catalogueVersion?.trim() || BUILT_IN_CATALOGUE_VERSION;
 
   for (const item of source) {
     if (!item || typeof item !== 'object') continue;
@@ -70,6 +74,10 @@ export function applyNumberPegDefinitions(value: unknown): void {
     if (!Number.isInteger(number) || number < 1 || number > MAX_NUMBER_PEGS || !keyword || !image || !description) continue;
     numberPegMap[number] = { keyword, image, description };
   }
+}
+
+export function getNumberPegCatalogueVersion(): string {
+  return activeCatalogueVersion;
 }
 
 export function getNumberPegDefinition(number: PegNumber): Omit<NumberPegItem, 'id' | 'number'> {

@@ -39,5 +39,5 @@ export function useSoundEffects() {
     });
   }, [enabled]);
 
-  return { playSound: play };
+  return { playSound: play, feedbackEnabled: enabled };
 }

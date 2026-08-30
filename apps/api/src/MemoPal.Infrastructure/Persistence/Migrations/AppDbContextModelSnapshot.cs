@@ -578,6 +578,10 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)");
 
+                    b.Property<string>("SceneRecipeJson")
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)");
+
                     b.Property<string>("SceneText")
                         .IsRequired()
                         .HasMaxLength(1000)

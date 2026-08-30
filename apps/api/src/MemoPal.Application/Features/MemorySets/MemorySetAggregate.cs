@@ -1,6 +1,7 @@
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Features.MemorySets.DTOs;
 using MemoPal.Domain.Entities;
+using System.Text.Json;
 
 namespace MemoPal.Application.Features.MemorySets;
 
@@ -127,6 +128,8 @@ internal static class MemorySetAggregate
             {
                 throw new ValidationAppException($"Peg {binding.PegNumber} needs a vivid scene.");
             }
+
+            ValidateSceneRecipe(binding.SceneRecipe, binding.PegNumber);
         }
 
         if (!isDraft && bindings.Count != itemPositions.Count)
@@ -192,6 +195,41 @@ internal static class MemorySetAggregate
         return entity;
     }
 
+    private static void ValidateSceneRecipe(PegSceneRecipeDto? recipe, int pegNumber)
+    {
+        if (recipe is null) return;
+        if (recipe.SchemaVersion != 2)
+            throw new ValidationAppException($"Peg {pegNumber} has an unsupported scene recipe version.");
+        if (string.IsNullOrWhiteSpace(recipe.Caption) || recipe.Caption.Trim().Length > 1000)
+            throw new ValidationAppException($"Peg {pegNumber} needs a readable scene caption.");
+        if (!new[] { "suggested", "customized", "user-written" }.Contains(recipe.AssociationSource, StringComparer.Ordinal))
+            throw new ValidationAppException($"Peg {pegNumber} has an unsupported scene source.");
+        var actions = new[] { "crash", "bounce", "wrap", "explode", "melt", "chase", "swallow", "stretch", "spin", "launch" };
+        if (!actions.Contains(recipe.ActionPreset, StringComparer.Ordinal))
+            throw new ValidationAppException($"Peg {pegNumber} has an unsupported scene action.");
+        if (recipe.VisualEffectPreset is not null && !actions.Contains(recipe.VisualEffectPreset, StringComparer.Ordinal))
+            throw new ValidationAppException($"Peg {pegNumber} has an unsupported visual effect.");
+        if (recipe.SoundPreset is not null && !new[] { "complete", "correct", "wrong" }.Contains(recipe.SoundPreset, StringComparer.Ordinal))
+            throw new ValidationAppException($"Peg {pegNumber} has an unsupported sound preset.");
+        if (recipe.HapticPreset is not null && !new[] { "impact", "success" }.Contains(recipe.HapticPreset, StringComparer.Ordinal))
+            throw new ValidationAppException($"Peg {pegNumber} has an unsupported haptic preset.");
+        if (recipe.SensoryBoosters is null || recipe.SensoryBoosters.Count > 1)
+            throw new ValidationAppException($"Peg {pegNumber} can have at most one sensory booster.");
+        if (recipe.SensoryBoosters.Any(string.IsNullOrWhiteSpace) || recipe.SensoryBoosters.Any(x => x.Length > 32))
+            throw new ValidationAppException($"Peg {pegNumber} has an invalid sensory booster.");
+        if (recipe.TargetVisual is not null && (!new[] { "emoji", "sticker", "word" }.Contains(recipe.TargetVisual.Kind, StringComparer.Ordinal) || string.IsNullOrWhiteSpace(recipe.TargetVisual.Value) || recipe.TargetVisual.Value.Length > 500))
+            throw new ValidationAppException($"Peg {pegNumber} has an invalid target visual.");
+        if (recipe.AnchorSnapshot is not null &&
+            (recipe.AnchorSnapshot.PegNumber != pegNumber ||
+             string.IsNullOrWhiteSpace(recipe.AnchorSnapshot.CatalogueVersion) || recipe.AnchorSnapshot.CatalogueVersion.Length > 100 ||
+             string.IsNullOrWhiteSpace(recipe.AnchorSnapshot.Keyword) || recipe.AnchorSnapshot.Keyword.Length > 200 ||
+             string.IsNullOrWhiteSpace(recipe.AnchorSnapshot.Image) || recipe.AnchorSnapshot.Image.Length > 2048 ||
+             string.IsNullOrWhiteSpace(recipe.AnchorSnapshot.Description) || recipe.AnchorSnapshot.Description.Length > 500))
+            throw new ValidationAppException($"Peg {pegNumber} has an invalid anchor snapshot.");
+        if (JsonSerializer.Serialize(recipe).Length > 8000)
+            throw new ValidationAppException($"Peg {pegNumber} scene recipe is too large.");
+    }
+
     public static MemorySetUpsertRequest CreateDuplicateRequest(MemorySet source)
     {
         const string copySuffix = " (copy)";
@@ -234,6 +272,7 @@ internal static class MemorySetAggregate
                             ItemPosition = itemPositions[x.MemoryItemId],
                             PegNumber = x.PegNumber,
                             SceneText = x.SceneText,
+                            SceneRecipe = DeserializeRecipe(x.SceneRecipeJson),
                             IsCustomScene = x.IsCustomScene,
                             SceneAssetUrl = x.SceneAssetUrl
                         }).ToList(),
@@ -308,6 +347,7 @@ internal static class MemorySetAggregate
                         x.MemoryItemId,
                         x.PegNumber,
                         x.SceneText,
+                        DeserializeRecipe(x.SceneRecipeJson),
                         x.IsCustomScene,
                         x.SceneAssetUrl,
                         x.CreatedAt,
@@ -586,8 +626,16 @@ internal static class MemorySetAggregate
     {
         binding.PegNumber = input.PegNumber;
         binding.SceneText = input.SceneText.Trim();
+        binding.SceneRecipeJson = input.SceneRecipe is null ? null : JsonSerializer.Serialize(input.SceneRecipe);
         binding.IsCustomScene = input.IsCustomScene;
         binding.SceneAssetUrl = string.IsNullOrWhiteSpace(input.SceneAssetUrl) ? null : input.SceneAssetUrl.Trim();
+    }
+
+    private static PegSceneRecipeDto? DeserializeRecipe(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        try { return JsonSerializer.Deserialize<PegSceneRecipeDto>(value); }
+        catch (JsonException) { return null; }
     }
 
     private static PalaceBinding CreatePalaceBinding(string planId, string itemId, PalaceBindingInput input)
