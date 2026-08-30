@@ -1,8 +1,6 @@
-import * as badgeService from '@/features/gamification/shared/services/badge.service';
 import * as levelConfigService from '@/features/gamification/shared/services/levelConfig.service';
 import * as milestoneService from '@/features/gamification/shared/services/milestone.service';
 import * as systemSettingsService from '@/core/settings/services/systemSettings.service';
-import * as xpConfigService from '@/features/gamification/shared/services/xpConfig.service';
 import { useEffect } from 'react';
 
 /**
@@ -16,11 +14,8 @@ export function useGamificationBootstrap(enabled: boolean) {
     const bootstrap = async () => {
       await Promise.allSettled([
         systemSettingsService.initializeSystemSettings(),
-        xpConfigService.getXpConfigs(),
         levelConfigService.getLevelConfigs(),
-        badgeService.getAllBadges(),
         milestoneService.getMilestones({}),
-        systemSettingsService.getGamificationUiConfig(),
       ]);
     };
 

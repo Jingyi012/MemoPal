@@ -27,9 +27,7 @@ export const adminMenuItems: AdminMenuItem[] = [
       { path: adminPaths.configLimits, name: 'Feature Limits' },
       { path: adminPaths.configXp, name: 'XP Configs' },
       { path: adminPaths.configLevels, name: 'Level Configs' },
-      { path: adminPaths.configBadges, name: 'Badge Definitions' },
       { path: adminPaths.configMilestones, name: 'Milestone Definitions' },
-      { path: adminPaths.configMissions, name: 'Mission Templates' },
     ],
   },
   {

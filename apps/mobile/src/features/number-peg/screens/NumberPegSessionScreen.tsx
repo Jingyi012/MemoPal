@@ -38,9 +38,11 @@ function findBinding(bindings: PegBinding[], memoryItem: MemoryItem) {
   return bindings.find((binding) => binding.memoryItemId === memoryItem.id);
 }
 
-function countCorrectResponses(responses: PracticeResponseInput[]) {
+function countFirstAttemptRecalls(responses: PracticeResponseInput[]) {
   return new Set(
-    responses.filter((response) => response.isCorrect).map((response) => response.memoryItemId),
+    responses
+      .filter((response) => response.isCorrect && response.attemptCount === 1)
+      .map((response) => response.memoryItemId),
   ).size;
 }
 
@@ -69,10 +71,11 @@ export default function NumberPegSessionScreen({
   const [startedAtMs, setStartedAtMs] = useState(() => Date.now());
   const [questionStartedAtMs, setQuestionStartedAtMs] = useState(() => Date.now());
   const [responses, setResponses] = useState<PracticeResponseInput[]>([]);
-  const score = countCorrectResponses(responses);
+  const recalledFirstTry = countFirstAttemptRecalls(responses);
   const checkingAnswerRef = useRef(false);
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
   const [hasRestoredSession, setHasRestoredSession] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
   const hydratedSessionRef = useRef<string | null>(null);
   const sessionReadyRef = useRef(false);
   const practiceAttempt = useCreatePracticeAttempt();
@@ -160,7 +163,7 @@ export default function NumberPegSessionScreen({
       memorySetVersion: memorySet.version,
       tab,
       questionIndex,
-      score,
+      score: recalledFirstTry,
       clientAttemptId,
       startedAt,
       startedAtMs,
@@ -168,10 +171,11 @@ export default function NumberPegSessionScreen({
       responses,
       savedAt: new Date().toISOString(),
     });
-  }, [clientAttemptId, memorySetQuery.data, questionIndex, questionStartedAtMs, responses, score, startedAt, startedAtMs, tab]);
+  }, [clientAttemptId, memorySetQuery.data, questionIndex, questionStartedAtMs, recalledFirstTry, responses, startedAt, startedAtMs, tab]);
 
   const restartRecall = () => {
     checkingAnswerRef.current = false;
+    setIsFinishing(false);
     setQuestionIndex(0);
     setAnswer('');
     setFeedback(null);
@@ -222,6 +226,7 @@ export default function NumberPegSessionScreen({
 
   const checkOrContinue = () => {
     if (!currentItem) return;
+    if (isFinishing) return;
     if (feedback) {
       if (feedback === 'wrong') {
         checkingAnswerRef.current = false;
@@ -240,7 +245,16 @@ export default function NumberPegSessionScreen({
           responses,
         };
         setLastPayload(payload);
-        practiceAttempt.mutate(payload);
+        setIsFinishing(true);
+        void practiceAttempt.mutateAsync(payload).catch(() => undefined).finally(() => {
+          setIsFinishing(false);
+          checkingAnswerRef.current = false;
+          setQuestionIndex((current) => current + 1);
+          setAnswer('');
+          setFeedback(null);
+          setQuestionStartedAtMs(Date.now());
+        });
+        return;
       }
       checkingAnswerRef.current = false;
       setQuestionIndex((current) => current + 1);
@@ -344,9 +358,15 @@ export default function NumberPegSessionScreen({
             <RecallResultCard
               tone="peg"
               title={t('roundComplete')}
-              score={score}
+              recalledFirstTry={recalledFirstTry}
               total={memorySet.items.length}
-              body={score === memorySet.items.length
+              recalledLabel={t('recalledFirstTry')}
+              needsPracticeLabel={t('needsPractice')}
+              xpEarned={practiceAttempt.data?.xpEarned}
+              levelUpTo={practiceAttempt.data && practiceAttempt.data.currentLevel > practiceAttempt.data.previousLevel
+                ? practiceAttempt.data.currentLevel
+                : undefined}
+              body={recalledFirstTry === memorySet.items.length
                 ? t('perfect')
                 : t('niceWork')}
               saveStatus={
@@ -406,8 +426,9 @@ export default function NumberPegSessionScreen({
                   : isSpelling
                     ? `${t('checkSpelling')} ${getSpellingHint(currentItem?.answer ?? '', answer)}`
                     : `${t('itWas')} ${currentItem?.answer}. ${t('pictureOnceMore')}`}
-                actionLabel={feedback === 'wrong' ? t('retryPeg') : feedback ? t('next') : t('checkAnswer')}
-                scoreLabel={`${t('scoreSoFar')}: ${score} / ${memorySet.items.length}`}
+                actionLabel={isFinishing ? t('savingProgress') : feedback === 'wrong' ? t('retryPeg') : feedback ? t('next') : t('checkAnswer')}
+                actionDisabled={isFinishing}
+                progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${memorySet.items.length}`}
                 answerAccessibilityLabel={t('typeYourAnswer')}
                 answerPlaceholder={t('typeYourAnswerPlaceholder')}
                 onAnswerChange={setAnswer}

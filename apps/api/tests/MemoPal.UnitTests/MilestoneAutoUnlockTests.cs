@@ -56,6 +56,35 @@ public sealed class MilestoneAutoUnlockTests
         Assert.NotNull(persisted.AchievedAt);
     }
 
+    [Fact]
+    public async Task GetMilestones_Should_Use_ServerOwned_Practice_And_Streak_Progress()
+    {
+        await using var db = CreateDbContext();
+        db.Users.Add(CreateUser("user-progress", level: 1, totalXp: 20));
+        db.UserStats.Add(new UserStats
+        {
+            UserId = "user-progress",
+            LessonsCompleted = 5,
+            WordsLearned = 20,
+            CurrentStreak = 3,
+            LongestStreak = 3,
+            LastActiveDate = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        db.MilestoneDefinitions.AddRange(
+            CreateMilestoneDefinition("milestone-sessions", "practice_5", 5, "lessons_completed"),
+            CreateMilestoneDefinition("milestone-words", "words_20", 20, "words_learned"),
+            CreateMilestoneDefinition("milestone-streak", "streak_3", 3, "streak_days"));
+        await db.SaveChangesAsync();
+
+        var response = await new GetMilestonesQueryHandler(db)
+            .Handle(new GetMilestonesQuery("user-progress"), default);
+
+        Assert.All(response.Data!, milestone => Assert.NotNull(milestone.AchievedAt));
+        Assert.Equal(3, await db.UserMilestones.CountAsync());
+    }
+
     private static AppDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -82,15 +111,19 @@ public sealed class MilestoneAutoUnlockTests
         };
     }
 
-    private static MilestoneDefinition CreateMilestoneDefinition(string id, string key, int levelTarget)
+    private static MilestoneDefinition CreateMilestoneDefinition(
+        string id,
+        string key,
+        int target,
+        string conditionType = "level")
     {
         return new MilestoneDefinition
         {
             Id = id,
             Key = key,
-            Title = $"Reach level {levelTarget}",
-            ConditionType = "level",
-            ConditionValue = levelTarget,
+            Title = $"Reach {target}",
+            ConditionType = conditionType,
+            ConditionValue = target,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             IsDeleted = false

@@ -1,5 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import type { DueMemoryReview } from '@/features/practice-attempts';
+import { groupMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { ArrowRight } from 'lucide-react-native';
@@ -14,18 +14,19 @@ type TodayReviewCardProps = {
 
 export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewCardProps) {
   const { t } = useTranslation('home');
+  const groupedReviews = groupMemoryReviews(reviews);
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.headerIcon}><Text style={styles.headerEmoji}>⏰</Text></View>
         <View style={{ flex: 1 }}>
           <Text style={styles.eyebrow}>TODAY’S MEMORY WALK</Text>
-          <Text style={styles.title}>{reviews.length} review{reviews.length === 1 ? '' : 's'} waiting for you</Text>
+          <Text style={styles.title}>{groupedReviews.length} review{groupedReviews.length === 1 ? '' : 's'} waiting for you</Text>
           <Text style={styles.subtitle}>Recall first. Every answer helps the next review find its rhythm.</Text>
         </View>
       </View>
       <View style={styles.reviewList}>
-        {reviews.slice(0, 3).map((review) => {
+        {groupedReviews.slice(0, 3).map(({ review, itemCount }) => {
           const isPeg = review.techniqueKey === 'number-peg';
           return (
             <AnimatedPressable key={review.id} onPress={() => onOpen(review)} style={styles.reviewRow}>
@@ -35,7 +36,7 @@ export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewC
               <View style={styles.reviewCopy}>
                 <Text numberOfLines={1} style={styles.reviewTitle}>{review.memorySetTitle}</Text>
                 <Text numberOfLines={1} style={[styles.reviewMeta, isOverdue(review.dueAt) && styles.overdueText]}>
-                  {isOverdue(review.dueAt) ? t('overdue') : t('dueToday')} · {review.prompt}
+                  {isOverdue(review.dueAt) ? t('overdue') : t('dueToday')} · {itemCount} {itemCount === 1 ? t('itemDue') : t('itemsDue')}
                 </Text>
               </View>
               <ArrowRight size={16} color={theme.inkSoft} />
@@ -47,7 +48,7 @@ export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewC
         <AnimatedPressable
           accessibilityRole="button"
           accessibilityLabel="Start today's memory review"
-          onPress={() => onStartReview(reviews[0])}
+          onPress={() => onStartReview(groupedReviews[0].review)}
           style={styles.startButton}>
           <Text style={styles.startButtonText}>Start review</Text>
           <ArrowRight size={17} color={theme.ink} />

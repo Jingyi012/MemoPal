@@ -1,18 +1,5 @@
 namespace MemoPal.Application.Features.Users.DTOs;
 
-public sealed record ManagedUserBadgeDataDto(
-    string UserBadgeId,
-    string BadgeId,
-    string Key,
-    string Name,
-    string? Description,
-    string? Rarity,
-    DateTime? EarnedAt,
-    bool IsDeleted,
-    DateTime CreatedAt,
-    DateTime UpdatedAt
-);
-
 public sealed record ManagedUserMilestoneDataDto(
     string UserMilestoneId,
     string MilestoneId,

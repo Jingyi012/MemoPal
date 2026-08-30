@@ -17,7 +17,7 @@ export function useLevelConfigs() {
   });
 
   return {
-    configs: query.data ?? [],
+    config: query.data ?? { xpPerLevel: 100 },
     isLoading: query.isLoading,
     isError: query.isError,
     refetch: query.refetch,

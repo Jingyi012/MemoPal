@@ -20,12 +20,8 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<RefreshTokenSession> RefreshTokenSessions => Set<RefreshTokenSession>();
     public DbSet<UserStats> UserStats => Set<UserStats>();
     public DbSet<Notification> Notifications => Set<Notification>();
-    public DbSet<BadgeDefinition> BadgeDefinitions => Set<BadgeDefinition>();
-    public DbSet<UserBadge> UserBadges => Set<UserBadge>();
     public DbSet<MilestoneDefinition> MilestoneDefinitions => Set<MilestoneDefinition>();
     public DbSet<UserMilestone> UserMilestones => Set<UserMilestone>();
-    public DbSet<UserMission> UserMissions => Set<UserMission>();
-    public DbSet<MissionTemplate> MissionTemplates => Set<MissionTemplate>();
     public DbSet<XpEvent> XpEvents => Set<XpEvent>();
     public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
@@ -104,24 +100,6 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasIndex(x => new { x.UserId, x.IsRead, x.IsDismissed });
         });
 
-        modelBuilder.Entity<BadgeDefinition>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.HasIndex(x => x.Key).IsUnique();
-            b.Property(x => x.ConditionType).HasMaxLength(64).HasDefaultValue("manual");
-            b.Property(x => x.ConditionValue).HasDefaultValue(0);
-        });
-
-        modelBuilder.Entity<UserBadge>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.HasIndex(x => new { x.UserId, x.BadgeId }).IsUnique();
-            b.HasOne(x => x.Badge)
-                .WithMany(x => x.UserBadges)
-                .HasForeignKey(x => x.BadgeId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
         modelBuilder.Entity<MilestoneDefinition>(b =>
         {
             b.HasKey(x => x.Id);
@@ -136,34 +114,6 @@ public class AppDbContext : DbContext, IAppDbContext
                 .WithMany(x => x.UserMilestones)
                 .HasForeignKey(x => x.MilestoneId)
                 .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<UserMission>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.HasIndex(x => new { x.UserId, x.MissionKey, x.PeriodToken }).IsUnique();
-            b.HasIndex(x => new { x.UserId, x.CompletedAt });
-            b.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(x => x.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-            b.Property(x => x.MissionKey).HasMaxLength(128);
-            b.Property(x => x.Period).HasMaxLength(32);
-            b.Property(x => x.PeriodToken).HasMaxLength(64);
-        });
-
-        modelBuilder.Entity<MissionTemplate>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.HasIndex(x => x.Key).IsUnique();
-            b.Property(x => x.Key).HasMaxLength(128);
-            b.Property(x => x.Title).HasMaxLength(200);
-            b.Property(x => x.Description).HasMaxLength(500);
-            b.Property(x => x.MetricType).HasMaxLength(64);
-            b.Property(x => x.Period).HasMaxLength(32);
-            b.Property(x => x.SortOrder).HasDefaultValue(0);
-            b.Property(x => x.IsActive).HasDefaultValue(true);
-            b.Property(x => x.Version).HasDefaultValue(1);
         });
 
         modelBuilder.Entity<XpEvent>(b =>

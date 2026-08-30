@@ -1,5 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import type { DueMemoryReview } from '@/features/practice-attempts';
+import { groupMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { ArrowRight, CalendarClock } from 'lucide-react-native';
@@ -14,7 +14,7 @@ export function UpcomingReviewCard({
   onOpen: (review: DueMemoryReview) => void;
 }) {
   const { t } = useTranslation('home');
-  const groupedReviews = groupReviews(reviews);
+  const groupedReviews = groupMemoryReviews(reviews);
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -40,24 +40,6 @@ export function UpcomingReviewCard({
         ))}
       </View>
     </View>
-  );
-}
-
-function groupReviews(reviews: DueMemoryReview[]) {
-  const groups = new Map<string, { review: DueMemoryReview; itemCount: number }>();
-  reviews.forEach((review) => {
-    const current = groups.get(review.memorySetId);
-    if (!current) {
-      groups.set(review.memorySetId, { review, itemCount: 1 });
-      return;
-    }
-    current.itemCount += 1;
-    if (new Date(review.dueAt).getTime() < new Date(current.review.dueAt).getTime()) {
-      current.review = review;
-    }
-  });
-  return Array.from(groups.values()).sort(
-    (left, right) => new Date(left.review.dueAt).getTime() - new Date(right.review.dueAt).getTime(),
   );
 }
 

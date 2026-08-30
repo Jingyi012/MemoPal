@@ -25,9 +25,9 @@ export const DEFAULT_HELP_FAQ_CONFIG: HelpFaqConfig = {
         'Missed reviews can still be completed later, but you may receive reduced XP compared with on-time completion.',
     },
     {
-      question: 'How do I earn badges and XP?',
+      question: 'How do I earn XP and milestones?',
       answer:
-        'Complete learning activities, reviews, missions, and streak goals to accumulate XP and unlock badges.',
+        'Learn a new memory, complete due reviews, and practise consistently. Milestones unlock automatically as your progress grows.',
     },
   ],
   support: {

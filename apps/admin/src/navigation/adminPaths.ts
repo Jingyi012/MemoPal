@@ -11,9 +11,7 @@ export const adminPaths = {
   configLimits: '/admin/configs/limits',
   configXp: '/admin/configs/xp',
   configLevels: '/admin/configs/levels',
-  configBadges: '/admin/configs/badges',
   configMilestones: '/admin/configs/milestones',
-  configMissions: '/admin/configs/missions',
 
   referralsRoot: '/admin/referrals',
   referralConfig: '/admin/referrals/config',

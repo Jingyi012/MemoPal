@@ -31,6 +31,11 @@ export type PracticeAttempt = Auditable & {
   firstAttemptCorrectCount: number;
   totalCount: number;
   nextReviewAt?: string | null;
+  xpEarned: number;
+  xpSourceType?: 'memory_learned' | 'due_review_completed' | 'extra_practice_completed' | null;
+  totalXp: number;
+  previousLevel: number;
+  currentLevel: number;
   responses: PracticeResponse[];
 };
 
@@ -56,6 +61,6 @@ export type PracticeActivityDay = {
 export type PracticeStats = {
   sessionsCompleted: number;
   wordsLearned: number;
-  accuracyPercent: number;
+  firstAttemptRecallPercent: number;
   weeklyActivity: PracticeActivityDay[];
 };

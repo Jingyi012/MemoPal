@@ -24,14 +24,6 @@ export const systemSettingsApi = {
     return response.data.data;
   },
 
-  async getXpConfigs(): Promise<SystemSettingDto | null> {
-    const response = await api.get<GeneralResponse<SystemSettingDto>>(
-      '/system-settings/xp-configs'
-    );
-    if (!response.data.success || !response.data.data) return null;
-    return response.data.data;
-  },
-
   async getLevelConfigs(): Promise<SystemSettingDto | null> {
     const response = await api.get<GeneralResponse<SystemSettingDto>>(
       '/system-settings/level-configs'
@@ -43,14 +35,6 @@ export const systemSettingsApi = {
   async getNumberPegDefinitions(): Promise<SystemSettingDto | null> {
     const response = await api.get<GeneralResponse<SystemSettingDto>>(
       '/system-settings/number-peg-definitions'
-    );
-    if (!response.data.success || !response.data.data) return null;
-    return response.data.data;
-  },
-
-  async getGamificationMobileUiConfig(): Promise<SystemSettingDto | null> {
-    const response = await api.get<GeneralResponse<SystemSettingDto>>(
-      '/system-settings/gamification/mobile-ui-config'
     );
     if (!response.data.success || !response.data.data) return null;
     return response.data.data;

@@ -1,10 +1,10 @@
 import { User } from '@/features/profile/types/users';
+import AnimatedPressable from '@/components/AnimatedPressable';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { typography } from '@/theme/typography';
 import { CommonHeader } from '@/components/CommonHeader';
-import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
 interface HomeHeaderProps {
@@ -33,11 +33,11 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
           <Text style={styles.greetingSubtitle}>{t('ready')}</Text>
         </View>
         <AnimatedPressable
-          accessibilityLabel={t('title')}
+          accessibilityLabel={`${t('levelLabel')} ${level}`}
           onPress={() => router.push('/(tabs)/profile')}
-          style={styles.avatarRing}>
-          <LinearGradient colors={['#FFC93C', '#FF6F91']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatarGradient}>
-            <Text style={styles.avatarLevel}>{level}</Text>
+          style={styles.levelRing}>
+          <LinearGradient colors={['#FFC93C', '#FF6F91']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.levelGradient}>
+            <Text style={styles.levelValue}>{level}</Text>
           </LinearGradient>
         </AnimatedPressable>
       </View>
@@ -57,14 +57,7 @@ const styles = {
   greetingCopy: { flex: 1, paddingRight: 12 },
   greetingTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 18 },
   greetingSubtitle: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 12, marginTop: 2 },
-  avatarRing: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.25)',
-    overflow: 'hidden' as const,
-  },
-  avatarGradient: { flex: 1, width: '100%' as const, alignItems: 'center' as const, justifyContent: 'center' as const },
-  avatarLevel: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 16 },
+  levelRing: { width: 52, height: 52, borderRadius: 26, borderWidth: 3, borderColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' as const },
+  levelGradient: { flex: 1, width: '100%' as const, alignItems: 'center' as const, justifyContent: 'center' as const },
+  levelValue: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 17 },
 };

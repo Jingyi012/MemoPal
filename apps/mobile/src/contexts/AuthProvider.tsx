@@ -48,7 +48,7 @@ const LOCAL_PREVIEW_USER: User = {
   displayName: 'Preview Player',
   email: 'preview@local',
   totalXp: 840,
-  level: 4,
+  level: 9,
   isPremium: false,
 };
 

@@ -46,17 +46,6 @@ public sealed class AdminUsersController : ApiControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{userId}/data/badges")]
-    public async Task<IActionResult> GetUserDataBadges(
-        string userId,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await Sender.Send(new GetManagedUserBadgesQuery(userId, pageNumber, pageSize), cancellationToken);
-        return Ok(result);
-    }
-
     [HttpGet("{userId}/data/milestones")]
     public async Task<IActionResult> GetUserDataMilestones(
         string userId,

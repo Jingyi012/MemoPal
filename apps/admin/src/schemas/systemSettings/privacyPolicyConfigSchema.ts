@@ -51,7 +51,7 @@ export const PRIVACY_POLICY_CONFIG_DEFAULT: PrivacyPolicyConfig = {
   sections: [
     {
       heading: "1. Information We Collect",
-      body: "We collect information you provide directly to us, including your name, email address, and profile photo. We also collect learning progress data, including completed palaces, review history, XP, levels, and badges earned.",
+      body: "We collect information you provide directly to us, including your name, email address, and profile photo. We also collect learning progress data, including completed memories, review history, XP, levels, streaks, and milestones.",
     },
     {
       heading: "2. How We Use Your Information",

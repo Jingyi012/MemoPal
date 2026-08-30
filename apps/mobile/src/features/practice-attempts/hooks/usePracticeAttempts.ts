@@ -12,6 +12,8 @@ import { useUserState } from '@/contexts/UserStateContext';
 import { CURRENT_USER_KEYS } from '@/features/profile/hooks/useCurrentUser';
 import { AUTH_STORAGE_KEY } from '@/features/auth/constants/auth';
 import { resolveNextStreak } from '@/features/gamification/shared/utils/streak';
+import { XP_KEYS } from '@/features/gamification/shared/hooks/useXpEvents';
+import { MILESTONE_KEYS } from '@/features/gamification/shared/hooks/useMilestones';
 
 export const PRACTICE_KEYS = {
   all: ['practice-attempts'] as const,
@@ -29,7 +31,13 @@ export function useCreatePracticeAttempt() {
   return useMutation({
     mutationFn: async (attempt: PracticeAttemptInput) => {
       if (isLocalPreviewEnabled) {
-        const created = createLocalPreviewAttempt(attempt);
+        const previousAttempts = await loadLocalPreviewAttempts();
+        const isFirstForMemory = !previousAttempts.some(
+          (item) => item.memorySetId === attempt.memorySetId && item.mode === 'recall',
+        );
+        const xpEarned = isFirstForMemory ? 20 : 5;
+        const previousTotalXp = previousAttempts.reduce((sum, item) => sum + Math.max(0, item.xpEarned), 0);
+        const created = createLocalPreviewAttempt(attempt, xpEarned, previousTotalXp);
         await saveLocalPreviewAttempt(created);
         await updateLocalPreviewStreak();
         return created;
@@ -47,6 +55,8 @@ export function useCreatePracticeAttempt() {
       void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.history(attempt.memorySetId) });
       void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.stats() });
       void queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
+      void queryClient.invalidateQueries({ queryKey: XP_KEYS.all });
+      void queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.all });
       void InAppNotificationSync.syncAllUpcoming(userState.notifications.reviewReminders);
     },
   });
@@ -89,7 +99,10 @@ export function usePracticeStats() {
 
 function buildPracticeStats(attempts: PracticeAttempt[]): PracticeStats {
   const total = attempts.reduce((sum, attempt) => sum + Math.max(0, attempt.totalCount), 0);
-  const correct = attempts.reduce((sum, attempt) => sum + Math.min(Math.max(0, attempt.correctCount), attempt.totalCount), 0);
+  const recalledFirstTry = attempts.reduce(
+    (sum, attempt) => sum + Math.min(Math.max(0, attempt.firstAttemptCorrectCount), attempt.totalCount),
+    0,
+  );
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const weeklyActivity = Array.from({ length: 7 }, (_, index) => {
@@ -104,7 +117,7 @@ function buildPracticeStats(attempts: PracticeAttempt[]): PracticeStats {
   return {
     sessionsCompleted: attempts.length,
     wordsLearned: new Set(attempts.flatMap((attempt) => attempt.responses.map((response) => response.memoryItemId))).size,
-    accuracyPercent: total ? Math.round((correct / total) * 100) : 0,
+    firstAttemptRecallPercent: total ? Math.round((recalledFirstTry / total) * 100) : 0,
     weeklyActivity,
   };
 }
@@ -143,7 +156,7 @@ export function useUpcomingMemoryReviews(days = 30) {
   });
 }
 
-function createLocalPreviewAttempt(attempt: PracticeAttemptInput): PracticeAttempt {
+function createLocalPreviewAttempt(attempt: PracticeAttemptInput, xpEarned: number, previousTotalXp: number): PracticeAttempt {
   const now = new Date().toISOString();
   const createdBy = 'local-preview-user';
   const correctCount = attempt.responses.filter((response) => response.isCorrect).length;
@@ -152,6 +165,7 @@ function createLocalPreviewAttempt(attempt: PracticeAttemptInput): PracticeAttem
   ).length;
   const techniqueKey = getLocalPreviewMemorySet(attempt.memorySetId)?.techniqueKey ?? 'number-peg';
 
+  const totalXp = previousTotalXp + xpEarned;
   const created: PracticeAttempt = {
     id: `preview-attempt-${Date.now()}`,
     clientAttemptId: attempt.clientAttemptId,
@@ -165,6 +179,11 @@ function createLocalPreviewAttempt(attempt: PracticeAttemptInput): PracticeAttem
     firstAttemptCorrectCount,
     totalCount: attempt.responses.length,
     nextReviewAt: null,
+    xpEarned,
+    xpSourceType: xpEarned === 20 ? 'memory_learned' : 'extra_practice_completed',
+    totalXp,
+    previousLevel: Math.floor(previousTotalXp / 100) + 1,
+    currentLevel: Math.floor(totalXp / 100) + 1,
     responses: attempt.responses.map((response, index) => ({
       ...response,
       id: `preview-response-${Date.now()}-${index}`,

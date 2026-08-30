@@ -10,12 +10,8 @@ public interface IAppDbContext
     DbSet<RefreshTokenSession> RefreshTokenSessions { get; }
     DbSet<UserStats> UserStats { get; }
     DbSet<Notification> Notifications { get; }
-    DbSet<BadgeDefinition> BadgeDefinitions { get; }
-    DbSet<UserBadge> UserBadges { get; }
     DbSet<MilestoneDefinition> MilestoneDefinitions { get; }
     DbSet<UserMilestone> UserMilestones { get; }
-    DbSet<UserMission> UserMissions { get; }
-    DbSet<MissionTemplate> MissionTemplates { get; }
     DbSet<XpEvent> XpEvents { get; }
     DbSet<UserSubscription> UserSubscriptions { get; }
     DbSet<SystemSetting> SystemSettings { get; }

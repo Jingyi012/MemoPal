@@ -1,5 +1,5 @@
 import * as milestoneService from '@/features/gamification/shared/services/milestone.service';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 export const MILESTONE_KEYS = {
   all: ['milestones'] as const,
@@ -24,7 +24,6 @@ export function useMilestones() {
     refetch: query.refetch,
   };
 }
-
 export function useMilestoneDetail(id: string) {
   const query = useQuery({
     queryKey: MILESTONE_KEYS.detail(id),
@@ -38,18 +37,4 @@ export function useMilestoneDetail(id: string) {
     isLoading: query.isLoading,
     isError: query.isError,
   };
-}
-
-export function useMilestoneMutations() {
-  const queryClient = useQueryClient();
-
-  const awardMilestone = useMutation({
-    mutationFn: ({ milestoneId }: { milestoneId: string }) =>
-      milestoneService.awardMilestone(milestoneId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.all });
-    },
-  });
-
-  return { awardMilestone };
 }

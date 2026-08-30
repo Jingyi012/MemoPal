@@ -1,10 +1,10 @@
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Common.Settings;
-using MemoPal.Application.Features.Missions;
 using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
 
 namespace MemoPal.Api.Security;
 
@@ -31,7 +31,8 @@ public sealed class AdminBootstrapper
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        await EnsureMissionTemplatesAsync(cancellationToken);
+        await EnsureGamificationSettingsAsync(cancellationToken);
+        await EnsureStarterMilestonesAsync(cancellationToken);
         if (_options.SeedStarterContent)
         {
             await EnsureStarterPalaceSceneAsync(cancellationToken);
@@ -45,6 +46,88 @@ public sealed class AdminBootstrapper
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task EnsureGamificationSettingsAsync(CancellationToken cancellationToken)
+    {
+        var existingKeys = await _db.SystemSettings
+            .Where(x => !x.IsDeleted &&
+                        (x.Key == SystemSettingKeys.XpConfigs || x.Key == SystemSettingKeys.LevelConfigs))
+            .Select(x => x.Key)
+            .ToListAsync(cancellationToken);
+        var now = DateTime.UtcNow;
+
+        if (!existingKeys.Contains(SystemSettingKeys.XpConfigs, StringComparer.Ordinal))
+        {
+            var defaults = XpAwardConfig.Default;
+            _db.SystemSettings.Add(new SystemSetting
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Key = SystemSettingKeys.XpConfigs,
+                Value = JsonSerializer.Serialize(new
+                {
+                    memoryLearnedXp = defaults.MemoryLearnedXp,
+                    dueReviewXp = defaults.DueReviewXp,
+                    extraPracticeXp = defaults.ExtraPracticeXp,
+                    extraPracticeDailyLimit = defaults.ExtraPracticeDailyLimit,
+                }),
+                Description = "Simple server-owned XP rewards.",
+                CreatedAt = now,
+                UpdatedAt = now,
+                CreatedBy = "system",
+                UpdatedBy = "system"
+            });
+        }
+
+        if (!existingKeys.Contains(SystemSettingKeys.LevelConfigs, StringComparer.Ordinal))
+        {
+            _db.SystemSettings.Add(new SystemSetting
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Key = SystemSettingKeys.LevelConfigs,
+                Value = JsonSerializer.Serialize(new { xpPerLevel = LevelProgressConfig.Default.XpPerLevel }),
+                Description = "XP required for every player level.",
+                CreatedAt = now,
+                UpdatedAt = now,
+                CreatedBy = "system",
+                UpdatedBy = "system"
+            });
+        }
+    }
+
+    private async Task EnsureStarterMilestonesAsync(CancellationToken cancellationToken)
+    {
+        if (await _db.MilestoneDefinitions.AnyAsync(x => !x.IsDeleted, cancellationToken))
+        {
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        var defaults = new[]
+        {
+            ("first_recall", "First recall", "Complete your first recall session.", "lessons_completed", 1),
+            ("practice_5", "Finding a rhythm", "Complete five practice sessions.", "lessons_completed", 5),
+            ("words_20", "Twenty memories stronger", "Practice twenty different memory items.", "words_learned", 20),
+            ("streak_3", "Three-day spark", "Practice on three days in a row.", "streak_days", 3),
+            ("level_5", "Memory explorer", "Reach Level 5.", "level", 5),
+        };
+
+        foreach (var (key, title, description, conditionType, conditionValue) in defaults)
+        {
+            _db.MilestoneDefinitions.Add(new MilestoneDefinition
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Key = key,
+                Title = title,
+                Description = description,
+                ConditionType = conditionType,
+                ConditionValue = conditionValue,
+                CreatedAt = now,
+                UpdatedAt = now,
+                CreatedBy = "system",
+                UpdatedBy = "system"
+            });
+        }
     }
 
     private async Task EnsureStarterPalaceSceneAsync(CancellationToken cancellationToken)
@@ -194,34 +277,4 @@ public sealed class AdminBootstrapper
         }
     }
 
-    private async Task EnsureMissionTemplatesAsync(CancellationToken cancellationToken)
-    {
-        if (await _db.MissionTemplates.AnyAsync(x => !x.IsDeleted, cancellationToken))
-        {
-            return;
-        }
-
-        var now = DateTime.UtcNow;
-        foreach (var template in MissionTemplateSerializer.GetDefaultTemplates())
-        {
-            _db.MissionTemplates.Add(new MissionTemplate
-            {
-                Id = Guid.NewGuid().ToString("N"),
-                Key = template.Key,
-                Title = template.Title,
-                Description = template.Description,
-                MetricType = template.MetricType,
-                Period = template.Period,
-                TargetValue = template.TargetValue,
-                RewardXp = template.RewardXp,
-                SortOrder = template.SortOrder,
-                IsActive = template.IsActive,
-                Version = 1,
-                CreatedAt = now,
-                UpdatedAt = now,
-                CreatedBy = "system",
-                UpdatedBy = "system"
-            });
-        }
-    }
 }

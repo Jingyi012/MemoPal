@@ -35,16 +35,16 @@ public sealed class GetPracticeStatsQueryHandler
             .Where(attempt => attempt.UserId == request.UserId && !attempt.IsDeleted)
             .Select(attempt => new AttemptSummary(
                 attempt.CompletedAt,
-                attempt.CorrectCount,
+                attempt.FirstAttemptCorrectCount,
                 attempt.TotalCount,
                 attempt.Responses.Select(response => response.MemoryItemId).ToList()))
             .ToListAsync(cancellationToken);
 
         var totalQuestions = attempts.Sum(attempt => Math.Max(0, attempt.TotalCount));
-        var correctQuestions = attempts.Sum(attempt => Math.Clamp(attempt.CorrectCount, 0, attempt.TotalCount));
-        var accuracy = totalQuestions == 0
+        var recalledOnFirstAttempt = attempts.Sum(attempt => Math.Clamp(attempt.FirstAttemptCorrectCount, 0, attempt.TotalCount));
+        var firstAttemptRecallPercent = totalQuestions == 0
             ? 0
-            : (int)Math.Round(correctQuestions * 100d / totalQuestions, MidpointRounding.AwayFromZero);
+            : (int)Math.Round(recalledOnFirstAttempt * 100d / totalQuestions, MidpointRounding.AwayFromZero);
         var wordsLearned = attempts
             .SelectMany(attempt => attempt.MemoryItemIds)
             .Where(id => !string.IsNullOrWhiteSpace(id))
@@ -62,13 +62,13 @@ public sealed class GetPracticeStatsQueryHandler
         return ApiResponse<PracticeStatsDto>.Ok(new PracticeStatsDto(
             attempts.Count,
             wordsLearned,
-            accuracy,
+            firstAttemptRecallPercent,
             weeklyActivity));
     }
 
     private sealed record AttemptSummary(
         DateTime CompletedAt,
-        int CorrectCount,
+        int FirstAttemptCorrectCount,
         int TotalCount,
         IReadOnlyList<string> MemoryItemIds);
 }

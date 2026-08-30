@@ -17,63 +17,8 @@ interface UseConfigEditorResult {
 }
 
 const ARRAY_WRAPPER_BY_KEY: Record<string, string> = {
-  "xp.configs": "configs",
-  "level.configs": "levels",
-  "gamification.missions.templates": "templates",
   "number-peg.definitions": "pegs",
 };
-
-function getConfigItems(
-  parsedValue: unknown,
-  wrapperKey: string,
-): Record<string, unknown>[] {
-  if (Array.isArray(parsedValue)) {
-    return parsedValue.filter(
-      (item): item is Record<string, unknown> =>
-        !!item && typeof item === "object",
-    );
-  }
-
-  if (parsedValue && typeof parsedValue === "object") {
-    const wrapped = (parsedValue as Record<string, unknown>)[wrapperKey];
-    if (Array.isArray(wrapped)) {
-      return wrapped.filter(
-        (item): item is Record<string, unknown> =>
-          !!item && typeof item === "object",
-      );
-    }
-  }
-
-  return [];
-}
-
-function normalizeLevelConfigs(parsedValue: unknown): Record<string, unknown> {
-  const levels = getConfigItems(parsedValue, "levels")
-    .map((item) => ({
-      level: Number(item.level ?? 0),
-      requiredXp: Number(item.requiredXp ?? 0),
-      ...(typeof item.title === "string" && item.title.trim().length > 0
-        ? { title: item.title.trim() }
-        : {}),
-    }))
-    .filter((item) => item.level > 0);
-
-  return { levels };
-}
-
-function normalizeXpConfigs(parsedValue: unknown): Record<string, unknown> {
-  const configs = getConfigItems(parsedValue, "configs")
-    .map((item) => ({
-      key: String(item.key ?? item.id ?? item.sourceType ?? "").trim(),
-      sourceType: String(item.sourceType ?? "").trim(),
-      baseXp: Number(item.baseXp ?? 0),
-      variableXp: Number(item.variableXp ?? 0),
-      isActive: item.isActive !== false,
-    }))
-    .filter((item) => item.key.length > 0 && item.sourceType.length > 0);
-
-  return { configs };
-}
 
 function normalizeConfigShape(
   configKey: string,
@@ -81,11 +26,26 @@ function normalizeConfigShape(
   defaultValue: Record<string, unknown>,
 ): Record<string, unknown> {
   if (configKey === "level.configs") {
-    return normalizeLevelConfigs(parsedValue);
+    if (parsedValue && typeof parsedValue === "object" && !Array.isArray(parsedValue)) {
+      const value = Number((parsedValue as Record<string, unknown>).xpPerLevel);
+      return Number.isFinite(value) && value > 0 ? { xpPerLevel: value } : defaultValue;
+    }
+    return defaultValue;
   }
 
   if (configKey === "xp.configs") {
-    return normalizeXpConfigs(parsedValue);
+    if (parsedValue && typeof parsedValue === "object" && !Array.isArray(parsedValue)) {
+      const source = parsedValue as Record<string, unknown>;
+      if ("memoryLearnedXp" in source) {
+        return {
+          memoryLearnedXp: Number(source.memoryLearnedXp ?? 0),
+          dueReviewXp: Number(source.dueReviewXp ?? 0),
+          extraPracticeXp: Number(source.extraPracticeXp ?? 0),
+          extraPracticeDailyLimit: Number(source.extraPracticeDailyLimit ?? 0),
+        };
+      }
+    }
+    return defaultValue;
   }
 
   if (Array.isArray(parsedValue)) {

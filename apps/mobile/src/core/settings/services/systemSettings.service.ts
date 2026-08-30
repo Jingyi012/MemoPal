@@ -1,6 +1,5 @@
 import { systemSettingsApi } from '@/core/settings/api/systemSettings';
 import type { SystemSettingDto } from '@/core/settings/types/systemSettings';
-import type { GamificationMobileUiConfig } from '@/features/gamification/shared/types/gamificationUiConfig';
 import type { PrivacyPolicyConfig } from '@/features/profile/types/privacyPolicyConfig';
 import type { HelpFaqConfig } from '@/features/support/types/helpFaqConfig';
 import { applyNumberPegDefinitions } from '@/features/number-peg/utils/numberPegMap';
@@ -98,12 +97,6 @@ export async function getFeatureLimits(isPremium = false) {
       fallback.customWordsPerLesson
     ),
   };
-}
-
-export async function getGamificationUiConfig(): Promise<Partial<GamificationMobileUiConfig> | null> {
-  return settingPayload<Partial<GamificationMobileUiConfig>>(
-    await systemSettingsApi.getGamificationMobileUiConfig()
-  );
 }
 
 export async function getHelpFaqConfig(): Promise<Partial<HelpFaqConfig> | null> {

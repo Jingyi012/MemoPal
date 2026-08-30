@@ -74,8 +74,11 @@ public sealed class GetMilestoneQueryHandler : IRequestHandler<GetMilestoneQuery
             achieved?.AchievedAt,
             definition.CreatedAt,
             definition.UpdatedAt,
+            definition.CreatedBy,
+            definition.UpdatedBy,
             definition.IsDeleted,
-            definition.DeletedAt);
+            definition.DeletedAt,
+            definition.DeletedBy);
     }
 }
 

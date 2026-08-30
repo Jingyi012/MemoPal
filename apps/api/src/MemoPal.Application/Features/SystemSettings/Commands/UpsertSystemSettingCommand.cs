@@ -34,6 +34,10 @@ public sealed class UpsertSystemSettingCommandHandler
         {
             normalizedValue = NormalizeLevelConfigValue(normalizedValue);
         }
+        else if (string.Equals(key, SystemSettingKeys.XpConfigs, StringComparison.Ordinal))
+        {
+            normalizedValue = NormalizeXpConfigValue(normalizedValue);
+        }
         else if (string.Equals(key, SystemSettingKeys.NumberPegDefinitions, StringComparison.Ordinal))
         {
             normalizedValue = NormalizeNumberPegDefinitionsValue(normalizedValue);
@@ -84,78 +88,88 @@ public sealed class UpsertSystemSettingCommandHandler
     {
         if (string.IsNullOrWhiteSpace(rawValue))
         {
-            return "{\"levels\":[]}";
+            return JsonSerializer.Serialize(new { xpPerLevel = LevelProgressConfig.Default.XpPerLevel });
         }
 
         try
         {
-            JsonNode? root = JsonNode.Parse(rawValue);
-            for (var i = 0; i < 3; i++)
-            {
-                if (root is not JsonValue valueNode || !valueNode.TryGetValue<string>(out var nestedJson))
-                {
-                    break;
-                }
+            var root = UnwrapJsonObject(rawValue);
+            var xpPerLevel = Math.Clamp(
+                ToInt(root?["xpPerLevel"], LevelProgressConfig.Default.XpPerLevel),
+                10,
+                100_000);
+            return JsonSerializer.Serialize(new { xpPerLevel });
+        }
+        catch
+        {
+            return JsonSerializer.Serialize(new { xpPerLevel = LevelProgressConfig.Default.XpPerLevel });
+        }
+    }
 
-                if (string.IsNullOrWhiteSpace(nestedJson))
-                {
-                    break;
-                }
+    private static string NormalizeXpConfigValue(string rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return SerializeDefaultXpConfig();
+        }
 
-                var nested = JsonNode.Parse(nestedJson);
-                if (nested is null)
-                {
-                    break;
-                }
-
-                root = nested;
-            }
-
-            var source = root switch
-            {
-                JsonArray direct => direct,
-                JsonObject obj when obj["levels"] is JsonArray levels => levels,
-                JsonObject obj when obj["configs"] is JsonArray configs => configs,
-                _ => new JsonArray()
-            };
-
-            var normalized = source
-                .OfType<JsonObject>()
-                .Select(item =>
-                {
-                    var level = ToInt(item["level"]);
-                    var requiredXp = ToInt(item["requiredXp"]);
-                    var title = item["title"]?.GetValue<string>()?.Trim();
-                    return new
-                    {
-                        level = Math.Max(0, level),
-                        requiredXp = Math.Max(0, requiredXp),
-                        title = string.IsNullOrWhiteSpace(title) ? null : title
-                    };
-                })
-                .Where(item => item.level > 0)
-                .OrderBy(item => item.level)
-                .ToList();
-
+        try
+        {
+            var root = UnwrapJsonObject(rawValue);
+            var defaults = XpAwardConfig.Default;
             return JsonSerializer.Serialize(new
             {
-                levels = normalized.Select(item => new
-                {
-                    item.level,
-                    item.requiredXp,
-                    item.title
-                })
+                memoryLearnedXp = ClampReward(ToInt(root?["memoryLearnedXp"], defaults.MemoryLearnedXp)),
+                dueReviewXp = ClampReward(ToInt(root?["dueReviewXp"], defaults.DueReviewXp)),
+                extraPracticeXp = ClampReward(ToInt(root?["extraPracticeXp"], defaults.ExtraPracticeXp)),
+                extraPracticeDailyLimit = Math.Clamp(
+                    ToInt(root?["extraPracticeDailyLimit"], defaults.ExtraPracticeDailyLimit),
+                    0,
+                    10),
             });
         }
         catch
         {
-            return rawValue;
+            return SerializeDefaultXpConfig();
         }
     }
 
-    private static int ToInt(JsonNode? node)
+    private static string SerializeDefaultXpConfig()
     {
-        if (node is null) return 0;
+        var defaults = XpAwardConfig.Default;
+        return JsonSerializer.Serialize(new
+        {
+            memoryLearnedXp = defaults.MemoryLearnedXp,
+            dueReviewXp = defaults.DueReviewXp,
+            extraPracticeXp = defaults.ExtraPracticeXp,
+            extraPracticeDailyLimit = defaults.ExtraPracticeDailyLimit,
+        });
+    }
+
+    private static JsonObject? UnwrapJsonObject(string rawValue)
+    {
+        JsonNode? root = JsonNode.Parse(rawValue);
+        for (var i = 0; i < 3; i++)
+        {
+            if (root is not JsonValue valueNode || !valueNode.TryGetValue<string>(out var nestedJson))
+            {
+                break;
+            }
+
+            if (string.IsNullOrWhiteSpace(nestedJson))
+            {
+                break;
+            }
+
+            root = JsonNode.Parse(nestedJson);
+        }
+
+        return root as JsonObject;
+    }
+
+    private static int ToInt(JsonNode? node, int fallback = 0)
+    {
+        if (node is null) return fallback;
 
         if (node is JsonValue valueNode)
         {
@@ -176,8 +190,10 @@ public sealed class UpsertSystemSettingCommandHandler
             }
         }
 
-        return 0;
+        return fallback;
     }
+
+    private static int ClampReward(int value) => Math.Clamp(value, 0, 10_000);
 
     private static string NormalizeNumberPegDefinitionsValue(string rawValue)
     {

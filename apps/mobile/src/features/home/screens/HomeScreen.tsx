@@ -1,11 +1,13 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
+import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import { useMemorySets } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets/types/memorySet.types';
-import { useDueMemoryReviews, usePracticeAttemptHistory, usePracticeStats, useUpcomingMemoryReviews, type DueMemoryReview, type PracticeAttempt } from '@/features/practice-attempts';
+import { groupMemoryReviews, useDueMemoryReviews, usePracticeAttemptHistory, usePracticeStats, useUpcomingMemoryReviews, type DueMemoryReview, type PracticeAttempt } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
+import { useGamificationRules } from '@/features/gamification/shared/hooks/useGamificationRules';
 import { WeeklyActivityCard } from '@/features/gamification/shared/components/WeeklyActivityCard';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
@@ -27,6 +29,7 @@ export default function HomeScreen() {
   const upcomingReviews = useUpcomingMemoryReviews(30);
   const activityQuery = useXpEvents({ recentDays: 7 });
   const practiceStatsQuery = usePracticeStats();
+  const gamificationRules = useGamificationRules();
   const activeMemorySets = (memorySets.data ?? [])
     .filter((item) => item.status !== 'archived')
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
@@ -37,6 +40,8 @@ export default function HomeScreen() {
     ? activeMemorySets[activeMemorySets.length - 1]
     : undefined;
   const streak = Math.max(0, user?.stats?.currentStreak ?? 0);
+  const dueReviewGroups = groupMemoryReviews(dueReviews.data ?? []);
+  const focusReview = dueReviewGroups[0]?.review;
 
   const refreshHome = async () => {
     await Promise.allSettled([memorySets.refetch(), activityQuery.refetch(), practiceStatsQuery.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]);
@@ -63,20 +68,20 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={memorySets.isRefetching || activityQuery.isFetching} onRefresh={refreshHome} />}
         contentContainerStyle={styles.content}>
-        <View style={styles.streakBanner}>
-          <View style={styles.streakCopyRow}>
-            <Text style={styles.streakFlame}>🔥</Text>
-            <View>
-            <Text style={styles.streakTitle}>{streak} {t('streak')}</Text>
-              <Text style={styles.streakSubtitle}>{t('streakSubtitle')}</Text>
-            </View>
-          </View>
-          <View style={styles.streakDots} accessibilityLabel={`${streak} day streak`}>
-            {Array.from({ length: 7 }, (_, index) => (
-              <View key={index} style={[styles.streakDot, index < Math.min(7, streak) && styles.streakDotOn]} />
-            ))}
-          </View>
-        </View>
+        <DailyFocusCard
+          dueCount={dueReviewGroups.length}
+          memorySet={memorySet}
+          review={focusReview}
+          memoryLearnedXp={gamificationRules.data?.memoryLearnedXp ?? 20}
+          dueReviewXp={gamificationRules.data?.dueReviewXp ?? 10}
+          extraPracticeXp={gamificationRules.data?.extraPracticeXp ?? 5}
+          streak={streak}
+          onPress={() => {
+            if (focusReview) openReview(router, focusReview);
+            else if (memorySet) router.push(`/memory-details/${memorySet.id}` as Href);
+            else router.push('/create-memory' as Href);
+          }}
+        />
 
         {memorySets.isLoading ? (
           <View style={styles.loadingFrame}><LoadingView description={t('loading')} /></View>
@@ -135,7 +140,7 @@ export default function HomeScreen() {
         <View style={styles.statRow}>
           <StatTile value={`${practiceStatsQuery.data?.sessionsCompleted ?? 0}`} label={t('sessions')} />
           <StatTile value={`${practiceStatsQuery.data?.wordsLearned ?? 0}`} label={t('words')} />
-          <StatTile value={`${practiceStatsQuery.data?.accuracyPercent ?? 0}%`} label={t('accuracy')} />
+          <StatTile value={`${practiceStatsQuery.data?.firstAttemptRecallPercent ?? 0}%`} label={t('firstTryRecall')} />
         </View>
 
         <WeeklyActivityCard title={t('weekActivity')} activity={practiceStatsQuery.data?.weeklyActivity} events={activityQuery.events} />
@@ -151,6 +156,69 @@ function openReview(router: ReturnType<typeof useRouter>, review: DueMemoryRevie
     ? `/palaces/memory/${review.memorySetId}?mode=recall`
     : `/number-peg/${review.memorySetId}?mode=recall`;
   router.push(route as Href);
+}
+
+function DailyFocusCard({
+  dueCount,
+  memorySet,
+  review,
+  memoryLearnedXp,
+  dueReviewXp,
+  extraPracticeXp,
+  streak,
+  onPress,
+}: {
+  dueCount: number;
+  memorySet?: MemorySet;
+  review?: DueMemoryReview;
+  memoryLearnedXp: number;
+  dueReviewXp: number;
+  extraPracticeXp: number;
+  streak: number;
+  onPress: () => void;
+}) {
+  const { t } = useTranslation('home');
+  const isDraft = memorySet?.status === 'draft';
+  const title = review
+    ? `${dueCount} ${t(dueCount === 1 ? 'reviewsWaiting' : 'reviewsWaitingPlural')}`
+    : !memorySet
+      ? t('focusFirstMemory')
+      : isDraft
+        ? t('focusContinueBuild')
+        : t('focusCaughtUp');
+  const body = review
+    ? t('focusReviewBody')
+    : !memorySet
+      ? t('focusFirstMemoryBody')
+      : isDraft
+        ? t('focusContinueBuildBody')
+        : t('focusCaughtUpBody');
+  const action = review
+    ? t('startReview')
+    : !memorySet
+      ? t('startLearning')
+      : isDraft
+        ? t('continueBuilding')
+        : t('extraPractice');
+  const reward = review ? dueReviewXp : !memorySet ? memoryLearnedXp : isDraft ? null : extraPracticeXp;
+
+  return (
+    <NightEmphasisCard style={styles.focusCard}>
+      <View style={styles.focusTopRow}>
+        <View style={styles.focusEyebrowRow}>
+          <Text style={styles.focusEyebrow}>{t('todaysFocus')}</Text>
+          {reward ? <Text style={styles.focusReward}>+{reward} {t('xpReward')}</Text> : null}
+        </View>
+        <View style={styles.focusStreak}><Text style={styles.focusStreakText}>🔥 {streak}</Text></View>
+      </View>
+      <Text style={styles.focusTitle}>{title}</Text>
+      <Text style={styles.focusBody}>{body}</Text>
+      <AnimatedPressable accessibilityRole="button" onPress={onPress} style={styles.focusAction}>
+        <Text style={styles.focusActionText}>{action}</Text>
+        <ArrowRight size={17} color="#2B2A3D" strokeWidth={2.5} />
+      </AnimatedPressable>
+    </NightEmphasisCard>
+  );
 }
 
 const MEMORY_TIPS = [
@@ -222,14 +290,17 @@ function StatTile({ value, label }: { value: string; label: string }) {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#FFFFFF' },
   content: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 128 },
-  streakBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF3D6', borderWidth: 2, borderColor: '#FFE3AE', borderRadius: 18, paddingVertical: 13, paddingHorizontal: 15, marginBottom: 16 },
-  streakCopyRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  streakFlame: { fontSize: 26 },
-  streakTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 13.5 },
-  streakSubtitle: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 2 },
-  streakDots: { flexDirection: 'row', gap: 4 },
-  streakDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#EEE9DC' },
-  streakDotOn: { backgroundColor: '#F2A900' },
+  focusCard: { marginBottom: 16 },
+  focusTopRow: { zIndex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  focusEyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  focusEyebrow: { color: '#FFC93C', fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase' },
+  focusReward: { color: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
+  focusStreak: { backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
+  focusStreakText: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 11.5 },
+  focusTitle: { zIndex: 1, color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 20, marginTop: 12 },
+  focusBody: { zIndex: 1, color: '#C9C5E0', fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 4, maxWidth: '88%' },
+  focusAction: { zIndex: 1, alignSelf: 'flex-start', minHeight: 42, flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#FFC93C', borderRadius: 13, paddingHorizontal: 15, marginTop: 14 },
+  focusActionText: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 12.5 },
   emptyIconEmoji: { fontSize: 24 },
   continueCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#FFFDF8', borderWidth: 2, borderColor: '#EEE9DC', borderRadius: 18, padding: 13, boxShadow: '0px 8px 20px rgba(43,42,61,0.08)' },
   techniqueBadge: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },

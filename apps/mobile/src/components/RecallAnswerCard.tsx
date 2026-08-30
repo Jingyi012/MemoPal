@@ -17,7 +17,8 @@ type RecallAnswerCardProps = {
   feedback: RecallFeedback;
   feedbackText: string;
   actionLabel: string;
-  scoreLabel: string;
+  actionDisabled?: boolean;
+  progressLabel: string;
   answerAccessibilityLabel?: string;
   answerPlaceholder?: string;
   onAnswerFocus?: () => void;
@@ -36,7 +37,8 @@ export function RecallAnswerCard({
   feedback,
   feedbackText,
   actionLabel,
-  scoreLabel,
+  actionDisabled = false,
+  progressLabel,
   answerAccessibilityLabel = 'Type your answer',
   answerPlaceholder = 'TYPE YOUR ANSWER',
   onAnswerFocus,
@@ -80,13 +82,13 @@ export function RecallAnswerCard({
       ) : null}
       <View style={styles.actionButtonWrap}>
         <AnimatedPressable
-          disabled={!answer.trim() && !feedback}
+          disabled={actionDisabled || (!answer.trim() && !feedback)}
           onPress={onSubmit}
-          style={[styles.actionButton, !answer.trim() && !feedback && styles.disabledButton]}>
+          style={[styles.actionButton, (actionDisabled || (!answer.trim() && !feedback)) && styles.disabledButton]}>
           <Text style={styles.actionText}>{actionLabel}</Text>
         </AnimatedPressable>
       </View>
-      <Text style={styles.score}>{scoreLabel}</Text>
+      <Text style={styles.progress}>{progressLabel}</Text>
     </View>
   );
 }
@@ -108,5 +110,5 @@ const styles = StyleSheet.create({
   actionButton: { width: '100%', minHeight: 48, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center' },
   actionText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 14 },
   disabledButton: { opacity: 0.4 },
-  score: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center', marginTop: 15 },
+  progress: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center', marginTop: 15 },
 });

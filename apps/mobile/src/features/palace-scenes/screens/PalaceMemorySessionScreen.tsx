@@ -55,14 +55,17 @@ export default function PalaceMemorySessionScreen({
   const [mode, setMode] = useState<SessionMode>(startInRecall ? 'recall' : 'browse');
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<Feedback>(null);
-  const [score, setScore] = useState(0);
   const [clientAttemptId, setClientAttemptId] = useState(() => Crypto.randomUUID());
   const [startedAt, setStartedAt] = useState(() => new Date().toISOString());
   const [startedAtMs, setStartedAtMs] = useState(() => Date.now());
   const [questionStartedAtMs, setQuestionStartedAtMs] = useState(() => Date.now());
   const [responses, setResponses] = useState<PracticeResponseInput[]>([]);
+  const recalledFirstTry = responses.filter(
+    (response) => response.isCorrect && response.attemptCount === 1,
+  ).length;
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
   const [hasRestoredSession, setHasRestoredSession] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
   const [bodyHeight, setBodyHeight] = useState(0);
   const [mapHeight, setMapHeight] = useState(0);
   const hydratedSessionRef = useRef<string | null>(null);
@@ -121,7 +124,6 @@ export default function PalaceMemorySessionScreen({
         setActiveIndex(0);
         setAnswer('');
         setFeedback(null);
-        setScore(0);
         setClientAttemptId(Crypto.randomUUID());
         setStartedAt(new Date().toISOString());
         setStartedAtMs(Date.now());
@@ -135,7 +137,6 @@ export default function PalaceMemorySessionScreen({
 
       setMode(snapshot.mode);
       setActiveIndex(snapshot.activeIndex);
-      setScore(snapshot.score);
       setClientAttemptId(snapshot.clientAttemptId);
       setStartedAt(snapshot.startedAt);
       setStartedAtMs(snapshot.startedAtMs);
@@ -160,7 +161,7 @@ export default function PalaceMemorySessionScreen({
       memorySetVersion: memorySet.version,
       mode,
       activeIndex,
-      score,
+      score: recalledFirstTry,
       clientAttemptId,
       startedAt,
       startedAtMs,
@@ -168,7 +169,7 @@ export default function PalaceMemorySessionScreen({
       responses,
       savedAt: new Date().toISOString(),
     });
-  }, [activeIndex, clientAttemptId, memorySetQuery.data, mode, questionStartedAtMs, responses, score, startedAt, startedAtMs]);
+  }, [activeIndex, clientAttemptId, memorySetQuery.data, mode, questionStartedAtMs, recalledFirstTry, responses, startedAt, startedAtMs]);
 
   const placements = useMemo(() => {
     const memorySet = memorySetQuery.data;
@@ -208,11 +209,11 @@ export default function PalaceMemorySessionScreen({
   const recallComplete = mode === 'recall' && activeIndex >= placements.length;
 
   const startRecall = () => {
+    setIsFinishing(false);
     setMode('recall');
     setActiveIndex(0);
     setAnswer('');
     setFeedback(null);
-    setScore(0);
     setClientAttemptId(Crypto.randomUUID());
     setStartedAt(new Date().toISOString());
     setStartedAtMs(Date.now());
@@ -224,6 +225,7 @@ export default function PalaceMemorySessionScreen({
 
   const checkOrContinue = () => {
     if (!active) return;
+    if (isFinishing) return;
     if (feedback) {
       if (feedback === 'wrong') {
         setFeedback(null);
@@ -241,7 +243,15 @@ export default function PalaceMemorySessionScreen({
           responses,
         };
         setLastPayload(payload);
-        practiceAttempt.mutate(payload);
+        setIsFinishing(true);
+        void practiceAttempt.mutateAsync(payload).catch(() => undefined).finally(() => {
+          setIsFinishing(false);
+          setActiveIndex((value) => value + 1);
+          setAnswer('');
+          setFeedback(null);
+          setQuestionStartedAtMs(Date.now());
+        });
+        return;
       }
       setActiveIndex((value) => value + 1);
       setAnswer('');
@@ -260,7 +270,6 @@ export default function PalaceMemorySessionScreen({
     ));
     setFeedback(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) {
-      setScore((value) => value + 1);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -336,51 +345,58 @@ export default function PalaceMemorySessionScreen({
     recallComplete ? (
       <RecallResultCard
         tone="palace"
-        title={t('title')}
-        score={score}
+        title={t('recallComplete')}
+        recalledFirstTry={recalledFirstTry}
         total={placements.length}
-        body={score === placements.length
-          ? 'Every locus led you to the right memory.'
-          : 'Walk through the missed loci once more, then try another round.'}
+        recalledLabel={t('recalledFirstTry')}
+        needsPracticeLabel={t('needsPractice')}
+        xpEarned={practiceAttempt.data?.xpEarned}
+        levelUpTo={practiceAttempt.data && practiceAttempt.data.currentLevel > practiceAttempt.data.previousLevel
+          ? practiceAttempt.data.currentLevel
+          : undefined}
+        body={recalledFirstTry === placements.length
+          ? t('recallPerfectBody')
+          : t('recallNeedsPracticeBody')}
         saveStatus={
           practiceAttempt.isPending ? (
-            <Text style={styles.saveState}>Saving your progress…</Text>
+            <Text style={styles.saveState}>{t('savingProgress')}</Text>
           ) : practiceAttempt.isError ? (
             <View style={styles.saveError}>
-              <Text style={styles.saveErrorText}>Progress was not saved. Your result is still here.</Text>
+              <Text style={styles.saveErrorText}>{t('progressNotSaved')}</Text>
               <AnimatedPressable
                 accessibilityRole="button"
-                accessibilityLabel="Retry saving progress"
+                accessibilityLabel={t('retrySave')}
                 onPress={() => lastPayload && practiceAttempt.mutate(lastPayload)}
                 style={styles.retrySaveButton}>
-                <Text style={styles.retrySaveText}>Retry save</Text>
+                <Text style={styles.retrySaveText}>{t('retrySave')}</Text>
               </AnimatedPressable>
             </View>
           ) : practiceAttempt.data ? (
             <Text style={styles.saveSuccess}>
-              Saved ✓ Next review {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : 'will appear in Today'}
+              {t('saved')} ✓ {t('nextReview')} {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : t('willAppearToday')}
             </Text>
           ) : null
         }
         onRetry={startRecall}
-        secondaryAction={{ label: 'Walk the Palace again', onPress: () => { setMode('walk'); setActiveIndex(0); } }}
+        secondaryAction={{ label: t('walkAgain'), onPress: () => { setMode('walk'); setActiveIndex(0); } }}
         onReturnToToday={() => router.replace('/(tabs)')}
       />
     ) : active ? (
       <RecallAnswerCard
         tone="palace"
         icon={<Text style={styles.recallEmoji}>🧠</Text>}
-        eyebrow={`LOCUS ${activeIndex + 1} · ${active.locus?.name?.toUpperCase() ?? 'MEMORY SPOT'}`}
-        prompt="What did you place here?"
+        eyebrow={`${t('locusLabel').toUpperCase()} ${activeIndex + 1} · ${active.locus?.name?.toUpperCase() ?? t('memorySpot')}`}
+        prompt={t('recallPrompt')}
         answer={answer}
         feedback={feedback}
         feedbackText={feedback === 'correct'
-          ? 'That is it!'
+          ? t('correctFeedback')
           : isSpelling
             ? `Check the spelling: ${getSpellingHint(active.item.answer, answer)}`
             : `It was ${active.item.answer}. See it at this locus once more, then try again.`}
-        actionLabel={feedback === 'wrong' ? 'Try this locus again' : feedback ? 'Next locus' : 'Check answer'}
-        scoreLabel={`Locus ${activeIndex + 1} / ${placements.length} · Score ${score}`}
+        actionLabel={isFinishing ? t('savingProgress') : feedback === 'wrong' ? t('tryLocusAgain') : feedback ? t('nextLocusAction') : t('checkAnswer')}
+        actionDisabled={isFinishing}
+        progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${placements.length}`}
         onAnswerFocus={expandRecallSheet}
         useBottomSheetInput
         onAnswerChange={setAnswer}

@@ -1,6 +1,5 @@
 using Mapster;
 using MemoPal.Application.Features.Auth.DTOs;
-using MemoPal.Application.Features.Badges.DTOs;
 using MemoPal.Application.Features.Milestones.DTOs;
 using MemoPal.Application.Features.Notifications.DTOs;
 using MemoPal.Application.Features.Users.DTOs;
@@ -18,10 +17,6 @@ public sealed class MapsterRegistration : IRegister
     {
         config.NewConfig<UserStats, UserStatsDto>();
         config.NewConfig<Notification, NotificationDto>();
-        config.NewConfig<BadgeDefinition, BadgeDefinitionDto>()
-            .Map(dest => dest.IconUrl, src => ToAbsoluteMediaUrlOrNull(src.IconUrl));
-        config.NewConfig<BadgeDefinitionDto, BadgeDefinitionDto>()
-            .Map(dest => dest.IconUrl, src => ToAbsoluteMediaUrlOrNull(src.IconUrl));
         config.NewConfig<MilestoneDefinition, MilestoneDefinitionDto>();
         config.NewConfig<User, ManagedUserApiDto>()
             .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.AvatarUrl));
@@ -45,25 +40,6 @@ public sealed class MapsterRegistration : IRegister
         config.NewConfig<UserWithStatDto, UserWithStatDto>()
             .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.AvatarUrl));
         config.NewConfig<AuthResponseDto, AuthResponseDto>();
-
-        config.NewConfig<(BadgeDefinition Badge, UserBadge? UserBadge), BadgeDto>()
-            .Map(dest => dest.Id, src => src.Badge.Id)
-            .Map(dest => dest.Key, src => src.Badge.Key)
-            .Map(dest => dest.Name, src => src.Badge.Name)
-            .Map(dest => dest.Description, src => src.Badge.Description)
-            .Map(dest => dest.Icon, src => src.Badge.Icon)
-            .Map(dest => dest.IconUrl, src => ToAbsoluteMediaUrlOrNull(src.Badge.IconUrl))
-            .Map(dest => dest.Rarity, src => src.Badge.Rarity)
-            .Map(dest => dest.ConditionType, src => src.Badge.ConditionType)
-            .Map(dest => dest.ConditionValue, src => src.Badge.ConditionValue)
-            .Map(dest => dest.EarnedAt, src => src.UserBadge == null ? null : src.UserBadge.EarnedAt)
-            .Map(dest => dest.CreatedAt, src => src.Badge.CreatedAt)
-            .Map(dest => dest.UpdatedAt, src => src.Badge.UpdatedAt)
-            .Map(dest => dest.IsDeleted, src => src.Badge.IsDeleted)
-            .Map(dest => dest.DeletedAt, src => src.Badge.DeletedAt);
-
-        config.NewConfig<BadgeDto, BadgeDto>()
-            .Map(dest => dest.IconUrl, src => ToAbsoluteMediaUrlOrNull(src.IconUrl));
 
         config.NewConfig<(MilestoneDefinition Milestone, UserMilestone? UserMilestone), MilestoneDto>()
             .Map(dest => dest.Id, src => src.Milestone.Id)

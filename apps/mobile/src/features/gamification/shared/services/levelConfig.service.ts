@@ -1,120 +1,75 @@
 import { systemSettingsApi } from '@/core/settings/api/systemSettings';
-import { LevelConfigs } from '@/features/gamification/shared/types/levelConfigs';
+import type {
+  LevelConfig,
+  LevelProgressConfig,
+} from '@/features/gamification/shared/types/levelConfigs';
 
-function getComputedLevelFromXp(configs: LevelConfigs[], totalXp: number): number {
-  if (!configs.length) return 1;
+const DEFAULT_XP_PER_LEVEL = 100;
 
-  const orderedByRequiredXp = [...configs].sort((a, b) => {
-    if (a.requiredXp !== b.requiredXp) return a.requiredXp - b.requiredXp;
-    return a.level - b.level;
-  });
-
-  let resolvedLevel = 1;
-  for (const config of orderedByRequiredXp) {
-    if (totalXp >= config.requiredXp) {
-      resolvedLevel = config.level;
-      continue;
-    }
-    break;
-  }
-
-  return Math.max(1, resolvedLevel);
-}
-
-async function ensureLevelConfigsLoaded(_forceRemote = false): Promise<LevelConfigs[]> {
-  const setting = await systemSettingsApi.getLevelConfigs();
-  if (!setting?.value) return [];
+function parseConfig(value?: string | null): LevelProgressConfig {
+  if (!value) return { xpPerLevel: DEFAULT_XP_PER_LEVEL };
 
   try {
-    const parsed = JSON.parse(setting.value) as unknown;
-    const source = Array.isArray(parsed)
-      ? parsed
-      : parsed && typeof parsed === 'object'
-        ? ((parsed as Record<string, unknown>).levels ??
-          (parsed as Record<string, unknown>).configs ??
-          (parsed as Record<string, unknown>).items)
-        : [];
-    if (!Array.isArray(source)) return [];
-    return source
-      .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
-      .map((item) => ({
-        level: Number(item.level ?? 0),
-        requiredXp: Number(item.requiredXp ?? 0),
-        title: item.title ? String(item.title) : undefined,
-        createdAt: String(item.createdAt ?? setting.createdAt),
-        updatedAt: String(item.updatedAt ?? setting.updatedAt),
-      }))
-      .filter((item) => item.level > 0)
-      .sort((a, b) => a.level - b.level);
+    let parsed: unknown = JSON.parse(value);
+    if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+    const xpPerLevel = Number(
+      parsed && typeof parsed === 'object'
+        ? (parsed as Record<string, unknown>).xpPerLevel
+        : DEFAULT_XP_PER_LEVEL,
+    );
+    return {
+      xpPerLevel: Number.isFinite(xpPerLevel)
+        ? Math.max(10, Math.trunc(xpPerLevel))
+        : DEFAULT_XP_PER_LEVEL,
+    };
   } catch {
-    return [];
+    return { xpPerLevel: DEFAULT_XP_PER_LEVEL };
   }
 }
 
-export async function getLevelConfigs(options?: {
-  forceRemote?: boolean;
-}): Promise<LevelConfigs[]> {
-  return await ensureLevelConfigsLoaded(options?.forceRemote ?? false);
+function titleForLevel(level: number) {
+  if (level >= 20) return 'Memory Master';
+  if (level >= 10) return 'Mind Architect';
+  if (level >= 5) return 'Memory Navigator';
+  if (level >= 2) return 'Memory Apprentice';
+  return 'Memory Explorer';
+}
+
+function levelConfig(level: number, xpPerLevel: number): LevelConfig {
+  return {
+    level,
+    requiredXp: Math.max(0, level - 1) * xpPerLevel,
+    title: titleForLevel(level),
+  };
+}
+
+export async function getLevelConfigs(): Promise<LevelProgressConfig> {
+  const setting = await systemSettingsApi.getLevelConfigs();
+  return parseConfig(setting?.value);
 }
 
 export async function getLevelProgress(
   totalXp: number,
-  authoritativeLevel?: number
+  _authoritativeLevel?: number,
 ): Promise<{
   currentLevel: number;
-  currentLevelConfig: LevelConfigs | null;
-  nextLevelConfig: LevelConfigs | null;
+  currentLevelConfig: LevelConfig;
+  nextLevelConfig: LevelConfig;
   xpInCurrentLevel: number;
   xpToNextLevel: number;
   totalXp: number;
 }> {
-  const configs = await ensureLevelConfigsLoaded(false);
-  const ordered = [...configs].sort((a, b) => a.level - b.level);
-  const resolvedLevel =
-    ordered.length > 0
-      ? getComputedLevelFromXp(ordered, totalXp)
-      : typeof authoritativeLevel === 'number' && authoritativeLevel > 0
-        ? authoritativeLevel
-        : 1;
+  const { xpPerLevel } = await getLevelConfigs();
+  const safeXp = Math.max(0, Math.trunc(totalXp));
+  const currentLevel = Math.floor(safeXp / xpPerLevel) + 1;
+  const xpInCurrentLevel = safeXp % xpPerLevel;
 
-  const currentLevelConfig = ordered.find((item) => item.level === resolvedLevel) ?? null;
-  const nextLevelConfig = ordered.find((item) => item.level > resolvedLevel) ?? null;
-  const currentLevelXp = currentLevelConfig?.requiredXp ?? 0;
-  const nextLevelXp = nextLevelConfig?.requiredXp ?? currentLevelXp + 1000;
   return {
-    currentLevel: resolvedLevel,
-    currentLevelConfig,
-    nextLevelConfig,
-    xpInCurrentLevel: Math.max(0, totalXp - currentLevelXp),
-    xpToNextLevel: Math.max(0, nextLevelXp - totalXp),
-    totalXp,
+    currentLevel,
+    currentLevelConfig: levelConfig(currentLevel, xpPerLevel),
+    nextLevelConfig: levelConfig(currentLevel + 1, xpPerLevel),
+    xpInCurrentLevel,
+    xpToNextLevel: xpPerLevel - xpInCurrentLevel,
+    totalXp: safeXp,
   };
-}
-
-export async function getByLevel(currentLevel: number): Promise<LevelConfigs | null> {
-  const configs = await ensureLevelConfigsLoaded(false);
-  return configs.find((c) => c.level === currentLevel) ?? null;
-}
-
-export async function getNextLevel(currentLevel: number): Promise<LevelConfigs | null> {
-  const configs = await ensureLevelConfigsLoaded(false);
-  return configs.find((c) => c.level === currentLevel + 1) ?? null;
-}
-
-export async function getLevelByXp(totalXp: number, authoritativeLevel?: number): Promise<number> {
-  const configs = await ensureLevelConfigsLoaded(false);
-  if (configs.length > 0) {
-    return getComputedLevelFromXp(configs, totalXp);
-  }
-
-  if (typeof authoritativeLevel === 'number' && authoritativeLevel > 0) {
-    return authoritativeLevel;
-  }
-
-  return 1;
-}
-
-export async function getXpRequiredForLevel(level: number): Promise<number> {
-  const config = await getByLevel(level);
-  return config?.requiredXp ?? 0;
 }

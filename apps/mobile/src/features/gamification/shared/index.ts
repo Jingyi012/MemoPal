@@ -1,15 +1,7 @@
-export * from './hooks/useBadges';
 export * from './hooks/useGamificationBootstrap';
-export * from './hooks/useGamificationUiConfig';
+export * from './hooks/useGamificationRules';
 export * from './hooks/useLevelConfigs';
 export * from './hooks/useMilestones';
-export * from './hooks/useMissions';
-export * from './hooks/useXpConfig';
 export * from './hooks/useXpEvents';
-export { recordXpEvent, recordXpEventWithClientEventId } from './services/xpEvents.service';
-export type * from './types/gamificationUiConfig';
-export type * from './types/levelAndbadge';
+export type * from './types/milestone';
 export type * from './types/levelConfigs';
-export type * from './types/missions';
-export type * from './types/xpConfigs';
-export type * from './types/xpEvents';

@@ -1,6 +1,5 @@
 import { AuthProvider } from '@/contexts/AuthProvider';
 import { NetworkStatusBanner } from '@/components/NetworkStatusBanner';
-import { GamificationRewardProvider } from '@/contexts/GamificationRewardContext';
 import { UserStateProvider } from '@/contexts/UserStateContext';
 import { useNotificationObserver } from '@/features/notifications/hooks/useNotificationObserver';
 import { useSubscriptionEntitlementSync } from '@/features/subscription/hooks/useSubscriptionEntitlementSync';
@@ -69,9 +68,7 @@ export default function RootLayout() {
         }}>
         <AuthProvider>
           <UserStateProvider>
-            <GamificationRewardProvider>
-              <AppLayout />
-            </GamificationRewardProvider>
+            <AppLayout />
           </UserStateProvider>
         </AuthProvider>
         <Toast config={toastConfig} topOffset={60} />

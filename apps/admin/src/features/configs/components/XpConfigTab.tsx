@@ -32,8 +32,8 @@ export function XpConfigTab() {
 
       <Alert
         type="info"
-        message="XP Configurations"
-        description="Configure base and variable XP rewards by source type."
+        message="Simple XP Rewards"
+        description="Users earn XP for learning a memory, completing a due review, or doing limited extra practice. The API calculates every award; mobile clients cannot choose an amount."
         showIcon
         style={{ marginBottom: 16 }}
       />
@@ -48,7 +48,7 @@ export function XpConfigTab() {
                 schema={XP_CONFIGS_SCHEMA}
                 formData={config}
                 onSubmit={handleSubmit}
-                title="XP Configurations"
+                title="Simple XP Rewards"
                 loading={isLoading}
               />
             ),
@@ -61,7 +61,7 @@ export function XpConfigTab() {
                 value={config}
                 schema={XP_CONFIGS_SCHEMA}
                 onSubmit={handleSubmit}
-                title="Advanced XP Configurations"
+                title="Advanced XP Rewards"
                 loading={isLoading}
               />
             ),

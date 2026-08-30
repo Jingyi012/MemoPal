@@ -10,8 +10,11 @@ public sealed record MilestoneDto(
     DateTime? AchievedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt,
+    string? CreatedBy,
+    string? UpdatedBy,
     bool IsDeleted,
-    DateTime? DeletedAt
+    DateTime? DeletedAt,
+    string? DeletedBy
 );
 
 public sealed record MilestoneDefinitionDto(
@@ -26,7 +29,8 @@ public sealed record MilestoneDefinitionDto(
     bool IsDeleted,
     DateTime? DeletedAt,
     string? CreatedBy,
-    string? UpdatedBy
+    string? UpdatedBy,
+    string? DeletedBy
 );
 
 public sealed class MilestoneDefinitionUpsertRequest

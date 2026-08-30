@@ -8,7 +8,6 @@ import { Notification } from '@/features/notifications/types/notification';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'expo-router';
 import {
-  Award,
   Bell,
   BookOpen,
   Check,
@@ -32,7 +31,6 @@ const TYPE_CONFIG = {
     bgColor: 'bg-[#EEE9FF]',
   },
   [NotificationType.MILESTONE]: { icon: Star, color: theme.sunDeep, bgColor: 'bg-[#FFF7E0]' },
-  [NotificationType.BADGE]: { icon: Award, color: theme.sky, bgColor: 'bg-[#EAF9FD]' },
   [NotificationType.REFERRAL]: { icon: Users, color: theme.violetDeep, bgColor: 'bg-[#EEE9FF]' },
   [NotificationType.LESSON]: { icon: BookOpen, color: theme.grass, bgColor: 'bg-[#F1FBF5]' },
   [NotificationType.LESSON_REVIEW]: {
@@ -314,9 +312,8 @@ const NotificationScreen = () => {
       case NotificationType.LESSON_REVIEW:
         return `/lessons/${referenceId}`;
 
-      case NotificationType.BADGE:
       case NotificationType.MILESTONE:
-        return `/badges`;
+        return `/(tabs)/achievements`;
 
       case NotificationType.PALACE:
         return `/palaces/${referenceId}`;

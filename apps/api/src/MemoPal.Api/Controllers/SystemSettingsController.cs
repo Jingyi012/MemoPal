@@ -14,18 +14,8 @@ public sealed class SystemSettingsController : ApiControllerBase
     {
     }
 
-    [HttpGet("gamification/mobile-ui-config")]
-    public async Task<IActionResult> GetGamificationMobileUiConfig(CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(
-            new GetSystemSettingsByKeyQuery(SystemSettingKeys.GamificationMobileUiConfig),
-            cancellationToken);
-        return Ok(result);
-    }
-
     /// <summary>
-    /// Fetch all system settings for mobile app (feature limits, gamification configs, mission templates, etc.)
-    /// Used on app startup and manual refresh to populate local cache
+    /// Fetch all public system settings used by the mobile app.
     /// </summary>
     [HttpGet("all")]
     public async Task<IActionResult> GetAllSettings(CancellationToken cancellationToken)
@@ -83,22 +73,22 @@ public sealed class SystemSettingsController : ApiControllerBase
     }
 
     /// <summary>
-    /// Fetch XP configurations
-    /// </summary>
-    [HttpGet("xp-configs")]
-    public async Task<IActionResult> GetXpConfigs(CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new GetSystemSettingsByKeyQuery(SystemSettingKeys.XpConfigs), cancellationToken);
-        return Ok(result);
-    }
-
-    /// <summary>
     /// Fetch level configurations
     /// </summary>
     [HttpGet("level-configs")]
     public async Task<IActionResult> GetLevelConfigs(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetSystemSettingsByKeyQuery(SystemSettingKeys.LevelConfigs), cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Fetch the simple, user-visible gamification rules.
+    /// </summary>
+    [HttpGet("gamification-rules")]
+    public async Task<IActionResult> GetGamificationRules(CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new GetGamificationRulesQuery(), cancellationToken);
         return Ok(result);
     }
 

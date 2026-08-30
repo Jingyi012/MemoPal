@@ -50,15 +50,20 @@ export default function MilestoneDefinitionsPage() {
               label='Condition Type'
               placeholder='Select condition type'
               rules={[{ required: true }]}
-              options={['level', 'lessons_completed', 'words_learned', 'streak_days'].map(
-                (value) => ({ label: value, value })
-              )}
+              options={[
+                { label: 'Player level', value: 'level' },
+                { label: 'Practice sessions completed', value: 'lessons_completed' },
+                { label: 'Different memory items practised', value: 'words_learned' },
+                { label: 'Current streak (days)', value: 'streak_days' },
+                { label: 'Best streak (days)', value: 'longest_streak' },
+                { label: 'Total XP earned', value: 'xp_earned' },
+              ]}
             />
             <ProFormDigit
               name='conditionValue'
               label='Condition Value'
               rules={[{ required: true }]}
-              min={0}
+              min={1}
               fieldProps={{ placeholder: 'Enter target value' }}
             />
           </>
@@ -67,4 +72,3 @@ export default function MilestoneDefinitionsPage() {
     </PortalPageContainer>
   );
 }
-

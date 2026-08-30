@@ -46,13 +46,21 @@ public sealed class PracticeAttemptTests
         Assert.Equal(firstAttempt.Id, secondAttempt.Id);
         Assert.Equal(1, firstAttempt.CorrectCount);
         Assert.Equal(1, firstAttempt.FirstAttemptCorrectCount);
+        Assert.Equal(20, firstAttempt.XpEarned);
+        Assert.Equal("memory_learned", firstAttempt.XpSourceType);
+        Assert.Equal(20, firstAttempt.TotalXp);
+        Assert.Equal(20, secondAttempt.XpEarned);
         Assert.Equal(userId, firstAttempt.CreatedBy);
         Assert.All(firstAttempt.Responses, response => Assert.Equal(userId, response.CreatedBy));
         Assert.Equal(1, await db.PracticeAttempts.CountAsync());
         Assert.Equal(2, await db.PracticeResponses.CountAsync());
+        Assert.Equal(1, await db.XpEvents.CountAsync());
+        Assert.Equal(20, (await db.Users.SingleAsync()).TotalXp);
         var userStats = await db.UserStats.SingleAsync(x => x.UserId == userId);
         Assert.Equal(1, userStats.CurrentStreak);
         Assert.Equal(1, userStats.LongestStreak);
+        Assert.Equal(1, userStats.LessonsCompleted);
+        Assert.Equal(2, userStats.WordsLearned);
         Assert.NotNull(userStats.LastActiveDate);
 
         var schedules = await db.MemoryReviewSchedules.OrderBy(x => x.MemoryItemId).ToListAsync();
@@ -210,6 +218,99 @@ public sealed class PracticeAttemptTests
     }
 
     [Fact]
+    public async Task Due_Recall_Should_Award_Configured_Xp_And_Level_Up()
+    {
+        const string userId = "due-xp-user";
+        await using var db = CreateDbContext(userId);
+        SeedMemorySet(db, userId, "set-due-xp", "item-due-xp");
+        var user = db.Users.Local.Single();
+        user.TotalXp = 95;
+        db.PracticeAttempts.Add(new PracticeAttempt
+        {
+            Id = "previous-attempt",
+            UserId = userId,
+            MemorySetId = "set-due-xp",
+            ClientAttemptId = "previous-client",
+            Mode = PracticeModes.Recall,
+            CompletedAt = DateTime.UtcNow.AddDays(-1),
+            TotalCount = 1
+        });
+        db.MemoryReviewSchedules.Add(new MemoryReviewSchedule
+        {
+            Id = "due-xp-schedule",
+            UserId = userId,
+            MemorySetId = "set-due-xp",
+            MemoryItemId = "item-due-xp",
+            DueAt = DateTime.UtcNow.AddMinutes(-1),
+            ReviewCount = 1,
+            IntervalDays = 1
+        });
+        await db.SaveChangesAsync();
+
+        var result = await new CreatePracticeAttemptBatchCommandHandler(db).Handle(
+            new CreatePracticeAttemptBatchCommand(userId, BuildRecallRequest(
+                "due-xp-client",
+                "set-due-xp",
+                "item-due-xp")),
+            default);
+
+        var attempt = Assert.Single(result.Data!);
+        Assert.Equal(10, attempt.XpEarned);
+        Assert.Equal("due_review_completed", attempt.XpSourceType);
+        Assert.Equal(105, attempt.TotalXp);
+        Assert.Equal(1, attempt.PreviousLevel);
+        Assert.Equal(2, attempt.CurrentLevel);
+    }
+
+    [Fact]
+    public async Task Extra_Practice_Should_Award_Only_Once_Per_Memory_Per_Day()
+    {
+        const string userId = "extra-xp-user";
+        await using var db = CreateDbContext(userId);
+        SeedMemorySet(db, userId, "set-extra-xp", "item-extra-xp");
+        db.PracticeAttempts.Add(new PracticeAttempt
+        {
+            Id = "previous-extra-attempt",
+            UserId = userId,
+            MemorySetId = "set-extra-xp",
+            ClientAttemptId = "previous-extra-client",
+            Mode = PracticeModes.Recall,
+            CompletedAt = DateTime.UtcNow.AddDays(-1),
+            TotalCount = 1
+        });
+        db.MemoryReviewSchedules.Add(new MemoryReviewSchedule
+        {
+            Id = "extra-xp-schedule",
+            UserId = userId,
+            MemorySetId = "set-extra-xp",
+            MemoryItemId = "item-extra-xp",
+            DueAt = DateTime.UtcNow.AddDays(1),
+            ReviewCount = 1,
+            IntervalDays = 1
+        });
+        await db.SaveChangesAsync();
+        var handler = new CreatePracticeAttemptBatchCommandHandler(db);
+
+        var first = await handler.Handle(
+            new CreatePracticeAttemptBatchCommand(userId, BuildRecallRequest(
+                "extra-xp-client-1",
+                "set-extra-xp",
+                "item-extra-xp")),
+            default);
+        var second = await handler.Handle(
+            new CreatePracticeAttemptBatchCommand(userId, BuildRecallRequest(
+                "extra-xp-client-2",
+                "set-extra-xp",
+                "item-extra-xp")),
+            default);
+
+        Assert.Equal(5, Assert.Single(first.Data!).XpEarned);
+        Assert.Equal(0, Assert.Single(second.Data!).XpEarned);
+        Assert.Equal(5, (await db.Users.SingleAsync()).TotalXp);
+        Assert.Single(await db.XpEvents.ToListAsync());
+    }
+
+    [Fact]
     public async Task UpcomingReviewQuery_Should_Return_Future_Items_Within_Window()
     {
         const string userId = "upcoming-user";
@@ -248,7 +349,7 @@ public sealed class PracticeAttemptTests
     }
 
     [Fact]
-    public async Task PracticeStatsQuery_Should_Aggregate_Sessions_Words_Accuracy_And_Weekly_Activity()
+    public async Task PracticeStatsQuery_Should_Aggregate_First_Attempt_Recall_And_Weekly_Activity()
     {
         const string userId = "stats-user";
         await using var db = CreateDbContext(userId);
@@ -262,6 +363,7 @@ public sealed class PracticeAttemptTests
                 ClientAttemptId = "stats-client-1",
                 CompletedAt = now,
                 CorrectCount = 2,
+                FirstAttemptCorrectCount = 2,
                 TotalCount = 3,
                 Responses =
                 [
@@ -278,6 +380,7 @@ public sealed class PracticeAttemptTests
                 ClientAttemptId = "stats-client-2",
                 CompletedAt = now.AddDays(-1),
                 CorrectCount = 1,
+                FirstAttemptCorrectCount = 0,
                 TotalCount = 1,
                 Responses =
                 [new PracticeResponse { Id = "stats-response-4", MemoryItemId = "word-1", IsCorrect = true }]
@@ -290,7 +393,7 @@ public sealed class PracticeAttemptTests
         Assert.True(result.Success);
         Assert.Equal(2, result.Data!.SessionsCompleted);
         Assert.Equal(3, result.Data.WordsLearned);
-        Assert.Equal(75, result.Data.AccuracyPercent);
+        Assert.Equal(50, result.Data.FirstAttemptRecallPercent);
         Assert.Equal(1, result.Data.WeeklyActivity[^1].Sessions);
         Assert.Equal(2, result.Data.WeeklyActivity.Sum(day => day.Sessions));
     }
@@ -303,8 +406,47 @@ public sealed class PracticeAttemptTests
         return new AppDbContext(options, new TestCurrentUserAccessor(userId));
     }
 
+    private static PracticeAttemptBatchRequest BuildRecallRequest(
+        string clientAttemptId,
+        string memorySetId,
+        string memoryItemId) => new()
+    {
+        Attempts =
+        [
+            new PracticeAttemptInput
+            {
+                ClientAttemptId = clientAttemptId,
+                MemorySetId = memorySetId,
+                Mode = PracticeModes.Recall,
+                DurationMs = 1000,
+                Responses =
+                [
+                    new PracticeResponseInput
+                    {
+                        MemoryItemId = memoryItemId,
+                        IsCorrect = true,
+                        AttemptCount = 1,
+                        ResponseMs = 500
+                    }
+                ]
+            }
+        ]
+    };
+
     private static void SeedMemorySet(AppDbContext db, string userId, string setId, params string[] itemIds)
     {
+        if (!db.Users.Local.Any(user => user.Id == userId))
+        {
+            db.Users.Add(new User
+            {
+                Id = userId,
+                Email = $"{userId}@example.com",
+                DisplayName = userId,
+                Level = 1,
+                TotalXp = 0
+            });
+        }
+
         db.MemorySets.Add(new MemorySet
         {
             Id = setId,

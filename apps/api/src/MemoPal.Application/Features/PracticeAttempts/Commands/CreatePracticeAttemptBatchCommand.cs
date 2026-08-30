@@ -2,7 +2,9 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.PracticeAttempts.DTOs;
+using MemoPal.Application.Features.XpEvents;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -76,7 +78,8 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
                             !x.IsDeleted)
                 .Select(x => (DateTime?)x.DueAt)
                 .MinAsync(cancellationToken);
-            return ToDto(existing, existingNextDue);
+            var existingAward = await GetAttemptAwardAsync(userId, existing.Id, cancellationToken);
+            return ToDto(existing, existingNextDue, existingAward);
         }
 
         var memorySet = await _db.MemorySets
@@ -97,6 +100,16 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
         {
             throw new ValidationAppException("Every response must belong to the selected memory set.");
         }
+
+        var isFirstCompletedRecall = input.Mode == PracticeModes.Recall &&
+            !await _db.PracticeAttempts
+                .AsNoTracking()
+                .AnyAsync(
+                    x => x.UserId == userId &&
+                         x.MemorySetId == memorySet.Id &&
+                         x.Mode == PracticeModes.Recall &&
+                         !x.IsDeleted,
+                    cancellationToken);
 
         var now = DateTime.UtcNow;
         var attempt = new PracticeAttempt
@@ -127,6 +140,7 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
         var schedules = await _db.MemoryReviewSchedules
             .Where(x => x.UserId == userId && responseIds.Contains(x.MemoryItemId) && !x.IsDeleted)
             .ToListAsync(cancellationToken);
+        var hasDueItems = schedules.Any(schedule => schedule.DueAt <= now);
 
         DateTime? nextReviewAt = schedules.Count == 0 ? null : schedules.Min(schedule => schedule.DueAt);
         if (input.Mode == PracticeModes.Recall)
@@ -179,14 +193,133 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
         // freshly logged-in device) sees the same value on the next profile
         // request; relying on client-side counters made the Home banner stay at
         // zero after a successful session.
-        await UpdateUserStreakAsync(userId, now, cancellationToken);
+        await UpdateUserProgressAsync(userId, responseIds, now, cancellationToken);
+        var xpAward = await AwardPracticeXpAsync(
+            userId,
+            attempt,
+            isFirstCompletedRecall,
+            hasDueItems,
+            now,
+            cancellationToken);
 
         await _db.SaveChangesAsync(cancellationToken);
-        return ToDto(attempt, nextReviewAt);
+        return ToDto(attempt, nextReviewAt, xpAward);
     }
 
-    private async Task UpdateUserStreakAsync(
+    private async Task<PracticeXpAward> AwardPracticeXpAsync(
         string userId,
+        PracticeAttempt attempt,
+        bool isFirstCompletedRecall,
+        bool hasDueItems,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var user = await _db.Users
+            .FirstOrDefaultAsync(x => x.Id == userId && !x.IsDeleted, cancellationToken)
+            ?? throw new NotFoundAppException("User not found.");
+        var previousLevel = Math.Max(1, user.Level);
+        var config = await _db.GetXpAwardConfigAsync(cancellationToken);
+
+        string sourceType;
+        string clientEventId;
+        int xpAmount;
+
+        if (isFirstCompletedRecall)
+        {
+            sourceType = XpSourceTypes.MemoryLearned;
+            clientEventId = $"memory-learned:{attempt.MemorySetId}";
+            xpAmount = config.MemoryLearnedXp;
+        }
+        else if (hasDueItems)
+        {
+            sourceType = XpSourceTypes.DueReviewCompleted;
+            clientEventId = $"due-review:{attempt.Id}";
+            xpAmount = config.DueReviewXp;
+        }
+        else
+        {
+            sourceType = XpSourceTypes.ExtraPracticeCompleted;
+            var dayToken = now.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
+            var dailyPrefix = $"extra-practice:{attempt.MemorySetId}:{dayToken}:";
+            var awardsToday = await _db.XpEvents
+                .AsNoTracking()
+                .CountAsync(
+                    x => x.UserId == userId &&
+                         x.SourceType == XpSourceTypes.ExtraPracticeCompleted &&
+                         x.ClientEventId.StartsWith(dailyPrefix) &&
+                         !x.IsDeleted,
+                    cancellationToken);
+
+            if (config.ExtraPracticeDailyLimit <= 0 || awardsToday >= config.ExtraPracticeDailyLimit)
+            {
+                return new PracticeXpAward(0, null, user.TotalXp, previousLevel, previousLevel);
+            }
+
+            clientEventId = $"{dailyPrefix}{awardsToday + 1}";
+            xpAmount = config.ExtraPracticeXp;
+        }
+
+        if (xpAmount <= 0)
+        {
+            return new PracticeXpAward(0, null, user.TotalXp, previousLevel, previousLevel);
+        }
+
+        var alreadyAwarded = await _db.XpEvents
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.UserId == userId && x.ClientEventId == clientEventId && !x.IsDeleted,
+                cancellationToken);
+        if (alreadyAwarded)
+        {
+            return new PracticeXpAward(0, null, user.TotalXp, previousLevel, previousLevel);
+        }
+
+        await _db.XpEvents.AddAsync(new XpEvent
+        {
+            Id = Guid.NewGuid().ToString("D"),
+            UserId = userId,
+            SourceType = sourceType,
+            SourceId = attempt.Id,
+            XpAmount = xpAmount,
+            ClientEventId = clientEventId,
+            IsDeleted = false,
+            CreatedAt = now,
+            UpdatedAt = now
+        }, cancellationToken);
+
+        user.TotalXp = Math.Max(0, user.TotalXp + xpAmount);
+        user.Level = await _db.ResolveLevelByXpAsync(user.TotalXp, cancellationToken);
+        user.UpdatedAt = now;
+
+        return new PracticeXpAward(xpAmount, sourceType, user.TotalXp, previousLevel, user.Level);
+    }
+
+    private async Task<PracticeXpAward> GetAttemptAwardAsync(
+        string userId,
+        string attemptId,
+        CancellationToken cancellationToken)
+    {
+        var user = await _db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == userId && !x.IsDeleted, cancellationToken)
+            ?? throw new NotFoundAppException("User not found.");
+        var xpEvent = await _db.XpEvents
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.UserId == userId && x.SourceId == attemptId && !x.IsDeleted,
+                cancellationToken);
+        var level = Math.Max(1, user.Level);
+        return new PracticeXpAward(
+            xpEvent?.XpAmount ?? 0,
+            xpEvent?.SourceType,
+            user.TotalXp,
+            level,
+            level);
+    }
+
+    private async Task UpdateUserProgressAsync(
+        string userId,
+        IReadOnlyCollection<string> practicedItemIds,
         DateTime now,
         CancellationToken cancellationToken)
     {
@@ -214,6 +347,18 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
             _ => 1
         };
         stats.LongestStreak = Math.Max(stats.LongestStreak, stats.CurrentStreak);
+        var previouslyLearnedItemIds = await _db.PracticeAttempts
+            .AsNoTracking()
+            .Where(attempt => attempt.UserId == userId && !attempt.IsDeleted)
+            .SelectMany(attempt => attempt.Responses)
+            .Where(response => practicedItemIds.Contains(response.MemoryItemId) && !response.IsDeleted)
+            .Select(response => response.MemoryItemId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        stats.LessonsCompleted = Math.Max(0, stats.LessonsCompleted) + 1;
+        stats.WordsLearned = Math.Max(0, stats.WordsLearned) + practicedItemIds
+            .Distinct(StringComparer.Ordinal)
+            .Count(itemId => !previouslyLearnedItemIds.Contains(itemId, StringComparer.Ordinal));
         stats.LastActiveDate = now;
         stats.UpdatedAt = now;
         stats.IsDeleted = false;
@@ -238,7 +383,10 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
             throw new ValidationAppException("startedAt cannot be in the future.");
     }
 
-    private static PracticeAttemptDto ToDto(PracticeAttempt attempt, DateTime? nextReviewAt) => new(
+    private static PracticeAttemptDto ToDto(
+        PracticeAttempt attempt,
+        DateTime? nextReviewAt,
+        PracticeXpAward xpAward) => new(
         attempt.Id,
         attempt.ClientAttemptId,
         attempt.MemorySetId,
@@ -251,6 +399,11 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
         attempt.FirstAttemptCorrectCount,
         attempt.TotalCount,
         nextReviewAt,
+        xpAward.XpEarned,
+        xpAward.SourceType,
+        xpAward.TotalXp,
+        xpAward.PreviousLevel,
+        xpAward.CurrentLevel,
         attempt.Responses.Select(response => new PracticeResponseDto(
             response.Id,
             response.MemoryItemId,
@@ -265,4 +418,11 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
         attempt.UpdatedAt,
         attempt.CreatedBy,
         attempt.UpdatedBy);
+
+    private sealed record PracticeXpAward(
+        int XpEarned,
+        string? SourceType,
+        int TotalXp,
+        int PreviousLevel,
+        int CurrentLevel);
 }

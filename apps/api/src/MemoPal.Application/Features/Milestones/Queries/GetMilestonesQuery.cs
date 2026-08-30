@@ -95,7 +95,10 @@ public sealed class GetMilestonesQueryHandler : IRequestHandler<GetMilestonesQue
             achieved?.AchievedAt,
             definition.CreatedAt,
             definition.UpdatedAt,
+            definition.CreatedBy,
+            definition.UpdatedBy,
             definition.IsDeleted,
-            definition.DeletedAt);
+            definition.DeletedAt,
+            definition.DeletedBy);
     }
 }

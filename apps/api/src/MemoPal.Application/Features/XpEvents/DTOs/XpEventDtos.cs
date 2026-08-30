@@ -14,12 +14,3 @@ public sealed record XpEventDto(
     DateTime? DeletedAt,
     string? DeletedBy
 );
-
-public sealed class XpEventUpsertRequest
-{
-    public string? Id { get; set; }
-    public string? SourceType { get; set; }
-    public string? SourceId { get; set; }
-    public int XpAmount { get; set; }
-    public string? ClientEventId { get; set; }
-}

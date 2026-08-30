@@ -13,7 +13,15 @@ public sealed record CreateMilestoneDefinitionCommand(MilestoneDefinitionUpsertR
 
 public sealed class CreateMilestoneDefinitionCommandHandler : IRequestHandler<CreateMilestoneDefinitionCommand, ApiResponse<MilestoneDefinitionDto>>
 {
-    private const string UnsupportedXpConditionType = "total_xp";
+    private static readonly IReadOnlySet<string> SupportedConditionTypes = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "level",
+        "lessons_completed",
+        "words_learned",
+        "streak_days",
+        "longest_streak",
+        "xp_earned"
+    };
     private readonly IAppDbContext _db;
 
     public CreateMilestoneDefinitionCommandHandler(IAppDbContext db)
@@ -27,8 +35,11 @@ public sealed class CreateMilestoneDefinitionCommandHandler : IRequestHandler<Cr
             throw new ValidationAppException("key, title, and conditionType are required.");
 
         var normalizedConditionType = request.Request.ConditionType.Trim();
-        if (string.Equals(normalizedConditionType, UnsupportedXpConditionType, StringComparison.OrdinalIgnoreCase))
-            throw new ValidationAppException("conditionType 'total_xp' is not supported. Use level milestones instead.");
+        normalizedConditionType = normalizedConditionType.ToLowerInvariant();
+        if (!SupportedConditionTypes.Contains(normalizedConditionType))
+            throw new ValidationAppException("conditionType must be level, lessons_completed, words_learned, streak_days, longest_streak, or xp_earned.");
+        if (request.Request.ConditionValue < 1)
+            throw new ValidationAppException("conditionValue must be at least 1.");
 
         var now = DateTime.UtcNow;
         var id = string.IsNullOrWhiteSpace(request.Request.Id) ? Guid.NewGuid().ToString("D") : request.Request.Id!;

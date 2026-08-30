@@ -9,6 +9,5 @@ export enum EntityType {
   REVIEW_SCHEDULE = 'review_schedules',
   XP_EVENT = 'xp_events',
   USER_STATS = 'user_stats',
-  BADGE = 'badges',
   MILESTONE = 'milestones',
 }

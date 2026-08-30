@@ -47,6 +47,11 @@ public sealed record PracticeAttemptDto(
     int FirstAttemptCorrectCount,
     int TotalCount,
     DateTime? NextReviewAt,
+    int XpEarned,
+    string? XpSourceType,
+    int TotalXp,
+    int PreviousLevel,
+    int CurrentLevel,
     IReadOnlyList<PracticeResponseDto> Responses,
     DateTime CreatedAt,
     DateTime UpdatedAt,
@@ -60,7 +65,7 @@ public sealed record PracticeActivityDayDto(
 public sealed record PracticeStatsDto(
     int SessionsCompleted,
     int WordsLearned,
-    int AccuracyPercent,
+    int FirstAttemptRecallPercent,
     IReadOnlyList<PracticeActivityDayDto> WeeklyActivity);
 
 public sealed record DueMemoryReviewDto(

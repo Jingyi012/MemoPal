@@ -1,11 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import { AdminRoute, ProtectedRoute } from './components/ProtectedRoute';
-import BadgeDefinitionsPage from './pages/BadgeDefinitionsPage';
 import FeatureLimitsPage from './pages/FeatureLimitsPage';
 import LevelConfigsPage from './pages/LevelConfigsPage';
 import MilestoneDefinitionsPage from './pages/MilestoneDefinitionsPage';
-import MissionTemplatesPage from './pages/MissionTemplatesPage';
 import ReferralConfigPage from './pages/ReferralConfigPage';
 import ReferralUsersPage from './pages/ReferralUsersPage';
 import UsersPage from './pages/UsersPage';
@@ -37,9 +35,7 @@ export default function App() {
               <Route path="limits" element={<FeatureLimitsPage />} />
               <Route path="xp" element={<XpConfigsPage />} />
               <Route path="levels" element={<LevelConfigsPage />} />
-              <Route path="badges" element={<BadgeDefinitionsPage />} />
               <Route path="milestones" element={<MilestoneDefinitionsPage />} />
-              <Route path="missions" element={<MissionTemplatesPage />} />
             </Route>
             <Route path="referrals">
               <Route index element={<Navigate to="config" replace />} />

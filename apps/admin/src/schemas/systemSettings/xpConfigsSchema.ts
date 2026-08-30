@@ -1,106 +1,55 @@
-export interface XpConfigItem {
-  key: string;
-  sourceType: string;
-  baseXp: number;
-  variableXp: number;
-  isActive: boolean;
-}
-
 export interface XpConfigsConfig {
-  configs: XpConfigItem[];
+  memoryLearnedXp: number;
+  dueReviewXp: number;
+  extraPracticeXp: number;
+  extraPracticeDailyLimit: number;
 }
-
-export const XP_CONFIG_ITEM_SCHEMA = {
-  type: "object",
-  title: "XP Config Entry",
-  properties: {
-    key: { type: "string", title: "Key", minLength: 1 },
-    sourceType: {
-      type: "string",
-      title: "Source Type",
-      enum: [
-        "review_complete",
-        "lesson_initial_completion",
-        "lesson_complete",
-        "word_mastered",
-        "streak_bonus",
-        "mission_complete",
-        "manual_adjustment",
-      ],
-    },
-    baseXp: { type: "number", title: "Base XP", minimum: 0 },
-    variableXp: { type: "number", title: "Variable XP", minimum: 0 },
-    isActive: { type: "boolean", title: "Active", default: true },
-  },
-  required: ["key", "sourceType", "baseXp", "variableXp", "isActive"],
-  additionalProperties: false,
-} as const;
 
 export const XP_CONFIGS_SCHEMA = {
   type: "object",
-  title: "XP Configurations",
+  title: "Simple XP Rewards",
   properties: {
-    configs: {
-      type: "array",
-      title: "Configs",
-      items: XP_CONFIG_ITEM_SCHEMA,
-      minItems: 1,
+    memoryLearnedXp: {
+      type: "number",
+      title: "Learn a new memory",
+      description: "Awarded once, after the first completed recall for a memory.",
+      minimum: 0,
+      maximum: 10000,
+    },
+    dueReviewXp: {
+      type: "number",
+      title: "Complete a due review",
+      description: "Awarded after completing a scheduled review that is due.",
+      minimum: 0,
+      maximum: 10000,
+    },
+    extraPracticeXp: {
+      type: "number",
+      title: "Extra practice",
+      description: "Awarded for an optional review completed before it is due.",
+      minimum: 0,
+      maximum: 10000,
+    },
+    extraPracticeDailyLimit: {
+      type: "number",
+      title: "Extra-practice rewards per memory each day",
+      description: "Limits repeat rewards while still encouraging a daily visit.",
+      minimum: 0,
+      maximum: 10,
     },
   },
-  required: ["configs"],
+  required: [
+    "memoryLearnedXp",
+    "dueReviewXp",
+    "extraPracticeXp",
+    "extraPracticeDailyLimit",
+  ],
   additionalProperties: false,
 } as const;
 
 export const XP_CONFIGS_DEFAULT: XpConfigsConfig = {
-  configs: [
-    {
-      key: "xp-review-complete",
-      sourceType: "review_complete",
-      baseXp: 15,
-      variableXp: 5,
-      isActive: true,
-    },
-    {
-      key: "xp-lesson-initial-completion",
-      sourceType: "lesson_initial_completion",
-      baseXp: 25,
-      variableXp: 10,
-      isActive: true,
-    },
-    {
-      key: "xp-lesson-complete",
-      sourceType: "lesson_complete",
-      baseXp: 40,
-      variableXp: 15,
-      isActive: true,
-    },
-    {
-      key: "xp-word-mastered",
-      sourceType: "word_mastered",
-      baseXp: 8,
-      variableXp: 2,
-      isActive: true,
-    },
-    {
-      key: "xp-streak-bonus",
-      sourceType: "streak_bonus",
-      baseXp: 12,
-      variableXp: 0,
-      isActive: true,
-    },
-    {
-      key: "xp-mission-complete",
-      sourceType: "mission_complete",
-      baseXp: 35,
-      variableXp: 0,
-      isActive: true,
-    },
-    {
-      key: "xp-manual-adjustment",
-      sourceType: "manual_adjustment",
-      baseXp: 50,
-      variableXp: 0,
-      isActive: true,
-    },
-  ],
+  memoryLearnedXp: 20,
+  dueReviewXp: 10,
+  extraPracticeXp: 5,
+  extraPracticeDailyLimit: 1,
 };

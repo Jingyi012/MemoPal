@@ -9,14 +9,6 @@ public sealed record UserStatsDto(
     DateTime UpdatedAt
 );
 
-public sealed class UpdateUserStatsRequest
-{
-    public int? LessonsCompleted { get; set; }
-    public int? WordsLearned { get; set; }
-    public int? CurrentStreak { get; set; }
-    public int? LongestStreak { get; set; }
-    public DateTime? LastActiveDate { get; set; }
-}
 
 public sealed record UserLevelDto(int Level, int Xp);
 

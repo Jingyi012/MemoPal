@@ -1,13 +1,9 @@
-export interface LevelConfigs {
+export interface LevelConfig {
   level: number;
   requiredXp: number;
-  title?: string;
-  updatedAt?: string;
-  createdAt?: string;
+  title: string;
 }
 
-export interface LevelConfigVersion {
-  version: string;
-  latestUpdatedAt?: string | null;
-  activeCount: number;
+export interface LevelProgressConfig {
+  xpPerLevel: number;
 }

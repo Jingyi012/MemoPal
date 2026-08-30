@@ -1,6 +1,5 @@
 using MediatR;
 using MemoPal.Application.Common;
-using MemoPal.Application.Features.Users.Commands;
 using MemoPal.Application.Features.Users.DTOs;
 using MemoPal.Application.Features.Users.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -19,13 +18,6 @@ public sealed class UsersController : ApiControllerBase
     public async Task<IActionResult> GetStats(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetUserStatsQuery(GetUserIdOrThrow()), cancellationToken); 
-        return Ok(result);
-    }
-
-    [HttpPatch("/users/stats")]
-    public async Task<IActionResult> UpdateStats([FromBody] UpdateUserStatsRequest request, CancellationToken cancellationToken)
-    {
-        var result = await Sender.Send(new UpdateUserStatsCommand(GetUserIdOrThrow(), request), cancellationToken); 
         return Ok(result);
     }
 

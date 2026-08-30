@@ -3,10 +3,6 @@ import {
   FEATURE_LIMITS_DEFAULT,
 } from "./featureLimitsSchema";
 import {
-  GAMIFICATION_UI_CONFIG_SCHEMA,
-  GAMIFICATION_UI_CONFIG_DEFAULT,
-} from "./gamificationUiConfigSchema";
-import {
   REFERRAL_PROGRAM_CONFIG_SCHEMA,
   REFERRAL_PROGRAM_CONFIG_DEFAULT,
 } from "./referralProgramConfigSchema";
@@ -36,7 +32,6 @@ import {
   NUMBER_PEG_DEFINITIONS_SCHEMA,
 } from "./numberPegDefinitionsSchema";
 
-export * from "./gamificationUiConfigSchema";
 export * from "./featureLimitsSchema";
 export * from "./referralProgramConfigSchema";
 export * from "./authLoginMethodsSchema";
@@ -55,12 +50,6 @@ export interface ConfigSchema {
 }
 
 export const ALL_CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
-  gamification_ui: {
-    key: "gamification.mobile.ui_config",
-    title: "Gamification UI Configuration",
-    schema: GAMIFICATION_UI_CONFIG_SCHEMA,
-    default: GAMIFICATION_UI_CONFIG_DEFAULT,
-  },
   feature_limits: {
     key: "feature.limits",
     title: "Feature Limits",

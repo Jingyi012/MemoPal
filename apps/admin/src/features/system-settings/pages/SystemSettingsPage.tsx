@@ -10,7 +10,6 @@ import type {
   SystemSettingDto,
   UpsertSystemSettingRequest,
 } from "../../../types/systemSetting";
-import GamificationUiConfigTab from "../../configs/components/GamificationUiConfigTab";
 import FeatureLimitsConfigTab from "../../configs/components/FeatureLimitsConfigTab";
 import ReferralProgramConfigTab from "../../configs/components/ReferralProgramConfigTab";
 import AuthLoginMethodsConfigTab from "../../configs/components/AuthLoginMethodsConfigTab";
@@ -21,7 +20,6 @@ import NumberPegDefinitionsConfigTab from "../../configs/components/NumberPegDef
 import { useAdminSystemSettingsApi } from "../hooks/useAdminSystemSettingsApi";
 
 const SYSTEM_SETTINGS_SECTIONS = [
-  "gamification",
   "feature-limits",
   "referral-program",
   "auth-login-methods",
@@ -86,11 +84,6 @@ export default function SystemSettingsPage() {
           borderRadius: 12,
         }}
         items={[
-          {
-            key: "gamification",
-            label: "Gamification UI",
-            children: <GamificationUiConfigTab />,
-          },
           {
             key: "feature-limits",
             label: "Feature Limits",

@@ -34,12 +34,6 @@ export const userStatsApi = {
   /**
    * Update user statistics
    */
-  async updateStats(stats: Partial<UserStats>): Promise<UserStats> {
-    const response = await api.patch<GeneralResponse<UserStats>>(`/users/stats`, stats);
-    if (!response.data.success) throw new Error(response.data.message);
-    return response.data.data;
-  },
-
   /**
    * Get user's current level and XP
    */

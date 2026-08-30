@@ -31,8 +31,8 @@ export function LevelConfigTab() {
 
       <Alert
         type="info"
-        message="Level Configurations"
-        description="Configure level thresholds used to map total XP to player level."
+        message="Level Progress"
+        description="Use one easy-to-understand XP target for every level. Changing it recalculates all user levels."
         showIcon
         style={{ marginBottom: 16 }}
       />
@@ -47,7 +47,7 @@ export function LevelConfigTab() {
                 schema={LEVEL_CONFIGS_SCHEMA}
                 formData={config}
                 onSubmit={handleSubmit}
-                title="Level Configurations"
+                title="Level Progress"
                 loading={isLoading}
               />
             ),
@@ -60,7 +60,7 @@ export function LevelConfigTab() {
                 value={config}
                 schema={LEVEL_CONFIGS_SCHEMA}
                 onSubmit={handleSubmit}
-                title="Advanced Level Configurations"
+                title="Advanced Level Progress"
                 loading={isLoading}
               />
             ),

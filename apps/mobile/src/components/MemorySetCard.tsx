@@ -16,7 +16,6 @@ type MemorySetCardProps = {
 export function MemorySetCard({ memorySet, reviewAt, onOpen, onActions }: MemorySetCardProps) {
   const { t } = useTranslation('library');
   const isPalace = memorySet.techniqueKey === 'palace';
-  const updatedLabel = formatUpdatedAt(memorySet.updatedAt, t);
   const reviewLabel = formatReviewLabel(reviewAt, t);
 
   return (
@@ -29,17 +28,14 @@ export function MemorySetCard({ memorySet, reviewAt, onOpen, onActions }: Memory
           {isPalace ? t('techniquePalace') : t('techniqueNumberPeg')}
         </Text>
         <Text numberOfLines={1} style={styles.memoryTitle}>{memorySet.title}</Text>
-        <View style={styles.memoryMetaRow}>
-          <Text numberOfLines={1} style={styles.memoryMeta}>
-            {memorySet.items.length} {memorySet.items.length === 1 ? t('item') : t('items')} ·{' '}
-            {memorySet.status === 'archived'
-              ? t('statusArchived')
-              : memorySet.status === 'draft'
-                ? t('statusDraft')
-                : t('statusReady')}
-          </Text>
-          {updatedLabel ? <Text style={styles.updatedLabel}>{updatedLabel}</Text> : null}
-        </View>
+        <Text numberOfLines={1} style={styles.memoryMeta}>
+          {memorySet.items.length} {memorySet.items.length === 1 ? t('item') : t('items')} ·{' '}
+          {memorySet.status === 'archived'
+            ? t('statusArchived')
+            : memorySet.status === 'draft'
+              ? t('statusDraft')
+              : t('statusReady')}
+        </Text>
         <Text numberOfLines={1} style={[styles.reviewLabel, reviewAt && Date.parse(reviewAt) <= Date.now() && styles.reviewLabelDue]}>
           {reviewLabel}
         </Text>
@@ -60,17 +56,6 @@ export function MemorySetCard({ memorySet, reviewAt, onOpen, onActions }: Memory
       <ChevronRight size={18} color={theme.inkSoft} />
     </AnimatedPressable>
   );
-}
-
-function formatUpdatedAt(value: string, t: (key: 'today' | 'yesterday' | 'daysAgo') => string): string {
-  const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) return '';
-
-  const days = Math.max(0, Math.floor((Date.now() - timestamp) / 86_400_000));
-  if (days === 0) return t('today');
-  if (days === 1) return t('yesterday');
-  if (days < 7) return `${days}${t('daysAgo')}`;
-  return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 function formatReviewLabel(value: string | undefined, t: (key: 'nextReview' | 'reviewDue' | 'reviewAfterRecall') => string): string {
@@ -96,9 +81,7 @@ const styles = StyleSheet.create({
   palaceLabel: { color: theme.violetDeep },
   pegLabel: { color: theme.berryDeep },
   memoryTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, marginTop: 4 },
-  memoryMetaRow: { alignItems: 'center', flexDirection: 'row', marginTop: 3 },
-  memoryMeta: { color: theme.inkSoft, flex: 1, fontFamily: typography.bodyBold, fontSize: 11, minWidth: 0 },
-  updatedLabel: { color: '#9A97A7', fontFamily: typography.bodyBold, fontSize: 10, marginLeft: 8 },
+  memoryMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3, minWidth: 0 },
   reviewLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, marginTop: 3 },
   reviewLabelDue: { color: theme.berryDeep },
   moreButton: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },

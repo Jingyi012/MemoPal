@@ -41,6 +41,13 @@ public sealed class GetPracticeAttemptHistoryQueryHandler
         }
 
         var attemptIds = attempts.Select(attempt => attempt.Id).ToList();
+        var user = await _db.Users
+            .AsNoTracking()
+            .FirstAsync(x => x.Id == request.UserId && !x.IsDeleted, cancellationToken);
+        var xpByAttemptId = await _db.XpEvents
+            .AsNoTracking()
+            .Where(x => x.UserId == request.UserId && x.SourceId != null && attemptIds.Contains(x.SourceId) && !x.IsDeleted)
+            .ToDictionaryAsync(x => x.SourceId!, cancellationToken);
         var currentNextReviewAt = await _db.MemoryReviewSchedules
             .AsNoTracking()
             .Where(schedule =>
@@ -62,19 +69,33 @@ public sealed class GetPracticeAttemptHistoryQueryHandler
 
         var latestAttemptId = attempts[0].Id;
         var history = attempts
-            .Select(attempt => ToDto(
+            .Select(attempt =>
+            {
+                xpByAttemptId.TryGetValue(attempt.Id, out var xpEvent);
+                return ToDto(
                 attempt,
                 nextReviews.TryGetValue(attempt.Id, out var nextReviewAt)
                     ? nextReviewAt
                     : attempt.Id == latestAttemptId
                         ? currentNextReviewAt
-                        : null))
+                        : null,
+                xpEvent?.XpAmount ?? 0,
+                xpEvent?.SourceType,
+                user.TotalXp,
+                user.Level);
+            })
             .ToList();
 
         return ApiResponse<IReadOnlyList<PracticeAttemptDto>>.Ok(history);
     }
 
-    private static PracticeAttemptDto ToDto(PracticeAttempt attempt, DateTime? nextReviewAt) => new(
+    private static PracticeAttemptDto ToDto(
+        PracticeAttempt attempt,
+        DateTime? nextReviewAt,
+        int xpEarned,
+        string? xpSourceType,
+        int totalXp,
+        int currentLevel) => new(
         attempt.Id,
         attempt.ClientAttemptId,
         attempt.MemorySetId,
@@ -87,6 +108,11 @@ public sealed class GetPracticeAttemptHistoryQueryHandler
         attempt.FirstAttemptCorrectCount,
         attempt.TotalCount,
         nextReviewAt,
+        xpEarned,
+        xpSourceType,
+        totalXp,
+        currentLevel,
+        currentLevel,
         attempt.Responses.Select(response => new PracticeResponseDto(
             response.Id,
             response.MemoryItemId,

@@ -26,6 +26,7 @@ import {
   getPalaceCapacityMessage,
   getPalaceLoci,
 } from '../src/features/palace-scenes/utils/palaceCapacity.ts';
+import { groupMemoryReviews } from '../src/features/practice-attempts/utils/reviewGrouping.ts';
 import {
   createPalaceAssociation,
   ensurePalaceAssociations,
@@ -127,6 +128,22 @@ test('treats an unknown reachability result as online when the device is connect
   assert.equal(isNetworkStateOnline({ isConnected: true, isInternetReachable: null }), true);
   assert.equal(isNetworkStateOnline({ isConnected: true, isInternetReachable: false }), false);
   assert.equal(isNetworkStateOnline({ isConnected: false, isInternetReachable: true }), false);
+});
+
+test('groups waiting reviews into one Home row per memory set', () => {
+  const reviews = [
+    { id: 'item-2', memorySetId: 'set-1', dueAt: '2026-08-30T10:00:00.000Z' },
+    { id: 'item-3', memorySetId: 'set-2', dueAt: '2026-08-29T10:00:00.000Z' },
+    { id: 'item-1', memorySetId: 'set-1', dueAt: '2026-08-29T09:00:00.000Z' },
+  ];
+
+  const groups = groupMemoryReviews(reviews);
+
+  assert.equal(groups.length, 2);
+  assert.equal(groups[0].review.memorySetId, 'set-1');
+  assert.equal(groups[0].review.id, 'item-1');
+  assert.equal(groups[0].itemCount, 2);
+  assert.equal(groups[1].itemCount, 1);
 });
 
 test('keeps the peg map ordered and makes each scene vivid', () => {

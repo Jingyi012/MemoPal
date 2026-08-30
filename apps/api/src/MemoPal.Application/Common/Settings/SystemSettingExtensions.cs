@@ -270,7 +270,22 @@ public static class SystemSettingExtensions
         }
     }
 
-    public static async Task<IReadOnlyList<LevelConfigSettingItem>> GetLevelConfigsAsync(
+    public static async Task<XpAwardConfig> GetXpAwardConfigAsync(
+        this IAppDbContext db,
+        CancellationToken cancellationToken = default)
+    {
+        var setting = await db.SystemSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => !x.IsDeleted && x.Key == SystemSettingKeys.XpConfigs,
+                cancellationToken);
+
+        return setting is null
+            ? XpAwardConfig.Default
+            : ParseXpAwardConfig(UnwrapNestedJsonString(setting.Value));
+    }
+
+    public static async Task<int> GetXpPerLevelAsync(
         this IAppDbContext db,
         CancellationToken cancellationToken = default)
     {
@@ -280,13 +295,9 @@ public static class SystemSettingExtensions
                 x => !x.IsDeleted && x.Key == SystemSettingKeys.LevelConfigs,
                 cancellationToken);
 
-        if (setting is null || string.IsNullOrWhiteSpace(setting.Value))
-        {
-            return [];
-        }
-
-        var normalizedJson = UnwrapNestedJsonString(setting.Value);
-        return ParseLevelConfigsFromJson(normalizedJson);
+        return setting is null
+            ? LevelProgressConfig.Default.XpPerLevel
+            : ParseLevelProgressConfig(UnwrapNestedJsonString(setting.Value)).XpPerLevel;
     }
 
     private static string UnwrapNestedJsonString(string rawJson)
@@ -319,59 +330,87 @@ public static class SystemSettingExtensions
         return current;
     }
 
-    private static IReadOnlyList<LevelConfigSettingItem> ParseLevelConfigsFromJson(string rawJson)
+    private static XpAwardConfig ParseXpAwardConfig(string rawJson)
     {
         if (string.IsNullOrWhiteSpace(rawJson))
         {
-            return [];
+            return XpAwardConfig.Default;
         }
 
         try
         {
+            var parsed = JsonSerializer.Deserialize<XpAwardConfigPayload>(rawJson, GenericJsonOptions);
+            if (parsed is not null &&
+                (parsed.MemoryLearnedXp.HasValue || parsed.DueReviewXp.HasValue || parsed.ExtraPracticeXp.HasValue))
+            {
+                var defaults = XpAwardConfig.Default;
+                return new XpAwardConfig(
+                    MemoryLearnedXp: ClampReward(parsed.MemoryLearnedXp ?? defaults.MemoryLearnedXp),
+                    DueReviewXp: ClampReward(parsed.DueReviewXp ?? defaults.DueReviewXp),
+                    ExtraPracticeXp: ClampReward(parsed.ExtraPracticeXp ?? defaults.ExtraPracticeXp),
+                    ExtraPracticeDailyLimit: Math.Clamp(
+                        parsed.ExtraPracticeDailyLimit ?? defaults.ExtraPracticeDailyLimit,
+                        0,
+                        10));
+            }
+
+            // Existing development databases may still contain the previous
+            // array-based configuration. Read its closest matching values so
+            // upgrading does not unexpectedly zero out rewards.
             using var doc = JsonDocument.Parse(rawJson);
             var root = doc.RootElement;
-
-            if (root.ValueKind == JsonValueKind.Array)
+            var items = root.ValueKind == JsonValueKind.Array
+                ? root
+                : TryGetPropertyInsensitive(root, "configs", out var configs) && configs.ValueKind == JsonValueKind.Array
+                    ? configs
+                    : default;
+            if (items.ValueKind != JsonValueKind.Array)
             {
-                var items = JsonSerializer.Deserialize<List<LevelConfigSettingItem>>(rawJson, GenericJsonOptions) ?? [];
-                return NormalizeLevelConfigItems(items);
+                return XpAwardConfig.Default;
             }
 
-            if (root.ValueKind == JsonValueKind.Object)
-            {
-                var wrapped = JsonSerializer.Deserialize<LevelConfigSettingPayload>(rawJson, GenericJsonOptions);
-                var wrappedItems = wrapped?.Levels ?? wrapped?.Configs;
-                if (wrappedItems is { Count: > 0 })
+            var legacy = items.EnumerateArray()
+                .Where(item => item.ValueKind == JsonValueKind.Object)
+                .Select(item => new
                 {
-                    return NormalizeLevelConfigItems(wrappedItems);
-                }
-
-                if (TryGetPropertyInsensitive(root, "items", out var itemsElement) &&
-                    itemsElement.ValueKind == JsonValueKind.Array)
-                {
-                    var items = JsonSerializer.Deserialize<List<LevelConfigSettingItem>>(
-                        itemsElement.GetRawText(),
-                        GenericJsonOptions) ?? [];
-                    return NormalizeLevelConfigItems(items);
-                }
-            }
-
-            return [];
+                    SourceType = TryGetPropertyInsensitive(item, "sourceType", out var source) ? source.GetString() : null,
+                    BaseXp = TryGetPropertyInsensitive(item, "baseXp", out var amount) && amount.TryGetInt32(out var value)
+                        ? value
+                        : 0
+                })
+                .ToList();
+            var fallback = XpAwardConfig.Default;
+            return new XpAwardConfig(
+                MemoryLearnedXp: ClampReward(legacy.FirstOrDefault(x => x.SourceType == "lesson_initial_completion")?.BaseXp ?? fallback.MemoryLearnedXp),
+                DueReviewXp: ClampReward(legacy.FirstOrDefault(x => x.SourceType == "review_complete")?.BaseXp ?? fallback.DueReviewXp),
+                ExtraPracticeXp: fallback.ExtraPracticeXp,
+                ExtraPracticeDailyLimit: fallback.ExtraPracticeDailyLimit);
         }
         catch (JsonException)
         {
-            return [];
+            return XpAwardConfig.Default;
         }
     }
 
-    private static IReadOnlyList<LevelConfigSettingItem> NormalizeLevelConfigItems(
-        IEnumerable<LevelConfigSettingItem> items)
+    private static LevelProgressConfig ParseLevelProgressConfig(string rawJson)
     {
-        return items
-            .Where(x => x.Level > 0)
-            .OrderBy(x => x.RequiredXp)
-            .ThenBy(x => x.Level)
-            .ToList();
+        if (string.IsNullOrWhiteSpace(rawJson))
+        {
+            return LevelProgressConfig.Default;
+        }
+
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<LevelProgressConfigPayload>(rawJson, GenericJsonOptions);
+            return new LevelProgressConfig(Math.Clamp(
+                parsed?.XpPerLevel ?? LevelProgressConfig.Default.XpPerLevel,
+                10,
+                100_000));
+        }
+        catch (JsonException)
+        {
+            return LevelProgressConfig.Default;
+        }
     }
 
     public static async Task<int> ResolveLevelByXpAsync(
@@ -379,8 +418,8 @@ public static class SystemSettingExtensions
         int totalXp,
         CancellationToken cancellationToken = default)
     {
-        var configs = await db.GetLevelConfigsAsync(cancellationToken);
-        return ResolveLevelByXp(configs, totalXp);
+        var xpPerLevel = await db.GetXpPerLevelAsync(cancellationToken);
+        return ResolveLevelByXp(xpPerLevel, totalXp);
     }
 
     public static async Task<bool> EnsureUserLevelMatchesXpAsync(
@@ -403,7 +442,7 @@ public static class SystemSettingExtensions
         this IAppDbContext db,
         CancellationToken cancellationToken = default)
     {
-        var configs = await db.GetLevelConfigsAsync(cancellationToken);
+        var xpPerLevel = await db.GetXpPerLevelAsync(cancellationToken);
         var users = await db.Users
             .Where(x => !x.IsDeleted)
             .ToListAsync(cancellationToken);
@@ -417,7 +456,7 @@ public static class SystemSettingExtensions
         var updatedCount = 0;
         foreach (var user in users)
         {
-            var resolvedLevel = ResolveLevelByXp(configs, Math.Max(0, user.TotalXp));
+            var resolvedLevel = ResolveLevelByXp(xpPerLevel, Math.Max(0, user.TotalXp));
             if (user.Level == resolvedLevel)
             {
                 continue;
@@ -431,23 +470,13 @@ public static class SystemSettingExtensions
         return updatedCount;
     }
 
-    private static int ResolveLevelByXp(IReadOnlyList<LevelConfigSettingItem> configs, int totalXp)
+    private static int ResolveLevelByXp(int xpPerLevel, int totalXp)
     {
-        if (configs.Count == 0)
-        {
-            return 1;
-        }
-
         var safeXp = Math.Max(0, totalXp);
-        var resolved = configs
-            .Where(x => x.RequiredXp <= safeXp)
-            .OrderByDescending(x => x.RequiredXp)
-            .ThenByDescending(x => x.Level)
-            .Select(x => x.Level)
-            .FirstOrDefault();
-
-        return resolved <= 0 ? 1 : resolved;
+        return checked(safeXp / Math.Max(1, xpPerLevel) + 1);
     }
+
+    private static int ClampReward(int value) => Math.Clamp(value, 0, 10_000);
 }
 
 public sealed record AuthLoginMethodsConfig(
@@ -468,17 +497,29 @@ internal sealed class AuthLoginMethodsPayload
     public bool? Facebook { get; init; }
 }
 
-public sealed class LevelConfigSettingItem
+public sealed record XpAwardConfig(
+    int MemoryLearnedXp,
+    int DueReviewXp,
+    int ExtraPracticeXp,
+    int ExtraPracticeDailyLimit)
 {
-    public int Level { get; init; }
-    public int RequiredXp { get; init; }
-    public string? Title { get; init; }
-    public DateTime? CreatedAt { get; init; }
-    public DateTime? UpdatedAt { get; init; }
+    public static XpAwardConfig Default { get; } = new(20, 10, 5, 1);
 }
 
-internal sealed class LevelConfigSettingPayload
+public sealed record LevelProgressConfig(int XpPerLevel)
 {
-    public List<LevelConfigSettingItem>? Levels { get; init; }
-    public List<LevelConfigSettingItem>? Configs { get; init; }
+    public static LevelProgressConfig Default { get; } = new(100);
+}
+
+internal sealed class XpAwardConfigPayload
+{
+    public int? MemoryLearnedXp { get; init; }
+    public int? DueReviewXp { get; init; }
+    public int? ExtraPracticeXp { get; init; }
+    public int? ExtraPracticeDailyLimit { get; init; }
+}
+
+internal sealed class LevelProgressConfigPayload
+{
+    public int? XpPerLevel { get; init; }
 }
