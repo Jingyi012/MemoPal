@@ -2,7 +2,12 @@ import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Pressable, PressableProps, StyleProp, ViewStyle } from 'react-native';
 import { cssInterop } from 'nativewind';
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 const PressableBase = cssInterop(Pressable, {
   className: 'style',
@@ -13,6 +18,8 @@ interface AnimatedPressableProps extends PressableProps {
   style?: StyleProp<ViewStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   className?: string;
+  /** Trigger the action on touch-down for controls that must work above the keyboard. */
+  pressOnIn?: boolean;
 }
 
 const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
@@ -20,6 +27,7 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   style,
   containerStyle,
   onPress,
+  pressOnIn = false,
   className,
   accessibilityRole = 'button',
   ...rest
@@ -31,6 +39,10 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
     transform: [{ scale: reduceMotion ? 1 : scale.value }],
   }));
   const classNameProps = className ? { className } : {};
+  const firePress = (event: Parameters<NonNullable<PressableProps['onPress']>>[0]) => {
+    onPress?.(event);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
 
   return (
     <Animated.View style={[containerStyle, animatedStyle]}>
@@ -39,15 +51,15 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
         {...classNameProps}
         accessibilityRole={accessibilityRole}
         style={style}
-        onPressIn={() => {
+        onPressIn={(e) => {
           if (!reduceMotion) scale.value = withSpring(0.96, { stiffness: 300 });
+          if (pressOnIn) firePress(e);
         }}
         onPressOut={() => {
           if (!reduceMotion) scale.value = withSpring(1);
         }}
         onPress={(e) => {
-          onPress?.(e);
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          if (!pressOnIn) firePress(e);
         }}>
         {children}
       </PressableBase>

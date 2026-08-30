@@ -7,7 +7,7 @@ import { Platform, Text } from 'react-native';
 
 export default function TabsLayout() {
   const { t } = useTranslation('navigation');
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const isLocalDevMode =
     String(process.env.EXPO_PUBLIC_LOCAL_DEV_MODE).trim().toLowerCase() === 'true';
 
@@ -17,6 +17,10 @@ export default function TabsLayout() {
 
   if (!isAuthenticated && !isLocalDevMode) {
     return <Redirect href="/login" />;
+  }
+
+  if (user?.onboardingStatus === 'not-started' || user?.onboardingStatus === 'in-progress') {
+    return <Redirect href="/onboarding" />;
   }
 
   return (

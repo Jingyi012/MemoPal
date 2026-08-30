@@ -24,6 +24,7 @@ public sealed record PredefinedMemoryLessonDto(
     string GoalType,
     int SortOrder,
     bool IsPublished,
+    bool IsStarterLesson,
     int Version,
     IReadOnlyList<PredefinedMemoryLessonItemDto> Items,
     DateTime CreatedAt,
@@ -44,6 +45,7 @@ public sealed class PredefinedMemoryLessonUpsertRequest
     public string GoalType { get; set; } = "ordered-list";
     public int SortOrder { get; set; }
     public bool IsPublished { get; set; }
+    public bool IsStarterLesson { get; set; }
     public int? ExpectedVersion { get; set; }
     public IReadOnlyList<PredefinedMemoryLessonItemInput> Items { get; set; } = [];
 }

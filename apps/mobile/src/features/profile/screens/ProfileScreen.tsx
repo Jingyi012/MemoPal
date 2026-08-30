@@ -11,6 +11,7 @@ import { PushNotificationService } from '@/features/notifications/services/pushN
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ChevronRight, LogOut, Pencil } from 'lucide-react-native';
@@ -35,9 +36,12 @@ export default function ProfileScreen() {
   const { t: languageT } = useTranslation('language');
   const { logout } = useAuth();
   const updateProfileMutation = useUpdateProfile();
-  const [showLogout, setShowLogout] = useState(false);
-  const [reviewRemindersEnabled, setReviewRemindersEnabled] = useState(userState.notifications.reviewReminders);
-  const [dailyLearningEnabled, setDailyLearningEnabled] = useState(userState.notifications.dailyLearningReminder);
+  const [reviewRemindersEnabled, setReviewRemindersEnabled] = useState(
+    userState.notifications.reviewReminders
+  );
+  const [dailyLearningEnabled, setDailyLearningEnabled] = useState(
+    userState.notifications.dailyLearningReminder
+  );
   const [reviewTime, setReviewTime] = useState(userState.preferences.reviewTime);
   const [soundEnabled, setSoundEnabled] = useState(userState.preferences.soundEnabled);
   const helpRef = useRef<any>(null);
@@ -45,16 +49,25 @@ export default function ProfileScreen() {
   const reviewScheduleRef = useRef<any>(null);
   const editProfileRef = useRef<any>(null);
   const languageRef = useRef<any>(null);
-  const languageLabel = userState.preferences.language === 'system'
-    ? `${languageT('followSystem')} · ${languageT('english')}/${languageT('chinese')}`
-    : userState.preferences.language === 'zh' ? languageT('chinese') : languageT('english');
+  const logoutRef = useRef<BottomSheetModal>(null);
+  const languageLabel =
+    userState.preferences.language === 'system'
+      ? `${languageT('followSystem')} · ${languageT('english')}/${languageT('chinese')}`
+      : userState.preferences.language === 'zh'
+        ? languageT('chinese')
+        : languageT('english');
 
   useEffect(() => {
     setReviewRemindersEnabled(userState.notifications.reviewReminders);
     setDailyLearningEnabled(userState.notifications.dailyLearningReminder);
     setReviewTime(userState.preferences.reviewTime);
     setSoundEnabled(userState.preferences.soundEnabled);
-  }, [userState.notifications.dailyLearningReminder, userState.notifications.reviewReminders, userState.preferences.reviewTime, userState.preferences.soundEnabled]);
+  }, [
+    userState.notifications.dailyLearningReminder,
+    userState.notifications.reviewReminders,
+    userState.preferences.reviewTime,
+    userState.preferences.soundEnabled,
+  ]);
 
   const saveSoundPreference = async (enabled: boolean) => {
     setSoundEnabled(enabled);
@@ -80,7 +93,11 @@ export default function ProfileScreen() {
       if (!granted) {
         setDailyLearningEnabled(false);
         await persistDailyLearningPreference(false);
-        Toast.show({ type: 'error', text1: t('notificationsDisabled'), text2: t('enableDailyReminders') });
+        Toast.show({
+          type: 'error',
+          text1: t('notificationsDisabled'),
+          text2: t('enableDailyReminders'),
+        });
         return;
       }
       await PushNotificationService.scheduleDailyLearning(reviewTime);
@@ -88,7 +105,11 @@ export default function ProfileScreen() {
     } catch (error) {
       setDailyLearningEnabled(previousValue);
       await persistDailyLearningPreference(previousValue);
-      Toast.show({ type: 'error', text1: t('reminderUpdateFailed'), text2: error instanceof Error ? error.message : t('unableUpdateDailyReminder') });
+      Toast.show({
+        type: 'error',
+        text1: t('reminderUpdateFailed'),
+        text2: error instanceof Error ? error.message : t('unableUpdateDailyReminder'),
+      });
     }
   };
 
@@ -98,15 +119,23 @@ export default function ProfileScreen() {
     try {
       if (!enabled) {
         await PushNotificationService.cancelAllReviewNotifications();
-        await updateState({ notifications: { ...userState.notifications, reviewReminders: false } });
+        await updateState({
+          notifications: { ...userState.notifications, reviewReminders: false },
+        });
         return;
       }
 
       const granted = await PushNotificationService.requestPermissions();
       if (!granted) {
         setReviewRemindersEnabled(false);
-        await updateState({ notifications: { ...userState.notifications, reviewReminders: false } });
-        Toast.show({ type: 'error', text1: t('notificationsDisabled'), text2: t('enableReviewReminders') });
+        await updateState({
+          notifications: { ...userState.notifications, reviewReminders: false },
+        });
+        Toast.show({
+          type: 'error',
+          text1: t('notificationsDisabled'),
+          text2: t('enableReviewReminders'),
+        });
         return;
       }
 
@@ -114,8 +143,14 @@ export default function ProfileScreen() {
       await updateState({ notifications: { ...userState.notifications, reviewReminders: true } });
     } catch (error) {
       setReviewRemindersEnabled(previousValue);
-      await updateState({ notifications: { ...userState.notifications, reviewReminders: previousValue } });
-      Toast.show({ type: 'error', text1: t('reminderUpdateFailed'), text2: error instanceof Error ? error.message : t('unableUpdateReviewReminders') });
+      await updateState({
+        notifications: { ...userState.notifications, reviewReminders: previousValue },
+      });
+      Toast.show({
+        type: 'error',
+        text1: t('reminderUpdateFailed'),
+        text2: error instanceof Error ? error.message : t('unableUpdateReviewReminders'),
+      });
     }
   };
 
@@ -162,19 +197,34 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.page}>
-      <CommonHeader eyebrow={t('title')} title={t('yourProgress')} description={t('levelXpStreak')} hideBackButton />
+      <CommonHeader
+        eyebrow={t('title')}
+        title={t('yourProgress')}
+        description={t('levelXpStreak')}
+        hideBackButton
+      />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.profileHead}>
           <View style={styles.avatar}>
-            {user?.avatarUrl ? <AppImage source={{ uri: user.avatarUrl }} style={styles.avatarImage} /> : (
-              <LinearGradient colors={['#FFC93C', '#FF6F91']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatarGradient}>
+            {user?.avatarUrl ? (
+              <AppImage source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
+            ) : (
+              <LinearGradient
+                colors={['#FFC93C', '#FF6F91']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avatarGradient}>
                 <Text style={styles.avatarEmoji}>🧑‍🎓</Text>
               </LinearGradient>
             )}
           </View>
           <Text style={styles.profileName}>{displayName}</Text>
-          <Text style={styles.profileSubtitle}>Level {level} · {t('memoryApprentice')}</Text>
-          <AnimatedPressable onPress={() => editProfileRef.current?.present()} style={styles.editButton}>
+          <Text style={styles.profileSubtitle}>
+            Level {level} · {t('memoryApprentice')}
+          </Text>
+          <AnimatedPressable
+            onPress={() => editProfileRef.current?.present()}
+            style={styles.editButton}>
             <Pencil size={14} color="#2B2A3D" />
             <Text style={styles.editButtonText}>{t('editProfile')}</Text>
           </AnimatedPressable>
@@ -182,26 +232,37 @@ export default function ProfileScreen() {
 
         <NightEmphasisCard style={styles.planCard}>
           <Text style={styles.planBadge}>{isPremium ? t('premiumPlan') : t('freePlan')}</Text>
-          <Text style={styles.planTitle}>{isPremium ? t('strongMemoryHabit') : t('unlockFaster')}</Text>
-          <Text style={styles.planSubtitle}>{isPremium ? t('keepStreak') : t('premiumBenefits')}</Text>
+          <Text style={styles.planTitle}>
+            {isPremium ? t('strongMemoryHabit') : t('unlockFaster')}
+          </Text>
+          <Text style={styles.planSubtitle}>
+            {isPremium ? t('keepStreak') : t('premiumBenefits')}
+          </Text>
           <AnimatedPressable onPress={() => router.push('/premium')} style={styles.upgradeButton}>
-            <Text style={styles.upgradeButtonText}>{isPremium ? t('managePlan') : t('upgradePro')}</Text>
+            <Text style={styles.upgradeButtonText}>
+              {isPremium ? t('managePlan') : t('upgradePro')}
+            </Text>
           </AnimatedPressable>
         </NightEmphasisCard>
 
         <Text style={styles.sectionLabel}>{t('settings')}</Text>
         <View style={styles.settingsList}>
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🔔</Text>} title={t('reviewReminders')} value={reviewRemindersEnabled ? t('on') : t('off')} right={<Switch value={reviewRemindersEnabled} onValueChange={saveReviewReminders} />} />
+          <ProfileSettingsRow
+            icon={<Text style={styles.settingsEmoji}>🔔</Text>}
+            title={t('reviewReminders')}
+            value={reviewRemindersEnabled ? t('on') : t('off')}
+            right={<Switch value={reviewRemindersEnabled} onValueChange={saveReviewReminders} />}
+          />
           <ProfileSettingsRow
             icon={<Text style={styles.settingsEmoji}>📚</Text>}
             title={t('dailyLearning')}
             value={reviewTime}
-            right={(
+            right={
               <View style={styles.reminderControl}>
                 <Text style={styles.settingsValue}>{reviewTime}</Text>
                 <Switch value={dailyLearningEnabled} onValueChange={saveDailyLearningReminder} />
               </View>
-            )}
+            }
             onPress={() => reviewScheduleRef.current?.present()}
           />
           <ProfileSettingsRow
@@ -210,13 +271,32 @@ export default function ProfileScreen() {
             value={soundEnabled ? t('on') : t('off')}
             right={<Switch value={soundEnabled} onValueChange={saveSoundPreference} />}
           />
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌐</Text>} title={t('language')} value={languageLabel} onPress={() => languageRef.current?.present()} />
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>🌙</Text>} title={t('theme')} value={t('light')} />
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>❓</Text>} title={t('helpSupport')} value="›" onPress={() => helpRef.current?.present()} />
-          <ProfileSettingsRow icon={<Text style={styles.settingsEmoji}>ℹ️</Text>} title={t('about')} value="›" onPress={() => privacyRef.current?.present()} />
+          <ProfileSettingsRow
+            icon={<Text style={styles.settingsEmoji}>🌐</Text>}
+            title={t('language')}
+            value={languageLabel}
+            onPress={() => languageRef.current?.present()}
+          />
+          <ProfileSettingsRow
+            icon={<Text style={styles.settingsEmoji}>🌙</Text>}
+            title={t('theme')}
+            value={t('light')}
+          />
+          <ProfileSettingsRow
+            icon={<Text style={styles.settingsEmoji}>❓</Text>}
+            title={t('helpSupport')}
+            value="›"
+            onPress={() => helpRef.current?.present()}
+          />
+          <ProfileSettingsRow
+            icon={<Text style={styles.settingsEmoji}>ℹ️</Text>}
+            title={t('about')}
+            value="›"
+            onPress={() => privacyRef.current?.present()}
+          />
         </View>
 
-        <AnimatedPressable onPress={() => setShowLogout(true)} style={styles.signOutButton}>
+        <AnimatedPressable onPress={() => logoutRef.current?.present()} style={styles.signOutButton}>
           <LogOut size={18} color={theme.berryDeep} />
           <Text style={styles.signOutText}>{t('signOut')}</Text>
         </AnimatedPressable>
@@ -239,18 +319,44 @@ export default function ProfileScreen() {
         initialAvatarUrl={user?.avatarUrl}
         onSave={async (payload) => {
           if (!user) return;
-          await updateProfileMutation.mutateAsync({ id: user.id, displayName: payload.displayName, email: payload.email, avatarUrl: payload.avatarUrl });
+          await updateProfileMutation.mutateAsync({
+            id: user.id,
+            displayName: payload.displayName,
+            email: payload.email,
+            avatarUrl: payload.avatarUrl,
+          });
           await queryClient.invalidateQueries();
         }}
       />
       <HelpSheet ref={helpRef} router={router} />
       <PrivacyPolicySheet ref={privacyRef} />
-      <ActionSheet isVisible={showLogout} onClose={() => setShowLogout(false)} onAction={logout} title={t('signOutTitle')} description={t('signOutDescription')} actionLabel={t('signOutTitle')} cancelLabel={t('cancel')} variant="destructive" Icon={LogOut} />
+      <ActionSheet
+        ref={logoutRef}
+        onAction={logout}
+        title={t('signOutTitle')}
+        description={t('signOutDescription')}
+        actionLabel={t('signOutTitle')}
+        cancelLabel={t('cancel')}
+        variant="destructive"
+        Icon={LogOut}
+      />
     </View>
   );
 }
 
-function ProfileSettingsRow({ icon, title, value, right, onPress }: { icon: ReactNode; title: string; value: string; right?: ReactNode; onPress?: () => void }) {
+function ProfileSettingsRow({
+  icon,
+  title,
+  value,
+  right,
+  onPress,
+}: {
+  icon: ReactNode;
+  title: string;
+  value: string;
+  right?: ReactNode;
+  onPress?: () => void;
+}) {
   const content = (
     <View style={styles.settingsRow}>
       <View style={styles.settingsIcon}>{icon}</View>
@@ -266,28 +372,114 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#FFFFFF' },
   content: { padding: 16, paddingBottom: 48 },
   profileHead: { alignItems: 'center', paddingTop: 10, paddingBottom: 20 },
-  avatar: { width: 78, height: 78, borderRadius: 39, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', boxShadow: '0px 8px 18px rgba(255,111,145,0.28)' },
+  avatar: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0px 8px 18px rgba(255,111,145,0.28)',
+  },
   avatarGradient: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   avatarImage: { width: '100%', height: '100%', borderRadius: 39 },
   avatarEmoji: { fontSize: 34 },
-  profileName: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 19, marginTop: 10 },
-  profileSubtitle: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 12, marginTop: 2 },
-  editButton: { minHeight: 38, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFFFFF', borderWidth: 2, borderColor: '#EEE9DC', borderRadius: 13, paddingHorizontal: 18, marginTop: 10 },
+  profileName: {
+    color: '#2B2A3D',
+    fontFamily: typography.displayExtraBold,
+    fontSize: 19,
+    marginTop: 10,
+  },
+  profileSubtitle: {
+    color: '#6B6A80',
+    fontFamily: typography.bodyBold,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  editButton: {
+    minHeight: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#EEE9DC',
+    borderRadius: 13,
+    paddingHorizontal: 18,
+    marginTop: 10,
+  },
   editButtonText: { color: '#2B2A3D', fontFamily: typography.display, fontSize: 13.5 },
   planCard: { marginBottom: 8 },
-  planBadge: { alignSelf: 'flex-start', color: 'white', backgroundColor: 'rgba(255,255,255,0.14)', fontFamily: typography.displayExtraBold, fontSize: 10.5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, marginBottom: 10 },
+  planBadge: {
+    alignSelf: 'flex-start',
+    color: 'white',
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    fontFamily: typography.displayExtraBold,
+    fontSize: 10.5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginBottom: 10,
+  },
   planTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 15 },
-  planSubtitle: { color: '#C9C5E0', fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 16, marginTop: 5 },
-  upgradeButton: { minHeight: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFC93C', borderRadius: 15, marginTop: 12, boxShadow: '0px 5px 0px #F2A900' },
+  planSubtitle: {
+    color: '#C9C5E0',
+    fontFamily: typography.bodyBold,
+    fontSize: 11.5,
+    lineHeight: 16,
+    marginTop: 5,
+  },
+  upgradeButton: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFC93C',
+    borderRadius: 15,
+    marginTop: 12,
+    boxShadow: '0px 5px 0px #F2A900',
+  },
   upgradeButtonText: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 14 },
-  sectionLabel: { color: '#6B6A80', fontFamily: typography.displayExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },
-  settingsList: { backgroundColor: '#FFFDF8', borderWidth: 2, borderColor: '#EEE9DC', borderRadius: 16, overflow: 'hidden' },
-  settingsRow: { minHeight: 51, flexDirection: 'row', alignItems: 'center', gap: 11, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: '#EEE9DC' },
+  sectionLabel: {
+    color: '#6B6A80',
+    fontFamily: typography.displayExtraBold,
+    fontSize: 13,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginTop: 22,
+    marginBottom: 10,
+  },
+  settingsList: {
+    backgroundColor: '#FFFDF8',
+    borderWidth: 2,
+    borderColor: '#EEE9DC',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  settingsRow: {
+    minHeight: 51,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE9DC',
+  },
   settingsIcon: { width: 25, alignItems: 'center' },
   settingsEmoji: { fontSize: 16, lineHeight: 20 },
   settingsTitle: { flex: 1, color: '#2B2A3D', fontFamily: typography.display, fontSize: 13 },
   settingsValue: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 12 },
   reminderControl: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  signOutButton: { minHeight: 46, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 2, borderColor: '#FFD2DC', borderRadius: 13, backgroundColor: '#FFF0F4', marginTop: 18 },
+  signOutButton: {
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 2,
+    borderColor: '#FFD2DC',
+    borderRadius: 13,
+    backgroundColor: '#FFF0F4',
+    marginTop: 18,
+  },
   signOutText: { color: '#E8527A', fontFamily: typography.display, fontSize: 13.5 },
 });

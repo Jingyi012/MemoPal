@@ -52,6 +52,12 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.DisplayName).HasMaxLength(200);
             b.Property(x => x.Role).HasMaxLength(32).HasDefaultValue(UserRoles.User);
             b.Property(x => x.ReferredByUserId).HasMaxLength(64);
+            b.Property(x => x.OnboardingStatus).HasMaxLength(32).HasDefaultValue(OnboardingStatuses.NotStarted);
+            b.Property(x => x.OnboardingStep).HasMaxLength(32).HasDefaultValue(OnboardingSteps.ChooseCategory);
+            b.Property(x => x.OnboardingVersion).HasDefaultValue(1);
+            b.Property(x => x.OnboardingSelectedCategoryId).HasMaxLength(64);
+            b.Property(x => x.OnboardingSelectedLessonId).HasMaxLength(64);
+            b.Property(x => x.OnboardingMemorySetId).HasMaxLength(64);
             b.HasOne(x => x.Stats)
                 .WithOne(x => x.User)
                 .HasForeignKey<UserStats>(x => x.UserId)
@@ -369,6 +375,7 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.GoalType).HasMaxLength(32);
             b.HasIndex(x => x.Key).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
             b.HasIndex(x => new { x.IsPublished, x.SortOrder, x.IsDeleted });
+            b.HasIndex(x => new { x.IsStarterLesson, x.IsPublished, x.SortOrder, x.IsDeleted });
             b.HasMany(x => x.Items)
                 .WithOne(x => x.Lesson)
                 .HasForeignKey(x => x.LessonId)

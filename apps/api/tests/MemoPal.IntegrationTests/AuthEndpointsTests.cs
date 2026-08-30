@@ -25,6 +25,8 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         var regJson = await regRes.Content.ReadFromJsonAsync<JsonElement>();
         var token = regJson.GetProperty("data").GetProperty("token").GetString();
         token.Should().NotBeNullOrWhiteSpace();
+        regJson.GetProperty("data").GetProperty("user").GetProperty("onboardingStatus").GetString()
+            .Should().Be("not-started");
 
         var loginRes = await _client.PostAsJsonAsync("/auth/login", new { email = "user@example.com", password = "password123" });
         loginRes.StatusCode.Should().Be(HttpStatusCode.OK);

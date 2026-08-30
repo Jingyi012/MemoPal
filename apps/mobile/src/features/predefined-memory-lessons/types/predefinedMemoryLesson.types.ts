@@ -24,6 +24,7 @@ export interface PredefinedMemoryLesson extends Auditable {
   goalType: LessonGoalType;
   sortOrder: number;
   isPublished: boolean;
+  isStarterLesson: boolean;
   version: number;
   items: PredefinedMemoryLessonItem[];
 }

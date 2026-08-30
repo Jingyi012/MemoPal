@@ -3,7 +3,7 @@ import { Redirect } from 'expo-router';
 import React from 'react';
 
 export default function RootIndex() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const isLocalDevMode =
     String(process.env.EXPO_PUBLIC_LOCAL_DEV_MODE).trim().toLowerCase() === 'true';
 
@@ -11,5 +11,9 @@ export default function RootIndex() {
     return null;
   }
 
-  return <Redirect href={isAuthenticated || isLocalDevMode ? '/(tabs)' : '/login'} />;
+  if (!isAuthenticated && !isLocalDevMode) return <Redirect href="/login" />;
+
+  const needsOnboarding = user?.onboardingStatus === 'not-started'
+    || user?.onboardingStatus === 'in-progress';
+  return <Redirect href={needsOnboarding ? '/onboarding' : '/(tabs)'} />;
 }

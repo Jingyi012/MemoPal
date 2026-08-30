@@ -14,6 +14,7 @@ export interface RegisterRequest {
 type LogoutRequest = {
   refreshToken?: string;
   logoutAllDevices?: boolean;
+  accessToken?: string;
 };
 
 export type ApiClientError = Error & {
@@ -209,6 +210,49 @@ export const authApi = {
     }
   },
 
+  async startOnboarding(categoryId: string, lessonId: string): Promise<User> {
+    try {
+      const response = await api.post<GeneralResponse<User>>('/auth/onboarding/start', {
+        categoryId,
+        lessonId,
+      });
+      return getApiDataOrThrow<User>(response.data, 'Could not start onboarding.');
+    } catch (error) {
+      throw createApiClientError(error, 'Could not start onboarding.');
+    }
+  },
+
+  async completeOnboarding(memorySetId: string): Promise<User> {
+    try {
+      const response = await api.post<GeneralResponse<User>>('/auth/onboarding/complete', {
+        memorySetId,
+      });
+      return getApiDataOrThrow<User>(response.data, 'Could not complete onboarding.');
+    } catch (error) {
+      throw createApiClientError(error, 'Could not complete onboarding.');
+    }
+  },
+
+  async linkOnboardingMemory(memorySetId: string): Promise<User> {
+    try {
+      const response = await api.post<GeneralResponse<User>>('/auth/onboarding/memory', {
+        memorySetId,
+      });
+      return getApiDataOrThrow<User>(response.data, 'Could not save onboarding progress.');
+    } catch (error) {
+      throw createApiClientError(error, 'Could not save onboarding progress.');
+    }
+  },
+
+  async skipOnboarding(): Promise<User> {
+    try {
+      const response = await api.post<GeneralResponse<User>>('/auth/onboarding/skip');
+      return getApiDataOrThrow<User>(response.data, 'Could not skip onboarding.');
+    } catch (error) {
+      throw createApiClientError(error, 'Could not skip onboarding.');
+    }
+  },
+
   async uploadAvatar(fileUri: string, fileName = 'avatar.jpg'): Promise<User> {
     try {
       const normalizedName = fileName || fileUri.split('/').pop() || 'avatar.jpg';
@@ -273,7 +317,10 @@ export const authApi = {
           deviceId: device.deviceId,
         },
         {
-          headers: { 'X-MemoPal-Skip-Refresh': '1' },
+          headers: {
+            'X-MemoPal-Skip-Refresh': '1',
+            ...(payload?.accessToken ? { Authorization: `Bearer ${payload.accessToken}` } : {}),
+          },
         }
       );
     } catch (error) {

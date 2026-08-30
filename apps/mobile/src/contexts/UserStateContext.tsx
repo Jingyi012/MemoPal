@@ -8,7 +8,6 @@ type UserStateContextType = {
   updateState: (updates: Partial<UserState>) => Promise<void>;
   updatePreferences: (updates: Partial<UserState['preferences']>) => Promise<void>;
   resetState: () => Promise<void>;
-  completeOnboarding: () => Promise<void>;
 };
 
 const UserStateContext = createContext<UserStateContextType | undefined>(undefined);
@@ -79,16 +78,6 @@ export const UserStateProvider = ({ children }: { children: ReactNode }) => {
     await saveState({ ...defaultUserState, lastVisitDate: new Date().toISOString() });
   };
 
-  const completeOnboarding = async () => {
-    await updateState({
-      hasCompletedOnboarding: true,
-      isFirstTime: false,
-      preferences: {
-        ...state.preferences,
-      },
-    });
-  };
-
   return (
     <UserStateContext.Provider
       value={{
@@ -96,7 +85,6 @@ export const UserStateProvider = ({ children }: { children: ReactNode }) => {
         updateState,
         updatePreferences,
         resetState,
-        completeOnboarding,
       }}>
       {children}
     </UserStateContext.Provider>

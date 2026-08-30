@@ -13,7 +13,7 @@ const categoryQueryKey = ['admin-predefined-memory-lesson-categories'] as const;
 const blankDraft = (): PredefinedMemoryLessonUpsertRequest => ({
   key: '', titleEn: '', titleZh: '', descriptionEn: '', descriptionZh: '', emoji: '🧠',
   categoryId: '', techniqueKey: 'number-peg', goalType: 'ordered-list', sortOrder: 100,
-  isPublished: false, items: [{ position: 1, contentEn: '', contentZh: '' }],
+  isPublished: false, isStarterLesson: false, items: [{ position: 1, contentEn: '', contentZh: '' }],
 });
 
 export default function PredefinedMemoryLessonsPage() {
@@ -38,6 +38,7 @@ export default function PredefinedMemoryLessonsPage() {
       descriptionEn: lesson.descriptionEn, descriptionZh: lesson.descriptionZh,
       emoji: lesson.emoji, categoryId: lesson.categoryId, techniqueKey: lesson.techniqueKey,
       goalType: lesson.goalType, sortOrder: lesson.sortOrder, isPublished: lesson.isPublished,
+      isStarterLesson: lesson.isStarterLesson,
       expectedVersion: lesson.version,
       items: lesson.items.map(({ id, position, contentEn, contentZh }) => ({ id, position, contentEn, contentZh })),
     } : { ...blankDraft(), categoryId: categoriesQuery.data?.find((category) => category.isActive)?.id ?? '' });
@@ -81,6 +82,7 @@ export default function PredefinedMemoryLessonsPage() {
   }));
   const canSave = draft.key.trim().length >= 2 && draft.titleEn.trim() && draft.titleZh.trim()
     && draft.emoji.trim() && draft.categoryId && draft.items.length > 0
+    && (!draft.isStarterLesson || (draft.items.length >= 2 && draft.items.length <= 5))
     && draft.items.every((item) => item.contentEn.trim() && item.contentZh.trim());
 
   return (
@@ -121,6 +123,7 @@ export default function PredefinedMemoryLessonsPage() {
                       <Tag color={lesson.techniqueKey === 'palace' ? 'purple' : 'magenta'}>{lesson.techniqueKey}</Tag>
                       <Tag>{lesson.items.length} items</Tag>
                       <Tag color={lesson.isPublished ? 'green' : 'default'}>{lesson.isPublished ? 'Published' : 'Draft'}</Tag>
+                      {lesson.isStarterLesson ? <Tag color='gold'>Onboarding starter</Tag> : null}
                     </Flex>
                   </div>
                 </Flex>
@@ -154,9 +157,10 @@ export default function PredefinedMemoryLessonsPage() {
             <Col xs={24} md={12}><Form.Item label='Chinese description'><Input.TextArea rows={2} value={draft.descriptionZh} onChange={(event) => setDraft({ ...draft, descriptionZh: event.target.value })} /></Form.Item></Col>
           </Row>
           <Row gutter={14}>
-            <Col xs={24} md={8}><Form.Item label='Technique'><Select value={draft.techniqueKey} onChange={(techniqueKey) => setDraft({ ...draft, techniqueKey })} options={[{ value: 'number-peg', label: 'Number Peg' }, { value: 'palace', label: 'Memory Palace' }]} /></Form.Item></Col>
-            <Col xs={24} md={8}><Form.Item label='Learning goal'><Select value={draft.goalType} onChange={(goalType) => setDraft({ ...draft, goalType })} options={['spelling', 'ordered-list', 'facts', 'names', 'custom'].map((value) => ({ value, label: value }))} /></Form.Item></Col>
-            <Col xs={24} md={8}><Form.Item label='Published'><Switch checked={draft.isPublished} onChange={(isPublished) => setDraft({ ...draft, isPublished })} checkedChildren='Visible' unCheckedChildren='Draft' /></Form.Item></Col>
+            <Col xs={24} md={6}><Form.Item label='Technique'><Select value={draft.techniqueKey} onChange={(techniqueKey) => setDraft({ ...draft, techniqueKey, isStarterLesson: techniqueKey === 'number-peg' ? draft.isStarterLesson : false })} options={[{ value: 'number-peg', label: 'Number Peg' }, { value: 'palace', label: 'Memory Palace' }]} /></Form.Item></Col>
+            <Col xs={24} md={6}><Form.Item label='Learning goal'><Select value={draft.goalType} onChange={(goalType) => setDraft({ ...draft, goalType })} options={['spelling', 'ordered-list', 'facts', 'names', 'custom'].map((value) => ({ value, label: value }))} /></Form.Item></Col>
+            <Col xs={12} md={6}><Form.Item label='Onboarding starter' extra='Starter lessons use 2–5 items.'><Switch disabled={draft.techniqueKey !== 'number-peg'} checked={draft.isStarterLesson} onChange={(isStarterLesson) => setDraft({ ...draft, isStarterLesson })} checkedChildren='Starter' unCheckedChildren='Regular' /></Form.Item></Col>
+            <Col xs={12} md={6}><Form.Item label='Published'><Switch checked={draft.isPublished} onChange={(isPublished) => setDraft({ ...draft, isPublished })} checkedChildren='Visible' unCheckedChildren='Draft' /></Form.Item></Col>
           </Row>
         </Form>
 

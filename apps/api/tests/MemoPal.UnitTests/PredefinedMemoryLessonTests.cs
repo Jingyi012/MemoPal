@@ -120,6 +120,29 @@ public sealed class PredefinedMemoryLessonTests
                 new DeletePredefinedMemoryLessonCategoryCommand(category.Id), default));
     }
 
+    [Fact]
+    public async Task Starter_Lesson_Must_Be_A_Short_Number_Peg_Lesson()
+    {
+        await using var db = CreateDbContext("admin-starter-editor");
+        var category = await AddCategory(db);
+        var request = BuildRequest("starter-lesson", category.Id, isPublished: true);
+        request.IsStarterLesson = true;
+
+        var tooShort = await Assert.ThrowsAsync<ValidationAppException>(() =>
+            new CreatePredefinedMemoryLessonCommandHandler(db).Handle(
+                new CreatePredefinedMemoryLessonCommand(request), default));
+        Assert.Contains("between 2 and 5", tooShort.Message);
+
+        request.Items =
+        [
+            request.Items[0],
+            new PredefinedMemoryLessonItemInput { Position = 2, ContentEn = "apple", ContentZh = "苹果" }
+        ];
+        var created = await new CreatePredefinedMemoryLessonCommandHandler(db).Handle(
+            new CreatePredefinedMemoryLessonCommand(request), default);
+        Assert.True(created.Data!.IsStarterLesson);
+    }
+
     private static PredefinedMemoryLessonUpsertRequest BuildRequest(string key, string categoryId, bool isPublished) => new()
     {
         Key = key,

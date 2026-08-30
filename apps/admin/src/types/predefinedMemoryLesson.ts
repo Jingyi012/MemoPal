@@ -26,6 +26,7 @@ export interface PredefinedMemoryLessonDto {
   goalType: LessonGoalType;
   sortOrder: number;
   isPublished: boolean;
+  isStarterLesson: boolean;
   version: number;
   items: PredefinedMemoryLessonItemDto[];
   createdAt: string;
@@ -53,6 +54,7 @@ export interface PredefinedMemoryLessonUpsertRequest {
   goalType: LessonGoalType;
   sortOrder: number;
   isPublished: boolean;
+  isStarterLesson: boolean;
   expectedVersion?: number;
   items: PredefinedMemoryLessonItemInput[];
 }

@@ -33,6 +33,7 @@ public sealed class PredefinedMemoryLessonEndpointsTests : IClassFixture<CustomW
         });
         registerResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var registerJson = await registerResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var userId = registerJson.GetProperty("data").GetProperty("user").GetProperty("id").GetString()!;
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
             "Bearer", registerJson.GetProperty("data").GetProperty("token").GetString());
 
@@ -66,6 +67,57 @@ public sealed class PredefinedMemoryLessonEndpointsTests : IClassFixture<CustomW
         lessons[0].GetProperty("key").GetString().Should().Be($"published-{suffix}");
         lessons[0].GetProperty("category").GetProperty("nameZh").GetString().Should().Be("测试分类");
         lessons[0].GetProperty("items")[0].GetProperty("contentZh").GetString().Should().Be("第一项");
+        lessons[0].GetProperty("isStarterLesson").GetBoolean().Should().BeTrue();
+
+        var startResponse = await _client.PostAsJsonAsync("/auth/onboarding/start", new
+        {
+            categoryId = lessons[0].GetProperty("categoryId").GetString(),
+            lessonId = lessons[0].GetProperty("id").GetString()
+        });
+        startResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var startJson = await startResponse.Content.ReadFromJsonAsync<JsonElement>();
+        startJson.GetProperty("data").GetProperty("onboardingStatus").GetString()
+            .Should().Be("in-progress");
+
+        string memorySetId;
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var memory = new MemorySet
+            {
+                UserId = userId,
+                Title = "Onboarding memory",
+                GoalType = MemoryGoalTypes.OrderedList,
+                TechniqueKey = MemoryTechniqueKeys.NumberPeg,
+                Status = MemorySetStatuses.Ready,
+                Visibility = MemorySetVisibilities.Private
+            };
+            db.MemorySets.Add(memory);
+            db.PracticeAttempts.Add(new PracticeAttempt
+            {
+                UserId = userId,
+                MemorySetId = memory.Id,
+                ClientAttemptId = $"onboarding-{suffix}",
+                TechniqueKey = MemoryTechniqueKeys.NumberPeg,
+                Mode = PracticeModes.Recall,
+                StartedAt = DateTime.UtcNow.AddMinutes(-1),
+                CompletedAt = DateTime.UtcNow,
+                DurationMs = 60_000,
+                CorrectCount = 2,
+                FirstAttemptCorrectCount = 2,
+                TotalCount = 2
+            });
+            await db.SaveChangesAsync();
+            memorySetId = memory.Id;
+        }
+
+        (await _client.PostAsJsonAsync("/auth/onboarding/memory", new { memorySetId }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        var completeResponse = await _client.PostAsJsonAsync("/auth/onboarding/complete", new { memorySetId });
+        completeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var completeJson = await completeResponse.Content.ReadFromJsonAsync<JsonElement>();
+        completeJson.GetProperty("data").GetProperty("onboardingStatus").GetString()
+            .Should().Be("completed");
     }
 
     private static PredefinedMemoryLesson BuildLesson(
@@ -86,7 +138,8 @@ public sealed class PredefinedMemoryLessonEndpointsTests : IClassFixture<CustomW
             TechniqueKey = "number-peg",
             GoalType = "ordered-list",
             SortOrder = 1,
-            IsPublished = isPublished
+            IsPublished = isPublished,
+            IsStarterLesson = isPublished
         };
         lesson.Items.Add(new PredefinedMemoryLessonItem
         {
@@ -94,6 +147,13 @@ public sealed class PredefinedMemoryLessonEndpointsTests : IClassFixture<CustomW
             Position = 1,
             ContentEn = "First item",
             ContentZh = "第一项"
+        });
+        lesson.Items.Add(new PredefinedMemoryLessonItem
+        {
+            LessonId = lesson.Id,
+            Position = 2,
+            ContentEn = "Second item",
+            ContentZh = "第二项"
         });
         return lesson;
     }

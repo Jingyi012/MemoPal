@@ -33,6 +33,7 @@ export type AuthContextType = {
   register: (req: RegisterRequest) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
   loginWithFacebook: (accessToken: string) => Promise<void>;
+  updateAuthenticatedUser: (nextUser: User) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -229,22 +230,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    const refreshToken = await getRefreshToken();
-    if (refreshToken) {
-      try {
-        await authApi.logout({ refreshToken });
-      } catch {
-        // Continue with local sign-out even when server-side revoke fails.
-      }
+    let refreshToken: string | null = null;
+    let accessToken: string | null = null;
+    try {
+      [refreshToken, accessToken] = await Promise.all([getRefreshToken(), getAccessToken()]);
+    } catch {
+      // A damaged or unavailable secure-store entry must not trap the user in
+      // an authenticated screen.
     }
+
+    // Signing out is a local action first. Update auth state and navigation
+    // immediately instead of making the user wait for the revoke endpoint.
+    setUser(null);
+    queryClient.clear();
+    router.replace('/login');
 
     await Promise.allSettled([
       AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
       clearAuthTokens(),
+      clearPersistedQueryCache(),
     ]);
-    setUser(null);
-    await clearPersistedQueryCache();
-    router.replace('/login');
+
+    if (refreshToken) {
+      void authApi.logout({ refreshToken, accessToken: accessToken ?? undefined }).catch(() => {
+        // The local session is already gone. Server-side revoke is best effort
+        // so offline users can always sign out.
+      });
+    }
+  };
+
+  const updateAuthenticatedUser = async (nextUser: User) => {
+    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser));
+    setUser(nextUser);
+    queryClient.setQueryData(CURRENT_USER_KEYS.all, nextUser);
   };
 
   return (
@@ -257,6 +275,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         register,
         loginWithGoogle,
         loginWithFacebook,
+        updateAuthenticatedUser,
         logout,
       }}>
       {children}

@@ -15,6 +15,7 @@ public sealed class PredefinedMemoryLesson : AuditableBaseEntity
     public string GoalType { get; set; } = MemoryGoalTypes.OrderedList;
     public int SortOrder { get; set; }
     public bool IsPublished { get; set; }
+    public bool IsStarterLesson { get; set; }
     public int Version { get; set; } = 1;
 
     public ICollection<PredefinedMemoryLessonItem> Items { get; set; } = new List<PredefinedMemoryLessonItem>();

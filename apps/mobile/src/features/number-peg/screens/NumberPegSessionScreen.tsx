@@ -4,6 +4,8 @@ import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { RecallAnswerCard } from '@/components/RecallAnswerCard';
 import { RecallResultCard } from '@/components/RecallResultCard';
+import { useAuth } from '@/contexts/AuthProvider';
+import { useUserState } from '@/contexts/UserStateContext';
 import { NumberPegRehearsalCard } from '@/features/number-peg/components/NumberPegRehearsalCard';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
@@ -13,6 +15,9 @@ import { typography } from '@/theme/typography';
 import { buildAllNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
 import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
+import { useOnboardingMutations } from '@/features/onboarding/hooks/useOnboardingMutations';
+import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
+import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
 import {
   useCreatePracticeAttempt,
   getSpellingHint,
@@ -57,7 +62,7 @@ function countFirstAttemptRecalls(responses: PracticeResponseInput[]) {
   return new Set(
     responses
       .filter((response) => response.isCorrect && response.attemptCount === 1)
-      .map((response) => response.memoryItemId),
+      .map((response) => response.memoryItemId)
   ).size;
 }
 
@@ -91,6 +96,8 @@ export default function NumberPegSessionScreen({
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
   const [hasRestoredSession, setHasRestoredSession] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [showReminderChoice, setShowReminderChoice] = useState(false);
+  const [reminderMessage, setReminderMessage] = useState<string | null>(null);
   const hydratedSessionRef = useRef<string | null>(null);
   const sessionReadyRef = useRef(false);
   const recallScrollRef = useRef<ScrollView | null>(null);
@@ -98,23 +105,17 @@ export default function NumberPegSessionScreen({
   const recallScrollOffsetRef = useRef(0);
   const recallScrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [recallKeyboardInset, setRecallKeyboardInset] = useState(0);
+  const [recallKeyboardOverlay, setRecallKeyboardOverlay] = useState(0);
   const practiceAttempt = useCreatePracticeAttempt();
+  const { user } = useAuth();
+  const { userState, updateState } = useUserState();
+  const { complete: completeOnboarding } = useOnboardingMutations();
   const { playSound, feedbackEnabled } = useSoundEffects();
 
   const scrollRecallInputIntoView = useCallback(() => {
     const scrollView = recallScrollRef.current;
-    const actionArea = recallActionRef.current;
-    const keyboard = Keyboard.metrics();
-    if (!scrollView || !actionArea || !keyboard) return;
-
-    actionArea.measureInWindow((_x, y, _width, height) => {
-      const overlap = y + height + 14 - keyboard.screenY;
-      if (overlap <= 0) return;
-      scrollView.scrollTo({
-        y: Math.max(0, recallScrollOffsetRef.current + overlap),
-        animated: true,
-      });
-    });
+    if (!scrollView) return;
+    requestAnimationFrame(() => scrollView.scrollToEnd({ animated: true }));
   }, []);
 
   const queueRecallInputScroll = useCallback(() => {
@@ -125,20 +126,47 @@ export default function NumberPegSessionScreen({
     }, 80);
   }, [scrollRecallInputIntoView]);
 
+  const syncRecallKeyboardLayout = useCallback((screenY: number, height: number) => {
+    setRecallKeyboardInset(height);
+    const scrollView = recallScrollRef.current;
+    if (!scrollView) return;
+    requestAnimationFrame(() => {
+      (scrollView as unknown as View).measureInWindow(
+        (_x: number, y: number, _width: number, viewHeight: number) => {
+          setRecallKeyboardOverlay(Math.max(0, y + viewHeight - screenY));
+        }
+      );
+    });
+  }, []);
+
   useEffect(() => {
     const showSubscription = Keyboard.addListener('keyboardDidShow', (event) => {
-      setRecallKeyboardInset(event.endCoordinates.height);
+      syncRecallKeyboardLayout(event.endCoordinates.screenY, event.endCoordinates.height);
       queueRecallInputScroll();
     });
     const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
       setRecallKeyboardInset(0);
+      setRecallKeyboardOverlay(0);
     });
     return () => {
       showSubscription.remove();
       hideSubscription.remove();
       if (recallScrollTimerRef.current) clearTimeout(recallScrollTimerRef.current);
     };
-  }, [queueRecallInputScroll]);
+  }, [queueRecallInputScroll, syncRecallKeyboardLayout]);
+
+  useEffect(() => {
+    if (tab !== 'recall' || recallKeyboardInset <= 0) return;
+    queueRecallInputScroll();
+  }, [
+    feedback,
+    questionIndex,
+    queueRecallInputScroll,
+    recallKeyboardInset,
+    recallKeyboardOverlay,
+    tab,
+  ]);
+
   const leaveSession = () => {
     if (returnTo === 'practice') {
       router.replace('/(tabs)/practice');
@@ -168,7 +196,11 @@ export default function NumberPegSessionScreen({
         return;
       }
 
-      if (!snapshot || snapshot.memorySetVersion !== memorySet.version || snapshot.questionIndex >= memorySet.items.length) {
+      if (
+        !snapshot ||
+        snapshot.memorySetVersion !== memorySet.version ||
+        snapshot.questionIndex >= memorySet.items.length
+      ) {
         if (snapshot) void clearNumberPegSession(memorySet.id);
         sessionReadyRef.current = true;
         return;
@@ -217,7 +249,8 @@ export default function NumberPegSessionScreen({
       !memorySet ||
       !sessionReadyRef.current ||
       hydratedSessionRef.current !== `${memorySet.id}:${memorySet.version}`
-    ) return;
+    )
+      return;
 
     if (questionIndex >= memorySet.items.length) {
       void clearNumberPegSession(memorySet.id);
@@ -237,7 +270,17 @@ export default function NumberPegSessionScreen({
       responses,
       savedAt: new Date().toISOString(),
     });
-  }, [clientAttemptId, memorySetQuery.data, questionIndex, questionStartedAtMs, recalledFirstTry, responses, startedAt, startedAtMs, tab]);
+  }, [
+    clientAttemptId,
+    memorySetQuery.data,
+    questionIndex,
+    questionStartedAtMs,
+    recalledFirstTry,
+    responses,
+    startedAt,
+    startedAtMs,
+    tab,
+  ]);
 
   const restartRecall = () => {
     checkingAnswerRef.current = false;
@@ -291,18 +334,19 @@ export default function NumberPegSessionScreen({
   const sceneBinding = sceneItem ? findBinding(bindings, sceneItem) : null;
   const scenePeg = sceneBinding ? resolvePeg(pegs, sceneBinding) : pegs[sceneIndex];
 
+  const saveRecallAttempt = async (payload: PracticeAttemptInput) => {
+    await practiceAttempt.mutateAsync(payload);
+    if (user?.onboardingStatus === 'in-progress' && user.onboardingMemorySetId === memorySet.id) {
+      await completeOnboarding.mutateAsync(memorySet.id);
+      setShowReminderChoice(true);
+    }
+  };
+
   const checkOrContinue = () => {
     if (!currentItem) return;
     if (isFinishing) return;
     if (feedback) {
-      if (feedback === 'wrong') {
-        checkingAnswerRef.current = false;
-        setFeedback(null);
-        setAnswer('');
-        setQuestionStartedAtMs(Date.now());
-        return;
-      }
-      if (questionIndex === memorySet.items.length - 1) {
+      if (feedback === 'correct' && questionIndex === memorySet.items.length - 1) {
         playSound('complete');
         const payload: PracticeAttemptInput = {
           clientAttemptId,
@@ -314,33 +358,39 @@ export default function NumberPegSessionScreen({
         };
         setLastPayload(payload);
         setIsFinishing(true);
-        void practiceAttempt.mutateAsync(payload).catch(() => undefined).finally(() => {
-          setIsFinishing(false);
-          checkingAnswerRef.current = false;
-          setQuestionIndex((current) => current + 1);
-          setAnswer('');
-          setFeedback(null);
-          setQuestionStartedAtMs(Date.now());
-        });
+        void saveRecallAttempt(payload)
+          .catch(() => undefined)
+          .finally(() => {
+            setIsFinishing(false);
+            checkingAnswerRef.current = false;
+            setQuestionIndex((current) => current + 1);
+            setAnswer('');
+            setFeedback(null);
+            setQuestionStartedAtMs(Date.now());
+          });
         return;
       }
-      checkingAnswerRef.current = false;
-      setQuestionIndex((current) => current + 1);
-      setAnswer('');
-      setFeedback(null);
-      setQuestionStartedAtMs(Date.now());
-      return;
+      if (feedback === 'correct') {
+        checkingAnswerRef.current = false;
+        setQuestionIndex((current) => current + 1);
+        setAnswer('');
+        setFeedback(null);
+        setQuestionStartedAtMs(Date.now());
+        return;
+      }
     }
 
     if (!answer.trim() || checkingAnswerRef.current) return;
     checkingAnswerRef.current = true;
     const isCorrect = normalizeRecallAnswer(answer) === normalizeRecallAnswer(currentItem.answer);
-    setResponses((current) => upsertRecallResponse(
-      current,
-      currentItem.id,
-      isCorrect,
-      Math.max(0, Date.now() - questionStartedAtMs),
-    ));
+    setResponses((current) =>
+      upsertRecallResponse(
+        current,
+        currentItem.id,
+        isCorrect,
+        Math.max(0, Date.now() - questionStartedAtMs)
+      )
+    );
     setFeedback(isCorrect ? 'correct' : 'wrong');
     playSound(isCorrect ? 'correct' : 'wrong');
     if (isCorrect && feedbackEnabled) {
@@ -350,9 +400,35 @@ export default function NumberPegSessionScreen({
     }
   };
 
+  const saveOnboardingReminderChoice = async (enabled: boolean) => {
+    if (!enabled) {
+      await updateState({
+        notifications: { ...userState.notifications, reviewReminders: false },
+      });
+      setShowReminderChoice(false);
+      return;
+    }
+    const granted = await PushNotificationService.requestPermissions();
+    await updateState({
+      notifications: { ...userState.notifications, reviewReminders: granted },
+    });
+    if (granted) {
+      await InAppNotificationSync.syncAllUpcoming(true);
+      setShowReminderChoice(false);
+    } else {
+      setReminderMessage(t('reminderPermissionDenied'));
+    }
+  };
+
   return (
     <View style={styles.page}>
-      <CommonHeader compact eyebrow={t('eyebrow')} title={memorySet.title} description={`${memorySet.items.length} ${t('items')} · ${t('title')}`} backAction={leaveSession} />
+      <CommonHeader
+        compact
+        eyebrow={t('eyebrow')}
+        title={memorySet.title}
+        description={`${memorySet.items.length} ${t('items')} · ${t('title')}`}
+        backAction={leaveSession}
+      />
       <View style={styles.tabs}>
         <View style={styles.tabWrap}>
           <AnimatedPressable
@@ -362,8 +438,12 @@ export default function NumberPegSessionScreen({
             style={[styles.tab, tab === 'scenes' && styles.activeTab]}>
             <Text style={styles.tabEmoji}>🎨</Text>
             <View style={styles.tabCopy}>
-              <Text style={[styles.tabText, tab === 'scenes' && styles.activeTabText]}>{t('rehearseTab')}</Text>
-              <Text style={[styles.tabSubtext, tab === 'scenes' && styles.activeTabSubtext]}>{t('rehearseTabBody')}</Text>
+              <Text style={[styles.tabText, tab === 'scenes' && styles.activeTabText]}>
+                {t('rehearseTab')}
+              </Text>
+              <Text style={[styles.tabSubtext, tab === 'scenes' && styles.activeTabSubtext]}>
+                {t('rehearseTabBody')}
+              </Text>
             </View>
           </AnimatedPressable>
         </View>
@@ -375,8 +455,12 @@ export default function NumberPegSessionScreen({
             style={[styles.tab, tab === 'recall' && styles.activeTab]}>
             <Text style={styles.tabEmoji}>🧠</Text>
             <View style={styles.tabCopy}>
-              <Text style={[styles.tabText, tab === 'recall' && styles.activeTabText]}>{t('recallTab')}</Text>
-              <Text style={[styles.tabSubtext, tab === 'recall' && styles.activeTabSubtext]}>{t('recallTabBody')}</Text>
+              <Text style={[styles.tabText, tab === 'recall' && styles.activeTabText]}>
+                {t('recallTab')}
+              </Text>
+              <Text style={[styles.tabSubtext, tab === 'recall' && styles.activeTabSubtext]}>
+                {t('recallTabBody')}
+              </Text>
             </View>
           </AnimatedPressable>
         </View>
@@ -388,7 +472,9 @@ export default function NumberPegSessionScreen({
       </View>
 
       {hasRestoredSession && tab !== 'recall' && (
-        <AnimatedPressable onPress={() => setHasRestoredSession(false)} style={styles.restoreNotice}>
+        <AnimatedPressable
+          onPress={() => setHasRestoredSession(false)}
+          style={styles.restoreNotice}>
           <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
         </AnimatedPressable>
       )}
@@ -424,13 +510,16 @@ export default function NumberPegSessionScreen({
       ) : (
         <ScrollView
           ref={recallScrollRef}
-          keyboardDismissMode="interactive"
-          keyboardShouldPersistTaps="handled"
-          onScroll={(event) => { recallScrollOffsetRef.current = event.nativeEvent.contentOffset.y; }}
+          style={styles.recallScroll}
+          keyboardDismissMode="none"
+          keyboardShouldPersistTaps="always"
+          onScroll={(event) => {
+            recallScrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+          }}
           scrollEventThrottle={16}
           contentContainerStyle={[
             styles.recallContent,
-            recallKeyboardInset > 0 ? { paddingBottom: recallKeyboardInset + 24 } : null,
+            recallKeyboardInset > 0 ? { paddingBottom: recallKeyboardOverlay + 24 } : null,
           ]}>
           {isComplete ? (
             <RecallResultCard
@@ -441,30 +530,68 @@ export default function NumberPegSessionScreen({
               recalledLabel={t('recalledFirstTry')}
               needsPracticeLabel={t('needsPractice')}
               xpEarned={practiceAttempt.data?.xpEarned}
-              levelUpTo={practiceAttempt.data && practiceAttempt.data.currentLevel > practiceAttempt.data.previousLevel
-                ? practiceAttempt.data.currentLevel
-                : undefined}
-              body={recalledFirstTry === memorySet.items.length
-                ? t('perfect')
-                : t('niceWork')}
+              levelUpTo={
+                practiceAttempt.data &&
+                practiceAttempt.data.currentLevel > practiceAttempt.data.previousLevel
+                  ? practiceAttempt.data.currentLevel
+                  : undefined
+              }
+              body={recalledFirstTry === memorySet.items.length ? t('perfect') : t('niceWork')}
               saveStatus={
-                practiceAttempt.isPending ? (
+                practiceAttempt.isPending || completeOnboarding.isPending ? (
                   <Text style={styles.saveState}>{t('savingProgress')}</Text>
-                ) : practiceAttempt.isError ? (
+                ) : practiceAttempt.isError || completeOnboarding.isError ? (
                   <View style={styles.saveError}>
                     <Text style={styles.saveErrorText}>{t('progressNotSaved')}</Text>
                     <AnimatedPressable
                       accessibilityRole="button"
                       accessibilityLabel={t('retrySave')}
-                      onPress={() => lastPayload && practiceAttempt.mutate(lastPayload)}
+                      onPress={() => {
+                        if (practiceAttempt.isError && lastPayload) {
+                          void saveRecallAttempt(lastPayload).catch(() => undefined);
+                        } else if (completeOnboarding.isError) {
+                          void completeOnboarding
+                            .mutateAsync(memorySet.id)
+                            .then(() => setShowReminderChoice(true))
+                            .catch(() => undefined);
+                        }
+                      }}
                       style={styles.retrySaveButton}>
                       <Text style={styles.retrySaveText}>{t('retrySave')}</Text>
                     </AnimatedPressable>
                   </View>
                 ) : practiceAttempt.data ? (
-                  <Text style={styles.saveSuccess}>
-                    {t('saved')} ✓ {t('nextReview')} {practiceAttempt.data.nextReviewAt ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString() : t('willAppearInToday')}
-                  </Text>
+                  <View>
+                    <Text style={styles.saveSuccess}>
+                      {t('saved')} ✓ {t('nextReview')}{' '}
+                      {practiceAttempt.data.nextReviewAt
+                        ? new Date(practiceAttempt.data.nextReviewAt).toLocaleString()
+                        : t('willAppearInToday')}
+                    </Text>
+                    {showReminderChoice ? (
+                      <View style={styles.reminderChoice}>
+                        <Text style={styles.reminderChoiceTitle}>{t('reminderChoiceTitle')}</Text>
+                        <Text style={styles.reminderChoiceBody}>{t('reminderChoiceBody')}</Text>
+                        {reminderMessage ? (
+                          <Text style={styles.reminderChoiceError}>{reminderMessage}</Text>
+                        ) : null}
+                        <View style={styles.reminderChoiceActions}>
+                          <AnimatedPressable
+                            onPress={() => void saveOnboardingReminderChoice(false)}
+                            style={styles.reminderLaterButton}
+                            containerStyle={{ width: '50%' }}>
+                            <Text style={styles.reminderLaterText}>{t('notNow')}</Text>
+                          </AnimatedPressable>
+                          <AnimatedPressable
+                            onPress={() => void saveOnboardingReminderChoice(true)}
+                            style={styles.reminderEnableButton}
+                            containerStyle={{ width: '50%' }}>
+                            <Text style={styles.reminderEnableText}>{t('enableReminder')}</Text>
+                          </AnimatedPressable>
+                        </View>
+                      </View>
+                    ) : null}
+                  </View>
                 ) : null
               }
               onRetry={restartRecall}
@@ -477,7 +604,9 @@ export default function NumberPegSessionScreen({
             <>
               <View style={styles.recallProgressRow}>
                 <Text style={styles.recallProgressLabel}>{t('recallRound')}</Text>
-                <Text style={styles.recallProgressCount}>{questionIndex + 1} {t('of')} {memorySet.items.length}</Text>
+                <Text style={styles.recallProgressCount}>
+                  {questionIndex + 1} {t('of')} {memorySet.items.length}
+                </Text>
               </View>
               <View style={styles.dots}>
                 {memorySet.items.map((item, index) => (
@@ -498,19 +627,33 @@ export default function NumberPegSessionScreen({
                 prompt={t('miniMoviePrompt')}
                 answer={answer}
                 feedback={feedback}
-                feedbackText={feedback === 'correct'
-                  ? t('nailed')
-                  : isSpelling
-                    ? `${t('checkSpelling')} ${getSpellingHint(currentItem?.answer ?? '', answer)}`
-                    : `${t('itWas')} ${currentItem?.answer}. ${t('pictureOnceMore')}`}
-                actionLabel={isFinishing ? t('savingProgress') : feedback === 'wrong' ? t('retryPeg') : feedback ? t('next') : t('checkAnswer')}
+                feedbackText={
+                  feedback === 'correct'
+                    ? t('nailed')
+                    : isSpelling
+                      ? `${t('checkSpelling')} ${getSpellingHint(currentItem?.answer ?? '', answer)}`
+                      : `${t('itWas')} ${currentItem?.answer}. ${t('pictureOnceMore')}`
+                }
+                actionLabel={
+                  isFinishing
+                    ? t('savingProgress')
+                    : feedback === 'correct'
+                      ? t('next')
+                      : t('checkAnswer')
+                }
                 actionDisabled={isFinishing}
                 progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${memorySet.items.length}`}
                 answerAccessibilityLabel={t('typeYourAnswer')}
                 answerPlaceholder={t('typeYourAnswerPlaceholder')}
                 onAnswerFocus={queueRecallInputScroll}
-                actionAreaRef={(view) => { recallActionRef.current = view; }}
-                onAnswerChange={setAnswer}
+                actionAreaRef={(view) => {
+                  recallActionRef.current = view;
+                }}
+                onAnswerChange={(value) => {
+                  checkingAnswerRef.current = false;
+                  setAnswer(value);
+                  if (feedback === 'wrong') setFeedback(null);
+                }}
                 onSubmit={checkOrContinue}
               />
             </>
@@ -525,48 +668,281 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
   tabs: { flexDirection: 'row', gap: 6, marginHorizontal: 16, marginTop: 10 },
   tabWrap: { flex: 1, minWidth: 0 },
-  tab: { width: '100%', minHeight: 58, borderRadius: 14, borderWidth: 2, borderColor: theme.line, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: 'white', paddingHorizontal: 9 },
-  activeTab: { backgroundColor: theme.ink, borderColor: theme.ink, boxShadow: '0px 3px 0px rgba(43,42,61,0.12)' },
+  tab: {
+    width: '100%',
+    minHeight: 58,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: theme.line,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    backgroundColor: 'white',
+    paddingHorizontal: 9,
+  },
+  activeTab: {
+    backgroundColor: theme.ink,
+    borderColor: theme.ink,
+    boxShadow: '0px 3px 0px rgba(43,42,61,0.12)',
+  },
   tabEmoji: { fontSize: 15 },
   tabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
   activeTabText: { color: 'white' },
   tabCopy: { flex: 1, minWidth: 0 },
-  tabSubtext: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9.5, lineHeight: 13, marginTop: 2 },
+  tabSubtext: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodySemibold,
+    fontSize: 9.5,
+    lineHeight: 13,
+    marginTop: 2,
+  },
   activeTabSubtext: { color: 'rgba(255,255,255,0.78)' },
   tabHint: { marginHorizontal: 18, marginTop: 7, marginBottom: 1 },
-  tabHintText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, textAlign: 'center' },
-  restoreNotice: { marginHorizontal: 16, marginTop: 9, borderRadius: 12, backgroundColor: '#E3F6ED', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 12, paddingVertical: 9 },
-  restoreNoticeText: { color: '#247B67', fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
+  tabHintText: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodyBold,
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: 'center',
+  },
+  restoreNotice: {
+    marginHorizontal: 16,
+    marginTop: 9,
+    borderRadius: 12,
+    backgroundColor: '#E3F6ED',
+    borderWidth: 1.5,
+    borderColor: '#BFE7D6',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  restoreNoticeText: {
+    color: '#247B67',
+    fontFamily: typography.bodyBold,
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: 'center',
+  },
   content: { padding: 18, paddingTop: 16, paddingBottom: 48 },
-  coachCard: { flexDirection: 'row', gap: 13, borderRadius: 18, backgroundColor: '#FFF7E0', borderWidth: 1.5, borderColor: '#FFE6A3', padding: 16, marginBottom: 20 },
+  coachCard: {
+    flexDirection: 'row',
+    gap: 13,
+    borderRadius: 18,
+    backgroundColor: '#FFF7E0',
+    borderWidth: 1.5,
+    borderColor: '#FFE6A3',
+    padding: 16,
+    marginBottom: 20,
+  },
   coachEmoji: { fontSize: 28 },
   coachTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  coachBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 3 },
-  rehearsalHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 14, paddingHorizontal: 10, textAlign: 'center' },
-  sceneCard: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 22, padding: 14, marginBottom: 18, marginTop: 4 },
-  sceneBadge: { position: 'absolute', top: -12, left: 14, zIndex: 2, minWidth: 32, height: 32, borderRadius: 16, paddingHorizontal: 5, backgroundColor: theme.berry, borderWidth: 3, borderColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
+  coachBody: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodySemibold,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 3,
+  },
+  rehearsalHint: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodyBold,
+    fontSize: 11,
+    lineHeight: 17,
+    marginTop: 14,
+    paddingHorizontal: 10,
+    textAlign: 'center',
+  },
+  sceneCard: {
+    backgroundColor: theme.paper,
+    borderWidth: 2,
+    borderColor: theme.line,
+    borderRadius: 22,
+    padding: 14,
+    marginBottom: 18,
+    marginTop: 4,
+  },
+  sceneBadge: {
+    position: 'absolute',
+    top: -12,
+    left: 14,
+    zIndex: 2,
+    minWidth: 32,
+    height: 32,
+    borderRadius: 16,
+    paddingHorizontal: 5,
+    backgroundColor: theme.berry,
+    borderWidth: 3,
+    borderColor: theme.paper,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sceneBadgeText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  sceneVisual: { minHeight: 104, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#EADFC4', backgroundColor: '#FFFCF4', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 12 },
+  sceneVisual: {
+    minHeight: 104,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: '#EADFC4',
+    backgroundColor: '#FFFCF4',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    padding: 12,
+  },
   pegEmoji: { fontSize: 40 },
   sceneArrow: { color: theme.berryDeep, fontFamily: typography.displayExtraBold, fontSize: 23 },
-  answerWord: { maxWidth: 145, color: theme.ink, fontFamily: typography.display, fontSize: 18, textAlign: 'center' },
-  pegName: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8, marginTop: 11 },
-  sceneText: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, marginTop: 5 },
-  primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, boxShadow: `0px 5px 0px ${theme.sunDeep}`, marginTop: 4 },
-  recallContent: { padding: 18, paddingTop: 16, paddingBottom: 56, flexGrow: 1 },
-  recallProgressRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, paddingHorizontal: 2 },
-  recallProgressLabel: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
+  answerWord: {
+    maxWidth: 145,
+    color: theme.ink,
+    fontFamily: typography.display,
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  pegName: {
+    color: theme.berryDeep,
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 10,
+    letterSpacing: 0.8,
+    marginTop: 11,
+  },
+  sceneText: {
+    color: theme.ink,
+    fontFamily: typography.bodyBold,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 5,
+  },
+  primaryButton: {
+    minHeight: 53,
+    borderRadius: 16,
+    backgroundColor: theme.sun,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    boxShadow: `0px 5px 0px ${theme.sunDeep}`,
+    marginTop: 4,
+  },
+  recallScroll: { flex: 1 },
+  recallContent: { padding: 18, paddingTop: 16, paddingBottom: 24, flexGrow: 1 },
+  recallProgressRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    paddingHorizontal: 2,
+  },
+  recallProgressLabel: {
+    color: theme.berryDeep,
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 10,
+    letterSpacing: 1,
+  },
   recallProgressCount: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
-  dots: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: 7, marginBottom: 21, minHeight: 12 },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 7,
+    marginBottom: 21,
+    minHeight: 12,
+  },
   dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: theme.line },
   doneDot: { backgroundColor: theme.grass },
   currentDot: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.25 }] },
   quizEmoji: { fontSize: 36 },
-  saveState: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, marginBottom: 12 },
-  saveSuccess: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center', marginBottom: 12 },
+  saveState: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodyBold,
+    fontSize: 12,
+    marginBottom: 12,
+  },
+  saveSuccess: {
+    color: theme.grass,
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
   saveError: { width: '100%', alignItems: 'center', marginBottom: 12 },
-  saveErrorText: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
-  retrySaveButton: { marginTop: 8, borderRadius: 12, backgroundColor: '#FFE3EA', paddingHorizontal: 14, paddingVertical: 9 },
+  saveErrorText: {
+    color: theme.berryDeep,
+    fontFamily: typography.bodyBold,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
+  },
+  retrySaveButton: {
+    marginTop: 8,
+    borderRadius: 12,
+    backgroundColor: '#FFE3EA',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
   retrySaveText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  reminderChoice: {
+    borderRadius: 15,
+    borderWidth: 1.5,
+    borderColor: '#DCD2FF',
+    backgroundColor: '#F8F5FF',
+    padding: 12,
+    marginBottom: 12,
+  },
+  reminderChoiceTitle: {
+    color: theme.ink,
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 12.5,
+    textAlign: 'center',
+  },
+  reminderChoiceBody: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodySemibold,
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: 'center',
+    marginTop: 3,
+  },
+  reminderChoiceError: {
+    color: theme.berryDeep,
+    fontFamily: typography.bodyBold,
+    fontSize: 10.5,
+    textAlign: 'center',
+    marginTop: 7,
+  },
+  reminderChoiceActions: {
+    flexDirection: 'row',
+    alignSelf: 'stretch',
+    gap: 8,
+    marginTop: 10,
+  },
+  reminderLaterButton: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 40,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: theme.line,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    gap: 4,
+  },
+  reminderLaterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  reminderEnableButton: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 40,
+    borderRadius: 12,
+    backgroundColor: theme.sun,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    gap: 4,
+  },
+  reminderEnableText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   centerState: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
 });

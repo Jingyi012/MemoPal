@@ -19,6 +19,7 @@ internal static class PredefinedMemoryLessonMapper
         lesson.GoalType,
         lesson.SortOrder,
         lesson.IsPublished,
+        lesson.IsStarterLesson,
         lesson.Version,
         lesson.Items.Where(x => !x.IsDeleted).OrderBy(x => x.Position).Select(x => new PredefinedMemoryLessonItemDto(
             x.Id, x.Position, x.ContentEn, x.ContentZh, x.CreatedAt, x.CreatedBy, x.UpdatedAt, x.UpdatedBy)).ToList(),

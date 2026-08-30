@@ -68,7 +68,7 @@ export const LoginScreen: React.FC = () => {
     try {
       setIsSubmitting(true);
       await login({ email: email.trim(), password });
-      router.replace('/(tabs)');
+      router.replace('/');
     } catch (error: any) {
       Toast.show({
         type: 'error',
@@ -152,7 +152,7 @@ export const LoginScreen: React.FC = () => {
                 setIsSubmitting(true);
                 const idToken = await getGoogleIdToken();
                 await loginWithGoogle(idToken);
-                router.replace('/(tabs)');
+                router.replace('/');
               } catch (error: any) {
                 Toast.show({
                   type: 'error',
@@ -189,7 +189,7 @@ export const LoginScreen: React.FC = () => {
                 setIsSubmitting(true);
                 const token = await getFacebookAccessToken();
                 await loginWithFacebook(token);
-                router.replace('/(tabs)');
+                router.replace('/');
               } catch (error: any) {
                 Toast.show({
                   type: 'error',

@@ -112,6 +112,50 @@ public sealed class AuthController : ApiControllerBase
     }
 
     [Authorize]
+    [HttpPost("onboarding/start")]
+    public async Task<IActionResult> StartOnboarding(
+        [FromBody] StartOnboardingRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new StartOnboardingCommand(GetUserIdOrThrow(), request.CategoryId, request.LessonId),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpPost("onboarding/memory")]
+    public async Task<IActionResult> LinkOnboardingMemory(
+        [FromBody] CompleteOnboardingRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new LinkOnboardingMemoryCommand(GetUserIdOrThrow(), request.MemorySetId),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpPost("onboarding/complete")]
+    public async Task<IActionResult> CompleteOnboarding(
+        [FromBody] CompleteOnboardingRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new CompleteOnboardingCommand(GetUserIdOrThrow(), request.MemorySetId),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpPost("onboarding/skip")]
+    public async Task<IActionResult> SkipOnboarding(CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new SkipOnboardingCommand(GetUserIdOrThrow()), cancellationToken);
+        return Ok(result);
+    }
+
+    [Authorize]
     [HttpPost("avatar-upload")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(10_000_000)]
@@ -178,6 +222,17 @@ public sealed class AuthController : ApiControllerBase
         public string? DisplayName { get; set; }
         public string? AvatarUrl { get; set; }
         public string? Email { get; set; }
+    }
+
+    public sealed class StartOnboardingRequest
+    {
+        public string CategoryId { get; set; } = string.Empty;
+        public string LessonId { get; set; } = string.Empty;
+    }
+
+    public sealed class CompleteOnboardingRequest
+    {
+        public string MemorySetId { get; set; } = string.Empty;
     }
 
     public sealed class UploadAvatarRequest

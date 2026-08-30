@@ -81,6 +81,10 @@ internal static partial class PredefinedMemoryLessonAggregate
 
         if (request.TechniqueKey == MemoryTechniqueKeys.NumberPeg && request.Items.Count > 100)
             throw new ValidationAppException("Number Peg lessons support at most 100 items.");
+        if (request.IsStarterLesson && request.TechniqueKey != MemoryTechniqueKeys.NumberPeg)
+            throw new ValidationAppException("The current guided onboarding supports Number Peg starter lessons only.");
+        if (request.IsStarterLesson && request.Items.Count is < 2 or > 5)
+            throw new ValidationAppException("A starter lesson needs between 2 and 5 items.");
     }
 
     private static void Apply(PredefinedMemoryLesson lesson, PredefinedMemoryLessonUpsertRequest request)
@@ -96,6 +100,7 @@ internal static partial class PredefinedMemoryLessonAggregate
         lesson.GoalType = request.GoalType;
         lesson.SortOrder = request.SortOrder;
         lesson.IsPublished = request.IsPublished;
+        lesson.IsStarterLesson = request.IsStarterLesson;
     }
 
     private static PredefinedMemoryLessonItem CreateItem(string lessonId, PredefinedMemoryLessonItemInput input)

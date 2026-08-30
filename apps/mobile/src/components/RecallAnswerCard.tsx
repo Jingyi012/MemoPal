@@ -58,12 +58,15 @@ export function RecallAnswerCard({
       {cue ? <View style={styles.cue}>{cue}</View> : null}
       <TextInput
         value={answer}
-        onChangeText={(value) => { if (!feedback) onAnswerChange(value); }}
+        onChangeText={onAnswerChange}
         onSubmitEditing={onSubmit}
-        // Keep focus and the keyboard between questions. The change handler
-        // still locks the submitted answer while feedback is visible.
+        returnKeyType={feedback ? 'next' : 'done'}
+        submitBehavior="submit"
+        // Keep focus and the keyboard between questions. A correct answer is
+        // locked until the user advances; an incorrect answer can be edited
+        // immediately and checked again.
         editable
-        caretHidden={Boolean(feedback)}
+        caretHidden={feedback === 'correct'}
         onFocus={onAnswerFocus}
         accessibilityLabel={answerAccessibilityLabel}
         autoCapitalize="characters"
@@ -87,6 +90,7 @@ export function RecallAnswerCard({
       <View ref={actionAreaRef} style={styles.actionButtonWrap}>
         <AnimatedPressable
           disabled={actionDisabled || (!answer.trim() && !feedback)}
+          pressOnIn
           onPress={onSubmit}
           style={[styles.actionButton, (actionDisabled || (!answer.trim() && !feedback)) && styles.disabledButton]}>
           <Text style={styles.actionText}>{actionLabel}</Text>

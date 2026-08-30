@@ -792,6 +792,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsStarterLesson")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -833,6 +836,8 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.HasIndex("IsPublished", "SortOrder", "IsDeleted");
 
                     b.HasIndex("CategoryId", "IsPublished", "SortOrder", "IsDeleted");
+
+                    b.HasIndex("IsStarterLesson", "IsPublished", "SortOrder", "IsDeleted");
 
                     b.ToTable("PredefinedMemoryLessons");
                 });
@@ -1348,6 +1353,43 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("OnboardingCompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OnboardingMemorySetId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("OnboardingSelectedCategoryId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("OnboardingSelectedLessonId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("OnboardingSkippedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OnboardingStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("not-started");
+
+                    b.Property<string>("OnboardingStep")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("choose-category");
+
+                    b.Property<int>("OnboardingVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()

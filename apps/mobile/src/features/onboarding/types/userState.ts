@@ -1,8 +1,6 @@
 export type AppLanguage = 'system' | 'en' | 'zh';
 
 export interface UserState {
-  isFirstTime: boolean;
-  hasCompletedOnboarding: boolean;
   lastVisitDate: string;
   totalVisits: number;
   currentStreak: number;
@@ -36,8 +34,6 @@ export interface UserState {
 }
 
 export const defaultUserState: UserState = {
-  isFirstTime: true,
-  hasCompletedOnboarding: false,
   lastVisitDate: new Date().toISOString(),
   totalVisits: 0,
   currentStreak: 0,
@@ -53,7 +49,7 @@ export const defaultUserState: UserState = {
     hapticsEnabled: true,
   },
   notifications: {
-    reviewReminders: true,
+    reviewReminders: false,
     dailyLearningReminder: false,
   },
   subscription: {

@@ -12,7 +12,7 @@ import { WeeklyActivityCard } from '@/features/gamification/shared/components/We
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight, Plus } from 'lucide-react-native';
+import { ArrowRight, Check, Circle, Plus } from 'lucide-react-native';
 import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HomeHeader } from '../components/Header/HomeHeader';
@@ -42,6 +42,14 @@ export default function HomeScreen() {
   const streak = Math.max(0, user?.stats?.currentStreak ?? 0);
   const dueReviewGroups = groupMemoryReviews(dueReviews.data ?? []);
   const focusReview = dueReviewGroups[0]?.review;
+  const onboardingMemory = user?.onboardingMemorySetId
+    ? activeMemorySets.find((item) => item.id === user.onboardingMemorySetId)
+    : undefined;
+  const onboardingSteps = onboardingMemory ? {
+    practiced: (user?.stats?.lessonsCompleted ?? 0) > 0,
+    createdOwn: activeMemorySets.some((item) => item.id !== onboardingMemory.id),
+    exploredPalace: activeMemorySets.some((item) => item.techniqueKey === 'palace'),
+  } : null;
 
   const refreshHome = async () => {
     await Promise.allSettled([memorySets.refetch(), activityQuery.refetch(), practiceStatsQuery.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]);
@@ -82,6 +90,21 @@ export default function HomeScreen() {
             else router.push('/create-memory' as Href);
           }}
         />
+
+        {onboardingSteps && !Object.values(onboardingSteps).every(Boolean) ? (
+          <GettingStartedCard
+            steps={onboardingSteps}
+            onNext={() => {
+              if (!onboardingSteps.practiced) {
+                router.push(`/number-peg/${onboardingMemory!.id}` as Href);
+              } else if (!onboardingSteps.createdOwn) {
+                router.push('/create-memory' as Href);
+              } else {
+                router.push('/palaces' as Href);
+              }
+            }}
+          />
+        ) : null}
 
         {memorySets.isLoading ? (
           <View style={styles.loadingFrame}><LoadingView description={t('loading')} /></View>
@@ -147,6 +170,47 @@ export default function HomeScreen() {
 
         <MemoryTipCard />
       </ScrollView>
+    </View>
+  );
+}
+
+function GettingStartedCard({
+  steps,
+  onNext,
+}: {
+  steps: { practiced: boolean; createdOwn: boolean; exploredPalace: boolean };
+  onNext: () => void;
+}) {
+  const { t } = useTranslation('home');
+  const rows = [
+    { done: true, label: t('starterCreated') },
+    { done: steps.practiced, label: t('starterPractice') },
+    { done: steps.createdOwn, label: t('starterOwnMemory') },
+    { done: steps.exploredPalace, label: t('starterPalace') },
+  ];
+  return (
+    <View style={styles.gettingStartedCard}>
+      <View style={styles.gettingStartedTop}>
+        <View>
+          <Text style={styles.gettingStartedEyebrow}>{t('gettingStarted')}</Text>
+          <Text style={styles.gettingStartedTitle}>{t('gettingStartedTitle')}</Text>
+        </View>
+        <Text style={styles.gettingStartedCount}>{rows.filter((row) => row.done).length}/{rows.length}</Text>
+      </View>
+      <View style={styles.gettingStartedRows}>
+        {rows.map((row) => (
+          <View key={row.label} style={styles.gettingStartedRow}>
+            {row.done
+              ? <View style={styles.stepDone}><Check size={12} color="white" strokeWidth={3} /></View>
+              : <Circle size={18} color="#C8C3D6" strokeWidth={2} />}
+            <Text style={[styles.gettingStartedLabel, row.done && styles.gettingStartedLabelDone]}>{row.label}</Text>
+          </View>
+        ))}
+      </View>
+      <AnimatedPressable onPress={onNext} style={styles.gettingStartedAction}>
+        <Text style={styles.gettingStartedActionText}>{t('continueGuide')}</Text>
+        <ArrowRight size={16} color="#2B2A3D" strokeWidth={2.5} />
+      </AnimatedPressable>
     </View>
   );
 }
@@ -301,6 +365,18 @@ const styles = StyleSheet.create({
   focusBody: { zIndex: 1, color: '#C9C5E0', fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 4, maxWidth: '88%' },
   focusAction: { zIndex: 1, alignSelf: 'flex-start', minHeight: 42, flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#FFC93C', borderRadius: 13, paddingHorizontal: 15, marginTop: 14 },
   focusActionText: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 12.5 },
+  gettingStartedCard: { borderRadius: 19, borderWidth: 2, borderColor: '#DED7FF', backgroundColor: '#F8F6FF', padding: 15, marginBottom: 16 },
+  gettingStartedTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
+  gettingStartedEyebrow: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8, textTransform: 'uppercase' },
+  gettingStartedTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 15, marginTop: 2 },
+  gettingStartedCount: { color: '#7A68E0', backgroundColor: '#EEE9FF', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
+  gettingStartedRows: { gap: 8, marginTop: 13 },
+  gettingStartedRow: { minHeight: 24, flexDirection: 'row', alignItems: 'center', gap: 9 },
+  stepDone: { width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: '#7A68E0' },
+  gettingStartedLabel: { color: '#2B2A3D', fontFamily: typography.bodyBold, fontSize: 11.5 },
+  gettingStartedLabelDone: { color: '#858095', textDecorationLine: 'line-through' },
+  gettingStartedAction: { minHeight: 42, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 13, backgroundColor: '#FFC93C', paddingHorizontal: 14, marginTop: 13 },
+  gettingStartedActionText: { color: '#2B2A3D', fontFamily: typography.bodyExtraBold, fontSize: 12 },
   emptyIconEmoji: { fontSize: 24 },
   continueCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#FFFDF8', borderWidth: 2, borderColor: '#EEE9DC', borderRadius: 18, padding: 13, boxShadow: '0px 8px 20px rgba(43,42,61,0.08)' },
   techniqueBadge: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },

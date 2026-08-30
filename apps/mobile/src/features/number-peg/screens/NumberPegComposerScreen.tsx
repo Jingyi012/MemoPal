@@ -58,6 +58,7 @@ import {
   type SceneCandidate,
 } from '@/features/number-peg/utils/numberPegMovie';
 import { NumberPegMovieStage } from '@/features/number-peg/components/NumberPegMovieStage';
+import { useOnboardingMutations } from '@/features/onboarding/hooks/useOnboardingMutations';
 
 type SceneDraft = { answer: string; sceneText: string; recipe: PegSceneRecipe };
 type StudioDraft = {
@@ -98,8 +99,10 @@ export default function NumberPegComposerScreen() {
     title?: string | string[];
     items?: string | string[];
     goalType?: string | string[];
+    onboardingLessonId?: string | string[];
   }>();
   const { createMemorySet } = useMemorySetMutations();
+  const { linkMemory: linkOnboardingMemory } = useOnboardingMutations();
   const { user } = useCurrentUser();
   const { playSound, feedbackEnabled } = useSoundEffects();
   const unlocked = getUnlockedPegCount(user?.level ?? 1);
@@ -123,6 +126,9 @@ export default function NumberPegComposerScreen() {
     [params.items]
   );
   const fromShared = initialItems.length > 0;
+  const onboardingLessonId = firstParam(params.onboardingLessonId);
+  const isOnboarding = Boolean(onboardingLessonId);
+  const onboardingMemoryIdRef = useRef<string | null>(null);
   const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
   const [goalType, setGoalType] = useState<MemoryGoalType>(() =>
     parseComposerGoal(params.goalType)
@@ -476,6 +482,11 @@ export default function NumberPegComposerScreen() {
     savingRef.current = true;
     setIsSaving(true);
     try {
+      if (onboardingLessonId && onboardingMemoryIdRef.current) {
+        await linkOnboardingMemory.mutateAsync(onboardingMemoryIdRef.current);
+        router.replace(`/number-peg/${onboardingMemoryIdRef.current}?returnTo=practice&mode=recall` as Href);
+        return;
+      }
       const size = Math.max(1, Math.min(unlocked, MAX_NUMBER_PEGS));
       const chunks = Array.from({ length: Math.ceil(items.length / size) }, (_, n) => ({
         n,
@@ -511,12 +522,17 @@ export default function NumberPegComposerScreen() {
         created.push(await createMemorySet.mutateAsync(req));
       }
       await AsyncStorage.removeItem(draftKey);
-      if (created[0])
+      if (created[0]) {
+        if (onboardingLessonId) {
+          onboardingMemoryIdRef.current = created[0].id;
+          await linkOnboardingMemory.mutateAsync(created[0].id);
+        }
         router.replace(
-          `/number-peg/${created[0].id}?returnTo=${fromShared ? 'practice' : 'number-peg'}` as Href
+          `/number-peg/${created[0].id}?returnTo=${fromShared ? 'practice' : 'number-peg'}${isOnboarding ? '&mode=recall' : ''}` as Href
         );
+      }
     } catch {
-      /* Keep the draft and mutation error visible. */
+      setMessage(t('saveError'));
     } finally {
       savingRef.current = false;
       setIsSaving(false);
@@ -554,6 +570,12 @@ export default function NumberPegComposerScreen() {
             </AnimatedPressable>
           ))}
         </ScrollView>
+        {isOnboarding ? (
+          <View style={styles.guidedCard}>
+            <Text style={styles.guidedTitle}>{t('guidedMovieTitle')}</Text>
+            <Text style={styles.guidedBody}>{t('guidedMovieBody')}</Text>
+          </View>
+        ) : null}
         {index === 0 && items.length > unlocked ? (
           <View style={styles.capacityCard}>
             <Text style={styles.capacityTitle}>{t('splitMemoryTitle')}</Text>
@@ -621,32 +643,34 @@ export default function NumberPegComposerScreen() {
             </AnimatedPressable>
           ))}
         </View>
-        <View style={styles.ideaActions}>
-          <AnimatedPressable
-            containerStyle={styles.equalSlot}
-            onPress={() => {
-              const nextSet = candidateSet + 1;
-              setCandidateSet(nextSet);
-              const next = buildSceneCandidates(currentAnchor, current.answer, nextSet, (key) =>
-                t(key as any)
-              )[0];
-              choose(next);
-            }}
-            style={styles.another}>
-            <RefreshCw size={15} color={theme.berryDeep} />
-            <Text style={styles.anotherText}>{t('anotherIdea')}</Text>
-          </AnimatedPressable>
-          <AnimatedPressable
-            containerStyle={styles.equalSlot}
-            onPress={() => setCustomMode((visible) => !visible)}
-            style={[styles.customToggle, customMode && styles.customToggleActive]}>
-            <PencilLine size={15} color={theme.berryDeep} />
-            <Text numberOfLines={1} style={styles.anotherText}>
-              {customMode ? t('hideCustomScene') : t('writeMyOwn')}
-            </Text>
-          </AnimatedPressable>
-        </View>
-        {customMode ? (
+        {!isOnboarding ? (
+          <View style={styles.ideaActions}>
+            <AnimatedPressable
+              containerStyle={styles.equalSlot}
+              onPress={() => {
+                const nextSet = candidateSet + 1;
+                setCandidateSet(nextSet);
+                const next = buildSceneCandidates(currentAnchor, current.answer, nextSet, (key) =>
+                  t(key as any)
+                )[0];
+                choose(next);
+              }}
+              style={styles.another}>
+              <RefreshCw size={15} color={theme.berryDeep} />
+              <Text style={styles.anotherText}>{t('anotherIdea')}</Text>
+            </AnimatedPressable>
+            <AnimatedPressable
+              containerStyle={styles.equalSlot}
+              onPress={() => setCustomMode((visible) => !visible)}
+              style={[styles.customToggle, customMode && styles.customToggleActive]}>
+              <PencilLine size={15} color={theme.berryDeep} />
+              <Text numberOfLines={1} style={styles.anotherText}>
+                {customMode ? t('hideCustomScene') : t('writeMyOwn')}
+              </Text>
+            </AnimatedPressable>
+          </View>
+        ) : null}
+        {!isOnboarding && customMode ? (
           <View style={styles.customEditor}>
             <Text style={styles.customEditorLabel}>{t('customScenePrompt')}</Text>
             <TextInput
@@ -661,28 +685,32 @@ export default function NumberPegComposerScreen() {
             />
           </View>
         ) : null}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.heading}>{t('addBooster')}</Text>
-          <Text style={styles.sectionHint}>{t('optional')}</Text>
-        </View>
-        <ScrollView
-          horizontal
-          nestedScrollEnabled
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.boosters}>
-          {BOOSTERS.map((boosterKey) => (
-            <AnimatedPressable
-              key={boosterKey}
-              onPress={() => booster(boosterKey)}
-              style={[
-                styles.booster,
-                current.recipe.sensoryBoosters[0] === boosterKey && styles.boosterSelected,
-              ]}>
-              <Text style={styles.boosterEmoji}>{getBoosterPresentation(boosterKey).emoji}</Text>
-              <Text style={styles.boosterText}>{t(`booster_${boosterKey}` as any)}</Text>
-            </AnimatedPressable>
-          ))}
-        </ScrollView>
+        {!isOnboarding ? (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.heading}>{t('addBooster')}</Text>
+            <Text style={styles.sectionHint}>{t('optional')}</Text>
+          </View>
+        ) : null}
+        {!isOnboarding ? (
+          <ScrollView
+            horizontal
+            nestedScrollEnabled
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.boosters}>
+            {BOOSTERS.map((boosterKey) => (
+              <AnimatedPressable
+                key={boosterKey}
+                onPress={() => booster(boosterKey)}
+                style={[
+                  styles.booster,
+                  current.recipe.sensoryBoosters[0] === boosterKey && styles.boosterSelected,
+                ]}>
+                <Text style={styles.boosterEmoji}>{getBoosterPresentation(boosterKey).emoji}</Text>
+                <Text style={styles.boosterText}>{t(`booster_${boosterKey}` as any)}</Text>
+              </AnimatedPressable>
+            ))}
+          </ScrollView>
+        ) : null}
         {message && (
           <View style={styles.message}>
             <Text style={styles.messageText}>{message}</Text>
@@ -716,7 +744,9 @@ export default function NumberPegComposerScreen() {
               {isSaving
                 ? t('saving')
                 : index === items.length - 1
-                  ? t('saveMemory')
+                  ? isOnboarding
+                    ? t('startRecall')
+                    : t('saveMemory')
                   : t('nextScene')}
             </Text>
             <ArrowRight size={17} color={theme.ink} />
@@ -898,6 +928,27 @@ const styles = StyleSheet.create({
   },
   dotLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 9 },
   activeDot: { backgroundColor: theme.sun, borderColor: theme.sunDeep },
+  guidedCard: {
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#DCD4FF',
+    backgroundColor: '#F6F3FF',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 14,
+  },
+  guidedTitle: {
+    color: theme.violetDeep,
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 12.5,
+  },
+  guidedBody: {
+    color: theme.inkSoft,
+    fontFamily: typography.bodySemibold,
+    fontSize: 11.5,
+    lineHeight: 17,
+    marginTop: 3,
+  },
   stageCard: {
     borderRadius: 26,
     borderWidth: 2,
