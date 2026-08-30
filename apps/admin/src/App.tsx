@@ -14,6 +14,8 @@ import ForbiddenPage from './pages/ForbiddenPage';
 import LoginPage from './pages/LoginPage';
 import { adminPaths } from './navigation/adminPaths';
 import PalaceScenesPage from './features/palace-scenes/pages/PalaceScenesPage';
+import PredefinedMemoryLessonsPage from './features/predefined-memory-lessons/pages/PredefinedMemoryLessonsPage';
+import PredefinedMemoryLessonCategoriesPage from './features/predefined-memory-lessons/pages/PredefinedMemoryLessonCategoriesPage';
 
 export default function App() {
   return (
@@ -29,6 +31,8 @@ export default function App() {
             <Route path="content">
               <Route index element={<Navigate to="palace-scenes" replace />} />
               <Route path="palace-scenes" element={<PalaceScenesPage />} />
+              <Route path="predefined-memory-lessons" element={<PredefinedMemoryLessonsPage />} />
+              <Route path="predefined-memory-lesson-categories" element={<PredefinedMemoryLessonCategoriesPage />} />
             </Route>
             <Route path="configs">
               <Route index element={<Navigate to="limits" replace />} />

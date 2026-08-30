@@ -1,6 +1,7 @@
-import { adminPaths } from './adminPaths';
+import { adminPaths } from "./adminPaths";
 
-export type AdminMenuIcon = 'users' | 'content' | 'config' | 'referral' | 'generic';
+export type AdminMenuIcon =
+  "users" | "content" | "config" | "referral" | "generic";
 
 export interface AdminMenuItem {
   path: string;
@@ -10,35 +11,40 @@ export interface AdminMenuItem {
 }
 
 export const adminMenuItems: AdminMenuItem[] = [
-  { path: adminPaths.users, name: 'Users', icon: 'users' },
+  { path: adminPaths.users, name: "Users", icon: "users" },
   {
     path: adminPaths.contentRoot,
-    name: 'Content Setup',
-    icon: 'content',
+    name: "Content Setup",
+    icon: "content",
     routes: [
-      { path: adminPaths.palaceScenes, name: 'Palace Scene Studio' },
+      { path: adminPaths.palaceScenes, name: "Palace Scene Studio" },
+      {
+        path: adminPaths.predefinedMemoryLessonCategories,
+        name: "Lesson Categories",
+      },
+      { path: adminPaths.predefinedMemoryLessons, name: "Predefined Lessons" },
     ],
   },
   {
     path: adminPaths.configsRoot,
-    name: 'Gamification Config',
-    icon: 'config',
+    name: "Gamification Config",
+    icon: "config",
     routes: [
-      { path: adminPaths.configLimits, name: 'Feature Limits' },
-      { path: adminPaths.configXp, name: 'XP Configs' },
-      { path: adminPaths.configLevels, name: 'Level Configs' },
-      { path: adminPaths.configMilestones, name: 'Milestone Definitions' },
+      { path: adminPaths.configLimits, name: "Feature Limits" },
+      { path: adminPaths.configXp, name: "XP Configs" },
+      { path: adminPaths.configLevels, name: "Level Configs" },
+      { path: adminPaths.configMilestones, name: "Milestone Definitions" },
     ],
   },
   {
     path: adminPaths.referralsRoot,
-    name: 'Referral Program',
-    icon: 'referral',
+    name: "Referral Program",
+    icon: "referral",
     routes: [
-      { path: adminPaths.referralConfig, name: 'Reward Config' },
-      { path: adminPaths.referralUsers, name: 'Referrer Users' },
+      { path: adminPaths.referralConfig, name: "Reward Config" },
+      { path: adminPaths.referralUsers, name: "Referrer Users" },
     ],
   },
-  { path: adminPaths.subscriptions, name: 'Subscriptions', icon: 'generic' },
-  { path: adminPaths.systemSettings, name: 'System Settings', icon: 'generic' },
+  { path: adminPaths.subscriptions, name: "Subscriptions", icon: "generic" },
+  { path: adminPaths.systemSettings, name: "System Settings", icon: "generic" },
 ];

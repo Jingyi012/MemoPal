@@ -38,6 +38,9 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<PracticeAttempt> PracticeAttempts => Set<PracticeAttempt>();
     public DbSet<PracticeResponse> PracticeResponses => Set<PracticeResponse>();
     public DbSet<MemoryReviewSchedule> MemoryReviewSchedules => Set<MemoryReviewSchedule>();
+    public DbSet<PredefinedMemoryLesson> PredefinedMemoryLessons => Set<PredefinedMemoryLesson>();
+    public DbSet<PredefinedMemoryLessonItem> PredefinedMemoryLessonItems => Set<PredefinedMemoryLessonItem>();
+    public DbSet<PredefinedMemoryLessonCategory> PredefinedMemoryLessonCategories => Set<PredefinedMemoryLessonCategory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -351,6 +354,53 @@ public class AppDbContext : DbContext, IAppDbContext
                 .WithMany()
                 .HasForeignKey(x => x.LocusId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PredefinedMemoryLesson>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Key).HasMaxLength(100);
+            b.Property(x => x.TitleEn).HasMaxLength(200);
+            b.Property(x => x.TitleZh).HasMaxLength(200);
+            b.Property(x => x.DescriptionEn).HasMaxLength(500);
+            b.Property(x => x.DescriptionZh).HasMaxLength(500);
+            b.Property(x => x.Emoji).HasMaxLength(32);
+            b.Property(x => x.TechniqueKey).HasMaxLength(32);
+            b.Property(x => x.GoalType).HasMaxLength(32);
+            b.HasIndex(x => x.Key).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.IsPublished, x.SortOrder, x.IsDeleted });
+            b.HasMany(x => x.Items)
+                .WithOne(x => x.Lesson)
+                .HasForeignKey(x => x.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.Category)
+                .WithMany(x => x.Lessons)
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.HasIndex(x => new { x.CategoryId, x.IsPublished, x.SortOrder, x.IsDeleted });
+        });
+
+        modelBuilder.Entity<PredefinedMemoryLessonCategory>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Key).HasMaxLength(100);
+            b.Property(x => x.NameEn).HasMaxLength(120);
+            b.Property(x => x.NameZh).HasMaxLength(120);
+            b.Property(x => x.DescriptionEn).HasMaxLength(500);
+            b.Property(x => x.DescriptionZh).HasMaxLength(500);
+            b.Property(x => x.Emoji).HasMaxLength(32);
+            b.HasIndex(x => x.Key).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.IsActive, x.SortOrder, x.IsDeleted });
+        });
+
+        modelBuilder.Entity<PredefinedMemoryLessonItem>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.ContentEn).HasMaxLength(500);
+            b.Property(x => x.ContentZh).HasMaxLength(500);
+            b.HasIndex(x => new { x.LessonId, x.Position })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
         });
     }
 

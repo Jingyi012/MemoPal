@@ -28,6 +28,9 @@ public interface IAppDbContext
     DbSet<PracticeAttempt> PracticeAttempts { get; }
     DbSet<PracticeResponse> PracticeResponses { get; }
     DbSet<MemoryReviewSchedule> MemoryReviewSchedules { get; }
+    DbSet<PredefinedMemoryLesson> PredefinedMemoryLessons { get; }
+    DbSet<PredefinedMemoryLessonItem> PredefinedMemoryLessonItems { get; }
+    DbSet<PredefinedMemoryLessonCategory> PredefinedMemoryLessonCategories { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

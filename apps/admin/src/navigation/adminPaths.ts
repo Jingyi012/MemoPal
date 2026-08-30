@@ -6,6 +6,8 @@ export const adminPaths = {
   users: '/admin/users',
   contentRoot: '/admin/content',
   palaceScenes: '/admin/content/palace-scenes',
+  predefinedMemoryLessons: '/admin/content/predefined-memory-lessons',
+  predefinedMemoryLessonCategories: '/admin/content/predefined-memory-lesson-categories',
 
   configsRoot: '/admin/configs',
   configLimits: '/admin/configs/limits',

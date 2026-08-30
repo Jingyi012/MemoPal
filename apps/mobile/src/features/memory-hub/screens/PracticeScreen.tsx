@@ -13,6 +13,8 @@ import { LevelProgressHeader } from '@/features/gamification/achievements/compon
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { usePredefinedMemoryLessons } from '@/features/predefined-memory-lessons';
+import type { PredefinedMemoryLesson } from '@/features/predefined-memory-lessons';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
 import { typography } from '@/theme/typography';
@@ -23,7 +25,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function PracticeScreen() {
   const router = useRouter();
-  const { t } = useTranslation('practice');
+  const { language, t } = useTranslation('practice');
   const modules = useEnabledMemoryModules();
   const numberPegEnabled = modules.some((module) => module.key === 'number-peg');
   const palaceEnabled = modules.some((module) => module.key === 'palace');
@@ -42,7 +44,21 @@ export default function PracticeScreen() {
   };
   const unlockedPegCount = getUnlockedPegCount(user?.level ?? 1);
   const palaceScenes = usePalaceScenes();
+  const lessons = usePredefinedMemoryLessons();
   const [filter, setFilter] = useState<'all' | 'number-peg' | 'palace'>('all');
+  const [lessonCategoryId, setLessonCategoryId] = useState<string>('all');
+  const lessonCategories = useMemo(() => {
+    const byId = new Map<string, PredefinedMemoryLesson['category']>();
+    (lessons.data ?? []).forEach((lesson) => byId.set(lesson.category.id, lesson.category));
+    return [...byId.values()].sort((left, right) => left.sortOrder - right.sortOrder);
+  }, [lessons.data]);
+  const visibleLessons = useMemo(
+    () => (lessons.data ?? []).filter((lesson) =>
+      (lessonCategoryId === 'all' || lesson.categoryId === lessonCategoryId)
+      && (lesson.techniqueKey === 'palace' ? palaceEnabled : numberPegEnabled),
+    ),
+    [lessonCategoryId, lessons.data, numberPegEnabled, palaceEnabled],
+  );
   const recentSets = useMemo(
     () => (memorySets.data ?? [])
       .filter((memorySet) => memorySet.status !== 'archived')
@@ -141,21 +157,53 @@ export default function PracticeScreen() {
             <Text style={[styles.sectionLabel, styles.discoveryTitle]}>{t('tryLesson')}</Text>
             <Text style={styles.lessonHint}>{t('tapToStart')}</Text>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.lessonList}>
-            {LESSONS.filter((lesson) => lesson.technique === 'palace' ? palaceEnabled : numberPegEnabled).map((lesson) => (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.lessonFilterRow}>
+            {([{ id: 'all', emoji: '', nameEn: t('all'), nameZh: t('all') }, ...lessonCategories]).map((category) => (
               <AnimatedPressable
-                key={lesson.title}
-                onPress={() => openLesson(router, lesson)}
-                style={styles.lessonCard}>
-                <Text style={styles.lessonEmoji}>{lesson.emoji}</Text>
-                <Text numberOfLines={2} style={styles.lessonTitle}>{lesson.title}</Text>
-                <Text style={styles.lessonCount}>{lesson.items.length} {lesson.items.length === 1 ? t('item') : t('items')}</Text>
-                <Text style={[styles.lessonTechnique, lesson.technique === 'palace' && styles.lessonTechniquePalace]}>
-                  {lesson.technique === 'palace' ? t('palace') : t('numberPeg')}
+                key={category.id}
+                onPress={() => setLessonCategoryId(category.id)}
+                style={[styles.lessonFilterChip, lessonCategoryId === category.id && styles.lessonFilterChipActive]}>
+                <Text style={[styles.lessonFilterText, lessonCategoryId === category.id && styles.lessonFilterTextActive]}>
+                  {category.emoji ? `${category.emoji} ` : ''}{language === 'zh' ? category.nameZh : category.nameEn}
                 </Text>
               </AnimatedPressable>
             ))}
           </ScrollView>
+          {lessons.isLoading ? (
+            <View style={styles.lessonLoading}><Text style={styles.emptyBody}>{t('loadingLessons')}</Text></View>
+          ) : lessons.isError ? (
+            <ModuleNoticeCard
+              icon={<RefreshCcw size={22} color={theme.inkSoft} />}
+              title={t('lessonsUnavailable')}
+              body={t('lessonsUnavailableBody')}
+              actionLabel={t('tryAgain')}
+              onAction={() => lessons.refetch()}
+            />
+          ) : visibleLessons.length ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.lessonList}>
+            {visibleLessons.map((lesson) => {
+              const localized = localizeLesson(lesson, language);
+              return (
+              <AnimatedPressable
+                key={lesson.id}
+                onPress={() => openLesson(router, lesson, language)}
+                style={styles.lessonCard}>
+                <Text style={styles.lessonEmoji}>{lesson.emoji}</Text>
+                <Text numberOfLines={2} style={styles.lessonTitle}>{localized.title}</Text>
+                <Text numberOfLines={2} style={styles.lessonDescription}>{localized.description}</Text>
+                <Text style={styles.lessonCount}>{lesson.items.length} {lesson.items.length === 1 ? t('item') : t('items')}</Text>
+                <View style={styles.lessonMetaRow}>
+                  <Text style={[styles.lessonTechnique, lesson.techniqueKey === 'palace' && styles.lessonTechniquePalace]}>
+                    {lesson.techniqueKey === 'palace' ? t('palace') : t('numberPeg')}
+                  </Text>
+                  <Text style={styles.lessonCategory}>{lesson.category.emoji} {language === 'zh' ? lesson.category.nameZh : lesson.category.nameEn}</Text>
+                </View>
+              </AnimatedPressable>
+            );})}
+          </ScrollView>
+          ) : (
+            <View style={styles.lessonLoading}><Text style={styles.emptyBody}>{t('noLessons')}</Text></View>
+          )}
         </View>
 
         <View style={styles.sectionHeadingRow}>
@@ -213,17 +261,21 @@ export default function PracticeScreen() {
   );
 }
 
-type Lesson = {
-  title: string;
-  emoji: string;
-  technique: 'number-peg' | 'palace';
-  goalType: 'spelling' | 'ordered-list' | 'facts';
-  items: string[];
-};
+function localizeLesson(lesson: PredefinedMemoryLesson, language: 'en' | 'zh') {
+  return {
+    title: language === 'zh' ? lesson.titleZh : lesson.titleEn,
+    description: language === 'zh' ? lesson.descriptionZh : lesson.descriptionEn,
+    items: lesson.items
+      .slice()
+      .sort((left, right) => left.position - right.position)
+      .map((item) => language === 'zh' ? item.contentZh : item.contentEn),
+  };
+}
 
-function openLesson(router: ReturnType<typeof useRouter>, lesson: Lesson) {
-  const path = lesson.technique === 'palace' ? '/palaces/create-memory' : '/number-peg/build';
-  router.push(`${path}?title=${encodeURIComponent(lesson.title)}&goalType=${lesson.goalType}&items=${encodeURIComponent(JSON.stringify(lesson.items))}` as Href);
+function openLesson(router: ReturnType<typeof useRouter>, lesson: PredefinedMemoryLesson, language: 'en' | 'zh') {
+  const localized = localizeLesson(lesson, language);
+  const path = lesson.techniqueKey === 'palace' ? '/palaces/create-memory' : '/number-peg/build';
+  router.push(`${path}?title=${encodeURIComponent(localized.title)}&goalType=${lesson.goalType}&items=${encodeURIComponent(JSON.stringify(localized.items))}` as Href);
 }
 
 function openMemorySet(router: ReturnType<typeof useRouter>, memorySet: MemorySet) {
@@ -246,12 +298,21 @@ const styles = StyleSheet.create({
   discoveryTitle: { marginTop: 0, marginBottom: 0 },
   lessonHint: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 0 },
   lessonList: { gap: 10, paddingTop: 10, paddingBottom: 10, paddingRight: 12 },
-  lessonCard: { width: 150, minHeight: 148, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 11 },
+  lessonFilterRow: { flexDirection: 'row', gap: 7, marginTop: 10, paddingRight: 12 },
+  lessonFilterChip: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 10, paddingVertical: 6 },
+  lessonFilterChipActive: { borderColor: theme.violetDeep, backgroundColor: '#EEE9FF' },
+  lessonFilterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
+  lessonFilterTextActive: { color: theme.violetDeep },
+  lessonCard: { width: 184, minHeight: 190, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 12 },
   lessonEmoji: { fontSize: 27 },
   lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5, lineHeight: 16, marginTop: 6 },
+  lessonDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, lineHeight: 15, marginTop: 4, minHeight: 30 },
   lessonCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, marginTop: 4 },
-  lessonTechnique: { alignSelf: 'flex-start', color: theme.berryDeep, backgroundColor: '#FFF0F4', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontFamily: typography.bodyExtraBold, fontSize: 9.5, marginTop: 9 },
+  lessonMetaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 5, marginTop: 9 },
+  lessonTechnique: { alignSelf: 'flex-start', color: theme.berryDeep, backgroundColor: '#FFF0F4', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
   lessonTechniquePalace: { color: theme.violetDeep, backgroundColor: '#EEE9FF' },
+  lessonCategory: { color: theme.inkSoft, backgroundColor: '#F4F1EA', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
+  lessonLoading: { minHeight: 92, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 18, justifyContent: 'center', marginTop: 10 },
   filterRow: { flexDirection: 'row', gap: 7, marginTop: 9, marginBottom: 11 },
   filterChip: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 10, paddingVertical: 6 },
   filterChipActive: { borderColor: theme.ink, backgroundColor: theme.ink },
@@ -276,13 +337,6 @@ const PEG_ANCHORS = [
   { number: 8, emoji: '⛄', name: 'Snowman' },
   { number: 9, emoji: '🎈', name: 'Balloon' },
   { number: 10, emoji: '⚾', name: 'Bat & ball' },
-];
-
-const LESSONS: Lesson[] = [
-  { title: '5 tricky spelling words', emoji: '🕯️', technique: 'number-peg', goalType: 'spelling', items: ['rhythm', 'necessary', 'separate', 'definitely', 'occasion'] },
-  { title: 'Solar system order', emoji: '🕯️', technique: 'number-peg', goalType: 'ordered-list', items: ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn'] },
-  { title: 'World capitals', emoji: '🏰', technique: 'palace', goalType: 'facts', items: ['Tokyo — Japan', 'Cairo — Egypt', 'Ottawa — Canada', 'Canberra — Australia', 'Lima — Peru', 'Oslo — Norway'] },
-  { title: 'Grocery run', emoji: '🕯️', technique: 'number-peg', goalType: 'ordered-list', items: ['milk', 'eggs', 'bread', 'apples', 'toothpaste'] },
 ];
 
 const SESSION_FILTERS: { key: 'all' | 'number-peg' | 'palace' }[] = [
