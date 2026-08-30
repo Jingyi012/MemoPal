@@ -23,6 +23,27 @@ In the output, you'll find options to open the app in a
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
+## EAS Android builds
+
+Android APKs are built from the repository root through the manually triggered
+`Build MemoPal Android` GitHub Actions workflow at
+`.github/workflows/build-mobile-android.yml`. Choose `uat` to use the EAS
+`preview` profile or `prod` to use the `production-apk` profile. The workflow
+syncs the selected environment's API, media, and Google OAuth variables to EAS
+before building, then publishes the APK as both an Actions artifact and a
+GitHub Release asset.
+
+Configure these secrets in each GitHub Environment (`uat` and/or `prod`):
+
+- `EXPO_TOKEN`
+- `MEMOPAL_MOBILE_API_BASE_URL`
+- `MEMOPAL_MOBILE_MEDIA_BASE_URL`
+- `MEMOPAL_GOOGLE_WEB_CLIENT_ID`
+- Optional: `MEMOPAL_GOOGLE_IOS_CLIENT_ID`, `MEMOPAL_GOOGLE_HOSTED_DOMAIN`
+
+The regular `npm run android` command remains a local Expo native build and
+does not invoke EAS or a cloud build.
+
 You can start developing by editing the files inside the `src/app` and
 `src/features` directories. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 

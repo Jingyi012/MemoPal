@@ -1,0 +1,152 @@
+name: Build MemoPal Android
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: GitHub Environment and EAS environment to build against
+        required: true
+        default: uat
+        type: choice
+        options:
+          - uat
+          - prod
+      prerelease:
+        description: Mark the downloaded APK release as a prerelease
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target_env }}
+    defaults:
+      run:
+        working-directory: apps/mobile
+    env:
+      EXPO_PUBLIC_API_BASE_URL: ${{ secrets.MEMOPAL_MOBILE_API_BASE_URL }}
+      EXPO_PUBLIC_MEDIA_BASE_URL: ${{ secrets.MEMOPAL_MOBILE_MEDIA_BASE_URL }}
+      EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID: ${{ secrets.MEMOPAL_GOOGLE_WEB_CLIENT_ID }}
+      EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID: ${{ secrets.MEMOPAL_GOOGLE_ANDROID_CLIENT_ID }}
+      EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID: ${{ secrets.MEMOPAL_GOOGLE_IOS_CLIENT_ID }}
+      EXPO_PUBLIC_GOOGLE_OAUTH_HOSTED_DOMAIN: ${{ secrets.MEMOPAL_GOOGLE_HOSTED_DOMAIN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Validate build secrets
+        shell: bash
+        run: |
+          test -n "${{ secrets.EXPO_TOKEN }}" || { echo "EXPO_TOKEN is required"; exit 1; }
+          test -n "${EXPO_PUBLIC_API_BASE_URL}" || { echo "MEMOPAL_MOBILE_API_BASE_URL is required"; exit 1; }
+          test -n "${EXPO_PUBLIC_MEDIA_BASE_URL}" || { echo "MEMOPAL_MOBILE_MEDIA_BASE_URL is required"; exit 1; }
+          test -n "${EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID}" || { echo "MEMOPAL_GOOGLE_WEB_CLIENT_ID is required"; exit 1; }
+
+      - name: Install dependencies
+        working-directory: .
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: |
+          npm install --global eas-cli@22.2.0
+          eas --version
+
+      - name: Sync mobile variables to EAS
+        shell: bash
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_TARGET_ENV: ${{ inputs.target_env }}
+        run: |
+          if [[ "${EAS_TARGET_ENV}" == "prod" ]]; then
+            EAS_ENVIRONMENT="production"
+          else
+            EAS_ENVIRONMENT="preview"
+          fi
+
+          set_eas_variable() {
+            local name="$1"
+            local value="$2"
+            if [[ -n "${value}" ]]; then
+              eas env:set \
+                --name "${name}" \
+                --value "${value}" \
+                --environment "${EAS_ENVIRONMENT}" \
+                --visibility plaintext \
+                --non-interactive
+            fi
+          }
+
+          set_eas_variable EXPO_PUBLIC_API_BASE_URL "${EXPO_PUBLIC_API_BASE_URL}"
+          set_eas_variable EXPO_PUBLIC_MEDIA_BASE_URL "${EXPO_PUBLIC_MEDIA_BASE_URL}"
+          set_eas_variable EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID "${EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID}"
+          set_eas_variable EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID "${EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID}"
+          set_eas_variable EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID "${EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID}"
+          set_eas_variable EXPO_PUBLIC_GOOGLE_OAUTH_HOSTED_DOMAIN "${EXPO_PUBLIC_GOOGLE_OAUTH_HOSTED_DOMAIN}"
+          set_eas_variable EXPO_PUBLIC_LOCAL_DEV_MODE "false"
+          set_eas_variable EXPO_PUBLIC_STRICT_BASE_URL "true"
+          echo "EAS environment configured: ${EAS_ENVIRONMENT}"
+
+      - name: Build APK with EAS
+        shell: bash
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_TARGET_ENV: ${{ inputs.target_env }}
+        run: |
+          if [[ "${EAS_TARGET_ENV}" == "prod" ]]; then
+            EAS_PROFILE="production-apk"
+          else
+            EAS_PROFILE="preview"
+          fi
+
+          if ! eas build --platform android --profile "${EAS_PROFILE}" --non-interactive --wait --json > eas-build.json 2> eas-build.log; then
+            echo "EAS build failed. Diagnostic output:"
+            cat eas-build.log || true
+            cat eas-build.json || true
+            exit 1
+          fi
+
+      - name: Download APK
+        shell: bash
+        env:
+          RELEASE_ENV: ${{ inputs.target_env }}
+          RELEASE_NUMBER: ${{ github.run_number }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const payload = JSON.parse(fs.readFileSync("eas-build.json", "utf8"));
+            const build = Array.isArray(payload) ? payload[0] : payload;
+            const url = build?.artifacts?.buildUrl;
+            if (!url) throw new Error("EAS did not return an APK URL");
+            fs.writeFileSync("apk-url.txt", url);
+          '
+          curl --fail --location --retry 3 "$(cat apk-url.txt)" --output "memopal-${RELEASE_ENV}-${RELEASE_NUMBER}.apk"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: memopal-android-${{ inputs.target_env }}-${{ github.run_number }}
+          path: apps/mobile/memopal-${{ inputs.target_env }}-${{ github.run_number }}.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-${{ inputs.target_env }}-${{ github.run_number }}
+          name: MemoPal Android ${{ inputs.target_env }} build ${{ github.run_number }}
+          prerelease: ${{ inputs.prerelease }}
+          generate_release_notes: false
+          files: apps/mobile/memopal-${{ inputs.target_env }}-${{ github.run_number }}.apk

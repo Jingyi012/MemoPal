@@ -32,6 +32,9 @@ jobs:
     env:
       DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
       IMAGE_OWNER: ${{ vars.IMAGE_OWNER }}
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+      VPS_USER: ${{ secrets.VPS_USER }}
 
     steps:
       - name: Checkout
@@ -83,22 +86,26 @@ jobs:
 
       - name: Configure SSH
         run: |
-          if [ -z "${{ secrets.VPS_HOST }}" ] || [ -z "${{ secrets.VPS_PORT }}" ] || [ -z "${{ secrets.VPS_USER }}" ] || [ -z "${{ secrets.VPS_SSH_KEY }}" ]; then
-            echo "Missing one or more required VPS secrets: VPS_HOST, VPS_PORT, VPS_USER, VPS_SSH_KEY"
+          if [ -z "${VPS_HOST}" ] || [ -z "${VPS_USER}" ] || [ -z "${{ secrets.VPS_SSH_KEY }}" ]; then
+            echo "Missing one or more required VPS secrets: VPS_HOST, VPS_USER, VPS_SSH_KEY"
+            exit 1
+          fi
+          if ! [[ "${VPS_PORT}" =~ ^[0-9]+$ ]] || [ "${VPS_PORT}" -lt 1 ] || [ "${VPS_PORT}" -gt 65535 ]; then
+            echo "VPS_PORT must be a valid TCP port (default: 22)."
             exit 1
           fi
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          if ! ssh-keyscan -T 10 -p "${{ secrets.VPS_PORT }}" -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/tmp/ssh-keyscan.err; then
-            echo "ssh-keyscan failed for host=${{ secrets.VPS_HOST }} port=${{ secrets.VPS_PORT }}"
+          if ! ssh-keyscan -T 10 -p "${VPS_PORT}" -H "${VPS_HOST}" >> ~/.ssh/known_hosts 2>/tmp/ssh-keyscan.err; then
+            echo "ssh-keyscan failed for host=${VPS_HOST} port=${VPS_PORT}"
             cat /tmp/ssh-keyscan.err || true
             exit 1
           fi
 
       - name: Deploy admin
         run: |
-          ssh -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" 'bash -s' -- "${DEPLOY_PATH}" "${RESOLVED_IMAGE_OWNER}" <<'EOF'
+          ssh -p "${VPS_PORT}" "${VPS_USER}@${VPS_HOST}" 'bash -s' -- "${DEPLOY_PATH}" "${RESOLVED_IMAGE_OWNER}" <<'EOF'
           set -euo pipefail
           DEPLOY_PATH="$1"
           IMAGE_OWNER="$2"
@@ -106,6 +113,12 @@ jobs:
           test -f ./.env || { echo "Missing ${DEPLOY_PATH}/.env. Copy from .env.example and fill values."; exit 1; }
           sed -i 's/\r$//' ./.env
           set -a; . ./.env; set +a
+          for required_name in POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DATA_PATH MEMOPAL_UPLOADS_PATH Database__ApplyMigrationsOnStartup ASPNETCORE_ENVIRONMENT ASPNETCORE_URLS FileStorage__RootPath API_BIND_HOST API_HOST_PORT DB_BIND_HOST DB_HOST_PORT ADMIN_BIND_HOST ADMIN_HOST_PORT; do
+            if [ -z "${!required_name:-}" ]; then
+              echo "${required_name} is required in ${DEPLOY_PATH}/.env"
+              exit 1
+            fi
+          done
 
           IMAGE_OWNER="${IMAGE_OWNER}" ADMIN_IMAGE_TAG=latest docker compose pull admin
           IMAGE_OWNER="${IMAGE_OWNER}" ADMIN_IMAGE_TAG=latest docker compose up -d admin

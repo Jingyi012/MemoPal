@@ -45,7 +45,8 @@ with Expo and the local Android SDK. It does not use EAS or a cloud build. The
 local build uses the debug signing certificate, so register that SHA-1 with
 Google OAuth when testing native Google Sign-In locally. EAS development and
 preview builds remain available separately through the profiles in
-`apps/mobile/eas.json`.
+`apps/mobile/eas.json`; use the manually triggered `Build MemoPal Android`
+workflow for UAT/production APKs.
 
 Copy each checked-in `.env.example` to its local `.env` file as needed. Real
 credentials, runtime uploads, build output, and local databases must never be

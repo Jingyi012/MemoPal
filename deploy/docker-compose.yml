@@ -3,15 +3,15 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: memopal
-      POSTGRES_USER: memopal
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - memopal_db:/var/lib/postgresql/data
+      - "${POSTGRES_DATA_PATH}:/var/lib/postgresql/data"
     ports:
-      - "${DB_BIND_HOST:-0.0.0.0}:${DB_HOST_PORT:-15432}:5432"
+      - "${DB_BIND_HOST}:${DB_HOST_PORT}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U memopal -d memopal"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -22,14 +22,11 @@ services:
     env_file:
       - .env
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=memopal;Username=memopal;Password=${POSTGRES_PASSWORD}
-      FileStorage__RootPath: /data/uploads
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
     ports:
-      - "127.0.0.1:${API_HOST_PORT:-18080}:8080"
+      - "${API_BIND_HOST}:${API_HOST_PORT}:8080"
     volumes:
-      - memopal_uploads:/data/uploads
+      - "${MEMOPAL_UPLOADS_PATH}:/data/uploads"
     depends_on:
       db:
         condition: service_healthy
@@ -38,10 +35,4 @@ services:
     image: ghcr.io/${IMAGE_OWNER}/memopal-admin:${ADMIN_IMAGE_TAG:-latest}
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${ADMIN_HOST_PORT:-18081}:80"
-
-volumes:
-  memopal_db:
-  memopal_uploads:
-    external: true
-    name: ${UPLOADS_VOLUME_NAME:-memopal_uploads}
+      - "${ADMIN_BIND_HOST}:${ADMIN_HOST_PORT}:80"
