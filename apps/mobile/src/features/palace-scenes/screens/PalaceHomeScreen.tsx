@@ -42,13 +42,13 @@ export default function PalaceHomeScreen() {
           icon={<Text style={styles.heroEmoji}>🏰</Text>}
           eyebrow={t('memoryTip')}
           title={t('description')}
-          body="Choose a scene, place each idea on a numbered locus, and follow the same visual path whenever you want to remember it."
-          actionLabel="Build a new Palace"
+          body={t('routeBody')}
+          actionLabel={t('buildNewPalace')}
           onAction={() => router.push('/palaces/create-memory' as Href)}
         />
 
         <AnimatedPressable
-          accessibilityLabel="Create a custom Palace"
+          accessibilityLabel={t('useYourOwnPlace')}
           // Let everyone open the editor to understand the workflow. The
           // editor still enforces the server-backed Premium limit when saving.
           onPress={() => router.push('/palaces/create-custom' as Href)}
@@ -57,25 +57,25 @@ export default function PalaceHomeScreen() {
             <Text style={styles.customEmoji}>🖼️</Text>
           </View>
           <View style={styles.customCopy}>
-            <Text style={styles.customEyebrow}>MAKE IT PERSONAL</Text>
-            <Text style={styles.customTitle}>Use your own place</Text>
-            <Text style={styles.customBody}>Upload one familiar photo and tap the spots you want to remember.</Text>
+            <Text style={styles.customEyebrow}>{t('makeItPersonal')}</Text>
+            <Text style={styles.customTitle}>{t('useYourOwnPlace')}</Text>
+            <Text style={styles.customBody}>{t('uploadFamiliarPhoto')}</Text>
           </View>
           <Text style={styles.customArrow}>→</Text>
         </AnimatedPressable>
 
         <View style={styles.sectionHeadingRow}>
           <View style={styles.sectionHeadingCopy}>
-            <Text style={styles.sectionEyebrow}>CHOOSE A FAMILIAR PATH</Text>
-            <Text style={styles.sectionTitle}>Palace scenes</Text>
+            <Text style={styles.sectionEyebrow}>{t('chooseFamiliarPath')}</Text>
+            <Text style={styles.sectionTitle}>{t('palaceScenes')}</Text>
           </View>
           {scenes.data?.length ? (
             <AnimatedPressable
               accessibilityRole="button"
-              accessibilityLabel="See all Palace scenes"
+              accessibilityLabel={t('seeAllScenes')}
               onPress={() => router.push('/palaces/map' as Href)}
               style={styles.seeAllButton}>
-              <Text style={styles.seeAllText}>See all</Text>
+              <Text style={styles.seeAllText}>{t('seeAllScenes')}</Text>
               <ChevronRight size={15} color={theme.violetDeep} />
             </AnimatedPressable>
           ) : null}
@@ -109,12 +109,12 @@ export default function PalaceHomeScreen() {
                     <Text numberOfLines={1} style={styles.sceneName}>
                       {scene.name}
                     </Text>
-                    <Text style={styles.sceneMeta}>{scene.loci.length} memorable loci</Text>
+                    <Text style={styles.sceneMeta}>{scene.loci.length} {t('memorableLoci')}</Text>
                   </View>
                 </AnimatedPressable>
                 {!scene.isTemplate ? (
                   <AnimatedPressable
-                    accessibilityLabel={`Edit ${scene.name}`}
+                    accessibilityLabel={t('editScene').replace('{name}', scene.name)}
                     onPress={(event) => {
                       event.stopPropagation();
                       router.push(`/palaces/create-custom?sceneId=${encodeURIComponent(scene.id)}` as Href);
@@ -136,8 +136,8 @@ export default function PalaceHomeScreen() {
 
         <View style={styles.sectionHeadingRow}>
           <View>
-            <Text style={styles.sectionEyebrow}>YOUR JOURNEYS</Text>
-            <Text style={styles.sectionTitle}>Ready for a mental walk?</Text>
+            <Text style={styles.sectionEyebrow}>{t('yourJourneys')}</Text>
+            <Text style={styles.sectionTitle}>{t('readyForMentalWalk')}</Text>
           </View>
         </View>
 
@@ -158,7 +158,7 @@ export default function PalaceHomeScreen() {
               tone="palace"
               title={memorySet.title}
               badgeText={String(memorySet.items.length)}
-              subtitle={`${memorySet.items.length} ${memorySet.items.length === 1 ? 'locus' : 'loci'} · ${memorySet.status === 'draft' ? 'Keep placing' : 'Walk and recall'}`}
+              subtitle={`${memorySet.items.length} ${memorySet.items.length === 1 ? t('locusSingular') : t('lociPlural')} · ${memorySet.status === 'draft' ? t('keepPlacing') : t('walkAndRecall')}`}
               onPress={() => router.push(`/palaces/memory/${memorySet.id}` as Href)}
             />
           ))
@@ -166,8 +166,8 @@ export default function PalaceHomeScreen() {
           <ModuleNoticeCard
             emoji="🗺️"
             title={t('firstJourney')}
-            body="Try a school topic, a speech, or the steps of a new skill."
-            actionLabel="Build a Palace"
+            body={t('firstJourneyBody')}
+            actionLabel={t('buildAPalace')}
             actionIcon={<ChevronRight size={16} color={theme.ink} />}
             onAction={() => router.push('/palaces/create-memory' as Href)}
           />

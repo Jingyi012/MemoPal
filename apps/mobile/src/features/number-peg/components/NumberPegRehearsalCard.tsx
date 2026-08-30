@@ -6,6 +6,7 @@ import { typography } from '@/theme/typography';
 import { ArrowLeft, ArrowRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
 
 type NumberPegRehearsalCardProps = {
   item: MemoryItem;
@@ -27,6 +28,7 @@ export function NumberPegRehearsalCard({
   onNext,
 }: NumberPegRehearsalCardProps) {
   const { t } = useTranslation('numberPeg');
+  const localizedPeg = localizeNumberPeg(peg, t);
   const isFirst = index === 0;
   const isLast = index === total - 1;
   return (
@@ -34,12 +36,12 @@ export function NumberPegRehearsalCard({
       <View style={styles.headerRow}>
         <View style={styles.icon}><Text style={styles.iconEmoji}>🎬</Text></View>
         <View style={styles.headerCopy}>
-          <Text style={styles.eyebrow}>{t('pegLabel').toUpperCase()} {peg.number} · {peg.keyword.toUpperCase()}</Text>
+          <Text style={styles.eyebrow}>{t('pegLabel').toUpperCase()} {localizedPeg.number} · {localizedPeg.keyword.toUpperCase()}</Text>
           <Text style={styles.progress}>{index + 1} {t('of')} {total}</Text>
         </View>
       </View>
       <View style={styles.sceneVisual}>
-        <View style={styles.pegBubble}><Text style={styles.pegEmoji}>{peg.image}</Text><Text style={styles.pegNumber}>{peg.number}</Text></View>
+        <View style={styles.pegBubble}><Text style={styles.pegEmoji}>{localizedPeg.image}</Text><Text style={styles.pegNumber}>{localizedPeg.number}</Text></View>
         <Text style={styles.sceneSparkle}>✨</Text>
         <Text numberOfLines={3} style={styles.answer}>{item.answer}</Text>
       </View>

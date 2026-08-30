@@ -1,6 +1,8 @@
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
+import { useTranslation } from '@/core/i18n/useTranslation';
+import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
 import { Text, View } from 'react-native';
 
 type Props = {
@@ -10,6 +12,8 @@ type Props = {
 };
 
 export function NumberPegItemCard({ item, locked = false, compact = false }: Props) {
+  const { t } = useTranslation('numberPeg');
+  const localizedItem = localizeNumberPeg(item, t);
   return (
     <View
       style={{
@@ -43,7 +47,7 @@ export function NumberPegItemCard({ item, locked = false, compact = false }: Pro
       <Text
         numberOfLines={1}
         style={{ marginTop: compact ? 4 : 7, fontFamily: typography.bodyExtraBold, fontSize: compact ? 10 : 12, color: locked ? theme.inkSoft : theme.ink }}>
-        {locked ? 'Locked' : item.keyword}
+        {locked ? t('locked') : localizedItem.keyword}
       </Text>
     </View>
   );

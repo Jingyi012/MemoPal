@@ -5,7 +5,8 @@ import { useMemorySetMutations } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import type { PegNumber } from '@/features/number-peg/types/numberPeg.types';
-import { buildAllNumberPegItems, buildPegScene, getUnlockedPegCount, MAX_NUMBER_PEGS } from '@/features/number-peg/utils/numberPegMap';
+import { buildAllNumberPegItems, getUnlockedPegCount, MAX_NUMBER_PEGS } from '@/features/number-peg/utils/numberPegMap';
+import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
@@ -53,7 +54,7 @@ export default function NumberPegComposerScreen() {
   const [scenes, setScenes] = useState<SceneDraft[]>(() =>
     prefilledItems.slice(0, MAX_NUMBER_PEGS).map((answer, index) => ({
       answer,
-      sceneText: buildPegScene(getComposerPegNumber(index, unlockedPegCount) as PegNumber, answer),
+      sceneText: buildLocalizedPegScene(getComposerPegNumber(index, unlockedPegCount) as PegNumber, answer, 0, pegs, t),
       variant: 0,
     }))
   );
@@ -92,7 +93,7 @@ export default function NumberPegComposerScreen() {
         const pegNumber = getComposerPegNumber(index, unlockedPegCount);
         return {
           answer,
-          sceneText: buildPegScene(pegNumber as PegNumber, answer),
+          sceneText: buildLocalizedPegScene(pegNumber as PegNumber, answer, 0, pegs, t),
           variant: 0,
         };
       })
@@ -111,7 +112,7 @@ export default function NumberPegComposerScreen() {
         return {
           ...scene,
           variant,
-          sceneText: buildPegScene(pegNumber as PegNumber, scene.answer, variant),
+          sceneText: buildLocalizedPegScene(pegNumber as PegNumber, scene.answer, variant, pegs, t),
         };
       })
     );
@@ -332,12 +333,13 @@ export default function NumberPegComposerScreen() {
             {scenes.map((scene, index) => {
               const peg = pegs[getComposerPegNumber(index, unlockedPegCount) - 1];
               const pegNumber = getComposerPegNumber(index, unlockedPegCount);
+              const localizedPeg = localizeNumberPeg(peg, t);
               return (
                 <SceneEditorCard
                   key={`${scene.answer}-${index}`}
                   index={index}
                   total={scenes.length}
-                  anchorLabel={`${t('pegLabel')} ${pegNumber} · ${peg.keyword.toUpperCase()}`}
+                  anchorLabel={`${t('pegLabel')} ${pegNumber} · ${localizedPeg.keyword.toUpperCase()}`}
                   itemLabel={scene.answer}
                   visual={
                     <>
@@ -406,6 +408,21 @@ function goalLabelKey(goalType: MemoryGoalType): 'goalSpelling' | 'goalList' | '
 
 function getComposerPegNumber(index: number, unlockedPegCount: number) {
   return (index % Math.max(1, unlockedPegCount)) + 1;
+}
+
+function buildLocalizedPegScene(
+  pegNumber: PegNumber,
+  answer: string,
+  variant: number,
+  pegs: ReturnType<typeof buildAllNumberPegItems>,
+  t: (key: any) => string,
+) {
+  const peg = localizeNumberPeg(pegs[pegNumber - 1], t);
+  const actionKey = `sceneAction${(Math.abs(variant) % 4) + 1}`;
+  return t('sceneTemplate')
+    .replace('{peg}', peg.keyword.toLowerCase())
+    .replace('{action}', t(actionKey))
+    .replace('{answer}', answer.trim());
 }
 
 const styles = StyleSheet.create({

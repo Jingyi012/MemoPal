@@ -31,8 +31,8 @@ export default function NumberPegMapScreen() {
         <View style={styles.summaryCard}>
           <View style={styles.summaryIcon}><Text style={styles.summaryEmoji}>🕯️</Text></View>
           <View style={styles.summaryCopy}>
-            <Text style={styles.summaryTitle}>Level {level} · {unlockedCount}/{MAX_NUMBER_PEGS} unlocked</Text>
-            <Text style={styles.summaryBody}>Learn a small set deeply before the next anchors open.</Text>
+            <Text style={styles.summaryTitle}>{t('levelUnlockedSummary').replace('{level}', String(level)).replace('{count}', String(unlockedCount)).replace('{total}', String(MAX_NUMBER_PEGS))}</Text>
+            <Text style={styles.summaryBody}>{t('anchorProgressBody')}</Text>
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${unlockedCount}%` }]} />
             </View>
@@ -41,12 +41,12 @@ export default function NumberPegMapScreen() {
 
         <View style={styles.headingRow}>
           <View>
-            <Text style={styles.eyebrow}>ANCHOR LIBRARY</Text>
-            <Text style={styles.heading}>Numbers 1–{MAX_NUMBER_PEGS}</Text>
+            <Text style={styles.eyebrow}>{t('anchorLibrary')}</Text>
+            <Text style={styles.heading}>{t('numbersRange').replace('{total}', String(MAX_NUMBER_PEGS))}</Text>
           </View>
           <View style={styles.lockPill}>
             <Text style={styles.lockEmoji}>🔒</Text>
-            <Text style={styles.lockPillText}>{MAX_NUMBER_PEGS - unlockedCount} locked</Text>
+            <Text style={styles.lockPillText}>{t('lockedCount').replace('{count}', String(MAX_NUMBER_PEGS - unlockedCount))}</Text>
           </View>
         </View>
 
@@ -62,7 +62,7 @@ export default function NumberPegMapScreen() {
         </View>
 
         <AnimatedPressable style={styles.startButton} onPress={() => router.push('/number-peg/create')}>
-          <Text style={styles.startButtonText}>Build a memory with these pegs</Text>
+          <Text style={styles.startButtonText}>{t('buildMemoryWithPegs')}</Text>
           <ArrowRight size={17} color={theme.ink} />
         </AnimatedPressable>
       </ScrollView>

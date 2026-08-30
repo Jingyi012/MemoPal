@@ -3,6 +3,7 @@ import { CommonHeader } from '@/components/CommonHeader';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { buildNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
+import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight, Check, RefreshCcw, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
@@ -15,17 +16,18 @@ export default function NumberPegFamiliarityScreen() {
   const router = useRouter();
   const { t } = useTranslation('numberPeg');
   const pegs = useMemo(() => buildNumberPegItems(), []);
+  const localizedPegs = useMemo(() => pegs.map((peg) => localizeNumberPeg(peg, t)), [pegs, t]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [score, setScore] = useState(0);
 
   const isComplete = questionIndex >= pegs.length;
-  const current = pegs[questionIndex];
+  const current = localizedPegs[questionIndex];
   const choices = useMemo(() => {
     if (!current) return [];
-    return [current, pegs[(questionIndex + 3) % pegs.length], pegs[(questionIndex + 6) % pegs.length]];
-  }, [current, pegs, questionIndex]);
+    return [current, localizedPegs[(questionIndex + 3) % localizedPegs.length], localizedPegs[(questionIndex + 6) % localizedPegs.length]];
+  }, [current, localizedPegs, questionIndex]);
 
   const choose = (pegId: string) => {
     if (feedback || !current) return;
@@ -63,7 +65,7 @@ export default function NumberPegFamiliarityScreen() {
             <Text style={styles.completeTitle}>{t('familiarityComplete')}</Text>
             <Text style={styles.completeScore}>{score} / {pegs.length}</Text>
             <Text style={styles.completeBody}>
-              You can now use the fixed pictures as quick hooks for spelling words, grocery lists, and short facts.
+              {t('familiarityCompleteBody')}
             </Text>
             <View style={styles.primaryButtonWrap}>
               <AnimatedPressable onPress={() => router.push('/number-peg/create' as Href)} style={styles.primaryButton}>
@@ -92,8 +94,8 @@ export default function NumberPegFamiliarityScreen() {
 
             <View style={styles.questionCard}>
               <View style={styles.numberBadge}><Text style={styles.numberBadgeText}>{current.number}</Text></View>
-              <Text style={styles.questionEyebrow}>ANCHOR {questionIndex + 1} OF {pegs.length}</Text>
-              <Text style={styles.questionTitle}>Which picture belongs to number {current.number}?</Text>
+              <Text style={styles.questionEyebrow}>{t('anchorProgress').replace('{current}', String(questionIndex + 1)).replace('{total}', String(pegs.length))}</Text>
+              <Text style={styles.questionTitle}>{t('whichPictureForNumber').replace('{number}', String(current.number))}</Text>
               <Text style={styles.questionHint}>{current.description}</Text>
 
               <View style={styles.choiceGrid}>
@@ -118,7 +120,7 @@ export default function NumberPegFamiliarityScreen() {
                 <View style={styles.feedbackRow}>
                   {feedback === 'correct' ? <Check size={18} color={theme.grass} /> : <X size={18} color={theme.berryDeep} />}
                   <Text style={[styles.feedbackText, feedback === 'correct' ? styles.feedbackCorrect : styles.feedbackWrong]}>
-                    {feedback === 'correct' ? 'That picture is locked in!' : `The ${current.keyword.toLowerCase()} belongs to ${current.number}.`}
+                    {feedback === 'correct' ? t('pictureLocked') : t('pictureBelongsTo').replace('{keyword}', current.keyword.toLowerCase()).replace('{number}', String(current.number))}
                   </Text>
                 </View>
               )}
@@ -126,7 +128,7 @@ export default function NumberPegFamiliarityScreen() {
               {feedback && (
                 <View style={styles.primaryButtonWrap}>
                   <AnimatedPressable onPress={next} style={styles.primaryButton}>
-                    <Text style={styles.primaryButtonText}>{questionIndex === pegs.length - 1 ? 'See my score' : 'Next anchor'}</Text>
+                    <Text style={styles.primaryButtonText}>{questionIndex === pegs.length - 1 ? t('seeMyScore') : t('nextAnchor')}</Text>
                     <ArrowRight size={18} color={theme.ink} />
                   </AnimatedPressable>
                 </View>

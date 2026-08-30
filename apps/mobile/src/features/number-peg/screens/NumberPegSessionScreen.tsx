@@ -10,6 +10,7 @@ import type { MemoryItem, PegBinding } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { buildNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
+import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import {
   useCreatePracticeAttempt,
@@ -220,6 +221,7 @@ export default function NumberPegSessionScreen({
   const currentItem = isComplete ? null : memorySet.items[questionIndex];
   const currentBinding = currentItem ? findBinding(bindings, currentItem) : null;
   const currentPeg = currentBinding ? pegs[currentBinding.pegNumber - 1] : null;
+  const localizedCurrentPeg = currentPeg ? localizeNumberPeg(currentPeg, t) : null;
   const sceneItem = memorySet.items[sceneIndex] ?? memorySet.items[0];
   const sceneBinding = sceneItem ? findBinding(bindings, sceneItem) : null;
   const scenePeg = sceneBinding ? pegs[sceneBinding.pegNumber - 1] : pegs[sceneIndex];
@@ -417,7 +419,7 @@ export default function NumberPegSessionScreen({
               <RecallAnswerCard
                 tone="peg"
                 icon={<Text style={styles.quizEmoji}>{currentPeg?.image ?? '✨'}</Text>}
-                eyebrow={`${t('pegLabel').toUpperCase()} ${currentBinding?.pegNumber ?? questionIndex + 1} · ${currentPeg?.keyword.toUpperCase()}`}
+                eyebrow={`${t('pegLabel').toUpperCase()} ${currentBinding?.pegNumber ?? questionIndex + 1} · ${localizedCurrentPeg?.keyword.toUpperCase() ?? ''}`}
                 prompt={t('miniMoviePrompt')}
                 answer={answer}
                 feedback={feedback}

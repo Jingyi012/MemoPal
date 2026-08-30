@@ -36,17 +36,17 @@ export default function PalaceMapScreen() {
         <View style={styles.summaryCard}>
           <View style={styles.summaryIcon}><Text style={styles.summaryEmoji}>🗺️</Text></View>
           <View style={styles.summaryCopy}>
-            <Text style={styles.summaryTitle}>{availableScenes.length} rooms ready for a walk</Text>
-            <Text style={styles.summaryBody}>Use a familiar route for each memory so your lists stay separate.</Text>
+            <Text style={styles.summaryTitle}>{t('roomsReadyTitle').replace('{count}', String(availableScenes.length))}</Text>
+            <Text style={styles.summaryBody}>{t('roomsReadyBody')}</Text>
           </View>
         </View>
 
         <View style={styles.headingRow}>
           <View>
-            <Text style={styles.eyebrow}>ROOM LIBRARY</Text>
-            <Text style={styles.heading}>Choose a scene</Text>
+            <Text style={styles.eyebrow}>{t('roomLibrary')}</Text>
+            <Text style={styles.heading}>{t('chooseScene')}</Text>
           </View>
-          <Text style={styles.countPill}>{scenes.data?.length ?? 0} total</Text>
+          <Text style={styles.countPill}>{scenes.data?.length ?? 0} {t('totalCount')}</Text>
         </View>
 
         {scenes.isLoading ? (
@@ -54,7 +54,7 @@ export default function PalaceMapScreen() {
         ) : scenes.isError ? (
           <ModuleNoticeCard
             title={t('doorsStuck')}
-            body={getNumberPegErrorMessage(scenes.error, 'Check your connection and try again.')}
+            body={getNumberPegErrorMessage(scenes.error, t('connection'))}
             onAction={scenes.refetch}
           />
         ) : scenes.data?.length ? (
@@ -64,15 +64,15 @@ export default function PalaceMapScreen() {
               return (
                 <AnimatedPressable
                   key={scene.id}
-                  accessibilityLabel={locked ? `Unlock ${scene.name}` : `Use ${scene.name}`}
+                  accessibilityLabel={(locked ? t('unlockScene') : t('useScene')).replace('{name}', scene.name)}
                   onPress={() => router.push((locked ? '/premium' : `/palaces/create-memory?sceneId=${encodeURIComponent(scene.id)}`) as Href)}
                   style={[styles.sceneCard, locked && styles.sceneCardLocked]}>
                   <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneImage} />
                   <View style={styles.sceneShade} />
-                  {locked ? <View style={styles.lockBadge}><Text style={styles.lockEmoji}>🔒</Text><Text style={styles.lockText}>Premium</Text></View> : null}
+                  {locked ? <View style={styles.lockBadge}><Text style={styles.lockEmoji}>🔒</Text><Text style={styles.lockText}>{t('premium')}</Text></View> : null}
                   <View style={styles.sceneCopy}>
                     <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
-                    <Text style={styles.sceneMeta}>{scene.loci.length} loci</Text>
+                    <Text style={styles.sceneMeta}>{t('lociCount').replace('{count}', String(scene.loci.length))}</Text>
                   </View>
                 </AnimatedPressable>
               );
@@ -87,7 +87,7 @@ export default function PalaceMapScreen() {
         )}
 
         <AnimatedPressable style={styles.startButton} onPress={() => router.push('/palaces/create-memory' as Href)}>
-          <Text style={styles.startButtonText}>Build a memory Palace</Text>
+          <Text style={styles.startButtonText}>{t('buildMemoryPalace')}</Text>
           <ArrowRight size={17} color={theme.ink} />
         </AnimatedPressable>
       </ScrollView>

@@ -71,7 +71,7 @@ export default function NumberPegHomeScreen() {
           </View>
           <AnimatedPressable
             accessibilityRole="button"
-            accessibilityLabel="See all peg anchors"
+            accessibilityLabel={t('seeAllPegs')}
             onPress={() => router.push('/number-peg/map' as Href)}
             style={styles.seeAllButton}>
               <Text style={styles.seeAllText}>{t('seeAll')}</Text>
@@ -87,7 +87,7 @@ export default function NumberPegHomeScreen() {
           ))}
         </ScrollView>
         <Text style={styles.unlockHint}>
-          Level {currentLevel} unlocks {unlockedCount} of 100 anchors. Keep practising to open the next set.
+          {t('unlockHint').replace('{level}', String(currentLevel)).replace('{count}', String(unlockedCount))}
         </Text>
 
         <View style={styles.sectionHeadingRow}>
@@ -104,7 +104,7 @@ export default function NumberPegHomeScreen() {
         ) : memorySets.isError ? (
           <ModuleNoticeCard
             title={t('unavailable')}
-            body={getNumberPegErrorMessage(memorySets.error, 'Check your connection and try again.')}
+            body={getNumberPegErrorMessage(memorySets.error, t('connection'))}
             onAction={() => memorySets.refetch()}
           />
         ) : memorySets.data?.length ? (
@@ -114,7 +114,7 @@ export default function NumberPegHomeScreen() {
               tone="peg"
               title={memorySet.title}
               badgeText={String(memorySet.items.length)}
-              subtitle={`${memorySet.items.length} ${memorySet.items.length === 1 ? 'item' : 'items'} · ${memorySet.status === 'draft' ? 'Keep building' : 'Ready to recall'}`}
+              subtitle={`${memorySet.items.length} ${memorySet.items.length === 1 ? t('item') : t('items')} · ${memorySet.status === 'draft' ? t('keepBuilding') : t('readyToRecall')}`}
               onPress={() => router.push(`/number-peg/${memorySet.id}` as Href)}
             />
           ))
