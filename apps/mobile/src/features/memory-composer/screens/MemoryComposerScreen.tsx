@@ -5,8 +5,8 @@ import { numberPegTheme as theme } from '@/features/number-peg/constants/numberP
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Plus, Trash2 } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { parseBulkItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import { buildTechniqueRoute, recommendTechnique, type TechniqueChoice } from '@/features/memory-composer/utils/techniqueRecommendation';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -36,8 +36,58 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
   const [bulkMode, setBulkMode] = useState(false);
   const [items, setItems] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const [keyboardInset, setKeyboardInset] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const focusedInputRef = useRef<TextInput | null>(null);
+  const scrollOffsetRef = useRef(0);
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const titleInputRef = useRef<TextInput>(null);
+  const bulkInputRef = useRef<TextInput>(null);
+  const newItemInputRef = useRef<TextInput>(null);
 
   const recommendation = useMemo(() => recommendTechnique(goalType, items.length), [goalType, items.length]);
+
+  const keepFocusedInputVisible = useCallback(() => {
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = setTimeout(() => {
+      const input = focusedInputRef.current;
+      const scrollView = scrollViewRef.current;
+      if (!input || !scrollView) return;
+
+      scrollView.getNativeScrollRef()?.measureInWindow((_scrollX, scrollY, _scrollWidth, scrollHeight) => {
+        input.measureInWindow((_inputX, inputY, _inputWidth, inputHeight) => {
+          const keyboardTop = Keyboard.metrics()?.screenY ?? scrollY + scrollHeight;
+          const visibleBottom = Math.min(scrollY + scrollHeight, keyboardTop) - 16;
+          const overlap = inputY + inputHeight - visibleBottom;
+
+          if (overlap > 0) {
+            scrollView.scrollTo({ y: scrollOffsetRef.current + overlap, animated: true });
+          }
+        });
+      });
+    }, 80);
+  }, []);
+
+  const handleInputFocus = useCallback((input: TextInput | null) => {
+    focusedInputRef.current = input;
+    keepFocusedInputVisible();
+  }, [keepFocusedInputVisible]);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', (event) => {
+      setKeyboardInset(event.endCoordinates.height);
+      keepFocusedInputVisible();
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardInset(0);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    };
+  }, [keepFocusedInputVisible]);
 
   const addItem = () => {
     const value = newItem.trim();
@@ -94,9 +144,13 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
       />
 
       <ScrollView
+        ref={scrollViewRef}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}>
+        onScroll={(event) => { scrollOffsetRef.current = event.nativeEvent.contentOffset.y; }}
+        scrollEventThrottle={16}
+        contentContainerStyle={[styles.content, keyboardInset > 0 && { paddingBottom: keyboardInset + 24 }]}>
         <View style={styles.progressRow}>
           <View style={[styles.progressDot, step === 'content' && styles.progressDotActive]} />
           <View style={[styles.progressLine, step === 'technique' && styles.progressLineActive]} />
@@ -112,8 +166,10 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
 
               <Text style={styles.label}>{t('memoryName')} <Text style={styles.optionalLabel}>{t('optional')}</Text></Text>
               <TextInput
+                ref={titleInputRef}
                 value={title}
                 onChangeText={(value) => { setTitle(value); setMessage(null); }}
+                onFocus={() => handleInputFocus(titleInputRef.current)}
                 maxLength={200}
                 placeholder={t('memoryPlaceholder')}
                 placeholderTextColor="#AAA7B5"
@@ -148,8 +204,10 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
                 <View style={styles.bulkCard}>
                   <Text style={styles.bulkTitle}>{t('onePerLine')}</Text>
                   <TextInput
+                    ref={bulkInputRef}
                     value={bulkInput}
                     onChangeText={setBulkInput}
+                    onFocus={() => handleInputFocus(bulkInputRef.current)}
                     multiline
                     maxLength={6000}
                     placeholder={'rhythm\nseparate\ncalendar'}
@@ -164,8 +222,10 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
               ) : null}
               <View style={styles.addRow}>
                 <TextInput
+                  ref={newItemInputRef}
                   value={newItem}
                   onChangeText={setNewItem}
+                  onFocus={() => handleInputFocus(newItemInputRef.current)}
                   onSubmitEditing={addItem}
                   returnKeyType="done"
                   maxLength={500}
