@@ -1,0 +1,145 @@
+name: Build MemoPal Android Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Product version in semantic version format, for example 1.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mobile-production
+  cancel-in-progress: false
+
+jobs:
+  build-apk:
+    name: Build production APK
+    runs-on: ubuntu-latest
+    environment: prod
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: apps/mobile
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      MEMOPAL_APP_VERSION: ${{ inputs.version }}
+      EXPO_PUBLIC_API_BASE_URL: ${{ secrets.MEMOPAL_MOBILE_API_BASE_URL }}
+      EXPO_PUBLIC_MEDIA_BASE_URL: ${{ secrets.MEMOPAL_MOBILE_MEDIA_BASE_URL }}
+      EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID: ${{ secrets.MEMOPAL_GOOGLE_WEB_CLIENT_ID }}
+      EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID: ${{ secrets.MEMOPAL_GOOGLE_ANDROID_CLIENT_ID }}
+      EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID: ${{ secrets.MEMOPAL_GOOGLE_IOS_CLIENT_ID }}
+      EXPO_PUBLIC_GOOGLE_OAUTH_HOSTED_DOMAIN: ${{ secrets.MEMOPAL_GOOGLE_HOSTED_DOMAIN }}
+      EXPO_PUBLIC_BUILD_ENV: prod
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Validate build inputs and secrets
+        shell: bash
+        run: |
+          if [[ ! "${MEMOPAL_APP_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Version must use semantic version format, for example 1.1.0"
+            exit 1
+          fi
+          test -n "${EXPO_TOKEN}" || { echo "EXPO_TOKEN is required"; exit 1; }
+          test -n "${EXPO_PUBLIC_API_BASE_URL}" || { echo "MEMOPAL_MOBILE_API_BASE_URL is required"; exit 1; }
+          test -n "${EXPO_PUBLIC_MEDIA_BASE_URL}" || { echo "MEMOPAL_MOBILE_MEDIA_BASE_URL is required"; exit 1; }
+          test -n "${EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID}" || { echo "MEMOPAL_GOOGLE_WEB_CLIENT_ID is required"; exit 1; }
+
+      - name: Install dependencies
+        working-directory: .
+        run: npm ci
+
+      - name: Check mobile app
+        working-directory: .
+        run: npm run check:mobile
+
+      - name: Install EAS CLI
+        run: |
+          npm install --global eas-cli@22.2.0
+          eas --version
+
+      - name: Sync production variables to EAS
+        shell: bash
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set_eas_variable() {
+            local name="$1"
+            local value="$2"
+            if [[ -n "${value}" ]]; then
+              eas env:set \
+                --name "${name}" \
+                --value "${value}" \
+                --environment production \
+                --visibility plaintext \
+                --non-interactive
+            fi
+          }
+
+          set_eas_variable MEMOPAL_APP_VERSION "${MEMOPAL_APP_VERSION}"
+          set_eas_variable EXPO_PUBLIC_API_BASE_URL "${EXPO_PUBLIC_API_BASE_URL}"
+          set_eas_variable EXPO_PUBLIC_MEDIA_BASE_URL "${EXPO_PUBLIC_MEDIA_BASE_URL}"
+          set_eas_variable EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID "${EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID}"
+          set_eas_variable EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID "${EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID}"
+          set_eas_variable EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID "${EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID}"
+          set_eas_variable EXPO_PUBLIC_GOOGLE_OAUTH_HOSTED_DOMAIN "${EXPO_PUBLIC_GOOGLE_OAUTH_HOSTED_DOMAIN}"
+          set_eas_variable EXPO_PUBLIC_LOCAL_DEV_MODE "false"
+          set_eas_variable EXPO_PUBLIC_STRICT_BASE_URL "true"
+          set_eas_variable EXPO_PUBLIC_BUILD_ENV "${EXPO_PUBLIC_BUILD_ENV}"
+
+      - name: Build production APK with EAS
+        shell: bash
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if ! eas build --platform android --profile production-apk --non-interactive --wait --json > eas-build.json 2> eas-build.log; then
+            echo "EAS build failed. Diagnostic output:"
+            cat eas-build.log || true
+            cat eas-build.json || true
+            exit 1
+          fi
+
+      - name: Download APK
+        shell: bash
+        env:
+          RELEASE_NUMBER: ${{ github.run_number }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const payload = JSON.parse(fs.readFileSync("eas-build.json", "utf8"));
+            const build = Array.isArray(payload) ? payload[0] : payload;
+            const url = build?.artifacts?.buildUrl;
+            if (!url) throw new Error("EAS did not return an APK URL");
+            fs.writeFileSync("apk-url.txt", url);
+          '
+          curl --fail --location --retry 3 "$(cat apk-url.txt)" --output "memopal-${MEMOPAL_APP_VERSION}-build-${RELEASE_NUMBER}.apk"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: memopal-android-${{ inputs.version }}-build-${{ github.run_number }}
+          path: apps/mobile/memopal-${{ inputs.version }}-build-${{ github.run_number }}.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-prod-v${{ inputs.version }}-build.${{ github.run_number }}
+          name: MemoPal v${{ inputs.version }} (Android build ${{ github.run_number }})
+          prerelease: false
+          generate_release_notes: true
+          files: apps/mobile/memopal-${{ inputs.version }}-build-${{ github.run_number }}.apk

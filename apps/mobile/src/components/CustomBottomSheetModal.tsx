@@ -15,9 +15,9 @@ interface Props extends Partial<BottomSheetModalProps> {
 type Ref = BottomSheetModal;
 
 const CustomBottomSheetModal = forwardRef<Ref, Props>(
-  ({ children, snapPoints, ...restProps }, ref) => {
+  ({ children, snapPoints, enableDynamicSizing, ...restProps }, ref) => {
     const defaultSnapPoints = useMemo(() => ['75%', '95%'], []);
-    const usedSnapPoints = snapPoints ?? defaultSnapPoints;
+    const usedSnapPoints = snapPoints ?? (enableDynamicSizing === true ? undefined : defaultSnapPoints);
     const animationConfigs = useBottomSheetTimingConfigs({ duration: 180 });
 
     const renderBackdrop = useCallback(
@@ -37,6 +37,7 @@ const CustomBottomSheetModal = forwardRef<Ref, Props>(
       <BottomSheetModal
         ref={ref}
         snapPoints={usedSnapPoints}
+        enableDynamicSizing={enableDynamicSizing}
         backdropComponent={renderBackdrop}
         animationConfigs={animationConfigs}
         backgroundStyle={styles.background}

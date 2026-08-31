@@ -25,21 +25,36 @@ In the output, you'll find options to open the app in a
 
 ## EAS Android builds
 
-Android APKs are built from the repository root through the manually triggered
-`Build MemoPal Android` GitHub Actions workflow at
-`.github/workflows/build-mobile-android.yml`. Choose `uat` to use the EAS
-`preview` profile or `prod` to use the `production-apk` profile. The workflow
-syncs the selected environment's API, media, and Google OAuth variables to EAS
-before building, then publishes the APK as both an Actions artifact and a
-GitHub Release asset.
+Mobile delivery is split into three workflows:
 
-Configure these secrets in each GitHub Environment (`uat` and/or `prod`):
+- `Mobile CI` runs typecheck, lint, and tests for mobile pull requests and
+  pushes to `main`. It does not start an EAS build.
+- `Build MemoPal Android Preview` is manually triggered for UAT. It validates
+  the app, builds the EAS `preview` APK, and publishes an Actions artifact and
+  prerelease. EAS increments the Android `versionCode`; no source version edit
+  is needed for each testing build.
+- `Build MemoPal Android Production` is manually triggered with a semantic
+  product version such as `1.1.0`. It uses the protected `prod` GitHub
+  Environment, builds the `production-apk` profile, and publishes a normal
+  GitHub Release. The entered version is injected for that build and does not
+  rewrite `app.json`.
+
+Configure these secrets in both GitHub Environments (`uat` and `prod`):
 
 - `EXPO_TOKEN`
 - `MEMOPAL_MOBILE_API_BASE_URL`
 - `MEMOPAL_MOBILE_MEDIA_BASE_URL`
 - `MEMOPAL_GOOGLE_WEB_CLIENT_ID`
 - Optional: `MEMOPAL_GOOGLE_IOS_CLIENT_ID`, `MEMOPAL_GOOGLE_HOSTED_DOMAIN`
+
+Configure required reviewers on the `prod` Environment so a production build
+cannot start without approval. Preview and production workflows use separate
+concurrency groups, preventing duplicate builds of the same type from running
+at once.
+
+The installed app shows its product version, native build number, and build
+environment under Profile > About MemoPal. Include these values in tester bug
+reports so a report can be matched to an exact APK.
 
 The regular `npm run android` command remains a local Expo native build and
 does not invoke EAS or a cloud build.

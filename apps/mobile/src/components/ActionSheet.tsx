@@ -6,6 +6,7 @@ import {
 } from '@gorhom/bottom-sheet';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnimatedPressable from './AnimatedPressable';
 
 interface ActionSheetProps {
@@ -31,6 +32,7 @@ export const ActionSheet = forwardRef<BottomSheetModal, ActionSheetProps>(({
 }, ref) => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [isActing, setIsActing] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useImperativeHandle(ref, () => bottomSheetModalRef.current!, []);
 
@@ -49,19 +51,20 @@ export const ActionSheet = forwardRef<BottomSheetModal, ActionSheetProps>(({
   return (
     <CustomBottomSheetModal
       ref={bottomSheetModalRef}
-      snapPoints={['48%']}
-      enableDynamicSizing={false}
+      enableDynamicSizing
       onDismiss={onClose}
       backgroundStyle={{ backgroundColor: '#FFFDF8', borderRadius: 32 }}
       handleIndicatorStyle={{ backgroundColor: theme.line, width: 48, height: 6 }}>
-      <BottomSheetView className="p-6 pb-12">
-        <View className="mb-8 items-center">
+      <BottomSheetView
+        className="px-6 pt-4"
+        style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
+        <View className="mb-6 items-center">
           {Icon && (
             <View
-              className={`mb-4 h-16 w-16 items-center justify-center rounded-full ${
+              className={`mb-3 h-14 w-14 items-center justify-center rounded-full ${
                 variant === 'destructive' ? 'bg-[#FFF0F4]' : 'bg-[#EEE9FF]'
               }`}>
-              <Icon size={32} color={variant === 'destructive' ? theme.berryDeep : theme.violetDeep} />
+              <Icon size={28} color={variant === 'destructive' ? theme.berryDeep : theme.violetDeep} />
             </View>
           )}
           <Text className="text-center text-xl font-bold text-[#2B2A3D]">{title}</Text>
