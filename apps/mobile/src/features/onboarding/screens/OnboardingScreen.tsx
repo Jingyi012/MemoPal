@@ -9,7 +9,7 @@ import {
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { Image } from 'expo-image';
-import { Href, useRouter } from 'expo-router';
+import { Href, Redirect, useRouter } from 'expo-router';
 import { ArrowRight, Check, Clock3, RefreshCcw } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -101,7 +101,11 @@ export function OnboardingScreen() {
     }
   };
 
-  if (user?.onboardingMemorySetId && !chooseAnother) {
+  if (user?.onboardingStatus === 'completed' || user?.onboardingStatus === 'skipped') {
+    return <Redirect href="/(tabs)" />;
+  }
+
+  if (user?.onboardingStatus === 'in-progress' && user.onboardingMemorySetId && !chooseAnother) {
     return (
       <View style={styles.page}>
         <View style={styles.resumeContent}>
@@ -197,9 +201,12 @@ export function OnboardingScreen() {
                 return (
                   <AnimatedPressable
                     key={category.id}
+                    containerStyle={styles.categoryPressable}
                     onPress={() => setSelectedCategoryId(category.id)}
                     style={[styles.categoryCard, active && styles.categoryCardActive]}>
-                    <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+                    <View style={styles.categoryIcon}>
+                      <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+                    </View>
                     <Text style={styles.categoryName}>
                       {language === 'zh' ? category.nameZh : category.nameEn}
                     </Text>
@@ -387,29 +394,39 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
+  categoryPressable: { width: '100%' },
   categoryCard: {
+    alignItems: 'center',
+    flexDirection: 'row',
     position: 'relative',
     width: '100%',
-    minHeight: 108,
+    height: 76,
     borderRadius: 17,
     borderWidth: 2,
     borderColor: theme.line,
     backgroundColor: theme.paper,
-    padding: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    textAlign: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   categoryCardActive: { borderColor: theme.violetDeep, backgroundColor: '#F5F2FF' },
+  categoryIcon: {
+    alignItems: 'center',
+    backgroundColor: '#FFF4D6',
+    borderRadius: 14,
+    height: 48,
+    justifyContent: 'center',
+    width: 48,
+  },
   categoryEmoji: { fontSize: 25, lineHeight: 30 },
   categoryName: {
+    flex: 1,
+    minWidth: 0,
     color: theme.ink,
     fontFamily: typography.bodyExtraBold,
     fontSize: 12.5,
     lineHeight: 17,
-    marginTop: 5,
-    paddingRight: 17,
-    textAlign: 'center',
+    marginLeft: 12,
+    paddingRight: 25,
   },
   check: {
     position: 'absolute',

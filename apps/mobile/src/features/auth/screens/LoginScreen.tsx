@@ -60,7 +60,8 @@ export const LoginScreen: React.FC = () => {
   const facebookEnabledByBackend = loginMethods.facebook;
   const googleSupportedInBuild = isGoogleLoginConfigured();
   const facebookConfigured = isFacebookLoginConfigured();
-  const hasEnabledMethod = emailPasswordEnabled || googleEnabledByBackend || facebookEnabledByBackend;
+  const hasEnabledMethod =
+    emailPasswordEnabled || googleEnabledByBackend || facebookEnabledByBackend;
 
   const handleLogin = async () => {
     if (!canSubmit || isSubmitting || !emailPasswordEnabled) return;
@@ -96,9 +97,7 @@ export const LoginScreen: React.FC = () => {
 
         <Text className="mb-2 text-2xl font-semibold text-[#2B2A3D]">{t('welcome')}</Text>
 
-        <Text className="mb-8 max-w-sm text-center text-[#6B6A80]">
-          {t('signInDescription')}
-        </Text>
+        <Text className="mb-8 max-w-sm text-center text-[#6B6A80]">{t('signInDescription')}</Text>
 
         {!hasEnabledMethod && (
           <Text className="mb-4 max-w-sm text-center text-sm text-[#E8527A]">
@@ -108,7 +107,7 @@ export const LoginScreen: React.FC = () => {
 
         {emailPasswordEnabled && (
           <>
-            <View className="mb-4 w-full max-w-sm gap-3">
+            <View className="mb-5 w-full max-w-sm gap-3">
               <TextInput
                 value={email}
                 onChangeText={setEmail}
@@ -129,12 +128,26 @@ export const LoginScreen: React.FC = () => {
             <AnimatedPressable
               onPress={handleLogin}
               disabled={!canSubmit || isSubmitting}
-              className={`mb-3 w-full max-w-sm items-center justify-center rounded-2xl px-6 py-4 ${!canSubmit || isSubmitting ? 'bg-[#D8D4C9]' : 'bg-[#FFC93C]'}`}>
-              <Text className={`font-medium ${!canSubmit || isSubmitting ? 'text-[#9A97A7]' : 'text-[#2B2A3D]'}`}>
+              className={`mb-5 h-14 w-full max-w-sm flex-row items-center justify-center rounded-2xl px-12 ${!canSubmit || isSubmitting ? 'bg-[#D8D4C9]' : 'bg-[#FFC93C]'}`}
+              style={
+                !canSubmit || isSubmitting
+                  ? undefined
+                  : { boxShadow: '0px 4px 0px rgba(214, 160, 27, 0.28)' }
+              }>
+              <Text
+                className={`font-medium ${!canSubmit || isSubmitting ? 'text-[#9A97A7]' : 'text-[#2B2A3D]'}`}>
                 {isSubmitting ? t('signingIn') : t('signIn')}
               </Text>
             </AnimatedPressable>
           </>
+        )}
+
+        {emailPasswordEnabled && (googleEnabledByBackend || facebookEnabledByBackend) && (
+          <View className="mb-4 w-full max-w-sm flex-row items-center gap-3">
+            <View className="h-px flex-1 bg-[#EEE9DC]" />
+            <Text className="text-xs font-semibold text-[#9A97A7]">{t('orContinueWith')}</Text>
+            <View className="h-px flex-1 bg-[#EEE9DC]" />
+          </View>
         )}
 
         {googleEnabledByBackend && (
@@ -213,9 +226,7 @@ export const LoginScreen: React.FC = () => {
       </View>
 
       <View className="p-6">
-        <Text className="text-center text-xs text-[#9A97A7]">
-          {t('terms')}
-        </Text>
+        <Text className="text-center text-xs text-[#9A97A7]">{t('terms')}</Text>
       </View>
     </View>
   );
