@@ -114,8 +114,6 @@ jobs:
 
       - name: Download APK
         shell: bash
-        env:
-          RELEASE_NUMBER: ${{ github.run_number }}
         run: |
           node -e '
             const fs = require("fs");
@@ -125,13 +123,13 @@ jobs:
             if (!url) throw new Error("EAS did not return an APK URL");
             fs.writeFileSync("apk-url.txt", url);
           '
-          curl --fail --location --retry 3 "$(cat apk-url.txt)" --output "memopal-${MEMOPAL_APP_VERSION}-build-${RELEASE_NUMBER}.apk"
+          curl --fail --location --retry 3 "$(cat apk-url.txt)" --output "memopal-${MEMOPAL_APP_VERSION}.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: memopal-android-${{ inputs.version }}-build-${{ github.run_number }}
-          path: apps/mobile/memopal-${{ inputs.version }}-build-${{ github.run_number }}.apk
+          name: memopal-android-${{ inputs.version }}
+          path: apps/mobile/memopal-${{ inputs.version }}.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -142,4 +140,4 @@ jobs:
           name: MemoPal v${{ inputs.version }} (Android build ${{ github.run_number }})
           prerelease: false
           generate_release_notes: true
-          files: apps/mobile/memopal-${{ inputs.version }}-build-${{ github.run_number }}.apk
+          files: apps/mobile/memopal-${{ inputs.version }}.apk
