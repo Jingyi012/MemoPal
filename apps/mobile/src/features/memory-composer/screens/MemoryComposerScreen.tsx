@@ -3,12 +3,12 @@ import { CommonHeader } from '@/components/CommonHeader';
 import type { MemoryGoalType } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
-import { Href, useRouter } from 'expo-router';
+import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Plus, Trash2 } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { parseBulkItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
-import { buildTechniqueRoute, recommendTechnique, type TechniqueChoice } from '@/features/memory-composer/utils/techniqueRecommendation';
+import { firstParam, parseBulkItems, parseComposerGoal, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
+import { buildTechniqueRoute, recommendTechnique, type ComposerOrigin, type TechniqueChoice } from '@/features/memory-composer/utils/techniqueRecommendation';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
 type ComposerStep = 'content' | 'technique';
@@ -23,18 +23,30 @@ const goals: { key: MemoryGoalType; translationKey: 'goalSpelling' | 'goalList' 
 type MemoryComposerProps = {
   /** Keep the shared content step while routing directly to one technique. */
   initialTechnique?: TechniqueChoice;
+  /** Preserve a Palace scene selected before the content-first flow. */
+  initialSceneId?: string;
 };
 
-export default function MemoryComposerScreen({ initialTechnique }: MemoryComposerProps = {}) {
+export default function MemoryComposerScreen({ initialTechnique, initialSceneId }: MemoryComposerProps = {}) {
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    title?: string | string[];
+    items?: string | string[];
+    goalType?: string | string[];
+    sceneId?: string | string[];
+    editContent?: string | string[];
+  }>();
   const { t } = useTranslation('memoryComposer');
+  const initialItems = useMemo(() => parseComposerItems(params.items), [params.items]);
+  const sceneId = initialSceneId ?? firstParam(params.sceneId);
+  const origin: ComposerOrigin = initialTechnique === 'palace' ? 'palace' : 'global';
   const [step, setStep] = useState<ComposerStep>('content');
-  const [title, setTitle] = useState('');
-  const [goalType, setGoalType] = useState<MemoryGoalType>('spelling');
+  const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
+  const [goalType, setGoalType] = useState<MemoryGoalType>(() => parseComposerGoal(params.goalType));
   const [newItem, setNewItem] = useState('');
   const [bulkInput, setBulkInput] = useState('');
   const [bulkMode, setBulkMode] = useState(false);
-  const [items, setItems] = useState<string[]>([]);
+  const [items, setItems] = useState<string[]>(initialItems);
   const [message, setMessage] = useState<string | null>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -44,6 +56,10 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
   const titleInputRef = useRef<TextInput>(null);
   const bulkInputRef = useRef<TextInput>(null);
   const newItemInputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (firstParam(params.editContent) === '1') setStep('content');
+  }, [params.editContent]);
 
   const recommendation = useMemo(() => recommendTechnique(goalType, items.length), [goalType, items.length]);
 
@@ -131,7 +147,7 @@ export default function MemoryComposerScreen({ initialTechnique }: MemoryCompose
   };
 
   const openTechnique = (technique: TechniqueChoice, routeTitle = title.trim()) => {
-    router.push(buildTechniqueRoute(technique, routeTitle, goalType, items) as Href);
+    router.push(buildTechniqueRoute(technique, routeTitle, goalType, items, sceneId, origin) as Href);
   };
 
   return (

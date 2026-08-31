@@ -228,6 +228,10 @@ export default function CustomPalaceEditorScreen() {
         ? await updateCustom.mutateAsync({ sceneId, request })
         : await createCustom.mutateAsync(request);
       if (user?.id && !sceneId) await clearCustomPalaceDraft(user.id);
+      if (sceneId) {
+        router.back();
+        return;
+      }
       router.replace({ pathname: '/palaces/create-memory', params: { sceneId: scene.id } });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not save your Palace. Try again.');

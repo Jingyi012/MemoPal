@@ -8,10 +8,21 @@ export function getPalaceCapacity(scene: PalaceScene | undefined) {
   return scene?.loci.length ?? 0;
 }
 
+export function getAvailablePalaceScenes(scenes: PalaceScene[], isPremium: boolean) {
+  return scenes.filter((scene) => !scene.isPremium || isPremium);
+}
+
+export function getPalaceCapacityShortfall(itemCount: number, capacity: number) {
+  return Math.max(0, itemCount - capacity);
+}
+
+export function getLargestPalaceCapacity(scenes: PalaceScene[]) {
+  return scenes.reduce((largest, scene) => Math.max(largest, getPalaceCapacity(scene)), 0);
+}
+
 /**
- * Pick the smallest scene that can hold the list. When no scene can hold it,
- * keep the largest scene selected so the user gets an actionable capacity
- * message instead of an invalid handoff.
+ * Pick the smallest scene that can hold the list. Return undefined when no
+ * scene can hold it so callers never treat an insufficient scene as selected.
  */
 export function choosePalaceScene(
   scenes: PalaceScene[],
@@ -26,17 +37,13 @@ export function choosePalaceScene(
   const fitting = scenes
     .filter((scene) => getPalaceCapacity(scene) >= itemCount)
     .sort((a, b) => getPalaceCapacity(a) - getPalaceCapacity(b));
-  if (fitting[0]) return fitting[0];
-
-  return scenes
-    .slice()
-    .sort((a, b) => getPalaceCapacity(b) - getPalaceCapacity(a))[0];
+  return fitting[0];
 }
 
 export function getPalaceCapacityMessage(itemCount: number, capacity: number) {
   if (itemCount <= capacity) return null;
 
-  const overflow = itemCount - capacity;
+  const overflow = getPalaceCapacityShortfall(itemCount, capacity);
   return `This list has ${itemCount} items, but the largest available Palace has ${capacity} loci. Remove ${overflow} item${overflow === 1 ? '' : 's'} or create a second memory.`;
 }
 

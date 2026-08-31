@@ -20,7 +20,7 @@ export function ensurePalaceAssociations(
   associations: string[],
 ) {
   return items.map((item, index) => {
-    const locus = loci.length ? loci[index % loci.length] : undefined;
-    return associations[index] ?? createPalaceAssociation(item, locus?.name ?? `locus ${(index % Math.max(1, loci.length)) + 1}`);
+    const locus = loci[index];
+    return associations[index] ?? createPalaceAssociation(item, locus?.name ?? `locus ${index + 1}`);
   });
 }

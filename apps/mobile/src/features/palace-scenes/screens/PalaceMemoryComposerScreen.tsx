@@ -3,6 +3,7 @@ import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useMemorySetMutations } from '@/features/memory-sets';
 import type { MemorySetUpsertRequest } from '@/features/memory-sets';
+import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { PalaceAssociationEditor } from '@/features/palace-scenes/components/PalaceAssociationEditor';
 import { PalaceLocusMap } from '@/features/palace-scenes/components/PalaceLocusMap';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
@@ -13,8 +14,11 @@ import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import {
   choosePalaceScene,
+  getAvailablePalaceScenes,
   getPalaceCapacity,
   getPalaceLoci,
+  getPalaceCapacityShortfall,
+  getLargestPalaceCapacity,
   sceneFitsPalaceItems,
 } from '@/features/palace-scenes/utils/palaceCapacity';
 import {
@@ -24,10 +28,11 @@ import {
 } from '@/features/palace-scenes/utils/palaceAuthoring';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Check, Plus, RefreshCcw, Search, Trash2 } from 'lucide-react-native';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { firstParam, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { firstParam, parseComposerGoal, parseComposerItems, parseComposerOrigin, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
+import type { ComposerOrigin } from '@/features/memory-composer/utils/techniqueRecommendation';
 import { ComposerProgress } from '@/features/memory-composer/components/ComposerProgress';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type ComposerStep = 'setup' | 'place';
 const MAX_PALACE_ITEMS = 100;
@@ -38,55 +43,132 @@ export default function PalaceMemoryComposerScreen() {
   const params = useLocalSearchParams<{
     title?: string | string[];
     items?: string | string[];
+    goalType?: string | string[];
     sceneId?: string | string[];
+    origin?: string | string[];
   }>();
   const scenesQuery = usePalaceScenes();
+  const { user, isLoading: isUserLoading } = useCurrentUser();
   const { createMemorySet } = useMemorySetMutations();
   const prefilledItems = useMemo(() => parseComposerItems(params.items), [params.items]);
   const fromSharedComposer = prefilledItems.length > 0;
   const [step, setStep] = useState<ComposerStep>('setup');
   const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
+  const [goalType] = useState(() => parseComposerGoal(params.goalType));
   const [newItem, setNewItem] = useState('');
   const [items, setItems] = useState<string[]>(() => prefilledItems);
   const [associations, setAssociations] = useState<string[]>([]);
   const [activeLocusIndex, setActiveLocusIndex] = useState(0);
   const [selectedSceneId, setSelectedSceneId] = useState(() => firstParam(params.sceneId) ?? '');
+  const origin: ComposerOrigin = parseComposerOrigin(params.origin);
+  const availableScenes = useMemo(
+    () => getAvailablePalaceScenes(scenesQuery.data ?? [], Boolean(user?.isPremium)),
+    [scenesQuery.data, user?.isPremium],
+  );
+  const sceneAvailabilityLoading = scenesQuery.isLoading || isUserLoading;
   const [message, setMessage] = useState<string | null>(null);
   const [showAllScenes, setShowAllScenes] = useState(false);
   const [sceneSearch, setSceneSearch] = useState('');
   const scrollRef = useRef<ScrollView>(null);
+  const focusedInputRef = useRef<TextInput | null>(null);
+  const titleInputRef = useRef<TextInput>(null);
+  const newItemInputRef = useRef<TextInput>(null);
+  const scrollOffsetRef = useRef(0);
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [keyboardInset, setKeyboardInset] = useState(0);
+
+  const returnToSharedComposer = (editContent = false) => {
+    router.dismissTo({
+      pathname: origin === 'global' ? '/create-memory' : '/palaces/create-memory',
+      params: {
+        title,
+        goalType,
+        items: JSON.stringify(items),
+        editContent: editContent ? '1' : '0',
+        ...(selectedSceneId ? { sceneId: selectedSceneId } : {}),
+      },
+    });
+  };
+
+  const keepFocusedInputVisible = useCallback(() => {
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = setTimeout(() => {
+      const input = focusedInputRef.current;
+      const scrollView = scrollRef.current;
+      if (!input || !scrollView) return;
+
+      scrollView.getNativeScrollRef()?.measureInWindow((_scrollX, scrollY, _scrollWidth, scrollHeight) => {
+        input.measureInWindow((_inputX, inputY, _inputWidth, inputHeight) => {
+          const keyboardTop = Keyboard.metrics()?.screenY ?? scrollY + scrollHeight;
+          const visibleBottom = Math.min(scrollY + scrollHeight, keyboardTop) - 16;
+          const overlap = inputY + inputHeight - visibleBottom;
+          if (overlap > 0) {
+            scrollView.scrollTo({ y: scrollOffsetRef.current + overlap, animated: true });
+          }
+        });
+      });
+    }, 80);
+  }, []);
+
+  const handleInputFocus = useCallback((input: TextInput | null) => {
+    focusedInputRef.current = input;
+    keepFocusedInputVisible();
+  }, [keepFocusedInputVisible]);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', (event) => {
+      setKeyboardInset(event.endCoordinates.height);
+      keepFocusedInputVisible();
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => setKeyboardInset(0));
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    };
+  }, [keepFocusedInputVisible]);
 
   useEffect(() => {
     requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: 0, animated: false }));
   }, [step]);
 
   useEffect(() => {
-    if (!scenesQuery.data?.length) return;
+    if (sceneAvailabilityLoading) return;
+    if (!availableScenes.length) {
+      if (selectedSceneId) setSelectedSceneId('');
+      return;
+    }
     const requestedSceneId = firstParam(params.sceneId);
-    const selectedSceneIsValid = scenesQuery.data.some((scene) => scene.id === selectedSceneId);
+    const selectedSceneIsValid = availableScenes.some(
+      (scene) => scene.id === selectedSceneId && sceneFitsPalaceItems(scene, items.length),
+    );
     if (selectedSceneIsValid) return;
-    const suggestedScene = choosePalaceScene(scenesQuery.data, items.length, requestedSceneId);
+    const suggestedScene = choosePalaceScene(availableScenes, items.length, requestedSceneId);
     if (suggestedScene) setSelectedSceneId(suggestedScene.id);
-  }, [items.length, params.sceneId, scenesQuery.data, selectedSceneId]);
+    else if (selectedSceneId) setSelectedSceneId('');
+  }, [availableScenes, items.length, params.sceneId, sceneAvailabilityLoading, selectedSceneId]);
 
   const selectedScene = useMemo(
-    () => scenesQuery.data?.find((scene) => scene.id === selectedSceneId),
-    [scenesQuery.data, selectedSceneId]
+    () => availableScenes.find((scene) => scene.id === selectedSceneId && sceneFitsPalaceItems(scene, items.length)),
+    [availableScenes, items.length, selectedSceneId]
   );
   const loci = useMemo(() => getPalaceLoci(selectedScene), [selectedScene]);
-  const selectedSceneCapacity = getPalaceCapacity(selectedScene);
-  const overflowCount = Math.max(0, items.length - selectedSceneCapacity);
-  const capacityMessage = selectedScene && overflowCount > 0
-    ? t('splitMemoryBody').replace('{capacity}', String(selectedSceneCapacity)).replace('{parts}', String(Math.ceil(items.length / Math.max(1, selectedSceneCapacity))))
+  const largestAvailableCapacity = getLargestPalaceCapacity(availableScenes);
+  const noFittingScene = !sceneAvailabilityLoading && items.length > largestAvailableCapacity;
+  const capacityMessage = noFittingScene
+    ? t('noSceneFitsBody')
+      .replace('{capacity}', String(largestAvailableCapacity))
+      .replace('{needed}', String(getPalaceCapacityShortfall(items.length, largestAvailableCapacity)))
     : null;
 
   const matchingScenes = useMemo(() => {
     const query = sceneSearch.trim().toLocaleLowerCase();
-    if (!query) return scenesQuery.data ?? [];
-    return (scenesQuery.data ?? []).filter((scene) =>
+    if (!query) return availableScenes;
+    return availableScenes.filter((scene) =>
       `${scene.name} ${scene.description}`.toLocaleLowerCase().includes(query),
     );
-  }, [sceneSearch, scenesQuery.data]);
+  }, [availableScenes, sceneSearch]);
 
   const visibleScenes = useMemo(() => {
     if (showAllScenes || sceneSearch.trim()) return matchingScenes;
@@ -94,6 +176,10 @@ export default function PalaceMemoryComposerScreen() {
     const remaining = matchingScenes.filter((scene) => scene.id !== selectedSceneId);
     return selected ? [selected, ...remaining].slice(0, 4) : remaining.slice(0, 4);
   }, [matchingScenes, sceneSearch, selectedSceneId, showAllScenes]);
+
+  const capacityHint = (scene: PalaceScene) => t('capacityReason')
+    .replace('{capacity}', String(getPalaceCapacity(scene)))
+    .replace('{needed}', String(getPalaceCapacityShortfall(items.length, getPalaceCapacity(scene))));
 
   useEffect(() => {
     if (!loci.length || !items.length) return;
@@ -109,10 +195,10 @@ export default function PalaceMemoryComposerScreen() {
       return;
     }
     setItems((current) => [...current, value]);
-    const locus = loci.length ? loci[items.length % loci.length] : undefined;
+    const locus = loci[items.length];
     setAssociations((current) => [
       ...current,
-      createPalaceAssociation(value, locus?.name ?? `locus ${(items.length % Math.max(1, loci.length)) + 1}`),
+      createPalaceAssociation(value, locus?.name ?? `locus ${items.length + 1}`),
     ]);
     setActiveLocusIndex(items.length);
     setNewItem('');
@@ -121,12 +207,18 @@ export default function PalaceMemoryComposerScreen() {
   };
 
   const continueToPlacement = () => {
-    if (!selectedScene) {
-      setMessage(t('chooseSceneBeforePlace'));
-      return;
-    }
     if (!items.length) {
       setMessage(t('addThingToRemember'));
+      return;
+    }
+    if (!selectedScene) {
+      setMessage(noFittingScene ? capacityMessage : t('chooseSceneBeforePlace'));
+      return;
+    }
+    if (!sceneFitsPalaceItems(selectedScene, items.length)) {
+      setMessage(
+        capacityMessage ?? t('chooseSceneBeforePlace'),
+      );
       return;
     }
     setMessage(null);
@@ -136,70 +228,68 @@ export default function PalaceMemoryComposerScreen() {
 
   const selectScene = (scene: PalaceScene) => {
     const fits = sceneFitsPalaceItems(scene, items.length);
+    if (!fits) {
+      setMessage(
+        t('capacityReason')
+          .replace('{capacity}', String(getPalaceCapacity(scene)))
+          .replace('{needed}', String(getPalaceCapacityShortfall(items.length, getPalaceCapacity(scene)))),
+      );
+      return;
+    }
     setSelectedSceneId(scene.id);
     const sceneLoci = getPalaceLoci(scene);
     setAssociations(items.map((item, index) => {
-      const locus = sceneLoci.length ? sceneLoci[index % sceneLoci.length] : undefined;
-      return createPalaceAssociation(item, locus?.name ?? `locus ${(index % Math.max(1, sceneLoci.length)) + 1}`);
+      const locus = sceneLoci[index];
+      return createPalaceAssociation(item, locus?.name ?? `locus ${index + 1}`);
     }));
     setActiveLocusIndex(0);
-    setMessage(
-      fits
-        ? null
-        : `${t('sceneHas')} ${scene.loci.length} ${t('loci')}. ${t('removeItemsOrChoose')}`
-    );
+    setMessage(null);
   };
 
   const save = () => {
-    if (!selectedScene) return setMessage(t('chooseSceneForPalace'));
     if (!items.length) return setMessage(t('addThingToRemember'));
+    if (!selectedScene) return setMessage(noFittingScene ? capacityMessage : t('chooseSceneForPalace'));
     if (!loci.length) return setMessage(t('sceneOnlyHas') + ' 0 ' + t('loci'));
+    if (!sceneFitsPalaceItems(selectedScene, items.length)) {
+      return setMessage(
+        t('noSceneFitsBody')
+          .replace('{capacity}', String(largestAvailableCapacity))
+          .replace('{needed}', String(getPalaceCapacityShortfall(items.length, largestAvailableCapacity))),
+      );
+    }
     const normalizedTitle = title.trim() || suggestMemoryTitle('custom', items);
     if (!title.trim()) setTitle(normalizedTitle);
 
     setMessage(null);
-    const chunkSize = Math.max(1, selectedSceneCapacity);
-    const chunks = Array.from({ length: Math.ceil(items.length / chunkSize) }, (_, chunkIndex) => {
-      const start = chunkIndex * chunkSize;
-      return { chunkIndex, answers: items.slice(start, start + chunkSize), associationOffset: start };
-    });
 
     void (async () => {
       try {
-        const createdSets = [];
-        for (const chunk of chunks) {
-          const suffix = chunks.length > 1 ? ` · ${chunk.chunkIndex + 1}/${chunks.length}` : '';
-          const chunkTitle = suffix
-            ? `${normalizedTitle.slice(0, Math.max(1, 200 - suffix.length))}${suffix}`
-            : normalizedTitle;
-          const request: MemorySetUpsertRequest = {
-            title: chunkTitle,
-            goalType: items.length > 10 ? 'facts' : 'ordered-list',
-            techniqueKey: 'palace',
-            status: 'ready',
-            visibility: 'private',
-            items: chunk.answers.map((answer, index) => ({ position: index + 1, prompt: `Recall locus ${index + 1}`, answer })),
-            techniquePlan: {
-              schemaVersion: 1,
-              palaceSceneId: selectedScene.id,
-              pegBindings: [],
-              palaceBindings: chunk.answers.map((answer, index) => {
-                const locus = loci[index];
-                return {
-                  itemPosition: index + 1,
-                  locusId: locus.id,
-                  associationText: getAssociationText(associations, chunk.associationOffset + index, answer, locus),
-                  isCustomScene: true,
-                };
-              }),
-            },
-          };
-          createdSets.push(await createMemorySet.mutateAsync(request));
-        }
-        const first = createdSets[0];
-        if (first) {
+        const request: MemorySetUpsertRequest = {
+          title: normalizedTitle,
+          goalType,
+          techniqueKey: 'palace',
+          status: 'ready',
+          visibility: 'private',
+          items: items.map((answer, index) => ({ position: index + 1, prompt: `Recall locus ${index + 1}`, answer })),
+          techniquePlan: {
+            schemaVersion: 1,
+            palaceSceneId: selectedScene.id,
+            pegBindings: [],
+            palaceBindings: items.map((answer, index) => {
+              const locus = loci[index];
+              return {
+                itemPosition: index + 1,
+                locusId: locus.id,
+                associationText: getAssociationText(associations, index, answer, locus),
+                isCustomScene: true,
+              };
+            }),
+          },
+        };
+        const created = await createMemorySet.mutateAsync(request);
+        if (created) {
           const returnTo = fromSharedComposer ? 'practice' : 'palaces';
-          router.replace(`/palaces/memory/${first.id}?returnTo=${returnTo}` as Href);
+          router.replace(`/palaces/memory/${created.id}?returnTo=${returnTo}` as Href);
         }
       } catch {
         // Keep the authored items and associations visible so saving can be retried.
@@ -214,7 +304,9 @@ export default function PalaceMemoryComposerScreen() {
       : null;
 
   return (
-    <View style={styles.page}>
+    <KeyboardAvoidingView
+      style={styles.page}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <CommonHeader
         eyebrow={t('eyebrow')}
         title={step === 'setup' ? t('makePlace') : t('placeMemories')}
@@ -225,10 +317,23 @@ export default function PalaceMemoryComposerScreen() {
             setStep('setup');
             return;
           }
+          if (fromSharedComposer) {
+            returnToSharedComposer();
+            return;
+          }
           router.back();
         }}
       />
-      <ScrollView ref={scrollRef} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+      <ScrollView
+        ref={scrollRef}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
+        showsVerticalScrollIndicator={false}
+        onScroll={(event) => {
+          scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+        }}
+        scrollEventThrottle={16}
+        contentContainerStyle={[styles.content, keyboardInset > 0 && { paddingBottom: keyboardInset + 24 }]}>
         {step === 'setup' && <ComposerProgress currentStep={1} firstLabel={t('chooseRoom')} secondLabel={t('placeMemoriesStep')} />}
         {step === 'setup' && (
           <View style={styles.infoCard}>
@@ -242,16 +347,24 @@ export default function PalaceMemoryComposerScreen() {
           </View>
         )}
 
-        {step === 'setup' && fromSharedComposer && title.trim() ? (
+        {step === 'setup' && fromSharedComposer ? (
           <View style={styles.draftCard}>
             <Text style={styles.draftEyebrow}>{t('memoryReady')}</Text>
-            <Text numberOfLines={1} style={styles.draftTitle}>{title}</Text>
+            <Text numberOfLines={1} style={styles.draftTitle}>{title || suggestMemoryTitle(goalType, items)}</Text>
             <Text style={styles.draftMeta}>{items.length} {t('items')} · {t('chooseSceneToPlace')}</Text>
           </View>
         ) : step === 'setup' ? (
           <>
             <Text style={styles.label}>{t('nameMemory')} <Text style={styles.optionalLabel}>{t('optional')}</Text></Text>
-            <TextInput value={title} onChangeText={setTitle} placeholder={t('titlePlaceholder')} placeholderTextColor="#AAA7B5" style={styles.input} />
+            <TextInput
+              ref={titleInputRef}
+              value={title}
+              onChangeText={setTitle}
+              onFocus={() => handleInputFocus(titleInputRef.current)}
+              placeholder={t('titlePlaceholder')}
+              placeholderTextColor="#AAA7B5"
+              style={styles.input}
+            />
           </>
          ) : null}
 
@@ -259,9 +372,9 @@ export default function PalaceMemoryComposerScreen() {
           <View style={styles.sceneHeadingRow}>
             <View style={styles.sceneHeadingCopy}>
               <Text style={[styles.label, styles.sceneLabel]}>{t('chooseScene')}</Text>
-              {scenesQuery.data?.length ? <Text style={styles.sceneCount}>{scenesQuery.data.length} {t('sceneCount')}</Text> : null}
+              {availableScenes.length ? <Text style={styles.sceneCount}>{availableScenes.length} {t('sceneCount')}</Text> : null}
             </View>
-            {scenesQuery.data && scenesQuery.data.length > 4 ? (
+            {availableScenes.length > 4 ? (
               <AnimatedPressable
                 accessibilityRole="button"
                 accessibilityLabel={showAllScenes ? t('hideScenes') : t('seeAllScenes')}
@@ -277,11 +390,11 @@ export default function PalaceMemoryComposerScreen() {
         )}
         {step === 'setup' && (
           <>
-        {scenesQuery.isLoading ? (
+        {sceneAvailabilityLoading ? (
           <Text style={styles.helper}>{t('loadingScenes')}</Text>
-        ) : scenesQuery.data?.length ? (
+        ) : availableScenes.length ? (
           <>
-            {showAllScenes && scenesQuery.data.length > 4 ? (
+            {showAllScenes && availableScenes.length > 4 ? (
               <View style={styles.sceneSearchWrap}>
                 <Search size={17} color={theme.inkSoft} />
                 <TextInput
@@ -298,17 +411,19 @@ export default function PalaceMemoryComposerScreen() {
               showAllScenes || sceneSearch.trim() ? (
                 <View style={styles.sceneGrid}>
                   {visibleScenes.map((scene) => {
-                    const active = scene.id === selectedSceneId;
                     const fits = sceneFitsPalaceItems(scene, items.length);
+                    const active = scene.id === selectedSceneId && fits;
                     return (
                       <AnimatedPressable
                         key={scene.id}
+                        accessibilityState={{ disabled: !fits }}
+                        disabled={!fits}
                         onPress={() => selectScene(scene)}
                         style={[styles.sceneOption, styles.sceneOptionGrid, active && styles.sceneOptionActive, !fits && styles.sceneOptionLimited]}>
                         <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneThumb} />
                         <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
                         <Text style={styles.sceneMeta}>
-                          {scene.loci.length} {t('loci')}{scene.isPremium ? ` · ${t('premium')}` : ''}{!fits ? ` · ${t('tooSmall')}` : ''}
+                          {scene.loci.length} {t('loci')}{scene.isPremium ? ` · ${t('premium')}` : ''}{!fits ? ` · ${capacityHint(scene)}` : ''}
                         </Text>
                       </AnimatedPressable>
                     );
@@ -317,17 +432,19 @@ export default function PalaceMemoryComposerScreen() {
               ) : (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sceneRail}>
                   {visibleScenes.map((scene) => {
-                    const active = scene.id === selectedSceneId;
                     const fits = sceneFitsPalaceItems(scene, items.length);
+                    const active = scene.id === selectedSceneId && fits;
                     return (
                       <AnimatedPressable
                         key={scene.id}
+                        accessibilityState={{ disabled: !fits }}
+                        disabled={!fits}
                         onPress={() => selectScene(scene)}
                         style={[styles.sceneOption, active && styles.sceneOptionActive, !fits && styles.sceneOptionLimited]}>
                         <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneThumb} />
                         <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
                         <Text style={styles.sceneMeta}>
-                          {scene.loci.length} {t('loci')}{scene.isPremium ? ` · ${t('premium')}` : ''}{!fits ? ` · ${t('tooSmall')}` : ''}
+                          {scene.loci.length} {t('loci')}{scene.isPremium ? ` · ${t('premium')}` : ''}{!fits ? ` · ${capacityHint(scene)}` : ''}
                         </Text>
                       </AnimatedPressable>
                     );
@@ -348,10 +465,17 @@ export default function PalaceMemoryComposerScreen() {
           </>
         )}
 
+        {step === 'setup' && capacityMessage && (
+          <View style={styles.capacityCard}>
+            <Text style={styles.capacityTitle}>{t('capacity')}</Text>
+            <Text style={styles.capacityText}>{capacityMessage}</Text>
+          </View>
+        )}
+
         {step === 'place' && selectedScene && (
           <>
             <PalaceLocusMap
-              activeIndex={loci.length ? activeLocusIndex % loci.length : 0}
+              activeIndex={activeLocusIndex}
               loci={loci}
               onSelect={(index) => {
                 if (index < items.length) setActiveLocusIndex(index);
@@ -385,31 +509,49 @@ export default function PalaceMemoryComposerScreen() {
 
         {step === 'setup' ? (
           <>
-            <View style={styles.labelRow}><Text style={styles.label}>{t('addItems')}</Text><Text style={styles.counter}>{items.length}/{MAX_PALACE_ITEMS}</Text></View>
-            <View style={styles.addRow}>
-              <TextInput value={newItem} onChangeText={setNewItem} onSubmitEditing={addItem} placeholder={t('itemPlaceholder')} placeholderTextColor="#AAA7B5" style={[styles.input, { flex: 1 }]} />
-              <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} style={styles.addButton}><Plus size={21} color="white" /></AnimatedPressable>
-            </View>
-            {items.map((item, index) => (
-              <View key={`${item}-${index}`} style={styles.itemRow}>
-                <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
-                <View style={{ flex: 1 }}><Text style={styles.itemText}>{item}</Text><Text style={styles.locusText}>{loci.length ? loci[index % loci.length]?.name : t('chooseSceneAssignLocus')}</Text></View>
-                <AnimatedPressable
-                  accessibilityLabel={`${t('removeAccessibility')} ${item}`}
-                  onPress={() => {
-                    setItems((current) => current.filter((_, i) => i !== index));
-                    setAssociations((current) => current.filter((_, i) => i !== index));
-                    setActiveLocusIndex((current) => Math.min(current, Math.max(0, items.length - 2)));
-                  }}
-                  style={styles.deleteButton}>
-                  <Trash2 size={17} color={theme.inkSoft} />
-                </AnimatedPressable>
-              </View>
-            ))}
+            {!fromSharedComposer ? (
+              <>
+                <View style={styles.labelRow}><Text style={styles.label}>{t('addItems')}</Text><Text style={styles.counter}>{items.length}/{MAX_PALACE_ITEMS}</Text></View>
+                <View style={styles.addRow}>
+                  <TextInput
+                    ref={newItemInputRef}
+                    value={newItem}
+                    onChangeText={setNewItem}
+                    onFocus={() => handleInputFocus(newItemInputRef.current)}
+                    onSubmitEditing={addItem}
+                    returnKeyType="done"
+                    placeholder={t('itemPlaceholder')}
+                    placeholderTextColor="#AAA7B5"
+                    style={[styles.input, { flex: 1 }]}
+                  />
+                  <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} style={styles.addButton}><Plus size={21} color="white" /></AnimatedPressable>
+                </View>
+                {items.map((item, index) => (
+                  <View key={`${item}-${index}`} style={styles.itemRow}>
+                    <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
+                    <View style={{ flex: 1 }}><Text style={styles.itemText}>{item}</Text><Text style={styles.locusText}>{loci[index]?.name ?? t('chooseSceneAssignLocus')}</Text></View>
+                    <AnimatedPressable
+                      accessibilityLabel={`${t('removeAccessibility')} ${item}`}
+                      onPress={() => {
+                        setItems((current) => current.filter((_, i) => i !== index));
+                        setAssociations((current) => current.filter((_, i) => i !== index));
+                        setActiveLocusIndex((current) => Math.min(current, Math.max(0, items.length - 2)));
+                      }}
+                      style={styles.deleteButton}>
+                      <Trash2 size={17} color={theme.inkSoft} />
+                    </AnimatedPressable>
+                  </View>
+                ))}
+              </>
+            ) : null}
             <View style={styles.fullWidthButton}>
-              <AnimatedPressable onPress={continueToPlacement} style={styles.continueButton}>
-              <Text style={styles.continueText}>{t('continuePlace')}</Text>
-                <ArrowRight size={18} color={theme.ink} />
+              <AnimatedPressable
+                accessibilityState={{ disabled: noFittingScene }}
+                disabled={noFittingScene}
+                onPress={continueToPlacement}
+                style={[styles.continueButton, noFittingScene && styles.continueButtonDisabled]}>
+              <Text style={[styles.continueText, noFittingScene && styles.continueTextDisabled]}>{t('continuePlace')}</Text>
+                <ArrowRight size={18} color={noFittingScene ? '#B8B3C5' : theme.ink} />
               </AnimatedPressable>
             </View>
           </>
@@ -426,12 +568,12 @@ export default function PalaceMemoryComposerScreen() {
         {step === 'place' && (
           <View style={styles.fullWidthButton}>
             <AnimatedPressable disabled={createMemorySet.isPending} onPress={save} style={[styles.saveButton, createMemorySet.isPending && { opacity: 0.5 }]}>
-              <Check size={19} color={theme.ink} /><Text style={styles.saveText}>{createMemorySet.isPending ? t('saving') : error ? t('trySavingAgain') : overflowCount > 0 ? t('saveAsMultiple') : t('savePalace')}</Text><ArrowRight size={18} color={theme.ink} />
+              <Check size={19} color={theme.ink} /><Text style={styles.saveText}>{createMemorySet.isPending ? t('saving') : error ? t('trySavingAgain') : t('savePalace')}</Text><ArrowRight size={18} color={theme.ink} />
             </AnimatedPressable>
           </View>
         )}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -472,6 +614,20 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginTop: 5,
   },
+  editContentButton: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    marginTop: 10,
+    borderRadius: 11,
+    backgroundColor: 'white',
+    borderWidth: 1.5,
+    borderColor: '#DCD4FF',
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  editContentText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 }, optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 18 },
   sceneHeadingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between' }, sceneHeadingCopy: { flex: 1 }, sceneLabel: { marginBottom: 2 }, sceneCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginBottom: 9 }, seeAllScenesButton: { alignItems: 'center', backgroundColor: '#EEE9FF', borderRadius: 999, marginBottom: 8, minHeight: 44, justifyContent: 'center', paddingHorizontal: 11 }, seeAllScenesText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 }, sceneSearchWrap: { alignItems: 'center', backgroundColor: 'white', borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 8, marginBottom: 10, paddingHorizontal: 12 }, sceneSearchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13, minHeight: 44 }, sceneGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }, sceneOptionGrid: { marginRight: 0, marginBottom: 10, width: '48%' }, noMatchingScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, paddingVertical: 16, textAlign: 'center' },
   input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 14, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
@@ -482,7 +638,7 @@ const styles = StyleSheet.create({
   itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line }, itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center' }, itemNumberText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 11 }, itemText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginLeft: 11 }, locusText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginLeft: 11, marginTop: 2 }, deleteButton: { width: 39, height: 39, alignItems: 'center', justifyContent: 'center' },
   errorCard: { marginTop: 14, borderRadius: 14, backgroundColor: '#FFF0F4', borderWidth: 1.5, borderColor: '#FFD2DC', padding: 12 }, errorText: { color: '#B53A5F', fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   fullWidthButton: { alignSelf: 'stretch' },
-  continueButton: { width: '100%', minHeight: 53, marginTop: 20, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 5px 0px ${theme.sunDeep}` }, continueText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  continueButton: { width: '100%', minHeight: 53, marginTop: 20, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 5px 0px ${theme.sunDeep}` }, continueButtonDisabled: { backgroundColor: '#EDEAF4', boxShadow: 'none' }, continueText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 }, continueTextDisabled: { color: '#9C97AA' },
   editSetupButton: { width: '100%', minHeight: 45, marginTop: 18, borderRadius: 14, borderWidth: 1.5, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center' }, editSetupText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   saveButton: { width: '100%', minHeight: 53, marginTop: 20, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 5px 0px ${theme.sunDeep}` }, saveText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
 });

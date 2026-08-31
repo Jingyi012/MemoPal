@@ -15,8 +15,5 @@ config.resolver.extraNodeModules = {
   'react-dom': path.resolve(projectRoot, 'node_modules', 'react-dom'),
 };
 
-// watch the root folder
-config.watchFolders = [projectRoot];
-
 // wrap with NativeWind
 module.exports = withNativeWind(config, { input: './global.css' });

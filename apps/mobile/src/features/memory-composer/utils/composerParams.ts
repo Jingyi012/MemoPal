@@ -1,4 +1,5 @@
 import type { MemoryGoalType } from '@/features/memory-sets';
+import type { ComposerOrigin } from './techniqueRecommendation';
 
 export function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -38,6 +39,10 @@ export function parseComposerGoal(value: string | string[] | undefined): MemoryG
   return goal === 'spelling' || goal === 'ordered-list' || goal === 'facts' || goal === 'names' || goal === 'custom'
     ? goal
     : 'spelling';
+}
+
+export function parseComposerOrigin(value: string | string[] | undefined): ComposerOrigin {
+  return firstParam(value) === 'global' ? 'global' : 'palace';
 }
 
 export function suggestMemoryTitle(goalType: MemoryGoalType, items: string[]): string {

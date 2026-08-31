@@ -791,6 +791,9 @@ export const translations = {
       maxItemsMessage: 'A memory can contain up to 100 items.',
       splitMemoryBody:
         'This room has {capacity} loci. We will save your list as {parts} separate memories and keep every item.',
+      noSceneFitsBody:
+        'This Palace has {capacity} loci, but your memory needs {needed} more. Edit the content, add loci to a custom Palace, or choose or create another Palace.',
+      capacityReason: '{needed} more needed',
       saveAsMultiple: 'Save as separate memories',
       couldNotSave: 'Could not save this Palace. Try again.',
       couldNotLoad: 'Could not load Palace scenes.',
@@ -836,6 +839,7 @@ export const translations = {
       addItems: 'Add your items',
       itemPlaceholder: 'A word, fact, name, or step',
       continuePlace: 'Continue to place memories',
+      editContent: 'Edit content',
       editSetup: 'Edit items or choose another room',
       tryAgain: 'Try another round',
       backToHome: 'Back to Home',
@@ -1782,6 +1786,9 @@ export const translations = {
       maxItemsMessage: '一项记忆最多可以包含 100 个项目。',
       splitMemoryBody:
         '这个房间有 {capacity} 个位置。我们会保存为 {parts} 个独立记忆，确保每一项都被保留。',
+      noSceneFitsBody:
+        '这个宫殿有 {capacity} 个位置，但你的记忆还需要 {needed} 个。请编辑内容、为自定义宫殿添加位置，或选择/创建其他宫殿。',
+      capacityReason: '还需要 {needed} 个',
       saveAsMultiple: '保存为独立记忆',
       couldNotSave: '无法保存宫殿，请重试。',
       couldNotLoad: '无法加载宫殿场景。',
@@ -1826,6 +1833,7 @@ export const translations = {
       addItems: '加入项目',
       itemPlaceholder: '词语、事实、姓名或步骤',
       continuePlace: '继续放置记忆',
+      editContent: '编辑内容',
       editSetup: '编辑项目或选择其他房间',
       tryAgain: '再试一轮',
       backToHome: '返回首页',

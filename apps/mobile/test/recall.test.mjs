@@ -23,8 +23,12 @@ import {
 } from '../src/features/number-peg/utils/numberPegMap.ts';
 import {
   choosePalaceScene,
+  getAvailablePalaceScenes,
   getPalaceCapacityMessage,
+  getPalaceCapacityShortfall,
+  getLargestPalaceCapacity,
   getPalaceLoci,
+  sceneFitsPalaceItems,
 } from '../src/features/palace-scenes/utils/palaceCapacity.ts';
 import { groupMemoryReviews } from '../src/features/practice-attempts/utils/reviewGrouping.ts';
 import {
@@ -111,6 +115,13 @@ test('builds a handoff route without losing the prepared list', () => {
   assert.match(route, /items=%5B%22rhythm%22%2C%22separate%22%5D/);
 });
 
+test('builds a Palace handoff with its scene and composer origin', () => {
+  const route = buildTechniqueRoute('palace', 'Biology chapter', 'facts', ['cells'], 'scene-42', 'global');
+  assert.match(route, /^\/palaces\/build\?/);
+  assert.match(route, /sceneId=scene-42/);
+  assert.match(route, /origin=global/);
+});
+
 test('parses a shared composer payload and creates a useful title', () => {
   const items = encodeURIComponent(JSON.stringify(['  planets ', '', 'moons']));
 
@@ -177,8 +188,12 @@ test('chooses the smallest Palace that fits and explains overflow clearly', () =
 
   assert.equal(choosePalaceScene(scenes, 5).id, 'compact');
   assert.equal(choosePalaceScene(scenes, 8).id, 'roomy');
-  assert.equal(choosePalaceScene(scenes, 20).id, 'roomy');
+  assert.equal(choosePalaceScene(scenes, 20), undefined);
+  assert.equal(getLargestPalaceCapacity(scenes), 12);
   assert.equal(choosePalaceScene(scenes, 5, 'roomy').id, 'roomy');
+  assert.equal(sceneFitsPalaceItems(compact, 7), false);
+  assert.equal(getPalaceCapacityShortfall(15, 12), 3);
+  assert.deepEqual(getAvailablePalaceScenes([compact, { ...roomy, isPremium: true }], false).map((scene) => scene.id), ['compact']);
   assert.equal(getPalaceLoci(roomy).length, 12);
   assert.equal(
     getPalaceCapacityMessage(15, 12),
