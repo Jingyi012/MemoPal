@@ -3,7 +3,7 @@ import type { MemorySet } from '@/features/memory-sets';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
-import { Archive, ChevronRight, MoreHorizontal } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 type MemorySetCardProps = {
@@ -19,7 +19,12 @@ export function MemorySetCard({ memorySet, reviewAt, onOpen, onActions }: Memory
   const reviewLabel = formatReviewLabel(reviewAt, t);
 
   return (
-    <AnimatedPressable onPress={onOpen} style={styles.memoryCard}>
+    <AnimatedPressable
+      accessibilityHint={onActions ? t('holdForActions') : undefined}
+      delayLongPress={420}
+      onLongPress={onActions}
+      onPress={onOpen}
+      style={styles.memoryCard}>
       <View style={[styles.techniqueIcon, isPalace ? styles.palaceIcon : styles.pegIcon]}>
         <Text style={styles.techniqueEmoji}>{isPalace ? '🏰' : '🕯️'}</Text>
       </View>
@@ -40,19 +45,6 @@ export function MemorySetCard({ memorySet, reviewAt, onOpen, onActions }: Memory
           {reviewLabel}
         </Text>
       </View>
-      {onActions ? (
-        <AnimatedPressable
-          accessibilityLabel={`${t('moreActions')} ${memorySet.title}`}
-          onPress={(event) => {
-            event.stopPropagation();
-            onActions();
-          }}
-          style={styles.moreButton}>
-          {memorySet.status === 'archived'
-            ? <Archive size={18} color={theme.inkSoft} />
-            : <MoreHorizontal size={20} color={theme.inkSoft} />}
-        </AnimatedPressable>
-      ) : null}
       <ChevronRight size={18} color={theme.inkSoft} />
     </AnimatedPressable>
   );
@@ -84,5 +76,4 @@ const styles = StyleSheet.create({
   memoryMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3, minWidth: 0 },
   reviewLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, marginTop: 3 },
   reviewLabelDue: { color: theme.berryDeep },
-  moreButton: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 });

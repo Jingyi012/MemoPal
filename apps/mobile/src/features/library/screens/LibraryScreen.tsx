@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import LoadingView from '@/components/LoadingView';
@@ -8,14 +9,18 @@ import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
 import { MemorySetCard } from '@/components/MemorySetCard';
 import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practice-attempts';
 import type { DueMemoryReview } from '@/features/practice-attempts';
+import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
+import { useUserState } from '@/contexts/UserStateContext';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Href, useRouter } from 'expo-router';
-import { Plus, RefreshCcw } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { MemoryActionsSheet } from '../components/MemoryActionsSheet';
 
 type LibraryFilter = 'all' | MemoryTechniqueKey | 'archived';
 
@@ -29,12 +34,21 @@ const filters: { key: LibraryFilter }[] = [
 export default function LibraryScreen() {
   const router = useRouter();
   const { t } = useTranslation('library');
+  const { userState } = useUserState();
   const memorySets = useMemorySets();
   const dueReviews = useDueMemoryReviews();
   const upcomingReviews = useUpcomingMemoryReviews(30);
-  const { duplicateMemorySet, setMemorySetArchived } = useMemorySetMutations();
+  const { duplicateMemorySet, setMemorySetArchived, deleteMemorySet } = useMemorySetMutations();
+  const memoryActionsRef = useRef<BottomSheetModal>(null);
   const [filter, setFilter] = useState<LibraryFilter>('all');
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [actionMemorySet, setActionMemorySet] = useState<MemorySet>();
+  const [deleteConfirmationMemory, setDeleteConfirmationMemory] = useState<MemorySet>();
+  const pendingDeleteRef = useRef<MemorySet | undefined>(undefined);
+
+  useEffect(() => {
+    if (actionMemorySet) memoryActionsRef.current?.present();
+  }, [actionMemorySet]);
 
   const visibleSets = useMemo(() => {
     const items = memorySets.data ?? [];
@@ -60,27 +74,68 @@ export default function LibraryScreen() {
   }, [dueReviews.data, upcomingReviews.data]);
 
   const showActions = (memorySet: MemorySet) => {
+    setActionMessage(null);
+    setActionMemorySet(memorySet);
+  };
+
+  const requestDeleteMemory = (memorySet: MemorySet) => {
+    pendingDeleteRef.current = memorySet;
+    memoryActionsRef.current?.dismiss();
+  };
+
+  const handleMemoryActionsDismiss = () => {
+    setActionMemorySet(undefined);
+    const pendingDelete = pendingDeleteRef.current;
+    pendingDeleteRef.current = undefined;
+    if (pendingDelete) setDeleteConfirmationMemory(pendingDelete);
+  };
+
+  const duplicateSelectedMemory = (memorySet: MemorySet) => {
+    duplicateMemorySet.mutate(memorySet.id, {
+      onSuccess: (copy) => {
+        memoryActionsRef.current?.dismiss();
+        setActionMessage(`“${copy.title}” ${t('readyInLibrary')}`);
+      },
+      onError: (error) => {
+        memoryActionsRef.current?.dismiss();
+        setActionMessage(getNumberPegErrorMessage(error, t('duplicateError')));
+      },
+    });
+  };
+
+  const toggleSelectedMemoryArchived = (memorySet: MemorySet) => {
     const isArchived = memorySet.status === 'archived';
-    Alert.alert(memorySet.title, t('actionsDescription'), [
+    setMemorySetArchived.mutate(
+      { memorySetId: memorySet.id, isArchived: !isArchived },
       {
-        text: t('duplicate'),
-        onPress: () => duplicateMemorySet.mutate(memorySet.id, {
-          onSuccess: (copy) => setActionMessage(`“${copy.title}” ${t('readyInLibrary')}`),
-          onError: (error) => setActionMessage(getNumberPegErrorMessage(error, t('duplicateError'))),
-        }),
+        onSuccess: () => {
+          memoryActionsRef.current?.dismiss();
+          setActionMessage(isArchived ? t('memoryRestored') : t('memoryArchived'));
+        },
+        onError: (error) => {
+          memoryActionsRef.current?.dismiss();
+          setActionMessage(getNumberPegErrorMessage(error, t('updateError')));
+        },
       },
-      {
-        text: isArchived ? t('restore') : t('archive'),
-        onPress: () => setMemorySetArchived.mutate(
-          { memorySetId: memorySet.id, isArchived: !isArchived },
-          {
-            onSuccess: () => setActionMessage(isArchived ? t('memoryRestored') : t('memoryArchived')),
-            onError: (error) => setActionMessage(getNumberPegErrorMessage(error, t('updateError'))),
-          }
-        ),
+    );
+  };
+
+  const deleteSelectedMemory = () => {
+    if (!deleteConfirmationMemory) return;
+    deleteMemorySet.mutate(deleteConfirmationMemory.id, {
+      onSuccess: () => {
+        setDeleteConfirmationMemory(undefined);
+        setActionMessage(t('memoryDeleted'));
+        void InAppNotificationSync.syncAllUpcoming(
+          userState.notifications.reviewReminders,
+          userState.preferences.language,
+        );
       },
-      { text: t('cancel'), style: 'cancel' },
-    ]);
+      onError: (error) => {
+        setDeleteConfirmationMemory(undefined);
+        setActionMessage(getNumberPegErrorMessage(error, t('deleteError')));
+      },
+    });
   };
 
   return (
@@ -201,6 +256,29 @@ export default function LibraryScreen() {
           </View>
         )}
       </ScrollView>
+
+      <MemoryActionsSheet
+        ref={memoryActionsRef}
+        memorySet={actionMemorySet}
+        isBusy={duplicateMemorySet.isPending || setMemorySetArchived.isPending || deleteMemorySet.isPending}
+        onDismiss={handleMemoryActionsDismiss}
+        onDuplicate={duplicateSelectedMemory}
+        onToggleArchived={toggleSelectedMemoryArchived}
+        onDelete={requestDeleteMemory}
+      />
+      <ConfirmModal
+        visible={Boolean(deleteConfirmationMemory)}
+        icon={<Trash2 size={28} color={theme.berryDeep} />}
+        title={t('deleteTitle')}
+        subject={deleteConfirmationMemory?.title}
+        description={t('deleteDescription')}
+        confirmText={t('delete')}
+        cancelText={t('keepMemory')}
+        destructive
+        isLoading={deleteMemorySet.isPending}
+        onConfirm={deleteSelectedMemory}
+        onCancel={() => setDeleteConfirmationMemory(undefined)}
+      />
     </View>
   );
 }

@@ -135,6 +135,7 @@ export function useMemorySetMutations() {
     onSuccess: (_, memorySetId) => {
       queryClient.removeQueries({ queryKey: MEMORY_SET_KEYS.detail(memorySetId) });
       void queryClient.invalidateQueries({ queryKey: MEMORY_SET_KEYS.lists() });
+      void queryClient.invalidateQueries({ queryKey: ['practice-attempts'] });
     },
   });
 
