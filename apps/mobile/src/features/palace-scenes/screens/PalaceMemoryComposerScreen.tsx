@@ -155,6 +155,10 @@ export default function PalaceMemoryComposerScreen() {
     [availableScenes, items.length, selectedSceneId]
   );
   const loci = useMemo(() => getPalaceLoci(selectedScene), [selectedScene]);
+  // A scene may have more authored stops than this memory needs. During
+  // placement, keep the route focused on the first locus for each item and
+  // hide unused markers/cards instead of presenting empty locations.
+  const placementLoci = useMemo(() => loci.slice(0, items.length), [items.length, loci]);
   const largestAvailableCapacity = getLargestPalaceCapacity(availableScenes);
   const noFittingScene = !sceneAvailabilityLoading && items.length > largestAvailableCapacity;
   const capacityMessage = noFittingScene
@@ -477,11 +481,9 @@ export default function PalaceMemoryComposerScreen() {
           <>
             <PalaceLocusMap
               activeIndex={activeLocusIndex}
-              loci={loci}
-              onSelect={(index) => {
-                if (index < items.length) setActiveLocusIndex(index);
-              }}
-              placedCount={items.length}
+              loci={placementLoci}
+              onSelect={setActiveLocusIndex}
+              placedCount={placementLoci.length}
               scene={selectedScene}
             />
             <Text style={styles.canvasHint}>
@@ -497,7 +499,7 @@ export default function PalaceMemoryComposerScreen() {
               activeIndex={activeLocusIndex}
               associations={associations}
               items={items}
-              loci={loci}
+              loci={placementLoci}
               onChangeAssociation={(value) =>
                 setAssociations((current) =>
                   current.map((entry, index) => (index === activeLocusIndex ? value : entry)),
