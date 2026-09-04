@@ -59,6 +59,30 @@ reports so a report can be matched to an exact APK.
 The regular `npm run android` command remains a local Expo native build and
 does not invoke EAS or a cloud build.
 
+### Scan words from a photo
+
+Memory Composer now includes `Scan a photo`. It opens the camera or photo
+library, runs on-device OCR, and shows an editable confirmation list before
+adding the words to the composer. Photos and unconfirmed OCR text are not sent
+to the API or persisted in the local database.
+
+OCR is a native module, so it is not available in Expo Go. Run the normal
+local Android command from `apps/mobile`; its `preandroid` step regenerates the
+native project before every local build:
+
+```bash
+npm run android
+```
+
+`npx expo run:android` bypasses npm lifecycle scripts, so use `npm run android`
+after adding or updating a native dependency. This installs a fresh development
+build containing the OCR module; restarting Metro alone cannot add native code.
+
+The first release uses the bundled ML Kit text recognizer for printed Latin
+text, which is the target format for spelling lists and grocery items. A
+Chinese-specific recognizer can be added later if Chinese OCR becomes a core
+input format.
+
 You can start developing by editing the files inside the `src/app` and
 `src/features` directories. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 

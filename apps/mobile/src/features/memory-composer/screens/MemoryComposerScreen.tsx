@@ -4,10 +4,11 @@ import type { MemoryGoalType } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, Plus, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, ClipboardList, Plus, ScanText, Trash2 } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { firstParam, parseBulkItems, parseComposerGoal, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
+import { consumeOcrDraft, saveOcrDraft } from '@/features/memory-composer/utils/ocrDraftStore';
 import { buildTechniqueRoute, recommendTechnique, type ComposerOrigin, type TechniqueChoice } from '@/features/memory-composer/utils/techniqueRecommendation';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
@@ -35,6 +36,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
     goalType?: string | string[];
     sceneId?: string | string[];
     editContent?: string | string[];
+    ocrDraftId?: string | string[];
   }>();
   const { t } = useTranslation('memoryComposer');
   const initialItems = useMemo(() => parseComposerItems(params.items), [params.items]);
@@ -56,6 +58,27 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
   const titleInputRef = useRef<TextInput>(null);
   const bulkInputRef = useRef<TextInput>(null);
   const newItemInputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    const draft = consumeOcrDraft(firstParam(params.ocrDraftId));
+    if (!draft?.items.length) return;
+
+    setItems((current) => {
+      const seen = new Set<string>();
+      return [...current, ...draft.items]
+        .map((item) => item.trim())
+        .filter((item) => {
+          const key = item.normalize('NFKC').toLocaleLowerCase();
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .slice(0, 100);
+    });
+    if (draft.title) setTitle((current) => current || draft.title!);
+    if (draft.goalType) setGoalType(parseComposerGoal(draft.goalType));
+    setMessage(t('scanAddedMessage').replace('{count}', String(draft.items.length)));
+  }, [params.ocrDraftId, t]);
 
   useEffect(() => {
     if (firstParam(params.editContent) === '1') setStep('content');
@@ -209,13 +232,34 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
               </View>
 
               <Text style={styles.label}>{t('addItems')}</Text>
-              <AnimatedPressable
-                accessibilityLabel={bulkMode ? t('hidePasteMany') : t('pasteManyAccessibility')}
-                onPress={() => { setBulkMode((current) => !current); setMessage(null); }}
-                style={styles.bulkToggle}>
-                <Text style={styles.bulkToggleEmoji}>📋</Text>
-                <Text style={styles.bulkToggleText}>{bulkMode ? t('addOne') : t('pasteMany')}</Text>
-              </AnimatedPressable>
+              <View style={styles.importActions}>
+                <AnimatedPressable
+                  accessibilityLabel={bulkMode ? t('hidePasteMany') : t('pasteManyAccessibility')}
+                  onPress={() => { setBulkMode((current) => !current); setMessage(null); }}
+                  containerStyle={styles.importActionContainer}
+                  style={[styles.importAction, bulkMode && styles.importActionSelected]}>
+                  <View style={[styles.importActionIcon, styles.pasteIcon]}>
+                    <ClipboardList size={17} color={theme.berryDeep} strokeWidth={2.3} />
+                  </View>
+                  <Text style={styles.importActionText}>{bulkMode ? t('addOne') : t('pasteMany')}</Text>
+                </AnimatedPressable>
+                <AnimatedPressable
+                  accessibilityLabel={t('scanFromPhotoAccessibility')}
+                  onPress={() => {
+                    const draftId = saveOcrDraft(items, {
+                      title: title.trim() || undefined,
+                      goalType,
+                    });
+                    router.push(`/scan-memory?sourceDraftId=${encodeURIComponent(draftId)}` as Href);
+                  }}
+                  containerStyle={styles.importActionContainer}
+                  style={styles.importAction}>
+                  <View style={[styles.importActionIcon, styles.scanIcon]}>
+                    <ScanText size={17} color={theme.violetDeep} strokeWidth={2.3} />
+                  </View>
+                  <Text style={styles.importActionText}>{t('scanFromPhoto')}</Text>
+                </AnimatedPressable>
+              </View>
               {bulkMode ? (
                 <View style={styles.bulkCard}>
                   <Text style={styles.bulkTitle}>{t('onePerLine')}</Text>
@@ -249,7 +293,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                   placeholderTextColor="#AAA7B5"
                   style={[styles.input, styles.addInput]}
                 />
-                <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} style={styles.addButton}>
+                <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} containerStyle={styles.addButtonContainer} style={styles.addButton}>
                   <Plus size={21} color="white" />
                 </AnimatedPressable>
               </View>
@@ -358,9 +402,14 @@ const styles = StyleSheet.create({
   cardTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 10 },
   cardBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 },
-  bulkToggle: { alignSelf: 'flex-start', minHeight: 34, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -2, marginBottom: 8, paddingHorizontal: 2 },
-  bulkToggleText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  bulkToggleEmoji: { fontSize: 15 },
+  importActions: { flexDirection: 'row', alignItems: 'stretch', gap: 10, marginTop: -2, marginBottom: 10 },
+  importActionContainer: { flex: 1, minWidth: 0 },
+  importAction: { width: '100%', minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 15, borderWidth: 1.5, borderColor: theme.line, backgroundColor: '#FFFFFF', paddingHorizontal: 10, boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.06)' },
+  importActionSelected: { borderColor: theme.berry, backgroundColor: theme.berryTint },
+  importActionIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  pasteIcon: { backgroundColor: theme.berryTint },
+  scanIcon: { backgroundColor: '#EEE9FF' },
+  importActionText: { flex: 1, color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11.5, lineHeight: 15 },
   bulkCard: { borderRadius: 15, borderWidth: 1.5, borderColor: '#FFD2DC', backgroundColor: '#FFF7F9', padding: 10, marginBottom: 10 },
   bulkTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginBottom: 7 },
   bulkInput: { minHeight: 105, paddingTop: 12, textAlignVertical: 'top', backgroundColor: 'white' },
@@ -376,7 +425,8 @@ const styles = StyleSheet.create({
   goalLabelSelected: { color: theme.ink },
   addRow: { flexDirection: 'row', gap: 8 },
   addInput: { flex: 1 },
-  addButton: { width: 49, minHeight: 49, borderRadius: 13, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center' },
+  addButtonContainer: { width: 52, minHeight: 52 },
+  addButton: { width: '100%', minHeight: 52, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center' },
   chipRow: { gap: 7, marginTop: 12 },
   itemChip: { minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: theme.line, borderRadius: 12, backgroundColor: 'white', paddingHorizontal: 8 },
   itemChipNumber: { width: 20, height: 20, borderRadius: 10, backgroundColor: theme.sun, alignItems: 'center', justifyContent: 'center' },

@@ -14,6 +14,9 @@
     },
     "android": {
       "package": "com.memopal.app",
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#2B2641",
         "foregroundImage": "./assets/images/icon-foreground.png"
@@ -30,6 +33,28 @@
     "plugins": [
       "expo-router",
       "./plugins/withAndroidMonorepoEntry",
+      [
+        "expo-mlkit-ocr",
+        {
+          "iosEngine": "auto"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "16.0",
+            "useFrameworks": "static"
+          }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow MemoPal to read photos so you can scan words into a memory.",
+          "cameraPermission": "Allow MemoPal to take a photo so you can scan words into a memory."
+        }
+      ],
       [
         "expo-splash-screen",
         {
