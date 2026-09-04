@@ -148,6 +148,21 @@ export default function ScanMemoryScreen() {
     router.replace(`/create-memory?ocrDraftId=${encodeURIComponent(draftId)}` as Href);
   };
 
+  const handleBack = () => {
+    if (phase === 'review') {
+      setPhase('choose');
+      return;
+    }
+
+    // A scan route can also be opened from a deep link or a notification,
+    // where there is no previous screen in the navigation stack.
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/create-memory' as Href);
+    }
+  };
+
   const title =
     phase === 'choose'
       ? t('scanTitle')
@@ -169,7 +184,7 @@ export default function ScanMemoryScreen() {
         eyebrow={t('scanEyebrow')}
         title={title}
         description={description}
-        backAction={() => (phase === 'review' ? setPhase('choose') : router.back())}
+        backAction={handleBack}
       />
       <ScrollView
         contentContainerStyle={styles.content}
