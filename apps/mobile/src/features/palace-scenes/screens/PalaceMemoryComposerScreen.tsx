@@ -8,6 +8,7 @@ import { PalaceAssociationEditor } from '@/features/palace-scenes/components/Pal
 import { PalaceLocusMap } from '@/features/palace-scenes/components/PalaceLocusMap';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import type { PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
+import { getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
@@ -38,7 +39,7 @@ type ComposerStep = 'setup' | 'place';
 const MAX_PALACE_ITEMS = 100;
 
 export default function PalaceMemoryComposerScreen() {
-  const { t } = useTranslation('palace');
+  const { language, t } = useTranslation('palace');
   const router = useRouter();
   const params = useLocalSearchParams<{
     title?: string | string[];
@@ -198,7 +199,7 @@ export default function PalaceMemoryComposerScreen() {
     const locus = loci[items.length];
     setAssociations((current) => [
       ...current,
-      createPalaceAssociation(value, locus?.name ?? `locus ${items.length + 1}`),
+      createPalaceAssociation(value, locus ? getPalaceLocusName(locus, language) : `locus ${items.length + 1}`),
     ]);
     setActiveLocusIndex(items.length);
     setNewItem('');
@@ -240,7 +241,7 @@ export default function PalaceMemoryComposerScreen() {
     const sceneLoci = getPalaceLoci(scene);
     setAssociations(items.map((item, index) => {
       const locus = sceneLoci[index];
-      return createPalaceAssociation(item, locus?.name ?? `locus ${index + 1}`);
+      return createPalaceAssociation(item, locus ? getPalaceLocusName(locus, language) : `locus ${index + 1}`);
     }));
     setActiveLocusIndex(0);
     setMessage(null);
@@ -529,7 +530,7 @@ export default function PalaceMemoryComposerScreen() {
                 {items.map((item, index) => (
                   <View key={`${item}-${index}`} style={styles.itemRow}>
                     <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
-                    <View style={{ flex: 1 }}><Text style={styles.itemText}>{item}</Text><Text style={styles.locusText}>{loci[index]?.name ?? t('chooseSceneAssignLocus')}</Text></View>
+                    <View style={{ flex: 1 }}><Text style={styles.itemText}>{item}</Text><Text style={styles.locusText}>{loci[index] ? getPalaceLocusName(loci[index], language) : t('chooseSceneAssignLocus')}</Text></View>
                     <AnimatedPressable
                       accessibilityLabel={`${t('removeAccessibility')} ${item}`}
                       onPress={() => {

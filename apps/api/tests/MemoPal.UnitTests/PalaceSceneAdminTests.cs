@@ -23,7 +23,17 @@ public sealed class PalaceSceneAdminTests
                 Status = PalaceSceneStatuses.Published,
                 Loci =
                 [
-                    new PalaceLocusInput { Position = 1, Name = "Door", XPercent = 10, YPercent = 55 },
+                    new PalaceLocusInput
+                    {
+                        Position = 1,
+                        Name = "Door",
+                        NameEn = "Door",
+                        NameZh = "门",
+                        DescriptionEn = "A bright doorway.",
+                        DescriptionZh = "明亮的门口。",
+                        XPercent = 10,
+                        YPercent = 55
+                    },
                     new PalaceLocusInput { Position = 2, Name = "Desk", XPercent = 65, YPercent = 70 }
                 ]
             }),
@@ -32,6 +42,9 @@ public sealed class PalaceSceneAdminTests
         Assert.Equal(1, create.Data!.Version);
         Assert.Equal("admin-1", create.Data.CreatedBy);
         Assert.All(create.Data.Loci, locus => Assert.Equal("admin-1", locus.CreatedBy));
+        Assert.Equal("Door", create.Data.Loci[0].NameEn);
+        Assert.Equal("门", create.Data.Loci[0].NameZh);
+        Assert.Equal("明亮的门口。", create.Data.Loci[0].DescriptionZh);
 
         var updateRequest = new PalaceSceneUpsertRequest
         {

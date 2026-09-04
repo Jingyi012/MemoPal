@@ -32,6 +32,11 @@ internal static class PalaceSceneAggregate
                 throw new ValidationAppException("Locus positions must be unique positive numbers.");
             if (string.IsNullOrWhiteSpace(locus.Name) || locus.Name.Trim().Length > 100)
                 throw new ValidationAppException($"Locus {locus.Position} needs a short name.");
+            ValidateOptionalLength(locus.NameEn, 100, $"Locus {locus.Position} English name");
+            ValidateOptionalLength(locus.NameZh, 100, $"Locus {locus.Position} Chinese name");
+            ValidateOptionalLength(locus.Description, 500, $"Locus {locus.Position} description");
+            ValidateOptionalLength(locus.DescriptionEn, 500, $"Locus {locus.Position} English description");
+            ValidateOptionalLength(locus.DescriptionZh, 500, $"Locus {locus.Position} Chinese description");
             if (locus.XPercent is < 0 or > 100 || locus.YPercent is < 0 or > 100)
                 throw new ValidationAppException("Locus coordinates must stay between 0 and 100 percent.");
             if (locus.RadiusPercent is < 2 or > 25)
@@ -139,8 +144,21 @@ internal static class PalaceSceneAggregate
         locus.Position = input.Position;
         locus.Name = input.Name.Trim();
         locus.Description = string.IsNullOrWhiteSpace(input.Description) ? null : input.Description.Trim();
+        locus.NameEn = NormalizeOptional(input.NameEn);
+        locus.NameZh = NormalizeOptional(input.NameZh);
+        locus.DescriptionEn = NormalizeOptional(input.DescriptionEn);
+        locus.DescriptionZh = NormalizeOptional(input.DescriptionZh);
         locus.XPercent = input.XPercent;
         locus.YPercent = input.YPercent;
         locus.RadiusPercent = input.RadiusPercent;
+    }
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static void ValidateOptionalLength(string? value, int maxLength, string label)
+    {
+        if (!string.IsNullOrWhiteSpace(value) && value.Trim().Length > maxLength)
+            throw new ValidationAppException($"{label} must be {maxLength} characters or fewer.");
     }
 }

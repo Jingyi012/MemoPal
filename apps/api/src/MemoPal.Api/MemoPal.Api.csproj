@@ -15,7 +15,7 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <Content Include="Assets\PalaceScenes\11-study-room.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\PalaceScenes\*.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

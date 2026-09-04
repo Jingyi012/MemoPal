@@ -29,6 +29,7 @@ import * as Crypto from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -47,7 +48,7 @@ export default function PalaceMemorySessionScreen({
   returnTo?: 'practice' | 'palaces';
 }) {
   const router = useRouter();
-  const { t } = useTranslation('palace');
+  const { language, t } = useTranslation('palace');
   const memorySetQuery = useMemorySet(memorySetId);
   const sceneId = memorySetQuery.data?.techniquePlan?.palaceSceneId ?? '';
   const sceneQuery = usePalaceScene(sceneId);
@@ -373,7 +374,7 @@ export default function PalaceMemorySessionScreen({
             <Text style={styles.recallCuePin}>📍</Text>
           </View>
           <View style={styles.recallCueLabel}>
-            <Text style={styles.recallCueLabelText}>{active.locus.name}</Text>
+            <Text style={styles.recallCueLabelText}>{getPalaceLocusName(active.locus, language)}</Text>
           </View>
         </View>
         <Text style={styles.recallCueCaption}>{t('recallCueHint')}</Text>
@@ -517,7 +518,7 @@ export default function PalaceMemorySessionScreen({
       <RecallAnswerCard
         tone="palace"
         icon={<Text style={styles.recallEmoji}>🧠</Text>}
-        eyebrow={`${t('locusLabel').toUpperCase()} ${activeIndex + 1} · ${active.locus?.name?.toUpperCase() ?? t('memorySpot')}`}
+        eyebrow={`${t('locusLabel').toUpperCase()} ${activeIndex + 1} · ${active.locus ? getPalaceLocusName(active.locus, language).toUpperCase() : t('memorySpot')}`}
         prompt={t('recallPrompt')}
         answer={answer}
         feedback={feedback}
@@ -568,7 +569,7 @@ export default function PalaceMemorySessionScreen({
               key={placement.item.id}
               accessibilityLabel={t('locusAccessibility')
                 .replace('{number}', String(index + 1))
-                .replace('{name}', placement.locus.name)}
+                .replace('{name}', getPalaceLocusName(placement.locus, language))}
               onPress={() => mode === 'browse' && setActiveIndex(index)}
               style={[
                 styles.marker,
@@ -594,7 +595,7 @@ export default function PalaceMemorySessionScreen({
             <View style={styles.previewCopy}>
               <Text style={styles.eyebrow}>
                 {t('locusLabel').toUpperCase()} {activeIndex + 1} ·{' '}
-                {active.locus?.name?.toUpperCase() ?? t('memorySpot')}
+                {active.locus ? getPalaceLocusName(active.locus, language).toUpperCase() : t('memorySpot')}
               </Text>
               <Text style={styles.previewAnswer}>{active.item.answer}</Text>
             </View>
@@ -633,7 +634,7 @@ export default function PalaceMemorySessionScreen({
             id: placement.item.id,
             answer: placement.item.answer,
             association: placement.binding?.associationText,
-            locusName: placement.locus?.name,
+            locusName: placement.locus ? getPalaceLocusName(placement.locus, language) : undefined,
           }))}
           onSelect={setActiveIndex}
         />
@@ -649,7 +650,7 @@ export default function PalaceMemorySessionScreen({
               </View>
               <View style={styles.flex}>
                 <Text style={styles.itemAnswer}>{placement.item.answer}</Text>
-                <Text style={styles.itemLocus}>{placement.locus?.name}</Text>
+                <Text style={styles.itemLocus}>{placement.locus ? getPalaceLocusName(placement.locus, language) : null}</Text>
               </View>
             </AnimatedPressable>
           ))}

@@ -3,6 +3,8 @@ import type { PalaceLocus, PalaceScene } from '@/features/palace-scenes/types/pa
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/core/i18n/useTranslation';
+import { getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 
 type PalaceLocusMapProps = {
   scene: PalaceScene;
@@ -21,6 +23,7 @@ export function PalaceLocusMap({
   onSelect,
   height,
 }: PalaceLocusMapProps) {
+  const { language, t } = useTranslation('palace');
   return (
     <View style={[styles.canvas, height ? { height } : undefined]}>
       <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={StyleSheet.absoluteFillObject} />
@@ -32,7 +35,7 @@ export function PalaceLocusMap({
           <View key={locus.id} style={[styles.markerAnchor, { left: `${locus.xPercent}%`, top: `${locus.yPercent}%` }]}>
             {isActive ? <View pointerEvents="none" style={styles.activeHalo} /> : null}
             <Pressable
-              accessibilityLabel={`Locus ${index + 1}: ${locus.name}`}
+              accessibilityLabel={`${t('locusLabel')} ${index + 1}: ${getPalaceLocusName(locus, language)}`}
               disabled={!onSelect}
               onPress={() => onSelect?.(index)}
               style={[styles.marker, isPlaced && styles.markerPlaced, isActive && styles.markerActive]}>

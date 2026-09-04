@@ -5,6 +5,10 @@ public sealed record PalaceLocusDto(
     int Position,
     string Name,
     string? Description,
+    string? NameEn,
+    string? NameZh,
+    string? DescriptionEn,
+    string? DescriptionZh,
     decimal XPercent,
     decimal YPercent,
     decimal RadiusPercent,
@@ -45,6 +49,10 @@ public sealed class PalaceLocusInput
     public int Position { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public string? NameEn { get; set; }
+    public string? NameZh { get; set; }
+    public string? DescriptionEn { get; set; }
+    public string? DescriptionZh { get; set; }
     public decimal XPercent { get; set; }
     public decimal YPercent { get; set; }
     public decimal RadiusPercent { get; set; } = 7m;

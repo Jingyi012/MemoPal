@@ -3,6 +3,10 @@ export type PalaceLocus = {
   position: number;
   name: string;
   description?: string | null;
+  nameEn?: string | null;
+  nameZh?: string | null;
+  descriptionEn?: string | null;
+  descriptionZh?: string | null;
   xPercent: number;
   yPercent: number;
   radiusPercent: number;
@@ -35,6 +39,10 @@ export type PalaceLocusInput = {
   position: number;
   name: string;
   description?: string;
+  nameEn?: string;
+  nameZh?: string;
+  descriptionEn?: string;
+  descriptionZh?: string;
   xPercent: number;
   yPercent: number;
   radiusPercent: number;

@@ -84,6 +84,10 @@ export default function PalaceScenesPage() {
                 position,
                 name,
                 description,
+                nameEn,
+                nameZh,
+                descriptionEn,
+                descriptionZh,
                 xPercent,
                 yPercent,
                 radiusPercent,
@@ -92,6 +96,10 @@ export default function PalaceScenesPage() {
                 position,
                 name,
                 description: description ?? undefined,
+                nameEn: nameEn ?? undefined,
+                nameZh: nameZh ?? undefined,
+                descriptionEn: descriptionEn ?? undefined,
+                descriptionZh: descriptionZh ?? undefined,
                 xPercent,
                 yPercent,
                 radiusPercent,
@@ -431,11 +439,35 @@ export default function PalaceScenesPage() {
                   <Flex gap={8} align="center" wrap="wrap">
                     <Tag color="purple">{index + 1}</Tag>
                     <Input
-                      value={locus.name}
+                      value={locus.nameEn ?? locus.name}
                       onChange={(e) =>
-                        updateLocus(index, { name: e.target.value })
+                        updateLocus(index, { name: e.target.value, nameEn: e.target.value })
                       }
-                      placeholder="Locus name"
+                      placeholder="Locus name (English)"
+                      style={{ flex: "1 1 180px" }}
+                    />
+                    <Input
+                      value={locus.nameZh ?? ""}
+                      onChange={(e) =>
+                        updateLocus(index, { nameZh: e.target.value })
+                      }
+                      placeholder="名称（中文）"
+                      style={{ flex: "1 1 150px" }}
+                    />
+                    <Input
+                      value={locus.descriptionEn ?? locus.description ?? ""}
+                      onChange={(e) =>
+                        updateLocus(index, { description: e.target.value, descriptionEn: e.target.value })
+                      }
+                      placeholder="Description (English)"
+                      style={{ flex: "1 1 220px" }}
+                    />
+                    <Input
+                      value={locus.descriptionZh ?? ""}
+                      onChange={(e) =>
+                        updateLocus(index, { descriptionZh: e.target.value })
+                      }
+                      placeholder="描述（中文）"
                       style={{ flex: "1 1 180px" }}
                     />
                     <InputNumber

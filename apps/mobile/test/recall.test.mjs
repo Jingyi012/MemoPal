@@ -38,6 +38,10 @@ import {
   getAssociationText,
 } from '../src/features/palace-scenes/utils/palaceAuthoring.ts';
 import { isNetworkStateOnline } from '../src/core/network/networkState.ts';
+import {
+  getPalaceLocusDescription,
+  getPalaceLocusName,
+} from '../src/features/palace-scenes/utils/palaceLocalization.ts';
 
 const makeScene = (id, locusCount) => ({
   id,
@@ -114,6 +118,23 @@ test('builds a handoff route without losing the prepared list', () => {
   assert.match(route, /^\/number-peg\/build\?/);
   assert.match(route, /title=Friday%20spelling/);
   assert.match(route, /items=%5B%22rhythm%22%2C%22separate%22%5D/);
+});
+
+test('uses localized Palace locus copy and keeps custom copy as fallback', () => {
+  const locus = {
+    name: 'Desk lamp',
+    nameEn: 'Desk lamp',
+    nameZh: '台灯',
+    description: 'A desk lamp.',
+    descriptionEn: 'A clear stop at the desk lamp.',
+    descriptionZh: '台灯是一个清晰的记忆停靠点。',
+  };
+
+  assert.equal(getPalaceLocusName(locus, 'en'), 'Desk lamp');
+  assert.equal(getPalaceLocusName(locus, 'zh'), '台灯');
+  assert.equal(getPalaceLocusDescription(locus, 'zh', 'fallback'), '台灯是一个清晰的记忆停靠点。');
+  assert.equal(getPalaceLocusName({ name: 'My sofa' }, 'zh'), 'My sofa');
+  assert.equal(getPalaceLocusDescription({ name: 'My sofa' }, 'en', 'fallback'), 'fallback');
 });
 
 test('builds a Palace handoff with its scene and composer origin', () => {

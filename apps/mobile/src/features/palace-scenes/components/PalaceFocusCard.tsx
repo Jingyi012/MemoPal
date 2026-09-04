@@ -6,6 +6,7 @@ import { typography } from '@/theme/typography';
 import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 
 type PalaceFocusCardProps = {
   scene: PalaceScene;
@@ -34,7 +35,8 @@ export function PalaceFocusCard({
   onStartRecall,
   isLast = false,
 }: PalaceFocusCardProps) {
-  const { t } = useTranslation('palace');
+  const { language, t } = useTranslation('palace');
+  const localizedLocusName = getPalaceLocusName(locus, language);
   const zoom = 2.15;
   return (
     <View style={styles.card}>
@@ -63,7 +65,7 @@ export function PalaceFocusCard({
       <View style={styles.copy}>
         <View style={styles.eyebrowRow}>
           <Text style={styles.focusSparkleEmoji}>✨</Text>
-          <Text style={styles.eyebrow}>{locus.name.toUpperCase()}</Text>
+          <Text style={styles.eyebrow}>{localizedLocusName.toUpperCase()}</Text>
         </View>
         {showAnswer ? <Text style={styles.answer}>{answer}</Text> : <Text style={styles.hiddenAnswer}>{t('hiddenMemory')}</Text>}
         {showAnswer && association ? <Text style={styles.association}>{association}</Text> : null}

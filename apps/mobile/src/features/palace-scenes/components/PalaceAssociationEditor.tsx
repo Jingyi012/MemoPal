@@ -9,6 +9,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useEffect } from 'react';
+import { getPalaceLocusDescription, getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 
 type PalaceAssociationEditorProps = {
   items: string[];
@@ -28,7 +29,7 @@ export function PalaceAssociationEditor({
   onSelectIndex,
   onChangeAssociation,
 }: PalaceAssociationEditorProps) {
-  const { t } = useTranslation('palace');
+  const { language, t } = useTranslation('palace');
   const { t: memoryT } = useTranslation('memoryComposer');
   const hasItems = items.length > 0;
   const safeIndex = hasItems ? Math.min(Math.max(activeIndex, 0), items.length - 1) : 0;
@@ -78,7 +79,9 @@ export function PalaceAssociationEditor({
   }
 
   const renderLocationVisual = (locus: PalaceLocus | undefined, fallbackIndex: number) => {
-    const previewLocusName = locus?.name ?? `${t('loci')} ${fallbackIndex + 1}`;
+    const previewLocusName = locus
+      ? getPalaceLocusName(locus, language)
+      : `${t('loci')} ${fallbackIndex + 1}`;
     return (
       <View style={styles.locationVisual}>
         <View style={styles.locationIcon}>
@@ -89,7 +92,9 @@ export function PalaceAssociationEditor({
             {t('placingAt')} <Text style={styles.locationName}>{previewLocusName}</Text>
           </Text>
           <Text style={styles.locationDescription}>
-            {locus?.description || t('locusDescriptionFallback')}
+            {locus
+              ? getPalaceLocusDescription(locus, language, t('locusDescriptionFallback'))
+              : t('locusDescriptionFallback')}
           </Text>
         </View>
       </View>

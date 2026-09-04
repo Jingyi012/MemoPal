@@ -328,6 +328,10 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasKey(x => x.Id);
             b.Property(x => x.Name).HasMaxLength(100);
             b.Property(x => x.Description).HasMaxLength(500);
+            b.Property(x => x.NameEn).HasMaxLength(100);
+            b.Property(x => x.NameZh).HasMaxLength(100);
+            b.Property(x => x.DescriptionEn).HasMaxLength(500);
+            b.Property(x => x.DescriptionZh).HasMaxLength(500);
             b.Property(x => x.XPercent).HasPrecision(5, 2);
             b.Property(x => x.YPercent).HasPrecision(5, 2);
             b.Property(x => x.RadiusPercent).HasPrecision(5, 2);
