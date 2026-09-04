@@ -27,8 +27,12 @@ function normalizeConfigShape(
 ): Record<string, unknown> {
   if (configKey === "level.configs") {
     if (parsedValue && typeof parsedValue === "object" && !Array.isArray(parsedValue)) {
-      const value = Number((parsedValue as Record<string, unknown>).xpPerLevel);
-      return Number.isFinite(value) && value > 0 ? { xpPerLevel: value } : defaultValue;
+      const source = parsedValue as Record<string, unknown>;
+      const value = Number(source.xpPerLevel);
+      const levelTitles = Array.isArray(source.levelTitles) ? source.levelTitles : defaultValue.levelTitles;
+      return Number.isFinite(value) && value > 0
+        ? { xpPerLevel: value, levelTitles }
+        : defaultValue;
     }
     return defaultValue;
   }

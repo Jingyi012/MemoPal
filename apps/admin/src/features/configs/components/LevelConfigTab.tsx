@@ -32,7 +32,7 @@ export function LevelConfigTab() {
       <Alert
         type="info"
         message="Level Progress"
-        description="Use one easy-to-understand XP target for every level. Changing it recalculates all user levels."
+        description="Set the XP target and the title for each level range. A title applies from its starting level until the next row. Changing XP recalculates all user levels."
         showIcon
         style={{ marginBottom: 16 }}
       />

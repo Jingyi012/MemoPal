@@ -1,4 +1,5 @@
 import * as levelConfigService from '@/features/gamification/shared/services/levelConfig.service';
+import { DEFAULT_LEVEL_TITLES } from '@/features/gamification/shared/utils/levelTitles';
 import { useQuery } from '@tanstack/react-query';
 
 export const LEVEL_CONFIG_KEYS = {
@@ -17,7 +18,7 @@ export function useLevelConfigs() {
   });
 
   return {
-    config: query.data ?? { xpPerLevel: 100 },
+    config: query.data ?? { xpPerLevel: 100, levelTitles: DEFAULT_LEVEL_TITLES },
     isLoading: query.isLoading,
     isError: query.isError,
     refetch: query.refetch,

@@ -26,16 +26,20 @@ import { ReviewScheduleSheet } from '../components/ReviewScheduleSheet';
 import type { AppLanguage } from '@/features/onboarding/types/userState';
 import { LanguageSheet } from '../components/LanguageSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
+import { DEFAULT_LEVEL_TITLES, getLevelTitleForLevel } from '@/features/gamification/shared/utils/levelTitles';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
   const { userState, updateState, updatePreferences } = useUserState();
-  const { t } = useTranslation('profile');
+  const { language, t } = useTranslation('profile');
   const { t: languageT } = useTranslation('language');
   const { logout } = useAuth();
   const updateProfileMutation = useUpdateProfile();
+  const totalXp = Math.max(0, user?.totalXp ?? 0);
+  const { levelInfo } = useLevelByXp(totalXp, user?.level);
   const [reviewRemindersEnabled, setReviewRemindersEnabled] = useState(
     userState.notifications.reviewReminders
   );
@@ -56,6 +60,11 @@ export default function ProfileScreen() {
       : userState.preferences.language === 'zh'
         ? languageT('chinese')
         : languageT('english');
+  const level = Math.max(1, levelInfo?.currentLevel ?? user?.level ?? 1);
+  const fallbackLevelTitle = getLevelTitleForLevel(level, DEFAULT_LEVEL_TITLES);
+  const levelTitle = language === 'zh'
+    ? levelInfo?.currentLevelConfig?.titleZh ?? levelInfo?.currentLevelConfig?.title ?? fallbackLevelTitle.titleZh
+    : levelInfo?.currentLevelConfig?.title ?? fallbackLevelTitle.titleEn;
 
   useEffect(() => {
     setReviewRemindersEnabled(userState.notifications.reviewReminders);
@@ -155,7 +164,6 @@ export default function ProfileScreen() {
   };
 
   const displayName = user?.displayName?.trim() || 'Memory learner';
-  const level = Math.max(1, user?.level ?? 1);
   const isPremium = Boolean(user?.isPremium);
   const selectedLanguage = (userState.preferences.language as AppLanguage) ?? 'system';
 
@@ -220,7 +228,7 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.profileName}>{displayName}</Text>
           <Text style={styles.profileSubtitle}>
-            Level {level} · {t('memoryApprentice')}
+            Level {level} · {levelTitle}
           </Text>
           <AnimatedPressable
             onPress={() => editProfileRef.current?.present()}

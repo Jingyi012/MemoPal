@@ -13,12 +13,13 @@ interface Props {
     xpToNextLevel: number;
     totalXp: number;
     title: string;
+    titleZh?: string;
   };
   streak: number;
 }
 
 export const LevelProgressHeader: React.FC<Props> = ({ level, streak }) => {
-  const { t } = useTranslation('achievements');
+  const { language, t } = useTranslation('achievements');
   const { levelWindowXp, isMaxLevel } = getLevelProgressMetrics(level.xpInCurrentLevel, level.xpToNextLevel);
   const localizedTitles: Record<string, string> = {
     'Memory Apprentice': t('memoryApprentice'),
@@ -33,7 +34,9 @@ export const LevelProgressHeader: React.FC<Props> = ({ level, streak }) => {
     'Memory Master': t('levelMemoryMaster'),
     'Palace Sage': t('levelPalaceSage'),
   };
-  const localizedTitle = localizedTitles[level.title] ?? level.title;
+  const localizedTitle = language === 'zh'
+    ? level.titleZh ?? localizedTitles[level.title] ?? level.title
+    : level.title;
 
   return (
     <NightEmphasisCard style={styles.card}>

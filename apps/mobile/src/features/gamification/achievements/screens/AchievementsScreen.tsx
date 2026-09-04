@@ -42,6 +42,7 @@ export default function AchievementsScreen() {
       xpToNextLevel: Math.max(1, levelInfo?.xpToNextLevel ?? 100),
       totalXp,
       title: levelInfo?.currentLevelConfig?.title ?? t('memoryExplorer'),
+      titleZh: levelInfo?.currentLevelConfig?.titleZh,
     };
   }, [levelInfo, t, totalXp, user?.level]);
 

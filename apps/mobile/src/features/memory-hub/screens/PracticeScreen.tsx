@@ -40,7 +40,8 @@ export default function PracticeScreen() {
     xpInCurrentLevel: Math.max(0, levelInfo?.xpInCurrentLevel ?? totalXp),
     xpToNextLevel: Math.max(0, levelInfo?.xpToNextLevel ?? 0),
     totalXp,
-    title: levelInfo?.currentLevelConfig?.title ?? 'Memory Apprentice',
+    title: levelInfo?.currentLevelConfig?.title ?? 'Memory Explorer',
+    titleZh: levelInfo?.currentLevelConfig?.titleZh,
   };
   const unlockedPegCount = getUnlockedPegCount(user?.level ?? 1);
   const palaceScenes = usePalaceScenes();

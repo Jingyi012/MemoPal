@@ -30,6 +30,7 @@ import {
   getPalaceLoci,
   sceneFitsPalaceItems,
 } from '../src/features/palace-scenes/utils/palaceCapacity.ts';
+import { getLevelTitleForLevel } from '../src/features/gamification/shared/utils/levelTitles.ts';
 import { groupMemoryReviews } from '../src/features/practice-attempts/utils/reviewGrouping.ts';
 import {
   createPalaceAssociation,
@@ -199,4 +200,16 @@ test('chooses the smallest Palace that fits and explains overflow clearly', () =
     getPalaceCapacityMessage(15, 12),
     'This list has 15 items, but the largest available Palace has 12 loci. Remove 3 items or create a second memory.',
   );
+});
+
+test('resolves configurable level titles from the nearest configured level', () => {
+  const titles = [
+    { level: 1, titleEn: 'Starter', titleZh: '起步者' },
+    { level: 4, titleEn: 'Recall Ranger', titleZh: '回忆游侠' },
+    { level: 9, titleEn: 'Mind Pilot', titleZh: '思维飞行员' },
+  ];
+
+  assert.equal(getLevelTitleForLevel(1, titles).titleEn, 'Starter');
+  assert.equal(getLevelTitleForLevel(7, titles).titleZh, '回忆游侠');
+  assert.equal(getLevelTitleForLevel(12, titles).titleEn, 'Mind Pilot');
 });

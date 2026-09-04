@@ -98,7 +98,36 @@ public sealed class UpsertSystemSettingCommandHandler
                 ToInt(root?["xpPerLevel"], LevelProgressConfig.Default.XpPerLevel),
                 10,
                 100_000);
-            return JsonSerializer.Serialize(new { xpPerLevel });
+            var levelTitles = new JsonArray();
+            if (root?["levelTitles"] is JsonArray source)
+            {
+                var normalizedTitles = source
+                    .OfType<JsonObject>()
+                    .Select(item => new
+                    {
+                        level = ToInt(item["level"]),
+                        titleEn = ToText(item["titleEn"]),
+                        titleZh = ToText(item["titleZh"]),
+                    })
+                    .Where(item => item.level >= 1 &&
+                                   !string.IsNullOrWhiteSpace(item.titleEn) &&
+                                   !string.IsNullOrWhiteSpace(item.titleZh))
+                    .GroupBy(item => item.level)
+                    .Select(group => group.First())
+                    .OrderBy(item => item.level);
+
+                foreach (var title in normalizedTitles)
+                {
+                    levelTitles.Add(new JsonObject
+                    {
+                        ["level"] = title.level,
+                        ["titleEn"] = title.titleEn,
+                        ["titleZh"] = title.titleZh,
+                    });
+                }
+            }
+
+            return JsonSerializer.Serialize(new { xpPerLevel, levelTitles });
         }
         catch
         {
@@ -191,6 +220,17 @@ public sealed class UpsertSystemSettingCommandHandler
         }
 
         return fallback;
+    }
+
+    private static string ToText(JsonNode? node)
+    {
+        if (node is JsonValue valueNode && valueNode.TryGetValue<string>(out var textValue))
+        {
+            var trimmed = textValue?.Trim() ?? string.Empty;
+            return trimmed[..Math.Min(80, trimmed.Length)];
+        }
+
+        return string.Empty;
     }
 
     private static int ClampReward(int value) => Math.Clamp(value, 0, 10_000);
