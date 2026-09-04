@@ -20,9 +20,13 @@ export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewC
       <View style={styles.cardHeader}>
         <View style={styles.headerIcon}><Text style={styles.headerEmoji}>⏰</Text></View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.eyebrow}>TODAY’S MEMORY WALK</Text>
-          <Text style={styles.title}>{groupedReviews.length} review{groupedReviews.length === 1 ? '' : 's'} waiting for you</Text>
-          <Text style={styles.subtitle}>Recall first. Every answer helps the next review find its rhythm.</Text>
+          <Text style={styles.eyebrow}>{t('todayMemoryWalk')}</Text>
+          <Text style={styles.title}>
+            {groupedReviews.length === 1
+              ? t('oneReviewWaiting')
+              : t('reviewsWaitingForYou').replace('{count}', String(groupedReviews.length))}
+          </Text>
+          <Text style={styles.subtitle}>{t('todayReviewBody')}</Text>
         </View>
       </View>
       <View style={styles.reviewList}>
@@ -47,10 +51,10 @@ export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewC
       {onStartReview ? (
         <AnimatedPressable
           accessibilityRole="button"
-          accessibilityLabel="Start today's memory review"
+          accessibilityLabel={t('startTodayReviewAccessibility')}
           onPress={() => onStartReview(groupedReviews[0].review)}
           style={styles.startButton}>
-          <Text style={styles.startButtonText}>Start review</Text>
+          <Text style={styles.startButtonText}>{t('startReview')}</Text>
           <ArrowRight size={17} color={theme.ink} />
         </AnimatedPressable>
       ) : null}

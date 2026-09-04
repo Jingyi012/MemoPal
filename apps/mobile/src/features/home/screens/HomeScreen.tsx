@@ -64,7 +64,7 @@ export default function HomeScreen() {
       <HomeHeader
         userData={user ?? {
           id: 'guest',
-          displayName: 'Guest',
+          displayName: t('guest'),
           email: 'guest@local',
           totalXp: 0,
           level: 1,

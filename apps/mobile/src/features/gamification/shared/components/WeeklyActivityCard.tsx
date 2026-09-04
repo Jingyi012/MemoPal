@@ -3,8 +3,7 @@ import { typography } from '@/theme/typography';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-
-const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+import { useTranslation } from '@/core/i18n/useTranslation';
 
 type WeeklyActivityCardProps = {
   title: string;
@@ -14,12 +13,14 @@ type WeeklyActivityCardProps = {
 
 /** Shared seven-day XP activity card used on Home and Progress. */
 export function WeeklyActivityCard({ title, events = [], activity }: WeeklyActivityCardProps) {
+  const { language } = useTranslation('home');
   const chartActivity = useMemo(() => {
+    const locale = language === 'zh' ? 'zh-CN' : 'en-US';
     if (activity) {
       const values = activity.map((day) => day.sessions);
       const max = Math.max(1, ...values);
       return values.map((value, index) => ({
-        label: DAY_LABELS[index],
+        label: formatWeekday(activity[index]?.date, locale),
         percent: value ? Math.max(10, Math.round((value / max) * 100)) : 6,
         today: index === values.length - 1,
       }));
@@ -41,11 +42,11 @@ export function WeeklyActivityCard({ title, events = [], activity }: WeeklyActiv
       .reduce((sum, event) => sum + Math.max(0, event.xpAmount), 0));
     const max = Math.max(1, ...values);
     return values.map((value, index) => ({
-      label: DAY_LABELS[index],
+      label: formatWeekday(days[index], locale),
       percent: value ? Math.max(10, Math.round((value / max) * 100)) : 6,
       today: index === 6,
     }));
-  }, [activity, events]);
+  }, [activity, events, language]);
 
   return (
     <View style={styles.card}>
@@ -65,6 +66,16 @@ export function WeeklyActivityCard({ title, events = [], activity }: WeeklyActiv
       </View>
     </View>
   );
+}
+
+function formatWeekday(value: string | Date | undefined, locale: string) {
+  if (!value) return '';
+  const date = value instanceof Date
+    ? value
+    : new Date(`${value.slice(0, 10)}T12:00:00`);
+  return Number.isNaN(date.getTime())
+    ? ''
+    : new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date);
 }
 
 const styles = StyleSheet.create({

@@ -13,7 +13,7 @@ export function UpcomingReviewCard({
   reviews: DueMemoryReview[];
   onOpen: (review: DueMemoryReview) => void;
 }) {
-  const { t } = useTranslation('home');
+  const { language, t } = useTranslation('home');
   const groupedReviews = groupMemoryReviews(reviews);
   return (
     <View style={styles.card}>
@@ -29,7 +29,7 @@ export function UpcomingReviewCard({
         {groupedReviews.slice(0, 3).map(({ review, itemCount }) => (
           <AnimatedPressable key={review.memorySetId} onPress={() => onOpen(review)} style={styles.row}>
             <View style={styles.dateBadge}>
-              <Text style={styles.dateText}>{formatShortDate(review.dueAt)}</Text>
+              <Text style={styles.dateText}>{formatShortDate(review.dueAt, language)}</Text>
             </View>
             <View style={styles.copy}>
               <Text numberOfLines={1} style={styles.rowTitle}>{review.memorySetTitle}</Text>
@@ -43,8 +43,8 @@ export function UpcomingReviewCard({
   );
 }
 
-function formatShortDate(value: string) {
-  return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+function formatShortDate(value: string, language: 'en' | 'zh') {
+  return new Date(value).toLocaleDateString(language === 'zh' ? 'zh-CN' : 'en-US', { month: 'short', day: 'numeric' });
 }
 
 const styles = StyleSheet.create({
