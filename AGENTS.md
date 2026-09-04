@@ -19,7 +19,6 @@ and apply to every change.
   [backend instructions](docs/agent-instructions/backend/backend.md).
 - `deploy` - Docker Compose and Nginx deployment configuration.
 - `docs` - product/design documents and diagrams.
-- `palaceData` - authored Palace imagery and walkthrough assets.
 
 The solution and package workspace are rooted here. Run commands from the
 repository root unless a command explicitly requires a project directory.

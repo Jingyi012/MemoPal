@@ -18,7 +18,6 @@ apps/
 AGENTS.md       Repository-wide coding-agent instructions
 deploy/         Shared Docker Compose and nginx configuration
 docs/           Product and architecture documentation
-palaceData/     Palace authoring source imagery (Git LFS)
 ```
 
 ## Development
