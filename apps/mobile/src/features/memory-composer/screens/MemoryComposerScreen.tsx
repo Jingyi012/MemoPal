@@ -173,13 +173,28 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
     router.push(buildTechniqueRoute(technique, routeTitle, goalType, items, sceneId, origin) as Href);
   };
 
+  const handleBack = () => {
+    if (step === 'technique') {
+      setStep('content');
+      return;
+    }
+
+    // The composer can be opened directly from a deep link. In that case
+    // there is no stack entry for router.back() to pop.
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)' as Href);
+    }
+  };
+
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <CommonHeader
         eyebrow={t('eyebrow')}
         title={step === 'content' ? t('addContent') : t('pickTechnique')}
         description={step === 'content' ? t('contentDescription') : t('techniqueDescription')}
-        backAction={() => (step === 'technique' ? setStep('content') : router.back())}
+        backAction={handleBack}
       />
 
       <ScrollView
