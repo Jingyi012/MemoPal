@@ -4,8 +4,8 @@ import {
   BottomSheetModalProps,
   useBottomSheetTimingConfigs,
 } from '@gorhom/bottom-sheet';
-import React, { forwardRef, ReactNode, useCallback, useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import React, { forwardRef, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
+import { BackHandler, Platform, StyleSheet } from 'react-native';
 
 interface Props extends Partial<BottomSheetModalProps> {
   children?: ReactNode;
@@ -15,10 +15,33 @@ interface Props extends Partial<BottomSheetModalProps> {
 type Ref = BottomSheetModal;
 
 const CustomBottomSheetModal = forwardRef<Ref, Props>(
-  ({ children, snapPoints, enableDynamicSizing, ...restProps }, ref) => {
+  ({ children, snapPoints, enableDynamicSizing, onChange, onDismiss, ...restProps }, ref) => {
     const defaultSnapPoints = useMemo(() => ['75%', '95%'], []);
     const usedSnapPoints = snapPoints ?? (enableDynamicSizing === true ? undefined : defaultSnapPoints);
     const animationConfigs = useBottomSheetTimingConfigs({ duration: 180 });
+    const bottomSheetRef = useRef<BottomSheetModal>(null);
+    const isPresentedRef = useRef(false);
+
+    useEffect(() => {
+      if (Platform.OS !== 'android') return undefined;
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+        if (!isPresentedRef.current || !bottomSheetRef.current) return false;
+        bottomSheetRef.current.dismiss();
+        return true;
+      });
+
+      return () => subscription.remove();
+    }, []);
+
+    const assignRef = useCallback((instance: BottomSheetModal | null) => {
+      bottomSheetRef.current = instance;
+      if (typeof ref === 'function') {
+        ref(instance);
+      } else if (ref) {
+        ref.current = instance;
+      }
+    }, [ref]);
 
     const renderBackdrop = useCallback(
       (backdropProps: any) => (
@@ -35,9 +58,17 @@ const CustomBottomSheetModal = forwardRef<Ref, Props>(
 
     return (
       <BottomSheetModal
-        ref={ref}
+        ref={assignRef}
         snapPoints={usedSnapPoints}
         enableDynamicSizing={enableDynamicSizing}
+        onChange={(index, position, type) => {
+          isPresentedRef.current = index >= 0;
+          onChange?.(index, position, type);
+        }}
+        onDismiss={() => {
+          isPresentedRef.current = false;
+          onDismiss?.();
+        }}
         backdropComponent={renderBackdrop}
         animationConfigs={animationConfigs}
         backgroundStyle={styles.background}
