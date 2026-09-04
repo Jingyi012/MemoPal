@@ -1,6 +1,6 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, DeleteOutlined, EditOutlined, PlusOutlined, TableOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Col, Empty, Flex, Form, Input, InputNumber, Modal, Popconfirm, Row, Select, Space, Spin, Switch, Table, Tag, Typography } from 'antd';
+import { App, Button, Card, Col, Empty, Flex, Form, Input, InputNumber, Modal, Popconfirm, Row, Select, Segmented, Space, Spin, Switch, Table, Tag, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { adminPredefinedMemoryLessonCategoriesApi, adminPredefinedMemoryLessonsApi } from '../../../api/adminPredefinedMemoryLessonsApi';
@@ -10,6 +10,7 @@ import type { PredefinedMemoryLessonDto, PredefinedMemoryLessonItemInput, Predef
 
 const queryKey = ['admin-predefined-memory-lessons'] as const;
 const categoryQueryKey = ['admin-predefined-memory-lesson-categories'] as const;
+type LessonViewMode = 'cards' | 'table';
 const blankDraft = (): PredefinedMemoryLessonUpsertRequest => ({
   key: '', titleEn: '', titleZh: '', descriptionEn: '', descriptionZh: '', emoji: '🧠',
   categoryId: '', techniqueKey: 'number-peg', goalType: 'ordered-list', sortOrder: 100,
@@ -26,6 +27,7 @@ export default function PredefinedMemoryLessonsPage() {
   const [editing, setEditing] = useState<PredefinedMemoryLessonDto | null>(null);
   const [draft, setDraft] = useState<PredefinedMemoryLessonUpsertRequest>(blankDraft);
   const [open, setOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<LessonViewMode>('table');
 
   const filteredLessons = useMemo(() => (lessonsQuery.data ?? []).filter(
     (lesson) => selectedCategoryId === 'all' || lesson.categoryId === selectedCategoryId,
@@ -92,7 +94,17 @@ export default function PredefinedMemoryLessonsPage() {
           <Typography.Title level={2} style={{ margin: 0 }}>Predefined Memory Lessons</Typography.Title>
           <Typography.Text type='secondary'>Publish bilingual starter memories for any learning category. The mobile Practice screen reads this catalogue directly.</Typography.Text>
         </div>
-        <Button type='primary' icon={<PlusOutlined />} onClick={() => openEditor()}>New lesson</Button>
+        <Space wrap>
+          <Segmented
+            value={viewMode}
+            onChange={(value) => setViewMode(value as LessonViewMode)}
+            options={[
+              { value: 'cards', label: 'Cards', icon: <AppstoreOutlined /> },
+              { value: 'table', label: 'Table', icon: <TableOutlined /> },
+            ]}
+          />
+          <Button type='primary' icon={<PlusOutlined />} onClick={() => openEditor()}>New lesson</Button>
+        </Space>
       </Flex>
 
       <Select
@@ -105,7 +117,79 @@ export default function PredefinedMemoryLessonsPage() {
         style={{ width: 280, marginBottom: 18 }}
       />
 
-      {lessonsQuery.isLoading ? <Spin /> : filteredLessons.length ? (
+      {lessonsQuery.isLoading ? <Spin /> : filteredLessons.length ? viewMode === 'table' ? (
+        <Table<PredefinedMemoryLessonDto>
+          rowKey='id'
+          dataSource={filteredLessons}
+          scroll={{ x: 1060 }}
+          pagination={{ pageSize: 12, showSizeChanger: true }}
+          columns={[
+            {
+              title: 'Lesson',
+              key: 'lesson',
+              width: 300,
+              render: (_, lesson) => (
+                <Space align='start'>
+                  <Typography.Text style={{ fontSize: 30, lineHeight: 1 }}>{lesson.emoji}</Typography.Text>
+                  <div>
+                    <Typography.Text strong>{lesson.titleEn}</Typography.Text>
+                    <Typography.Text type='secondary' style={{ display: 'block' }}>{lesson.titleZh}</Typography.Text>
+                    <Typography.Paragraph type='secondary' ellipsis={{ rows: 2 }} style={{ margin: '4px 0 0', maxWidth: 220 }}>
+                      {lesson.descriptionEn || 'No description'}
+                    </Typography.Paragraph>
+                  </div>
+                </Space>
+              ),
+            },
+            {
+              title: 'Category',
+              key: 'category',
+              width: 170,
+              render: (_, lesson) => <Tag color='cyan'>{lesson.category.emoji} {lesson.category.nameEn}</Tag>,
+            },
+            {
+              title: 'Technique',
+              dataIndex: 'techniqueKey',
+              key: 'techniqueKey',
+              width: 135,
+              render: (technique: string) => <Tag color={technique === 'palace' ? 'purple' : 'magenta'}>{technique}</Tag>,
+            },
+            {
+              title: 'Items',
+              dataIndex: 'items',
+              key: 'items',
+              width: 80,
+              render: (items: PredefinedMemoryLessonDto['items']) => items.length,
+            },
+            {
+              title: 'Status',
+              key: 'status',
+              width: 170,
+              render: (_, lesson) => (
+                <Space direction='vertical' size={2}>
+                  <Tag color={lesson.isPublished ? 'green' : 'default'}>{lesson.isPublished ? 'Published' : 'Draft'}</Tag>
+                  {lesson.isStarterLesson ? <Tag color='gold'>Onboarding starter</Tag> : null}
+                </Space>
+              ),
+            },
+            { title: 'Version', dataIndex: 'version', key: 'version', width: 80 },
+            {
+              title: 'Actions',
+              key: 'actions',
+              fixed: 'right',
+              width: 110,
+              render: (_, lesson) => (
+                <Space>
+                  <Button type='text' icon={<EditOutlined />} aria-label={`Edit ${lesson.titleEn}`} onClick={() => openEditor(lesson)} />
+                  <Popconfirm title='Delete this lesson?' onConfirm={() => deleteMutation.mutate(lesson.id)}>
+                    <Button type='text' danger icon={<DeleteOutlined />} aria-label={`Delete ${lesson.titleEn}`} />
+                  </Popconfirm>
+                </Space>
+              ),
+            },
+          ]}
+        />
+      ) : (
         <Row gutter={[16, 16]}>
           {filteredLessons.map((lesson) => (
             <Col xs={24} md={12} xl={8} key={lesson.id}>

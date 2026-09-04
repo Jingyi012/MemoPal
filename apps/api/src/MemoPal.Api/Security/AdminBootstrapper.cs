@@ -35,6 +35,7 @@ public sealed class AdminBootstrapper
         await EnsureStarterMilestonesAsync(cancellationToken);
         if (_options.SeedStarterContent)
         {
+            await EnsurePredefinedMemoryLessonsAsync(cancellationToken);
             await EnsureStarterPalaceSceneAsync(cancellationToken);
             await EnsurePredefinedPalaceScenesAsync(cancellationToken);
         }
@@ -265,6 +266,247 @@ public sealed class AdminBootstrapper
         ("Wall clock", "挂钟", "A clear visual stop at the wall clock.", "挂钟是一个清晰的记忆停靠点。", 80m, 25m),
         ("Tall plant", "高盆栽", "A clear visual stop at the tall plant.", "高盆栽是一个清晰的记忆停靠点。", 84m, 49m),
         ("Side cabinet", "边柜", "A clear visual stop at the side cabinet.", "边柜是一个清晰的记忆停靠点。", 94m, 66m)
+    ];
+
+    private async Task EnsurePredefinedMemoryLessonsAsync(CancellationToken cancellationToken)
+    {
+        var categories = await _db.PredefinedMemoryLessonCategories
+            .Where(x => !x.IsDeleted)
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+        if (categories.Count == 0) return;
+
+        foreach (var definition in GetPredefinedMemoryLessons())
+        {
+            if (!categories.ContainsKey(definition.CategoryId)) continue;
+
+            var existing = await _db.PredefinedMemoryLessons
+                .Include(x => x.Items)
+                .FirstOrDefaultAsync(x => x.Id == definition.Id && !x.IsDeleted, cancellationToken);
+
+            if (existing is null)
+            {
+                var now = DateTime.UtcNow;
+                var lesson = new PredefinedMemoryLesson
+                {
+                    Id = definition.Id,
+                    Key = definition.Key,
+                    TitleEn = definition.TitleEn,
+                    TitleZh = definition.TitleZh,
+                    DescriptionEn = definition.DescriptionEn,
+                    DescriptionZh = definition.DescriptionZh,
+                    Emoji = definition.Emoji,
+                    CategoryId = definition.CategoryId,
+                    TechniqueKey = definition.TechniqueKey,
+                    GoalType = definition.GoalType,
+                    SortOrder = definition.SortOrder,
+                    IsPublished = true,
+                    IsStarterLesson = definition.IsStarterLesson,
+                    Version = 1,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    CreatedBy = "system",
+                    UpdatedBy = "system"
+                };
+                for (var index = 0; index < definition.Items.Length; index++)
+                {
+                    lesson.Items.Add(CreatePredefinedLessonItem(lesson.Id, index + 1, definition.Items[index], now));
+                }
+                _db.PredefinedMemoryLessons.Add(lesson);
+                continue;
+            }
+
+            // Do not overwrite an admin's curated lesson. System-owned seeds can
+            // be refreshed so new installs and existing prototype databases get
+            // the same simple onboarding content.
+            if (existing.CreatedBy == "system" && existing.UpdatedBy == "system")
+            {
+                ApplyPredefinedMemoryLessonSeed(existing, definition);
+            }
+        }
+    }
+
+    private static void ApplyPredefinedMemoryLessonSeed(
+        PredefinedMemoryLesson lesson,
+        PredefinedMemoryLessonSeed definition)
+    {
+        var now = DateTime.UtcNow;
+        var changed = lesson.Key != definition.Key ||
+            lesson.TitleEn != definition.TitleEn ||
+            lesson.TitleZh != definition.TitleZh ||
+            lesson.DescriptionEn != definition.DescriptionEn ||
+            lesson.DescriptionZh != definition.DescriptionZh ||
+            lesson.Emoji != definition.Emoji ||
+            lesson.CategoryId != definition.CategoryId ||
+            lesson.TechniqueKey != definition.TechniqueKey ||
+            lesson.GoalType != definition.GoalType ||
+            lesson.SortOrder != definition.SortOrder ||
+            !lesson.IsPublished ||
+            lesson.IsStarterLesson != definition.IsStarterLesson;
+
+        lesson.Key = definition.Key;
+        lesson.TitleEn = definition.TitleEn;
+        lesson.TitleZh = definition.TitleZh;
+        lesson.DescriptionEn = definition.DescriptionEn;
+        lesson.DescriptionZh = definition.DescriptionZh;
+        lesson.Emoji = definition.Emoji;
+        lesson.CategoryId = definition.CategoryId;
+        lesson.TechniqueKey = definition.TechniqueKey;
+        lesson.GoalType = definition.GoalType;
+        lesson.SortOrder = definition.SortOrder;
+        lesson.IsPublished = true;
+        lesson.IsStarterLesson = definition.IsStarterLesson;
+        lesson.IsDeleted = false;
+
+        var activeItems = lesson.Items.Where(x => !x.IsDeleted).OrderBy(x => x.Position).ToList();
+        for (var index = 0; index < definition.Items.Length; index++)
+        {
+            var seed = definition.Items[index];
+            var isNew = index >= activeItems.Count;
+            var item = index < activeItems.Count
+                ? activeItems[index]
+                : new PredefinedMemoryLessonItem
+                {
+                    Id = $"{lesson.Id}-item-{index + 1}",
+                    LessonId = lesson.Id,
+                    CreatedAt = now,
+                    CreatedBy = "system"
+                };
+            var itemChanged = item.Position != index + 1 ||
+                item.ContentEn != seed.ContentEn ||
+                item.ContentZh != seed.ContentZh ||
+                item.IsDeleted;
+            item.Position = index + 1;
+            item.ContentEn = seed.ContentEn;
+            item.ContentZh = seed.ContentZh;
+            item.IsDeleted = false;
+            item.DeletedAt = null;
+            item.DeletedBy = null;
+            if (itemChanged)
+            {
+                item.UpdatedAt = now;
+                item.UpdatedBy = "system";
+                changed = true;
+            }
+            if (isNew) lesson.Items.Add(item);
+        }
+
+        foreach (var extra in activeItems.Skip(definition.Items.Length))
+        {
+            extra.IsDeleted = true;
+            extra.DeletedAt = now;
+            extra.DeletedBy = "system";
+            changed = true;
+        }
+
+        if (changed)
+        {
+            lesson.Version = Math.Max(lesson.Version + 1, 1);
+            lesson.UpdatedAt = now;
+            lesson.UpdatedBy = "system";
+        }
+    }
+
+    private static PredefinedMemoryLessonItem CreatePredefinedLessonItem(
+        string lessonId,
+        int position,
+        PredefinedLessonItemSeed seed,
+        DateTime now) => new()
+    {
+        Id = $"{lessonId}-item-{position}",
+        LessonId = lessonId,
+        Position = position,
+        ContentEn = seed.ContentEn,
+        ContentZh = seed.ContentZh,
+        CreatedAt = now,
+        UpdatedAt = now,
+        CreatedBy = "system",
+        UpdatedBy = "system"
+    };
+
+    private sealed record PredefinedLessonItemSeed(string ContentEn, string ContentZh);
+    private sealed record PredefinedMemoryLessonSeed(
+        string Id,
+        string Key,
+        string TitleEn,
+        string TitleZh,
+        string DescriptionEn,
+        string DescriptionZh,
+        string Emoji,
+        string CategoryId,
+        string TechniqueKey,
+        string GoalType,
+        int SortOrder,
+        bool IsStarterLesson,
+        PredefinedLessonItemSeed[] Items);
+
+    private static PredefinedMemoryLessonSeed[] GetPredefinedMemoryLessons() =>
+    [
+        // This first lesson is deliberately gentle: onboarding should teach the
+        // product loop, not test advanced spelling.
+        new("lesson-primary-spelling-safari", "primary-spelling-safari", "Spelling Safari", "拼写探险",
+            "Remember five simple words with vivid Number Peg movies.", "用生动的数字挂钩小电影记住五个简单单词。", "🦁",
+            "lesson-category-languages", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.Spelling, 10, true,
+            [new("cat", "猫"), new("sun", "太阳"), new("fish", "鱼"), new("book", "书"), new("tree", "树")]),
+        new("lesson-primary-colour-hunt", "primary-colour-hunt", "Colour Hunt", "颜色寻宝",
+            "Learn four everyday colours in a quick, playful round.", "用轻松好玩的方式记住四种常见颜色。", "🎨",
+            "lesson-category-languages", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 15, true,
+            [new("red", "红色"), new("blue", "蓝色"), new("green", "绿色"), new("yellow", "黄色")]),
+        new("lesson-primary-animal-friends", "primary-animal-friends", "Animal Friends", "动物朋友",
+            "Meet four friendly animals and replay them in order.", "认识四种可爱的动物，并按顺序回忆它们。", "🐾",
+            "lesson-category-general", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 20, true,
+            [new("cat", "猫"), new("dog", "狗"), new("bird", "鸟"), new("fish", "鱼")]),
+        new("lesson-primary-snack-time", "primary-snack-time", "Snack Time", "点心时间",
+            "Pack four tasty snacks into a memorable little movie.", "把四样好吃的点心放进一部好记的小电影。", "🍎",
+            "lesson-category-everyday", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 25, true,
+            [new("apple", "苹果"), new("bread", "面包"), new("milk", "牛奶"), new("egg", "鸡蛋")]),
+        new("lesson-primary-school-bag", "primary-school-bag", "My School Bag", "我的书包",
+            "Remember the five things to check before school.", "记住上学前要检查的五样东西。", "🎒",
+            "lesson-category-everyday", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 30, true,
+            [new("book", "课本"), new("pencil", "铅笔"), new("ruler", "尺子"), new("eraser", "橡皮擦"), new("water bottle", "水壶")]),
+        new("lesson-primary-lunchbox-checklist", "primary-lunchbox-checklist", "Lunchbox Checklist", "午餐盒清单",
+            "Remember everything you need for a happy school lunch.", "记住一份开心校园午餐需要带齐的东西。", "🍱",
+            "lesson-category-everyday", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 35, false,
+            [new("sandwich", "三明治"), new("apple", "苹果"), new("water bottle", "水壶"), new("yogurt", "酸奶"), new("napkin", "餐巾"), new("spoon", "汤匙")]),
+        new("lesson-everyday-morning-routine", "everyday-morning-routine", "Morning Routine", "早晨流程",
+            "Replay six small steps to start the day smoothly.", "按顺序回忆六个步骤，让早晨更顺利。", "🌞",
+            "lesson-category-everyday", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 40, false,
+            [new("wake up", "起床"), new("brush teeth", "刷牙"), new("get dressed", "穿衣服"), new("eat breakfast", "吃早餐"), new("pack bag", "收拾书包"), new("leave home", "出门")]),
+        new("lesson-everyday-grocery-basket", "everyday-grocery-basket", "Grocery Basket", "杂货篮",
+            "Keep an eight-item grocery list easy to replay.", "让八项杂货清单变得容易回忆。", "🛒",
+            "lesson-category-everyday", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 45, false,
+            [new("rice", "米"), new("milk", "牛奶"), new("eggs", "鸡蛋"), new("tomatoes", "番茄"), new("bananas", "香蕉"), new("soap", "肥皂"), new("bread", "面包"), new("tea", "茶")]),
+        new("lesson-primary-planet-journey", "primary-planet-journey", "Planet Journey", "行星之旅",
+            "Walk through a Palace and place the eight planets in order.", "走进记忆宫殿，依次放好太阳系八大行星。", "🪐",
+            "lesson-category-science", MemoryTechniqueKeys.Palace, MemoryGoalTypes.OrderedList, 50, false,
+            [new("Mercury", "水星"), new("Venus", "金星"), new("Earth", "地球"), new("Mars", "火星"), new("Jupiter", "木星"), new("Saturn", "土星"), new("Uranus", "天王星"), new("Neptune", "海王星")]),
+        new("lesson-science-five-senses", "science-five-senses", "Five Senses", "五种感官",
+            "Place the five senses around a familiar Palace route.", "把五种感官放进熟悉的记忆宫殿路线。", "🖐️",
+            "lesson-category-science", MemoryTechniqueKeys.Palace, MemoryGoalTypes.OrderedList, 55, false,
+            [new("sight", "视觉"), new("hearing", "听觉"), new("smell", "嗅觉"), new("taste", "味觉"), new("touch", "触觉")]),
+        new("lesson-science-water-cycle", "science-water-cycle", "Water Cycle", "水循环",
+            "Replay four simple steps of the water cycle.", "按顺序回忆水循环的四个简单步骤。", "💧",
+            "lesson-category-science", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 60, false,
+            [new("evaporation", "蒸发"), new("condensation", "凝结"), new("rain", "下雨"), new("collection", "汇集")]),
+        new("lesson-secondary-scientific-method", "secondary-scientific-method", "Scientific Method Steps", "科学方法六步骤",
+            "Peg the six steps used to investigate a scientific question.", "用数字挂钩记住探究科学问题的六个步骤。", "🔬",
+            "lesson-category-science", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 65, false,
+            [new("Ask a question", "提出问题"), new("Research", "查找资料"), new("Form a hypothesis", "作出假设"), new("Run an experiment", "进行实验"), new("Analyse the results", "分析结果"), new("Draw a conclusion", "得出结论")]),
+        new("lesson-secondary-cell-biology", "secondary-cell-biology", "Cell Biology Essentials", "细胞生物学基础",
+            "Place six cell structures and their jobs around a Memory Palace.", "把六种细胞结构及其功能放进记忆宫殿。", "🧫",
+            "lesson-category-science", MemoryTechniqueKeys.Palace, MemoryGoalTypes.Facts, 70, false,
+            [new("Nucleus — controls cell activities", "细胞核 — 控制细胞活动"), new("Cell membrane — controls entry and exit", "细胞膜 — 控制物质进出"), new("Cytoplasm — where reactions happen", "细胞质 — 化学反应发生的地方"), new("Mitochondria — releases energy", "线粒体 — 释放能量"), new("Ribosome — makes proteins", "核糖体 — 制造蛋白质"), new("Vacuole — stores water", "液泡 — 储存水")]),
+        new("lesson-geography-continents", "geography-continents", "Seven Continents", "七大洲",
+            "Build a Palace route for the seven continents.", "用记忆宫殿记住七大洲。", "🌍",
+            "lesson-category-geography", MemoryTechniqueKeys.Palace, MemoryGoalTypes.OrderedList, 75, false,
+            [new("Asia", "亚洲"), new("Africa", "非洲"), new("Europe", "欧洲"), new("North America", "北美洲"), new("South America", "南美洲"), new("Australia", "澳大利亚"), new("Antarctica", "南极洲")]),
+        new("lesson-secondary-world-capitals", "secondary-world-capitals", "World Capitals Challenge", "世界首都挑战",
+            "Build a Palace route for six country-and-capital pairs.", "为六组国家和首都建立一条宫殿路线。", "🌐",
+            "lesson-category-geography", MemoryTechniqueKeys.Palace, MemoryGoalTypes.Facts, 80, false,
+            [new("Malaysia — Kuala Lumpur", "马来西亚 — 吉隆坡"), new("Japan — Tokyo", "日本 — 东京"), new("Egypt — Cairo", "埃及 — 开罗"), new("Canada — Ottawa", "加拿大 — 渥太华"), new("Australia — Canberra", "澳大利亚 — 堪培拉"), new("Norway — Oslo", "挪威 — 奥斯陆")]),
+        new("lesson-general-weather-week", "general-weather-week", "Weather Week", "一周天气",
+            "Remember seven weather words for the week.", "记住一周会用到的七个天气词。", "☀️",
+            "lesson-category-general", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 85, false,
+            [new("sunny", "晴天"), new("cloudy", "多云"), new("rainy", "下雨"), new("windy", "有风"), new("stormy", "暴风雨"), new("foggy", "有雾"), new("snowy", "下雪")])
     ];
 
     private async Task EnsurePredefinedPalaceScenesAsync(CancellationToken cancellationToken)
