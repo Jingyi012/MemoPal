@@ -23,6 +23,10 @@ export function usePalaceScenes() {
       }
     },
     staleTime: 1000 * 60 * 10,
+    // Palace templates can be added or replaced by the API bootstrapper and
+    // admin portal. Always refresh when this screen mounts so a persisted
+    // TanStack Query snapshot never hides newly seeded scenes.
+    refetchOnMount: 'always',
     networkMode: 'online',
   });
 }

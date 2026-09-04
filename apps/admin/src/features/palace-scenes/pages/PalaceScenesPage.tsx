@@ -1,8 +1,12 @@
 import {
+  AppstoreOutlined,
+  ArrowDownOutlined,
+  ArrowUpOutlined,
   DeleteOutlined,
   EditOutlined,
   EnvironmentOutlined,
   PlusOutlined,
+  TableOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -22,8 +26,10 @@ import {
   Space,
   Spin,
   Switch,
+  Table,
   Tag,
   Typography,
+  Segmented,
 } from "antd";
 import {
   useMemo,
@@ -43,6 +49,7 @@ import type {
 } from "../../../types/palaceScene";
 
 const queryKey = ["admin-palace-scenes"] as const;
+type SceneViewMode = "cards" | "table";
 const blankDraft = (): PalaceSceneUpsertRequest => ({
   name: "",
   description: "",
@@ -64,6 +71,7 @@ export default function PalaceScenesPage() {
   const [editing, setEditing] = useState<PalaceSceneDto | null>(null);
   const [draft, setDraft] = useState<PalaceSceneUpsertRequest>(blankDraft);
   const [selectedLocus, setSelectedLocus] = useState(0);
+  const [viewMode, setViewMode] = useState<SceneViewMode>("cards");
   const canvasRef = useRef<HTMLDivElement>(null);
   const draggingLocus = useRef<number | null>(null);
 
@@ -205,6 +213,22 @@ export default function PalaceScenesPage() {
         : Math.min(current, Math.max(0, draft.loci.length - 2)),
     );
   };
+  const moveLocus = (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= draft.loci.length) return;
+
+    setDraft((current) => {
+      const loci = [...current.loci];
+      [loci[index], loci[targetIndex]] = [loci[targetIndex], loci[index]];
+      return {
+        ...current,
+        // Reordering only changes the persisted position. Every other locus
+        // field, including both descriptions, is carried over unchanged.
+        loci: loci.map((locus, position) => ({ ...locus, position: position + 1 })),
+      };
+    });
+    setSelectedLocus(targetIndex);
+  };
 
   return (
     <PortalPageContainer>
@@ -218,53 +242,159 @@ export default function PalaceScenesPage() {
             Palace.
           </Typography.Text>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => openEditor()}
-        >
-          New scene
-        </Button>
+        <Space wrap>
+          <Segmented
+            value={viewMode}
+            onChange={(value) => setViewMode(value as SceneViewMode)}
+            options={[
+              { value: "cards", label: "Cards", icon: <AppstoreOutlined /> },
+              { value: "table", label: "Table", icon: <TableOutlined /> },
+            ]}
+          />
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => openEditor()}
+          >
+            New scene
+          </Button>
+        </Space>
       </Flex>
       {scenesQuery.isLoading ? (
         <Spin />
       ) : scenesQuery.data?.length ? (
-        <Row gutter={[16, 16]}>
-          {scenesQuery.data.map((scene) => (
-            <Col xs={24} md={12} xl={8} key={scene.id}>
-              <Card
-                cover={
-                  <img
-                    src={resolveMediaPath(scene.imageUrl)}
-                    alt={scene.name}
-                    style={{ height: 190, objectFit: "cover" }}
-                  />
-                }
-                actions={[
-                  <EditOutlined key="edit" onClick={() => openEditor(scene)} />,
-                  <Popconfirm
-                    key="delete"
-                    title="Delete this scene?"
-                    description="Scenes in use must be archived instead."
-                    onConfirm={() => deleteMutation.mutate(scene.id)}
-                  >
-                    <DeleteOutlined />
-                  </Popconfirm>,
-                ]}
-              >
-                <Card.Meta
-                  title={
-                    <Space>
-                      {scene.name}
-                      {scene.isPremium && <Tag color="gold">Premium</Tag>}
-                    </Space>
+        viewMode === "table" ? (
+          <Table<PalaceSceneDto>
+            rowKey="id"
+            dataSource={scenesQuery.data}
+            scroll={{ x: 900 }}
+            pagination={{ pageSize: 10, showSizeChanger: true }}
+            columns={[
+              {
+                title: "Scene",
+                key: "scene",
+                width: 320,
+                render: (_, scene) => (
+                  <Space align="start">
+                    <img
+                      src={resolveMediaPath(scene.imageUrl)}
+                      alt={scene.name}
+                      style={{
+                        width: 104,
+                        height: 68,
+                        borderRadius: 8,
+                        objectFit: "cover",
+                        flex: "none",
+                      }}
+                    />
+                    <div>
+                      <Typography.Text strong>{scene.name}</Typography.Text>
+                      <Typography.Paragraph
+                        type="secondary"
+                        ellipsis={{ rows: 2 }}
+                        style={{ margin: "4px 0 0", maxWidth: 185 }}
+                      >
+                        {scene.description || "No description"}
+                      </Typography.Paragraph>
+                    </div>
+                  </Space>
+                ),
+              },
+              {
+                title: "Loci",
+                dataIndex: "loci",
+                key: "loci",
+                width: 90,
+                render: (loci: PalaceSceneDto["loci"]) => `${loci.length} loci`,
+              },
+              {
+                title: "Status",
+                dataIndex: "status",
+                key: "status",
+                width: 130,
+                render: (status: string) => (
+                  <Tag color={status === "published" ? "green" : status === "archived" ? "default" : "blue"}>
+                    {status}
+                  </Tag>
+                ),
+              },
+              {
+                title: "Premium",
+                dataIndex: "isPremium",
+                key: "isPremium",
+                width: 100,
+                render: (isPremium: boolean) =>
+                  isPremium ? <Tag color="gold">Premium</Tag> : <Typography.Text type="secondary">No</Typography.Text>,
+              },
+              { title: "Version", dataIndex: "version", key: "version", width: 90 },
+              {
+                title: "Actions",
+                key: "actions",
+                fixed: "right",
+                width: 120,
+                render: (_, scene) => (
+                  <Space>
+                    <Button
+                      type="text"
+                      icon={<EditOutlined />}
+                      aria-label={`Edit ${scene.name}`}
+                      onClick={() => openEditor(scene)}
+                    />
+                    <Popconfirm
+                      title="Delete this scene?"
+                      description="Scenes in use must be archived instead."
+                      onConfirm={() => deleteMutation.mutate(scene.id)}
+                    >
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        aria-label={`Delete ${scene.name}`}
+                      />
+                    </Popconfirm>
+                  </Space>
+                ),
+              },
+            ]}
+          />
+        ) : (
+          <Row gutter={[16, 16]}>
+            {scenesQuery.data.map((scene) => (
+              <Col xs={24} md={12} xl={8} key={scene.id}>
+                <Card
+                  cover={
+                    <img
+                      src={resolveMediaPath(scene.imageUrl)}
+                      alt={scene.name}
+                      style={{ height: 190, objectFit: "cover" }}
+                    />
                   }
-                  description={`${scene.loci.length} loci · Version ${scene.version}`}
-                />
-              </Card>
-            </Col>
-          ))}
-        </Row>
+                  actions={[
+                    <EditOutlined key="edit" onClick={() => openEditor(scene)} />,
+                    <Popconfirm
+                      key="delete"
+                      title="Delete this scene?"
+                      description="Scenes in use must be archived instead."
+                      onConfirm={() => deleteMutation.mutate(scene.id)}
+                    >
+                      <DeleteOutlined />
+                    </Popconfirm>,
+                  ]}
+                >
+                  <Card.Meta
+                    title={
+                      <Space>
+                        {scene.name}
+                        {scene.isPremium && <Tag color="gold">Premium</Tag>}
+                      </Space>
+                    }
+                    description={`${scene.loci.length} loci · Version ${scene.version}`}
+                  />
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )
       ) : (
         <Empty description="No Palace scenes yet" />
       )}
@@ -272,14 +402,22 @@ export default function PalaceScenesPage() {
       <Modal
         open={open}
         onCancel={() => setOpen(false)}
-        width={1100}
+        width={1320}
+        style={{ top: 16 }}
+        styles={{
+          body: {
+            maxHeight: "calc(100vh - 150px)",
+            overflowY: "auto",
+            paddingRight: 8,
+          },
+        }}
         title={editing ? `Edit ${editing.name}` : "Create Palace scene"}
         okText={saveMutation.isPending ? "Saving…" : "Save scene"}
         okButtonProps={{ loading: saveMutation.isPending }}
         onOk={() => saveMutation.mutate()}
       >
         <Row gutter={20}>
-          <Col xs={24} lg={9}>
+          <Col xs={24} lg={8}>
             <Form layout="vertical">
               <Form.Item label="Name" required>
                 <Input
@@ -330,30 +468,34 @@ export default function PalaceScenesPage() {
               </Row>
             </Form>
           </Col>
-          <Col xs={24} lg={15}>
-            <Typography.Title level={5}>Locus canvas</Typography.Title>
-            <Typography.Paragraph type="secondary">
-              Click the image to place or move the selected locus. Drag any
-              marker for fine positioning, or use the X/Y fields below.
-            </Typography.Paragraph>
-            <div
-              ref={canvasRef}
-              onClick={placeLocus}
-              onPointerMove={moveDraggedLocus}
-              onPointerUp={stopDragging}
-              onPointerCancel={stopDragging}
-              style={{
-                position: "relative",
-                width: "100%",
-                aspectRatio: "4 / 3",
-                borderRadius: 16,
-                overflow: "hidden",
-                cursor: draft.imageUrl ? "crosshair" : "default",
-                background: "#f1f5f9",
-                border: "2px solid #ddd6fe",
-                touchAction: "none",
-              }}
-            >
+          <Col xs={24} lg={16}>
+            <Row gutter={20} align="top">
+              <Col xs={24} xl={14}>
+                <div style={{ position: "sticky", top: 0, zIndex: 2 }}>
+                  <Typography.Title level={5}>Locus canvas</Typography.Title>
+                  <Typography.Paragraph type="secondary">
+                    Click the image to place or move the selected locus. Drag
+                    any marker for fine positioning, or use the X/Y fields in
+                    the panel beside it.
+                  </Typography.Paragraph>
+                  <div
+                    ref={canvasRef}
+                    onClick={placeLocus}
+                    onPointerMove={moveDraggedLocus}
+                    onPointerUp={stopDragging}
+                    onPointerCancel={stopDragging}
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      aspectRatio: "4 / 3",
+                      borderRadius: 16,
+                      overflow: "hidden",
+                      cursor: draft.imageUrl ? "crosshair" : "default",
+                      background: "#f1f5f9",
+                      border: "2px solid #ddd6fe",
+                      touchAction: "none",
+                    }}
+                  >
               {imageUrl ? (
                 <img
                   src={imageUrl}
@@ -408,24 +550,39 @@ export default function PalaceScenesPage() {
                   {index + 1}
                 </button>
               ))}
-            </div>
-            <Flex
-              justify="space-between"
-              align="center"
-              style={{ marginTop: 14, marginBottom: 8 }}
-            >
-              <Typography.Text strong>{draft.loci.length} loci</Typography.Text>
-              <Button
-                icon={<EnvironmentOutlined />}
-                onClick={() => setSelectedLocus(draft.loci.length)}
-              >
-                Add locus, then click image
-              </Button>
-            </Flex>
-            <Space
-              direction="vertical"
-              style={{ width: "100%", maxHeight: 240, overflowY: "auto" }}
-            >
+                  </div>
+                  <Flex
+                    justify="space-between"
+                    align="center"
+                    style={{ marginTop: 14, marginBottom: 8 }}
+                  >
+                    <Typography.Text strong>{draft.loci.length} loci</Typography.Text>
+                    <Button
+                      icon={<EnvironmentOutlined />}
+                      onClick={() => setSelectedLocus(draft.loci.length)}
+                    >
+                      Add locus, then click image
+                    </Button>
+                  </Flex>
+                </div>
+              </Col>
+              <Col xs={24} xl={10}>
+                <Typography.Title level={5} style={{ marginTop: 0 }}>
+                  Locus details
+                </Typography.Title>
+                <Typography.Paragraph type="secondary">
+                  Select a marker or row to edit its details. The canvas stays
+                  visible while this list scrolls.
+                </Typography.Paragraph>
+                <Space
+                  direction="vertical"
+                  style={{
+                    width: "100%",
+                    maxHeight: "calc(100vh - 335px)",
+                    overflowY: "auto",
+                    paddingRight: 4,
+                  }}
+                >
               {draft.loci.map((locus, index) => (
                 <Card
                   key={locus.id ?? index}
@@ -509,6 +666,30 @@ export default function PalaceScenesPage() {
                       addonAfter="%"
                       style={{ width: 105 }}
                     />
+                    <Space.Compact>
+                      <Button
+                        type="text"
+                        icon={<ArrowUpOutlined />}
+                        aria-label={`Move locus ${index + 1} up`}
+                        title="Move up"
+                        disabled={index === 0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          moveLocus(index, -1);
+                        }}
+                      />
+                      <Button
+                        type="text"
+                        icon={<ArrowDownOutlined />}
+                        aria-label={`Move locus ${index + 1} down`}
+                        title="Move down"
+                        disabled={index === draft.loci.length - 1}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          moveLocus(index, 1);
+                        }}
+                      />
+                    </Space.Compact>
                     <Button
                       danger
                       type="text"
@@ -522,6 +703,8 @@ export default function PalaceScenesPage() {
                 </Card>
               ))}
             </Space>
+          </Col>
+        </Row>
           </Col>
         </Row>
         {saveMutation.isError && (
