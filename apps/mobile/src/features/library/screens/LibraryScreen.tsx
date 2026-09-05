@@ -7,6 +7,7 @@ import LoadingView from '@/components/LoadingView';
 import { useMemorySetMutations, useMemorySets } from '@/features/memory-sets';
 import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
 import { MemorySetCard } from '@/components/MemorySetCard';
+import { usePalaceScenes } from '@/features/palace-scenes';
 import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practice-attempts';
 import type { DueMemoryReview } from '@/features/practice-attempts';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
@@ -16,13 +17,14 @@ import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Href, useRouter } from 'expo-router';
-import { Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
+import { LayoutGrid, List as ListIcon, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { MemoryActionsSheet } from '../components/MemoryActionsSheet';
 
 type LibraryFilter = 'all' | MemoryTechniqueKey | 'archived';
+type LibraryViewMode = 'card' | 'list';
 
 const filters: { key: LibraryFilter }[] = [
   { key: 'all' },
@@ -34,8 +36,9 @@ const filters: { key: LibraryFilter }[] = [
 export default function LibraryScreen() {
   const router = useRouter();
   const { t } = useTranslation('library');
-  const { userState } = useUserState();
+  const { userState, updateState } = useUserState();
   const memorySets = useMemorySets();
+  const palaceScenes = usePalaceScenes();
   const dueReviews = useDueMemoryReviews();
   const upcomingReviews = useUpcomingMemoryReviews(30);
   const { duplicateMemorySet, setMemorySetArchived, deleteMemorySet } = useMemorySetMutations();
@@ -45,6 +48,7 @@ export default function LibraryScreen() {
   const [actionMemorySet, setActionMemorySet] = useState<MemorySet>();
   const [deleteConfirmationMemory, setDeleteConfirmationMemory] = useState<MemorySet>();
   const pendingDeleteRef = useRef<MemorySet | undefined>(undefined);
+  const viewMode: LibraryViewMode = userState.ui.libraryViewMode ?? 'card';
 
   useEffect(() => {
     if (actionMemorySet) memoryActionsRef.current?.present();
@@ -62,6 +66,10 @@ export default function LibraryScreen() {
   }, [filter, memorySets.data]);
 
   const activeCount = memorySets.data?.filter((memorySet) => memorySet.status !== 'archived').length ?? 0;
+  const palaceSceneById = useMemo(
+    () => new Map((palaceScenes.data ?? []).map((scene) => [scene.id, scene])),
+    [palaceScenes.data],
+  );
   const reviewByMemorySetId = useMemo(() => {
     const nextReviewBySet = new Map<string, DueMemoryReview>();
     [...(dueReviews.data ?? []), ...(upcomingReviews.data ?? [])].forEach((review) => {
@@ -76,6 +84,11 @@ export default function LibraryScreen() {
   const showActions = (memorySet: MemorySet) => {
     setActionMessage(null);
     setActionMemorySet(memorySet);
+  };
+
+  const changeViewMode = (mode: LibraryViewMode) => {
+    if (mode === viewMode) return;
+    void updateState({ ui: { ...userState.ui, libraryViewMode: mode } });
   };
 
   const requestDeleteMemory = (memorySet: MemorySet) => {
@@ -153,7 +166,7 @@ export default function LibraryScreen() {
         refreshControl={
           <RefreshControl
             refreshing={memorySets.isRefetching || dueReviews.isRefetching || upcomingReviews.isRefetching}
-            onRefresh={() => { void Promise.allSettled([memorySets.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
+            onRefresh={() => { void Promise.allSettled([memorySets.refetch(), palaceScenes.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
           />
         }>
         <NightEmphasisCard style={styles.summaryCard}>
@@ -192,6 +205,30 @@ export default function LibraryScreen() {
           })}
         </View>
 
+        <View style={styles.viewToolbar}>
+          <Text style={styles.viewModeLabel}>{t('viewMode')}</Text>
+          <View style={styles.viewToggle}>
+            <AnimatedPressable
+              accessibilityRole="button"
+              accessibilityLabel={t('cardView')}
+              accessibilityState={{ selected: viewMode === 'card' }}
+              hitSlop={4}
+              onPress={() => changeViewMode('card')}
+              style={[styles.viewOption, viewMode === 'card' && styles.viewOptionSelected]}>
+              <LayoutGrid size={16} color={viewMode === 'card' ? 'white' : theme.violetDeep} />
+            </AnimatedPressable>
+            <AnimatedPressable
+              accessibilityRole="button"
+              accessibilityLabel={t('listView')}
+              accessibilityState={{ selected: viewMode === 'list' }}
+              hitSlop={4}
+              onPress={() => changeViewMode('list')}
+              style={[styles.viewOption, viewMode === 'list' && styles.viewOptionSelected]}>
+              <ListIcon size={16} color={viewMode === 'list' ? 'white' : theme.violetDeep} />
+            </AnimatedPressable>
+          </View>
+        </View>
+
         {actionMessage && (
           <AnimatedPressable onPress={() => setActionMessage(null)} style={styles.actionNotice}>
             <Text style={styles.actionNoticeText}>{actionMessage}</Text>
@@ -214,15 +251,20 @@ export default function LibraryScreen() {
             </AnimatedPressable>
           </View>
         ) : visibleSets.length ? (
-          <View style={styles.cardList}>
+          <View style={[styles.cardList, viewMode === 'list' ? styles.listCardList : styles.cardGrid]}>
             {visibleSets.map((memorySet) => (
-              <MemorySetCard
-                key={memorySet.id}
-                memorySet={memorySet}
-                reviewAt={reviewByMemorySetId.get(memorySet.id)?.dueAt}
-                onOpen={() => openSet(router, memorySet)}
-                onActions={() => showActions(memorySet)}
-              />
+              <View key={memorySet.id} style={viewMode === 'card' ? styles.cardGridItem : undefined}>
+                <MemorySetCard
+                  memorySet={memorySet}
+                  reviewAt={reviewByMemorySetId.get(memorySet.id)?.dueAt}
+                  onOpen={() => openSet(router, memorySet)}
+                  onActions={() => showActions(memorySet)}
+                  variant={viewMode}
+                  layout={viewMode === 'card' ? 'grid' : 'row'}
+                  coverImageUrl={getPalaceScene(memorySet, palaceSceneById)?.imageUrl}
+                  coverImageSource={getPalaceScene(memorySet, palaceSceneById)?.imageSource}
+                />
+              </View>
             ))}
           </View>
         ) : filter === 'all' ? (
@@ -287,6 +329,14 @@ function openSet(router: ReturnType<typeof useRouter>, memorySet: MemorySet) {
   router.push(`/memory-details/${memorySet.id}` as Href);
 }
 
+function getPalaceScene(
+  memorySet: MemorySet,
+  sceneById: Map<string, { imageUrl: string; imageSource?: number }>,
+) {
+  const sceneId = memorySet.techniquePlan?.palaceSceneId;
+  return sceneId ? sceneById.get(sceneId) : undefined;
+}
+
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 40 },
@@ -327,12 +377,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  filterChipSelected: { borderColor: '#36304D', backgroundColor: '#36304D' },
+  filterChipSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetDeep },
   filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   filterTextSelected: { color: 'white' },
+  viewToolbar: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  viewModeLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  viewToggle: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 12, borderWidth: 1.5, flexDirection: 'row', padding: 3 },
+  viewOption: { alignItems: 'center', borderRadius: 9, height: 34, justifyContent: 'center', width: 36 },
+  viewOptionSelected: { backgroundColor: theme.violetDeep },
   actionNotice: { marginBottom: 14, borderRadius: 14, backgroundColor: '#F1FBF5', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 13, paddingVertical: 11 },
   actionNoticeText: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
   cardList: { gap: 10 },
+  listCardList: { gap: 6 },
+  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
+  cardGridItem: { width: '48.5%' },
   noticeCard: {
     borderWidth: 2,
     borderColor: theme.line,
@@ -359,7 +417,7 @@ const styles = StyleSheet.create({
   emptyButton: {
     marginTop: 15,
     borderRadius: 13,
-    backgroundColor: theme.ink,
+    backgroundColor: theme.violetDeep,
     paddingHorizontal: 15,
     paddingVertical: 11,
     flexDirection: 'row',

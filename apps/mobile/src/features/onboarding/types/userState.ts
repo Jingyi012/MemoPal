@@ -8,6 +8,7 @@ export interface UserState {
   ui: {
     tutorialPromptDismissed: boolean;
     tutorialViewedAt?: string | null;
+    libraryViewMode: 'card' | 'list';
   };
 
   preferences: {
@@ -40,6 +41,7 @@ export const defaultUserState: UserState = {
   ui: {
     tutorialPromptDismissed: false,
     tutorialViewedAt: null,
+    libraryViewMode: 'card',
   },
   preferences: {
     reviewTime: '09:00',
