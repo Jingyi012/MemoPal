@@ -195,7 +195,7 @@ export function PalaceAssociationEditor({
             <Text numberOfLines={1} style={styles.compactGenerateText}>
               {isGenerating
                 ? t('aiGeneratingAllShort')
-                : t('aiGenerateAllShort').replace('{count}', String(items.length))}
+                : t('aiGenerateAllShort')}
             </Text>
           </AnimatedPressable>
         ) : null}
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   headingRow: { alignItems: 'center', flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
   headingCopy: { flex: 1 },
   title: { color: theme.ink, fontFamily: typography.display, fontSize: 17 },
-  compactGenerateButton: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#DCD4FF', borderRadius: 11, borderWidth: 1.5, flexDirection: 'row', gap: 5, justifyContent: 'center', maxWidth: 118, minHeight: 32, paddingHorizontal: 8 },
+  compactGenerateButton: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#DCD4FF', borderRadius: 11, borderWidth: 1.5, flexDirection: 'row', gap: 5, justifyContent: 'center', maxWidth: 142, minHeight: 32, paddingHorizontal: 8 },
   generateButtonDisabled: { opacity: 0.62 },
   compactGenerateText: { color: theme.violetDeep, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 15, marginTop: 4, marginBottom: 5 },
@@ -280,11 +280,11 @@ const styles = StyleSheet.create({
   deckPreviewPrevious: { zIndex: 1 },
   swipeCard: { zIndex: 2 },
   locationVisual: { alignItems: 'center', flexDirection: 'row', gap: 8, width: '100%' },
-  locationIcon: { alignItems: 'center', backgroundColor: '#EAE4FF', borderRadius: 10, height: 30, justifyContent: 'center', width: 30 },
+  locationIcon: { alignItems: 'center', backgroundColor: '#EAE4FF', borderRadius: 11, height: 32, justifyContent: 'center', width: 32 },
   locationCopy: { flex: 1, minWidth: 0 },
-  locationLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
+  locationLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5 },
   locationName: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold },
-  locationDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9, lineHeight: 13, marginTop: 1 },
+  locationDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9.5, lineHeight: 14, marginTop: 2 },
   swipeHint: { alignItems: 'center', flexDirection: 'row', gap: 5, justifyContent: 'center', marginBottom: 8, marginTop: 4 },
   swipeHintText: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: 10 },
   navigationRow: { flexDirection: 'row', gap: 9, marginTop: 2 },
