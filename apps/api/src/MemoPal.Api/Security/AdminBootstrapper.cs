@@ -444,7 +444,7 @@ public sealed class AdminBootstrapper
         // This first lesson is deliberately gentle: onboarding should teach the
         // product loop, not test advanced spelling.
         new("lesson-primary-spelling-safari", "primary-spelling-safari", "Spelling Safari", "拼写探险",
-            "Remember five simple words with vivid Number Peg movies.", "用生动的数字挂钩小电影记住五个简单单词。", "🦁",
+            "Remember five simple words with vivid Number Peg scenes.", "用生动的数字挂钩场景记住五个简单单词。", "🦁",
             "lesson-category-languages", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.Spelling, 10, true,
             [new("cat", "猫"), new("sun", "太阳"), new("fish", "鱼"), new("book", "书"), new("tree", "树")]),
         new("lesson-primary-colour-hunt", "primary-colour-hunt", "Colour Hunt", "颜色寻宝",
@@ -456,7 +456,7 @@ public sealed class AdminBootstrapper
             "lesson-category-general", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 20, true,
             [new("cat", "猫"), new("dog", "狗"), new("bird", "鸟"), new("fish", "鱼")]),
         new("lesson-primary-snack-time", "primary-snack-time", "Snack Time", "点心时间",
-            "Pack four tasty snacks into a memorable little movie.", "把四样好吃的点心放进一部好记的小电影。", "🍎",
+            "Pack four tasty snacks into a memorable sequence of scenes.", "把四样好吃的点心放进一组好记的场景。", "🍎",
             "lesson-category-everyday", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 25, true,
             [new("apple", "苹果"), new("bread", "面包"), new("milk", "牛奶"), new("egg", "鸡蛋")]),
         new("lesson-primary-school-bag", "primary-school-bag", "My School Bag", "我的书包",
