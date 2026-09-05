@@ -19,10 +19,12 @@ interface ConfirmModalProps {
   icon?: ReactNode;
   confirmText?: string;
   cancelText?: string;
+  alternativeText?: string;
   destructive?: boolean;
   isLoading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  onAlternative?: () => void;
 }
 
 export function ConfirmModal({
@@ -33,10 +35,12 @@ export function ConfirmModal({
   icon,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
+  alternativeText,
   destructive = false,
   isLoading = false,
   onConfirm,
   onCancel,
+  onAlternative,
 }: ConfirmModalProps) {
   const close = () => {
     if (!isLoading) onCancel();
@@ -64,6 +68,16 @@ export function ConfirmModal({
                 </View>
               ) : null}
               {description ? <Text style={styles.description}>{description}</Text> : null}
+
+              {alternativeText && onAlternative ? (
+                <AnimatedPressable
+                  disabled={isLoading}
+                  onPress={onAlternative}
+                  style={[styles.alternativeButton, isLoading && styles.disabled]}
+                  containerStyle={{ alignSelf: 'stretch' }}>
+                  <Text style={styles.alternativeText}>{alternativeText}</Text>
+                </AnimatedPressable>
+              ) : null}
 
               <View style={styles.actions}>
                 <AnimatedPressable
@@ -161,6 +175,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   actions: { flexDirection: 'row', gap: 10, marginTop: 20, width: '100%', height: 52 },
+  alternativeButton: {
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    backgroundColor: theme.violetTint,
+    borderColor: theme.violetLine,
+    borderRadius: 15,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    marginTop: 18,
+    minHeight: 48,
+    paddingHorizontal: 14,
+  },
+  alternativeText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   button: {
     alignItems: 'center',
     borderRadius: 15,

@@ -234,6 +234,7 @@ export default function PracticeScreen() {
             icon={<RefreshCcw size={22} color={theme.inkSoft} />}
             title={t('recentPractice')}
             body={t('description')}
+            actionLabel={t('tryAgain')}
             onAction={() => memorySets.refetch()}
           />
         ) : recentSets.length ? (
@@ -243,6 +244,7 @@ export default function PracticeScreen() {
                 key={memorySet.id}
                 memorySet={memorySet}
                 reviewAt={reviewByMemorySetId.get(memorySet.id)?.dueAt}
+                actionLabel={t('practiceNow')}
                 onOpen={() => openMemorySet(router, memorySet)}
               />
             ))}

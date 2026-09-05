@@ -19,6 +19,7 @@ public interface IAppDbContext
     DbSet<ReferralRecord> ReferralRecords { get; }
     DbSet<ReferralMilestoneReward> ReferralMilestoneRewards { get; }
     DbSet<MemorySet> MemorySets { get; }
+    DbSet<MemorySetReport> MemorySetReports { get; }
     DbSet<MemoryItem> MemoryItems { get; }
     DbSet<TechniquePlan> TechniquePlans { get; }
     DbSet<PegBinding> PegBindings { get; }

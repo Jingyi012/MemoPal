@@ -4,6 +4,7 @@ export const adminPaths = {
   forbidden: '/forbidden',
 
   users: '/admin/users',
+  communityMemorySets: '/admin/community-memory-sets',
   contentRoot: '/admin/content',
   palaceScenes: '/admin/content/palace-scenes',
   predefinedMemoryLessons: '/admin/content/predefined-memory-lessons',

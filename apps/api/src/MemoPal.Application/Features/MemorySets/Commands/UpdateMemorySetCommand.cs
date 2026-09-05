@@ -4,6 +4,7 @@ using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.MemorySets.DTOs;
 using Microsoft.EntityFrameworkCore;
+using MemoPal.Application.Features.CommunityMemorySets;
 
 namespace MemoPal.Application.Features.MemorySets.Commands;
 
@@ -42,6 +43,9 @@ public sealed class UpdateMemorySetCommandHandler
                 $"This memory set changed on another request. Reload version {entity.Version} before saving again.");
         }
 
+        if (request.Request.Visibility != entity.Visibility)
+            throw new ValidationAppException("Use the visibility endpoint to change sharing settings.");
+
         await MemorySetPalaceValidator.ValidateAsync(
             _db,
             request.UserId,
@@ -49,6 +53,9 @@ public sealed class UpdateMemorySetCommandHandler
             cancellationToken);
 
         MemorySetAggregate.Update(entity, request.Request);
+        if (entity.Visibility == MemoPal.Domain.Entities.MemorySetVisibilities.Public)
+            entity.SharesPrivateAssets = await CommunityMemorySetPublishingValidator.ValidateAsync(
+                _db, entity, entity.SharesPrivateAssets, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
         return ApiResponse<MemorySetDto>.Ok(MemorySetAggregate.ToDto(entity));
     }

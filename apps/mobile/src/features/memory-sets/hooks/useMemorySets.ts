@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   archiveLocalPreviewMemorySet,
+  setLocalPreviewMemorySetVisibility,
   createLocalPreviewMemorySet,
   deleteLocalPreviewMemorySet,
   duplicateLocalPreviewMemorySet,
@@ -10,7 +11,7 @@ import {
   updateLocalPreviewMemorySet,
 } from '@/core/dev/localPreviewData';
 import { memorySetApi } from '../api/memorySet.api';
-import { MEMORY_SET_KEYS } from '../queryKeys';
+import { COMMUNITY_MEMORY_SET_KEYS, MEMORY_SET_KEYS } from '../queryKeys';
 import type {
   MemorySet,
   MemorySetUpsertRequest,
@@ -78,6 +79,7 @@ export function useMemorySetMutations() {
   const cacheMemorySet = (memorySet: MemorySet) => {
     queryClient.setQueryData(MEMORY_SET_KEYS.detail(memorySet.id), memorySet);
     void queryClient.invalidateQueries({ queryKey: MEMORY_SET_KEYS.lists() });
+    void queryClient.invalidateQueries({ queryKey: COMMUNITY_MEMORY_SET_KEYS.all });
   };
 
   const createMemorySet = useMutation({
@@ -93,6 +95,7 @@ export function useMemorySetMutations() {
         ...current.filter((item) => item.id !== created.id),
       ]);
       void queryClient.invalidateQueries({ queryKey: MEMORY_SET_KEYS.lists() });
+      void queryClient.invalidateQueries({ queryKey: COMMUNITY_MEMORY_SET_KEYS.all });
     },
   });
 
@@ -123,6 +126,19 @@ export function useMemorySetMutations() {
     onSuccess: cacheMemorySet,
   });
 
+  const setMemorySetVisibility = useMutation({
+    mutationFn: ({ memorySetId, visibility, confirmPrivateAssets = false }: {
+      memorySetId: string;
+      visibility: 'private' | 'public';
+      confirmPrivateAssets?: boolean;
+    }) =>
+      isLocalPreviewEnabled
+        ? Promise.resolve(setLocalPreviewMemorySetVisibility(memorySetId, visibility))
+        : memorySetApi.setVisibility(memorySetId, visibility, confirmPrivateAssets),
+    retry: false,
+    onSuccess: cacheMemorySet,
+  });
+
   const deleteMemorySet = useMutation({
     mutationFn: (memorySetId: string) => {
       if (isLocalPreviewEnabled) {
@@ -144,6 +160,7 @@ export function useMemorySetMutations() {
     updateMemorySet,
     duplicateMemorySet,
     setMemorySetArchived,
+    setMemorySetVisibility,
     deleteMemorySet,
   };
 }

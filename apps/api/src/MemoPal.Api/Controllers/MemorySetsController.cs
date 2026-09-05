@@ -4,6 +4,8 @@ using MemoPal.Application.Features.MemorySets.DTOs;
 using MemoPal.Application.Features.MemorySets.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MemoPal.Application.Features.CommunityMemorySets.Commands;
+using MemoPal.Application.Features.CommunityMemorySets.DTOs;
 
 namespace MemoPal.Api.Controllers;
 
@@ -61,6 +63,19 @@ public sealed class MemorySetsController : ApiControllerBase
     {
         var result = await Sender.Send(
             new DuplicateMemorySetCommand(GetUserIdOrThrow(), memorySetId),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPatch("{memorySetId}/visibility")]
+    public async Task<IActionResult> UpdateVisibility(
+        string memorySetId,
+        [FromBody] UpdateMemorySetVisibilityRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new UpdateMemorySetVisibilityCommand(
+                GetUserIdOrThrow(), memorySetId, request.Visibility, request.ConfirmPrivateAssets),
             cancellationToken);
         return Ok(result);
     }

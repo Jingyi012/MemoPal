@@ -10,10 +10,31 @@ public sealed class MemorySet : UserOwnedEntity
     public string TechniqueKey { get; set; } = MemoryTechniqueKeys.NumberPeg;
     public string Status { get; set; } = MemorySetStatuses.Draft;
     public string Visibility { get; set; } = MemorySetVisibilities.Private;
+    public string CommunityStatus { get; set; } = MemorySetCommunityStatuses.Visible;
+    public DateTime? PublishedAt { get; set; }
+    public DateTime? HiddenAt { get; set; }
+    public string? HiddenReason { get; set; }
+    public bool SharesPrivateAssets { get; set; }
+    public string? CopiedFromMemorySetId { get; set; }
     public int Version { get; set; } = 1;
 
     public ICollection<MemoryItem> Items { get; set; } = new List<MemoryItem>();
     public TechniquePlan? TechniquePlan { get; set; }
+    public MemorySet? CopiedFromMemorySet { get; set; }
+    public ICollection<MemorySet> Copies { get; set; } = new List<MemorySet>();
+    public ICollection<MemorySetReport> Reports { get; set; } = new List<MemorySetReport>();
+}
+
+public static class MemorySetCommunityStatuses
+{
+    public const string Visible = "visible";
+    public const string Hidden = "hidden";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
+    {
+        Visible,
+        Hidden
+    };
 }
 
 public static class MemoryTechniqueKeys

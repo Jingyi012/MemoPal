@@ -17,14 +17,17 @@ import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Href, useRouter } from 'expo-router';
-import { LayoutGrid, List as ListIcon, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
+import { Globe2, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import Toast from 'react-native-toast-message';
 import { MemoryActionsSheet } from '../components/MemoryActionsSheet';
+import { DiscoverMemorySetsScreen } from './DiscoverMemorySetsScreen';
 
 type LibraryFilter = 'all' | MemoryTechniqueKey | 'archived';
 type LibraryViewMode = 'card' | 'list';
+type LibraryTab = 'mine' | 'discover';
 
 const filters: { key: LibraryFilter }[] = [
   { key: 'all' },
@@ -41,13 +44,15 @@ export default function LibraryScreen() {
   const palaceScenes = usePalaceScenes();
   const dueReviews = useDueMemoryReviews();
   const upcomingReviews = useUpcomingMemoryReviews(30);
-  const { duplicateMemorySet, setMemorySetArchived, deleteMemorySet } = useMemorySetMutations();
+  const { duplicateMemorySet, setMemorySetArchived, setMemorySetVisibility, deleteMemorySet } = useMemorySetMutations();
   const memoryActionsRef = useRef<BottomSheetModal>(null);
   const [filter, setFilter] = useState<LibraryFilter>('all');
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [libraryTab, setLibraryTab] = useState<LibraryTab>('mine');
   const [actionMemorySet, setActionMemorySet] = useState<MemorySet>();
   const [deleteConfirmationMemory, setDeleteConfirmationMemory] = useState<MemorySet>();
+  const [visibilityConfirmationMemory, setVisibilityConfirmationMemory] = useState<MemorySet>();
   const pendingDeleteRef = useRef<MemorySet | undefined>(undefined);
+  const pendingVisibilityRef = useRef<MemorySet | undefined>(undefined);
   const viewMode: LibraryViewMode = userState.ui.libraryViewMode ?? 'card';
 
   useEffect(() => {
@@ -82,7 +87,6 @@ export default function LibraryScreen() {
   }, [dueReviews.data, upcomingReviews.data]);
 
   const showActions = (memorySet: MemorySet) => {
-    setActionMessage(null);
     setActionMemorySet(memorySet);
   };
 
@@ -101,17 +105,20 @@ export default function LibraryScreen() {
     const pendingDelete = pendingDeleteRef.current;
     pendingDeleteRef.current = undefined;
     if (pendingDelete) setDeleteConfirmationMemory(pendingDelete);
+    const pendingVisibility = pendingVisibilityRef.current;
+    pendingVisibilityRef.current = undefined;
+    if (pendingVisibility) setVisibilityConfirmationMemory(pendingVisibility);
   };
 
   const duplicateSelectedMemory = (memorySet: MemorySet) => {
     duplicateMemorySet.mutate(memorySet.id, {
       onSuccess: (copy) => {
         memoryActionsRef.current?.dismiss();
-        setActionMessage(`“${copy.title}” ${t('readyInLibrary')}`);
+        Toast.show({ type: 'success', text1: `“${copy.title}” ${t('readyInLibrary')}` });
       },
       onError: (error) => {
         memoryActionsRef.current?.dismiss();
-        setActionMessage(getNumberPegErrorMessage(error, t('duplicateError')));
+        Toast.show({ type: 'error', text1: t('duplicateError'), text2: getNumberPegErrorMessage(error, t('duplicateError')) });
       },
     });
   };
@@ -123,11 +130,11 @@ export default function LibraryScreen() {
       {
         onSuccess: () => {
           memoryActionsRef.current?.dismiss();
-          setActionMessage(isArchived ? t('memoryRestored') : t('memoryArchived'));
+          Toast.show({ type: 'success', text1: isArchived ? t('memoryRestored') : t('memoryArchived') });
         },
         onError: (error) => {
           memoryActionsRef.current?.dismiss();
-          setActionMessage(getNumberPegErrorMessage(error, t('updateError')));
+          Toast.show({ type: 'error', text1: t('updateError'), text2: getNumberPegErrorMessage(error, t('updateError')) });
         },
       },
     );
@@ -138,7 +145,7 @@ export default function LibraryScreen() {
     deleteMemorySet.mutate(deleteConfirmationMemory.id, {
       onSuccess: () => {
         setDeleteConfirmationMemory(undefined);
-        setActionMessage(t('memoryDeleted'));
+        Toast.show({ type: 'success', text1: t('memoryDeleted') });
         void InAppNotificationSync.syncAllUpcoming(
           userState.notifications.reviewReminders,
           userState.preferences.language,
@@ -146,10 +153,35 @@ export default function LibraryScreen() {
       },
       onError: (error) => {
         setDeleteConfirmationMemory(undefined);
-        setActionMessage(getNumberPegErrorMessage(error, t('deleteError')));
+        Toast.show({ type: 'error', text1: t('deleteError'), text2: getNumberPegErrorMessage(error, t('deleteError')) });
       },
     });
   };
+
+  const requestVisibilityChange = (memorySet: MemorySet) => {
+    pendingVisibilityRef.current = memorySet;
+    memoryActionsRef.current?.dismiss();
+  };
+
+  const confirmVisibilityChange = (confirmPrivateAssets = false) => {
+    if (!visibilityConfirmationMemory) return;
+    const memorySet = visibilityConfirmationMemory;
+    const visibility = memorySet.visibility === 'public' ? 'private' : 'public';
+    setMemorySetVisibility.mutate({ memorySetId: memorySet.id, visibility, confirmPrivateAssets }, {
+      onSuccess: () => {
+        setVisibilityConfirmationMemory(undefined);
+        Toast.show({ type: 'success', text1: visibility === 'public' ? t('memoryPublished') : t('memoryPrivate') });
+      },
+      onError: (error) => {
+        setVisibilityConfirmationMemory(undefined);
+        Toast.show({ type: 'error', text1: t('visibilityError'), text2: getNumberPegErrorMessage(error, t('visibilityError')) });
+      },
+    });
+  };
+
+  const visibilityIncludesPrivateAssets = visibilityConfirmationMemory
+    ? hasPrivateAssets(visibilityConfirmationMemory, palaceSceneById)
+    : false;
 
   return (
     <View style={styles.page}>
@@ -160,7 +192,28 @@ export default function LibraryScreen() {
         hideBackButton
       />
 
-      <ScrollView
+      <View style={styles.libraryTabBar}>
+        <View style={styles.libraryTabs}>
+          <AnimatedPressable
+            accessibilityState={{ selected: libraryTab === 'mine' }}
+            containerStyle={styles.libraryTabContainer}
+            onPress={() => setLibraryTab('mine')}
+            style={[styles.libraryTab, libraryTab === 'mine' && styles.libraryTabSelected]}>
+            <Text style={styles.libraryTabEmoji}>📚</Text>
+            <Text style={[styles.libraryTabText, libraryTab === 'mine' && styles.libraryTabTextSelected]}>{t('myMemories')}</Text>
+          </AnimatedPressable>
+          <AnimatedPressable
+            accessibilityState={{ selected: libraryTab === 'discover' }}
+            containerStyle={styles.libraryTabContainer}
+            onPress={() => setLibraryTab('discover')}
+            style={[styles.libraryTab, libraryTab === 'discover' && styles.libraryTabSelected]}>
+            <Text style={styles.libraryTabEmoji}>🧭</Text>
+            <Text style={[styles.libraryTabText, libraryTab === 'discover' && styles.libraryTabTextSelected]}>{t('discover')}</Text>
+          </AnimatedPressable>
+        </View>
+      </View>
+
+      {libraryTab === 'discover' ? <DiscoverMemorySetsScreen embedded /> : <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -229,12 +282,6 @@ export default function LibraryScreen() {
           </View>
         </View>
 
-        {actionMessage && (
-          <AnimatedPressable onPress={() => setActionMessage(null)} style={styles.actionNotice}>
-            <Text style={styles.actionNoticeText}>{actionMessage}</Text>
-          </AnimatedPressable>
-        )}
-
         {memorySets.isLoading ? (
           <View style={styles.loadingFrame}>
             <LoadingView description={t('loading')} />
@@ -297,16 +344,45 @@ export default function LibraryScreen() {
             )}
           </View>
         )}
-      </ScrollView>
+      </ScrollView>}
 
       <MemoryActionsSheet
         ref={memoryActionsRef}
         memorySet={actionMemorySet}
-        isBusy={duplicateMemorySet.isPending || setMemorySetArchived.isPending || deleteMemorySet.isPending}
+        isBusy={duplicateMemorySet.isPending || setMemorySetArchived.isPending || setMemorySetVisibility.isPending || deleteMemorySet.isPending}
         onDismiss={handleMemoryActionsDismiss}
         onDuplicate={duplicateSelectedMemory}
         onToggleArchived={toggleSelectedMemoryArchived}
         onDelete={requestDeleteMemory}
+        onRequestVisibility={requestVisibilityChange}
+      />
+      <ConfirmModal
+        visible={Boolean(visibilityConfirmationMemory)}
+        icon={visibilityConfirmationMemory?.visibility === 'public' ? <LockKeyhole size={28} color={theme.inkSoft} /> : <Globe2 size={28} color={theme.grass} />}
+        title={visibilityConfirmationMemory?.visibility === 'public' ? t('makePrivateTitle') : t('makePublicTitle')}
+        subject={visibilityConfirmationMemory?.title}
+        description={visibilityConfirmationMemory?.visibility === 'public'
+          ? t('makePrivateDescription')
+          : visibilityIncludesPrivateAssets
+            ? t('privateAssetsDescription')
+            : t('makePublicDescription')}
+        confirmText={visibilityConfirmationMemory?.visibility === 'public'
+          ? t('makePrivate')
+          : visibilityIncludesPrivateAssets
+            ? t('publishWithAssets')
+            : t('makePublic')}
+        cancelText={visibilityIncludesPrivateAssets ? t('keepPrivate') : t('cancel')}
+        alternativeText={visibilityIncludesPrivateAssets ? t('reviewBeforePublishing') : undefined}
+        isLoading={setMemorySetVisibility.isPending}
+        onConfirm={() => confirmVisibilityChange(visibilityIncludesPrivateAssets)}
+        onCancel={() => setVisibilityConfirmationMemory(undefined)}
+        onAlternative={visibilityIncludesPrivateAssets && visibilityConfirmationMemory
+          ? () => {
+              const memorySetId = visibilityConfirmationMemory.id;
+              setVisibilityConfirmationMemory(undefined);
+              router.push(`/memory-details/${memorySetId}` as Href);
+            }
+          : undefined}
       />
       <ConfirmModal
         visible={Boolean(deleteConfirmationMemory)}
@@ -337,8 +413,56 @@ function getPalaceScene(
   return sceneId ? sceneById.get(sceneId) : undefined;
 }
 
+function hasPrivateAssets(
+  memorySet: MemorySet,
+  sceneById: Map<string, { isTemplate?: boolean }>,
+) {
+  if (memorySet.items.some((item) => Boolean(item.pronunciationAudioUrl))) return true;
+  const plan = memorySet.techniquePlan;
+  if (!plan) return false;
+  if (plan.pegBindings.some((binding) => Boolean(binding.sceneAssetUrl))) return true;
+  if (plan.palaceBindings.some((binding) => binding.isCustomScene || Boolean(binding.sceneAssetUrl))) return true;
+  if (memorySet.techniqueKey !== 'palace' || !plan.palaceSceneId) return false;
+  return sceneById.get(plan.palaceSceneId)?.isTemplate === false;
+}
+
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
+  libraryTabBar: {
+    backgroundColor: theme.canvas,
+    borderBottomColor: '#F0EDF8',
+    borderBottomWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    position: 'relative',
+    zIndex: 20,
+  },
+  libraryTabs: {
+    backgroundColor: theme.violetTint,
+    borderColor: theme.violetLine,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    flexDirection: 'row',
+    gap: 4,
+    padding: 3,
+  },
+  libraryTabContainer: { flex: 1 },
+  libraryTab: {
+    alignItems: 'center',
+    borderRadius: 10,
+    flexDirection: 'row',
+    gap: 7,
+    justifyContent: 'center',
+    minHeight: 42,
+    paddingHorizontal: 12,
+  },
+  libraryTabSelected: {
+    backgroundColor: theme.violetDeep,
+    boxShadow: '0px 3px 8px rgba(111, 86, 220, 0.22)',
+  },
+  libraryTabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  libraryTabEmoji: { fontSize: 16, lineHeight: 20 },
+  libraryTabTextSelected: { color: 'white' },
   content: { padding: 16, paddingBottom: 40 },
   summaryCard: {
     minHeight: 112,
@@ -385,8 +509,6 @@ const styles = StyleSheet.create({
   viewToggle: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 12, borderWidth: 1.5, flexDirection: 'row', padding: 3 },
   viewOption: { alignItems: 'center', borderRadius: 9, height: 34, justifyContent: 'center', width: 36 },
   viewOptionSelected: { backgroundColor: theme.violetDeep },
-  actionNotice: { marginBottom: 14, borderRadius: 14, backgroundColor: '#F1FBF5', borderWidth: 1.5, borderColor: '#BFE7D6', paddingHorizontal: 13, paddingVertical: 11 },
-  actionNoticeText: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
   cardList: { gap: 10 },
   listCardList: { gap: 6 },
   cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },

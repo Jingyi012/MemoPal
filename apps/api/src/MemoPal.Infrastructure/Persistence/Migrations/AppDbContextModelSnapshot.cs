@@ -17,7 +17,7 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -162,6 +162,17 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<string>("CommunityStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("visible");
+
+                    b.Property<string>("CopiedFromMemorySetId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -183,8 +194,23 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<DateTime?>("HiddenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("HiddenReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("SharesPrivateAssets")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -222,11 +248,75 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CopiedFromMemorySetId");
+
+                    b.HasIndex("UserId", "CopiedFromMemorySetId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE AND \"CopiedFromMemorySetId\" IS NOT NULL");
+
                     b.HasIndex("UserId", "UpdatedAt");
 
                     b.HasIndex("UserId", "Status", "IsDeleted");
 
+                    b.HasIndex("Visibility", "CommunityStatus", "PublishedAt", "IsDeleted");
+
                     b.ToTable("MemorySets");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.MemorySetReport", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MemorySetId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemorySetId", "IsDeleted");
+
+                    b.HasIndex("UserId", "MemorySetId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE");
+
+                    b.ToTable("MemorySetReports");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.MilestoneDefinition", b =>
@@ -1754,11 +1844,35 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MemoPal.Domain.Entities.MemorySet", b =>
                 {
+                    b.HasOne("MemoPal.Domain.Entities.MemorySet", "CopiedFromMemorySet")
+                        .WithMany("Copies")
+                        .HasForeignKey("CopiedFromMemorySetId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("MemoPal.Domain.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CopiedFromMemorySet");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.MemorySetReport", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.MemorySet", "MemorySet")
+                        .WithMany("Reports")
+                        .HasForeignKey("MemorySetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MemoPal.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MemorySet");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.PalaceBinding", b =>
@@ -1942,7 +2056,11 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MemoPal.Domain.Entities.MemorySet", b =>
                 {
+                    b.Navigation("Copies");
+
                     b.Navigation("Items");
+
+                    b.Navigation("Reports");
 
                     b.Navigation("TechniquePlan");
                 });

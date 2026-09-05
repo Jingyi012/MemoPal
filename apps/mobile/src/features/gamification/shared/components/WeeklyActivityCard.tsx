@@ -13,14 +13,22 @@ type WeeklyActivityCardProps = {
 
 /** Shared seven-day XP activity card used on Home and Progress. */
 export function WeeklyActivityCard({ title, events = [], activity }: WeeklyActivityCardProps) {
-  const { language } = useTranslation('home');
+  const { t } = useTranslation('home');
+  const weekdayLabels = useMemo(() => [
+    t('weekdaySun'),
+    t('weekdayMon'),
+    t('weekdayTue'),
+    t('weekdayWed'),
+    t('weekdayThu'),
+    t('weekdayFri'),
+    t('weekdaySat'),
+  ], [t]);
   const chartActivity = useMemo(() => {
-    const locale = language === 'zh' ? 'zh-CN' : 'en-US';
     if (activity) {
       const values = activity.map((day) => day.sessions);
       const max = Math.max(1, ...values);
       return values.map((value, index) => ({
-        label: formatWeekday(activity[index]?.date, locale),
+        label: formatWeekday(activity[index]?.date, weekdayLabels),
         percent: value ? Math.max(10, Math.round((value / max) * 100)) : 6,
         today: index === values.length - 1,
       }));
@@ -42,11 +50,11 @@ export function WeeklyActivityCard({ title, events = [], activity }: WeeklyActiv
       .reduce((sum, event) => sum + Math.max(0, event.xpAmount), 0));
     const max = Math.max(1, ...values);
     return values.map((value, index) => ({
-      label: formatWeekday(days[index], locale),
+      label: formatWeekday(days[index], weekdayLabels),
       percent: value ? Math.max(10, Math.round((value / max) * 100)) : 6,
       today: index === 6,
     }));
-  }, [activity, events, language]);
+  }, [activity, events, weekdayLabels]);
 
   return (
     <View style={styles.card}>
@@ -68,14 +76,12 @@ export function WeeklyActivityCard({ title, events = [], activity }: WeeklyActiv
   );
 }
 
-function formatWeekday(value: string | Date | undefined, locale: string) {
+function formatWeekday(value: string | Date | undefined, labels: string[]) {
   if (!value) return '';
   const date = value instanceof Date
     ? value
     : new Date(`${value.slice(0, 10)}T12:00:00`);
-  return Number.isNaN(date.getTime())
-    ? ''
-    : new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date);
+  return Number.isNaN(date.getTime()) ? '' : labels[date.getDay()] ?? '';
 }
 
 const styles = StyleSheet.create({

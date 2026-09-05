@@ -1,0 +1,154 @@
+import { EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
+import { ProTable } from "@ant-design/pro-components";
+import type { ProColumns } from "@ant-design/pro-components";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button, Popconfirm, Select, Space, Tag, Typography } from "antd";
+import { useMemo, useState } from "react";
+import { adminCommunityMemorySetsApi } from "../../../api/adminCommunityMemorySetsApi";
+import { PortalPageContainer } from "../../../components/PortalPageContainer";
+import type {
+  AdminCommunityMemorySetDto,
+  CommunityMemorySetStatus,
+} from "../../../types/communityMemorySet";
+import {
+  adminCommunityMemorySetsQueryKey,
+  useAdminCommunityMemorySets,
+} from "../hooks/useAdminCommunityMemorySets";
+
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+}
+
+export default function CommunityMemorySetsPage() {
+  const queryClient = useQueryClient();
+  const [status, setStatus] = useState<CommunityMemorySetStatus | undefined>();
+  const { hideMutation, restoreMutation } = useAdminCommunityMemorySets();
+
+  const columns = useMemo<ProColumns<AdminCommunityMemorySetDto>[]>(
+    () => [
+      {
+        title: "Memory set",
+        dataIndex: "title",
+        render: (_, row) => (
+          <Space direction="vertical" size={0}>
+            <Typography.Text strong>{row.title}</Typography.Text>
+            <Typography.Text type="secondary" ellipsis={{ tooltip: row.description ?? undefined }}>
+              {row.description || "No description"}
+            </Typography.Text>
+          </Space>
+        ),
+      },
+      {
+        title: "Author",
+        dataIndex: "author",
+        search: false,
+        render: (_, row) => row.author.displayName || "Unknown author",
+      },
+      { title: "Technique", dataIndex: "techniqueKey", search: false, width: 120 },
+      { title: "Items", dataIndex: "itemCount", search: false, width: 76 },
+      { title: "Copies", dataIndex: "copyCount", search: false, width: 76 },
+      {
+        title: "Reports",
+        dataIndex: "reportCount",
+        search: false,
+        width: 92,
+        render: (value, row) => (
+          <Tag color={row.reportCount > 0 ? "orange" : "default"}>{value}</Tag>
+        ),
+      },
+      {
+        title: "Published",
+        dataIndex: "publishedAt",
+        search: false,
+        width: 170,
+        render: (_, row) => formatDateTime(row.publishedAt),
+      },
+      {
+        title: "Status",
+        dataIndex: "communityStatus",
+        search: false,
+        width: 105,
+        render: (_, row) => (
+          <Tag color={row.communityStatus === "hidden" ? "red" : "green"}>
+            {row.communityStatus === "hidden" ? "Hidden" : "Visible"}
+          </Tag>
+        ),
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        search: false,
+        fixed: "right",
+        width: 130,
+        render: (_, row) =>
+          row.communityStatus === "hidden" ? (
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              loading={restoreMutation.isPending && restoreMutation.variables === row.id}
+              onClick={() => restoreMutation.mutate(row.id)}
+            >
+              Restore
+            </Button>
+          ) : (
+            <Popconfirm
+              title="Hide this memory set?"
+              description="It will no longer appear in the community library."
+              okText="Hide"
+              onConfirm={() => hideMutation.mutate({ id: row.id })}
+            >
+              <Button
+                size="small"
+                danger
+                icon={<EyeInvisibleOutlined />}
+                loading={hideMutation.isPending && hideMutation.variables?.id === row.id}
+              >
+                Hide
+              </Button>
+            </Popconfirm>
+          ),
+      },
+    ],
+    [hideMutation, restoreMutation],
+  );
+
+  return (
+    <PortalPageContainer>
+      <ProTable<AdminCommunityMemorySetDto>
+        rowKey="id"
+        key={status ?? "all"}
+        headerTitle="Community Memory Sets"
+        columns={columns}
+        search={{ labelWidth: "auto" }}
+        options={false}
+        pagination={{ pageSize: 20, showSizeChanger: true }}
+        toolBarRender={() => [
+          <Select
+            key="status"
+            allowClear
+            placeholder="All statuses"
+            value={status}
+            onChange={setStatus}
+            options={[
+              { label: "Visible", value: "visible" },
+              { label: "Hidden", value: "hidden" },
+            ]}
+            style={{ width: 150 }}
+          />,
+        ]}
+        request={async (params) => {
+          const search = String(params.title || params.author || "");
+          const pageNumber = Number(params.current || 1);
+          const pageSize = Number(params.pageSize || 20);
+          const page = await queryClient.fetchQuery({
+            queryKey: [...adminCommunityMemorySetsQueryKey, pageNumber, pageSize, search, status],
+            queryFn: () => adminCommunityMemorySetsApi.list({ pageNumber, pageSize, search, status }),
+          });
+          return { data: page.data, success: page.success, total: page.pagination.totalCount };
+        }}
+      />
+    </PortalPageContainer>
+  );
+}

@@ -5,7 +5,7 @@ import type { MemorySet } from '@/features/memory-sets';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Archive, ArchiveRestore, Copy, Trash2 } from 'lucide-react-native';
+import { Archive, ArchiveRestore, Copy, Globe2, LockKeyhole, Trash2 } from 'lucide-react-native';
 import { forwardRef, type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,10 +17,11 @@ type MemoryActionsSheetProps = {
   onDuplicate: (memorySet: MemorySet) => void;
   onToggleArchived: (memorySet: MemorySet) => void;
   onDelete: (memorySet: MemorySet) => void;
+  onRequestVisibility: (memorySet: MemorySet) => void;
 };
 
 export const MemoryActionsSheet = forwardRef<BottomSheetModal, MemoryActionsSheetProps>(
-  ({ memorySet, isBusy = false, onDismiss, onDuplicate, onToggleArchived, onDelete }, ref) => {
+  ({ memorySet, isBusy = false, onDismiss, onDuplicate, onToggleArchived, onDelete, onRequestVisibility }, ref) => {
     const { t } = useTranslation('library');
     const insets = useSafeAreaInsets();
     const isArchived = memorySet?.status === 'archived';
@@ -43,6 +44,13 @@ export const MemoryActionsSheet = forwardRef<BottomSheetModal, MemoryActionsShee
               iconBackground="#EEE9FF"
               disabled={!memorySet || isBusy}
               onPress={() => memorySet && onDuplicate(memorySet)}
+            />
+            <ActionRow
+              label={memorySet?.visibility === 'public' ? t('makePrivate') : t('makePublic')}
+              icon={memorySet?.visibility === 'public' ? <LockKeyhole size={20} color={theme.inkSoft} /> : <Globe2 size={20} color={theme.grass} />}
+              iconBackground={memorySet?.visibility === 'public' ? '#F2F0EA' : '#E9F8F1'}
+              disabled={!memorySet || isBusy}
+              onPress={() => memorySet && onRequestVisibility(memorySet)}
             />
             <ActionRow
               label={isArchived ? t('restore') : t('archive')}

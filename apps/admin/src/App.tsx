@@ -16,6 +16,7 @@ import { adminPaths } from './navigation/adminPaths';
 import PalaceScenesPage from './features/palace-scenes/pages/PalaceScenesPage';
 import PredefinedMemoryLessonsPage from './features/predefined-memory-lessons/pages/PredefinedMemoryLessonsPage';
 import PredefinedMemoryLessonCategoriesPage from './features/predefined-memory-lessons/pages/PredefinedMemoryLessonCategoriesPage';
+import CommunityMemorySetsPage from './features/community-memory-sets/pages/CommunityMemorySetsPage';
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
           <Route path={adminPaths.root} element={<Layout />}>
             <Route index element={<Navigate to="users" replace />} />
             <Route path="users" element={<UsersPage />} />
+            <Route path="community-memory-sets" element={<CommunityMemorySetsPage />} />
             <Route path="content">
               <Route index element={<Navigate to="palace-scenes" replace />} />
               <Route path="palace-scenes" element={<PalaceScenesPage />} />

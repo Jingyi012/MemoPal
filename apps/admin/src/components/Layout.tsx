@@ -1,5 +1,6 @@
 import {
   BookOutlined,
+  EyeOutlined,
   LogoutOutlined,
   ShareAltOutlined,
   SettingOutlined,
@@ -33,6 +34,8 @@ export default function Layout() {
           <BookOutlined />
         ) : item.icon === "referral" ? (
           <ShareAltOutlined />
+        ) : item.icon === "moderation" ? (
+          <EyeOutlined />
         ) : (
           <SettingOutlined />
         ),

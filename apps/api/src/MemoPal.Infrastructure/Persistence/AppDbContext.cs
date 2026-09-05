@@ -29,6 +29,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<ReferralRecord> ReferralRecords => Set<ReferralRecord>();
     public DbSet<ReferralMilestoneReward> ReferralMilestoneRewards => Set<ReferralMilestoneReward>();
     public DbSet<MemorySet> MemorySets => Set<MemorySet>();
+    public DbSet<MemorySetReport> MemorySetReports => Set<MemorySetReport>();
     public DbSet<MemoryItem> MemoryItems => Set<MemoryItem>();
     public DbSet<TechniquePlan> TechniquePlans => Set<TechniquePlan>();
     public DbSet<PegBinding> PegBindings => Set<PegBinding>();
@@ -188,8 +189,16 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.TechniqueKey).HasMaxLength(32);
             b.Property(x => x.Status).HasMaxLength(32);
             b.Property(x => x.Visibility).HasMaxLength(32);
+            b.Property(x => x.CommunityStatus).HasMaxLength(32).HasDefaultValue(MemorySetCommunityStatuses.Visible);
+            b.Property(x => x.SharesPrivateAssets).HasDefaultValue(false);
+            b.Property(x => x.HiddenReason).HasMaxLength(500);
+            b.Property(x => x.CopiedFromMemorySetId).HasMaxLength(64);
             b.HasIndex(x => new { x.UserId, x.UpdatedAt });
             b.HasIndex(x => new { x.UserId, x.Status, x.IsDeleted });
+            b.HasIndex(x => new { x.Visibility, x.CommunityStatus, x.PublishedAt, x.IsDeleted });
+            b.HasIndex(x => new { x.UserId, x.CopiedFromMemorySetId })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE AND \"CopiedFromMemorySetId\" IS NOT NULL");
             b.HasOne<User>()
                 .WithMany()
                 .HasForeignKey(x => x.UserId)
@@ -202,6 +211,31 @@ public class AppDbContext : DbContext, IAppDbContext
                 .WithOne(x => x.MemorySet)
                 .HasForeignKey<TechniquePlan>(x => x.MemorySetId)
                 .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.CopiedFromMemorySet)
+                .WithMany(x => x.Copies)
+                .HasForeignKey(x => x.CopiedFromMemorySetId)
+                .OnDelete(DeleteBehavior.SetNull);
+            b.HasMany(x => x.Reports)
+                .WithOne(x => x.MemorySet)
+                .HasForeignKey(x => x.MemorySetId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MemorySetReport>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.MemorySetId).HasMaxLength(64);
+            b.Property(x => x.Reason).HasMaxLength(64);
+            b.Property(x => x.Details).HasMaxLength(500);
+            b.HasIndex(x => new { x.UserId, x.MemorySetId })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.MemorySetId, x.IsDeleted });
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<MemoryItem>(b =>

@@ -2,6 +2,8 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.MemorySets.DTOs;
+using MemoPal.Application.Common.Exceptions;
+using MemoPal.Domain.Entities;
 
 namespace MemoPal.Application.Features.MemorySets.Commands;
 
@@ -23,6 +25,8 @@ public sealed class CreateMemorySetCommandHandler
         CreateMemorySetCommand request,
         CancellationToken cancellationToken)
     {
+        if (request.Request.Visibility != MemorySetVisibilities.Private)
+            throw new ValidationAppException("New memories must be private. Use the visibility endpoint after completing the memory.");
         await MemorySetPalaceValidator.ValidateAsync(
             _db,
             request.UserId,

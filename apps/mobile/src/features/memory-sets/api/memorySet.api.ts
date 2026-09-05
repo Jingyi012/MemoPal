@@ -53,6 +53,18 @@ export const memorySetApi = {
     );
   },
 
+  async setVisibility(
+    memorySetId: string,
+    visibility: 'private' | 'public',
+    confirmPrivateAssets = false,
+  ): Promise<MemorySet> {
+    const response = await api.patch<GeneralResponse<MemorySet>>(
+      `/v2/memory-sets/${encodeURIComponent(memorySetId)}/visibility`,
+      { visibility, confirmPrivateAssets },
+    );
+    return unwrap(response.data, 'Could not update this memory visibility.');
+  },
+
   async delete(memorySetId: string): Promise<void> {
     const response = await api.delete<GeneralResponse<boolean>>(
       `/v2/memory-sets/${encodeURIComponent(memorySetId)}`

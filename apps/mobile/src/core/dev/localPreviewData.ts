@@ -228,6 +228,14 @@ export function archiveLocalPreviewMemorySet(memorySetId: string, isArchived: bo
   return updated;
 }
 
+export function setLocalPreviewMemorySetVisibility(memorySetId: string, visibility: 'private' | 'public') {
+  const current = getLocalPreviewMemorySet(memorySetId);
+  if (!current) throw new Error('Preview memory not found.');
+  const updated = { ...current, visibility, version: current.version + 1, updatedAt: new Date().toISOString() };
+  localPreviewMemorySets = localPreviewMemorySets.map((memorySet) => memorySet.id === memorySetId ? updated : memorySet);
+  return updated;
+}
+
 export function duplicateLocalPreviewMemorySet(memorySetId: string) {
   const current = getLocalPreviewMemorySet(memorySetId);
   if (!current) throw new Error('Preview memory not found.');

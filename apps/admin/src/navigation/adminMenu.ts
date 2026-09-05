@@ -1,7 +1,7 @@
 import { adminPaths } from "./adminPaths";
 
 export type AdminMenuIcon =
-  "users" | "content" | "config" | "referral" | "generic";
+  "users" | "content" | "config" | "referral" | "moderation" | "generic";
 
 export interface AdminMenuItem {
   path: string;
@@ -12,6 +12,7 @@ export interface AdminMenuItem {
 
 export const adminMenuItems: AdminMenuItem[] = [
   { path: adminPaths.users, name: "Users", icon: "users" },
+  { path: adminPaths.communityMemorySets, name: "Community Memory Sets", icon: "moderation" },
   {
     path: adminPaths.contentRoot,
     name: "Content Setup",
