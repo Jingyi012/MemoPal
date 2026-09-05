@@ -21,6 +21,9 @@ type SceneEditorCardProps = {
   accent?: 'peg' | 'palace';
   inputLabel?: string;
   readOnly?: boolean;
+  headerAction?: ReactNode;
+  /** Use the denser placement variant when the card shares a viewport with a map. */
+  compact?: boolean;
 };
 
 /** The shared scene-writing surface used by both memory techniques. */
@@ -40,12 +43,14 @@ export function SceneEditorCard({
   accent = 'peg',
   inputLabel,
   readOnly = false,
+  headerAction,
+  compact = false,
 }: SceneEditorCardProps) {
   const { t } = useTranslation('memoryComposer');
   const isPalace = accent === 'palace';
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, compact && styles.compactCard]}>
       <View style={styles.header}>
         <View style={[styles.badge, isPalace ? styles.palaceBadge : styles.pegBadge]}>
           <Text style={styles.badgeText}>{index + 1}</Text>
@@ -54,12 +59,15 @@ export function SceneEditorCard({
           <Text style={[styles.anchor, isPalace ? styles.palaceText : styles.pegText]}>{anchorLabel}</Text>
           {itemLabel ? <Text numberOfLines={1} style={styles.itemLabel}>{itemLabel}</Text> : null}
         </View>
-        <Text style={[styles.progress, isPalace ? styles.palaceProgress : styles.pegProgress]}>{index + 1}/{total}</Text>
+        <View style={styles.headerActions}>
+          {headerAction}
+          <Text style={[styles.progress, isPalace ? styles.palaceProgress : styles.pegProgress]}>{index + 1}/{total}</Text>
+        </View>
       </View>
 
-      {visual ? <View style={[styles.visual, isPalace ? styles.palaceVisual : styles.pegVisual]}>{visual}</View> : null}
+      {visual ? <View style={[styles.visual, isPalace ? styles.palaceVisual : styles.pegVisual, compact && styles.compactVisual]}>{visual}</View> : null}
 
-      <Text style={styles.inputLabel}>{inputLabel ?? t('memoryScene')}</Text>
+      <Text style={[styles.inputLabel, compact && styles.compactInputLabel]}>{inputLabel ?? t('memoryScene')}</Text>
       <TextInput
         accessibilityLabel={accessibilityLabel}
         editable={!readOnly}
@@ -68,7 +76,7 @@ export function SceneEditorCard({
         maxLength={maxLength}
         placeholder={placeholder}
         placeholderTextColor="#AAA7B5"
-        style={styles.input}
+        style={[styles.input, compact && styles.compactInput]}
         textAlignVertical="top"
         value={value}
       />
@@ -85,7 +93,9 @@ export function SceneEditorCard({
 
 const styles = StyleSheet.create({
   card: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 20, padding: 14, marginBottom: 16 },
+  compactCard: { borderRadius: 18, marginBottom: 10, padding: 11 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerActions: { alignItems: 'center', flexDirection: 'row', gap: 6 },
   badge: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: theme.paper },
   pegBadge: { backgroundColor: theme.berry },
   palaceBadge: { backgroundColor: theme.violet },
@@ -99,10 +109,13 @@ const styles = StyleSheet.create({
   pegProgress: { color: theme.berryDeep, backgroundColor: '#FFF0F4' },
   palaceProgress: { color: theme.violetDeep, backgroundColor: '#EEE9FF' },
   visual: { minHeight: 86, borderRadius: 15, marginTop: 12, alignItems: 'center', justifyContent: 'center', padding: 10 },
+  compactVisual: { minHeight: 56, marginTop: 8, padding: 7 },
   pegVisual: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#EADFC4', backgroundColor: '#FFFCF4', flexDirection: 'row', gap: 9 },
   palaceVisual: { borderWidth: 1.5, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF' },
   inputLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 12 },
+  compactInputLabel: { fontSize: 11, marginTop: 8 },
   input: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19, minHeight: 74, textAlignVertical: 'top', marginTop: 6, borderRadius: 13, borderWidth: 1.5, borderColor: theme.line, backgroundColor: 'white', padding: 11 },
+  compactInput: { fontSize: 12, lineHeight: 17, minHeight: 58, marginTop: 4, padding: 9 },
   action: { marginTop: 9, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', minHeight: 44, borderRadius: 12, borderWidth: 1.5, borderColor: '#FFD9E2', backgroundColor: '#FFF0F4' },
   actionText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   actionEmoji: { fontSize: 16 },

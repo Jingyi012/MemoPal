@@ -1,5 +1,6 @@
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Infrastructure.Auth;
+using MemoPal.Infrastructure.AI;
 using MemoPal.Infrastructure.Persistence;
 using MemoPal.Infrastructure.Security;
 using MemoPal.Infrastructure.Storage;
@@ -50,6 +51,15 @@ public static class DependencyInjection
 
         services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
         services.AddHttpClient<IFacebookTokenValidator, FacebookTokenValidator>();
+        services.Configure<PalaceAssociationGenerationOptions>(
+            configuration.GetSection(PalaceAssociationGenerationOptions.SectionName));
+        services.AddHttpClient<IPalaceAssociationGenerator, PalaceAssociationGenerator>((serviceProvider, client) =>
+        {
+            var settings = serviceProvider
+                .GetRequiredService<IOptions<PalaceAssociationGenerationOptions>>()
+                .Value;
+            client.Timeout = TimeSpan.FromSeconds(Math.Clamp(settings.TimeoutSeconds, 5, 120));
+        });
 
         return services;
     }

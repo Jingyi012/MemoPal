@@ -7,8 +7,9 @@ import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { PalaceAssociationEditor } from '@/features/palace-scenes/components/PalaceAssociationEditor';
 import { PalaceLocusMap } from '@/features/palace-scenes/components/PalaceLocusMap';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
+import { useGeneratePalaceAssociations } from '@/features/palace-scenes/hooks/useGeneratePalaceAssociations';
 import type { PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
-import { getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
+import { getPalaceLocusDescription, getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
@@ -28,7 +29,7 @@ import {
   getAssociationText,
 } from '@/features/palace-scenes/utils/palaceAuthoring';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, Check, Plus, RefreshCcw, Search, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, ChevronUp, Plus, RefreshCcw, Search, Trash2 } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { firstParam, parseComposerGoal, parseComposerItems, parseComposerOrigin, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import type { ComposerOrigin } from '@/features/memory-composer/utils/techniqueRecommendation';
@@ -51,6 +52,7 @@ export default function PalaceMemoryComposerScreen() {
   const scenesQuery = usePalaceScenes();
   const { user, isLoading: isUserLoading } = useCurrentUser();
   const { createMemorySet } = useMemorySetMutations();
+  const generatePalaceAssociations = useGeneratePalaceAssociations();
   const prefilledItems = useMemo(() => parseComposerItems(params.items), [params.items]);
   const fromSharedComposer = prefilledItems.length > 0;
   const [step, setStep] = useState<ComposerStep>('setup');
@@ -59,6 +61,8 @@ export default function PalaceMemoryComposerScreen() {
   const [newItem, setNewItem] = useState('');
   const [items, setItems] = useState<string[]>(() => prefilledItems);
   const [associations, setAssociations] = useState<string[]>([]);
+  const [generationMessage, setGenerationMessage] = useState<string | null>(null);
+  const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
   const [activeLocusIndex, setActiveLocusIndex] = useState(0);
   const [selectedSceneId, setSelectedSceneId] = useState(() => firstParam(params.sceneId) ?? '');
   const origin: ComposerOrigin = parseComposerOrigin(params.origin);
@@ -76,6 +80,7 @@ export default function PalaceMemoryComposerScreen() {
   const newItemInputRef = useRef<TextInput>(null);
   const scrollOffsetRef = useRef(0);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const generationVersionRef = useRef(0);
   const [keyboardInset, setKeyboardInset] = useState(0);
 
   const returnToSharedComposer = (editContent = false) => {
@@ -192,6 +197,104 @@ export default function PalaceMemoryComposerScreen() {
     setActiveLocusIndex((current) => Math.min(current, items.length - 1));
   }, [items, loci]);
 
+  useEffect(() => {
+    // A request may finish after the user changes the list or scene. Ignore
+    // that stale result instead of replacing newly edited associations.
+    generationVersionRef.current += 1;
+    setGenerationMessage(null);
+  }, [items, selectedSceneId]);
+
+  const generateAssociations = async () => {
+    if (!selectedScene || !items.length || !placementLoci.length || generatePalaceAssociations.isPending) {
+      return;
+    }
+
+    const generationVersion = generationVersionRef.current;
+    const requestItems = [...items];
+    const requestLoci = [...placementLoci];
+    setGeneratingIndex(null);
+    setGenerationMessage(null);
+    try {
+      const result = await generatePalaceAssociations.mutateAsync({
+        locale: language === 'zh' ? 'zh' : 'en',
+        style: 'vivid',
+        chainMode: false,
+        items: requestItems.map((word, index) => {
+          const locus = requestLoci[index];
+          return {
+            position: index + 1,
+            word,
+            locusName: locus ? getPalaceLocusName(locus, language) : `${t('loci')} ${index + 1}`,
+            locusDescription: locus
+              ? getPalaceLocusDescription(locus, language, t('locusDescriptionFallback'))
+              : t('locusDescriptionFallback'),
+          };
+        }),
+      });
+      if (generationVersion !== generationVersionRef.current) return;
+      const suggestions = new Map(
+        result.suggestions.map((suggestion) => [suggestion.position, suggestion.associationText]),
+      );
+      setAssociations((current) => requestItems.map((item, index) => {
+        const locus = requestLoci[index];
+        return suggestions.get(index + 1)
+          ?? current[index]
+          ?? createPalaceAssociation(item, locus ? getPalaceLocusName(locus, language) : `${t('loci')} ${index + 1}`);
+      }));
+      const messageKey = result.source === 'template'
+        ? 'aiGeneratedTemplate'
+        : result.source === 'mixed'
+          ? 'aiGeneratedMixed'
+          : 'aiGenerated';
+      setGenerationMessage(t(messageKey).replace('{count}', String(result.generatedCount)));
+    } catch {
+      setGenerationMessage(t('aiGenerationFailed'));
+    }
+  };
+
+  const generateCurrentAssociation = async () => {
+    if (!selectedScene || !items.length || !placementLoci.length || generatePalaceAssociations.isPending) {
+      return;
+    }
+
+    const index = Math.min(Math.max(activeLocusIndex, 0), items.length - 1);
+    const locus = placementLoci[index];
+    const generationVersion = generationVersionRef.current;
+    const requestItem = items[index];
+    setGeneratingIndex(index);
+    setGenerationMessage(null);
+    try {
+      const result = await generatePalaceAssociations.mutateAsync({
+        locale: language === 'zh' ? 'zh' : 'en',
+        style: 'vivid',
+        chainMode: false,
+        items: [{
+          position: index + 1,
+          word: requestItem,
+          locusName: locus ? getPalaceLocusName(locus, language) : `${t('loci')} ${index + 1}`,
+          locusDescription: locus
+            ? getPalaceLocusDescription(locus, language, t('locusDescriptionFallback'))
+            : t('locusDescriptionFallback'),
+        }],
+      });
+      if (generationVersion !== generationVersionRef.current) return;
+      const suggestion = result.suggestions.find((entry) => entry.position === index + 1);
+      if (!suggestion) {
+        setGenerationMessage(t('aiGenerationFailed'));
+        return;
+      }
+      setAssociations((current) => current.map((entry, entryIndex) => (
+        entryIndex === index ? suggestion.associationText : entry
+      )));
+      const messageKey = result.source === 'template' ? 'aiGeneratedTemplate' : 'aiGenerated';
+      setGenerationMessage(t(messageKey).replace('{count}', '1'));
+    } catch {
+      setGenerationMessage(t('aiGenerationFailed'));
+    } finally {
+      setGeneratingIndex(null);
+    }
+  };
+
   const addItem = () => {
     const value = newItem.trim();
     if (!value) return;
@@ -247,6 +350,7 @@ export default function PalaceMemoryComposerScreen() {
       const locus = sceneLoci[index];
       return createPalaceAssociation(item, locus ? getPalaceLocusName(locus, language) : `locus ${index + 1}`);
     }));
+    setGenerationMessage(null);
     setActiveLocusIndex(0);
     setMessage(null);
   };
@@ -389,6 +493,11 @@ export default function PalaceMemoryComposerScreen() {
                 }}
                 style={styles.seeAllScenesButton}>
                 <Text style={styles.seeAllScenesText}>{showAllScenes ? t('hideScenes') : t('seeAllScenes')}</Text>
+                {showAllScenes ? (
+                  <ChevronUp size={15} color={theme.violetDeep} />
+                ) : (
+                  <ChevronRight size={15} color={theme.violetDeep} />
+                )}
               </AnimatedPressable>
             ) : null}
           </View>
@@ -505,6 +614,12 @@ export default function PalaceMemoryComposerScreen() {
                   current.map((entry, index) => (index === activeLocusIndex ? value : entry)),
                 )
               }
+              onGenerate={() => void generateAssociations()}
+              isGenerating={generatePalaceAssociations.isPending}
+              generationMessage={generationMessage}
+              onGenerateCurrent={() => void generateCurrentAssociation()}
+              isGeneratingAny={generatePalaceAssociations.isPending}
+              isGeneratingCurrent={generatingIndex === activeLocusIndex && generatePalaceAssociations.isPending}
               onSelectIndex={setActiveLocusIndex}
             />
           </>
@@ -632,7 +747,7 @@ const styles = StyleSheet.create({
   },
   editContentText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 }, optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 18 },
-  sceneHeadingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between' }, sceneHeadingCopy: { flex: 1 }, sceneLabel: { marginBottom: 2 }, sceneCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginBottom: 9 }, seeAllScenesButton: { alignItems: 'center', backgroundColor: '#EEE9FF', borderRadius: 999, marginBottom: 8, minHeight: 44, justifyContent: 'center', paddingHorizontal: 11 }, seeAllScenesText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 }, sceneSearchWrap: { alignItems: 'center', backgroundColor: 'white', borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 8, marginBottom: 10, paddingHorizontal: 12 }, sceneSearchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13, minHeight: 44 }, sceneGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }, sceneOptionGrid: { marginRight: 0, marginBottom: 10, width: '48%' }, noMatchingScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, paddingVertical: 16, textAlign: 'center' },
+  sceneHeadingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between' }, sceneHeadingCopy: { flex: 1 }, sceneLabel: { marginBottom: 2 }, sceneCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginBottom: 9 }, seeAllScenesButton: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: '#EEE9FF', marginBottom: 8, paddingLeft: 11, paddingRight: 7 }, seeAllScenesText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 }, sceneSearchWrap: { alignItems: 'center', backgroundColor: 'white', borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 8, marginBottom: 10, paddingHorizontal: 12 }, sceneSearchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13, minHeight: 44 }, sceneGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }, sceneOptionGrid: { marginRight: 0, marginBottom: 10, width: '48%' }, noMatchingScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, paddingVertical: 16, textAlign: 'center' },
   input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 14, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
   sceneRail: { marginHorizontal: -16, paddingLeft: 16 }, sceneOption: { width: 172, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8, marginRight: 10 }, sceneOptionActive: { borderColor: '#7A68E0', backgroundColor: '#F7F5FF' }, sceneOptionLimited: { opacity: 0.72 }, sceneThumb: { height: 92, borderRadius: 12 }, sceneName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 8 }, sceneMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 2 },
   canvasHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, textAlign: 'center', marginTop: 8 }, capacityCard: { marginTop: 11, borderRadius: 14, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 12 }, capacityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 }, capacityText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 3 },

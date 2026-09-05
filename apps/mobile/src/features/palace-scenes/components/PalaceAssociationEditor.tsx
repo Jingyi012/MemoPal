@@ -4,11 +4,11 @@ import type { PalaceLocus } from '@/features/palace-scenes/types/palaceScene.typ
 import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
 import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { ArrowLeft, ArrowLeftRight, ArrowRight, MapPin } from 'lucide-react-native';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ArrowLeft, ArrowLeftRight, ArrowRight, MapPin, RefreshCw, Sparkles } from 'lucide-react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { getPalaceLocusDescription, getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 
 type PalaceAssociationEditorProps = {
@@ -18,6 +18,12 @@ type PalaceAssociationEditorProps = {
   activeIndex: number;
   onSelectIndex: (index: number) => void;
   onChangeAssociation: (value: string) => void;
+  onGenerate?: () => void;
+  isGenerating?: boolean;
+  generationMessage?: string | null;
+  onGenerateCurrent?: () => void;
+  isGeneratingAny?: boolean;
+  isGeneratingCurrent?: boolean;
 };
 
 /** The focused placement editor used while building a Palace route. */
@@ -28,34 +34,62 @@ export function PalaceAssociationEditor({
   activeIndex,
   onSelectIndex,
   onChangeAssociation,
+  onGenerate,
+  isGenerating = false,
+  generationMessage,
+  onGenerateCurrent,
+  isGeneratingAny = false,
+  isGeneratingCurrent = false,
 }: PalaceAssociationEditorProps) {
   const { language, t } = useTranslation('palace');
   const { t: memoryT } = useTranslation('memoryComposer');
   const hasItems = items.length > 0;
   const safeIndex = hasItems ? Math.min(Math.max(activeIndex, 0), items.length - 1) : 0;
-  const activeItem = items[safeIndex] ?? '';
-  const activeLocusIndex = safeIndex < loci.length ? safeIndex : -1;
-  const activeLocus = activeLocusIndex >= 0 ? loci[activeLocusIndex] : undefined;
-  const previewIndex = safeIndex < items.length - 1 ? safeIndex + 1 : safeIndex > 0 ? safeIndex - 1 : -1;
-  const previewLocus = previewIndex >= 0 && previewIndex < loci.length ? loci[previewIndex] : undefined;
+  const nextIndex = safeIndex < items.length - 1 ? safeIndex + 1 : -1;
+  const previousIndex = safeIndex > 0 ? safeIndex - 1 : -1;
   const translateX = useSharedValue(0);
   const rotation = useSharedValue(0);
+  const previewProgress = useSharedValue(0);
+  const previewDirection = useSharedValue(nextIndex >= 0 ? -1 : 1);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     translateX.value = 0;
     rotation.value = 0;
-  }, [safeIndex, rotation, translateX]);
+    previewProgress.value = 0;
+    previewDirection.value = nextIndex >= 0 ? -1 : 1;
+  }, [nextIndex, previewDirection, previewProgress, rotation, safeIndex, translateX]);
 
   const animatedCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }, { rotate: `${rotation.value}deg` }],
   }));
 
+  const animatedNextPreviewStyle = useAnimatedStyle(() => {
+    const progress = previewDirection.value < 0 ? previewProgress.value : 0;
+    return {
+      opacity: previewDirection.value < 0 ? 0.86 + progress * 0.14 : 0,
+      transform: [{ translateY: 5 - progress * 5 }, { scale: 0.95 + progress * 0.05 }],
+    };
+  });
+
+  const animatedPreviousPreviewStyle = useAnimatedStyle(() => {
+    const progress = previewDirection.value > 0 ? previewProgress.value : 0;
+    return {
+      opacity: previewDirection.value > 0 ? 0.86 + progress * 0.14 : 0,
+      transform: [{ translateY: 5 - progress * 5 }, { scale: 0.95 + progress * 0.05 }],
+    };
+  });
+
   const swipeGesture = Gesture.Pan()
     .activeOffsetX([-12, 12])
     .failOffsetY([-18, 18])
+    .onStart(() => {
+      previewProgress.value = 0;
+    })
     .onUpdate((event) => {
       translateX.value = event.translationX;
       rotation.value = event.translationX / 24;
+      previewDirection.value = event.translationX < 0 ? -1 : 1;
+      previewProgress.value = Math.min(Math.abs(event.translationX) / 140, 1);
     })
     .onEnd((event) => {
       const isForward = event.translationX < -72 && safeIndex < items.length - 1;
@@ -63,15 +97,18 @@ export function PalaceAssociationEditor({
       if (!isForward && !isBackward) {
         translateX.value = withSpring(0);
         rotation.value = withSpring(0);
+        previewProgress.value = withSpring(0);
         return;
       }
 
       const nextIndex = isForward ? safeIndex + 1 : safeIndex - 1;
       const exitX = isForward ? -380 : 380;
-      translateX.value = withTiming(exitX, { duration: 180 }, (finished) => {
+      previewDirection.value = isForward ? -1 : 1;
+      previewProgress.value = withTiming(1, { duration: 220 });
+      translateX.value = withTiming(exitX, { duration: 220 }, (finished) => {
         if (finished) runOnJS(onSelectIndex)(nextIndex);
       });
-      rotation.value = withTiming(isForward ? -10 : 10, { duration: 180 });
+      rotation.value = withTiming(isForward ? -10 : 10, { duration: 220 });
     });
 
   if (!hasItems) {
@@ -101,53 +138,88 @@ export function PalaceAssociationEditor({
     );
   };
 
+  const renderEditorCard = (index: number, readOnly = false) => {
+    const item = items[index] ?? '';
+    const locus = index >= 0 && index < loci.length ? loci[index] : undefined;
+    return (
+      <SceneEditorCard
+        index={index}
+        total={items.length}
+        anchorLabel={`${t('locusLabel')} ${index + 1}`}
+        itemLabel={item}
+        visual={renderLocationVisual(locus, index)}
+        value={associations[index] ?? ''}
+        onChangeText={readOnly ? () => undefined : onChangeAssociation}
+        placeholder={memoryT('associationPlaceholder')}
+        inputLabel={t('associationPrompt')}
+        accessibilityLabel={`${t('associationPrompt')}: ${item}`}
+        accent="palace"
+        compact
+        readOnly={readOnly}
+        headerAction={!readOnly && onGenerateCurrent ? (
+          <AnimatedPressable
+            accessibilityRole="button"
+            accessibilityLabel={isGeneratingCurrent ? t('aiRegenerating') : t('aiRegenerate')}
+            disabled={isGeneratingAny}
+            onPress={onGenerateCurrent}
+            style={[styles.regenerateButton, isGeneratingAny && styles.regenerateButtonDisabled]}>
+            {isGeneratingCurrent ? (
+              <ActivityIndicator color={theme.violetDeep} size="small" />
+            ) : (
+              <RefreshCw color={theme.violetDeep} size={15} strokeWidth={2.5} />
+            )}
+          </AnimatedPressable>
+        ) : undefined}
+      />
+    );
+  };
+
   return (
     <View style={styles.section}>
       <View style={styles.headingRow}>
         <View style={styles.headingCopy}>
           <Text style={styles.title}>{t('placementTitle')}</Text>
         </View>
-        <Text style={styles.progress}>{safeIndex + 1}/{items.length} {t('placed')}</Text>
+        {onGenerate ? (
+          <AnimatedPressable
+            accessibilityRole="button"
+            accessibilityLabel={isGenerating ? t('aiGeneratingAllLabel') : t('aiGenerateAllLabel')}
+            disabled={isGenerating}
+            onPress={onGenerate}
+            style={[styles.compactGenerateButton, isGenerating && styles.generateButtonDisabled]}>
+            {isGenerating ? (
+              <ActivityIndicator color={theme.violetDeep} size="small" />
+            ) : (
+              <Sparkles size={14} color={theme.violetDeep} strokeWidth={2.4} />
+            )}
+            <Text numberOfLines={1} style={styles.compactGenerateText}>
+              {isGenerating
+                ? t('aiGeneratingAllShort')
+                : t('aiGenerateAllShort').replace('{count}', String(items.length))}
+            </Text>
+          </AnimatedPressable>
+        ) : null}
       </View>
       <Text style={styles.helper}>{t('placementHelper')}</Text>
+      {generationMessage ? <Text numberOfLines={1} ellipsizeMode="tail" style={styles.generationMessage}>{generationMessage}</Text> : null}
 
       <View style={styles.cardStack}>
         {items.length > 1 ? <View pointerEvents="none" style={[styles.deckLayer, styles.deckLayerBack]} /> : null}
-        {previewIndex >= 0 ? (
-          <View pointerEvents="none" style={[styles.deckPreview, styles.deckPreviewFront]}>
-            <SceneEditorCard
-              index={previewIndex}
-              total={items.length}
-              anchorLabel={`${t('locusLabel')} ${previewIndex + 1}`}
-              itemLabel={items[previewIndex]}
-              visual={renderLocationVisual(previewLocus, previewIndex)}
-              value={associations[previewIndex] ?? ''}
-              onChangeText={() => undefined}
-              placeholder={memoryT('associationPlaceholder')}
-              inputLabel={t('associationPrompt')}
-              accessibilityLabel={`${t('associationPrompt')}: ${items[previewIndex]}`}
-              accent="palace"
-              readOnly
-            />
+        {nextIndex >= 0 ? (
+          <View pointerEvents="none" style={[styles.deckPreview, styles.deckPreviewNext]}>
+            <Animated.View style={animatedNextPreviewStyle}>{renderEditorCard(nextIndex, true)}</Animated.View>
+          </View>
+        ) : null}
+        {previousIndex >= 0 ? (
+          <View pointerEvents="none" style={[styles.deckPreview, styles.deckPreviewPrevious]}>
+            <Animated.View style={animatedPreviousPreviewStyle}>{renderEditorCard(previousIndex, true)}</Animated.View>
           </View>
         ) : null}
         <GestureDetector gesture={swipeGesture}>
           <Animated.View
             accessibilityHint={t('swipeHint')}
             style={[styles.swipeCard, animatedCardStyle]}>
-            <SceneEditorCard
-              index={safeIndex}
-              total={items.length}
-              anchorLabel={`${t('locusLabel')} ${safeIndex + 1}`}
-              itemLabel={activeItem}
-              visual={renderLocationVisual(activeLocus, safeIndex)}
-              value={associations[safeIndex] ?? ''}
-              onChangeText={onChangeAssociation}
-              placeholder={memoryT('associationPlaceholder')}
-              inputLabel={t('associationPrompt')}
-              accessibilityLabel={`${t('associationPrompt')}: ${activeItem}`}
-              accent="palace"
-            />
+            {renderEditorCard(safeIndex)}
           </Animated.View>
         </GestureDetector>
       </View>
@@ -189,25 +261,31 @@ export function PalaceAssociationEditor({
 }
 
 const styles = StyleSheet.create({
-  section: { marginTop: 18 },
-  headingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between' },
+  section: { marginTop: 12 },
+  headingRow: { alignItems: 'center', flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
   headingCopy: { flex: 1 },
   title: { color: theme.ink, fontFamily: typography.display, fontSize: 17 },
-  progress: { backgroundColor: '#EEE9FF', borderRadius: 999, color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, paddingHorizontal: 9, paddingVertical: 5 },
-  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 7, marginBottom: 10 },
+  compactGenerateButton: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#DCD4FF', borderRadius: 11, borderWidth: 1.5, flexDirection: 'row', gap: 5, justifyContent: 'center', maxWidth: 118, minHeight: 32, paddingHorizontal: 8 },
+  generateButtonDisabled: { opacity: 0.62 },
+  compactGenerateText: { color: theme.violetDeep, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 15, marginTop: 4, marginBottom: 5 },
+  generationMessage: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9.5, lineHeight: 13, marginBottom: 4, textAlign: 'center' },
+  regenerateButton: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#DCD4FF', borderRadius: 10, borderWidth: 1, height: 30, justifyContent: 'center', width: 30 },
+  regenerateButtonDisabled: { opacity: 0.62 },
   cardStack: { position: 'relative' },
   deckLayer: { backgroundColor: '#F3F0FF', borderColor: '#DCD4FF', borderRadius: 20, borderWidth: 1.5, left: 0, position: 'absolute', right: 0 },
   deckLayerBack: { bottom: 11, left: 10, right: 10, top: 13, opacity: 0.65 },
-  deckPreview: { left: 5, position: 'absolute', right: 5, top: 6, zIndex: 1 },
-  deckPreviewFront: { opacity: 0.9 },
+  deckPreview: { left: 0, position: 'absolute', right: 0, top: 4, zIndex: 1 },
+  deckPreviewNext: { zIndex: 1 },
+  deckPreviewPrevious: { zIndex: 1 },
   swipeCard: { zIndex: 2 },
-  locationVisual: { alignItems: 'center', flexDirection: 'row', gap: 10, width: '100%' },
-  locationIcon: { alignItems: 'center', backgroundColor: '#EAE4FF', borderRadius: 12, height: 36, justifyContent: 'center', width: 36 },
+  locationVisual: { alignItems: 'center', flexDirection: 'row', gap: 8, width: '100%' },
+  locationIcon: { alignItems: 'center', backgroundColor: '#EAE4FF', borderRadius: 10, height: 30, justifyContent: 'center', width: 30 },
   locationCopy: { flex: 1, minWidth: 0 },
-  locationLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
+  locationLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
   locationName: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold },
-  locationDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, lineHeight: 15, marginTop: 2 },
-  swipeHint: { alignItems: 'center', flexDirection: 'row', gap: 5, justifyContent: 'center', marginBottom: 8, marginTop: -8 },
+  locationDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9, lineHeight: 13, marginTop: 1 },
+  swipeHint: { alignItems: 'center', flexDirection: 'row', gap: 5, justifyContent: 'center', marginBottom: 8, marginTop: 4 },
   swipeHintText: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: 10 },
   navigationRow: { flexDirection: 'row', gap: 9, marginTop: 2 },
   navigationSlot: { flex: 1, minWidth: 0 },

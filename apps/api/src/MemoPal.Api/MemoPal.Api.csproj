@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <UserSecretsId>MemoPal-Api-Local</UserSecretsId>
   </PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild"
