@@ -1,5 +1,5 @@
 import api from '@/core/api/apiClient';
-import type { GeneralResponse } from '@/core/types/general';
+import type { GeneralResponse, PagedResponse } from '@/core/types/general';
 import type { MemorySet, MemorySetUpsertRequest } from '../types/memorySet.types';
 
 function unwrap<T>(response: GeneralResponse<T>, fallbackMessage: string): T {
@@ -11,8 +11,12 @@ function unwrap<T>(response: GeneralResponse<T>, fallbackMessage: string): T {
 
 export const memorySetApi = {
   async getAll(): Promise<MemorySet[]> {
-    const response = await api.get<GeneralResponse<MemorySet[]>>('/v1/memory-sets');
+    const response = await api.get<PagedResponse<MemorySet[]>>('/v1/memory-sets', { params: { pageNumber: 1, pageSize: 50 } });
     return unwrap(response.data, 'Could not load your memory sets.');
+  },
+  async getPage(pageNumber = 1, pageSize = 20) {
+    const response = await api.get<PagedResponse<MemorySet[]>>('/v1/memory-sets', { params: { pageNumber, pageSize } });
+    return { items: unwrap(response.data, 'Could not load your memory sets.'), pageNumber: response.data.pagination.pageNumber, pageSize: response.data.pagination.pageSize, totalCount: response.data.pagination.totalCount };
   },
 
   async getById(memorySetId: string): Promise<MemorySet> {

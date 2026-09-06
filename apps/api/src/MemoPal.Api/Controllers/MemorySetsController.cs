@@ -18,10 +18,10 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
         var result = await Sender.Send(
-            new GetMemorySetsQuery(GetUserIdOrThrow()),
+            new GetPagedMemorySetsQuery(GetUserIdOrThrow(), pageNumber, pageSize),
             cancellationToken);
         return Ok(result);
     }

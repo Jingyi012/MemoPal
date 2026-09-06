@@ -4,7 +4,7 @@ import { ConfirmModal } from '@/components/ConfirmModal';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import LoadingView from '@/components/LoadingView';
-import { useMemorySetMutations, useMemorySets } from '@/features/memory-sets';
+import { useInfiniteMemorySets, useMemorySetMutations } from '@/features/memory-sets';
 import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
 import { MemorySetCard } from '@/components/MemorySetCard';
 import { usePalaceScenes } from '@/features/palace-scenes';
@@ -40,7 +40,7 @@ export default function LibraryScreen() {
   const router = useRouter();
   const { t } = useTranslation('library');
   const { userState, updateState } = useUserState();
-  const memorySets = useMemorySets();
+  const pagedMemorySets = useInfiniteMemorySets();
   const palaceScenes = usePalaceScenes();
   const dueReviews = useDueMemoryReviews();
   const upcomingReviews = useUpcomingMemoryReviews(30);
@@ -60,7 +60,7 @@ export default function LibraryScreen() {
   }, [actionMemorySet]);
 
   const visibleSets = useMemo(() => {
-    const items = memorySets.data ?? [];
+    const items = pagedMemorySets.data?.pages.flatMap((page) => page.items) ?? [];
     return items
       .filter((memorySet) => {
         if (filter === 'archived') return memorySet.status === 'archived';
@@ -68,9 +68,9 @@ export default function LibraryScreen() {
         return filter === 'all' || memorySet.techniqueKey === filter;
       })
       .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt));
-  }, [filter, memorySets.data]);
+  }, [filter, pagedMemorySets.data]);
 
-  const activeCount = memorySets.data?.filter((memorySet) => memorySet.status !== 'archived').length ?? 0;
+  const activeCount = pagedMemorySets.data?.pages.flatMap((page) => page.items).filter((memorySet) => memorySet.status !== 'archived').length ?? 0;
   const palaceSceneById = useMemo(
     () => new Map((palaceScenes.data ?? []).map((scene) => [scene.id, scene])),
     [palaceScenes.data],
@@ -189,6 +189,7 @@ export default function LibraryScreen() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
+        actions={[{ component: <AnimatedPressable accessibilityLabel={t('lessonLibrary')} onPress={() => router.push('/lessons' as Href)} style={styles.headerLessonButton}><Text style={styles.headerLessonEmoji}>📚</Text></AnimatedPressable> }]}
         hideBackButton
       />
 
@@ -218,8 +219,8 @@ export default function LibraryScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={memorySets.isRefetching || dueReviews.isRefetching || upcomingReviews.isRefetching}
-            onRefresh={() => { void Promise.allSettled([memorySets.refetch(), palaceScenes.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
+            refreshing={pagedMemorySets.isRefetching || dueReviews.isRefetching || upcomingReviews.isRefetching}
+            onRefresh={() => { void Promise.allSettled([pagedMemorySets.refetch(), palaceScenes.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
           />
         }>
         <NightEmphasisCard style={styles.summaryCard}>
@@ -260,7 +261,8 @@ export default function LibraryScreen() {
 
         <View style={styles.viewToolbar}>
           <Text style={styles.viewModeLabel}>{t('viewMode')}</Text>
-          <View style={styles.viewToggle}>
+          <View style={styles.viewActions}>
+            <View style={styles.viewToggle}>
             <AnimatedPressable
               accessibilityRole="button"
               accessibilityLabel={t('cardView')}
@@ -279,20 +281,21 @@ export default function LibraryScreen() {
               style={[styles.viewOption, viewMode === 'list' && styles.viewOptionSelected]}>
               <ListIcon size={16} color={viewMode === 'list' ? 'white' : theme.violetDeep} />
             </AnimatedPressable>
+            </View>
           </View>
         </View>
 
-        {memorySets.isLoading ? (
+        {pagedMemorySets.isLoading ? (
           <View style={styles.loadingFrame}>
             <LoadingView description={t('loading')} />
           </View>
-        ) : memorySets.isError ? (
+        ) : pagedMemorySets.isError ? (
           <View style={styles.noticeCard}>
             <Text style={styles.noticeTitle}>{t('unavailable')}</Text>
             <Text style={styles.noticeBody}>
-              {getNumberPegErrorMessage(memorySets.error, t('connectionRetry'))}
+              {getNumberPegErrorMessage(pagedMemorySets.error, t('connectionRetry'))}
             </Text>
-            <AnimatedPressable onPress={() => memorySets.refetch()} style={styles.retryButton}>
+            <AnimatedPressable onPress={() => pagedMemorySets.refetch()} style={styles.retryButton}>
               <RefreshCcw size={16} color={theme.ink} />
               <Text style={styles.retryText}>{t('retry')}</Text>
             </AnimatedPressable>
@@ -325,25 +328,17 @@ export default function LibraryScreen() {
           />
         ) : (
           <View style={styles.noticeCard}>
-            <Text style={styles.emptyEmoji}>{filter === 'palace' ? '🏡' : filter === 'number-peg' ? '🦢' : filter === 'archived' ? '📦' : '✨'}</Text>
-            <Text style={styles.noticeTitle}>
-              {filter === 'archived' ? t('archiveEmpty') : t('collectionEmpty')}
-            </Text>
-            <Text style={styles.noticeBody}>
-              {filter === 'archived'
-                ? t('archiveBody')
-                : t('buildFirstBody')}
-            </Text>
-            {filter !== 'archived' && (
-              <AnimatedPressable
-                onPress={() => router.push('/create-memory' as Href)}
-                style={styles.emptyButton}>
-                <Plus size={17} color="white" />
-                <Text style={styles.emptyButtonText}>{t('create')}</Text>
-              </AnimatedPressable>
-            )}
+            <Text style={styles.emptyEmoji}>{filter === 'palace' ? '🏡' : filter === 'number-peg' ? '🦢' : '📦'}</Text>
+            <Text style={styles.noticeTitle}>{filter === 'archived' ? t('archiveEmpty') : t('collectionEmpty')}</Text>
+            <Text style={styles.noticeBody}>{filter === 'archived' ? t('archiveBody') : t('buildFirstBody')}</Text>
+            {filter !== 'archived' && <AnimatedPressable onPress={() => router.push('/create-memory' as Href)} style={styles.emptyButton}><Plus size={17} color="white" /><Text style={styles.emptyButtonText}>{t('create')}</Text></AnimatedPressable>}
           </View>
         )}
+        {pagedMemorySets.hasNextPage && !pagedMemorySets.isFetchingNextPage ? (
+          <AnimatedPressable onPress={() => void pagedMemorySets.fetchNextPage()} style={styles.loadMoreButton}>
+            <Text style={styles.loadMoreText}>{t('loadMore')}</Text>
+          </AnimatedPressable>
+        ) : pagedMemorySets.isFetchingNextPage ? <Text style={styles.loadMoreText}>{t('loading')}</Text> : null}
       </ScrollView>}
 
       <MemoryActionsSheet
@@ -505,6 +500,9 @@ const styles = StyleSheet.create({
   filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   filterTextSelected: { color: 'white' },
   viewToolbar: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  viewActions: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  headerLessonButton: { alignItems: 'center', backgroundColor: '#F2EEFF', borderColor: '#DDD3FF', borderRadius: 19, borderWidth: 1.5, height: 40, justifyContent: 'center', width: 40 },
+  headerLessonEmoji: { fontSize: 20 },
   viewModeLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   viewToggle: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 12, borderWidth: 1.5, flexDirection: 'row', padding: 3 },
   viewOption: { alignItems: 'center', borderRadius: 9, height: 34, justifyContent: 'center', width: 36 },
@@ -547,5 +545,9 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   emptyButtonText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  loadMoreButton: { alignSelf: 'center', marginTop: 16, borderRadius: 999, backgroundColor: '#EEE9FF', paddingHorizontal: 18, paddingVertical: 10 },
+  loadMoreText: { textAlign: 'center', color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  lessonEntry: { alignItems: 'center', backgroundColor: '#F2EEFF', borderColor: '#DDD3FF', borderRadius: 999, borderWidth: 1.5, flexDirection: 'row', gap: 5, paddingHorizontal: 9, paddingVertical: 6 },
+  lessonEntryTitle: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 }, lessonEntryArrow: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 14 },
   loadingFrame: { height: 180, overflow: 'hidden', borderRadius: 20 },
 });

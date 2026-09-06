@@ -156,7 +156,9 @@ export default function PracticeScreen() {
         <View style={styles.discoverySection}>
           <View style={styles.sectionHeadingRow}>
             <Text style={[styles.sectionLabel, styles.discoveryTitle]}>{t('tryLesson')}</Text>
-            <Text style={styles.lessonHint}>{t('tapToStart')}</Text>
+            <AnimatedPressable onPress={() => router.push('/lessons' as Href)} hitSlop={8}>
+              <Text style={styles.seeAll}>{t('seeAll')} →</Text>
+            </AnimatedPressable>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.lessonFilterRow}>
             {([{ id: 'all', emoji: '', nameEn: t('all'), nameZh: t('all') }, ...lessonCategories]).map((category) => (
@@ -189,7 +191,7 @@ export default function PracticeScreen() {
                 key={lesson.id}
                 onPress={() => openLesson(router, lesson, language)}
                 style={styles.lessonCard}>
-                <Text style={styles.lessonEmoji}>{lesson.emoji}</Text>
+                <View style={[styles.lessonEmojiWrap, lesson.techniqueKey === 'palace' && styles.lessonEmojiWrapPalace]}><Text style={styles.lessonEmoji}>{lesson.emoji}</Text></View>
                 <Text numberOfLines={2} style={styles.lessonTitle}>{localized.title}</Text>
                 <Text numberOfLines={2} style={styles.lessonDescription}>{localized.description}</Text>
                 <Text style={styles.lessonCount}>{lesson.items.length} {lesson.items.length === 1 ? t('item') : t('items')}</Text>
@@ -306,8 +308,10 @@ const styles = StyleSheet.create({
   lessonFilterChipActive: { borderColor: theme.violetDeep, backgroundColor: '#EEE9FF' },
   lessonFilterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
   lessonFilterTextActive: { color: theme.violetDeep },
-  lessonCard: { width: 184, minHeight: 190, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 12 },
-  lessonEmoji: { fontSize: 27 },
+  lessonCard: { width: 184, minHeight: 190, borderRadius: 16, borderWidth: 1.5, borderColor: '#E4DFF4', backgroundColor: '#FFFFFF', padding: 12, shadowColor: '#6B5BC5', shadowOpacity: 0.07, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  lessonEmojiWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF0F4' },
+  lessonEmojiWrapPalace: { backgroundColor: '#EEE9FF' },
+  lessonEmoji: { fontSize: 25 },
   lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5, lineHeight: 16, marginTop: 6 },
   lessonDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, lineHeight: 15, marginTop: 4, minHeight: 30 },
   lessonCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, marginTop: 4 },

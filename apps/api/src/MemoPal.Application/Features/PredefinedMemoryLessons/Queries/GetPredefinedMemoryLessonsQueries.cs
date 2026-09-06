@@ -8,6 +8,8 @@ namespace MemoPal.Application.Features.PredefinedMemoryLessons.Queries;
 
 public sealed record GetPublishedPredefinedMemoryLessonsQuery
     : IRequest<ApiResponse<IReadOnlyList<PredefinedMemoryLessonDto>>>;
+public sealed record GetPagedPublishedPredefinedMemoryLessonsQuery(int PageNumber = 1, int PageSize = 12)
+    : IRequest<PaginatedResponse<PredefinedMemoryLessonDto>>;
 public sealed record GetAdminPredefinedMemoryLessonsQuery
     : IRequest<ApiResponse<IReadOnlyList<PredefinedMemoryLessonDto>>>;
 
@@ -28,6 +30,26 @@ public sealed class GetPublishedPredefinedMemoryLessonsQueryHandler(IAppDbContex
             .ToListAsync(cancellationToken);
         return ApiResponse<IReadOnlyList<PredefinedMemoryLessonDto>>.Ok(
             lessons.Select(PredefinedMemoryLessonMapper.ToDto).ToList());
+    }
+}
+
+public sealed class GetPagedPublishedPredefinedMemoryLessonsQueryHandler(IAppDbContext db)
+    : IRequestHandler<GetPagedPublishedPredefinedMemoryLessonsQuery, PaginatedResponse<PredefinedMemoryLessonDto>>
+{
+    public async Task<PaginatedResponse<PredefinedMemoryLessonDto>> Handle(
+        GetPagedPublishedPredefinedMemoryLessonsQuery request, CancellationToken cancellationToken)
+    {
+        var pageNumber = Math.Max(1, request.PageNumber);
+        var pageSize = Math.Clamp(request.PageSize, 1, 50);
+        var query = db.PredefinedMemoryLessons.AsNoTracking()
+            .Include(x => x.Items.Where(item => !item.IsDeleted))
+            .Include(x => x.Category)
+            .Where(x => !x.IsDeleted && x.IsPublished && !x.Category.IsDeleted && x.Category.IsActive)
+            .OrderBy(x => x.Category.SortOrder).ThenBy(x => x.SortOrder).ThenBy(x => x.TitleEn);
+        var totalCount = await query.CountAsync(cancellationToken);
+        var lessons = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+        return PaginatedResponse<PredefinedMemoryLessonDto>.Ok(
+            lessons.Select(PredefinedMemoryLessonMapper.ToDto).ToList(), pageNumber, pageSize, totalCount);
     }
 }
 

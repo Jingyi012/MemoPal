@@ -6,10 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 namespace MemoPal.Api.Controllers;
 
 [Authorize]
-[Route("predefined-memory-lessons")]
+[Route("v1/predefined-memory-lessons")]
 public sealed class PredefinedMemoryLessonsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpGet]
-    public async Task<IActionResult> GetPublished(CancellationToken cancellationToken) =>
-        Ok(await Sender.Send(new GetPublishedPredefinedMemoryLessonsQuery(), cancellationToken));
+    public async Task<IActionResult> GetPublished([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default) =>
+        Ok(await Sender.Send(new GetPagedPublishedPredefinedMemoryLessonsQuery(pageNumber, pageSize), cancellationToken));
 }

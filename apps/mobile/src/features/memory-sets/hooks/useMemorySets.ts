@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   archiveLocalPreviewMemorySet,
   setLocalPreviewMemorySetVisibility,
@@ -33,6 +33,26 @@ export function useMemorySets(techniqueKey?: MemoryTechniqueKey) {
         ? memorySets.filter((memorySet) => memorySet.techniqueKey === techniqueKey)
         : memorySets;
     },
+    staleTime: 1000 * 60 * 2,
+    networkMode: 'online',
+  });
+}
+
+export function useInfiniteMemorySets() {
+  return useInfiniteQuery({
+    queryKey: [...MEMORY_SET_KEYS.lists(), 'paged'],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
+      try {
+        return await memorySetApi.getPage(pageParam, 20);
+      } catch (error) {
+        if (!isLocalPreviewEnabled) throw error;
+        const all = getLocalPreviewMemorySets();
+        const start = (pageParam - 1) * 20;
+        return { items: all.slice(start, start + 20), pageNumber: pageParam, pageSize: 20, totalCount: all.length };
+      }
+    },
+    getNextPageParam: (lastPage) => lastPage.pageNumber * lastPage.pageSize < lastPage.totalCount ? lastPage.pageNumber + 1 : undefined,
     staleTime: 1000 * 60 * 2,
     networkMode: 'online',
   });
