@@ -4,6 +4,7 @@ using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.PalaceScenes.DTOs;
+using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.PalaceScenes.Commands;
@@ -40,6 +41,8 @@ public sealed class UpdatePalaceSceneCommandHandler(IAppDbContext db)
         if (request.Request.ExpectedVersion != scene.Version)
             throw new ConflictAppException($"This Palace scene changed. Reload version {scene.Version} before saving.");
 
+        PalaceSceneAggregate.Validate(request.Request);
+        await PalaceScenePositionCoordinator.StageExistingPositionsAsync(db, scene, cancellationToken);
         PalaceSceneAggregate.Update(scene, request.Request);
         await db.SaveChangesAsync(cancellationToken);
         return ApiResponse<PalaceSceneDto>.Ok(PalaceSceneMapper.ToDto(scene));
@@ -115,9 +118,38 @@ public sealed class UpdateCustomPalaceSceneCommandHandler(IAppDbContext db)
         if (request.Request.Loci.Count > locationLimit)
             throw new ValidationAppException($"This plan allows up to {locationLimit} loci in a custom Palace.");
 
+        PalaceSceneAggregate.Validate(request.Request);
+        await PalaceScenePositionCoordinator.StageExistingPositionsAsync(db, scene, cancellationToken);
         PalaceSceneAggregate.UpdateCustom(scene, request.Request);
         await db.SaveChangesAsync(cancellationToken);
         return ApiResponse<PalaceSceneDto>.Ok(PalaceSceneMapper.ToDto(scene));
+    }
+}
+
+/// <summary>
+/// Prevents PostgreSQL unique-index conflicts when an update reorders loci.
+/// EF Core can send a swap (1 -> 2, 2 -> 1) as two UPDATE statements while
+/// the unique (scene, position) index is checked after each statement. Move
+/// tracked active loci to a unique temporary range first, persist that phase,
+/// then let the aggregate apply the requested positions.
+/// </summary>
+internal static class PalaceScenePositionCoordinator
+{
+    public static async Task StageExistingPositionsAsync(
+        IAppDbContext db,
+        PalaceScene scene,
+        CancellationToken cancellationToken)
+    {
+        var activeLoci = scene.Loci
+            .Where(locus => !locus.IsDeleted)
+            .OrderBy(locus => locus.Id, StringComparer.Ordinal)
+            .ToArray();
+
+        for (var index = 0; index < activeLoci.Length; index++)
+            activeLoci[index].Position = -(index + 1);
+
+        if (activeLoci.Length > 0)
+            await db.SaveChangesAsync(cancellationToken);
     }
 }
 

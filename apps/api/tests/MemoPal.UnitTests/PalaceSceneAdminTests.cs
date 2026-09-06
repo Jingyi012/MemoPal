@@ -129,6 +129,46 @@ public sealed class PalaceSceneAdminTests
         Assert.True((await db.PalaceScenes.IgnoreQueryFilters().SingleAsync(x => x.Id == created.Data.Id)).IsDeleted);
     }
 
+    [Fact]
+    public async Task Update_Should_Safely_Swap_Locus_Order()
+    {
+        await using var db = CreateDbContext("reorder-admin");
+        var created = await new CreatePalaceSceneCommandHandler(db).Handle(
+            new CreatePalaceSceneCommand(new PalaceSceneUpsertRequest
+            {
+                Name = "Reorder room",
+                Description = "A room",
+                ImageUrl = "/uploads/room.webp",
+                Status = PalaceSceneStatuses.Published,
+                Loci =
+                [
+                    new PalaceLocusInput { Position = 1, Name = "Door", Description = "Keep door text", XPercent = 10, YPercent = 20 },
+                    new PalaceLocusInput { Position = 2, Name = "Desk", Description = "Keep desk text", XPercent = 70, YPercent = 80 }
+                ]
+            }), default);
+
+        var door = created.Data!.Loci.Single(x => x.Name == "Door");
+        var desk = created.Data.Loci.Single(x => x.Name == "Desk");
+        var updated = await new UpdatePalaceSceneCommandHandler(db).Handle(
+            new UpdatePalaceSceneCommand(created.Data.Id, new PalaceSceneUpsertRequest
+            {
+                Name = "Reorder room",
+                Description = "A room",
+                ImageUrl = "/uploads/room.webp",
+                Status = PalaceSceneStatuses.Published,
+                ExpectedVersion = created.Data.Version,
+                Loci =
+                [
+                    new PalaceLocusInput { Id = door.Id, Position = 2, Name = door.Name, Description = door.Description, XPercent = door.XPercent, YPercent = door.YPercent },
+                    new PalaceLocusInput { Id = desk.Id, Position = 1, Name = desk.Name, Description = desk.Description, XPercent = desk.XPercent, YPercent = desk.YPercent }
+                ]
+            }), default);
+
+        Assert.Equal(2, updated.Data!.Loci.Single(x => x.Id == door.Id).Position);
+        Assert.Equal(1, updated.Data.Loci.Single(x => x.Id == desk.Id).Position);
+        Assert.Equal("Keep door text", updated.Data.Loci.Single(x => x.Id == door.Id).Description);
+    }
+
     private static AppDbContext CreateDbContext(string userId)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
