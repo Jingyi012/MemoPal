@@ -1,6 +1,6 @@
 import { CommonHeader } from '@/components/CommonHeader';
 import { NumberPegItemCard } from '@/features/number-peg/components/NumberPegItemCard';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { buildAllNumberPegItems, getUnlockedPegCount, MAX_NUMBER_PEGS } from '@/features/number-peg/utils/numberPegMap';
 import { useRouter } from 'expo-router';
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   headingRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 25, marginBottom: 12 },
   eyebrow: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
   heading: { color: theme.ink, fontFamily: typography.display, fontSize: 18, marginTop: 3 },
-  lockPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, backgroundColor: '#F6F3EA', paddingHorizontal: 9, paddingVertical: 6 },
+  lockPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, backgroundColor: '#F3F0FF', paddingHorizontal: 9, paddingVertical: 6 },
   lockEmoji: { fontSize: 12 },
   lockPillText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 9 },

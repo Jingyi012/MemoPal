@@ -6,7 +6,7 @@ import {
   usePredefinedMemoryLessons,
   type PredefinedMemoryLesson,
 } from '@/features/predefined-memory-lessons';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Image } from 'expo-image';
 import { Href, Redirect, useRouter } from 'expo-router';
@@ -315,7 +315,7 @@ function localizeLesson(lesson: PredefinedMemoryLesson, language: 'en' | 'zh') {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#FFFFFF' },
+  page: { flex: 1, backgroundColor: theme.canvas },
   content: { paddingHorizontal: 18, paddingBottom: 200 },
   brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   logo: { width: 44, height: 44, borderRadius: 14, overflow: 'hidden', backgroundColor: theme.ink },

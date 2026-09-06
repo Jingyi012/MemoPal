@@ -11,7 +11,7 @@ import { useGeneratePalaceAssociations } from '@/features/palace-scenes/hooks/us
 import type { PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
 import { getPalaceLocusDescription, getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import {

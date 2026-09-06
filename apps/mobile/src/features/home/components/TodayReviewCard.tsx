@@ -1,6 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { groupMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { ArrowRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
@@ -67,9 +67,9 @@ function isOverdue(dueAt: string) {
 }
 
 const styles = StyleSheet.create({
-  card: { marginTop: 12, borderRadius: 21, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 14 },
+  card: { marginTop: 12, borderRadius: 21, borderWidth: 2, borderColor: '#F4D8B8', backgroundColor: '#FFF3E6', padding: 14 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headerIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },
+  headerIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#FFF7DD', alignItems: 'center', justifyContent: 'center' },
   headerEmoji: { fontSize: 21 },
   eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.7 },
   title: { color: theme.ink, fontFamily: typography.display, fontSize: 15, marginTop: 3 },

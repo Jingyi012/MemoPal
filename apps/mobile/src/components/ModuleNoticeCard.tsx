@@ -1,5 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { RefreshCcw } from 'lucide-react-native';
 import type { ReactNode } from 'react';
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     alignItems: 'center',
-    backgroundColor: '#EEE9FF',
+    backgroundColor: theme.mintTint,
     borderRadius: 14,
     height: 42,
     justifyContent: 'center',

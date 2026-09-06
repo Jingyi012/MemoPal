@@ -1,6 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
 import { typography } from '@/theme/typography';
 import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react-native';

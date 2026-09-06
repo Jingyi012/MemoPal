@@ -6,7 +6,7 @@ import { MemorySetRow } from '@/components/MemorySetRow';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
@@ -199,9 +199,9 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: '#E3D7B3',
+    backgroundColor: '#CFC6F4',
     borderWidth: 2,
-    borderColor: '#EEE9DC',
+    borderColor: '#E5DFFF',
   },
   sceneImage: { ...StyleSheet.absoluteFillObject },
   sceneShade: {

@@ -1,6 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useHelpFaqConfig } from '@/features/support/hooks/useHelpFaqConfig';
 import { HelpFaqItem } from '@/features/support/types/helpFaqConfig';
@@ -59,8 +59,8 @@ const HelpSheet = forwardRef<Ref, HelpSheetProps>(({ router }, ref) => {
               bottomSheetRef.current?.dismiss();
               router.push('/support');
             }}
-            className="mb-6 flex-row items-center gap-3 rounded-2xl border-2 border-[#DCD4FF] bg-[#EEE9FF] p-4">
-            <View className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DCD4FF]">
+            className="mb-6 flex-row items-center gap-3 rounded-2xl border-2 border-line-sky bg-tint-sky p-4">
+            <View className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
               <Text className="text-xl">✉️</Text>
             </View>
             <View className="flex-1">
@@ -107,7 +107,7 @@ const AccordionItem = ({
     <View className="mb-2 overflow-hidden">
       <AnimatedPressable
         onPress={onPress}
-        className="mb-1 flex-row justify-between rounded-2xl border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4 active:bg-[#F6F3EA]">
+        className="mb-1 flex-row justify-between rounded-2xl border-2 border-line bg-surface p-4 active:bg-tint-peach">
         <Text className="flex-1 pr-4 font-semibold text-[#2B2A3D]">{item.question}</Text>
         <Animated.View style={chevronStyle}>
           <ChevronRight className="h-5 w-5" color={theme.inkSoft} />

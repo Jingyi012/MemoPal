@@ -24,7 +24,7 @@ const TermsAndConditionSheet = forwardRef<Ref, TermsAndConditionSheetProps>(({ t
       <View className="flex-1 px-6 pb-8 pt-2">
         <View className="mb-6 flex-row items-center justify-between">
           <Text className="text-2xl font-bold text-[#2B2A3D]">{terms.title}</Text>
-          <TouchableOpacity onPress={handleDismissTerms} className="rounded-full bg-[#F6F3EA] p-2">
+          <TouchableOpacity onPress={handleDismissTerms} className="rounded-full bg-tint-peach p-2">
             <X size={20} color="#6B6A80" />
           </TouchableOpacity>
         </View>
@@ -44,7 +44,7 @@ const TermsAndConditionSheet = forwardRef<Ref, TermsAndConditionSheetProps>(({ t
 
         <TouchableOpacity
           onPress={handleDismissTerms}
-          className="mt-4 rounded-xl bg-[#FFC93C] py-4">
+          className="mt-4 rounded-xl bg-primary py-4">
           <Text className="text-center font-bold text-[#2B2A3D]">{terms.closeButtonLabel}</Text>
         </TouchableOpacity>
       </View>
@@ -56,7 +56,7 @@ TermsAndConditionSheet.displayName = 'TermsAndConditionSheet';
 
 const TermSection = ({ number, title, body }: { number: string; title: string; body: string }) => (
   <View className="flex-row gap-3">
-    <View className="h-6 w-6 items-center justify-center rounded-full bg-[#FFF7E0]">
+    <View className="h-6 w-6 items-center justify-center rounded-full bg-tint-sun">
       <Text className="text-xs font-bold text-[#F2A900]">{number}</Text>
     </View>
     <View className="flex-1">

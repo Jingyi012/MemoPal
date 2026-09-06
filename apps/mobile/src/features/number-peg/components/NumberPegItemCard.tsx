@@ -1,5 +1,5 @@
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';

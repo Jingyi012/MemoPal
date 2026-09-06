@@ -9,7 +9,7 @@ import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
@@ -23,8 +23,9 @@ import { EditProfileSheet } from '../components/EditProfileSheet';
 import HelpSheet from '../components/HelpSheet';
 import PrivacyPolicySheet from '../components/PrivacyPolicySheet';
 import { ReviewScheduleSheet } from '../components/ReviewScheduleSheet';
-import type { AppLanguage } from '@/features/onboarding/types/userState';
+import type { AppLanguage, AppTheme } from '@/features/onboarding/types/userState';
 import { LanguageSheet } from '../components/LanguageSheet';
+import ThemeSheet from '../components/ThemeSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { DEFAULT_LEVEL_TITLES, getLevelTitleForLevel } from '@/features/gamification/shared/utils/levelTitles';
@@ -53,6 +54,7 @@ export default function ProfileScreen() {
   const reviewScheduleRef = useRef<any>(null);
   const editProfileRef = useRef<any>(null);
   const languageRef = useRef<any>(null);
+  const themeRef = useRef<BottomSheetModal>(null);
   const logoutRef = useRef<BottomSheetModal>(null);
   const languageLabel =
     userState.preferences.language === 'system'
@@ -65,6 +67,12 @@ export default function ProfileScreen() {
   const levelTitle = language === 'zh'
     ? levelInfo?.currentLevelConfig?.titleZh ?? levelInfo?.currentLevelConfig?.title ?? fallbackLevelTitle.titleZh
     : levelInfo?.currentLevelConfig?.title ?? fallbackLevelTitle.titleEn;
+  const selectedTheme = userState.preferences.theme ?? 'light';
+  const themeLabel = selectedTheme === 'dark'
+    ? t('dark')
+    : selectedTheme === 'auto'
+      ? t('systemTheme')
+      : t('light');
 
   useEffect(() => {
     setReviewRemindersEnabled(userState.notifications.reviewReminders);
@@ -288,18 +296,17 @@ export default function ProfileScreen() {
           <ProfileSettingsRow
             icon={<Text style={styles.settingsEmoji}>🌙</Text>}
             title={t('theme')}
-            value={t('light')}
+            value={themeLabel}
+            onPress={() => themeRef.current?.present()}
           />
           <ProfileSettingsRow
             icon={<Text style={styles.settingsEmoji}>❓</Text>}
             title={t('helpSupport')}
-            value="›"
             onPress={() => helpRef.current?.present()}
           />
           <ProfileSettingsRow
             icon={<Text style={styles.settingsEmoji}>ℹ️</Text>}
             title={t('about')}
-            value="›"
             onPress={() => privacyRef.current?.present()}
           />
         </View>
@@ -318,7 +325,18 @@ export default function ProfileScreen() {
       <LanguageSheet
         ref={languageRef}
         currentLanguage={selectedLanguage}
-        onSave={(language) => updatePreferences({ ...userState.preferences, language })}
+        onSave={(language) => {
+          languageRef.current?.dismiss();
+          return updatePreferences({ language });
+        }}
+      />
+      <ThemeSheet
+        ref={themeRef}
+        currentTheme={selectedTheme}
+        onSave={(nextTheme: AppTheme) => {
+          themeRef.current?.dismiss();
+          return updatePreferences({ theme: nextTheme });
+        }}
       />
       <EditProfileSheet
         ref={editProfileRef}
@@ -361,7 +379,7 @@ function ProfileSettingsRow({
 }: {
   icon: ReactNode;
   title: string;
-  value: string;
+  value?: string;
   right?: ReactNode;
   onPress?: () => void;
 }) {
@@ -369,15 +387,15 @@ function ProfileSettingsRow({
     <View style={styles.settingsRow}>
       <View style={styles.settingsIcon}>{icon}</View>
       <Text style={styles.settingsTitle}>{title}</Text>
-      {right ?? <Text style={styles.settingsValue}>{value}</Text>}
-      {onPress && !right && value !== '›' ? <ChevronRight size={16} color="#6B6A80" /> : null}
+      {right ?? (value ? <Text style={styles.settingsValue}>{value}</Text> : null)}
+      {onPress && !right ? <ChevronRight size={18} color={theme.inkMuted} strokeWidth={2.5} /> : null}
     </View>
   );
   return onPress ? <AnimatedPressable onPress={onPress}>{content}</AnimatedPressable> : content;
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#FFFFFF' },
+  page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 48 },
   profileHead: { alignItems: 'center', paddingTop: 10, paddingBottom: 20 },
   avatar: {
@@ -393,13 +411,13 @@ const styles = StyleSheet.create({
   avatarImage: { width: '100%', height: '100%', borderRadius: 39 },
   avatarEmoji: { fontSize: 34 },
   profileName: {
-    color: '#2B2A3D',
+    color: theme.ink,
     fontFamily: typography.displayExtraBold,
     fontSize: 19,
     marginTop: 10,
   },
   profileSubtitle: {
-    color: '#6B6A80',
+    color: theme.inkSoft,
     fontFamily: typography.bodyBold,
     fontSize: 12,
     marginTop: 2,
@@ -409,14 +427,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.paper,
     borderWidth: 2,
-    borderColor: '#EEE9DC',
+    borderColor: theme.line,
     borderRadius: 13,
     paddingHorizontal: 18,
     marginTop: 10,
   },
-  editButtonText: { color: '#2B2A3D', fontFamily: typography.display, fontSize: 13.5 },
+  editButtonText: { color: theme.ink, fontFamily: typography.display, fontSize: 13.5 },
   planCard: { marginBottom: 8 },
   planBadge: {
     alignSelf: 'flex-start',
@@ -441,14 +459,14 @@ const styles = StyleSheet.create({
     minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFC93C',
+    backgroundColor: theme.sun,
     borderRadius: 15,
     marginTop: 12,
-    boxShadow: '0px 5px 0px #F2A900',
+    boxShadow: `0px 5px 0px ${theme.sunDeep}`,
   },
-  upgradeButtonText: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 14 },
+  upgradeButtonText: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 },
   sectionLabel: {
-    color: '#6B6A80',
+    color: theme.inkSoft,
     fontFamily: typography.displayExtraBold,
     fontSize: 13,
     letterSpacing: 0.4,
@@ -457,9 +475,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   settingsList: {
-    backgroundColor: '#FFFDF8',
+    backgroundColor: theme.paper,
     borderWidth: 2,
-    borderColor: '#EEE9DC',
+    borderColor: theme.line,
     borderRadius: 16,
     overflow: 'hidden',
   },
@@ -470,12 +488,12 @@ const styles = StyleSheet.create({
     gap: 11,
     paddingHorizontal: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE9DC',
+    borderBottomColor: theme.line,
   },
   settingsIcon: { width: 25, alignItems: 'center' },
   settingsEmoji: { fontSize: 16, lineHeight: 20 },
-  settingsTitle: { flex: 1, color: '#2B2A3D', fontFamily: typography.display, fontSize: 13 },
-  settingsValue: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 12 },
+  settingsTitle: { flex: 1, color: theme.ink, fontFamily: typography.display, fontSize: 13 },
+  settingsValue: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
   reminderControl: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   signOutButton: {
     minHeight: 46,
@@ -484,10 +502,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     borderWidth: 2,
-    borderColor: '#FFD2DC',
+    borderColor: theme.berryLine,
     borderRadius: 13,
-    backgroundColor: '#FFF0F4',
+    backgroundColor: theme.berryTint,
     marginTop: 18,
   },
-  signOutText: { color: '#E8527A', fontFamily: typography.display, fontSize: 13.5 },
+  signOutText: { color: theme.berryDeep, fontFamily: typography.display, fontSize: 13.5 },
 });

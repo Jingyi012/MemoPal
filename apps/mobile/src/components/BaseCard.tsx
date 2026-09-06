@@ -41,7 +41,7 @@ const CARD_SHADOW_STYLE: Record<CardShadow, ViewStyle | undefined> = {
   md: { boxShadow: '0px 4px 14px rgba(43, 42, 61, 0.12)' },
 };
 
-export const CARD_SURFACE_CLASS = 'bg-[#FFFDF8]';
+export const CARD_SURFACE_CLASS = 'bg-surface';
 
 export function getBaseCardClassName({
   className,
@@ -61,7 +61,7 @@ export function getBaseCardClassName({
     CARD_PADDING_CLASS[padding],
     CARD_RADIUS_CLASS[radius],
     CARD_SHADOW_CLASS[shadow],
-    bordered ? 'border-2 border-[#EEE9DC]' : '',
+    bordered ? 'border-2 border-line' : '',
     className
   );
 }

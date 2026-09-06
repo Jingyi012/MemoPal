@@ -1,4 +1,4 @@
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import {
   BottomSheetModal,
@@ -53,7 +53,7 @@ export const ActionSheet = forwardRef<BottomSheetModal, ActionSheetProps>(({
       ref={bottomSheetModalRef}
       enableDynamicSizing
       onDismiss={onClose}
-      backgroundStyle={{ backgroundColor: '#FFFDF8', borderRadius: 32 }}
+      backgroundStyle={{ backgroundColor: theme.paper, borderRadius: 32 }}
       handleIndicatorStyle={{ backgroundColor: theme.line, width: 48, height: 6 }}>
       <BottomSheetView
         className="px-6 pt-4"
@@ -62,14 +62,14 @@ export const ActionSheet = forwardRef<BottomSheetModal, ActionSheetProps>(({
           {Icon && (
             <View
               className={`mb-3 h-14 w-14 items-center justify-center rounded-full ${
-                variant === 'destructive' ? 'bg-[#FFF0F4]' : 'bg-[#EEE9FF]'
+                variant === 'destructive' ? 'bg-tint-berry' : 'bg-tint-violet'
               }`}>
               <Icon size={28} color={variant === 'destructive' ? theme.berryDeep : theme.violetDeep} />
             </View>
           )}
-          <Text className="text-center text-xl font-bold text-[#2B2A3D]">{title}</Text>
+          <Text className="text-center text-xl font-bold text-ink">{title}</Text>
           {description && (
-            <Text className="mt-2 px-4 text-center leading-5 text-[#6B6A80]">{description}</Text>
+            <Text className="mt-2 px-4 text-center leading-5 text-ink-soft">{description}</Text>
           )}
         </View>
 
@@ -78,7 +78,7 @@ export const ActionSheet = forwardRef<BottomSheetModal, ActionSheetProps>(({
             onPress={() => void handleAction()}
             disabled={isActing}
             className={`${
-              variant === 'destructive' ? 'bg-[#E8527A]' : 'bg-[#7A68E0]'
+              variant === 'destructive' ? 'bg-primary-active' : 'bg-secondary'
             } h-14 items-center justify-center rounded-2xl ${isActing ? 'opacity-70' : ''}`}>
             {isActing ? <ActivityIndicator color="white" /> : <Text className="text-lg font-bold text-white">{actionLabel}</Text>}
           </AnimatedPressable>
@@ -87,7 +87,7 @@ export const ActionSheet = forwardRef<BottomSheetModal, ActionSheetProps>(({
             onPress={() => bottomSheetModalRef.current?.dismiss()}
             disabled={isActing}
             className="h-14 items-center justify-center rounded-2xl">
-            <Text className="text-lg font-semibold text-[#6B6A80]">{cancelLabel}</Text>
+            <Text className="text-lg font-semibold text-ink-soft">{cancelLabel}</Text>
           </AnimatedPressable>
         </View>
       </BottomSheetView>

@@ -44,7 +44,7 @@ const PrivacyPolicySheet = forwardRef<Ref>((_, ref) => {
             </View>
           ))}
 
-          <View className="mt-2 rounded-3xl border border-[#E9E3D5] bg-[#FFFDF8] p-4">
+          <View className="mt-2 rounded-3xl border border-[#E5DFFF] bg-white p-4">
             <Text className="mb-3 text-base font-bold text-[#2B2A3D]">
               {t('buildInformation')}
             </Text>

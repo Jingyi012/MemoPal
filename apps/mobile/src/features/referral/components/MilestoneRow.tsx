@@ -13,10 +13,10 @@ export const MilestoneRow: React.FC<Props> = ({ title, refs, rewardLabel, curren
   const isCompleted = current >= refs;
   return (
     <View
-      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#EEE9DC]' : ''}`}>
+      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#E5DFFF]' : ''}`}>
       <View className="flex-row items-center">
         <View
-          className={`mr-4 h-9 w-9 items-center justify-center rounded-full ${isCompleted ? 'bg-[#F1FBF5]' : 'bg-[#F6F3EA]'}`}>
+              className={`mr-4 h-9 w-9 items-center justify-center rounded-full ${isCompleted ? 'bg-[#F1FBF5]' : 'bg-[#F3F0FF]'}`}>
           <Text className="text-base">{isAwarded ? '✓' : '🔒'}</Text>
         </View>
         <View>

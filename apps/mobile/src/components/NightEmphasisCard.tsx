@@ -1,4 +1,4 @@
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Circle, Defs, RadialGradient, Stop, Svg } from 'react-native-svg';
 import type { ReactNode } from 'react';

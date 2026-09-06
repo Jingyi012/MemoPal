@@ -22,14 +22,14 @@ export function StepNavigationFooter({
 
   return (
     <View
-      className="w-full flex-row justify-between gap-3 border-t-2 border-[#EEE9DC] bg-white p-5"
+      className="w-full flex-row justify-between gap-3 border-t-2 border-[#E5DFFF] bg-white p-5"
       style={{ paddingBottom: Math.max(12, insets.bottom + 8) }}>
       {/* Previous Button */}
       {onPrevious && (
         <AnimatedPressable
           onPress={onPrevious}
           // Changed p-4 to py-4 to match the Next button
-          className="flex-1 items-center justify-center rounded-2xl bg-[#F6F3EA] py-4"
+          className="flex-1 items-center justify-center rounded-2xl bg-tint-peach py-4"
           style={{ boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.08)' }}>
           <Text className="text-base font-black text-[#6B6A80]">{previousLabel}</Text>
         </AnimatedPressable>

@@ -82,7 +82,7 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <View className="flex-1 bg-[#FFFDF8]">
+    <View className="flex-1 bg-white">
       <View className="flex-1 items-center justify-center px-8">
         <View
           accessibilityLabel="MemoPal app icon"
@@ -114,21 +114,21 @@ export const LoginScreen: React.FC = () => {
                 placeholder={t('email')}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
+                className="rounded-2xl border-2 border-[#E5DFFF] bg-white px-4 py-3"
               />
               <TextInput
                 value={password}
                 onChangeText={setPassword}
                 placeholder={t('password')}
                 secureTextEntry
-                className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
+                className="rounded-2xl border-2 border-[#E5DFFF] bg-white px-4 py-3"
               />
             </View>
 
             <AnimatedPressable
               onPress={handleLogin}
               disabled={!canSubmit || isSubmitting}
-              className={`mb-5 h-14 w-full max-w-sm flex-row items-center justify-center rounded-2xl px-12 ${!canSubmit || isSubmitting ? 'bg-[#D8D4C9]' : 'bg-[#FFC93C]'}`}
+              className={`mb-5 h-14 w-full max-w-sm flex-row items-center justify-center rounded-2xl px-12 ${!canSubmit || isSubmitting ? 'bg-line' : 'bg-primary'}`}
               style={
                 !canSubmit || isSubmitting
                   ? undefined
@@ -144,9 +144,9 @@ export const LoginScreen: React.FC = () => {
 
         {emailPasswordEnabled && (googleEnabledByBackend || facebookEnabledByBackend) && (
           <View className="mb-4 w-full max-w-sm flex-row items-center gap-3">
-            <View className="h-px flex-1 bg-[#EEE9DC]" />
+            <View className="h-px flex-1 bg-line" />
             <Text className="text-xs font-semibold text-[#9A97A7]">{t('orContinueWith')}</Text>
-            <View className="h-px flex-1 bg-[#EEE9DC]" />
+            <View className="h-px flex-1 bg-line" />
           </View>
         )}
 
@@ -177,7 +177,7 @@ export const LoginScreen: React.FC = () => {
               }
             }}
             disabled={isSubmitting}
-            className="mb-2 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#EEE9DC] bg-white px-6 py-4">
+            className="mb-2 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#E5DFFF] bg-white px-6 py-4">
             <Image
               source={require('../../../../assets/images/google-icon.png')}
               style={{ width: 18, height: 18 }}
@@ -214,7 +214,7 @@ export const LoginScreen: React.FC = () => {
               }
             }}
             disabled={isSubmitting}
-            className="mb-3 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#EEE9DC] bg-white px-6 py-4">
+            className="mb-3 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#E5DFFF] bg-white px-6 py-4">
             <Ionicons name="logo-facebook" size={18} color="#1877F2" />
             <Text className="font-medium text-[#2B2A3D]">{t('continueFacebook')}</Text>
           </AnimatedPressable>

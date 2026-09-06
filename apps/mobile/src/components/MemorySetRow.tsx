@@ -34,8 +34,8 @@ export function MemorySetRow({ tone, title, badgeText, subtitle, onPress }: Memo
 const styles = StyleSheet.create({
   card: { minHeight: 76, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 13, marginBottom: 10, flexDirection: 'row', alignItems: 'center' },
   badge: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  pegBadge: { backgroundColor: '#FFF0F4' },
-  palaceBadge: { backgroundColor: '#EEE9FF' },
+  pegBadge: { backgroundColor: theme.berryTint },
+  palaceBadge: { backgroundColor: theme.violetTint },
   badgeText: { fontFamily: typography.display, fontSize: 18 },
   pegText: { color: theme.berryDeep },
   palaceText: { color: theme.violetDeep },

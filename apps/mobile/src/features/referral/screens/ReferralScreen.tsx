@@ -3,7 +3,7 @@ import { BaseCard } from '@/components/BaseCard';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import LoadingView from '@/components/LoadingView';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { NotificationType } from '@/enums/notificationType';
 import { useNotificationMutations, useNotifications } from '@/features/notifications/hooks/useNotifications';
 import { syncEntitlementToLocal } from '@/features/subscription/services/subscription.service';
@@ -200,7 +200,7 @@ const ReferralScreen: React.FC = () => {
 
   if (!summary) {
     return (
-      <View className="flex-1 bg-[#FFFDF8]">
+      <View className="flex-1 bg-white">
         <CommonHeader
           title={t('title')}
           description={t('description')}
@@ -214,7 +214,7 @@ const ReferralScreen: React.FC = () => {
             {loadError ?? 'Please try again in a moment.'}
           </Text>
           <TouchableOpacity
-            className="rounded-xl bg-[#FFC93C] px-4 py-3"
+            className="rounded-xl bg-primary px-4 py-3"
             onPress={() => void loadSummary()}>
             <Text className="font-semibold text-[#2B2A3D]">{t('retry')}</Text>
           </TouchableOpacity>
@@ -224,7 +224,7 @@ const ReferralScreen: React.FC = () => {
   }
 
   return (
-    <View className="flex-1 bg-[#FFFDF8]">
+    <View className="flex-1 bg-white">
       <CommonHeader
         title={t('title')}
         description={t('description')}
@@ -236,7 +236,7 @@ const ReferralScreen: React.FC = () => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
         {loadError ? (
-          <View className="mb-5 rounded-2xl border-2 border-[#FFD9E2] bg-[#FFF0F4] px-4 py-3">
+          <View className="mb-5 rounded-2xl border-2 border-line-berry bg-tint-berry px-4 py-3">
             <Text className="text-sm font-semibold text-[#E8527A]">
               Unable to refresh referral data
             </Text>
@@ -250,7 +250,7 @@ const ReferralScreen: React.FC = () => {
           </Text>
           <TouchableOpacity
             onPress={handleCopy}
-            className="my-4 flex-row items-center justify-center rounded-2xl border-2 border-dashed border-[#DCD4FF] bg-[#EEE9FF] py-4">
+            className="my-4 flex-row items-center justify-center rounded-2xl border-2 border-dashed border-line-sky bg-tint-sky py-4">
             <Text className="mr-3 text-3xl font-black tracking-[4px] text-[#7A68E0]">
               {summary.referralCode}
             </Text>
@@ -338,10 +338,10 @@ const ReferralScreen: React.FC = () => {
                 placeholder={t('referralCode')}
                 value={redeemCode}
                 onChangeText={setRedeemCode}
-                className="mt-4 rounded-xl border-2 border-[#EEE9DC] bg-white px-4 py-3 text-base text-[#2B2A3D]"
+                className="mt-4 rounded-xl border-2 border-[#E5DFFF] bg-white px-4 py-3 text-base text-[#2B2A3D]"
               />
               <TouchableOpacity
-                className={`mt-3 rounded-xl px-4 py-3 ${redeeming ? 'bg-[#D8D4C9]' : 'bg-[#FFC93C]'}`}
+                className={`mt-3 rounded-xl px-4 py-3 ${redeeming ? 'bg-line' : 'bg-primary'}`}
                 disabled={redeeming}
                 onPress={() => void handleRedeem()}>
                 <Text className={`text-center font-semibold ${redeeming ? 'text-[#9A97A7]' : 'text-[#2B2A3D]'}`}>
@@ -374,7 +374,7 @@ const ReferralScreen: React.FC = () => {
               {rewardNotice?.body}
             </Text>
             <TouchableOpacity
-              className="mt-6 rounded-xl bg-[#FFC93C] px-4 py-3"
+              className="mt-6 rounded-xl bg-primary px-4 py-3"
               onPress={() => void closeRewardPopup()}>
               <Text className="text-center font-semibold text-[#2B2A3D]">{t('gotIt')}</Text>
             </TouchableOpacity>

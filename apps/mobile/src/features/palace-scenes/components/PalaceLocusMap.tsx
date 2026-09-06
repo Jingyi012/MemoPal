@@ -1,6 +1,6 @@
 import { AppImage } from '@/components/AppImage';
 import type { PalaceLocus, PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     // scenes. This prevents `cover` from cropping the image away from the
     // percentage-based locus coordinates.
     aspectRatio: 4 / 3,
-    borderColor: '#E3D7B3',
+    borderColor: '#DCD4FF',
     borderRadius: 20,
     borderWidth: 2,
     backgroundColor: '#F4EFE0',

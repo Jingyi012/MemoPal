@@ -1,7 +1,7 @@
 import { CommonHeader } from '@/components/CommonHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import LoadingView from '@/components/LoadingView';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { NotificationType } from '@/enums/notificationType';
 import { useNotificationMutations, useNotifications } from '@/features/notifications/hooks/useNotifications';
 import { Notification } from '@/features/notifications/types/notification';
@@ -24,21 +24,21 @@ import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react
 import Toast from 'react-native-toast-message';
 
 const TYPE_CONFIG = {
-  [NotificationType.XP]: { icon: Zap, color: theme.sunDeep, bgColor: 'bg-[#FFF7E0]' },
+  [NotificationType.XP]: { icon: Zap, color: theme.sunDeep, bgColor: 'bg-tint-sun' },
   [NotificationType.LEVEL_UP]: {
     icon: TrendingUp,
     color: theme.violetDeep,
-    bgColor: 'bg-[#EEE9FF]',
+    bgColor: 'bg-tint-violet',
   },
-  [NotificationType.MILESTONE]: { icon: Star, color: theme.sunDeep, bgColor: 'bg-[#FFF7E0]' },
-  [NotificationType.REFERRAL]: { icon: Users, color: theme.violetDeep, bgColor: 'bg-[#EEE9FF]' },
-  [NotificationType.LESSON]: { icon: BookOpen, color: theme.grass, bgColor: 'bg-[#F1FBF5]' },
+  [NotificationType.MILESTONE]: { icon: Star, color: theme.sunDeep, bgColor: 'bg-tint-sun' },
+  [NotificationType.REFERRAL]: { icon: Users, color: theme.sky, bgColor: 'bg-tint-sky' },
+  [NotificationType.LESSON]: { icon: BookOpen, color: theme.grass, bgColor: 'bg-tint-mint' },
   [NotificationType.LESSON_REVIEW]: {
     icon: BookOpen,
     color: theme.grass,
-    bgColor: 'bg-[#F1FBF5]',
+    bgColor: 'bg-tint-mint',
   },
-  [NotificationType.SYSTEM]: { icon: Settings, color: theme.inkSoft, bgColor: 'bg-[#F6F3EA]' },
+  [NotificationType.SYSTEM]: { icon: Settings, color: theme.sky, bgColor: 'bg-tint-sky' },
 };
 
 type NotificationListRow =
@@ -355,8 +355,8 @@ const NotificationScreen = () => {
             isSelectionMode && isSelected
               ? 'border-red-200 bg-red-50'
               : notification.isRead
-              ? 'border-2 border-[#EEE9DC] bg-white'
-                : 'border-2 border-[#DCD4FF] bg-[#F7F5FF]'
+              ? 'border-2 border-[#E5DFFF] bg-white'
+                : 'border-2 border-line-violet bg-tint-violet'
           }`}>
           {isSelectionMode && (
             <View className="mr-3 mt-2">
@@ -384,7 +384,7 @@ const NotificationScreen = () => {
                   {notification.title}
                 </Text>
                 {!isSelectionMode && !notification.isRead && (
-                  <View className="ml-2 rounded-full bg-[#EEE9FF] px-2 py-0.5">
+                  <View className="ml-2 rounded-full bg-tint-violet px-2 py-0.5">
                     <Text className="text-[10px] font-bold text-[#7A68E0]">NEW</Text>
                   </View>
                 )}
@@ -405,7 +405,7 @@ const NotificationScreen = () => {
             <View className="mt-2 flex-row items-center justify-between">
               <View className="flex-row items-center">
                 {notification.referenceType && (
-                  <View className="rounded-md bg-[#F6F3EA] px-2 py-0.5">
+                  <View className="rounded-md bg-tint-peach px-2 py-0.5">
                     <Text className="text-[10px] font-bold uppercase text-[#6B6A80]">
                       {notification.referenceType}
                     </Text>
@@ -428,7 +428,7 @@ const NotificationScreen = () => {
   if (isLoading) return <LoadingView />;
 
   return (
-    <View className="flex-1 bg-[#FFFDF8]">
+    <View className="flex-1 bg-white">
       <CommonHeader
         title={t('title')}
         description={
@@ -454,7 +454,7 @@ const NotificationScreen = () => {
       />
 
       {isSelectionMode && (
-        <View className="mb-2 border-b-2 border-[#EEE9DC] bg-white px-4 py-3">
+        <View className="mb-2 border-b-2 border-[#E5DFFF] bg-white px-4 py-3">
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={clearSelectionMode} activeOpacity={0.7}>
               <Text className="font-semibold text-[#6B6A80]">Cancel</Text>
@@ -478,8 +478,8 @@ const NotificationScreen = () => {
         contentContainerStyle={{ paddingBottom: isSelectionMode ? 132 : undoPayload ? 110 : 40 }}
         ListEmptyComponent={
           <View className="mt-32 items-center justify-center p-6">
-            <View className="h-20 w-20 items-center justify-center rounded-full bg-[#F6F3EA]">
-              <Bell size={40} color="#D8D4C9" />
+            <View className="h-20 w-20 items-center justify-center rounded-full bg-tint-sky">
+              <Bell size={40} color="#4FC0E8" />
             </View>
             <Text className="mt-4 text-xl font-bold text-[#2B2A3D]">No notifications</Text>
             <Text className="mt-2 text-center text-[#6B6A80]">
@@ -490,7 +490,7 @@ const NotificationScreen = () => {
       />
 
       {isSelectionMode && (
-        <View className="border-t-2 border-[#EEE9DC] bg-white px-4 pb-5 pt-3">
+        <View className="border-t-2 border-[#E5DFFF] bg-white px-4 pb-5 pt-3">
           <TouchableOpacity
             activeOpacity={0.8}
             disabled={selectedCount === 0 || isRemoving}

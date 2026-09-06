@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { typography } from '@/theme/typography';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { StyleSheet, Text } from 'react-native';
 
 type NewMemoryCardProps = {
@@ -24,14 +25,14 @@ const styles = StyleSheet.create({
     minHeight: 126,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#FFE6A3',
-    backgroundColor: '#FFF7E0',
+    borderColor: theme.sunLine,
+    backgroundColor: theme.sunTint,
     padding: 18,
     alignItems: 'center',
     justifyContent: 'center',
     boxShadow: '0px 8px 20px rgba(43, 42, 61, 0.08)',
   },
   emoji: { fontSize: 32, lineHeight: 36 },
-  title: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 16.5, marginTop: 8 },
-  body: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 12.5, textAlign: 'center', marginTop: 4 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16.5, marginTop: 8 },
+  body: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12.5, textAlign: 'center', marginTop: 4 },
 });

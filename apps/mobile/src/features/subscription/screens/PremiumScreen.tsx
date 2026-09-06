@@ -2,7 +2,7 @@ import { systemSettingsApi } from '@/core/settings/api/systemSettings';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { BaseCard } from '@/components/BaseCard';
 import LoadingView from '@/components/LoadingView';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import {
   DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG,
@@ -308,17 +308,17 @@ const styles = StyleSheet.create({
   featuresCard: { marginTop: 16 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   sectionTitle: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase' },
-  sectionMarker: { width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEE9FF' },
+  sectionMarker: { width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.sunTint },
   featureList: { gap: 15 },
   featureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  featureIcon: { width: 27, height: 27, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEE9FF' },
+  featureIcon: { width: 27, height: 27, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.mintTint },
   featureCopy: { flex: 1, minWidth: 0 },
   featureTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, lineHeight: 18 },
   featureDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, marginTop: 2 },
   planList: { gap: 12, marginTop: 20 },
   planCard: { position: 'relative', borderRadius: 20, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 16, paddingVertical: 17 },
   planCardBestValue: { paddingTop: 38 },
-  planCardSelected: { borderColor: theme.violet, backgroundColor: '#F7F5FF', boxShadow: '0px 4px 10px rgba(122, 104, 224, 0.13)' },
+  planCardSelected: { borderColor: theme.violet, backgroundColor: theme.violetTint, boxShadow: '0px 4px 10px rgba(122, 104, 224, 0.13)' },
   bestValueBadge: { position: 'absolute', zIndex: 2, top: 11, right: 16, borderRadius: 999, overflow: 'hidden' },
   bestValueGradient: { borderRadius: 999, paddingHorizontal: 11, paddingVertical: 5 },
   bestValueText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.5 },
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   finePrint: { color: '#9A97A7', fontFamily: typography.bodySemibold, fontSize: 10, lineHeight: 15, textAlign: 'center' },
   termsLink: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 8, textDecorationLine: 'underline' },
   unavailableContent: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 },
-  unavailableIcon: { width: 56, height: 56, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEE9FF', marginBottom: 14 },
+  unavailableIcon: { width: 56, height: 56, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.skyTint, marginBottom: 14 },
   unavailableTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 16, lineHeight: 22, textAlign: 'center' },
   unavailableBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 7, marginBottom: 18 },
   retryButton: { borderRadius: 14, backgroundColor: theme.sun, paddingHorizontal: 22, paddingVertical: 12, boxShadow: '0px 4px 0px rgba(242, 169, 0, 0.8)' },

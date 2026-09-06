@@ -11,7 +11,7 @@ export const PalaceCreationTips: React.FC<PalaceCreationTipsProps> = ({
   maxLocations,
 }) => {
   return (
-    <View className="rounded-2xl border-2 border-[#BFE7D6] bg-[#F1FBF5] p-5">
+    <View className="rounded-2xl border-2 border-line-mint bg-tint-mint p-5">
       <Text className="mb-2 text-base font-semibold text-[#247B67]">💡 Palace Creation Tips</Text>
 
       <View className="space-y-2">

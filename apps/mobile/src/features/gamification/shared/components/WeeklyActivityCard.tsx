@@ -86,8 +86,8 @@ function formatWeekday(value: string | Date | undefined, labels: string[]) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFDF8',
-    borderColor: '#EEE9DC',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E5DFFF',
     borderRadius: 16,
     borderWidth: 2,
     marginTop: 14,

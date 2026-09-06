@@ -15,7 +15,7 @@ import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes'
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { usePredefinedMemoryLessons } from '@/features/predefined-memory-lessons';
 import type { PredefinedMemoryLesson } from '@/features/predefined-memory-lessons';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
@@ -288,7 +288,7 @@ function openMemorySet(router: ReturnType<typeof useRouter>, memorySet: MemorySe
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#FFFFFF' },
+  page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 42 },
   progressHeaderWrap: { paddingHorizontal: 16, paddingTop: 10 },
   sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },
@@ -305,20 +305,20 @@ const styles = StyleSheet.create({
   lessonList: { gap: 10, paddingTop: 10, paddingBottom: 10, paddingRight: 12 },
   lessonFilterRow: { flexDirection: 'row', gap: 7, marginTop: 10, paddingRight: 12 },
   lessonFilterChip: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 10, paddingVertical: 6 },
-  lessonFilterChipActive: { borderColor: theme.violetDeep, backgroundColor: '#EEE9FF' },
+  lessonFilterChipActive: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint },
   lessonFilterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
   lessonFilterTextActive: { color: theme.violetDeep },
-  lessonCard: { width: 184, minHeight: 190, borderRadius: 16, borderWidth: 1.5, borderColor: '#E4DFF4', backgroundColor: '#FFFFFF', padding: 12, shadowColor: '#6B5BC5', shadowOpacity: 0.07, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
-  lessonEmojiWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF0F4' },
-  lessonEmojiWrapPalace: { backgroundColor: '#EEE9FF' },
+  lessonCard: { width: 184, minHeight: 190, borderRadius: 16, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 12, shadowColor: theme.violetDeep, shadowOpacity: 0.07, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  lessonEmojiWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.berryTint },
+  lessonEmojiWrapPalace: { backgroundColor: theme.violetTint },
   lessonEmoji: { fontSize: 25 },
   lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5, lineHeight: 16, marginTop: 6 },
   lessonDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, lineHeight: 15, marginTop: 4, minHeight: 30 },
   lessonCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, marginTop: 4 },
   lessonMetaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 5, marginTop: 9 },
-  lessonTechnique: { alignSelf: 'flex-start', color: theme.berryDeep, backgroundColor: '#FFF0F4', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
-  lessonTechniquePalace: { color: theme.violetDeep, backgroundColor: '#EEE9FF' },
-  lessonCategory: { color: theme.inkSoft, backgroundColor: '#F4F1EA', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
+  lessonTechnique: { alignSelf: 'flex-start', color: theme.berryDeep, backgroundColor: theme.berryTint, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
+  lessonTechniquePalace: { color: theme.violetDeep, backgroundColor: theme.violetTint },
+  lessonCategory: { color: theme.inkSoft, backgroundColor: theme.peachTint, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
   lessonLoading: { minHeight: 92, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 18, justifyContent: 'center', marginTop: 10 },
   filterRow: { flexDirection: 'row', gap: 7, marginTop: 9, marginBottom: 11 },
   filterChip: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 10, paddingVertical: 6 },

@@ -1,7 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import type { MemoryGoalType } from '@/features/memory-sets';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, ClipboardList, Plus, ScanText, Trash2 } from 'lucide-react-native';
@@ -404,7 +404,7 @@ function MessageCard({ message }: { message: string }) {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#FFFFFF' },
+  page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 42 },
   progressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 15 },
   progressDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: theme.line },
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 },
   importActions: { flexDirection: 'row', alignItems: 'stretch', gap: 10, marginTop: -2, marginBottom: 10 },
   importActionContainer: { flex: 1, minWidth: 0 },
-  importAction: { width: '100%', minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 15, borderWidth: 1.5, borderColor: theme.line, backgroundColor: '#FFFFFF', paddingHorizontal: 10, boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.06)' },
+  importAction: { width: '100%', minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 15, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 10, boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.06)' },
   importActionSelected: { borderColor: theme.berry, backgroundColor: theme.berryTint },
   importActionIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   pasteIcon: { backgroundColor: theme.berryTint },

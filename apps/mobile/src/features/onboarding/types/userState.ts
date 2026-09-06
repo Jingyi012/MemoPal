@@ -1,4 +1,5 @@
 export type AppLanguage = 'system' | 'en' | 'zh';
+export type AppTheme = 'light' | 'dark' | 'auto';
 
 export interface UserState {
   lastVisitDate: string;
@@ -13,7 +14,7 @@ export interface UserState {
 
   preferences: {
     reviewTime: string;
-    theme: 'light' | 'dark' | 'auto';
+    theme: AppTheme;
     language: AppLanguage;
     soundEnabled: boolean;
     hapticsEnabled: boolean;

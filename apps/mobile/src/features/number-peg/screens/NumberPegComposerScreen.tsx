@@ -30,7 +30,7 @@ import type {
 } from '@/features/memory-sets';
 import { useMemorySetMutations } from '@/features/memory-sets';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import {
   buildAllNumberPegItems,
   getNumberPegCatalogueVersion,
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     borderRadius: 999,
-    backgroundColor: '#EEE9FF',
+    backgroundColor: theme.berryTint,
     paddingHorizontal: 9,
     minHeight: 28,
   },
@@ -1114,7 +1114,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     paddingHorizontal: 8,
   },
-  customToggleActive: { backgroundColor: '#EEE9FF', borderColor: '#CFC3FF' },
+  customToggleActive: { backgroundColor: theme.sunTint, borderColor: theme.sunLine },
   customEditor: {
     borderRadius: 15,
     borderWidth: 1.5,

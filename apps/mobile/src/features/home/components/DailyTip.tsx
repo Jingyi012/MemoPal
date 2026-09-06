@@ -57,7 +57,7 @@ export const DailyTip: React.FC<DailyTipProps> = ({ dayOfMonth }) => {
     <Animated.View
       entering={FadeInDown.delay(300)}
       className={getBaseCardClassName({
-        className: 'mt-2 border-2 border-[#E0D9FF] bg-[#EEE9FF] p-4',
+        className: 'mt-2 border-2 border-line-mint bg-tint-mint p-4',
         padding: 'none',
       })}>
       <View className="flex-row gap-3">
@@ -65,8 +65,8 @@ export const DailyTip: React.FC<DailyTipProps> = ({ dayOfMonth }) => {
           <Text className="text-3xl">{tip.emoji}</Text>
         </View>
         <View className="flex-1">
-          <Text className="mb-1 font-bold text-[#2B2A3D]">{tip.title}</Text>
-          <Text className="text-sm leading-5 text-[#6B6A80]">{tip.tip}</Text>
+          <Text className="mb-1 font-bold text-ink">{tip.title}</Text>
+          <Text className="text-sm leading-5 text-ink-soft">{tip.tip}</Text>
         </View>
       </View>
     </Animated.View>

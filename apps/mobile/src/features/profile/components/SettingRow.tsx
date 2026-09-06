@@ -30,7 +30,7 @@ export const SettingsRow: React.FC<Props> = ({
   };
 
   const content = (
-    <View className="flex-row items-center justify-between rounded-2xl border-2 border-[#EEE9DC] bg-[#FFFDF8] p-4">
+    <View className="flex-row items-center justify-between rounded-2xl border-2 border-[#E5DFFF] bg-white p-4">
       <View className="flex-row items-center gap-3">
         {icon}
         <View>

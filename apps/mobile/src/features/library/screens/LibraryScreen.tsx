@@ -12,7 +12,7 @@ import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practi
 import type { DueMemoryReview } from '@/features/practice-attempts';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
 import { useUserState } from '@/contexts/UserStateContext';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -545,9 +545,9 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   emptyButtonText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  loadMoreButton: { alignSelf: 'center', marginTop: 16, borderRadius: 999, backgroundColor: '#EEE9FF', paddingHorizontal: 18, paddingVertical: 10 },
-  loadMoreText: { textAlign: 'center', color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  lessonEntry: { alignItems: 'center', backgroundColor: '#F2EEFF', borderColor: '#DDD3FF', borderRadius: 999, borderWidth: 1.5, flexDirection: 'row', gap: 5, paddingHorizontal: 9, paddingVertical: 6 },
-  lessonEntryTitle: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 }, lessonEntryArrow: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 14 },
+  loadMoreButton: { alignSelf: 'center', marginTop: 16, borderRadius: 999, backgroundColor: theme.skyTint, paddingHorizontal: 18, paddingVertical: 10 },
+  loadMoreText: { textAlign: 'center', color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  lessonEntry: { alignItems: 'center', backgroundColor: theme.sunTint, borderColor: theme.sunLine, borderRadius: 999, borderWidth: 1.5, flexDirection: 'row', gap: 5, paddingHorizontal: 9, paddingVertical: 6 },
+  lessonEntryTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 10 }, lessonEntryArrow: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 },
   loadingFrame: { height: 180, overflow: 'hidden', borderRadius: 20 },
 });

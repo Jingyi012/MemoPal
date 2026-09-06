@@ -2,7 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import type { MemorySet } from '@/features/memory-sets';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { CalendarClock, ChevronRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
@@ -167,8 +167,8 @@ const styles = StyleSheet.create({
   listTechniqueIcon: { width: 40, height: 40, borderRadius: 13 },
   techniqueEmoji: { fontSize: 22 },
   listTechniqueEmoji: { fontSize: 18 },
-  palaceIcon: { backgroundColor: '#EEE9FF' },
-  pegIcon: { backgroundColor: '#FFF0F4' },
+  palaceIcon: { backgroundColor: theme.violetTint },
+  pegIcon: { backgroundColor: theme.berryTint },
   memoryCopy: { flex: 1, minWidth: 0, marginHorizontal: 12 },
   listMemoryCopy: { marginHorizontal: 10 },
   techniqueLabel: { fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.8 },
@@ -196,10 +196,10 @@ const styles = StyleSheet.create({
 });
 
 const PEG_COVER_PALETTES = [
-  { background: '#FFF0F4' },
-  { background: '#FFF7DD' },
-  { background: '#EEE9FF' },
-  { background: '#EAF8F5' },
+  { background: theme.berryTint },
+  { background: theme.sunTint },
+  { background: theme.skyTint },
+  { background: theme.mintTint },
 ];
 
 function getPegVisuals(memorySet: MemorySet): string[] {

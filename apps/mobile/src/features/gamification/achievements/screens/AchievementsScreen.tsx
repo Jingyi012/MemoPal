@@ -12,6 +12,7 @@ import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes'
 import { usePracticeStats } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { typography } from '@/theme/typography';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { ArrowRight, Check, History } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -274,10 +275,10 @@ function ProgressLine({
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#FFFFFF' },
+  page: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 16, paddingBottom: 128 },
   statRow: { flexDirection: 'row', gap: 10 },
-  statTile: { flex: 1, alignItems: 'center', backgroundColor: '#FFFDF8', borderWidth: 2, borderColor: '#EEE9DC', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 6 },
+  statTile: { flex: 1, alignItems: 'center', backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 6 },
   statValue: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 19 },
   statLabel: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10, textAlign: 'center', marginTop: 2 },
   progressLine: { marginTop: 20 },
@@ -287,17 +288,17 @@ const styles = StyleSheet.create({
   seeAll: { minHeight: 32, justifyContent: 'center' },
   seeAllRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   seeAllText: { color: '#4FC0E8', fontFamily: typography.displayExtraBold, fontSize: 11.5 },
-  progressTrack: { height: 9, backgroundColor: '#EEE9DC', borderRadius: 999, overflow: 'hidden' },
+  progressTrack: { height: 9, backgroundColor: theme.line, borderRadius: 999, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 999 },
   sectionHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 25, marginBottom: 11 },
   sectionLabel: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 17 },
   sectionBody: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 2 },
-  achievedPill: { borderRadius: 999, backgroundColor: '#F1FBF5', paddingHorizontal: 10, paddingVertical: 6 },
+  achievedPill: { borderRadius: 999, backgroundColor: theme.mintTint, paddingHorizontal: 10, paddingVertical: 6 },
   achievedPillText: { color: '#267A55', fontFamily: typography.bodyExtraBold, fontSize: 10 },
   milestoneList: { gap: 10 },
-  milestoneCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#FFFDF8', borderWidth: 2, borderColor: '#EEE9DC', borderRadius: 18, padding: 13 },
-  milestoneCardAchieved: { borderColor: '#BFE7D6', backgroundColor: '#F8FFFB' },
-  milestoneIcon: { width: 44, height: 44, borderRadius: 15, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },
+  milestoneCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 18, padding: 13 },
+  milestoneCardAchieved: { borderColor: theme.mintLine, backgroundColor: theme.mintTint },
+  milestoneIcon: { width: 44, height: 44, borderRadius: 15, backgroundColor: theme.skyTint, alignItems: 'center', justifyContent: 'center' },
   milestoneIconAchieved: { backgroundColor: '#DDF5E9' },
   milestoneEmoji: { fontSize: 21 },
   milestoneCopy: { flex: 1, minWidth: 0 },
@@ -306,10 +307,10 @@ const styles = StyleSheet.create({
   milestoneStatus: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
   milestoneStatusAchieved: { color: '#267A55' },
   milestoneDescription: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 15, marginTop: 2 },
-  milestoneTrack: { height: 6, borderRadius: 999, overflow: 'hidden', backgroundColor: '#EEE9DC', marginTop: 8 },
-  milestoneFill: { height: '100%', borderRadius: 999, backgroundColor: '#9B8CFF' },
-  milestoneFillAchieved: { backgroundColor: '#3FB87F' },
-  emptyMilestones: { alignItems: 'center', borderRadius: 18, borderWidth: 2, borderColor: '#EEE9DC', backgroundColor: '#FFFDF8', padding: 22 },
+  milestoneTrack: { height: 6, borderRadius: 999, overflow: 'hidden', backgroundColor: theme.line, marginTop: 8 },
+  milestoneFill: { height: '100%', borderRadius: 999, backgroundColor: theme.violet },
+  milestoneFillAchieved: { backgroundColor: theme.grass },
+  emptyMilestones: { alignItems: 'center', borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 22 },
   emptyEmoji: { fontSize: 28 },
   emptyTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 8 },
   emptyBody: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 11, textAlign: 'center', marginTop: 4 },

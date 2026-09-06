@@ -1,4 +1,4 @@
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import React from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 

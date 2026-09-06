@@ -53,7 +53,7 @@ export default function Support() {
   };
 
   return (
-    <View className="flex-1 bg-[#FFFDF8]">
+    <View className="flex-1 bg-white">
       <CommonHeader title={t('title')} description={undefined} backAction={() => router.back()} />
 
       <View className="gap-4 p-5">
@@ -67,7 +67,7 @@ export default function Support() {
           value={subject}
           onChangeText={setSubject}
           placeholder={t('subject')}
-          className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
+          className="rounded-2xl border-2 border-[#E5DFFF] bg-white px-4 py-3"
         />
 
         <TextInput
@@ -77,13 +77,13 @@ export default function Support() {
           multiline
           numberOfLines={6}
           textAlignVertical="top"
-          className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
+          className="rounded-2xl border-2 border-[#E5DFFF] bg-white px-4 py-3"
         />
 
         <AnimatedPressable
           onPress={handleSend}
           disabled={!supportEnabled}
-          className={`items-center rounded-2xl py-4 ${supportEnabled ? 'bg-[#FFC93C]' : 'bg-[#D8D4C9]'}`}>
+          className={`items-center rounded-2xl py-4 ${supportEnabled ? 'bg-primary' : 'bg-line'}`}>
           <Text className={`font-semibold ${supportEnabled ? 'text-[#2B2A3D]' : 'text-[#9A97A7]'}`}>{supportButtonTitle}</Text>
         </AnimatedPressable>
       </View>

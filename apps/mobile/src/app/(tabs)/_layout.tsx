@@ -33,7 +33,7 @@ export default function TabsLayout() {
         tabBarButton: HapticTab,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          borderTopColor: '#EEE9DC',
+          borderTopColor: '#E5DFFF',
         },
         sceneStyle: {
           backgroundColor: '#FFFFFF',

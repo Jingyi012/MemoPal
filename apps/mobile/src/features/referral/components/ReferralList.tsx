@@ -42,10 +42,10 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
           <View
             key={user.referralId}
             className={`flex-row items-center justify-between p-3 ${
-              !isLast ? 'border-b border-[#EEE9DC]' : ''
+              !isLast ? 'border-b border-[#E5DFFF]' : ''
             }`}>
             <View className="flex-row items-center">
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-[#EEE9FF]">
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-[#EAF7FC]">
                 <Text className="font-bold text-[#7A68E0]">
                   {user.displayName.charAt(0).toUpperCase()}
                 </Text>
@@ -57,7 +57,7 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
             </View>
 
             <View
-              className={`rounded-full px-2 py-1 ${isPremium ? 'bg-[#FFF7E0]' : 'bg-[#F6F3EA]'}`}>
+          className={`rounded-full px-2 py-1 ${isPremium ? 'bg-[#FFF7DD]' : 'bg-[#EAF8F1]'}`}>
               <Text
                 className={`text-xs font-bold uppercase ${
                   isPremium ? 'text-[#F2A900]' : 'text-[#6B6A80]'
@@ -72,7 +72,7 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
       {hasMore ? (
         <TouchableOpacity
           onPress={() => setVisibleCount((prev) => Math.min(prev + pageSize, referrals.length))}
-          className="m-3 items-center rounded-xl bg-[#F6F3EA] px-4 py-3">
+          className="m-3 items-center rounded-xl bg-[#FFF3E6] px-4 py-3">
           <Text className="text-sm font-semibold text-[#6B6A80]">Load More</Text>
         </TouchableOpacity>
       ) : null}

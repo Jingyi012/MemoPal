@@ -17,23 +17,23 @@ export function ContinueSessionCard({ memorySet, onPress }: ContinueSessionCardP
     <View className="mt-4">
       <AnimatedPressable
         onPress={onPress}
-        className="flex-row items-center rounded-[18px] border-2 border-[#EEE9DC] bg-[#FFFDF8] p-[13px]"
+        className="flex-row items-center rounded-[18px] border-2 border-line bg-surface p-[13px]"
         style={{ boxShadow: '0px 8px 20px rgba(43,42,61,0.08)' }}>
         <View className="flex-row items-center">
-          <View className={`h-12 w-12 items-center justify-center rounded-2xl ${isPalace ? 'bg-[#EEE9FF]' : 'bg-[#FFF0F4]'}`}>
+          <View className={`h-12 w-12 items-center justify-center rounded-2xl ${isPalace ? 'bg-tint-violet' : 'bg-tint-berry'}`}>
             <Text className="text-2xl">{isPalace ? '🏰' : '🕯️'}</Text>
           </View>
           <View className="ml-3 min-w-0 flex-1">
-            <Text className="text-[10.5px] font-bold text-[#6B6A80]">
+            <Text className="text-[10.5px] font-bold text-ink-soft">
               Continue where you left off
             </Text>
-            <Text numberOfLines={1} className="mt-[1px] text-[14px] font-black text-[#2B2A3D]">
+            <Text numberOfLines={1} className="mt-[1px] text-[14px] font-black text-ink">
               {memorySet.title}
             </Text>
-            <View className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#EEE9DC]">
-              <View className="h-full rounded-full bg-[#9B8CFF]" style={{ width: `${progress}%` }} />
+            <View className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line">
+              <View className="h-full rounded-full bg-accent-violet" style={{ width: `${progress}%` }} />
             </View>
-            <Text className="mt-1 text-[10.5px] font-bold text-[#6B6A80]">
+            <Text className="mt-1 text-[10.5px] font-bold text-ink-soft">
               {memorySet.status === 'draft' ? 'Keep building' : `${memorySet.items.length} items ready to recall`}
             </Text>
           </View>

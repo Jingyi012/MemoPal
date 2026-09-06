@@ -1,6 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { groupMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { ArrowRight, CalendarClock } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
@@ -50,7 +50,7 @@ function formatShortDate(value: string, language: 'en' | 'zh') {
 const styles = StyleSheet.create({
   card: { marginTop: 12, borderRadius: 21, borderWidth: 2, borderColor: '#E0D9FF', backgroundColor: '#FBFAFF', padding: 14 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  icon: { width: 40, height: 40, borderRadius: 13, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },
+  icon: { width: 40, height: 40, borderRadius: 13, backgroundColor: '#EAF7FC', alignItems: 'center', justifyContent: 'center' },
   copy: { flex: 1, minWidth: 0 },
   eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.7 },
   title: { color: theme.ink, fontFamily: typography.display, fontSize: 15, marginTop: 3 },

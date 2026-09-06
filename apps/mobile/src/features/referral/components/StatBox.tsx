@@ -10,10 +10,10 @@ interface Props {
 
 export const StatBox: React.FC<Props> = ({ icon, value, label }) => (
   <BaseCard className="flex-1 rounded-3xl p-5">
-    <View className="mb-3 h-10 w-10 items-center justify-center rounded-2xl bg-[#EEE9FF]">
+    <View className="mb-3 h-10 w-10 items-center justify-center rounded-2xl bg-tint-mint">
       {icon}
     </View>
-    <Text className="text-2xl font-bold text-[#2B2A3D]">{value}</Text>
-    <Text className="text-xs font-bold uppercase tracking-tight text-[#9A97A7]">{label}</Text>
+    <Text className="text-2xl font-bold text-ink">{value}</Text>
+    <Text className="text-xs font-bold uppercase tracking-tight text-ink-muted">{label}</Text>
   </BaseCard>
 );

@@ -4,7 +4,7 @@ import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   heading: { color: theme.ink, fontFamily: typography.display, fontSize: 18, marginTop: 3 },
   countPill: { color: theme.violetDeep, backgroundColor: '#EEE9FF', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 6, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   grid: { flexDirection: 'column', gap: 14 },
-  sceneCard: { width: '100%', height: 110, overflow: 'hidden', borderRadius: 20, backgroundColor: '#E3D7B3', borderWidth: 2, borderColor: '#EEE9DC' },
+  sceneCard: { width: '100%', height: 110, overflow: 'hidden', borderRadius: 20, backgroundColor: '#CFC6F4', borderWidth: 2, borderColor: '#E5DFFF' },
   sceneCardLocked: { opacity: 0.78 },
   sceneImage: { ...StyleSheet.absoluteFillObject },
   sceneShade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(43,42,61,0.28)' },

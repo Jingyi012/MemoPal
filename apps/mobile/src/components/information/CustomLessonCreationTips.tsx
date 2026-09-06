@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 
 export const CustomLessonCreationTips: React.FC = () => {
   return (
-    <View className="rounded-2xl border-2 border-[#E0D9FF] bg-[#EEE9FF] p-4">
+    <View className="rounded-2xl border-2 border-line-peach bg-tint-peach p-4">
       <Text className="mb-2 text-base font-semibold text-[#7A68E0]">
         💡 Tips for Creating Lessons
       </Text>

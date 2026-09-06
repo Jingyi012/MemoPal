@@ -1,6 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Check, ChevronRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 16, marginTop: 2 },
   helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 9 },
   list: { gap: 8, marginTop: 12 },
-  row: { alignItems: 'center', backgroundColor: '#FFFDF8', borderColor: theme.line, borderRadius: 15, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 68, paddingHorizontal: 10, paddingVertical: 9 },
+  row: { alignItems: 'center', backgroundColor: '#FFFFFF', borderColor: theme.line, borderRadius: 15, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 68, paddingHorizontal: 10, paddingVertical: 9 },
   rowActive: { backgroundColor: '#F7F5FF', borderColor: '#9B8CFF' },
   number: { alignItems: 'center', backgroundColor: '#EEE9FF', borderRadius: 15, height: 30, justifyContent: 'center', width: 30 },
   numberActive: { backgroundColor: theme.sun },

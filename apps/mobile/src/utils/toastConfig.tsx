@@ -38,12 +38,12 @@ const variantStyles: Record<ToastVariant, VariantStyle> = {
   },
   info: {
     Icon: Info,
-    iconColor: Colors.indigo700,
-    iconBackground: Colors.indigo100,
-    borderColor: Colors.indigo200,
-    accentColor: Colors.indigo500,
-    titleColor: Colors.indigo900,
-    messageColor: Colors.indigo700,
+    iconColor: '#7A68E0',
+    iconBackground: '#EEE9FF',
+    borderColor: '#DCD4FF',
+    accentColor: '#9B8CFF',
+    titleColor: '#2B2A3D',
+    messageColor: '#6B6A80',
   },
 };
 

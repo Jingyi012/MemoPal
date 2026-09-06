@@ -6,6 +6,7 @@ import {
 } from '@gorhom/bottom-sheet';
 import React, { forwardRef, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import { BackHandler, Platform, StyleSheet } from 'react-native';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 
 interface Props extends Partial<BottomSheetModalProps> {
   children?: ReactNode;
@@ -86,6 +87,6 @@ CustomBottomSheetModal.displayName = 'CustomBottomSheetModal';
 export default CustomBottomSheetModal;
 
 const styles = StyleSheet.create({
-  background: { backgroundColor: '#FFFDF8' },
-  handleIndicator: { backgroundColor: '#D8D4C9', width: 42 },
+  background: { backgroundColor: theme.paper },
+  handleIndicator: { backgroundColor: theme.violetLine, width: 42 },
 });

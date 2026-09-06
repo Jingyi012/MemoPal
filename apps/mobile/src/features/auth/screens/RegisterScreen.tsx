@@ -1,7 +1,7 @@
 import { authApi } from '@/features/auth/api/auth';
 import { referralApi } from '@/features/referral/api/referral';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { useAuth } from '@/contexts/AuthProvider';
 import {
   getFacebookAccessToken,
@@ -113,7 +113,7 @@ export default function Register() {
   };
 
   return (
-    <View className="flex-1 bg-[#FFFDF8]">
+    <View className="flex-1 bg-white">
       <View className="flex-1 items-center justify-center px-8">
         <LinearGradient
           colors={[theme.violetDeep, theme.berryDeep]}
@@ -144,7 +144,7 @@ export default function Register() {
                 value={displayName}
                 onChangeText={setDisplayName}
                 placeholder={t('displayName')}
-                className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
+                className="rounded-2xl border-2 border-[#E5DFFF] bg-white px-4 py-3"
                 autoCapitalize="words"
               />
               <TextInput
@@ -153,28 +153,28 @@ export default function Register() {
                 placeholder={t('email')}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
+                className="rounded-2xl border-2 border-[#E5DFFF] bg-white px-4 py-3"
               />
               <TextInput
                 value={password}
                 onChangeText={setPassword}
                 placeholder={t('passwordHint')}
                 secureTextEntry
-                className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
+                className="rounded-2xl border-2 border-[#E5DFFF] bg-white px-4 py-3"
               />
               <TextInput
                 value={referralCode}
                 onChangeText={setReferralCode}
                 placeholder={t('referralCode')}
                 autoCapitalize="characters"
-                className="rounded-2xl border-2 border-[#EEE9DC] bg-white px-4 py-3"
+                className="rounded-2xl border-2 border-[#E5DFFF] bg-white px-4 py-3"
               />
             </View>
 
             <AnimatedPressable
               onPress={handleRegister}
               disabled={!canSubmit || isSubmitting}
-              className={`mb-3 w-full max-w-sm items-center justify-center rounded-2xl px-6 py-4 ${!canSubmit || isSubmitting ? 'bg-[#D8D4C9]' : 'bg-[#FFC93C]'}`}>
+              className={`mb-3 w-full max-w-sm items-center justify-center rounded-2xl px-6 py-4 ${!canSubmit || isSubmitting ? 'bg-line' : 'bg-primary'}`}>
               <Text className={`font-medium ${!canSubmit || isSubmitting ? 'text-[#9A97A7]' : 'text-[#2B2A3D]'}`}>
                 {isSubmitting ? t('creatingAccount') : t('signUp')}
               </Text>
@@ -210,7 +210,7 @@ export default function Register() {
               }
             }}
             disabled={isSubmitting}
-            className="mb-2 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#EEE9DC] bg-white px-6 py-4">
+            className="mb-2 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#E5DFFF] bg-white px-6 py-4">
             <Image
               source={require('../../../../assets/images/google-icon.png')}
               style={{ width: 18, height: 18 }}
@@ -247,7 +247,7 @@ export default function Register() {
               }
             }}
             disabled={isSubmitting}
-            className="mb-3 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#EEE9DC] bg-white px-6 py-4">
+            className="mb-3 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#E5DFFF] bg-white px-6 py-4">
             <Ionicons name="logo-facebook" size={18} color="#1877F2" />
             <Text className="font-medium text-[#2B2A3D]">{t('continueFacebook')}</Text>
           </AnimatedPressable>

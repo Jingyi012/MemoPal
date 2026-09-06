@@ -1,7 +1,7 @@
 import { BaseCard } from '@/components/BaseCard';
 import { StepNavigationFooter } from '@/components/StepNavigationFooter';
 import { GradientColors } from '@/core/types/colors';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft } from 'lucide-react-native';
 import React, { useState } from 'react';
@@ -183,12 +183,12 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
         showsVerticalScrollIndicator={false}
         style={animatedContentStyle}>
         <View className="space-y-6 pb-10">
-          <BaseCard className="border-2 border-[#EEE9DC] bg-[#FFFDF8]" radius="3xl" padding="lg" shadow="sm">
+          <BaseCard className="border-2 border-[#E5DFFF] bg-white" radius="3xl" padding="lg" shadow="sm">
             <Text className="text-base leading-6 text-[#6B6A80]">{localizedStep.content}</Text>
           </BaseCard>
 
           <BaseCard
-            className="mt-3 flex-row border-2 border-[#E0D9FF] bg-[#EEE9FF]"
+            className="mt-3 flex-row border-2 border-line-violet bg-tint-violet"
             radius="3xl"
             padding="lg"
             shadow="none">
@@ -203,7 +203,7 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
 
           {currentStep === 1 && (
             <BaseCard
-              className="mt-3 border-2 border-[#BFE7D6] bg-[#F1FBF5]"
+              className="mt-3 border-2 border-line-mint bg-tint-mint"
               radius="3xl"
               padding="lg"
               shadow="none">
@@ -223,7 +223,7 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
 
           {currentStep === 3 && (
             <BaseCard
-              className="mt-3 border-2 border-[#FFE6A3] bg-[#FFF7E0]"
+              className="mt-3 border-2 border-line-sun bg-tint-sun"
               radius="3xl"
               padding="lg"
               shadow="none">

@@ -107,7 +107,7 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
             </View>
           </View>
 
-          <LinearGradient colors={['#FFF7E0', '#FFFDF8']} style={styles.preview}>
+          <LinearGradient colors={['#FFF7DD', '#FFFFFF']} style={styles.preview}>
             <Text style={styles.previewLabel}>{t('currentTime')}</Text>
             <Text style={styles.previewTime}>{selectedTime}</Text>
             <Text style={styles.previewHint}>{t('dailyLearning')}</Text>
@@ -319,8 +319,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   quickPill: {
-    backgroundColor: '#F6F3EA',
-    borderColor: '#EEE9DC',
+    backgroundColor: '#F3F0FF',
+    borderColor: '#E5DFFF',
     borderRadius: 10,
     borderWidth: 2,
     paddingHorizontal: 10,
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   quickTextSelected: { color: '#7A68E0' },
   footer: {
     alignItems: 'stretch',
-    borderTopColor: '#EEE9DC',
+    borderTopColor: '#E5DFFF',
     borderTopWidth: 2,
     flexDirection: 'row',
     gap: 10,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   buttonSlot: { flex: 1 },
   cancelButton: {
     alignItems: 'center',
-    backgroundColor: '#F6F3EA',
+    backgroundColor: '#F3F0FF',
     borderColor: '#E8E1D3',
     borderRadius: 14,
     borderWidth: 2,

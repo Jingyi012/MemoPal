@@ -7,7 +7,7 @@ import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { NumberPegItemCard } from '@/features/number-peg/components/NumberPegItemCard';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { useNumberPegOverview } from '@/features/number-peg/hooks/useNumberPegOverview';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';

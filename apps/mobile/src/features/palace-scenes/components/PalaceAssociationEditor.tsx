@@ -1,7 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { SceneEditorCard } from '@/features/memory-composer/components/SceneEditorCard';
 import type { PalaceLocus } from '@/features/palace-scenes/types/palaceScene.types';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';

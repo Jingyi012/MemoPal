@@ -12,7 +12,7 @@ import {
   writeCustomPalaceDraft,
 } from '@/features/palace-scenes/services/customPalaceDraft';
 import type { PalaceLocusInput } from '@/features/palace-scenes/types/palaceScene.types';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { firstParam } from '@/features/memory-composer/utils/composerParams';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';

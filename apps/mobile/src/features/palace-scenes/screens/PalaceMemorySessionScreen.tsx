@@ -9,7 +9,7 @@ import { PalaceFocusCard } from '@/features/palace-scenes/components/PalaceFocus
 import { PalaceOrderedList } from '@/features/palace-scenes/components/PalaceOrderedList';
 import { useMemorySet } from '@/features/memory-sets';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
-import { numberPegTheme as theme } from '@/features/number-peg/constants/numberPegTheme';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { usePalaceScene } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import {
@@ -731,7 +731,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: '#E3D7B3',
+    borderColor: '#DCD4FF',
     backgroundColor: '#F4EFE0',
   },
   floor: {
