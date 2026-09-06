@@ -1,13 +1,13 @@
 import { apiClient } from "../lib/apiClient";
 import type { PaginatedResponse } from "../types/api";
 import type {
-  AdminCommunityMemorySetDto,
+  CommunityMemorySetView,
   CommunityMemorySetStatus,
 } from "../types/communityMemorySet";
 
 const endpoint = "/admin/community-memory-sets";
 
-export interface AdminCommunityMemorySetListParams {
+export interface CommunityMemorySetListParams {
   pageNumber?: number;
   pageSize?: number;
   search?: string;
@@ -20,8 +20,8 @@ export const adminCommunityMemorySetsApi = {
     pageSize = 20,
     search = "",
     status,
-  }: AdminCommunityMemorySetListParams = {}): Promise<PaginatedResponse<AdminCommunityMemorySetDto>> {
-    const { data } = await apiClient.get<PaginatedResponse<AdminCommunityMemorySetDto>>(endpoint, {
+  }: CommunityMemorySetListParams = {}): Promise<PaginatedResponse<CommunityMemorySetView>> {
+    const { data } = await apiClient.get<PaginatedResponse<CommunityMemorySetView>>(endpoint, {
       params: {
         pageNumber,
         pageSize,

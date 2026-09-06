@@ -1,16 +1,16 @@
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
-using MemoPal.Application.Features.Subscriptions.DTOs;
+using MemoPal.Application.Features.Subscriptions.Admin.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Subscriptions.Commands;
 
-public sealed record UpdateUserSubscriptionCommand(string SubscriptionId, AdminUpdateSubscriptionRequest Request)
-    : IRequest<ApiResponse<AdminUserSubscriptionDto>>;
+public sealed record UpdateUserSubscriptionCommand(string SubscriptionId, UpdateSubscriptionRequest Request)
+    : IRequest<ApiResponse<UserSubscriptionView>>;
 
 public sealed class UpdateUserSubscriptionCommandHandler
-    : IRequestHandler<UpdateUserSubscriptionCommand, ApiResponse<AdminUserSubscriptionDto>>
+    : IRequestHandler<UpdateUserSubscriptionCommand, ApiResponse<UserSubscriptionView>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,11 +19,11 @@ public sealed class UpdateUserSubscriptionCommandHandler
         _db = db;
     }
 
-    public async Task<ApiResponse<AdminUserSubscriptionDto>> Handle(UpdateUserSubscriptionCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<UserSubscriptionView>> Handle(UpdateUserSubscriptionCommand request, CancellationToken cancellationToken)
     {
         var entity = await _db.UserSubscriptions.FirstOrDefaultAsync(x => x.Id == request.SubscriptionId && !x.IsDeleted, cancellationToken);
         if (entity is null)
-            return ApiResponse<AdminUserSubscriptionDto>.Fail("Subscription not found.");
+            return ApiResponse<UserSubscriptionView>.Fail("Subscription not found.");
 
         if (!string.IsNullOrWhiteSpace(request.Request.Status))
             entity.Status = request.Request.Status.Trim().ToLowerInvariant();
@@ -49,7 +49,7 @@ public sealed class UpdateUserSubscriptionCommandHandler
 
         await _db.SaveChangesAsync(cancellationToken);
 
-        var dto = new AdminUserSubscriptionDto(
+        var dto = new UserSubscriptionView(
             entity.Id,
             entity.UserId,
             entity.PlanId,
@@ -61,9 +61,11 @@ public sealed class UpdateUserSubscriptionCommandHandler
             entity.AutoRenew,
             entity.LastVerifiedAt,
             entity.CreatedAt,
-            entity.UpdatedAt
+            entity.UpdatedAt,
+            user?.Email,
+            user?.DisplayName
         );
 
-        return ApiResponse<AdminUserSubscriptionDto>.Ok(dto);
+        return ApiResponse<UserSubscriptionView>.Ok(dto);
     }
 }

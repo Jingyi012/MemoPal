@@ -4,14 +4,14 @@ import type { UploadProps } from 'antd';
 import { useState } from 'react';
 import {
   useAdminMediaApi,
-  type AdminImageCategory,
+  type ImageCategory,
 } from '../../hooks/useAdminMediaApi';
 import { compressImageForUpload } from '../../utils/imageCompression';
 
 interface ImageUploadFieldProps {
   value?: string;
   onChange?: (value: string) => void;
-  category: AdminImageCategory;
+  category: ImageCategory;
 }
 
 export function ImageUploadField({ value, onChange, category }: ImageUploadFieldProps) {

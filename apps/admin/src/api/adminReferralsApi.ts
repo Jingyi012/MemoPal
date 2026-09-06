@@ -1,8 +1,8 @@
 import { apiClient } from "../lib/apiClient";
 import type { ApiResponse, PaginatedResponse } from "../types/api";
 import type {
-  AdminReferralRecordDto,
-  AdminReferralUserDto,
+  ReferralRecordView,
+  ReferralUserView,
   ReferralProgramConfigDto,
 } from "../types/referral";
 
@@ -28,8 +28,8 @@ export const adminReferralsApi = {
     pageNumber = 1,
     pageSize = 20,
     search = "",
-  ): Promise<PaginatedResponse<AdminReferralUserDto>> {
-    const r = await apiClient.get<PaginatedResponse<AdminReferralUserDto>>(
+  ): Promise<PaginatedResponse<ReferralUserView>> {
+    const r = await apiClient.get<PaginatedResponse<ReferralUserView>>(
       "/admin/referrals/users",
       {
         params: { pageNumber, pageSize, search: search || undefined },
@@ -43,8 +43,8 @@ export const adminReferralsApi = {
     pageSize = 20,
     search = "",
     referrerUserId?: string,
-  ): Promise<PaginatedResponse<AdminReferralRecordDto>> {
-    const r = await apiClient.get<PaginatedResponse<AdminReferralRecordDto>>(
+  ): Promise<PaginatedResponse<ReferralRecordView>> {
+    const r = await apiClient.get<PaginatedResponse<ReferralRecordView>>(
       "/admin/referrals/records",
       {
         params: {

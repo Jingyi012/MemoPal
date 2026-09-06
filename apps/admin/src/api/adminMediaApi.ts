@@ -2,10 +2,10 @@ import { apiClient } from '../lib/apiClient';
 import { resolveMediaUrl } from '../lib/mediaUrl';
 import type { ApiResponse } from '../types/api';
 
-export type AdminImageCategory = 'palace' | 'location' | 'general';
+export type ImageCategory = 'palace' | 'location' | 'general';
 
 export const adminMediaApi = {
-  async uploadImage(file: File, category: AdminImageCategory): Promise<string> {
+  async uploadImage(file: File, category: ImageCategory): Promise<string> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('category', category);

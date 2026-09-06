@@ -1,7 +1,7 @@
 using MediatR;
 using MemoPal.Application.Features.PredefinedMemoryLessons.Commands;
 using MemoPal.Application.Features.PredefinedMemoryLessons.DTOs;
-using MemoPal.Application.Features.PredefinedMemoryLessons.Queries;
+using MemoPal.Application.Features.PredefinedMemoryLessons.Admin.Queries;
 using MemoPal.Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +14,7 @@ public sealed class AdminPredefinedMemoryLessonsController(ISender sender) : Api
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken) =>
-        Ok(await Sender.Send(new GetAdminPredefinedMemoryLessonsQuery(), cancellationToken));
+        Ok(await Sender.Send(new GetPredefinedMemoryLessonsQuery(), cancellationToken));
 
     [HttpPost]
     public async Task<IActionResult> Create(

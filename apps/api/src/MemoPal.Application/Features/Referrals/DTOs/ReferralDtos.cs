@@ -89,7 +89,7 @@ public sealed record RedeemReferralResultDto(
     IReadOnlyList<ReferralMilestoneProgressDto> NewlyAwardedMilestones
 );
 
-public sealed record AdminReferralUserDto(
+public sealed record ReferralUserView(
     string UserId,
     string DisplayName,
     string Email,
@@ -102,7 +102,7 @@ public sealed record AdminReferralUserDto(
     DateTime UpdatedAt
 );
 
-public sealed record AdminReferralRecordDto(
+public sealed record ReferralRecordView(
     string Id,
     string ReferralCode,
     string ReferrerUserId,

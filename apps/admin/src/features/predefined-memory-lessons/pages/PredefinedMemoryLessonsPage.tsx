@@ -1,6 +1,6 @@
 import { AppstoreOutlined, DeleteOutlined, EditOutlined, PlusOutlined, TableOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Col, Empty, Flex, Form, Input, InputNumber, Modal, Popconfirm, Row, Select, Segmented, Space, Spin, Switch, Table, Tag, Typography } from 'antd';
+import { Alert, App, Button, Card, Col, Empty, Flex, Form, Input, InputNumber, Modal, Popconfirm, Row, Select, Segmented, Space, Spin, Switch, Table, Tag, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { adminPredefinedMemoryLessonCategoriesApi, adminPredefinedMemoryLessonsApi } from '../../../api/adminPredefinedMemoryLessonsApi';
@@ -18,7 +18,7 @@ const blankDraft = (): PredefinedMemoryLessonUpsertRequest => ({
 });
 
 export default function PredefinedMemoryLessonsPage() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedCategoryId = searchParams.get('category') ?? 'all';
@@ -86,6 +86,20 @@ export default function PredefinedMemoryLessonsPage() {
     && draft.emoji.trim() && draft.categoryId && draft.items.length > 0
     && (!draft.isStarterLesson || (draft.items.length >= 2 && draft.items.length <= 5))
     && draft.items.every((item) => item.contentEn.trim() && item.contentZh.trim());
+  const saveLesson = () => {
+    const isPublishing = draft.isPublished && !editing?.isPublished;
+    if (!isPublishing) {
+      saveMutation.mutate();
+      return;
+    }
+
+    modal.confirm({
+      title: 'Publish this lesson now?',
+      content: 'The lesson will become visible in the mobile Practice catalogue immediately after it is saved.',
+      okText: 'Publish lesson',
+      onOk: () => saveMutation.mutateAsync(),
+    });
+  };
 
   return (
     <PortalPageContainer>
@@ -117,7 +131,9 @@ export default function PredefinedMemoryLessonsPage() {
         style={{ width: 280, marginBottom: 18 }}
       />
 
-      {lessonsQuery.isLoading ? <Spin /> : filteredLessons.length ? viewMode === 'table' ? (
+      {lessonsQuery.isError ? (
+        <Alert type='error' showIcon message='Could not load lessons.' action={<Button onClick={() => void lessonsQuery.refetch()}>Retry</Button>} />
+      ) : lessonsQuery.isLoading ? <Spin /> : filteredLessons.length ? viewMode === 'table' ? (
         <Table<PredefinedMemoryLessonDto>
           rowKey='id'
           dataSource={filteredLessons}
@@ -224,7 +240,7 @@ export default function PredefinedMemoryLessonsPage() {
         title={editing ? `Edit ${editing.titleEn}` : 'Create predefined lesson'}
         okText={saveMutation.isPending ? 'Saving…' : 'Save lesson'}
         okButtonProps={{ loading: saveMutation.isPending, disabled: !canSave }}
-        onOk={() => saveMutation.mutate()}
+        onOk={saveLesson}
         styles={{ body: { maxHeight: '72vh', overflowY: 'auto', paddingRight: 8 } }}
       >
         <Form layout='vertical'>

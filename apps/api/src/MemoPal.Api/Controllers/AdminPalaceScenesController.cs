@@ -1,7 +1,7 @@
 using MediatR;
 using MemoPal.Application.Features.PalaceScenes.Commands;
 using MemoPal.Application.Features.PalaceScenes.DTOs;
-using MemoPal.Application.Features.PalaceScenes.Queries;
+using MemoPal.Application.Features.PalaceScenes.Admin.Queries;
 using MemoPal.Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +16,7 @@ public sealed class AdminPalaceScenesController : ApiControllerBase
 
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken) =>
-        Ok(await Sender.Send(new GetAdminPalaceScenesQuery(), cancellationToken));
+        Ok(await Sender.Send(new GetPalaceScenesQuery(), cancellationToken));
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PalaceSceneUpsertRequest request, CancellationToken cancellationToken) =>

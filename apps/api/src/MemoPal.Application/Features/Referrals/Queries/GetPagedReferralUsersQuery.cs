@@ -7,10 +7,10 @@ using Microsoft.EntityFrameworkCore;
 namespace MemoPal.Application.Features.Referrals.Queries;
 
 public sealed record GetPagedReferralUsersQuery(int PageNumber = 1, int PageSize = 20, string? Search = null)
-    : IRequest<PaginatedResponse<AdminReferralUserDto>>;
+    : IRequest<PaginatedResponse<ReferralUserView>>;
 
 public sealed class GetPagedReferralUsersQueryHandler
-    : IRequestHandler<GetPagedReferralUsersQuery, PaginatedResponse<AdminReferralUserDto>>
+    : IRequestHandler<GetPagedReferralUsersQuery, PaginatedResponse<ReferralUserView>>
 {
     private readonly IAppDbContext _db;
 
@@ -19,7 +19,7 @@ public sealed class GetPagedReferralUsersQueryHandler
         _db = db;
     }
 
-    public async Task<PaginatedResponse<AdminReferralUserDto>> Handle(GetPagedReferralUsersQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedResponse<ReferralUserView>> Handle(GetPagedReferralUsersQuery request, CancellationToken cancellationToken)
     {
         var pageNumber = Math.Max(1, request.PageNumber);
         var pageSize = Math.Clamp(request.PageSize, 1, 200);
@@ -95,7 +95,7 @@ public sealed class GetPagedReferralUsersQueryHandler
                 var record = recordMap.GetValueOrDefault(item.UserId);
                 var milestone = milestoneMap.GetValueOrDefault(item.UserId);
 
-                return new AdminReferralUserDto(
+                return new ReferralUserView(
                     item.UserId,
                     item.DisplayName,
                     item.Email,
@@ -109,6 +109,6 @@ public sealed class GetPagedReferralUsersQueryHandler
             })
             .ToList();
 
-        return PaginatedResponse<AdminReferralUserDto>.Ok(data, pageNumber, pageSize, totalCount);
+        return PaginatedResponse<ReferralUserView>.Ok(data, pageNumber, pageSize, totalCount);
     }
 }

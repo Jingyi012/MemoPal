@@ -3,6 +3,8 @@ export const adminPaths = {
   login: '/login',
   forbidden: '/forbidden',
 
+  dashboard: '/admin/dashboard',
+
   users: '/admin/users',
   communityMemorySets: '/admin/community-memory-sets',
   contentRoot: '/admin/content',

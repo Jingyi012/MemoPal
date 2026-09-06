@@ -1,13 +1,13 @@
-import { EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
+import { EyeInvisibleOutlined, EyeOutlined, FileSearchOutlined } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import type { ProColumns } from "@ant-design/pro-components";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Popconfirm, Select, Space, Tag, Typography } from "antd";
+import { Button, Descriptions, Drawer, Empty, Input, List, Modal, Select, Space, Tag, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { adminCommunityMemorySetsApi } from "../../../api/adminCommunityMemorySetsApi";
 import { PortalPageContainer } from "../../../components/PortalPageContainer";
 import type {
-  AdminCommunityMemorySetDto,
+  CommunityMemorySetView,
   CommunityMemorySetStatus,
 } from "../../../types/communityMemorySet";
 import {
@@ -24,9 +24,12 @@ function formatDateTime(value: string | null | undefined) {
 export default function CommunityMemorySetsPage() {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<CommunityMemorySetStatus | undefined>();
+  const [selected, setSelected] = useState<CommunityMemorySetView | null>(null);
+  const [hideTarget, setHideTarget] = useState<CommunityMemorySetView | null>(null);
+  const [hideReason, setHideReason] = useState("");
   const { hideMutation, restoreMutation } = useAdminCommunityMemorySets();
 
-  const columns = useMemo<ProColumns<AdminCommunityMemorySetDto>[]>(
+  const columns = useMemo<ProColumns<CommunityMemorySetView>[]>(
     () => [
       {
         title: "Memory set",
@@ -81,9 +84,13 @@ export default function CommunityMemorySetsPage() {
         key: "actions",
         search: false,
         fixed: "right",
-        width: 130,
+        width: 210,
         render: (_, row) =>
-          row.communityStatus === "hidden" ? (
+          <Space>
+            <Button size="small" icon={<FileSearchOutlined />} onClick={() => setSelected(row)}>
+              Review
+            </Button>
+            {row.communityStatus === "hidden" ? (
             <Button
               size="small"
               icon={<EyeOutlined />}
@@ -92,23 +99,14 @@ export default function CommunityMemorySetsPage() {
             >
               Restore
             </Button>
-          ) : (
-            <Popconfirm
-              title="Hide this memory set?"
-              description="It will no longer appear in the community library."
-              okText="Hide"
-              onConfirm={() => hideMutation.mutate({ id: row.id })}
-            >
-              <Button
-                size="small"
-                danger
-                icon={<EyeInvisibleOutlined />}
+            ) : (
+              <Button size="small" danger icon={<EyeInvisibleOutlined />}
                 loading={hideMutation.isPending && hideMutation.variables?.id === row.id}
-              >
+                onClick={() => { setHideTarget(row); setHideReason(""); }}>
                 Hide
               </Button>
-            </Popconfirm>
-          ),
+            )}
+          </Space>,
       },
     ],
     [hideMutation, restoreMutation],
@@ -116,7 +114,7 @@ export default function CommunityMemorySetsPage() {
 
   return (
     <PortalPageContainer>
-      <ProTable<AdminCommunityMemorySetDto>
+      <ProTable<CommunityMemorySetView>
         rowKey="id"
         key={status ?? "all"}
         headerTitle="Community Memory Sets"
@@ -149,6 +147,63 @@ export default function CommunityMemorySetsPage() {
           return { data: page.data, success: page.success, total: page.pagination.totalCount };
         }}
       />
+
+      <Drawer
+        title={selected ? `Review: ${selected.title}` : "Review memory set"}
+        width={560}
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        extra={selected?.communityStatus === "visible" ? (
+          <Button danger icon={<EyeInvisibleOutlined />} onClick={() => {
+            setHideTarget(selected);
+            setHideReason("");
+          }}>Hide content</Button>
+        ) : undefined}
+      >
+        {selected ? (
+          <Space direction="vertical" size="large" style={{ width: "100%" }}>
+            <Typography.Paragraph>{selected.description || "No description provided."}</Typography.Paragraph>
+            <Descriptions column={1} bordered size="small" items={[
+              { key: "author", label: "Author", children: selected.author.displayName },
+              { key: "technique", label: "Technique", children: selected.techniqueKey },
+              { key: "published", label: "Published", children: formatDateTime(selected.publishedAt) },
+              { key: "status", label: "Status", children: selected.communityStatus },
+              ...(selected.hiddenReason ? [{ key: "hiddenReason", label: "Hidden reason", children: selected.hiddenReason }] : []),
+            ]} />
+            <div>
+              <Typography.Title level={5}>Reports ({selected.reports.length})</Typography.Title>
+              {selected.reports.length ? (
+                <List dataSource={selected.reports} renderItem={(report) => (
+                  <List.Item>
+                    <List.Item.Meta title={<Space><Tag color="orange">{report.reason}</Tag><Typography.Text type="secondary">{formatDateTime(report.createdAt)}</Typography.Text></Space>}
+                      description={report.details || "No additional details."} />
+                  </List.Item>
+                )} />
+              ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No reports" />}
+            </div>
+          </Space>
+        ) : null}
+      </Drawer>
+
+      <Modal
+        title="Hide community memory set"
+        open={!!hideTarget}
+        okText="Hide content"
+        okButtonProps={{ danger: true, disabled: !hideReason.trim(), loading: hideMutation.isPending }}
+        onCancel={() => setHideTarget(null)}
+        onOk={async () => {
+          if (!hideTarget || !hideReason.trim()) return;
+          await hideMutation.mutateAsync({ id: hideTarget.id, reason: hideReason.trim() });
+          setHideTarget(null);
+          setSelected(null);
+        }}
+      >
+        <Typography.Paragraph type="secondary">
+          This removes the content from the community library. Record a reason for the moderation history.
+        </Typography.Paragraph>
+        <Input.TextArea rows={4} maxLength={500} showCount value={hideReason}
+          placeholder="Reason for hiding this content" onChange={(event) => setHideReason(event.target.value)} />
+      </Modal>
     </PortalPageContainer>
   );
 }

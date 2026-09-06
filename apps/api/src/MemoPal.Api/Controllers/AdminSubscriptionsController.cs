@@ -1,7 +1,7 @@
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Features.Subscriptions.Commands;
-using MemoPal.Application.Features.Subscriptions.DTOs;
+using MemoPal.Application.Features.Subscriptions.Admin.Contracts;
 using MemoPal.Application.Features.Subscriptions.Queries;
 using MemoPal.Domain.Common;
 using Microsoft.AspNetCore.Authorization;
@@ -26,7 +26,7 @@ public sealed class AdminSubscriptionsController : ApiControllerBase
         CancellationToken cancellationToken = default)
     {
         var result = await Sender.Send(
-            new GetPagedUserSubscriptionsQuery(new AdminSubscriptionFilter
+            new GetPagedUserSubscriptionsQuery(new SubscriptionFilter
             {
                 PageNumber = pageNumber,
                 PageSize = pageSize,
@@ -41,7 +41,7 @@ public sealed class AdminSubscriptionsController : ApiControllerBase
     [HttpPatch("{subscriptionId}")]
     public async Task<IActionResult> Update(
         [FromRoute] string subscriptionId,
-        [FromBody] AdminUpdateSubscriptionRequest request,
+        [FromBody] UpdateSubscriptionRequest request,
         CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new UpdateUserSubscriptionCommand(subscriptionId, request), cancellationToken);

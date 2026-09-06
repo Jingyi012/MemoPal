@@ -5,17 +5,17 @@ using MemoPal.Application.Features.CommunityMemorySets.DTOs;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace MemoPal.Application.Features.CommunityMemorySets.Queries;
+namespace MemoPal.Application.Features.CommunityMemorySets.Admin.Queries;
 
-public sealed record GetAdminCommunityMemorySetsQuery(
+public sealed record GetCommunityMemorySetsQuery(
     string? Search, string? Status, int PageNumber, int PageSize)
-    : IRequest<PaginatedResponse<AdminCommunityMemorySetDto>>;
+    : IRequest<PaginatedResponse<CommunityMemorySetView>>;
 
-public sealed class GetAdminCommunityMemorySetsQueryHandler(IAppDbContext db)
-    : IRequestHandler<GetAdminCommunityMemorySetsQuery, PaginatedResponse<AdminCommunityMemorySetDto>>
+public sealed class GetCommunityMemorySetsQueryHandler(IAppDbContext db)
+    : IRequestHandler<GetCommunityMemorySetsQuery, PaginatedResponse<CommunityMemorySetView>>
 {
-    public async Task<PaginatedResponse<AdminCommunityMemorySetDto>> Handle(
-        GetAdminCommunityMemorySetsQuery request,
+    public async Task<PaginatedResponse<CommunityMemorySetView>> Handle(
+        GetCommunityMemorySetsQuery request,
         CancellationToken cancellationToken)
     {
         var pageNumber = Math.Max(1, request.PageNumber);
@@ -45,19 +45,34 @@ public sealed class GetAdminCommunityMemorySetsQueryHandler(IAppDbContext db)
             })
             .ToListAsync(cancellationToken);
         var authorIds = page.Select(x => x.MemorySet.UserId).Distinct().ToList();
+        var memorySetIds = page.Select(x => x.MemorySet.Id).ToList();
         var authors = await db.Users.AsNoTracking().Where(x => authorIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id, cancellationToken);
+        var reports = await db.MemorySetReports.AsNoTracking()
+            .Where(x => memorySetIds.Contains(x.MemorySetId) && !x.IsDeleted)
+            .OrderByDescending(x => x.CreatedAt)
+            .Select(x => new { x.Id, x.MemorySetId, x.Reason, x.Details, x.CreatedAt })
+            .ToListAsync(cancellationToken);
+        var reportsByMemorySet = reports
+            .GroupBy(x => x.MemorySetId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<MemorySetReportView>)group
+                    .Select(x => new MemorySetReportView(x.Id, x.Reason, x.Details, x.CreatedAt))
+                    .ToList());
         var data = page.Where(x => authors.ContainsKey(x.MemorySet.UserId)).Select(x =>
         {
             var set = x.MemorySet;
             var author = authors[set.UserId];
-            return new AdminCommunityMemorySetDto(
+            return new CommunityMemorySetView(
                 set.Id, set.Title, set.Description, set.GoalType, set.TechniqueKey,
                 set.Visibility, set.CommunityStatus, set.PublishedAt, set.HiddenAt, set.HiddenReason,
                 new CommunityAuthorDto(author.Id, author.DisplayName, author.AvatarUrl),
-                x.ItemCount, x.CopyCount, x.ReportCount, set.CreatedAt, set.UpdatedAt);
+                x.ItemCount, x.CopyCount, x.ReportCount,
+                reportsByMemorySet.GetValueOrDefault(set.Id, []),
+                set.CreatedAt, set.UpdatedAt);
         }).ToList();
 
-        return PaginatedResponse<AdminCommunityMemorySetDto>.Ok(data, pageNumber, pageSize, totalCount);
+        return PaginatedResponse<CommunityMemorySetView>.Ok(data, pageNumber, pageSize, totalCount);
     }
 }

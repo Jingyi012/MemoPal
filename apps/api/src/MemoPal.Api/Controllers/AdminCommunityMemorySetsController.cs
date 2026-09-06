@@ -1,7 +1,7 @@
 using MediatR;
 using MemoPal.Application.Features.CommunityMemorySets.Commands;
 using MemoPal.Application.Features.CommunityMemorySets.DTOs;
-using MemoPal.Application.Features.CommunityMemorySets.Queries;
+using MemoPal.Application.Features.CommunityMemorySets.Admin.Queries;
 using MemoPal.Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +19,7 @@ public sealed class AdminCommunityMemorySetsController(ISender sender) : ApiCont
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default) =>
-        Ok(await Sender.Send(new GetAdminCommunityMemorySetsQuery(
+        Ok(await Sender.Send(new GetCommunityMemorySetsQuery(
             search, status, pageNumber, pageSize), cancellationToken));
 
     [HttpPatch("{memorySetId}/hide")]

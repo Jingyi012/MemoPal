@@ -27,10 +27,18 @@ export function useUserMutations(onDone: () => void) {
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
-      message.success('User deleted');
+      message.success('User deactivated');
       onDone();
     },
   });
 
-  return { createMutation, updateMutation, deleteMutation };
+  const restoreMutation = useMutation({
+    mutationFn: (id: string) => updateUser(id, { isDeleted: false }),
+    onSuccess: () => {
+      message.success('User restored');
+      onDone();
+    },
+  });
+
+  return { createMutation, updateMutation, deleteMutation, restoreMutation };
 }

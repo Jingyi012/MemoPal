@@ -11,6 +11,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   App,
+  Alert,
   Button,
   Card,
   Col,
@@ -60,7 +61,7 @@ const blankDraft = (): PalaceSceneUpsertRequest => ({
 });
 
 export default function PalaceScenesPage() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const { resolveMediaPath } = useAdminMediaApi();
   const scenesQuery = useQuery({
@@ -147,6 +148,26 @@ export default function PalaceScenesPage() {
     () => (draft.imageUrl ? resolveMediaPath(draft.imageUrl) : ""),
     [draft.imageUrl, resolveMediaPath],
   );
+  const canPublish = Boolean(
+    draft.name.trim() &&
+    draft.imageUrl.trim() &&
+    draft.loci.length > 0 &&
+    draft.loci.every((locus) => locus.name.trim()),
+  );
+  const saveScene = () => {
+    const isPublishing = draft.status === "published" && editing?.status !== "published";
+    if (!isPublishing) {
+      saveMutation.mutate();
+      return;
+    }
+
+    modal.confirm({
+      title: "Publish this Palace scene now?",
+      content: "It will become available to mobile users immediately after it is saved.",
+      okText: "Publish scene",
+      onOk: async () => { await saveMutation.mutateAsync(); },
+    });
+  };
   const getLocusPosition = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -260,7 +281,10 @@ export default function PalaceScenesPage() {
           </Button>
         </Space>
       </Flex>
-      {scenesQuery.isLoading ? (
+      {scenesQuery.isError ? (
+        <Alert type="error" showIcon message="Could not load Palace scenes."
+          action={<Button onClick={() => void scenesQuery.refetch()}>Retry</Button>} />
+      ) : scenesQuery.isLoading ? (
         <Spin />
       ) : scenesQuery.data?.length ? (
         viewMode === "table" ? (
@@ -413,8 +437,8 @@ export default function PalaceScenesPage() {
         }}
         title={editing ? `Edit ${editing.name}` : "Create Palace scene"}
         okText={saveMutation.isPending ? "Saving…" : "Save scene"}
-        okButtonProps={{ loading: saveMutation.isPending }}
-        onOk={() => saveMutation.mutate()}
+        okButtonProps={{ loading: saveMutation.isPending, disabled: draft.status === "published" && !canPublish }}
+        onOk={saveScene}
       >
         <Row gutter={20}>
           <Col xs={24} lg={8}>

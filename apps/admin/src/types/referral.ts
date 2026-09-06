@@ -19,7 +19,7 @@ export interface ReferralProgramConfigDto {
   milestones: ReferralMilestoneConfigDto[];
 }
 
-export interface AdminReferralUserDto {
+export interface ReferralUserView {
   userId: string;
   displayName: string;
   email: string;
@@ -32,7 +32,7 @@ export interface AdminReferralUserDto {
   updatedAt: string;
 }
 
-export interface AdminReferralRecordDto {
+export interface ReferralRecordView {
   id: string;
   referralCode: string;
   referrerUserId: string;

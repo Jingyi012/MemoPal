@@ -13,17 +13,17 @@ import { App, Button } from "antd";
 import { useRef, useState } from "react";
 import { PortalPageContainer } from "../../../components/PortalPageContainer";
 import { useSubscriptionsApi } from "../hooks/useSubscriptionsApi";
-import type { AdminUserSubscriptionDto } from "../../../types/subscription";
+import type { UserSubscriptionView, UpdateSubscriptionRequest } from "../../../types/subscription";
 
 export default function SubscriptionsPage() {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const { listSubscriptions, updateSubscription } = useSubscriptionsApi();
   const actionRef = useRef<ActionType | null>(null);
-  const [editing, setEditing] = useState<AdminUserSubscriptionDto | null>(null);
+  const [editing, setEditing] = useState<UserSubscriptionView | null>(null);
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateSubscriptionRequest }) =>
       updateSubscription(id, payload),
     onSuccess: () => {
       message.success("Subscription updated");
@@ -32,8 +32,12 @@ export default function SubscriptionsPage() {
     },
   });
 
-  const columns: ProColumns<AdminUserSubscriptionDto>[] = [
-    { title: "User", dataIndex: "userId" },
+  const columns: ProColumns<UserSubscriptionView>[] = [
+    {
+      title: "User",
+      dataIndex: "userEmail",
+      render: (_, row) => row.userDisplayName ? `${row.userDisplayName} (${row.userEmail})` : row.userEmail || row.userId,
+    },
     { title: "Plan", dataIndex: "planId" },
     { title: "Provider", dataIndex: "provider" },
     {
@@ -65,14 +69,14 @@ export default function SubscriptionsPage() {
 
   return (
     <PortalPageContainer>
-      <ProTable<AdminUserSubscriptionDto>
+      <ProTable<UserSubscriptionView>
         rowKey="id"
         actionRef={actionRef}
         columns={columns}
         request={async (params) => {
           const pageNumber = params.current || 1;
           const pageSize = params.pageSize || 20;
-          const search = String(params.userId || "");
+          const search = String(params.userEmail || "");
           const status = String(params.status || "");
           const data = await queryClient.fetchQuery({
             queryKey: [

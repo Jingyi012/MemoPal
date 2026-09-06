@@ -1,4 +1,4 @@
-export interface AdminUserSubscriptionDto {
+export interface UserSubscriptionView {
   id: string;
   userId: string;
   planId: string;
@@ -11,9 +11,11 @@ export interface AdminUserSubscriptionDto {
   lastVerifiedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  userEmail?: string | null;
+  userDisplayName?: string | null;
 }
 
-export interface AdminUpdateSubscriptionRequest {
+export interface UpdateSubscriptionRequest {
   status?: string;
   expiresAt?: string;
   autoRenew?: boolean;

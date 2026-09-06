@@ -8,6 +8,7 @@ type Props = {
   formKey?: Key;
   initialValues?: ManagedUserDto | Record<string, unknown>;
   requirePassword?: boolean;
+  roleDisabled?: boolean;
   onOpenChange: (open: boolean) => void;
   onFinish: (values: ManagedUserUpsertRequest) => Promise<boolean>;
 };
@@ -18,6 +19,7 @@ export function UserFormModal({
   formKey,
   initialValues,
   requirePassword = false,
+  roleDisabled = false,
   onOpenChange,
   onFinish,
 }: Props) {
@@ -53,6 +55,8 @@ export function UserFormModal({
         name="role"
         label="Role"
         placeholder='Select role'
+        disabled={roleDisabled}
+        extra={roleDisabled ? 'You cannot change your own administrator role.' : undefined}
         initialValue="User"
         options={[
           { label: 'User', value: 'User' },

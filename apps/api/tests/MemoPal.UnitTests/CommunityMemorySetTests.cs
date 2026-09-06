@@ -3,6 +3,7 @@ using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.CommunityMemorySets.Commands;
 using MemoPal.Application.Features.CommunityMemorySets.DTOs;
 using MemoPal.Application.Features.CommunityMemorySets.Queries;
+using AdminCommunityQueries = MemoPal.Application.Features.CommunityMemorySets.Admin.Queries;
 using MemoPal.Application.Features.MemorySets.Commands;
 using MemoPal.Application.Features.MemorySets.DTOs;
 using MemoPal.Domain.Entities;
@@ -58,8 +59,14 @@ public sealed class CommunityMemorySetTests
 
             var report = await new ReportCommunityMemorySetCommandHandler(readerDb).Handle(
                 new ReportCommunityMemorySetCommand(readerId, memorySetId,
-                    new ReportMemorySetRequest { Reason = "spam" }), default);
+                    new ReportMemorySetRequest { Reason = "spam", Details = "Repeated promotion" }), default);
             Assert.Equal("spam", report.Data!.Reason);
+
+            var adminPage = await new AdminCommunityQueries.GetCommunityMemorySetsQueryHandler(readerDb).Handle(
+                new AdminCommunityQueries.GetCommunityMemorySetsQuery(null, null, 1, 20), default);
+            var adminItem = Assert.Single(adminPage.Data!);
+            var adminReport = Assert.Single(adminItem.Reports);
+            Assert.Equal("Repeated promotion", adminReport.Details);
         }
 
         await using (var adminDb = CreateDb(options, "admin"))
@@ -92,8 +99,8 @@ public sealed class CommunityMemorySetTests
 
         await using (var adminDb = CreateDb(options, "admin"))
         {
-            var adminPage = await new GetAdminCommunityMemorySetsQueryHandler(adminDb).Handle(
-                new GetAdminCommunityMemorySetsQuery(null, null, 1, 20), default);
+            var adminPage = await new AdminCommunityQueries.GetCommunityMemorySetsQueryHandler(adminDb).Handle(
+                new AdminCommunityQueries.GetCommunityMemorySetsQuery(null, null, 1, 20), default);
             Assert.Empty(adminPage.Data!);
             await Assert.ThrowsAsync<NotFoundAppException>(() =>
                 new ModerateCommunityMemorySetCommandHandler(adminDb).Handle(

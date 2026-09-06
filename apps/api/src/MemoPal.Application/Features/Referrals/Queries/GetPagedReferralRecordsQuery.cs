@@ -11,10 +11,10 @@ public sealed record GetPagedReferralRecordsQuery(
     int PageSize = 20,
     string? Search = null,
     string? ReferrerUserId = null)
-    : IRequest<PaginatedResponse<AdminReferralRecordDto>>;
+    : IRequest<PaginatedResponse<ReferralRecordView>>;
 
 public sealed class GetPagedReferralRecordsQueryHandler
-    : IRequestHandler<GetPagedReferralRecordsQuery, PaginatedResponse<AdminReferralRecordDto>>
+    : IRequestHandler<GetPagedReferralRecordsQuery, PaginatedResponse<ReferralRecordView>>
 {
     private readonly IAppDbContext _db;
 
@@ -23,7 +23,7 @@ public sealed class GetPagedReferralRecordsQueryHandler
         _db = db;
     }
 
-    public async Task<PaginatedResponse<AdminReferralRecordDto>> Handle(GetPagedReferralRecordsQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedResponse<ReferralRecordView>> Handle(GetPagedReferralRecordsQuery request, CancellationToken cancellationToken)
     {
         var pageNumber = Math.Max(1, request.PageNumber);
         var pageSize = Math.Clamp(request.PageSize, 1, 200);
@@ -62,7 +62,7 @@ public sealed class GetPagedReferralRecordsQueryHandler
             .OrderByDescending(x => x.Record.RedeemedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => new AdminReferralRecordDto(
+            .Select(x => new ReferralRecordView(
                 x.Record.Id,
                 x.Record.ReferralCode,
                 x.Record.ReferrerUserId,
@@ -78,6 +78,6 @@ public sealed class GetPagedReferralRecordsQueryHandler
                 x.Record.InviteeRewardPremiumDays))
             .ToListAsync(cancellationToken);
 
-        return PaginatedResponse<AdminReferralRecordDto>.Ok(data, pageNumber, pageSize, totalCount);
+        return PaginatedResponse<ReferralRecordView>.Ok(data, pageNumber, pageSize, totalCount);
     }
 }

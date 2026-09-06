@@ -53,7 +53,7 @@ public sealed class CommunityMemorySetEndpointsTests : IClassFixture<CustomWebAp
         secondCopyData.GetProperty("alreadyCopied").GetBoolean().Should().BeTrue();
         secondCopyData.GetProperty("memorySet").GetProperty("id").GetString().Should().Be(copyId);
 
-        (await reader.PostAsJsonAsync($"/v1/community/memory-sets/{memorySetId}/reports", new { reason = "spam" }))
+        (await reader.PostAsJsonAsync($"/v1/community/memory-sets/{memorySetId}/reports", new { reason = "spam", details = "Repeated advertising" }))
             .StatusCode.Should().Be(HttpStatusCode.OK);
 
         using var admin = _factory.CreateClient();
@@ -70,6 +70,22 @@ public sealed class CommunityMemorySetEndpointsTests : IClassFixture<CustomWebAp
         login.StatusCode.Should().Be(HttpStatusCode.OK);
         var adminToken = (await login.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("data").GetProperty("token").GetString();
         admin.DefaultRequestHeaders.Authorization = Bearer(adminToken!);
+        (await admin.GetAsync("/admin/dashboard")).StatusCode.Should().Be(HttpStatusCode.OK);
+        var moderationQueue = await admin.GetFromJsonAsync<JsonElement>("/admin/community-memory-sets?pageSize=50");
+        var moderationItem = moderationQueue.GetProperty("data").EnumerateArray()
+            .Single(x => x.GetProperty("id").GetString() == memorySetId);
+        moderationItem.GetProperty("reports")[0].GetProperty("details").GetString()
+            .Should().Be("Repeated advertising");
+        (await admin.DeleteAsync($"/admin/users/{adminAuth.UserId}"))
+            .StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await admin.DeleteAsync($"/admin/users/{ownerAuth.UserId}"))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        var deactivatedUsers = await admin.GetFromJsonAsync<JsonElement>("/admin/users?includeDeleted=true&pageSize=50");
+        deactivatedUsers.GetProperty("data").EnumerateArray()
+            .Single(x => x.GetProperty("id").GetString() == ownerAuth.UserId)
+            .GetProperty("isDeleted").GetBoolean().Should().BeTrue();
+        (await admin.PutAsJsonAsync($"/admin/users/{ownerAuth.UserId}", new { isDeleted = false }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
         (await admin.PatchAsJsonAsync($"/admin/community-memory-sets/{memorySetId}/hide", new { reason = "Reported" }))
             .StatusCode.Should().Be(HttpStatusCode.OK);
 

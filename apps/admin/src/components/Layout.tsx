@@ -1,5 +1,6 @@
 import {
   BookOutlined,
+  DashboardOutlined,
   EyeOutlined,
   LogoutOutlined,
   ShareAltOutlined,
@@ -28,7 +29,9 @@ export default function Layout() {
     items.map((item) => ({
       ...item,
       icon:
-        item.icon === "users" ? (
+        item.icon === "dashboard" ? (
+          <DashboardOutlined />
+        ) : item.icon === "users" ? (
           <TeamOutlined />
         ) : item.icon === "content" ? (
           <BookOutlined />

@@ -10,7 +10,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Users.Commands;
 
-public sealed record UpdateManagedUserCommand(string UserId, ManagedUserUpsertRequest Request) : IRequest<ApiResponse<ManagedUserDto>>;
+public sealed record UpdateManagedUserCommand(
+    string ActorUserId,
+    string UserId,
+    ManagedUserUpsertRequest Request) : IRequest<ApiResponse<ManagedUserDto>>;
 
 public sealed class UpdateManagedUserCommandHandler : IRequestHandler<UpdateManagedUserCommand, ApiResponse<ManagedUserDto>>
 {
@@ -27,6 +30,13 @@ public sealed class UpdateManagedUserCommandHandler : IRequestHandler<UpdateMana
     {
         var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId, cancellationToken)
             ?? throw new NotFoundAppException("User not found.");
+
+        var removesOwnAdminAccess = request.ActorUserId == request.UserId &&
+            ((request.Request.Role is not null &&
+                !string.Equals(request.Request.Role, UserRoles.Admin, StringComparison.OrdinalIgnoreCase)) ||
+             request.Request.IsDeleted == true);
+        if (removesOwnAdminAccess)
+            throw new ConflictAppException("You cannot remove your own administrator access.");
 
         if (!string.IsNullOrWhiteSpace(request.Request.DisplayName))
             user.DisplayName = request.Request.DisplayName.Trim();
@@ -59,6 +69,16 @@ public sealed class UpdateManagedUserCommandHandler : IRequestHandler<UpdateMana
         {
             user.IsDeleted = request.Request.IsDeleted.Value;
             user.DeletedAt = user.IsDeleted ? DateTime.UtcNow : null;
+
+            var stats = await _db.UserStats.FirstOrDefaultAsync(
+                x => x.UserId == user.Id,
+                cancellationToken);
+            if (stats is not null)
+            {
+                stats.IsDeleted = user.IsDeleted;
+                stats.DeletedAt = user.DeletedAt;
+                stats.UpdatedAt = DateTime.UtcNow;
+            }
         }
 
         await _db.EnsureUserLevelMatchesXpAsync(user, cancellationToken);

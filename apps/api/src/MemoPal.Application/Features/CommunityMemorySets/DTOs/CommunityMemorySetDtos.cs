@@ -74,7 +74,13 @@ public sealed class ReportMemorySetRequest
 
 public sealed record MemorySetReportDto(string Id, string MemorySetId, string Reason, DateTime CreatedAt);
 
-public sealed record AdminCommunityMemorySetDto(
+public sealed record MemorySetReportView(
+    string Id,
+    string Reason,
+    string? Details,
+    DateTime CreatedAt);
+
+public sealed record CommunityMemorySetView(
     string Id,
     string Title,
     string? Description,
@@ -89,6 +95,7 @@ public sealed record AdminCommunityMemorySetDto(
     int ItemCount,
     int CopyCount,
     int ReportCount,
+    IReadOnlyList<MemorySetReportView> Reports,
     DateTime CreatedAt,
     DateTime UpdatedAt);
 

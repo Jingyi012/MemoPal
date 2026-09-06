@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
-import { adminMediaApi, type AdminImageCategory } from '../api/adminMediaApi';
+import { adminMediaApi, type ImageCategory } from '../api/adminMediaApi';
 
-export type { AdminImageCategory };
+export type { ImageCategory };
 
 export function useAdminMediaApi() {
-  const uploadImage = useCallback((file: File, category: AdminImageCategory) => {
+  const uploadImage = useCallback((file: File, category: ImageCategory) => {
     return adminMediaApi.uploadImage(file, category);
   }, []);
 

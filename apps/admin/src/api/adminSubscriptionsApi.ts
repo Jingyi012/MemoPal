@@ -1,13 +1,13 @@
 import { apiClient } from "../lib/apiClient";
 import type { ApiResponse, PaginatedResponse } from "../types/api";
 import type {
-  AdminUpdateSubscriptionRequest,
-  AdminUserSubscriptionDto,
+  UpdateSubscriptionRequest,
+  UserSubscriptionView,
 } from "../types/subscription";
 
 export const adminSubscriptionsApi = {
   async list(pageNumber = 1, pageSize = 20, search = "", status = "") {
-    const r = await apiClient.get<PaginatedResponse<AdminUserSubscriptionDto>>(
+    const r = await apiClient.get<PaginatedResponse<UserSubscriptionView>>(
       "/admin/subscriptions",
       {
         params: {
@@ -23,9 +23,9 @@ export const adminSubscriptionsApi = {
 
   async update(
     subscriptionId: string,
-    payload: AdminUpdateSubscriptionRequest,
+    payload: UpdateSubscriptionRequest,
   ) {
-    const r = await apiClient.patch<ApiResponse<AdminUserSubscriptionDto>>(
+    const r = await apiClient.patch<ApiResponse<UserSubscriptionView>>(
       `/admin/subscriptions/${subscriptionId}`,
       payload,
     );

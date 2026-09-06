@@ -10,8 +10,6 @@ public sealed record GetPublishedPredefinedMemoryLessonsQuery
     : IRequest<ApiResponse<IReadOnlyList<PredefinedMemoryLessonDto>>>;
 public sealed record GetPagedPublishedPredefinedMemoryLessonsQuery(int PageNumber = 1, int PageSize = 12)
     : IRequest<PaginatedResponse<PredefinedMemoryLessonDto>>;
-public sealed record GetAdminPredefinedMemoryLessonsQuery
-    : IRequest<ApiResponse<IReadOnlyList<PredefinedMemoryLessonDto>>>;
 
 public sealed class GetPublishedPredefinedMemoryLessonsQueryHandler(IAppDbContext db)
     : IRequestHandler<GetPublishedPredefinedMemoryLessonsQuery, ApiResponse<IReadOnlyList<PredefinedMemoryLessonDto>>>
@@ -32,7 +30,6 @@ public sealed class GetPublishedPredefinedMemoryLessonsQueryHandler(IAppDbContex
             lessons.Select(PredefinedMemoryLessonMapper.ToDto).ToList());
     }
 }
-
 public sealed class GetPagedPublishedPredefinedMemoryLessonsQueryHandler(IAppDbContext db)
     : IRequestHandler<GetPagedPublishedPredefinedMemoryLessonsQuery, PaginatedResponse<PredefinedMemoryLessonDto>>
 {
@@ -50,24 +47,5 @@ public sealed class GetPagedPublishedPredefinedMemoryLessonsQueryHandler(IAppDbC
         var lessons = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
         return PaginatedResponse<PredefinedMemoryLessonDto>.Ok(
             lessons.Select(PredefinedMemoryLessonMapper.ToDto).ToList(), pageNumber, pageSize, totalCount);
-    }
-}
-
-public sealed class GetAdminPredefinedMemoryLessonsQueryHandler(IAppDbContext db)
-    : IRequestHandler<GetAdminPredefinedMemoryLessonsQuery, ApiResponse<IReadOnlyList<PredefinedMemoryLessonDto>>>
-{
-    public async Task<ApiResponse<IReadOnlyList<PredefinedMemoryLessonDto>>> Handle(
-        GetAdminPredefinedMemoryLessonsQuery request,
-        CancellationToken cancellationToken)
-    {
-        var lessons = await db.PredefinedMemoryLessons.AsNoTracking()
-            .Include(x => x.Items.Where(item => !item.IsDeleted))
-            .Include(x => x.Category)
-            .Where(x => !x.IsDeleted)
-            .OrderBy(x => x.SortOrder)
-            .ThenBy(x => x.TitleEn)
-            .ToListAsync(cancellationToken);
-        return ApiResponse<IReadOnlyList<PredefinedMemoryLessonDto>>.Ok(
-            lessons.Select(PredefinedMemoryLessonMapper.ToDto).ToList());
     }
 }

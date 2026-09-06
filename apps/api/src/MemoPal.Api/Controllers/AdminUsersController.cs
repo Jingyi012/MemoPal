@@ -89,14 +89,16 @@ public sealed class AdminUsersController : ApiControllerBase
     [HttpPut("{userId}")]
     public async Task<IActionResult> UpdateUser(string userId, [FromBody] ManagedUserUpsertRequest request, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new UpdateManagedUserCommand(userId, request), cancellationToken);
+        var result = await Sender.Send(new UpdateManagedUserCommand(
+            GetUserIdOrThrow(), userId, request), cancellationToken);
         return Ok(result);
     }
 
     [HttpDelete("{userId}")]
     public async Task<IActionResult> DeleteUser(string userId, CancellationToken cancellationToken)
     {
-        var result = await Sender.Send(new DeleteManagedUserCommand(userId), cancellationToken);
+        var result = await Sender.Send(new DeleteManagedUserCommand(
+            GetUserIdOrThrow(), userId), cancellationToken);
         return Ok(result);
     }
 

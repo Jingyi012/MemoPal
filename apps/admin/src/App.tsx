@@ -1,33 +1,43 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { Flex, Spin } from 'antd';
 import Layout from './components/Layout';
 import { AdminRoute, ProtectedRoute } from './components/ProtectedRoute';
-import FeatureLimitsPage from './pages/FeatureLimitsPage';
-import LevelConfigsPage from './pages/LevelConfigsPage';
-import MilestoneDefinitionsPage from './pages/MilestoneDefinitionsPage';
-import ReferralConfigPage from './pages/ReferralConfigPage';
-import ReferralUsersPage from './pages/ReferralUsersPage';
-import UsersPage from './pages/UsersPage';
-import SubscriptionsPage from './pages/SubscriptionsPage';
-import SystemSettingsPage from './pages/SystemSettingsPage';
-import XpConfigsPage from './pages/XpConfigsPage';
-import ForbiddenPage from './pages/ForbiddenPage';
-import LoginPage from './pages/LoginPage';
 import { adminPaths } from './navigation/adminPaths';
-import PalaceScenesPage from './features/palace-scenes/pages/PalaceScenesPage';
-import PredefinedMemoryLessonsPage from './features/predefined-memory-lessons/pages/PredefinedMemoryLessonsPage';
-import PredefinedMemoryLessonCategoriesPage from './features/predefined-memory-lessons/pages/PredefinedMemoryLessonCategoriesPage';
-import CommunityMemorySetsPage from './features/community-memory-sets/pages/CommunityMemorySetsPage';
+
+const DashboardPage = lazy(() => import('./features/dashboard/pages/DashboardPage'));
+const FeatureLimitsPage = lazy(() => import('./pages/FeatureLimitsPage'));
+const LevelConfigsPage = lazy(() => import('./pages/LevelConfigsPage'));
+const MilestoneDefinitionsPage = lazy(() => import('./pages/MilestoneDefinitionsPage'));
+const ReferralConfigPage = lazy(() => import('./pages/ReferralConfigPage'));
+const ReferralUsersPage = lazy(() => import('./pages/ReferralUsersPage'));
+const UsersPage = lazy(() => import('./pages/UsersPage'));
+const SubscriptionsPage = lazy(() => import('./pages/SubscriptionsPage'));
+const SystemSettingsPage = lazy(() => import('./pages/SystemSettingsPage'));
+const XpConfigsPage = lazy(() => import('./pages/XpConfigsPage'));
+const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const PalaceScenesPage = lazy(() => import('./features/palace-scenes/pages/PalaceScenesPage'));
+const PredefinedMemoryLessonsPage = lazy(() => import('./features/predefined-memory-lessons/pages/PredefinedMemoryLessonsPage'));
+const PredefinedMemoryLessonCategoriesPage = lazy(() => import('./features/predefined-memory-lessons/pages/PredefinedMemoryLessonCategoriesPage'));
+const CommunityMemorySetsPage = lazy(() => import('./features/community-memory-sets/pages/CommunityMemorySetsPage'));
+
+function RouteFallback() {
+  return <Flex align="center" justify="center" style={{ minHeight: 240 }}><Spin size="large" /></Flex>;
+}
 
 export default function App() {
   return (
-    <Routes>
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
       <Route path={adminPaths.login} element={<LoginPage />} />
       <Route path={adminPaths.forbidden} element={<ForbiddenPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AdminRoute />}>
           <Route path={adminPaths.root} element={<Layout />}>
-            <Route index element={<Navigate to="users" replace />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="community-memory-sets" element={<CommunityMemorySetsPage />} />
             <Route path="content">
@@ -55,6 +65,7 @@ export default function App() {
       </Route>
 
       <Route path="*" element={<Navigate to={adminPaths.root} replace />} />
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }

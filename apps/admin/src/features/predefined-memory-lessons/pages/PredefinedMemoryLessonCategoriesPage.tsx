@@ -1,6 +1,6 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Col, Empty, Flex, Form, Input, InputNumber, Modal, Popconfirm, Row, Spin, Switch, Tag, Typography } from 'antd';
+import { Alert, App, Button, Card, Col, Empty, Flex, Form, Input, InputNumber, Modal, Popconfirm, Row, Spin, Switch, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { adminPredefinedMemoryLessonCategoriesApi } from '../../../api/adminPredefinedMemoryLessonsApi';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
@@ -72,7 +72,9 @@ export default function PredefinedMemoryLessonCategoriesPage() {
         <Button type='primary' icon={<PlusOutlined />} onClick={() => openEditor()}>New category</Button>
       </Flex>
 
-      {categoriesQuery.isLoading ? <Spin /> : categoriesQuery.data?.length ? (
+      {categoriesQuery.isError ? (
+        <Alert type='error' showIcon message='Could not load lesson categories.' action={<Button onClick={() => void categoriesQuery.refetch()}>Retry</Button>} />
+      ) : categoriesQuery.isLoading ? <Spin /> : categoriesQuery.data?.length ? (
         <Row gutter={[16, 16]}>
           {categoriesQuery.data.map((category) => (
             <Col xs={24} md={12} xl={8} key={category.id}>

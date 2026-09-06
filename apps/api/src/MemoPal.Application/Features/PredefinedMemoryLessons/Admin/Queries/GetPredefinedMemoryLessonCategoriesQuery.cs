@@ -4,16 +4,16 @@ using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.PredefinedMemoryLessons.DTOs;
 using Microsoft.EntityFrameworkCore;
 
-namespace MemoPal.Application.Features.PredefinedMemoryLessons.Queries;
+namespace MemoPal.Application.Features.PredefinedMemoryLessons.Admin.Queries;
 
-public sealed record GetAdminPredefinedMemoryLessonCategoriesQuery
+public sealed record GetPredefinedMemoryLessonCategoriesQuery
     : IRequest<ApiResponse<IReadOnlyList<PredefinedMemoryLessonCategoryDto>>>;
 
-public sealed class GetAdminPredefinedMemoryLessonCategoriesQueryHandler(IAppDbContext db)
-    : IRequestHandler<GetAdminPredefinedMemoryLessonCategoriesQuery, ApiResponse<IReadOnlyList<PredefinedMemoryLessonCategoryDto>>>
+public sealed class GetPredefinedMemoryLessonCategoriesQueryHandler(IAppDbContext db)
+    : IRequestHandler<GetPredefinedMemoryLessonCategoriesQuery, ApiResponse<IReadOnlyList<PredefinedMemoryLessonCategoryDto>>>
 {
     public async Task<ApiResponse<IReadOnlyList<PredefinedMemoryLessonCategoryDto>>> Handle(
-        GetAdminPredefinedMemoryLessonCategoriesQuery request,
+        GetPredefinedMemoryLessonCategoriesQuery request,
         CancellationToken cancellationToken)
     {
         var categories = await db.PredefinedMemoryLessonCategories.AsNoTracking()

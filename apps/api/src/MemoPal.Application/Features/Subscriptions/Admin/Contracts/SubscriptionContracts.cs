@@ -1,6 +1,6 @@
-namespace MemoPal.Application.Features.Subscriptions.DTOs;
+namespace MemoPal.Application.Features.Subscriptions.Admin.Contracts;
 
-public sealed record AdminUserSubscriptionDto(
+public sealed record UserSubscriptionView(
     string Id,
     string UserId,
     string PlanId,
@@ -12,10 +12,12 @@ public sealed record AdminUserSubscriptionDto(
     bool AutoRenew,
     DateTime? LastVerifiedAt,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    string? UserEmail,
+    string? UserDisplayName
 );
 
-public sealed class AdminSubscriptionFilter
+public sealed class SubscriptionFilter
 {
     public int PageNumber { get; set; } = 1;
     public int PageSize { get; set; } = 20;
@@ -23,7 +25,7 @@ public sealed class AdminSubscriptionFilter
     public string? Status { get; set; }
 }
 
-public sealed class AdminUpdateSubscriptionRequest
+public sealed class UpdateSubscriptionRequest
 {
     public string? Status { get; set; }
     public DateTime? ExpiresAt { get; set; }

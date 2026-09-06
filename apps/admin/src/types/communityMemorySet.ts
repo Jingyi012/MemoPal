@@ -6,7 +6,14 @@ export interface CommunityMemorySetAuthorDto {
   avatarUrl: string | null;
 }
 
-export interface AdminCommunityMemorySetDto {
+export interface MemorySetReportView {
+  id: string;
+  reason: string;
+  details: string | null;
+  createdAt: string;
+}
+
+export interface CommunityMemorySetView {
   id: string;
   title: string;
   description: string | null;
@@ -21,6 +28,7 @@ export interface AdminCommunityMemorySetDto {
   itemCount: number;
   copyCount: number;
   reportCount: number;
+  reports: MemorySetReportView[];
   createdAt: string;
   updatedAt: string;
 }

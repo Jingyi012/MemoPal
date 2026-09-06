@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Button, Card, Space, Tag } from 'antd';
 import { useMemo, useState } from 'react';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
-import type { AdminReferralRecordDto, AdminReferralUserDto } from '../../../types/referral';
+import type { ReferralRecordView, ReferralUserView } from '../../../types/referral';
 import { useAdminReferralsApi } from '../hooks/useAdminReferralsApi';
 
 function formatDateTime(value?: string | null) {
@@ -16,7 +16,7 @@ function formatDateTime(value?: string | null) {
 export default function ReferralUsersPage() {
   const queryClient = useQueryClient();
   const { listReferralUsers, listReferralRecords } = useAdminReferralsApi();
-  const [selectedReferrer, setSelectedReferrer] = useState<AdminReferralUserDto | null>(null);
+  const [selectedReferrer, setSelectedReferrer] = useState<ReferralUserView | null>(null);
 
   const selectedTag = useMemo(() => {
     if (!selectedReferrer) return null;
@@ -27,7 +27,7 @@ export default function ReferralUsersPage() {
     <PortalPageContainer>
       <Space direction='vertical' size={16} style={{ width: '100%' }}>
         <Card title='Referrer Users'>
-          <ProTable<AdminReferralUserDto>
+          <ProTable<ReferralUserView>
             rowKey='userId'
             search={{ labelWidth: 'auto' }}
             options={false}
@@ -93,7 +93,7 @@ export default function ReferralUsersPage() {
             </Space>
           }
         >
-          <ProTable<AdminReferralRecordDto>
+          <ProTable<ReferralRecordView>
             rowKey='id'
             search={{ labelWidth: 'auto' }}
             options={false}
