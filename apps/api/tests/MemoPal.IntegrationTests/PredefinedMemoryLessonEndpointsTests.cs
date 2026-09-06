@@ -56,7 +56,7 @@ public sealed class PredefinedMemoryLessonEndpointsTests : IClassFixture<CustomW
             await db.SaveChangesAsync();
         }
 
-        var response = await _client.GetAsync("/predefined-memory-lessons");
+        var response = await _client.GetAsync("/v1/predefined-memory-lessons");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
         var lessons = json.GetProperty("data").EnumerateArray()
