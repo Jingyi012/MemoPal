@@ -96,7 +96,7 @@ export default function PalaceMapScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 40 },
   summaryCard: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 18, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 13 },
   summaryIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEE9FF' },

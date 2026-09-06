@@ -2,10 +2,14 @@ import { HapticTab } from '@/components/ui/haptic-tab';
 import { WebTabBar } from '@/components/WebTabBar';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { Redirect, Tabs } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import { Platform, Text } from 'react-native';
 
 export default function TabsLayout() {
+  const { colorScheme } = useColorScheme();
+  const theme = memopalThemes[colorScheme ?? 'light'];
   const { t } = useTranslation('navigation');
   const { user, isAuthenticated, isLoading } = useAuth();
   const isLocalDevMode =
@@ -27,16 +31,16 @@ export default function TabsLayout() {
     <Tabs
       tabBar={Platform.OS === 'web' ? (props) => <WebTabBar {...props} /> : undefined}
       screenOptions={{
-        tabBarActiveTintColor: '#E8527A',
-        tabBarInactiveTintColor: '#6B6A80',
+        tabBarActiveTintColor: theme.berryDeep,
+        tabBarInactiveTintColor: theme.inkSoft,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E5DFFF',
+          backgroundColor: theme.paper,
+          borderTopColor: theme.line,
         },
         sceneStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: theme.canvas,
         },
       }}>
       <Tabs.Screen

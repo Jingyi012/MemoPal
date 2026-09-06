@@ -12,11 +12,12 @@ import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes'
 import { usePracticeStats } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { typography } from '@/theme/typography';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { ArrowRight, Check, History } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useColorScheme } from 'nativewind';
 
 type MilestoneProgress = Milestone & {
   currentValue: number;
@@ -34,6 +35,8 @@ export default function AchievementsScreen() {
   const { data: practiceStats, refetch: refetchPracticeStats } = usePracticeStats();
   const palaceScenes = usePalaceScenes();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
 
   const displayLevel = useMemo(() => {
     const currentLevel = Math.max(1, levelInfo?.currentLevel ?? user?.level ?? 1);
@@ -132,8 +135,8 @@ export default function AchievementsScreen() {
 
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={styles.sectionLabel}>{t('milestones')}</Text>
-            <Text style={styles.sectionBody}>{t('milestonesBody')}</Text>
+            <Text style={[styles.sectionLabel, { color: activeTheme.ink }]}>{t('milestones')}</Text>
+            <Text style={[styles.sectionBody, { color: activeTheme.inkSoft }]}>{t('milestonesBody')}</Text>
           </View>
           <View style={styles.achievedPill}>
             <Text style={styles.achievedPillText}>
@@ -255,19 +258,21 @@ function ProgressLine({
   onPress: () => void;
 }) {
   const { t } = useTranslation('achievements');
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   return (
     <View style={styles.progressLine}>
       <View style={styles.progressLineHeader}>
-        <Text style={styles.progressSectionLabel}>{label}</Text>
+        <Text style={[styles.progressSectionLabel, { color: activeTheme.ink }]}>{label}</Text>
         <AnimatedPressable accessibilityLabel={`${t('seeAll')} ${label}`} onPress={onPress} style={styles.seeAll}>
           <View style={styles.seeAllRow}>
-            <Text style={styles.seeAllText}>{t('seeAll')}</Text>
-            <ArrowRight size={12} color="#4FC0E8" />
+            <Text style={[styles.seeAllText, { color: activeTheme.sky }]}>{t('seeAll')}</Text>
+            <ArrowRight size={12} color={activeTheme.sky} />
           </View>
         </AnimatedPressable>
       </View>
-      <Text style={styles.progressLabel}>{value}</Text>
-      <View style={styles.progressTrack}>
+      <Text style={[styles.progressLabel, { color: activeTheme.inkSoft }]}>{value}</Text>
+      <View style={[styles.progressTrack, { backgroundColor: activeTheme.line }]}>
         <View style={[styles.progressFill, { width: `${Math.min(100, Math.max(0, percent))}%`, backgroundColor: color }]} />
       </View>
     </View>
@@ -275,7 +280,7 @@ function ProgressLine({
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 128 },
   statRow: { flexDirection: 'row', gap: 10 },
   statTile: { flex: 1, alignItems: 'center', backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 6 },

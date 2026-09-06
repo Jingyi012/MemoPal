@@ -6,17 +6,20 @@ import { useDebouncedValue } from '@/core/hooks/useDebouncedValue';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useCommunityMemorySets } from '@/features/memory-sets';
 import type { CommunityMemorySetFilters, CommunityMemorySetSummary } from '@/features/memory-sets';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useColorScheme } from 'nativewind';
 
 type DiscoverMemorySetsScreenProps = { embedded?: boolean };
 
 export function DiscoverMemorySetsScreen({ embedded = false }: DiscoverMemorySetsScreenProps) {
   const { t } = useTranslation('library');
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [techniqueKey, setTechniqueKey] = useState<CommunityMemorySetFilters['techniqueKey']>();
@@ -75,7 +78,7 @@ export function DiscoverMemorySetsScreen({ embedded = false }: DiscoverMemorySet
               <FilterChip label={sort === 'newest' ? t('sortNewest') : t('sortPopular')} selected onPress={() => setSort(sort === 'newest' ? 'popular' : 'newest')} />
             </View>
             <View style={styles.headingRow}>
-              <Text style={styles.sectionTitle}>{t('discoverCommunity')}</Text>
+              <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{t('discoverCommunity')}</Text>
               <Text style={styles.resultCount}>{query.data?.pages[0]?.totalCount ?? items.length}</Text>
             </View>
           </View>
@@ -121,7 +124,7 @@ function goalLabel(goal: string, t: (key: any) => string) {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 30 },
   searchBox: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 17, borderWidth: 1.5, flexDirection: 'row', minHeight: 50, paddingHorizontal: 14 },
   searchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 14, marginHorizontal: 10, minHeight: 46 },

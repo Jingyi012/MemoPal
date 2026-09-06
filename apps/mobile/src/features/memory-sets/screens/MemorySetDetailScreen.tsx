@@ -4,7 +4,7 @@ import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { usePracticeAttemptHistory } from '@/features/practice-attempts';
 import type { PracticeAttempt } from '@/features/practice-attempts';
@@ -13,10 +13,13 @@ import { AlertCircle, ArrowRight, Check, Circle, RefreshCcw, X } from 'lucide-re
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { TranslationKey } from '@/core/i18n/i18n';
+import { useColorScheme } from 'nativewind';
 
 export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: string }) {
   const router = useRouter();
   const { t } = useTranslation('memoryDetails');
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const query = useMemorySet(memorySetId);
   const historyQuery = usePracticeAttemptHistory(memorySetId);
 
@@ -58,7 +61,7 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SummaryCard memorySet={memorySet} latestAttempt={latestAttempt} t={t} />
 
-        <Text style={styles.sectionLabel}>{t('yourMemoryItems')}</Text>
+        <Text style={[styles.sectionLabel, { color: activeTheme.ink }]}>{t('yourMemoryItems')}</Text>
         <View style={styles.itemList}>
           {memorySet.items.map((item) => {
             const response = responseByItemId.get(item.id);
@@ -217,7 +220,7 @@ function getReviewScheduleLabel(
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 42 },
   summaryCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 21, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 15 },
   summaryIcon: { width: 52, height: 52, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },

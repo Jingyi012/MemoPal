@@ -5,8 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnimatedPressable from './AnimatedPressable';
 import HomeButton from './HomeButton';
 import { NotificationBell } from './NotificationBell';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
+import { useColorScheme } from 'nativewind';
 
 interface Actions {
   icon?: LucideIcon;
@@ -46,9 +47,11 @@ export const CommonHeader: React.FC<HeaderProps> = ({
   compact = false,
 }) => {
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
 
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: activeTheme.paper, borderBottomColor: activeTheme.line }]}>
       <View style={[styles.headerInner, compact && styles.compactHeaderInner, { paddingTop: insets.top + (compact ? 4 : 8) }]}>
         <View style={[styles.row, compact && styles.compactRow]}>
           {/* Back button slot */}
@@ -60,8 +63,8 @@ export const CommonHeader: React.FC<HeaderProps> = ({
                 accessibilityLabel="Go back"
                 hitSlop={4}
                 onPress={backAction}
-                style={[styles.backButton, compact && styles.compactBackButton]}>
-                <ChevronLeft size={compact ? 18 : 20} color={theme.ink} />
+                style={[styles.backButton, compact && styles.compactBackButton, { backgroundColor: activeTheme.sand }]}>
+                <ChevronLeft size={compact ? 18 : 20} color={activeTheme.ink} />
               </AnimatedPressable>
             )
           ) : (
@@ -70,9 +73,9 @@ export const CommonHeader: React.FC<HeaderProps> = ({
 
           {/* Title + description */}
           <View style={styles.titleBlock}>
-            {eyebrow && <Text style={[styles.eyebrow, compact && styles.compactEyebrow]}>{eyebrow}</Text>}
-            <Text style={[styles.title, compact && styles.compactTitle]} numberOfLines={1}>{title}</Text>
-            {description && <Text style={[styles.description, compact && styles.compactDescription]} numberOfLines={1}>{description}</Text>}
+            {eyebrow && <Text style={[styles.eyebrow, compact && styles.compactEyebrow, { color: activeTheme.berryDeep, backgroundColor: activeTheme.berryTint, borderColor: activeTheme.berryLine }]}>{eyebrow}</Text>}
+            <Text style={[styles.title, compact && styles.compactTitle, { color: activeTheme.ink }]} numberOfLines={1}>{title}</Text>
+            {description && <Text style={[styles.description, compact && styles.compactDescription, { color: activeTheme.inkSoft }]} numberOfLines={1}>{description}</Text>}
           </View>
 
           {/* Actions */}
@@ -91,7 +94,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
                       key={index}
                       onPress={action.onPress}
                       style={[styles.actionButton, compact && styles.compactActionButton]}>
-                      <Icon size={compact ? 18 : 20} color={theme.ink} />
+                      <Icon size={compact ? 18 : 20} color={activeTheme.ink} />
                     </AnimatedPressable>
                   );
                 }

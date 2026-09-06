@@ -6,7 +6,8 @@ import {
 } from '@gorhom/bottom-sheet';
 import React, { forwardRef, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import { BackHandler, Platform, StyleSheet } from 'react-native';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { useColorScheme } from 'nativewind';
 
 interface Props extends Partial<BottomSheetModalProps> {
   children?: ReactNode;
@@ -17,6 +18,8 @@ type Ref = BottomSheetModal;
 
 const CustomBottomSheetModal = forwardRef<Ref, Props>(
   ({ children, snapPoints, enableDynamicSizing, onChange, onDismiss, ...restProps }, ref) => {
+    const { colorScheme } = useColorScheme();
+    const activeTheme = memopalThemes[colorScheme ?? 'light'];
     const defaultSnapPoints = useMemo(() => ['75%', '95%'], []);
     const usedSnapPoints = snapPoints ?? (enableDynamicSizing === true ? undefined : defaultSnapPoints);
     const animationConfigs = useBottomSheetTimingConfigs({ duration: 180 });
@@ -72,8 +75,8 @@ const CustomBottomSheetModal = forwardRef<Ref, Props>(
         }}
         backdropComponent={renderBackdrop}
         animationConfigs={animationConfigs}
-        backgroundStyle={styles.background}
-        handleIndicatorStyle={styles.handleIndicator}
+        backgroundStyle={[styles.background, { backgroundColor: activeTheme.paper }]}
+        handleIndicatorStyle={[styles.handleIndicator, { backgroundColor: activeTheme.violetLine }]}
         enablePanDownToClose
         {...restProps}>
         {children}

@@ -1,8 +1,9 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { useColorScheme } from 'nativewind';
 import { forwardRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -25,10 +26,26 @@ type PreferenceSelectionSheetProps = {
 /** Shared appearance for short settings pickers such as language and theme. */
 export const PreferenceSelectionSheet = forwardRef<BottomSheetModal, PreferenceSelectionSheetProps>(
   ({ title, description, currentValue, options, onSelect }, ref) => (
-    <CustomBottomSheetModal ref={ref} snapPoints={['58%']} enableDynamicSizing={false}>
+    <PreferenceSheetContent
+      ref={ref}
+      title={title}
+      description={description}
+      currentValue={currentValue}
+      options={options}
+      onSelect={onSelect}
+    />
+  )
+);
+
+const PreferenceSheetContent = forwardRef<BottomSheetModal, PreferenceSelectionSheetProps>(
+  ({ title, description, currentValue, options, onSelect }, ref) => {
+    const { colorScheme } = useColorScheme();
+    const activeTheme = memopalThemes[colorScheme ?? 'light'];
+
+    return <CustomBottomSheetModal ref={ref} snapPoints={['58%']} enableDynamicSizing={false}>
       <BottomSheetScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description}>{description}</Text>
+        <Text style={[styles.title, { color: activeTheme.ink }]}>{title}</Text>
+        <Text style={[styles.description, { color: activeTheme.inkSoft }]}>{description}</Text>
 
         <View style={styles.options}>
           {options.map((option) => {
@@ -39,29 +56,31 @@ export const PreferenceSelectionSheet = forwardRef<BottomSheetModal, PreferenceS
                 accessibilityState={{ checked: selected }}
                 key={option.key}
                 onPress={() => void onSelect(option.key)}
-                style={[styles.option, selected && styles.optionSelected]}>
+                style={[styles.option, { borderColor: activeTheme.line, backgroundColor: activeTheme.paper }, selected && { borderColor: activeTheme.violet, backgroundColor: activeTheme.violetTint }]}>
                 <View
                   style={[
                     styles.icon,
-                    { backgroundColor: selected ? theme.paper : option.tint },
+                    { backgroundColor: selected ? activeTheme.paper : option.tint },
                   ]}>
                   <Text style={styles.emoji}>{option.emoji}</Text>
                 </View>
                 <View style={styles.copy}>
-                  <Text style={styles.optionTitle}>{option.title}</Text>
-                  <Text style={styles.optionBody}>{option.description}</Text>
+                  <Text style={[styles.optionTitle, { color: activeTheme.ink }]}>{option.title}</Text>
+                  <Text style={[styles.optionBody, { color: activeTheme.inkSoft }]}>{option.description}</Text>
                 </View>
-                <View style={[styles.radio, selected && styles.radioSelected]}>
-                  {selected ? <Text style={styles.check}>✓</Text> : null}
+                <View style={[styles.radio, { borderColor: activeTheme.line }, selected && { borderColor: activeTheme.violetDeep, backgroundColor: activeTheme.violetDeep }]}>
+                  {selected ? <Text style={[styles.check, { color: activeTheme.paper }]}>✓</Text> : null}
                 </View>
               </AnimatedPressable>
             );
           })}
         </View>
       </BottomSheetScrollView>
-    </CustomBottomSheetModal>
-  )
+    </CustomBottomSheetModal>;
+  }
 );
+
+PreferenceSheetContent.displayName = 'PreferenceSheetContent';
 
 PreferenceSelectionSheet.displayName = 'PreferenceSelectionSheet';
 

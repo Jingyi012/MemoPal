@@ -2,7 +2,7 @@ import { systemSettingsApi } from '@/core/settings/api/systemSettings';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { BaseCard } from '@/components/BaseCard';
 import LoadingView from '@/components/LoadingView';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import {
   DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG,
@@ -18,10 +18,13 @@ import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TermsAndConditionSheet from '../components/TermsAndConditionSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { useColorScheme } from 'nativewind';
 
 const PremiumScreen: React.FC = () => {
   const router = useRouter();
   const { t } = useTranslation('subscription');
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
   const termsRef = useRef<BottomSheetModal>(null);
   const [config, setConfig] = useState<PremiumSubscriptionConfig | null>(null);
@@ -178,7 +181,7 @@ const PremiumScreen: React.FC = () => {
         <View style={styles.body}>
           <BaseCard radius="3xl" padding="lg" shadow="sm" style={styles.featuresCard}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{config.sections.includedTitle}</Text>
+              <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{config.sections.includedTitle}</Text>
               <View style={styles.sectionMarker}>
                 <Check size={14} color={theme.violetDeep} strokeWidth={3} />
               </View>
@@ -284,7 +287,7 @@ const PremiumScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   topBar: { minHeight: 64, paddingHorizontal: 16, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: theme.canvas, borderBottomWidth: 1, borderBottomColor: theme.line },
   topBarPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, borderWidth: 1.3, borderColor: theme.berryLine, backgroundColor: theme.berryTint, paddingHorizontal: 10, paddingVertical: 5 },
   topBarLabel: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase' },

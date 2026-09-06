@@ -1,4 +1,4 @@
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
@@ -8,6 +8,7 @@ import {
 import React, { useCallback, useEffect, useRef } from 'react';
 import { Text, View } from 'react-native';
 import AnimatedPressable from './AnimatedPressable';
+import { useColorScheme } from 'nativewind';
 
 interface AlertMessageProps {
   isVisible: boolean;
@@ -29,6 +30,8 @@ export const AlertMessage: React.FC<AlertMessageProps> = ({
   variant = 'primary',
 }) => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const { colorScheme } = useColorScheme();
+  const theme = memopalThemes[colorScheme ?? 'light'];
 
   useEffect(() => {
     if (isVisible) {
@@ -51,7 +54,7 @@ export const AlertMessage: React.FC<AlertMessageProps> = ({
       index={0}
       backdropComponent={renderBackdrop}
       onDismiss={onClose}
-      backgroundStyle={{ borderRadius: 32 }}
+      backgroundStyle={{ borderRadius: 32, backgroundColor: theme.paper }}
       handleIndicatorStyle={{ backgroundColor: theme.line, width: 48, height: 6 }}>
       <BottomSheetView className="p-6 pb-12">
         <View className="mb-8 items-center">
@@ -63,9 +66,9 @@ export const AlertMessage: React.FC<AlertMessageProps> = ({
               <Icon size={32} color={variant === 'destructive' ? theme.berryDeep : theme.violetDeep} />
             </View>
           )}
-          <Text className="text-center text-xl font-bold text-[#2B2A3D]">{title}</Text>
+          <Text className="text-center text-xl font-bold" style={{ color: theme.ink }}>{title}</Text>
           {description && (
-            <Text className="mt-2 px-4 text-center leading-5 text-[#6B6A80]">{description}</Text>
+            <Text className="mt-2 px-4 text-center leading-5" style={{ color: theme.inkSoft }}>{description}</Text>
           )}
         </View>
 

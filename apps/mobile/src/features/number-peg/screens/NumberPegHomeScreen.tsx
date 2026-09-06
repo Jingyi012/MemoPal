@@ -7,7 +7,7 @@ import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { NumberPegItemCard } from '@/features/number-peg/components/NumberPegItemCard';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { useNumberPegOverview } from '@/features/number-peg/hooks/useNumberPegOverview';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
@@ -16,10 +16,13 @@ import { Href, useRouter } from 'expo-router';
 import { ArrowRight, ChevronRight } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { useColorScheme } from 'nativewind';
 
 export default function NumberPegHomeScreen() {
   const router = useRouter();
   const { t } = useTranslation('numberPeg');
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const { items } = useNumberPegOverview();
   const { user } = useCurrentUser();
   const memorySets = useMemorySets('number-peg');
@@ -67,7 +70,7 @@ export default function NumberPegHomeScreen() {
         <View style={styles.sectionHeadingRow}>
           <View style={styles.sectionHeadingCopy}>
             <Text style={styles.sectionEyebrow}>{t('pegSet')}</Text>
-            <Text style={styles.sectionTitle}>{t('unlockedAnchors')}</Text>
+            <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{t('unlockedAnchors')}</Text>
           </View>
           <AnimatedPressable
             accessibilityRole="button"
@@ -93,7 +96,7 @@ export default function NumberPegHomeScreen() {
         <View style={styles.sectionHeadingRow}>
           <View style={styles.sectionHeadingCopy}>
             <Text style={styles.sectionEyebrow}>{t('memoriesSection')}</Text>
-            <Text style={styles.sectionTitle}>{t('quickRecall')}</Text>
+            <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{t('quickRecall')}</Text>
           </View>
         </View>
 
@@ -134,7 +137,7 @@ export default function NumberPegHomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 40 },
   heroEmoji: { fontSize: 27 },
   familiarityCard: { minHeight: 72, borderRadius: 18, borderWidth: 2, borderColor: '#FFD9E2', backgroundColor: '#FFF0F4', padding: 12, marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },

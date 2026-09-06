@@ -6,7 +6,7 @@ import { MemorySetRow } from '@/components/MemorySetRow';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
@@ -14,10 +14,13 @@ import { Href, useRouter } from 'expo-router';
 import { ChevronRight, Pencil } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { useColorScheme } from 'nativewind';
 
 export default function PalaceHomeScreen() {
   const router = useRouter();
   const { t } = useTranslation('palace');
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const memorySets = useMemorySets('palace');
   const scenes = usePalaceScenes();
   const isRefreshing = memorySets.isRefetching || scenes.isRefetching;
@@ -67,7 +70,7 @@ export default function PalaceHomeScreen() {
         <View style={styles.sectionHeadingRow}>
           <View style={styles.sectionHeadingCopy}>
             <Text style={styles.sectionEyebrow}>{t('chooseFamiliarPath')}</Text>
-            <Text style={styles.sectionTitle}>{t('palaceScenes')}</Text>
+            <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{t('palaceScenes')}</Text>
           </View>
           {scenes.data?.length ? (
             <AnimatedPressable
@@ -137,7 +140,7 @@ export default function PalaceHomeScreen() {
         <View style={styles.sectionHeadingRow}>
           <View>
             <Text style={styles.sectionEyebrow}>{t('yourJourneys')}</Text>
-            <Text style={styles.sectionTitle}>{t('readyForMentalWalk')}</Text>
+            <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{t('readyForMentalWalk')}</Text>
           </View>
         </View>
 
@@ -178,7 +181,7 @@ export default function PalaceHomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 40 },
   sectionHeadingRow: {
     marginTop: 28,

@@ -9,7 +9,7 @@ import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
@@ -29,6 +29,7 @@ import ThemeSheet from '../components/ThemeSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { DEFAULT_LEVEL_TITLES, getLevelTitleForLevel } from '@/features/gamification/shared/utils/levelTitles';
+import { useColorScheme } from 'nativewind';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -38,6 +39,8 @@ export default function ProfileScreen() {
   const { language, t } = useTranslation('profile');
   const { t: languageT } = useTranslation('language');
   const { logout } = useAuth();
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const updateProfileMutation = useUpdateProfile();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
   const { levelInfo } = useLevelByXp(totalXp, user?.level);
@@ -234,15 +237,15 @@ export default function ProfileScreen() {
               </LinearGradient>
             )}
           </View>
-          <Text style={styles.profileName}>{displayName}</Text>
-          <Text style={styles.profileSubtitle}>
+          <Text style={[styles.profileName, { color: activeTheme.ink }]}>{displayName}</Text>
+          <Text style={[styles.profileSubtitle, { color: activeTheme.inkSoft }]}>
             Level {level} · {levelTitle}
           </Text>
           <AnimatedPressable
             onPress={() => editProfileRef.current?.present()}
-            style={styles.editButton}>
-            <Pencil size={14} color="#2B2A3D" />
-            <Text style={styles.editButtonText}>{t('editProfile')}</Text>
+            style={[styles.editButton, { backgroundColor: activeTheme.paper, borderColor: activeTheme.line }]}>
+            <Pencil size={14} color={activeTheme.ink} />
+            <Text style={[styles.editButtonText, { color: activeTheme.ink }]}>{t('editProfile')}</Text>
           </AnimatedPressable>
         </View>
 
@@ -261,7 +264,7 @@ export default function ProfileScreen() {
           </AnimatedPressable>
         </NightEmphasisCard>
 
-        <Text style={styles.sectionLabel}>{t('settings')}</Text>
+        <Text style={[styles.sectionLabel, { color: activeTheme.ink }]}>{t('settings')}</Text>
         <View style={styles.settingsList}>
           <ProfileSettingsRow
             icon={<Text style={styles.settingsEmoji}>🔔</Text>}
@@ -395,7 +398,7 @@ function ProfileSettingsRow({
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 48 },
   profileHead: { alignItems: 'center', paddingTop: 10, paddingBottom: 20 },
   avatar: {

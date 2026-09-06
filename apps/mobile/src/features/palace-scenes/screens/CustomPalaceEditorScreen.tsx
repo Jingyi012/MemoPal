@@ -442,7 +442,7 @@ export default function CustomPalaceEditorScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 44 },
   flex: { flex: 1 },
   privacyCard: {

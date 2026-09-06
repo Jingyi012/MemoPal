@@ -665,7 +665,7 @@ export default function NumberPegSessionScreen({
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   tabs: { flexDirection: 'row', gap: 6, marginHorizontal: 16, marginTop: 10 },
   tabWrap: { flex: 1, minWidth: 0 },
   tab: {

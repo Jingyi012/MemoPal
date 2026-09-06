@@ -6,7 +6,7 @@ import {
   usePredefinedMemoryLessons,
   type PredefinedMemoryLesson,
 } from '@/features/predefined-memory-lessons';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Image } from 'expo-image';
 import { Href, Redirect, useRouter } from 'expo-router';
@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useOnboardingMutations } from '../hooks/useOnboardingMutations';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColorScheme } from 'nativewind';
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets();
@@ -278,14 +279,16 @@ export function OnboardingScreen() {
 }
 
 function SectionHeading({ step, title, body }: { step: string; title: string; body: string }) {
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   return (
     <View style={styles.sectionHeading}>
       <View style={styles.sectionStep}>
         <Text style={styles.sectionStepText}>{step}</Text>
       </View>
       <View style={styles.sectionCopy}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <Text style={styles.sectionBody}>{body}</Text>
+        <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{title}</Text>
+        <Text style={[styles.sectionBody, { color: activeTheme.inkSoft }]}>{body}</Text>
       </View>
     </View>
   );
@@ -315,7 +318,7 @@ function localizeLesson(lesson: PredefinedMemoryLesson, language: 'en' | 'zh') {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 18, paddingBottom: 200 },
   brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   logo: { width: 44, height: 44, borderRadius: 14, overflow: 'hidden', backgroundColor: theme.ink },

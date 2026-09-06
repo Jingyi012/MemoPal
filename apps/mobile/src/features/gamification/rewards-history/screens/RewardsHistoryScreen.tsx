@@ -102,7 +102,7 @@ function dayLabel(iso: string, todayLabel: string, yesterdayLabel: string) {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas }, content: { padding: 16, paddingBottom: 48 }, filterRow: { flexDirection: 'row', gap: 8 },
+  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 48 }, filterRow: { flexDirection: 'row', gap: 8 },
   filter: { minHeight: 38, borderRadius: 999, backgroundColor: theme.peachTint, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' }, filterActive: { backgroundColor: theme.violetDeep },
   filterText: { color: '#6B6A80', fontFamily: typography.bodyExtraBold, fontSize: 11.5 }, filterTextActive: { color: '#FFFFFF' }, windowNote: { color: '#9A97A7', fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 9 },
   group: { marginTop: 20 }, day: { color: '#6B6A80', fontFamily: typography.displayExtraBold, fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }, list: { gap: 9 },

@@ -696,7 +696,7 @@ export default function PalaceMemoryComposerScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas }, content: { padding: 16, paddingBottom: 42 },
+  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 42 },
   infoCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 19, backgroundColor: '#EEE9FF', borderWidth: 1.5, borderColor: '#DCD4FF', padding: 14 },
   infoIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white' },
   infoEmoji: { fontSize: 25, lineHeight: 30 }, infoCopy: { flex: 1, minWidth: 0 }, infoTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 19 }, infoText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },

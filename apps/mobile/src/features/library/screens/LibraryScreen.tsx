@@ -12,7 +12,7 @@ import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practi
 import type { DueMemoryReview } from '@/features/practice-attempts';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
 import { useUserState } from '@/contexts/UserStateContext';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -21,6 +21,7 @@ import { Globe2, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Tr
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { useColorScheme } from 'nativewind';
 import Toast from 'react-native-toast-message';
 import { MemoryActionsSheet } from '../components/MemoryActionsSheet';
 import { DiscoverMemorySetsScreen } from './DiscoverMemorySetsScreen';
@@ -54,6 +55,8 @@ export default function LibraryScreen() {
   const pendingDeleteRef = useRef<MemorySet | undefined>(undefined);
   const pendingVisibilityRef = useRef<MemorySet | undefined>(undefined);
   const viewMode: LibraryViewMode = userState.ui.libraryViewMode ?? 'card';
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
 
   useEffect(() => {
     if (actionMemorySet) memoryActionsRef.current?.present();
@@ -193,23 +196,23 @@ export default function LibraryScreen() {
         hideBackButton
       />
 
-      <View style={styles.libraryTabBar}>
-        <View style={styles.libraryTabs}>
+      <View style={[styles.libraryTabBar, { backgroundColor: activeTheme.canvas, borderBottomColor: activeTheme.line }]}>
+        <View style={[styles.libraryTabs, { backgroundColor: activeTheme.violetTint, borderColor: activeTheme.violetLine }]}>
           <AnimatedPressable
             accessibilityState={{ selected: libraryTab === 'mine' }}
             containerStyle={styles.libraryTabContainer}
             onPress={() => setLibraryTab('mine')}
-            style={[styles.libraryTab, libraryTab === 'mine' && styles.libraryTabSelected]}>
+            style={[styles.libraryTab, libraryTab === 'mine' && styles.libraryTabSelected, libraryTab === 'mine' ? { backgroundColor: activeTheme.violetDeep } : undefined]}>
             <Text style={styles.libraryTabEmoji}>📚</Text>
-            <Text style={[styles.libraryTabText, libraryTab === 'mine' && styles.libraryTabTextSelected]}>{t('myMemories')}</Text>
+            <Text style={[styles.libraryTabText, { color: libraryTab === 'mine' ? '#FFFFFF' : activeTheme.inkSoft }]}>{t('myMemories')}</Text>
           </AnimatedPressable>
           <AnimatedPressable
             accessibilityState={{ selected: libraryTab === 'discover' }}
             containerStyle={styles.libraryTabContainer}
             onPress={() => setLibraryTab('discover')}
-            style={[styles.libraryTab, libraryTab === 'discover' && styles.libraryTabSelected]}>
+            style={[styles.libraryTab, libraryTab === 'discover' && styles.libraryTabSelected, libraryTab === 'discover' ? { backgroundColor: activeTheme.violetDeep } : undefined]}>
             <Text style={styles.libraryTabEmoji}>🧭</Text>
-            <Text style={[styles.libraryTabText, libraryTab === 'discover' && styles.libraryTabTextSelected]}>{t('discover')}</Text>
+            <Text style={[styles.libraryTabText, { color: libraryTab === 'discover' ? '#FFFFFF' : activeTheme.inkSoft }]}>{t('discover')}</Text>
           </AnimatedPressable>
         </View>
       </View>
@@ -422,7 +425,7 @@ function hasPrivateAssets(
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   libraryTabBar: {
     backgroundColor: theme.canvas,
     borderBottomColor: '#F0EDF8',

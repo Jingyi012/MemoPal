@@ -69,7 +69,7 @@ function openLesson(router: ReturnType<typeof useRouter>, lesson: PredefinedMemo
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#fff' }, content: { padding: 16, paddingBottom: 36 },
+  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 36 },
   search: { height: 48, borderRadius: 16, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 8 },
   searchInput: { flex: 1, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 }, filters: { gap: 8, paddingVertical: 16 },
   filter: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, paddingHorizontal: 14, paddingVertical: 9, backgroundColor: '#fff' }, filterActive: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep }, filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 }, filterTextActive: { color: '#fff' },

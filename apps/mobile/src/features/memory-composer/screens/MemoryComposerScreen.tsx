@@ -404,7 +404,7 @@ function MessageCard({ message }: { message: string }) {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 42 },
   progressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 15 },
   progressDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: theme.line },

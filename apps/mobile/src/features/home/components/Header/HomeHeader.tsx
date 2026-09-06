@@ -6,6 +6,8 @@ import { Text, View } from 'react-native';
 import { typography } from '@/theme/typography';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { memopalThemes } from '@/theme/memopalTheme';
+import { useColorScheme } from 'nativewind';
 
 interface HomeHeaderProps {
   userData: User;
@@ -18,6 +20,8 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
   const greeting = hour < 12 ? t('greetingMorning') : hour < 18 ? t('greetingAfternoon') : t('greetingEvening');
   const name = userData?.displayName?.trim() || t('welcome');
   const level = Math.max(1, userData?.level ?? 1);
+  const { colorScheme } = useColorScheme();
+  const theme = memopalThemes[colorScheme ?? 'light'];
 
   return (
     <>
@@ -29,15 +33,15 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
       />
       <View style={styles.greetingRow}>
         <View style={styles.greetingCopy}>
-          <Text style={styles.greetingTitle}>{greeting}, {name} 👋</Text>
-          <Text style={styles.greetingSubtitle}>{t('ready')}</Text>
+          <Text style={[styles.greetingTitle, { color: theme.ink }]}>{greeting}, {name} 👋</Text>
+          <Text style={[styles.greetingSubtitle, { color: theme.inkSoft }]}>{t('ready')}</Text>
         </View>
         <AnimatedPressable
           accessibilityLabel={`${t('levelLabel')} ${level}`}
           onPress={() => router.push('/(tabs)/profile')}
           style={styles.levelRing}>
           <LinearGradient colors={['#FFC93C', '#FF6F91']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.levelGradient}>
-            <Text style={styles.levelValue}>{level}</Text>
+            <Text style={[styles.levelValue, { color: theme.ink }]}>{level}</Text>
           </LinearGradient>
         </AnimatedPressable>
       </View>

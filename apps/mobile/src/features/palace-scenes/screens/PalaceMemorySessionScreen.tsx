@@ -720,7 +720,7 @@ export default function PalaceMemorySessionScreen({
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   sessionScroll: { flex: 1 },
   sessionContent: { paddingBottom: 24 },
   sessionPanel: { paddingHorizontal: 16, paddingBottom: 24 },

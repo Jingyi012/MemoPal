@@ -10,7 +10,7 @@ import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
 import { useGamificationRules } from '@/features/gamification/shared/hooks/useGamificationRules';
 import { WeeklyActivityCard } from '@/features/gamification/shared/components/WeeklyActivityCard';
 import { typography } from '@/theme/typography';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { Href, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, Check, Circle, Plus } from 'lucide-react-native';
@@ -20,10 +20,13 @@ import { HomeHeader } from '../components/Header/HomeHeader';
 import { TodayReviewCard } from '../components/TodayReviewCard';
 import { UpcomingReviewCard } from '../components/UpcomingReviewCard';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { useColorScheme } from 'nativewind';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { t } = useTranslation('home');
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const { user } = useCurrentUser();
   const memorySets = useMemorySets();
   const dueReviews = useDueMemoryReviews();
@@ -142,7 +145,7 @@ export default function HomeScreen() {
 
         {todayPickMemorySet ? (
           <>
-            <Text style={styles.sectionLabel}>{t('todaysPick')}</Text>
+            <Text style={[styles.sectionLabel, { color: activeTheme.inkSoft }]}>{t('todaysPick')}</Text>
             <AnimatedPressable onPress={openTodayPick} style={styles.todayCard}>
               <LinearGradient colors={['#FFF7E0', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.todayGradient}>
                 <Text style={styles.todayIcon}>🕯️</Text>
@@ -160,7 +163,7 @@ export default function HomeScreen() {
           </>
         ) : null}
 
-        <Text style={styles.sectionLabel}>{t('thisWeek')}</Text>
+        <Text style={[styles.sectionLabel, { color: activeTheme.inkSoft }]}>{t('thisWeek')}</Text>
         <View style={styles.statRow}>
           <StatTile value={`${practiceStatsQuery.data?.sessionsCompleted ?? 0}`} label={t('practiceSessions')} />
           <StatTile value={`${practiceStatsQuery.data?.wordsLearned ?? 0}`} label={t('words')} />
@@ -353,7 +356,7 @@ function StatTile({ value, label }: { value: string; label: string }) {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 128 },
   focusCard: { marginBottom: 16 },
   focusTopRow: { zIndex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

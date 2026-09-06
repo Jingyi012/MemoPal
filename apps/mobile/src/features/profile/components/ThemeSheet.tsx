@@ -1,8 +1,9 @@
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { AppTheme } from '@/features/onboarding/types/userState';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { forwardRef } from 'react';
+import { useColorScheme } from 'nativewind';
 import { PreferenceSelectionSheet } from './PreferenceSelectionSheet';
 
 type Ref = BottomSheetModal;
@@ -25,6 +26,8 @@ const THEME_OPTIONS: {
 
 const ThemeSheet = forwardRef<Ref, ThemeSheetProps>(({ currentTheme, onSave }, ref) => {
   const { t } = useTranslation('profile');
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
 
   return (
     <PreferenceSelectionSheet
@@ -37,7 +40,7 @@ const ThemeSheet = forwardRef<Ref, ThemeSheetProps>(({ currentTheme, onSave }, r
         emoji: option.emoji,
         title: t(option.titleKey),
         description: t(option.bodyKey),
-        tint: [theme.sunTint, theme.violetTint, theme.skyTint][index],
+        tint: [activeTheme.sunTint, activeTheme.violetTint, activeTheme.skyTint][index],
       }))}
       onSelect={(value) => onSave(value as AppTheme)}
     />

@@ -1,4 +1,5 @@
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { useColorScheme } from 'nativewind';
+import { memopalThemes } from '@/theme/memopalTheme';
 import React from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
@@ -7,10 +8,12 @@ interface Props {
 }
 
 const LoadingView: React.FC<Props> = ({ description }) => {
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <ActivityIndicator color={theme.violetDeep} size="large" />
-      {description && <Text className="mt-4 font-medium text-[#6B6A80]">{description}</Text>}
+    <View className="flex-1 items-center justify-center" style={{ backgroundColor: activeTheme.canvas }}>
+      <ActivityIndicator color={activeTheme.violetDeep} size="large" />
+      {description && <Text className="mt-4 font-medium" style={{ color: activeTheme.inkSoft }}>{description}</Text>}
     </View>
   );
 };

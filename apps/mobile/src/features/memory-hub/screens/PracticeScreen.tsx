@@ -15,17 +15,20 @@ import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes'
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { usePredefinedMemoryLessons } from '@/features/predefined-memory-lessons';
 import type { PredefinedMemoryLesson } from '@/features/predefined-memory-lessons';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
 import { Plus, RefreshCcw } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useColorScheme } from 'nativewind';
 
 export default function PracticeScreen() {
   const router = useRouter();
   const { language, t } = useTranslation('practice');
+  const { colorScheme } = useColorScheme();
+  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const modules = useEnabledMemoryModules();
   const numberPegEnabled = modules.some((module) => module.key === 'number-peg');
   const palaceEnabled = modules.some((module) => module.key === 'palace');
@@ -100,7 +103,7 @@ export default function PracticeScreen() {
           onAction={() => router.push('/create-memory' as Href)}
         />
 
-        <Text style={styles.sectionLabel}>{t('jumpTechnique')}</Text>
+        <Text style={[styles.sectionLabel, { color: activeTheme.ink }]}>{t('jumpTechnique')}</Text>
         <View style={styles.techniqueRow}>
           {modules.map((module) => {
             const isPeg = module.key === 'number-peg';
@@ -155,7 +158,7 @@ export default function PracticeScreen() {
 
         <View style={styles.discoverySection}>
           <View style={styles.sectionHeadingRow}>
-            <Text style={[styles.sectionLabel, styles.discoveryTitle]}>{t('tryLesson')}</Text>
+            <Text style={[styles.sectionLabel, styles.discoveryTitle, { color: activeTheme.ink }]}>{t('tryLesson')}</Text>
             <AnimatedPressable onPress={() => router.push('/lessons' as Href)} hitSlop={8}>
               <Text style={styles.seeAll}>{t('seeAll')} →</Text>
             </AnimatedPressable>
@@ -210,7 +213,7 @@ export default function PracticeScreen() {
         </View>
 
         <View style={styles.sectionHeadingRow}>
-          <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>{t('recentPractice')}</Text>
+          <Text style={[styles.sectionLabel, { marginBottom: 0, color: activeTheme.ink }]}>{t('recentPractice')}</Text>
           <AnimatedPressable onPress={() => router.push('/(tabs)/library' as Href)}>
             <Text style={styles.seeAll}>{t('seeAll')} →</Text>
           </AnimatedPressable>
@@ -288,7 +291,7 @@ function openMemorySet(router: ReturnType<typeof useRouter>, memorySet: MemorySe
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas },
+  page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 42 },
   progressHeaderWrap: { paddingHorizontal: 16, paddingTop: 10 },
   sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },

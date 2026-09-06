@@ -1,4 +1,4 @@
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import {
   BottomSheetModal,
@@ -8,6 +8,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { ActivityIndicator, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnimatedPressable from './AnimatedPressable';
+import { useColorScheme } from 'nativewind';
 
 interface ActionSheetProps {
   onClose?: () => void;
@@ -33,6 +34,8 @@ export const ActionSheet = forwardRef<BottomSheetModal, ActionSheetProps>(({
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [isActing, setIsActing] = useState(false);
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
+  const theme = memopalThemes[colorScheme ?? 'light'];
 
   useImperativeHandle(ref, () => bottomSheetModalRef.current!, []);
 
