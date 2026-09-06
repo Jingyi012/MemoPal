@@ -31,7 +31,7 @@ public sealed class PalaceAssociationEndpointsTests : IClassFixture<CustomWebApp
         var token = registerPayload.GetProperty("data").GetProperty("token").GetString();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await client.PostAsJsonAsync("/v2/palace-associations/generate", new
+        var response = await client.PostAsJsonAsync("/v1/palace-associations/generate", new
         {
             locale = "en",
             style = "vivid",

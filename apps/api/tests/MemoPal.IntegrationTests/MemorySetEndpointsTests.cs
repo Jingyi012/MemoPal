@@ -31,7 +31,7 @@ public sealed class MemorySetEndpointsTests : IClassFixture<CustomWebApplication
         var token = registerJson.GetProperty("data").GetProperty("token").GetString();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var createResponse = await _client.PostAsJsonAsync("/v2/memory-sets", new
+        var createResponse = await _client.PostAsJsonAsync("/v1/memory-sets", new
         {
             title = "Shopping movie",
             goalType = "ordered-list",
@@ -90,7 +90,7 @@ public sealed class MemorySetEndpointsTests : IClassFixture<CustomWebApplication
         createdRecipe.GetProperty("anchorSnapshot").GetProperty("keyword").GetString()
             .Should().Be("Candle");
 
-        var getResponse = await _client.GetAsync($"/v2/memory-sets/{memorySetId}");
+        var getResponse = await _client.GetAsync($"/v1/memory-sets/{memorySetId}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var fetchedJson = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
         var fetchedRecipe = fetchedJson.GetProperty("data").GetProperty("techniquePlan")

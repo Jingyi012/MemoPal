@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MemoPal.Api.Controllers;
 
 [Authorize]
-[Route("v2/palace-associations")]
+[Route("v1/palace-associations")]
 public sealed class PalaceAssociationsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpPost("generate")]

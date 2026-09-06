@@ -34,7 +34,7 @@ export const palaceAssociationApi = {
     request: GeneratePalaceAssociationsRequest,
   ): Promise<GeneratePalaceAssociationsResponse> {
     const response = await api.post<GeneralResponse<GeneratePalaceAssociationsResponse>>(
-      '/v2/palace-associations/generate',
+      '/v1/palace-associations/generate',
       request,
       { timeout: 90_000 },
     );

@@ -11,25 +11,25 @@ function unwrap<T>(response: GeneralResponse<T>, fallbackMessage: string): T {
 
 export const memorySetApi = {
   async getAll(): Promise<MemorySet[]> {
-    const response = await api.get<GeneralResponse<MemorySet[]>>('/v2/memory-sets');
+    const response = await api.get<GeneralResponse<MemorySet[]>>('/v1/memory-sets');
     return unwrap(response.data, 'Could not load your memory sets.');
   },
 
   async getById(memorySetId: string): Promise<MemorySet> {
     const response = await api.get<GeneralResponse<MemorySet>>(
-      `/v2/memory-sets/${encodeURIComponent(memorySetId)}`
+      `/v1/memory-sets/${encodeURIComponent(memorySetId)}`
     );
     return unwrap(response.data, 'Could not load this memory set.');
   },
 
   async create(request: MemorySetUpsertRequest): Promise<MemorySet> {
-    const response = await api.post<GeneralResponse<MemorySet>>('/v2/memory-sets', request);
+    const response = await api.post<GeneralResponse<MemorySet>>('/v1/memory-sets', request);
     return unwrap(response.data, 'Could not save this memory set.');
   },
 
   async update(memorySetId: string, request: MemorySetUpsertRequest): Promise<MemorySet> {
     const response = await api.put<GeneralResponse<MemorySet>>(
-      `/v2/memory-sets/${encodeURIComponent(memorySetId)}`,
+      `/v1/memory-sets/${encodeURIComponent(memorySetId)}`,
       request
     );
     return unwrap(response.data, 'Could not update this memory set.');
@@ -37,7 +37,7 @@ export const memorySetApi = {
 
   async duplicate(memorySetId: string): Promise<MemorySet> {
     const response = await api.post<GeneralResponse<MemorySet>>(
-      `/v2/memory-sets/${encodeURIComponent(memorySetId)}/duplicate`
+      `/v1/memory-sets/${encodeURIComponent(memorySetId)}/duplicate`
     );
     return unwrap(response.data, 'Could not duplicate this memory set.');
   },
@@ -45,7 +45,7 @@ export const memorySetApi = {
   async setArchived(memorySetId: string, isArchived: boolean): Promise<MemorySet> {
     const action = isArchived ? 'archive' : 'restore';
     const response = await api.patch<GeneralResponse<MemorySet>>(
-      `/v2/memory-sets/${encodeURIComponent(memorySetId)}/${action}`
+      `/v1/memory-sets/${encodeURIComponent(memorySetId)}/${action}`
     );
     return unwrap(
       response.data,
@@ -59,7 +59,7 @@ export const memorySetApi = {
     confirmPrivateAssets = false,
   ): Promise<MemorySet> {
     const response = await api.patch<GeneralResponse<MemorySet>>(
-      `/v2/memory-sets/${encodeURIComponent(memorySetId)}/visibility`,
+      `/v1/memory-sets/${encodeURIComponent(memorySetId)}/visibility`,
       { visibility, confirmPrivateAssets },
     );
     return unwrap(response.data, 'Could not update this memory visibility.');
@@ -67,7 +67,7 @@ export const memorySetApi = {
 
   async delete(memorySetId: string): Promise<void> {
     const response = await api.delete<GeneralResponse<boolean>>(
-      `/v2/memory-sets/${encodeURIComponent(memorySetId)}`
+      `/v1/memory-sets/${encodeURIComponent(memorySetId)}`
     );
     unwrap(response.data, 'Could not delete this memory set.');
   },

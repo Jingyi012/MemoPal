@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { predefinedMemoryLessonsApi } from '../api/predefinedMemoryLessons.api';
 
 export const PREDEFINED_MEMORY_LESSON_KEYS = {
-  all: ['predefined-memory-lessons', 'v2'] as const,
+  all: ['predefined-memory-lessons', 'v1'] as const,
   published: () => [...PREDEFINED_MEMORY_LESSON_KEYS.all, 'published'] as const,
 };
 

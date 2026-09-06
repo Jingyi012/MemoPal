@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MemoPal.Api.Controllers;
 
 [Authorize]
-[Route("v2/practice-attempts")]
+[Route("v1/practice-attempts")]
 public sealed class PracticeAttemptsController : ApiControllerBase
 {
     public PracticeAttemptsController(ISender sender) : base(sender)
@@ -46,7 +46,7 @@ public sealed class PracticeAttemptsController : ApiControllerBase
         return Ok(result);
     }
 
-    [HttpGet("/v2/reviews/due")]
+    [HttpGet("/v1/reviews/due")]
     public async Task<IActionResult> GetDue(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -55,7 +55,7 @@ public sealed class PracticeAttemptsController : ApiControllerBase
         return Ok(result);
     }
 
-    [HttpGet("/v2/reviews/upcoming")]
+    [HttpGet("/v1/reviews/upcoming")]
     public async Task<IActionResult> GetUpcoming(
         [FromQuery] int days = 30,
         CancellationToken cancellationToken = default)

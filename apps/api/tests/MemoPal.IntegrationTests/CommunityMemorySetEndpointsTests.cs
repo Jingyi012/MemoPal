@@ -24,7 +24,7 @@ public sealed class CommunityMemorySetEndpointsTests : IClassFixture<CustomWebAp
         using var owner = _factory.CreateClient();
         var ownerAuth = await Register(owner, $"owner-{suffix}@example.com", "Owner");
         owner.DefaultRequestHeaders.Authorization = Bearer(ownerAuth.Token);
-        var create = await owner.PostAsJsonAsync("/v2/memory-sets", BuildMemoryRequest());
+        var create = await owner.PostAsJsonAsync("/v1/memory-sets", BuildMemoryRequest());
         create.StatusCode.Should().Be(HttpStatusCode.OK);
         var memorySetId = (await create.Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("data").GetProperty("id").GetString()!;
@@ -33,27 +33,27 @@ public sealed class CommunityMemorySetEndpointsTests : IClassFixture<CustomWebAp
         var readerAuth = await Register(reader, $"reader-{suffix}@example.com", "Reader");
         reader.DefaultRequestHeaders.Authorization = Bearer(readerAuth.Token);
         (await Browse(reader)).Should().NotContain(x => x.GetProperty("id").GetString() == memorySetId);
-        (await reader.GetAsync($"/v2/community/memory-sets/{memorySetId}"))
+        (await reader.GetAsync($"/v1/community/memory-sets/{memorySetId}"))
             .StatusCode.Should().Be(HttpStatusCode.NotFound);
 
-        var publish = await owner.PatchAsJsonAsync($"/v2/memory-sets/{memorySetId}/visibility", new { visibility = "public" });
+        var publish = await owner.PatchAsJsonAsync($"/v1/memory-sets/{memorySetId}/visibility", new { visibility = "public" });
         publish.StatusCode.Should().Be(HttpStatusCode.OK);
         var discovered = (await Browse(reader)).Single(x => x.GetProperty("id").GetString() == memorySetId);
         discovered.GetProperty("author").GetProperty("displayName").GetString().Should().Be("Owner");
         discovered.TryGetProperty("createdBy", out _).Should().BeFalse();
 
-        var firstCopy = await reader.PostAsync($"/v2/community/memory-sets/{memorySetId}/copy", null);
+        var firstCopy = await reader.PostAsync($"/v1/community/memory-sets/{memorySetId}/copy", null);
         firstCopy.StatusCode.Should().Be(HttpStatusCode.OK);
         var firstCopyData = (await firstCopy.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("data");
         var copyId = firstCopyData.GetProperty("memorySet").GetProperty("id").GetString();
         firstCopyData.GetProperty("memorySet").GetProperty("visibility").GetString().Should().Be("private");
         firstCopyData.GetProperty("alreadyCopied").GetBoolean().Should().BeFalse();
-        var secondCopyData = (await (await reader.PostAsync($"/v2/community/memory-sets/{memorySetId}/copy", null))
+        var secondCopyData = (await (await reader.PostAsync($"/v1/community/memory-sets/{memorySetId}/copy", null))
             .Content.ReadFromJsonAsync<JsonElement>()).GetProperty("data");
         secondCopyData.GetProperty("alreadyCopied").GetBoolean().Should().BeTrue();
         secondCopyData.GetProperty("memorySet").GetProperty("id").GetString().Should().Be(copyId);
 
-        (await reader.PostAsJsonAsync($"/v2/community/memory-sets/{memorySetId}/reports", new { reason = "spam" }))
+        (await reader.PostAsJsonAsync($"/v1/community/memory-sets/{memorySetId}/reports", new { reason = "spam" }))
             .StatusCode.Should().Be(HttpStatusCode.OK);
 
         using var admin = _factory.CreateClient();
@@ -73,13 +73,13 @@ public sealed class CommunityMemorySetEndpointsTests : IClassFixture<CustomWebAp
         (await admin.PatchAsJsonAsync($"/admin/community-memory-sets/{memorySetId}/hide", new { reason = "Reported" }))
             .StatusCode.Should().Be(HttpStatusCode.OK);
 
-        (await reader.GetAsync($"/v2/community/memory-sets/{memorySetId}"))
+        (await reader.GetAsync($"/v1/community/memory-sets/{memorySetId}"))
             .StatusCode.Should().Be(HttpStatusCode.NotFound);
-        (await reader.PostAsync($"/v2/community/memory-sets/{memorySetId}/copy", null))
+        (await reader.PostAsync($"/v1/community/memory-sets/{memorySetId}/copy", null))
             .StatusCode.Should().Be(HttpStatusCode.NotFound);
         (await admin.PatchAsync($"/admin/community-memory-sets/{memorySetId}/restore", null))
             .StatusCode.Should().Be(HttpStatusCode.OK);
-        (await reader.GetAsync($"/v2/community/memory-sets/{memorySetId}"))
+        (await reader.GetAsync($"/v1/community/memory-sets/{memorySetId}"))
             .StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
@@ -102,7 +102,7 @@ public sealed class CommunityMemorySetEndpointsTests : IClassFixture<CustomWebAp
 
     private static async Task<JsonElement[]> Browse(HttpClient client)
     {
-        var response = await client.GetAsync("/v2/community/memory-sets?pageNumber=1&pageSize=50");
+        var response = await client.GetAsync("/v1/community/memory-sets?pageNumber=1&pageSize=50");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
         return json.GetProperty("data").EnumerateArray().ToArray();

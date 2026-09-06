@@ -10,7 +10,7 @@ using MemoPal.Application.Features.CommunityMemorySets.DTOs;
 namespace MemoPal.Api.Controllers;
 
 [Authorize]
-[Route("v2/memory-sets")]
+[Route("v1/memory-sets")]
 public sealed class MemorySetsController : ApiControllerBase
 {
     public MemorySetsController(ISender sender) : base(sender)

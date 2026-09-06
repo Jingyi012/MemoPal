@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MemoPal.Api.Controllers;
 
 [Authorize]
-[Route("v2/palace-scenes")]
+[Route("v1/palace-scenes")]
 public sealed class PalaceScenesController : ApiControllerBase
 {
     public PalaceScenesController(ISender sender) : base(sender) { }

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MemoPal.Api.Controllers;
 
 [Authorize]
-[Route("v2/community/memory-sets")]
+[Route("v1/community/memory-sets")]
 public sealed class CommunityMemorySetsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpGet]
