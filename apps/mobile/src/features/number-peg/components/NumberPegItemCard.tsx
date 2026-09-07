@@ -1,5 +1,6 @@
+import { useColorScheme } from 'nativewind';
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
@@ -12,6 +13,8 @@ type Props = {
 };
 
 export function NumberPegItemCard({ item, locked = false, compact = false }: Props) {
+  const { colorScheme } = useColorScheme();
+  const theme = memopalThemes[colorScheme ?? 'light'];
   const { t } = useTranslation('numberPeg');
   const localizedItem = localizeNumberPeg(item, t);
   return (
@@ -41,7 +44,7 @@ export function NumberPegItemCard({ item, locked = false, compact = false }: Pro
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-        <Text style={{ fontFamily: typography.bodyExtraBold, fontSize: compact ? 9 : 11, color: 'white' }}>{item.number}</Text>
+        <Text style={{ fontFamily: typography.bodyExtraBold, fontSize: compact ? 9 : 11, color: theme.onSun }}>{item.number}</Text>
       </View>
       <Text style={{ fontSize: compact ? 26 : 34, opacity: locked ? 0.35 : 1 }}>{locked ? '🔒' : item.image}</Text>
       <Text

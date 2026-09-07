@@ -76,6 +76,8 @@ export function SceneEditorCard({
         maxLength={maxLength}
         placeholder={placeholder}
         placeholderTextColor="#AAA7B5"
+        selectionColor={isPalace ? theme.violetDeep : theme.berryDeep}
+        cursorColor={isPalace ? theme.violetDeep : theme.berryDeep}
         style={[styles.input, compact && styles.compactInput]}
         textAlignVertical="top"
         value={value}

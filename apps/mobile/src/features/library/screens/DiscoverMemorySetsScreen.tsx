@@ -1,3 +1,4 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -6,7 +7,7 @@ import { useDebouncedValue } from '@/core/hooks/useDebouncedValue';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useCommunityMemorySets } from '@/features/memory-sets';
 import type { CommunityMemorySetFilters, CommunityMemorySetSummary } from '@/features/memory-sets';
-import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react-native';
@@ -17,6 +18,7 @@ import { useColorScheme } from 'nativewind';
 type DiscoverMemorySetsScreenProps = { embedded?: boolean };
 
 export function DiscoverMemorySetsScreen({ embedded = false }: DiscoverMemorySetsScreenProps) {
+  const { styles, theme } = useStyles();
   const { t } = useTranslation('library');
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
@@ -95,10 +97,12 @@ export function DiscoverMemorySetsScreen({ embedded = false }: DiscoverMemorySet
 }
 
 function FilterChip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  const { styles } = useStyles();
   return <AnimatedPressable onPress={onPress} style={[styles.chip, selected && styles.chipSelected]}><Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text></AnimatedPressable>;
 }
 
 function CommunityMemoryCard({ item, onPress, t }: { item: CommunityMemorySetSummary; onPress: () => void; t: (key: any) => string }) {
+  const { styles } = useStyles();
   const isPalace = item.techniqueKey === 'palace';
   return <AnimatedPressable containerStyle={styles.cardContainer} onPress={onPress} style={styles.card}>
     <View style={[styles.cover, isPalace ? styles.palaceCover : styles.pegCover]}>
@@ -123,7 +127,7 @@ function goalLabel(goal: string, t: (key: any) => string) {
   return t(key);
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 30 },
   searchBox: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 17, borderWidth: 1.5, flexDirection: 'row', minHeight: 50, paddingHorizontal: 14 },
@@ -134,7 +138,7 @@ const styles = StyleSheet.create({
   chip: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 999, borderWidth: 1.5, minHeight: 36, justifyContent: 'center', paddingHorizontal: 12 },
   chipSelected: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
   chipText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  chipTextSelected: { color: 'white' },
+  chipTextSelected: { color: theme.onAccent},
   headingRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 11, marginTop: 25 },
   sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 },
   resultCount: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
@@ -148,11 +152,11 @@ const styles = StyleSheet.create({
   posterOrbSmall: { backgroundColor: 'rgba(155,140,255,0.17)', borderRadius: 38, bottom: -22, height: 76, left: -15, position: 'absolute', width: 76 },
   coverEmoji: { fontSize: 38 },
   posterWord: { color: theme.berryDeep, fontFamily: typography.displayExtraBold, fontSize: 10, marginTop: 5, maxWidth: '78%' },
-  coverBadge: { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 8, left: 8, paddingHorizontal: 6, paddingVertical: 4, position: 'absolute', top: 8 },
-  coverBadgeText: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 7.5 },
+  coverBadge: { backgroundColor: theme.mintTint, borderRadius: 8, left: 8, paddingHorizontal: 6, paddingVertical: 4, position: 'absolute', top: 8 },
+  coverBadgeText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 7.5 },
   cardBody: { minHeight: 107, padding: 10 },
   cardLabel: { fontFamily: typography.bodyExtraBold, fontSize: 8.5, letterSpacing: .7 }, palaceLabel: { color: theme.violetDeep }, pegLabel: { color: theme.berryDeep },
   cardTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15, lineHeight: 19, marginTop: 4 },
   cardMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9.5, marginTop: 7 }, cardStats: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 8.5, marginTop: 4 },
-  separator: { height: 9 }, loading: { height: 200, overflow: 'hidden' }, empty: { alignItems: 'center', paddingHorizontal: 25, paddingVertical: 64 }, emptyEmoji: { fontSize: 34 }, emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, marginTop: 11, textAlign: 'center' }, emptyBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' }, retry: { backgroundColor: theme.sun, borderRadius: 13, marginTop: 15, paddingHorizontal: 18, paddingVertical: 11 }, retryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 }, loadMore: { alignItems: 'center', alignSelf: 'center', backgroundColor: theme.violetTint, borderRadius: 14, flexDirection: 'row', gap: 7, justifyContent: 'center', marginTop: 17, minHeight: 44, paddingHorizontal: 17 }, loadMoreText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 }, footerSpace: { height: 10 },
-});
+  separator: { height: 9 }, loading: { height: 200, overflow: 'hidden' }, empty: { alignItems: 'center', paddingHorizontal: 25, paddingVertical: 64 }, emptyEmoji: { fontSize: 34 }, emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, marginTop: 11, textAlign: 'center' }, emptyBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' }, retry: { backgroundColor: theme.sun, borderRadius: 13, marginTop: 15, paddingHorizontal: 18, paddingVertical: 11 }, retryText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 13 }, loadMore: { alignItems: 'center', alignSelf: 'center', backgroundColor: theme.violetTint, borderRadius: 14, flexDirection: 'row', gap: 7, justifyContent: 'center', marginTop: 17, minHeight: 44, paddingHorizontal: 17 }, loadMoreText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 }, footerSpace: { height: 10 },
+}));

@@ -1,7 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { LevelUpModal } from '@/components/LevelUpModal';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Home, RefreshCcw } from 'lucide-react-native';
 import React from 'react';
@@ -46,6 +46,7 @@ export function RecallResultCard({
   returnHomeLabel,
   onReturnHome,
 }: RecallResultCardProps) {
+  const { styles, theme } = useStyles();
   const { t } = useTranslation('achievements');
   const isPeg = tone === 'peg';
   const [levelUpVisible, setLevelUpVisible] = React.useState(Boolean(levelUpTo));
@@ -84,7 +85,7 @@ export function RecallResultCard({
           accessibilityLabel={retryAccessibilityLabel}
           onPress={onRetry}
           style={styles.primaryButton}>
-          <RefreshCcw size={18} color={theme.ink} />
+          <RefreshCcw size={18} color={theme.onSun} />
           <Text style={styles.primaryText}>{retryLabel}</Text>
         </AnimatedPressable>
       </View>
@@ -111,27 +112,27 @@ export function RecallResultCard({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: { flex: 1, minHeight: 390, borderRadius: 25, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 24, alignItems: 'center', justifyContent: 'center' },
-  palaceCard: { minHeight: 360, borderColor: '#DCD4FF', borderRadius: 23 },
+  palaceCard: { minHeight: 360, borderColor: theme.violetLine, borderRadius: 23 },
   emoji: { fontSize: 54 },
   title: { color: theme.ink, fontFamily: typography.display, fontSize: 22, marginTop: 12, textAlign: 'center' },
-  resultRow: { width: '100%', flexDirection: 'row', alignItems: 'stretch', marginTop: 18, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingVertical: 13 },
+  resultRow: { width: '100%', flexDirection: 'row', alignItems: 'stretch', marginTop: 18, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingVertical: 13 },
   resultStat: { flex: 1, alignItems: 'center', paddingHorizontal: 8 },
   resultDivider: { width: 2, backgroundColor: theme.line },
-  recalledValue: { color: theme.grass, fontFamily: typography.displayExtraBold, fontSize: 28 },
+  recalledValue: { color: theme.successText, fontFamily: typography.displayExtraBold, fontSize: 28 },
   practiceValue: { color: theme.berryDeep, fontFamily: typography.displayExtraBold, fontSize: 28 },
   resultLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10.5, marginTop: 2, textAlign: 'center' },
   body: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 14, marginBottom: 12 },
-  xpPill: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 999, backgroundColor: '#FFF3D6', borderWidth: 2, borderColor: '#FFE3AE', paddingHorizontal: 14, paddingVertical: 8, marginBottom: 14 },
+  xpPill: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 999, backgroundColor: theme.sunTint, borderWidth: 2, borderColor: theme.sunLine, paddingHorizontal: 14, paddingVertical: 8, marginBottom: 14 },
   xpText: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15 },
   levelText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
   actionWrap: { alignSelf: 'stretch' },
   secondaryActionWrap: { marginTop: 12 },
   primaryButton: { width: '100%', minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
-  primaryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
+  primaryText: { color: theme.onSun, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
   secondaryButton: { width: '100%', minHeight: 49, borderRadius: 16, borderWidth: 2, borderColor: theme.violet, backgroundColor: theme.violetTint, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
   secondaryText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   returnHomeButton: { minHeight: 44, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   returnHomeText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
-});
+}));

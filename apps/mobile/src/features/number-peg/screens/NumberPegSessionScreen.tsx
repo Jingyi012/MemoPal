@@ -10,7 +10,7 @@ import { NumberPegRehearsalCard } from '@/features/number-peg/components/NumberP
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { buildAllNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
 import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
@@ -77,6 +77,7 @@ export default function NumberPegSessionScreen({
   startInRecall?: boolean;
   returnTo?: 'practice' | 'number-peg';
 }) {
+  const { styles } = useStyles();
   const router = useRouter();
   const { t } = useTranslation('numberPeg');
   const memorySetQuery = useMemorySet(memorySetId);
@@ -664,7 +665,7 @@ export default function NumberPegSessionScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   tabs: { flexDirection: 'row', gap: 6, marginHorizontal: 16, marginTop: 10 },
   tabWrap: { flex: 1, minWidth: 0 },
@@ -678,12 +679,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 7,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     paddingHorizontal: 9,
   },
   activeTab: {
-    backgroundColor: theme.ink,
-    borderColor: theme.ink,
+    backgroundColor: theme.night,
+    borderColor: theme.night,
     boxShadow: '0px 3px 0px rgba(43,42,61,0.12)',
   },
   tabEmoji: { fontSize: 15 },
@@ -710,14 +711,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 9,
     borderRadius: 12,
-    backgroundColor: '#E3F6ED',
+    backgroundColor: theme.mintTint,
     borderWidth: 1.5,
-    borderColor: '#BFE7D6',
+    borderColor: theme.mintLine,
     paddingHorizontal: 12,
     paddingVertical: 9,
   },
   restoreNoticeText: {
-    color: '#247B67',
+    color: theme.successText,
     fontFamily: typography.bodyBold,
     fontSize: 12,
     lineHeight: 17,
@@ -728,9 +729,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 13,
     borderRadius: 18,
-    backgroundColor: '#FFF7E0',
+    backgroundColor: theme.sunTint,
     borderWidth: 1.5,
-    borderColor: '#FFE6A3',
+    borderColor: theme.sunLine,
     padding: 16,
     marginBottom: 20,
   },
@@ -782,8 +783,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: '#EADFC4',
-    backgroundColor: '#FFFCF4',
+    borderColor: theme.sunLine,
+    backgroundColor: theme.sunTint,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -860,7 +861,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   saveSuccess: {
-    color: theme.grass,
+    color: theme.successText,
     fontFamily: typography.bodyExtraBold,
     fontSize: 12,
     lineHeight: 18,
@@ -878,7 +879,7 @@ const styles = StyleSheet.create({
   retrySaveButton: {
     marginTop: 8,
     borderRadius: 12,
-    backgroundColor: '#FFE3EA',
+    backgroundColor: theme.berryTint,
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
@@ -886,8 +887,8 @@ const styles = StyleSheet.create({
   reminderChoice: {
     borderRadius: 15,
     borderWidth: 1.5,
-    borderColor: '#DCD2FF',
-    backgroundColor: '#F8F5FF',
+    borderColor: theme.violetLine,
+    backgroundColor: theme.violetTint,
     padding: 12,
     marginBottom: 12,
   },
@@ -925,7 +926,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: theme.line,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
@@ -943,6 +944,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     gap: 4,
   },
-  reminderEnableText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  reminderEnableText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   centerState: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
-});
+}));

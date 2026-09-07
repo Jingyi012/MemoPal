@@ -1,11 +1,15 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { useColorScheme } from 'nativewind';
+import { typography } from '@/theme/typography';
+import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 
 /** Web-only tab bar: React Navigation's default bar still forwards deprecated pointerEvents props. */
 export function WebTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const { colorScheme } = useColorScheme();
+  const palette = memopalThemes[colorScheme ?? 'light'];
   return (
-    <View style={styles.bar}>
+    <View style={[styles.bar, { backgroundColor: palette.paper, borderTopColor: palette.line }]}>
       {state.routes.map((route, index) => {
         const descriptor = descriptors[route.key];
         const options = descriptor.options;
@@ -44,7 +48,7 @@ export function WebTabBar({ state, descriptors, navigation }: BottomTabBarProps)
 }
 
 const styles = StyleSheet.create({
-  bar: { minHeight: 64, flexDirection: 'row', alignItems: 'stretch', justifyContent: 'space-around', backgroundColor: theme.paper, borderTopWidth: 1, borderTopColor: theme.line, boxShadow: '0px -2px 8px rgba(43, 42, 61, 0.08)' },
-  item: { minWidth: 64, minHeight: 64, flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingHorizontal: 4 },
-  label: { fontSize: 10.5, fontWeight: '700' },
+  bar: { borderTopLeftRadius: 24, borderTopRightRadius: 24, minHeight: 72, flexDirection: 'row', alignItems: 'stretch', justifyContent: 'space-around', backgroundColor: theme.paper, borderTopWidth: 1, borderTopColor: theme.line, boxShadow: '0px -2px 8px rgba(43, 42, 61, 0.08)' },
+  item: { minWidth: 0, minHeight: 72, flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingHorizontal: 4 },
+  label: { fontSize: 11, fontFamily: typography.bodyExtraBold, textAlign: 'center' },
 });

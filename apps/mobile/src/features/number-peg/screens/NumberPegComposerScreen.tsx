@@ -30,7 +30,7 @@ import type {
 } from '@/features/memory-sets';
 import { useMemorySetMutations } from '@/features/memory-sets';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import {
   buildAllNumberPegItems,
   getNumberPegCatalogueVersion,
@@ -94,6 +94,7 @@ const GOALS: {
 ];
 export default function NumberPegComposerScreen() {
   const { t } = useTranslation('numberPeg');
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const params = useLocalSearchParams<{
     title?: string | string[];
@@ -315,7 +316,9 @@ export default function NumberPegComposerScreen() {
             value={title}
             onChangeText={setTitle}
             placeholder={t('namePlaceholder')}
-            placeholderTextColor="#AAA7B5"
+            placeholderTextColor={theme.inkSoft}
+            selectionColor={theme.berryDeep}
+            cursorColor={theme.berryDeep}
             style={styles.input}
           />
           <Text style={[styles.heading, styles.formHeading]}>{t('whatFor')}</Text>
@@ -336,12 +339,14 @@ export default function NumberPegComposerScreen() {
             onChangeText={setNewItem}
             onSubmitEditing={addItem}
             placeholder={t('itemPlaceholder')}
-            placeholderTextColor="#AAA7B5"
+            placeholderTextColor={theme.inkSoft}
+            selectionColor={theme.berryDeep}
+            cursorColor={theme.berryDeep}
             style={styles.input}
           />
           <AnimatedPressable onPress={addItem} style={styles.next}>
             <Text style={styles.buttonText}>{t('addItem')}</Text>
-            <ArrowRight size={17} color={theme.ink} />
+            <ArrowRight size={17} color={theme.onSun} />
           </AnimatedPressable>
           <View style={styles.itemList}>
             {items.map((item, i) => (
@@ -371,7 +376,7 @@ export default function NumberPegComposerScreen() {
           ) : null}
           <AnimatedPressable onPress={buildScenes} style={styles.next}>
             <Text style={styles.buttonText}>{t('buildScenes')}</Text>
-            <ArrowRight size={17} color={theme.ink} />
+            <ArrowRight size={17} color={theme.onSun} />
           </AnimatedPressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -566,7 +571,7 @@ export default function NumberPegComposerScreen() {
               accessibilityState={{ selected: i === index }}
               onPress={() => openScene(i)}
               style={[styles.dot, i === index && styles.activeDot]}>
-              <Text style={styles.dotLabel}>{i + 1}</Text>
+              <Text style={[styles.dotLabel, i === index && { color: theme.onSun }]}>{i + 1}</Text>
             </AnimatedPressable>
           ))}
         </ScrollView>
@@ -679,7 +684,9 @@ export default function NumberPegComposerScreen() {
               multiline
               maxLength={1000}
               placeholder={t('associationPlaceholder')}
-              placeholderTextColor="#AAA7B5"
+              placeholderTextColor={theme.inkSoft}
+              selectionColor={theme.berryDeep}
+              cursorColor={theme.berryDeep}
               textAlignVertical="top"
               style={[styles.input, styles.customInput]}
             />
@@ -730,7 +737,7 @@ export default function NumberPegComposerScreen() {
             onPress={() => openScene(Math.max(0, index - 1))}
             style={[styles.back, (!index || isSaving) && styles.disabled]}>
             <ArrowLeft size={17} color={theme.ink} />
-            <Text numberOfLines={1} style={[styles.buttonText, styles.navigationButtonText]}>
+            <Text style={[styles.buttonText, styles.navigationButtonText, { color: theme.ink }]}>
               {t('previousScene')}
             </Text>
           </AnimatedPressable>
@@ -740,7 +747,7 @@ export default function NumberPegComposerScreen() {
             onPress={advance}
             accessibilityState={{ disabled: isSaving }}
             style={[styles.next, isSaving && styles.disabled]}>
-            <Text numberOfLines={1} style={[styles.buttonText, styles.navigationButtonText]}>
+            <Text style={[styles.buttonText, styles.navigationButtonText]}>
               {isSaving
                 ? t('saving')
                 : index === items.length - 1
@@ -749,7 +756,7 @@ export default function NumberPegComposerScreen() {
                     : t('saveMemory')
                   : t('nextScene')}
             </Text>
-            <ArrowRight size={17} color={theme.ink} />
+            <ArrowRight size={17} color={theme.onSun} />
           </AnimatedPressable>
         </View>
       </ScrollView>
@@ -844,7 +851,7 @@ function isValidRecipe(recipe: unknown): recipe is PegSceneRecipe {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: {
     width: '100%',
@@ -862,21 +869,21 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     borderWidth: 1.5,
     borderColor: theme.line,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
     paddingHorizontal: 8,
   },
-  goalSelected: { borderColor: theme.sunDeep, backgroundColor: '#FFF7E0' },
+  goalSelected: { borderColor: theme.sunDeep, backgroundColor: theme.sunTint },
   itemList: { gap: 7, marginTop: 12 },
   itemRow: {
     minHeight: 42,
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: theme.line,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
@@ -889,13 +896,13 @@ const styles = StyleSheet.create({
     width: 20,
   },
   itemText: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13 },
-  remove: { minWidth: 34, minHeight: 34, alignItems: 'center', justifyContent: 'center' },
+  remove: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   capacityCard: {
     marginTop: 12,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#FFE09A',
-    backgroundColor: '#FFF8E6',
+    borderColor: theme.sunLine,
+    backgroundColor: theme.sunTint,
     padding: 12,
   },
   capacityTitle: {
@@ -922,7 +929,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: theme.line,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -931,8 +938,8 @@ const styles = StyleSheet.create({
   guidedCard: {
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#DCD4FF',
-    backgroundColor: '#F6F3FF',
+    borderColor: theme.violetLine,
+    backgroundColor: theme.violetTint,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 14,
@@ -1002,9 +1009,9 @@ const styles = StyleSheet.create({
   },
   captionPanel: {
     borderRadius: 16,
-    backgroundColor: '#F8F6FF',
+    backgroundColor: theme.violetTint,
     borderWidth: 1.5,
-    borderColor: '#E4DEFF',
+    borderColor: theme.violetLine,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginTop: 9,
@@ -1017,7 +1024,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   replay: {
-    minHeight: 32,
+    minHeight: 44,
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1027,7 +1034,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   replayText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  buttonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  buttonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -1057,18 +1064,18 @@ const styles = StyleSheet.create({
     width: '100%',
     borderWidth: 2,
     borderColor: theme.line,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     borderRadius: 17,
     paddingHorizontal: 6,
     paddingVertical: 10,
-    height: 102,
+    minHeight: 102,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
   },
   selected: {
     borderColor: theme.sunDeep,
-    backgroundColor: '#FFF7E0',
+    backgroundColor: theme.sunTint,
     boxShadow: '0px 5px 0px rgba(255,190,45,0.18)',
   },
   choiceEmoji: { fontSize: 25 },
@@ -1097,7 +1104,7 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     borderWidth: 1.5,
     borderColor: theme.line,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     paddingHorizontal: 8,
   },
   anotherText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
@@ -1111,15 +1118,15 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     borderWidth: 1.5,
     borderColor: theme.line,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     paddingHorizontal: 8,
   },
   customToggleActive: { backgroundColor: theme.sunTint, borderColor: theme.sunLine },
   customEditor: {
     borderRadius: 15,
     borderWidth: 1.5,
-    borderColor: '#DCD2FF',
-    backgroundColor: '#F8F5FF',
+    borderColor: theme.violetLine,
+    backgroundColor: theme.violetTint,
     padding: 11,
     marginBottom: 4,
   },
@@ -1140,10 +1147,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     gap: 2,
   },
-  boosterSelected: { borderColor: theme.berry, backgroundColor: '#FFF0F4' },
+  boosterSelected: { borderColor: theme.berry, backgroundColor: theme.berryTint },
   boosterEmoji: { fontSize: 18 },
   boosterText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
   input: {
@@ -1151,7 +1158,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     borderWidth: 2,
     borderColor: theme.line,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     color: theme.ink,
     paddingHorizontal: 12,
     fontFamily: typography.bodySemibold,
@@ -1161,9 +1168,9 @@ const styles = StyleSheet.create({
   message: {
     marginTop: 12,
     borderRadius: 12,
-    backgroundColor: '#FFF0F4',
+    backgroundColor: theme.berryTint,
     borderWidth: 1.5,
-    borderColor: '#FFD2DC',
+    borderColor: theme.berryLine,
     padding: 11,
   },
   messageText: {
@@ -1184,7 +1191,7 @@ const styles = StyleSheet.create({
     width: '100%',
     minHeight: 49,
     borderRadius: 13,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     borderWidth: 1.5,
     borderColor: theme.line,
     paddingHorizontal: 11,
@@ -1206,4 +1213,4 @@ const styles = StyleSheet.create({
   },
   navigationButtonText: { flexShrink: 1, textAlign: 'center', fontSize: 12 },
   disabled: { opacity: 0.35 },
-});
+}));

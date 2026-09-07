@@ -1,3 +1,4 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ActionSheet } from '@/components/ActionSheet';
 import { AppImage } from '@/components/AppImage';
@@ -9,7 +10,7 @@ import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
-import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
@@ -32,6 +33,7 @@ import { DEFAULT_LEVEL_TITLES, getLevelTitleForLevel } from '@/features/gamifica
 import { useColorScheme } from 'nativewind';
 
 export default function ProfileScreen() {
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
@@ -223,7 +225,7 @@ export default function ProfileScreen() {
         hideBackButton
       />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <View style={styles.profileHead}>
+        <View style={[styles.profileHead, { backgroundColor: activeTheme.violetTint, borderColor: activeTheme.violetLine }]}>
           <View style={styles.avatar}>
             {user?.avatarUrl ? (
               <AppImage source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
@@ -386,6 +388,7 @@ function ProfileSettingsRow({
   right?: ReactNode;
   onPress?: () => void;
 }) {
+  const { styles, theme } = useStyles();
   const content = (
     <View style={styles.settingsRow}>
       <View style={styles.settingsIcon}>{icon}</View>
@@ -397,10 +400,10 @@ function ProfileSettingsRow({
   return onPress ? <AnimatedPressable onPress={onPress}>{content}</AnimatedPressable> : content;
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 16, paddingBottom: 48 },
-  profileHead: { alignItems: 'center', paddingTop: 10, paddingBottom: 20 },
+  content: { padding: 20, paddingBottom: 48 },
+  profileHead: { alignItems: 'center', padding: 24, marginBottom: 22, borderRadius: 28, borderWidth: 2 },
   avatar: {
     width: 78,
     height: 78,
@@ -426,7 +429,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   editButton: {
-    minHeight: 38,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -467,7 +470,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     boxShadow: `0px 5px 0px ${theme.sunDeep}`,
   },
-  upgradeButtonText: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 },
+  upgradeButtonText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 14 },
   sectionLabel: {
     color: theme.inkSoft,
     fontFamily: typography.displayExtraBold,
@@ -485,7 +488,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   settingsRow: {
-    minHeight: 51,
+    minHeight: 60,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 11,
@@ -493,8 +496,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.line,
   },
-  settingsIcon: { width: 25, alignItems: 'center' },
-  settingsEmoji: { fontSize: 16, lineHeight: 20 },
+  settingsIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: theme.violetTint, alignItems: 'center', justifyContent: 'center' },
+  settingsEmoji: { fontSize: 19, lineHeight: 24 },
   settingsTitle: { flex: 1, color: theme.ink, fontFamily: typography.display, fontSize: 13 },
   settingsValue: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
   reminderControl: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -511,4 +514,4 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   signOutText: { color: theme.berryDeep, fontFamily: typography.display, fontSize: 13.5 },
-});
+}));

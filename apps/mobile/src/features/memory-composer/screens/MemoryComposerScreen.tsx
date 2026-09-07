@@ -227,6 +227,8 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                 maxLength={200}
                 placeholder={t('memoryPlaceholder')}
                 placeholderTextColor="#AAA7B5"
+                selectionColor={theme.violetDeep}
+                cursorColor={theme.violetDeep}
                 style={styles.input}
               />
 
@@ -287,6 +289,8 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                     maxLength={6000}
                     placeholder={'rhythm\nseparate\ncalendar'}
                     placeholderTextColor="#AAA7B5"
+                    selectionColor={theme.violetDeep}
+                    cursorColor={theme.violetDeep}
                     style={[styles.input, styles.bulkInput]}
                   />
                   <AnimatedPressable onPress={addBulkItems} style={styles.bulkButton}>
@@ -306,6 +310,8 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                   maxLength={500}
                   placeholder={t('itemPlaceholder')}
                   placeholderTextColor="#AAA7B5"
+                  selectionColor={theme.violetDeep}
+                  cursorColor={theme.violetDeep}
                   style={[styles.input, styles.addInput]}
                 />
                 <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} containerStyle={styles.addButtonContainer} style={styles.addButton}>

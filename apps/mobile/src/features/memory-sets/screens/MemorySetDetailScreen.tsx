@@ -1,10 +1,11 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
-import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { usePracticeAttemptHistory } from '@/features/practice-attempts';
 import type { PracticeAttempt } from '@/features/practice-attempts';
@@ -16,6 +17,7 @@ import type { TranslationKey } from '@/core/i18n/i18n';
 import { useColorScheme } from 'nativewind';
 
 export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: string }) {
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const { t } = useTranslation('memoryDetails');
   const { colorScheme } = useColorScheme();
@@ -63,18 +65,17 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
 
         <Text style={[styles.sectionLabel, { color: activeTheme.ink }]}>{t('yourMemoryItems')}</Text>
         <View style={styles.itemList}>
-          {memorySet.items.map((item) => {
+          {memorySet.items.map((item, index) => {
             const response = responseByItemId.get(item.id);
             const status = getItemStatus(response, Boolean(latestAttempt));
             return (
-            <View key={item.id} style={styles.itemRow}>
+            <View key={item.id} style={[styles.itemRow, index === memorySet.items.length - 1 && styles.itemRowLast]}>
               <View style={[styles.itemNumber, isPalace ? styles.itemNumberPalace : styles.itemNumberPeg]}>
                 <Text style={styles.itemNumberText}>{item.position}</Text>
               </View>
               <View style={styles.itemCopy}>
                 <Text style={styles.itemPrompt}>{localizeItemPrompt(item.prompt, item.position, t)}</Text>
-                <Text numberOfLines={1} style={styles.itemAnswer}>{item.answer}</Text>
-              </View>
+                <Text style={styles.itemAnswer}>{item.answer}</Text>
               <View style={styles.readyBadge}>
                 {status === 'recalled' ? <Check size={13} color={theme.grass} /> : null}
                 {status === 'needs-review' ? <X size={13} color={theme.berryDeep} /> : null}
@@ -83,6 +84,7 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
                 <Text style={[styles.readyText, status === 'needs-review' && styles.needsReviewText, status === 'not-tried' && styles.notTriedText]}>
                   {statusLabel(status, t)}
                 </Text>
+              </View>
               </View>
             </View>
             );
@@ -127,6 +129,7 @@ function SummaryCard({
   latestAttempt: PracticeAttempt | null;
   t: (key: TranslationKey<'memoryDetails'>) => string;
 }) {
+  const { styles } = useStyles();
   const isPalace = memorySet.techniqueKey === 'palace';
   const summaryMeta = getSummaryMeta(memorySet, latestAttempt, t);
   return (
@@ -219,14 +222,14 @@ function getReviewScheduleLabel(
   return `${t('nextReview')}: ${new Date(latestAttempt.nextReviewAt).toLocaleString()}`;
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 42 },
   summaryCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 21, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 15 },
   summaryIcon: { width: 52, height: 52, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   techniqueEmoji: { fontSize: 25 },
-  summaryIconPalace: { backgroundColor: '#EEE9FF' },
-  summaryIconPeg: { backgroundColor: '#FFF0F4' },
+  summaryIconPalace: { backgroundColor: theme.violetTint },
+  summaryIconPeg: { backgroundColor: theme.berryTint },
   summaryCopy: { flex: 1, marginLeft: 13 },
   techniqueLabel: { fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8 },
   palaceLabel: { color: theme.violetDeep },
@@ -239,38 +242,38 @@ const styles = StyleSheet.create({
   modeSectionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 18 },
   modeSectionBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4, marginBottom: 11 },
   modeCard: { alignItems: 'center', borderRadius: 18, borderWidth: 2, flexDirection: 'row', marginBottom: 10, minHeight: 92, padding: 13 },
-  rehearseCard: { backgroundColor: '#F4F0FF', borderColor: '#DAD0FF' },
-  recallCard: { backgroundColor: '#FFF6D9', borderColor: '#FFDF83' },
+  rehearseCard: { backgroundColor: theme.violetTint, borderColor: theme.violetLine },
+  recallCard: { backgroundColor: theme.sunTint, borderColor: theme.sunLine },
   recallCardDue: { borderColor: theme.berry },
   modeIcon: { alignItems: 'center', borderRadius: 15, height: 52, justifyContent: 'center', width: 52 },
-  rehearseIcon: { backgroundColor: '#E4DBFF' },
-  recallIcon: { backgroundColor: '#FFE9A6' },
+  rehearseIcon: { backgroundColor: theme.violetLine },
+  recallIcon: { backgroundColor: theme.sunLine },
   modeEmoji: { fontSize: 25 },
   modeCopy: { flex: 1, marginLeft: 12 },
   modeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
   modeTitleRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  dueBadge: { backgroundColor: '#FFE3EA', borderRadius: 999, color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, paddingHorizontal: 7, paddingVertical: 3 },
+  dueBadge: { backgroundColor: theme.berryTint, borderRadius: 999, color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, paddingHorizontal: 7, paddingVertical: 3 },
   modeBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11.5, lineHeight: 16, marginTop: 2 },
   modeActionRow: { alignItems: 'center', flexDirection: 'row', gap: 4, marginTop: 7 },
   modeAction: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 24, marginBottom: 10 },
   itemList: { borderRadius: 19, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 13 },
-  itemRow: { minHeight: 67, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line },
+  itemRow: { minHeight: 80, paddingVertical: 12, flexDirection: 'row', alignItems: 'flex-start', borderBottomWidth: 1, borderBottomColor: theme.line },
   itemRowLast: { borderBottomWidth: 0 },
   itemNumber: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   itemNumberPalace: { backgroundColor: theme.violet },
   itemNumberPeg: { backgroundColor: theme.sun },
-  itemNumberText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   itemCopy: { flex: 1, minWidth: 0, marginLeft: 11 },
-  itemPrompt: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 2 },
-  readyBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 8 },
-  readyText: { color: theme.grass, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  itemPrompt: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, lineHeight: 22, marginTop: 3 },
+  readyBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
+  readyText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   needsReviewText: { color: theme.berryDeep },
   notTriedText: { color: theme.inkSoft },
   primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
-  primaryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
+  primaryButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 15 },
   secondaryButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 4 },
   secondaryButtonText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   centerState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-});
+}));

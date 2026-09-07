@@ -1,3 +1,4 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -5,7 +6,6 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { useMilestones } from '@/features/gamification/shared/hooks/useMilestones';
 import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
 import { typography } from '@/theme/typography';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -14,6 +14,7 @@ type RewardFilter = 'all' | 'xp' | 'milestone';
 type TimelineEntry = { id: string; type: Exclude<RewardFilter, 'all'>; title: string; subtitle?: string; points?: number; occurredAt: string };
 
 export default function RewardsHistoryScreen() {
+  const { styles } = useStyles();
   const router = useRouter();
   const { t } = useTranslation('rewards');
   const { events: xpEvents, isLoading: isLoadingXp } = useXpEvents({ recentDays: 30 });
@@ -101,13 +102,13 @@ function dayLabel(iso: string, todayLabel: string, yesterdayLabel: string) {
   return date.toLocaleDateString();
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 48 }, filterRow: { flexDirection: 'row', gap: 8 },
   filter: { minHeight: 38, borderRadius: 999, backgroundColor: theme.peachTint, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' }, filterActive: { backgroundColor: theme.violetDeep },
-  filterText: { color: '#6B6A80', fontFamily: typography.bodyExtraBold, fontSize: 11.5 }, filterTextActive: { color: '#FFFFFF' }, windowNote: { color: '#9A97A7', fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 9 },
-  group: { marginTop: 20 }, day: { color: '#6B6A80', fontFamily: typography.displayExtraBold, fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }, list: { gap: 9 },
+  filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11.5 }, filterTextActive: { color: theme.onAccent}, windowNote: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 9 },
+  group: { marginTop: 20 }, day: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }, list: { gap: 9 },
   rewardCard: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 17, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 12 },
   icon: { width: 40, height: 40, borderRadius: 13, backgroundColor: theme.skyTint, alignItems: 'center', justifyContent: 'center' }, milestoneIcon: { backgroundColor: theme.sunTint }, emoji: { fontSize: 19 }, copy: { flex: 1, minWidth: 0 },
-  rewardTitle: { color: '#2B2A3D', fontFamily: typography.bodyExtraBold, fontSize: 12.5 }, rewardSubtitle: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 2 }, time: { color: '#9A97A7', fontFamily: typography.bodyBold, fontSize: 9.5, marginTop: 4 }, points: { color: '#267A55', fontFamily: typography.displayExtraBold, fontSize: 11.5 },
+  rewardTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5 }, rewardSubtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 2 }, time: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: 9.5, marginTop: 4 }, points: { color: theme.successText, fontFamily: typography.displayExtraBold, fontSize: 11.5 },
   emptyCard: { alignItems: 'center', marginTop: 24, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 24 }, emptyEmoji: { fontSize: 28 }, emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 8 }, emptyBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, textAlign: 'center', marginTop: 4 },
-});
+}));

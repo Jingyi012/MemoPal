@@ -1,3 +1,4 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
@@ -15,7 +16,7 @@ import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes'
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { usePredefinedMemoryLessons } from '@/features/predefined-memory-lessons';
 import type { PredefinedMemoryLesson } from '@/features/predefined-memory-lessons';
-import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
@@ -25,6 +26,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
 
 export default function PracticeScreen() {
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const { language, t } = useTranslation('practice');
   const { colorScheme } = useColorScheme();
@@ -99,7 +101,7 @@ export default function PracticeScreen() {
           title={t('newMemory')}
           body={t('newMemoryBody')}
           actionLabel={t('tapToStart')}
-          actionIcon={<Plus size={15} color={theme.ink} />}
+          actionIcon={<Plus size={15} color={theme.onSun} />}
           onAction={() => router.push('/create-memory' as Href)}
         />
 
@@ -111,10 +113,10 @@ export default function PracticeScreen() {
               <View key={module.key} style={styles.techniqueJumpWrap}>
                 <AnimatedPressable
                   onPress={() => router.push(module.route as Href)}
-                  style={styles.techniqueJump}>
+                  style={[styles.techniqueJump, { backgroundColor: isPeg ? activeTheme.berryTint : activeTheme.violetTint, borderColor: isPeg ? activeTheme.berryLine : activeTheme.violetLine }]}>
                   <Text style={styles.techniqueJumpEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
-                  <Text style={styles.techniqueJumpName}>{isPeg ? t('numberPeg') : t('palace')}</Text>
-                  <Text style={styles.techniqueJumpLink}>{t('tapToStart')} →</Text>
+                  <Text style={[styles.techniqueJumpName, { color: activeTheme.ink }]}>{isPeg ? t('numberPeg') : t('palace')}</Text>
+                  <Text style={[styles.techniqueJumpLink, { color: isPeg ? activeTheme.berryDeep : activeTheme.violetDeep }]}>{t('tapToStart')} →</Text>
                 </AnimatedPressable>
               </View>
             );
@@ -260,7 +262,7 @@ export default function PracticeScreen() {
             title={t('newMemory')}
             body={t('newMemoryBody')}
             actionLabel={t('tapToStart')}
-            actionIcon={<Plus size={15} color={theme.ink} />}
+            actionIcon={<Plus size={15} color={theme.onSun} />}
             onAction={() => router.push('/create-memory' as Href)}
           />
         )}
@@ -290,33 +292,33 @@ function openMemorySet(router: ReturnType<typeof useRouter>, memorySet: MemorySe
   router.push(`/memory-details/${memorySet.id}` as Href);
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 16, paddingBottom: 42 },
-  progressHeaderWrap: { paddingHorizontal: 16, paddingTop: 10 },
+  content: { padding: 20, paddingBottom: 42 },
+  progressHeaderWrap: { paddingHorizontal: 20, paddingTop: 10 },
   sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },
   techniqueRow: { width: '100%', flexDirection: 'row', gap: 8 },
-  techniqueJumpWrap: { flex: 1, minWidth: 0, minHeight: 104 },
-  techniqueJump: { width: '100%', minHeight: 104, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingVertical: 12, paddingHorizontal: 10, alignItems: 'center' },
-  techniqueJumpEmoji: { fontSize: 26, lineHeight: 30 },
-  techniqueJumpName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5, textAlign: 'center', marginTop: 7 },
-  techniqueJumpLink: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 10.5, marginTop: 3 },
+  techniqueJumpWrap: { flex: 1, minWidth: 0, minHeight: 140 },
+  techniqueJump: { width: '100%', minHeight: 140, borderRadius: 24, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingVertical: 18, paddingHorizontal: 10, alignItems: 'center' },
+  techniqueJumpEmoji: { fontSize: 38, lineHeight: 46 },
+  techniqueJumpName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center', marginTop: 7 },
+  techniqueJumpLink: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 10.5, marginTop: 3 },
   sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 1 },
   discoverySection: { marginTop: 24 },
   discoveryTitle: { marginTop: 0, marginBottom: 0 },
-  lessonHint: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 0 },
+  lessonHint: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 0 },
   lessonList: { gap: 10, paddingTop: 10, paddingBottom: 10, paddingRight: 12 },
   lessonFilterRow: { flexDirection: 'row', gap: 7, marginTop: 10, paddingRight: 12 },
-  lessonFilterChip: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 10, paddingVertical: 6 },
+  lessonFilterChip: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 8 },
   lessonFilterChipActive: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint },
   lessonFilterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
   lessonFilterTextActive: { color: theme.violetDeep },
-  lessonCard: { width: 184, minHeight: 190, borderRadius: 16, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 12, shadowColor: theme.violetDeep, shadowOpacity: 0.07, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  lessonCard: { width: 200, minHeight: 210, borderRadius: 24, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 12, shadowColor: theme.violetDeep, shadowOpacity: 0.07, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
   lessonEmojiWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.berryTint },
   lessonEmojiWrapPalace: { backgroundColor: theme.violetTint },
   lessonEmoji: { fontSize: 25 },
-  lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5, lineHeight: 16, marginTop: 6 },
-  lessonDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, lineHeight: 15, marginTop: 4, minHeight: 30 },
+  lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, lineHeight: 20, marginTop: 6 },
+  lessonDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4, minHeight: 30 },
   lessonCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, marginTop: 4 },
   lessonMetaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 5, marginTop: 9 },
   lessonTechnique: { alignSelf: 'flex-start', color: theme.berryDeep, backgroundColor: theme.berryTint, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
@@ -324,17 +326,17 @@ const styles = StyleSheet.create({
   lessonCategory: { color: theme.inkSoft, backgroundColor: theme.peachTint, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
   lessonLoading: { minHeight: 92, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 18, justifyContent: 'center', marginTop: 10 },
   filterRow: { flexDirection: 'row', gap: 7, marginTop: 9, marginBottom: 11 },
-  filterChip: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 10, paddingVertical: 6 },
+  filterChip: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 8 },
   filterChipActive: { borderColor: theme.ink, backgroundColor: theme.ink },
   filterChipText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
-  filterChipTextActive: { color: 'white' },
-  seeAll: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11.5, marginTop: 22 },
+  filterChipTextActive: { color: theme.paper},
+  seeAll: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 11.5, marginTop: 22 },
   sessionList: { gap: 10 },
   emptyIconEmoji: { fontSize: 24 },
   sessionCard: { minHeight: 70, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 10 },
   emptyCard: { borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 20, alignItems: 'center' },
   emptyBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 4 },
-});
+}));
 
 const PEG_ANCHORS = [
   { number: 1, emoji: '🕯️', name: 'Candle' },

@@ -1,3 +1,4 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -12,7 +13,7 @@ import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes'
 import { usePracticeStats } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { typography } from '@/theme/typography';
-import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { ArrowRight, Check, History } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -26,6 +27,7 @@ type MilestoneProgress = Milestone & {
 };
 
 export default function AchievementsScreen() {
+  const { styles } = useStyles();
   const router = useRouter();
   const { t } = useTranslation('achievements');
   const { user, isLoading: userLoading, refetch: refetchUser } = useCurrentUser();
@@ -194,6 +196,7 @@ function toMilestoneProgress(
 }
 
 function MilestoneCard({ milestone }: { milestone: MilestoneProgress }) {
+  const { styles, theme } = useStyles();
   const { t } = useTranslation('achievements');
   const achieved = Boolean(milestone.achievedAt);
   const localizedCopy = (() => {
@@ -209,7 +212,7 @@ function MilestoneCard({ milestone }: { milestone: MilestoneProgress }) {
   return (
     <View style={[styles.milestoneCard, achieved && styles.milestoneCardAchieved]}>
       <View style={[styles.milestoneIcon, achieved && styles.milestoneIconAchieved]}>
-        {achieved ? <Check size={20} color="#267A55" strokeWidth={3} /> : <Text style={styles.milestoneEmoji}>{milestoneEmoji(milestone)}</Text>}
+        {achieved ? <Check size={20} color={theme.successText} strokeWidth={3} /> : <Text style={styles.milestoneEmoji}>{milestoneEmoji(milestone)}</Text>}
       </View>
       <View style={styles.milestoneCopy}>
         <View style={styles.milestoneTopRow}>
@@ -236,6 +239,7 @@ function milestoneEmoji(milestone: Milestone) {
 }
 
 function StatTile({ value, label }: { value: string; label: string }) {
+  const { styles } = useStyles();
   return (
     <View style={styles.statTile}>
       <Text style={styles.statValue}>{value}</Text>
@@ -257,17 +261,18 @@ function ProgressLine({
   color: string;
   onPress: () => void;
 }) {
+  const { styles } = useStyles();
   const { t } = useTranslation('achievements');
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
   return (
-    <View style={styles.progressLine}>
+    <View style={[styles.progressLine, { backgroundColor: activeTheme.violetTint, borderColor: activeTheme.violetLine }]}>
       <View style={styles.progressLineHeader}>
         <Text style={[styles.progressSectionLabel, { color: activeTheme.ink }]}>{label}</Text>
         <AnimatedPressable accessibilityLabel={`${t('seeAll')} ${label}`} onPress={onPress} style={styles.seeAll}>
           <View style={styles.seeAllRow}>
-            <Text style={[styles.seeAllText, { color: activeTheme.sky }]}>{t('seeAll')}</Text>
-            <ArrowRight size={12} color={activeTheme.sky} />
+            <Text style={[styles.seeAllText, { color: activeTheme.link }]}>{t('seeAll')}</Text>
+            <ArrowRight size={12} color={activeTheme.link} />
           </View>
         </AnimatedPressable>
       </View>
@@ -279,44 +284,44 @@ function ProgressLine({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 16, paddingBottom: 128 },
+  content: { padding: 20, paddingBottom: 128 },
   statRow: { flexDirection: 'row', gap: 10 },
   statTile: { flex: 1, alignItems: 'center', backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 6 },
-  statValue: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 19 },
-  statLabel: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10, textAlign: 'center', marginTop: 2 },
-  progressLine: { marginTop: 20 },
+  statValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 },
+  statLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, textAlign: 'center', marginTop: 2 },
+  progressLine: { marginTop: 20, padding: 18, borderRadius: 24, borderWidth: 1, borderColor: theme.violetLine, backgroundColor: theme.violetTint },
   progressLineHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 },
-  progressSectionLabel: { color: '#6B6A80', fontFamily: typography.displayExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase' },
-  progressLabel: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 11.5, marginBottom: 6 },
-  seeAll: { minHeight: 32, justifyContent: 'center' },
+  progressSectionLabel: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase' },
+  progressLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, marginBottom: 6 },
+  seeAll: { minHeight: 44, justifyContent: 'center' },
   seeAllRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  seeAllText: { color: '#4FC0E8', fontFamily: typography.displayExtraBold, fontSize: 11.5 },
+  seeAllText: { color: theme.link, fontFamily: typography.displayExtraBold, fontSize: 11.5 },
   progressTrack: { height: 9, backgroundColor: theme.line, borderRadius: 999, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 999 },
   sectionHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 25, marginBottom: 11 },
-  sectionLabel: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 17 },
-  sectionBody: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 2 },
+  sectionLabel: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17 },
+  sectionBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 2 },
   achievedPill: { borderRadius: 999, backgroundColor: theme.mintTint, paddingHorizontal: 10, paddingVertical: 6 },
-  achievedPillText: { color: '#267A55', fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  achievedPillText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   milestoneList: { gap: 10 },
-  milestoneCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 18, padding: 13 },
+  milestoneCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 24, padding: 17 },
   milestoneCardAchieved: { borderColor: theme.mintLine, backgroundColor: theme.mintTint },
   milestoneIcon: { width: 44, height: 44, borderRadius: 15, backgroundColor: theme.skyTint, alignItems: 'center', justifyContent: 'center' },
-  milestoneIconAchieved: { backgroundColor: '#DDF5E9' },
+  milestoneIconAchieved: { backgroundColor: theme.mintTint },
   milestoneEmoji: { fontSize: 21 },
   milestoneCopy: { flex: 1, minWidth: 0 },
   milestoneTopRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  milestoneTitle: { flex: 1, color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 13.5 },
-  milestoneStatus: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
-  milestoneStatusAchieved: { color: '#267A55' },
-  milestoneDescription: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 15, marginTop: 2 },
+  milestoneTitle: { flex: 1, color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 13.5 },
+  milestoneStatus: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
+  milestoneStatusAchieved: { color: theme.successText },
+  milestoneDescription: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, marginTop: 2 },
   milestoneTrack: { height: 6, borderRadius: 999, overflow: 'hidden', backgroundColor: theme.line, marginTop: 8 },
   milestoneFill: { height: '100%', borderRadius: 999, backgroundColor: theme.violet },
   milestoneFillAchieved: { backgroundColor: theme.grass },
   emptyMilestones: { alignItems: 'center', borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 22 },
   emptyEmoji: { fontSize: 28 },
-  emptyTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 8 },
-  emptyBody: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 11, textAlign: 'center', marginTop: 4 },
-});
+  emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 8 },
+  emptyBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, textAlign: 'center', marginTop: 4 },
+}));

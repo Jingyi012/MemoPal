@@ -9,7 +9,7 @@ import { PalaceFocusCard } from '@/features/palace-scenes/components/PalaceFocus
 import { PalaceOrderedList } from '@/features/palace-scenes/components/PalaceOrderedList';
 import { useMemorySet } from '@/features/memory-sets';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { usePalaceScene } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import {
@@ -47,6 +47,7 @@ export default function PalaceMemorySessionScreen({
   startInRecall?: boolean;
   returnTo?: 'practice' | 'palaces';
 }) {
+  const { styles } = useStyles();
   const router = useRouter();
   const { language, t } = useTranslation('palace');
   const memorySetQuery = useMemorySet(memorySetId);
@@ -540,6 +541,8 @@ export default function PalaceMemorySessionScreen({
               : t('checkAnswer')
         }
         actionDisabled={isFinishing}
+        answerAccessibilityLabel={t('typeYourAnswer')}
+        answerPlaceholder={t('typeYourAnswer')}
         progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${placements.length}`}
         cue={renderRecallCue()}
         onAnswerFocus={queueRecallInputScroll}
@@ -719,7 +722,7 @@ export default function PalaceMemorySessionScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   sessionScroll: { flex: 1 },
   sessionContent: { paddingBottom: 24 },
@@ -731,8 +734,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: '#DCD4FF',
-    backgroundColor: '#F4EFE0',
+    borderColor: theme.violetLine,
+    backgroundColor: theme.sand,
   },
   floor: {
     position: 'absolute',
@@ -742,7 +745,7 @@ const styles = StyleSheet.create({
     left: 14,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: '#CDBD8A',
+    borderColor: theme.sunLine,
     borderRadius: 14,
   },
   marker: {
@@ -752,7 +755,7 @@ const styles = StyleSheet.create({
     marginLeft: -17,
     marginTop: -17,
     borderRadius: 17,
-    backgroundColor: '#9B8CFF',
+    backgroundColor: theme.violet,
     borderWidth: 2.5,
     borderColor: 'white',
     alignItems: 'center',
@@ -760,7 +763,7 @@ const styles = StyleSheet.create({
     boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.18)',
   },
   activeMarker: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.18 }] },
-  markerText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  markerText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   hint: {
     color: theme.inkSoft,
     fontFamily: typography.bodyBold,
@@ -772,14 +775,14 @@ const styles = StyleSheet.create({
   restoreNotice: {
     marginBottom: 10,
     borderRadius: 12,
-    backgroundColor: '#E3F6ED',
+    backgroundColor: theme.mintTint,
     borderWidth: 1.5,
-    borderColor: '#BFE7D6',
+    borderColor: theme.mintLine,
     paddingHorizontal: 12,
     paddingVertical: 9,
   },
   restoreNoticeText: {
-    color: '#247B67',
+    color: theme.successText,
     fontFamily: typography.bodyExtraBold,
     fontSize: 12,
     lineHeight: 17,
@@ -793,15 +796,15 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     borderWidth: 2,
     borderColor: theme.line,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
     paddingHorizontal: 9,
   },
   modeCardActive: {
-    backgroundColor: theme.ink,
-    borderColor: theme.ink,
+    backgroundColor: theme.night,
+    borderColor: theme.night,
     boxShadow: '0px 3px 0px rgba(43,42,61,0.12)',
   },
   modeEmoji: { fontSize: 15 },
@@ -824,26 +827,27 @@ const styles = StyleSheet.create({
   subModeRail: { flexDirection: 'row', gap: 6, marginBottom: 12 },
   subModeTab: {
     alignItems: 'center',
-    backgroundColor: '#F7F5FF',
-    borderColor: '#DCD4FF',
+    backgroundColor: theme.violetTint,
+    borderColor: theme.violetLine,
     borderRadius: 11,
     borderWidth: 1.5,
     flex: 1,
     flexDirection: 'row',
     gap: 4,
     justifyContent: 'center',
-    minHeight: 38,
+    minHeight: 44,
+    paddingVertical: 8,
     paddingHorizontal: 5,
   },
-  subModeTabActive: { backgroundColor: '#EEE9FF', borderColor: '#9B8CFF' },
+  subModeTabActive: { backgroundColor: theme.violetTint, borderColor: theme.violet },
   subModeEmoji: { fontSize: 13 },
-  subModeText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  subModeText: { color: theme.inkSoft, flexShrink: 1, textAlign: 'center', fontFamily: typography.bodyExtraBold, fontSize: 11 },
   subModeTextActive: { color: theme.violetDeep },
   previewCard: {
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#DCD4FF',
-    backgroundColor: '#F7F5FF',
+    borderColor: theme.violetLine,
+    backgroundColor: theme.violetTint,
     padding: 14,
     marginBottom: 12,
   },
@@ -852,13 +856,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 13,
-    backgroundColor: '#EEE9FF',
+    backgroundColor: theme.violetTint,
     alignItems: 'center',
     justifyContent: 'center',
   },
   previewCopy: { flex: 1 },
   eyebrow: {
-    color: '#7A68E0',
+    color: theme.violetDeep,
     fontFamily: typography.bodyExtraBold,
     fontSize: 10,
     letterSpacing: 0.8,
@@ -881,12 +885,12 @@ const styles = StyleSheet.create({
   recallCue: { width: '100%' },
   recallCueWindow: {
     aspectRatio: 2.15,
-    borderColor: '#DCD4FF',
+    borderColor: theme.violetLine,
     borderRadius: 16,
     borderWidth: 2,
     overflow: 'hidden',
     position: 'relative',
-    backgroundColor: '#EEE9FF',
+    backgroundColor: theme.violetTint,
   },
   recallCueImage: { position: 'absolute' },
   recallCueTarget: {
@@ -941,16 +945,16 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 8,
   },
-  activeRow: { borderColor: '#9B8CFF', backgroundColor: '#F7F5FF' },
+  activeRow: { borderColor: theme.violet, backgroundColor: theme.violetTint },
   itemNumber: {
     width: 29,
     height: 29,
     borderRadius: 15,
-    backgroundColor: '#9B8CFF',
+    backgroundColor: theme.violet,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  itemNumberText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   itemLocus: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginTop: 2 },
   primaryButton: {
@@ -965,7 +969,7 @@ const styles = StyleSheet.create({
     boxShadow: `0px 5px 0px ${theme.sunDeep}`,
   },
   primaryText: {
-    color: theme.ink,
+    color: theme.onSun,
     fontFamily: typography.bodyExtraBold,
     fontSize: 14,
     textAlign: 'center',
@@ -975,14 +979,14 @@ const styles = StyleSheet.create({
     minHeight: 49,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#9B8CFF',
-    backgroundColor: '#F7F5FF',
+    borderColor: theme.violet,
+    backgroundColor: theme.violetTint,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
     paddingHorizontal: 16,
   },
-  secondaryText: { color: '#6654D9', fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  secondaryText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   saveState: {
     color: theme.inkSoft,
     fontFamily: typography.bodyBold,
@@ -990,7 +994,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   saveSuccess: {
-    color: theme.grass,
+    color: theme.successText,
     fontFamily: typography.bodyExtraBold,
     fontSize: 12,
     lineHeight: 18,
@@ -1008,10 +1012,10 @@ const styles = StyleSheet.create({
   retrySaveButton: {
     marginTop: 8,
     borderRadius: 12,
-    backgroundColor: '#FFE3EA',
+    backgroundColor: theme.berryTint,
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
   retrySaveText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-});
+}));

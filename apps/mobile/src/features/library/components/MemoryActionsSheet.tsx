@@ -1,8 +1,8 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemorySet } from '@/features/memory-sets';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { Archive, ArchiveRestore, Copy, Globe2, LockKeyhole, Trash2 } from 'lucide-react-native';
@@ -22,6 +22,7 @@ type MemoryActionsSheetProps = {
 
 export const MemoryActionsSheet = forwardRef<BottomSheetModal, MemoryActionsSheetProps>(
   ({ memorySet, isBusy = false, onDismiss, onDuplicate, onToggleArchived, onDelete, onRequestVisibility }, ref) => {
+  const { styles, theme } = useStyles();
     const { t } = useTranslation('library');
     const insets = useSafeAreaInsets();
     const isArchived = memorySet?.status === 'archived';
@@ -41,14 +42,14 @@ export const MemoryActionsSheet = forwardRef<BottomSheetModal, MemoryActionsShee
             <ActionRow
               label={t('duplicate')}
               icon={<Copy size={20} color={theme.violetDeep} />}
-              iconBackground="#EEE9FF"
+              iconBackground={theme.violetTint}
               disabled={!memorySet || isBusy}
               onPress={() => memorySet && onDuplicate(memorySet)}
             />
             <ActionRow
               label={memorySet?.visibility === 'public' ? t('makePrivate') : t('makePublic')}
               icon={memorySet?.visibility === 'public' ? <LockKeyhole size={20} color={theme.inkSoft} /> : <Globe2 size={20} color={theme.grass} />}
-              iconBackground={memorySet?.visibility === 'public' ? '#F2F0EA' : '#E9F8F1'}
+              iconBackground={memorySet?.visibility === 'public' ? theme.canvas : theme.mintTint}
               disabled={!memorySet || isBusy}
               onPress={() => memorySet && onRequestVisibility(memorySet)}
             />
@@ -57,14 +58,14 @@ export const MemoryActionsSheet = forwardRef<BottomSheetModal, MemoryActionsShee
               icon={isArchived
                 ? <ArchiveRestore size={20} color={theme.grass} />
                 : <Archive size={20} color={theme.inkSoft} />}
-              iconBackground={isArchived ? '#E9F8F1' : '#F2F0EA'}
+              iconBackground={isArchived ? theme.mintTint : theme.canvas}
               disabled={!memorySet || isBusy}
               onPress={() => memorySet && onToggleArchived(memorySet)}
             />
             <ActionRow
               label={t('delete')}
               icon={<Trash2 size={20} color={theme.berryDeep} />}
-              iconBackground="#FFF0F4"
+              iconBackground={theme.berryTint}
               destructive
               disabled={!memorySet || isBusy}
               onPress={() => memorySet && onDelete(memorySet)}
@@ -100,6 +101,7 @@ function ActionRow({
   disabled: boolean;
   onPress: () => void;
 }) {
+  const { styles } = useStyles();
   return (
     <AnimatedPressable
       accessibilityLabel={label}
@@ -112,7 +114,7 @@ function ActionRow({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   sheetBackground: { backgroundColor: theme.paper, borderRadius: 30 },
   content: { paddingHorizontal: 20, paddingTop: 12 },
   title: {
@@ -168,4 +170,4 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   busyText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
-});
+}));

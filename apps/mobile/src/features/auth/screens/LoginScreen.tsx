@@ -1,3 +1,5 @@
+import { AuthLayout } from '../components/AuthLayout';
+import { AuthField } from '../components/AuthField';
 import { authApi } from '@/features/auth/api/auth';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useAuth } from '@/contexts/AuthProvider';
@@ -12,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
@@ -82,11 +84,10 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-1 items-center justify-center px-8">
+    <AuthLayout terms={t('terms')}>
         <View
           accessibilityLabel="MemoPal app icon"
-          className="mb-6 h-24 w-24 overflow-hidden rounded-[26px]"
+          className="self-center mb-6 h-24 w-24 overflow-hidden rounded-[26px]"
           style={{ boxShadow: '0px 5px 12px rgba(43, 38, 65, 0.22)' }}>
           <Image
             source={require('../../../../assets/images/icon.png')}
@@ -95,47 +96,51 @@ export const LoginScreen: React.FC = () => {
           />
         </View>
 
-        <Text className="mb-2 text-2xl font-semibold text-[#2B2A3D]">{t('welcome')}</Text>
+        <Text className="mb-2 text-center text-3xl font-semibold text-ink">{t('welcome')}</Text>
 
-        <Text className="mb-8 max-w-sm text-center text-[#6B6A80]">{t('signInDescription')}</Text>
+        <Text className="mb-8  text-center text-ink-soft">{t('signInDescription')}</Text>
 
         {!hasEnabledMethod && (
-          <Text className="mb-4 max-w-sm text-center text-sm text-[#E8527A]">
+          <Text className="mb-4  text-center text-sm text-accent-berry">
             {t('loginUnavailable')}
           </Text>
         )}
 
         {emailPasswordEnabled && (
           <>
-            <View className="mb-5 w-full max-w-sm gap-3">
-              <TextInput
+            <View className="mb-5 w-full gap-3">
+              <AuthField
                 value={email}
                 onChangeText={setEmail}
+                label={t('email')}
                 placeholder={t('email')}
                 keyboardType="email-address"
+                autoComplete="email"
+                autoCorrect={false}
                 autoCapitalize="none"
-                className="rounded-2xl border-2 border-[#E5DFFF] bg-white px-4 py-3"
               />
-              <TextInput
+              <AuthField
                 value={password}
                 onChangeText={setPassword}
+                label={t('password')}
                 placeholder={t('password')}
+                autoComplete="current-password"
                 secureTextEntry
-                className="rounded-2xl border-2 border-[#E5DFFF] bg-white px-4 py-3"
               />
             </View>
 
             <AnimatedPressable
+              containerStyle={{ alignSelf: 'stretch' }}
               onPress={handleLogin}
               disabled={!canSubmit || isSubmitting}
-              className={`mb-5 h-14 w-full max-w-sm flex-row items-center justify-center rounded-2xl px-12 ${!canSubmit || isSubmitting ? 'bg-line' : 'bg-primary'}`}
+              className={`mb-5 h-14 w-full flex-row items-center justify-center rounded-2xl px-12 ${!canSubmit || isSubmitting ? 'bg-line' : 'bg-primary'}`}
               style={
                 !canSubmit || isSubmitting
                   ? undefined
                   : { boxShadow: '0px 4px 0px rgba(214, 160, 27, 0.28)' }
               }>
               <Text
-                className={`font-medium ${!canSubmit || isSubmitting ? 'text-[#9A97A7]' : 'text-[#2B2A3D]'}`}>
+                className={`font-medium ${!canSubmit || isSubmitting ? 'text-ink-soft' : 'text-[#2B2A3D]'}`}>
                 {isSubmitting ? t('signingIn') : t('signIn')}
               </Text>
             </AnimatedPressable>
@@ -143,15 +148,16 @@ export const LoginScreen: React.FC = () => {
         )}
 
         {emailPasswordEnabled && (googleEnabledByBackend || facebookEnabledByBackend) && (
-          <View className="mb-4 w-full max-w-sm flex-row items-center gap-3">
+          <View className="mb-4 w-full flex-row items-center gap-3">
             <View className="h-px flex-1 bg-line" />
-            <Text className="text-xs font-semibold text-[#9A97A7]">{t('orContinueWith')}</Text>
+            <Text className="text-xs font-semibold text-ink-soft">{t('orContinueWith')}</Text>
             <View className="h-px flex-1 bg-line" />
           </View>
         )}
 
         {googleEnabledByBackend && (
           <AnimatedPressable
+              containerStyle={{ alignSelf: 'stretch' }}
             onPress={async () => {
               if (!googleSupportedInBuild) {
                 Toast.show({
@@ -177,18 +183,19 @@ export const LoginScreen: React.FC = () => {
               }
             }}
             disabled={isSubmitting}
-            className="mb-2 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#E5DFFF] bg-white px-6 py-4">
+            className="mb-2 w-full flex-row items-center justify-center gap-3 rounded-2xl border-2 border-line bg-surface px-6 py-4">
             <Image
               source={require('../../../../assets/images/google-icon.png')}
               style={{ width: 18, height: 18 }}
               contentFit="contain"
             />
-            <Text className="font-medium text-[#2B2A3D]">{t('continueGoogle')}</Text>
+            <Text className="font-medium text-ink">{t('continueGoogle')}</Text>
           </AnimatedPressable>
         )}
 
         {facebookEnabledByBackend && (
           <AnimatedPressable
+              containerStyle={{ alignSelf: 'stretch' }}
             onPress={async () => {
               if (!facebookConfigured) {
                 Toast.show({
@@ -214,20 +221,15 @@ export const LoginScreen: React.FC = () => {
               }
             }}
             disabled={isSubmitting}
-            className="mb-3 w-full max-w-sm flex-row items-center justify-center gap-3 rounded-2xl border-2 border-[#E5DFFF] bg-white px-6 py-4">
+            className="mb-3 w-full flex-row items-center justify-center gap-3 rounded-2xl border-2 border-line bg-surface px-6 py-4">
             <Ionicons name="logo-facebook" size={18} color="#1877F2" />
-            <Text className="font-medium text-[#2B2A3D]">{t('continueFacebook')}</Text>
+            <Text className="font-medium text-ink">{t('continueFacebook')}</Text>
           </AnimatedPressable>
         )}
 
-        <AnimatedPressable onPress={() => router.push('/register')} className="mb-4">
-          <Text className="text-[#7A68E0]">{t('noAccount')}</Text>
+        <AnimatedPressable onPress={() => router.push('/register')} className="min-h-11 items-center justify-center">
+          <Text className="text-primary-active">{t('noAccount')}</Text>
         </AnimatedPressable>
-      </View>
-
-      <View className="p-6">
-        <Text className="text-center text-xs text-[#9A97A7]">{t('terms')}</Text>
-      </View>
-    </View>
+    </AuthLayout>
   );
 };

@@ -1,3 +1,4 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { ConfirmModal } from '@/components/ConfirmModal';
@@ -12,7 +13,7 @@ import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practi
 import type { DueMemoryReview } from '@/features/practice-attempts';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
 import { useUserState } from '@/contexts/UserStateContext';
-import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -38,6 +39,7 @@ const filters: { key: LibraryFilter }[] = [
 ];
 
 export default function LibraryScreen() {
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const { t } = useTranslation('library');
   const { userState, updateState } = useUserState();
@@ -204,7 +206,7 @@ export default function LibraryScreen() {
             onPress={() => setLibraryTab('mine')}
             style={[styles.libraryTab, libraryTab === 'mine' && styles.libraryTabSelected, libraryTab === 'mine' ? { backgroundColor: activeTheme.violetDeep } : undefined]}>
             <Text style={styles.libraryTabEmoji}>📚</Text>
-            <Text style={[styles.libraryTabText, { color: libraryTab === 'mine' ? '#FFFFFF' : activeTheme.inkSoft }]}>{t('myMemories')}</Text>
+            <Text style={[styles.libraryTabText, { color: libraryTab === 'mine' ? activeTheme.onAccent : activeTheme.inkSoft }]}>{t('myMemories')}</Text>
           </AnimatedPressable>
           <AnimatedPressable
             accessibilityState={{ selected: libraryTab === 'discover' }}
@@ -212,7 +214,7 @@ export default function LibraryScreen() {
             onPress={() => setLibraryTab('discover')}
             style={[styles.libraryTab, libraryTab === 'discover' && styles.libraryTabSelected, libraryTab === 'discover' ? { backgroundColor: activeTheme.violetDeep } : undefined]}>
             <Text style={styles.libraryTabEmoji}>🧭</Text>
-            <Text style={[styles.libraryTabText, { color: libraryTab === 'discover' ? '#FFFFFF' : activeTheme.inkSoft }]}>{t('discover')}</Text>
+            <Text style={[styles.libraryTabText, { color: libraryTab === 'discover' ? activeTheme.onAccent : activeTheme.inkSoft }]}>{t('discover')}</Text>
           </AnimatedPressable>
         </View>
       </View>
@@ -242,7 +244,7 @@ export default function LibraryScreen() {
             accessibilityLabel={t('create')}
             onPress={() => router.push('/create-memory' as Href)}
             style={styles.addButton}>
-            <Plus size={21} color={theme.ink} />
+            <Plus size={21} color={theme.onSun} />
           </AnimatedPressable>
         </NightEmphasisCard>
 
@@ -273,7 +275,7 @@ export default function LibraryScreen() {
               hitSlop={4}
               onPress={() => changeViewMode('card')}
               style={[styles.viewOption, viewMode === 'card' && styles.viewOptionSelected]}>
-              <LayoutGrid size={16} color={viewMode === 'card' ? 'white' : theme.violetDeep} />
+              <LayoutGrid size={16} color={viewMode === 'card' ? theme.onAccent : theme.violetDeep} />
             </AnimatedPressable>
             <AnimatedPressable
               accessibilityRole="button"
@@ -282,7 +284,7 @@ export default function LibraryScreen() {
               hitSlop={4}
               onPress={() => changeViewMode('list')}
               style={[styles.viewOption, viewMode === 'list' && styles.viewOptionSelected]}>
-              <ListIcon size={16} color={viewMode === 'list' ? 'white' : theme.violetDeep} />
+              <ListIcon size={16} color={viewMode === 'list' ? theme.onAccent : theme.violetDeep} />
             </AnimatedPressable>
             </View>
           </View>
@@ -299,7 +301,7 @@ export default function LibraryScreen() {
               {getNumberPegErrorMessage(pagedMemorySets.error, t('connectionRetry'))}
             </Text>
             <AnimatedPressable onPress={() => pagedMemorySets.refetch()} style={styles.retryButton}>
-              <RefreshCcw size={16} color={theme.ink} />
+              <RefreshCcw size={16} color={theme.onSun} />
               <Text style={styles.retryText}>{t('retry')}</Text>
             </AnimatedPressable>
           </View>
@@ -326,7 +328,7 @@ export default function LibraryScreen() {
             title={t('newMemory')}
             body={t('newMemoryBody')}
             actionLabel={t('tapToStart')}
-            actionIcon={<Plus size={15} color={theme.ink} />}
+            actionIcon={<Plus size={15} color={theme.onSun} />}
             onAction={() => router.push('/create-memory' as Href)}
           />
         ) : (
@@ -334,7 +336,7 @@ export default function LibraryScreen() {
             <Text style={styles.emptyEmoji}>{filter === 'palace' ? '🏡' : filter === 'number-peg' ? '🦢' : '📦'}</Text>
             <Text style={styles.noticeTitle}>{filter === 'archived' ? t('archiveEmpty') : t('collectionEmpty')}</Text>
             <Text style={styles.noticeBody}>{filter === 'archived' ? t('archiveBody') : t('buildFirstBody')}</Text>
-            {filter !== 'archived' && <AnimatedPressable onPress={() => router.push('/create-memory' as Href)} style={styles.emptyButton}><Plus size={17} color="white" /><Text style={styles.emptyButtonText}>{t('create')}</Text></AnimatedPressable>}
+            {filter !== 'archived' && <AnimatedPressable onPress={() => router.push('/create-memory' as Href)} style={styles.emptyButton}><Plus size={17} color={theme.onAccent} /><Text style={styles.emptyButtonText}>{t('create')}</Text></AnimatedPressable>}
           </View>
         )}
         {pagedMemorySets.hasNextPage && !pagedMemorySets.isFetchingNextPage ? (
@@ -424,13 +426,13 @@ function hasPrivateAssets(
   return sceneById.get(plan.palaceSceneId)?.isTemplate === false;
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   libraryTabBar: {
     backgroundColor: theme.canvas,
-    borderBottomColor: '#F0EDF8',
+    borderBottomColor: theme.line,
     borderBottomWidth: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 10,
     position: 'relative',
     zIndex: 20,
@@ -451,7 +453,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 7,
     justifyContent: 'center',
-    minHeight: 42,
+    minHeight: 48,
     paddingHorizontal: 12,
   },
   libraryTabSelected: {
@@ -460,8 +462,8 @@ const styles = StyleSheet.create({
   },
   libraryTabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   libraryTabEmoji: { fontSize: 16, lineHeight: 20 },
-  libraryTabTextSelected: { color: 'white' },
-  content: { padding: 16, paddingBottom: 40 },
+  libraryTabTextSelected: { color: theme.onAccent},
+  content: { padding: 20, paddingBottom: 40 },
   summaryCard: {
     minHeight: 112,
     flexDirection: 'row',
@@ -490,7 +492,7 @@ const styles = StyleSheet.create({
   },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 18 },
   filterChip: {
-    minHeight: 38,
+    minHeight: 44,
     borderRadius: 999,
     borderWidth: 2,
     borderColor: theme.line,
@@ -501,19 +503,22 @@ const styles = StyleSheet.create({
   },
   filterChipSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetDeep },
   filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  filterTextSelected: { color: 'white' },
+  filterTextSelected: { color: theme.onAccent},
   viewToolbar: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   viewActions: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  headerLessonButton: { alignItems: 'center', backgroundColor: '#F2EEFF', borderColor: '#DDD3FF', borderRadius: 19, borderWidth: 1.5, height: 40, justifyContent: 'center', width: 40 },
+  headerLessonButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 19, borderWidth: 1.5, height: 40, justifyContent: 'center', width: 40 },
   headerLessonEmoji: { fontSize: 20 },
   viewModeLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   viewToggle: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 12, borderWidth: 1.5, flexDirection: 'row', padding: 3 },
-  viewOption: { alignItems: 'center', borderRadius: 9, height: 34, justifyContent: 'center', width: 36 },
+  viewOption: { alignItems: 'center', borderRadius: 9, height: 44, justifyContent: 'center', width: 44 },
   viewOptionSelected: { backgroundColor: theme.violetDeep },
   cardList: { gap: 10 },
   listCardList: { gap: 6 },
-  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
-  cardGridItem: { width: '48.5%' },
+  // Leave the horizontal spacing to `space-between`; combining the inherited
+  // gap with percentage widths can push the second card onto a new row on
+  // narrow screens.
+  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 0, justifyContent: 'space-between', rowGap: 18 },
+  cardGridItem: { flexShrink: 0, width: '48.5%' },
   noticeCard: {
     borderWidth: 2,
     borderColor: theme.line,
@@ -534,7 +539,7 @@ const styles = StyleSheet.create({
     gap: 7,
     alignItems: 'center',
   },
-  retryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  retryText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   emptyIconEmoji: { fontSize: 24 },
   emptyEmoji: { fontSize: 32, marginBottom: 9 },
   emptyButton: {
@@ -547,10 +552,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 7,
   },
-  emptyButtonText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  emptyButtonText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   loadMoreButton: { alignSelf: 'center', marginTop: 16, borderRadius: 999, backgroundColor: theme.skyTint, paddingHorizontal: 18, paddingVertical: 10 },
-  loadMoreText: { textAlign: 'center', color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  loadMoreText: { textAlign: 'center', color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   lessonEntry: { alignItems: 'center', backgroundColor: theme.sunTint, borderColor: theme.sunLine, borderRadius: 999, borderWidth: 1.5, flexDirection: 'row', gap: 5, paddingHorizontal: 9, paddingVertical: 6 },
   lessonEntryTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 10 }, lessonEntryArrow: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 },
   loadingFrame: { height: 180, overflow: 'hidden', borderRadius: 20 },
-});
+}));

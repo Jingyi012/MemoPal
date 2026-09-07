@@ -2,7 +2,7 @@ import { ChevronLeft, LucideIcon } from 'lucide-react-native';
 import React, { ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AnimatedPressable from './AnimatedPressable';
+import { HeaderIconButton } from './ui/HeaderIconButton';
 import HomeButton from './HomeButton';
 import { NotificationBell } from './NotificationBell';
 import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
@@ -51,7 +51,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
 
   return (
-    <View style={[styles.header, { backgroundColor: activeTheme.paper, borderBottomColor: activeTheme.line }]}>
+    <View style={[styles.header, { backgroundColor: activeTheme.canvas, borderBottomColor: activeTheme.line }]}>
       <View style={[styles.headerInner, compact && styles.compactHeaderInner, { paddingTop: insets.top + (compact ? 4 : 8) }]}>
         <View style={[styles.row, compact && styles.compactRow]}>
           {/* Back button slot */}
@@ -59,13 +59,11 @@ export const CommonHeader: React.FC<HeaderProps> = ({
             leftComponent ? (
               leftComponent
             ) : (
-              <AnimatedPressable
+              <HeaderIconButton
+                icon={ChevronLeft}
                 accessibilityLabel="Go back"
-                hitSlop={4}
                 onPress={backAction}
-                style={[styles.backButton, compact && styles.compactBackButton, { backgroundColor: activeTheme.sand }]}>
-                <ChevronLeft size={compact ? 18 : 20} color={activeTheme.ink} />
-              </AnimatedPressable>
+              />
             )
           ) : (
             ''
@@ -74,8 +72,8 @@ export const CommonHeader: React.FC<HeaderProps> = ({
           {/* Title + description */}
           <View style={styles.titleBlock}>
             {eyebrow && <Text style={[styles.eyebrow, compact && styles.compactEyebrow, { color: activeTheme.berryDeep, backgroundColor: activeTheme.berryTint, borderColor: activeTheme.berryLine }]}>{eyebrow}</Text>}
-            <Text style={[styles.title, compact && styles.compactTitle, { color: activeTheme.ink }]} numberOfLines={1}>{title}</Text>
-            {description && <Text style={[styles.description, compact && styles.compactDescription, { color: activeTheme.inkSoft }]} numberOfLines={1}>{description}</Text>}
+            <Text style={[styles.title, compact && styles.compactTitle, { color: activeTheme.ink }]} numberOfLines={compact ? 1 : 2}>{title}</Text>
+            {description && <Text style={[styles.description, compact && styles.compactDescription, { color: activeTheme.inkSoft }]} numberOfLines={compact ? 1 : 2}>{description}</Text>}
           </View>
 
           {/* Actions */}
@@ -88,14 +86,12 @@ export const CommonHeader: React.FC<HeaderProps> = ({
                 if (action.icon) {
                   const Icon = action.icon;
                   return (
-                    <AnimatedPressable
-                      accessibilityLabel={action.accessibilityLabel}
-                      hitSlop={4}
+                    <HeaderIconButton
+                      icon={Icon}
+                      accessibilityLabel={action.accessibilityLabel ?? title}
                       key={index}
                       onPress={action.onPress}
-                      style={[styles.actionButton, compact && styles.compactActionButton]}>
-                      <Icon size={compact ? 18 : 20} color={activeTheme.ink} />
-                    </AnimatedPressable>
+                    />
                   );
                 }
               })}
@@ -114,12 +110,12 @@ export const CommonHeader: React.FC<HeaderProps> = ({
 const styles = {
   header: {
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     borderBottomColor: theme.line,
   },
   headerInner: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
   },
   compactHeaderInner: {
     paddingHorizontal: 14,
@@ -134,19 +130,6 @@ const styles = {
   compactRow: {
     gap: 8,
     minHeight: 36,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 19,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    backgroundColor: theme.sand,
-  },
-  compactBackButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
   },
   titleBlock: {
     flex: 1,
@@ -174,7 +157,7 @@ const styles = {
   },
   title: {
     color: theme.ink,
-    fontSize: 19,
+    fontSize: 25,
     fontFamily: typography.displayExtraBold,
     letterSpacing: -0.2,
   },
@@ -184,7 +167,7 @@ const styles = {
   },
   description: {
     color: theme.inkSoft,
-    fontSize: 11.5,
+    fontSize: 13,
     fontFamily: typography.bodyBold,
     marginTop: 2,
   },
@@ -195,19 +178,6 @@ const styles = {
   actions: {
     flexDirection: 'row' as const,
     gap: 7,
-  },
-  actionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 19,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    backgroundColor: theme.sand,
-  },
-  compactActionButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
   },
   additionalContent: {
     marginTop: 10,

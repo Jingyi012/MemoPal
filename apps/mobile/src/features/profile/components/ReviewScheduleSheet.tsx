@@ -1,8 +1,9 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { typography } from '@/theme/typography';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Clock3 } from 'lucide-react-native';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -31,6 +32,7 @@ const QUICK_TIMES = ['08:00', '12:00', '19:00'];
 
 export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
   ({ currentTime, onSave }, ref) => {
+    const { styles, theme } = useStyles();
     const insets = useSafeAreaInsets();
     const { t } = useTranslation('profile');
     const [selectedTime, setSelectedTime] = useState(normalizeTime(currentTime));
@@ -96,10 +98,10 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
         enableDynamicSizing={false}
         enableContentPanningGesture={false}
         onDismiss={resetSelection}>
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + 8 }]}>
+        <BottomSheetScrollView contentContainerStyle={[styles.sheet, { paddingBottom: insets.bottom + 16 }]} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <View style={styles.headerIcon}>
-              <Clock3 size={21} color="#7A68E0" />
+              <Clock3 size={21} color={theme.violetDeep} />
             </View>
             <View style={styles.headerCopy}>
               <Text style={styles.title}>{t('dailyLearningTime')}</Text>
@@ -107,7 +109,7 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
             </View>
           </View>
 
-          <LinearGradient colors={['#FFF7DD', '#FFFFFF']} style={styles.preview}>
+          <LinearGradient colors={[theme.sunTint, theme.paper]} style={styles.preview}>
             <Text style={styles.previewLabel}>{t('currentTime')}</Text>
             <Text style={styles.previewTime}>{selectedTime}</Text>
             <Text style={styles.previewHint}>{t('dailyLearning')}</Text>
@@ -163,7 +165,7 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
               </AnimatedPressable>
             </View>
           </View>
-        </View>
+        </BottomSheetScrollView>
       </CustomBottomSheetModal>
     );
   }
@@ -184,11 +186,13 @@ function WheelColumn({
   formatValue: (value: number) => string;
   onScrollEnd: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }) {
+  const { styles } = useStyles();
   return (
     <NativeViewGestureHandler disallowInterruption>
       <ScrollView
         ref={listRef}
         style={styles.wheelList}
+        onLayout={() => listRef.current?.scrollTo({ y: Math.max(0, data.indexOf(value)) * ITEM_HEIGHT, animated: false })}
         snapToInterval={ITEM_HEIGHT}
         decelerationRate="fast"
         nestedScrollEnabled
@@ -233,8 +237,8 @@ function clampIndex(value: number, length: number) {
   return Math.min(length - 1, Math.max(0, value));
 }
 
-const styles = StyleSheet.create({
-  sheet: { flex: 1, paddingHorizontal: 20, paddingTop: 12 },
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
+  sheet: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 12 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 11, marginBottom: 12 },
   headerIcon: {
     width: 42,
@@ -242,36 +246,36 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EEE9FF',
+    backgroundColor: theme.violetTint,
   },
   headerCopy: { flex: 1 },
-  title: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 19 },
-  subtitle: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 11.5, marginTop: 2 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, marginTop: 2 },
   preview: {
     alignItems: 'center',
-    borderColor: '#FFE3AE',
+    borderColor: theme.sunLine,
     borderRadius: 18,
     borderWidth: 2,
     paddingVertical: 10,
     marginBottom: 10,
   },
   previewLabel: {
-    color: '#A47B00',
+    color: theme.inkSoft,
     fontFamily: typography.bodyExtraBold,
     fontSize: 9.5,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   previewTime: {
-    color: '#2B2A3D',
+    color: theme.ink,
     fontFamily: typography.displayExtraBold,
     fontSize: 31,
     lineHeight: 36,
     marginTop: 1,
   },
-  previewHint: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10 },
+  previewHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
   instruction: {
-    color: '#6B6A80',
+    color: theme.inkSoft,
     fontFamily: typography.bodyBold,
     fontSize: 11,
     textAlign: 'center',
@@ -279,8 +283,8 @@ const styles = StyleSheet.create({
   },
   wheel: {
     alignItems: 'center',
-    backgroundColor: '#F7F5FF',
-    borderColor: '#DCD4FF',
+    backgroundColor: theme.paper,
+    borderColor: theme.violetLine,
     borderRadius: 18,
     borderWidth: 2,
     flexDirection: 'row',
@@ -291,8 +295,8 @@ const styles = StyleSheet.create({
   },
   wheelList: { flexGrow: 0, height: ITEM_HEIGHT * VISIBLE_ITEMS, width: 82 },
   selectionHighlight: {
-    backgroundColor: '#EEE9FF',
-    borderColor: '#CFC4FF',
+    backgroundColor: theme.violetTint,
+    borderColor: theme.violetLine,
     borderRadius: 12,
     borderWidth: 2,
     height: ITEM_HEIGHT,
@@ -302,36 +306,38 @@ const styles = StyleSheet.create({
     top: WHEEL_PADDING,
   },
   wheelItem: { alignItems: 'center', height: ITEM_HEIGHT, justifyContent: 'center', width: 70 },
-  wheelText: { color: '#AAA6B8', fontFamily: typography.displayExtraBold, fontSize: 21 },
-  wheelTextSelected: { color: '#7A68E0', fontSize: 25 },
+  wheelText: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 21 },
+  wheelTextSelected: { color: theme.violetDeep, fontSize: 25 },
   colon: {
-    color: '#7A68E0',
+    color: theme.violetDeep,
     fontFamily: typography.displayExtraBold,
     fontSize: 25,
     marginHorizontal: 3,
   },
   quickRow: { alignItems: 'center', flexDirection: 'row', gap: 7, marginTop: 12, marginBottom: 13 },
   quickLabel: {
-    color: '#6B6A80',
+    color: theme.inkSoft,
     flex: 1,
     fontFamily: typography.bodyExtraBold,
     fontSize: 10,
     textTransform: 'uppercase',
   },
   quickPill: {
-    backgroundColor: '#F3F0FF',
-    borderColor: '#E5DFFF',
+    minHeight: 44,
+    justifyContent: 'center',
+    backgroundColor: theme.violetTint,
+    borderColor: theme.line,
     borderRadius: 10,
     borderWidth: 2,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  quickPillSelected: { backgroundColor: '#EEE9FF', borderColor: '#CFC4FF' },
-  quickText: { color: '#6B6A80', fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  quickTextSelected: { color: '#7A68E0' },
+  quickPillSelected: { backgroundColor: theme.violetTint, borderColor: theme.violetLine },
+  quickText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  quickTextSelected: { color: theme.violetDeep },
   footer: {
     alignItems: 'stretch',
-    borderTopColor: '#E5DFFF',
+    borderTopColor: theme.line,
     borderTopWidth: 2,
     flexDirection: 'row',
     gap: 10,
@@ -342,24 +348,24 @@ const styles = StyleSheet.create({
   buttonSlot: { flex: 1 },
   cancelButton: {
     alignItems: 'center',
-    backgroundColor: '#F3F0FF',
-    borderColor: '#E8E1D3',
+    backgroundColor: theme.violetTint,
+    borderColor: theme.line,
     borderRadius: 14,
     borderWidth: 2,
     justifyContent: 'center',
-    minHeight: 42,
+    minHeight: 48,
     width: '100%',
   },
-  cancelText: { color: '#6B6A80', fontFamily: typography.displayExtraBold, fontSize: 13 },
+  cancelText: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 13 },
   saveButton: {
     alignItems: 'center',
-    backgroundColor: '#FFC93C',
-    borderColor: '#F2A900',
+    backgroundColor: theme.sun,
+    borderColor: theme.sunDeep,
     borderRadius: 14,
     borderWidth: 2,
     justifyContent: 'center',
-    minHeight: 42,
+    minHeight: 48,
     width: '100%',
   },
-  saveText: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 13 },
-});
+  saveText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 13 },
+}));

@@ -1,10 +1,11 @@
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
   Modal,
   StyleSheet,
+  ScrollView,
   Text,
   TouchableWithoutFeedback,
   View,
@@ -42,6 +43,7 @@ export function ConfirmModal({
   onCancel,
   onAlternative,
 }: ConfirmModalProps) {
+  const { styles, theme } = useStyles();
   const close = () => {
     if (!isLoading) onCancel();
   };
@@ -57,7 +59,7 @@ export function ConfirmModal({
       <TouchableWithoutFeedback onPress={close}>
         <View style={styles.backdrop}>
           <TouchableWithoutFeedback>
-            <View style={styles.dialog}>
+            <ScrollView style={styles.dialog} contentContainerStyle={styles.dialogContent} showsVerticalScrollIndicator={false}>
               {icon ? <View style={styles.icon}>{icon}</View> : null}
               <Text style={styles.title}>{title}</Text>
               {subject ? (
@@ -84,7 +86,7 @@ export function ConfirmModal({
                   disabled={isLoading}
                   onPress={close}
                   style={[styles.button, styles.cancelButton, isLoading && styles.disabled]}
-                  containerStyle={{ width: '50%' }}>
+                  containerStyle={styles.buttonSlot}>
                   <Text style={styles.cancelText}>{cancelText}</Text>
                 </AnimatedPressable>
                 <AnimatedPressable
@@ -95,9 +97,9 @@ export function ConfirmModal({
                     destructive ? styles.destructiveButton : styles.confirmButton,
                     isLoading && styles.disabled,
                   ]}
-                  containerStyle={{ width: '50%' }}>
+                  containerStyle={styles.buttonSlot}>
                   {isLoading ? (
-                    <ActivityIndicator color={destructive ? 'white' : theme.ink} />
+                    <ActivityIndicator color={destructive ? theme.onAccent : theme.onSun} />
                   ) : (
                     <Text style={[styles.confirmText, destructive && styles.destructiveText]}>
                       {confirmText}
@@ -105,7 +107,7 @@ export function ConfirmModal({
                   )}
                 </AnimatedPressable>
               </View>
-            </View>
+            </ScrollView>
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
@@ -113,7 +115,7 @@ export function ConfirmModal({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   backdrop: {
     alignItems: 'center',
     backgroundColor: 'rgba(30, 26, 48, 0.58)',
@@ -122,19 +124,21 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   dialog: {
-    alignItems: 'center',
+    maxHeight: '90%',
+    flexGrow: 0,
     backgroundColor: theme.paper,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
+    borderColor: theme.line,
     borderRadius: 26,
     borderWidth: 1,
     boxShadow: '0px 18px 40px rgba(30, 26, 48, 0.30)',
     maxWidth: 360,
-    padding: 22,
     width: '100%',
   },
+  dialogContent: { alignItems: 'center', padding: 22 },
+  buttonSlot: { flexGrow: 1, flexBasis: 120 },
   icon: {
     alignItems: 'center',
-    backgroundColor: '#FFF0F4',
+    backgroundColor: theme.berryTint,
     borderRadius: 22,
     height: 64,
     justifyContent: 'center',
@@ -174,7 +178,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     textAlign: 'center',
   },
-  actions: { flexDirection: 'row', gap: 10, marginTop: 20, width: '100%', height: 52 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 20, width: '100%' },
   alternativeButton: {
     alignItems: 'center',
     alignSelf: 'stretch',
@@ -187,18 +191,21 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: 14,
   },
-  alternativeText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  alternativeText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
   button: {
+    minHeight: 52,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     alignItems: 'center',
     borderRadius: 15,
     flex: 1,
     justifyContent: 'center',
   },
-  cancelButton: { backgroundColor: '#F3F0E8', borderColor: theme.line, borderWidth: 1.5 },
+  cancelButton: { backgroundColor: theme.canvas, borderColor: theme.line, borderWidth: 1.5 },
   confirmButton: { backgroundColor: theme.sun },
   destructiveButton: { backgroundColor: theme.berryDeep },
-  cancelText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  confirmText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  destructiveText: { color: 'white' },
+  cancelText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
+  confirmText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
+  destructiveText: { color: theme.onAccent },
   disabled: { opacity: 0.65 },
-});
+}));

@@ -1,6 +1,6 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { groupMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { ArrowRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
@@ -13,6 +13,7 @@ type TodayReviewCardProps = {
 };
 
 export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewCardProps) {
+  const { styles, theme } = useStyles();
   const { t } = useTranslation('home');
   const groupedReviews = groupMemoryReviews(reviews);
   return (
@@ -55,7 +56,7 @@ export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewC
           onPress={() => onStartReview(groupedReviews[0].review)}
           style={styles.startButton}>
           <Text style={styles.startButtonText}>{t('startReview')}</Text>
-          <ArrowRight size={17} color={theme.ink} />
+          <ArrowRight size={17} color={theme.onSun} />
         </AnimatedPressable>
       ) : null}
     </View>
@@ -66,24 +67,24 @@ function isOverdue(dueAt: string) {
   return new Date(dueAt).getTime() < Date.now();
 }
 
-const styles = StyleSheet.create({
-  card: { marginTop: 12, borderRadius: 21, borderWidth: 2, borderColor: '#F4D8B8', backgroundColor: '#FFF3E6', padding: 14 },
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
+  card: { marginTop: 12, borderRadius: 21, borderWidth: 2, borderColor: theme.peachLine, backgroundColor: theme.sand, padding: 14 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headerIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#FFF7DD', alignItems: 'center', justifyContent: 'center' },
+  headerIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: theme.sunTint, alignItems: 'center', justifyContent: 'center' },
   headerEmoji: { fontSize: 21 },
   eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.7 },
   title: { color: theme.ink, fontFamily: typography.display, fontSize: 15, marginTop: 3 },
   subtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 3 },
   reviewList: { gap: 7, marginTop: 12 },
-  reviewRow: { minHeight: 54, borderRadius: 14, backgroundColor: 'white', paddingHorizontal: 9, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 9 },
+  reviewRow: { minHeight: 54, borderRadius: 14, backgroundColor: theme.paper, paddingHorizontal: 9, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 9 },
   reviewIcon: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   reviewEmoji: { fontSize: 15 },
-  pegIcon: { backgroundColor: '#FFF0F4' },
-  palaceIcon: { backgroundColor: '#EEE9FF' },
+  pegIcon: { backgroundColor: theme.berryTint },
+  palaceIcon: { backgroundColor: theme.violetTint },
   reviewCopy: { flex: 1, minWidth: 0 },
   reviewTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
   reviewMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 2 },
   overdueText: { color: theme.berryDeep },
   startButton: { minHeight: 44, borderRadius: 13, backgroundColor: theme.sun, marginTop: 10, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
-  startButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
-});
+  startButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
+}));

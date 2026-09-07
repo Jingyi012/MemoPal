@@ -41,7 +41,7 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
           onPress={() => router.push('/(tabs)/profile')}
           style={styles.levelRing}>
           <LinearGradient colors={['#FFC93C', '#FF6F91']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.levelGradient}>
-            <Text style={[styles.levelValue, { color: theme.ink }]}>{level}</Text>
+            <Text style={[styles.levelValue, { color: theme.onSun }]}>{level}</Text>
           </LinearGradient>
         </AnimatedPressable>
       </View>
@@ -51,17 +51,17 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
 
 const styles = {
   greetingRow: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingHorizontal: 20,
+    paddingTop: 14,
     paddingBottom: 2,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
   },
   greetingCopy: { flex: 1, paddingRight: 12 },
-  greetingTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 18 },
-  greetingSubtitle: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 12, marginTop: 2 },
+  greetingTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 21 },
+  greetingSubtitle: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 13, marginTop: 2 },
   levelRing: { width: 52, height: 52, borderRadius: 26, borderWidth: 3, borderColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' as const },
   levelGradient: { flex: 1, width: '100%' as const, alignItems: 'center' as const, justifyContent: 'center' as const },
-  levelValue: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 17 },
+  levelValue: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 21 },
 };

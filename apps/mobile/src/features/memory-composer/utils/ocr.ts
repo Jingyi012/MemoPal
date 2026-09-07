@@ -1,4 +1,5 @@
 import type { RecognitionResult } from 'expo-mlkit-ocr';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 export { extractMemoryItems, MAX_OCR_ITEMS, type OcrItem } from './ocrParsing';
 
@@ -19,6 +20,9 @@ export class OcrError extends Error {
 export async function recognizeMemoryPhoto(uri: string): Promise<RecognitionResult> {
   if (Platform.OS === 'web') {
     throw new OcrError('unsupported', 'OCR is available on Android and iOS only.');
+  }
+  if (Constants.appOwnership === 'expo') {
+    throw new OcrError('native-missing', 'OCR is not included in Expo Go.');
   }
 
   try {

@@ -1,3 +1,4 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
@@ -26,6 +27,7 @@ type Ref = BottomSheetModal;
 
 export const EditProfileSheet = forwardRef<Ref, Props>(
   ({ initialName = '', initialEmail = '', initialAvatarUrl = '', onSave }, ref) => {
+    const { styles, theme } = useStyles();
     const { t } = useTranslation('profile');
     const insets = useSafeAreaInsets();
     const [displayName, setDisplayName] = useState(initialName);
@@ -79,7 +81,7 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
-              <View style={styles.headerIcon}><Pencil size={19} color="#7A68E0" /></View>
+              <View style={styles.headerIcon}><Pencil size={19} color={theme.violetDeep} /></View>
               <View style={styles.headerCopy}>
                 <Text style={styles.title}>{t('editProfile')}</Text>
                 <Text style={styles.subtitle}>{t('editDetails')}</Text>
@@ -99,7 +101,7 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
                 <Text style={styles.avatarTitle}>{t('profilePicture')}</Text>
                 <Text style={styles.avatarHint}>{t('chooseImage')}</Text>
               </View>
-              <Pencil size={16} color="#7A68E0" />
+              <Pencil size={16} color={theme.violetDeep} />
             </AnimatedPressable>
 
             <Text style={styles.fieldLabel}>{t('displayName')}</Text>
@@ -118,7 +120,7 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
 
             <Text style={styles.fieldLabel}>{t('email')}</Text>
             <View style={[styles.inputWrap, styles.lockedInputWrap]}>
-              <Mail size={16} color="#AAA6B8" />
+              <Mail size={16} color={theme.inkSoft} />
               <TextInput
                 style={[styles.input, styles.lockedInput]}
                 placeholder={t('email')}
@@ -129,7 +131,7 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
                 editable={false}
                 selectTextOnFocus={false}
               />
-              <LockKeyhole size={15} color="#AAA6B8" />
+              <LockKeyhole size={15} color={theme.inkSoft} />
             </View>
             <Text style={styles.helper}>{t('emailImmutable')}</Text>
 
@@ -155,34 +157,34 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
 
 EditProfileSheet.displayName = 'EditProfileSheet';
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 12 },
   header: { alignItems: 'center', flexDirection: 'row', gap: 11, marginBottom: 15 },
-  headerIcon: { alignItems: 'center', backgroundColor: '#EEE9FF', borderRadius: 14, height: 42, justifyContent: 'center', width: 42 },
+  headerIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 14, height: 42, justifyContent: 'center', width: 42 },
   headerCopy: { flex: 1 },
-  title: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 20 },
-  subtitle: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 11.5, marginTop: 2 },
-  avatarCard: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#DCD4FF', borderRadius: 18, borderWidth: 2, flexDirection: 'row', gap: 12, padding: 12 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 20 },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, marginTop: 2 },
+  avatarCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 18, borderWidth: 2, flexDirection: 'row', gap: 12, padding: 12 },
   avatarWrap: { height: 64, position: 'relative', width: 64 },
-  avatarImage: { borderColor: '#FFFFFF', borderRadius: 32, borderWidth: 3, height: 64, width: 64 },
-  avatarPlaceholder: { alignItems: 'center', backgroundColor: '#FFC93C', borderColor: '#FFFFFF', borderRadius: 32, borderWidth: 3, height: 64, justifyContent: 'center', width: 64 },
-  avatarLetter: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 27 },
-  cameraBadge: { alignItems: 'center', backgroundColor: '#FFC93C', borderColor: '#FFFFFF', borderRadius: 13, borderWidth: 2, bottom: -2, height: 26, justifyContent: 'center', position: 'absolute', right: -3, width: 26 },
+  avatarImage: { borderColor: theme.paper, borderRadius: 32, borderWidth: 3, height: 64, width: 64 },
+  avatarPlaceholder: { alignItems: 'center', backgroundColor: theme.sun, borderColor: theme.paper, borderRadius: 32, borderWidth: 3, height: 64, justifyContent: 'center', width: 64 },
+  avatarLetter: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 27 },
+  cameraBadge: { alignItems: 'center', backgroundColor: theme.sun, borderColor: theme.paper, borderRadius: 13, borderWidth: 2, bottom: -2, height: 26, justifyContent: 'center', position: 'absolute', right: -3, width: 26 },
   avatarCopy: { flex: 1 },
-  avatarTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 14 },
-  avatarHint: { color: '#7A68E0', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3 },
-  fieldLabel: { color: '#6B6A80', fontFamily: typography.displayExtraBold, fontSize: 11, letterSpacing: 0.5, marginBottom: 7, marginTop: 17, textTransform: 'uppercase' },
-  inputWrap: { alignItems: 'center', backgroundColor: '#FFFFFF', borderColor: '#E5DFFF', borderRadius: 14, borderWidth: 2, flexDirection: 'row', gap: 9, minHeight: 52, paddingHorizontal: 13 },
-  lockedInputWrap: { backgroundColor: '#F3F0FF', borderColor: '#E5DFFF' },
-  input: { color: '#2B2A3D', flex: 1, fontFamily: typography.bodySemibold, fontSize: 14, paddingVertical: 0 },
-  lockedInput: { color: '#9A97A7' },
-  helper: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 16, marginTop: 6 },
-  footer: { borderTopColor: '#E5DFFF', borderTopWidth: 2, flexDirection: 'row', gap: 10, marginTop: 22, paddingTop: 14, paddingBottom: 5 },
+  avatarTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 },
+  avatarHint: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3 },
+  fieldLabel: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 11, letterSpacing: 0.5, marginBottom: 7, marginTop: 17, textTransform: 'uppercase' },
+  inputWrap: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 14, borderWidth: 2, flexDirection: 'row', gap: 9, minHeight: 52, paddingHorizontal: 13 },
+  lockedInputWrap: { backgroundColor: theme.violetTint, borderColor: theme.line },
+  input: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 14, paddingVertical: 0 },
+  lockedInput: { color: theme.inkSoft },
+  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 16, marginTop: 6 },
+  footer: { borderTopColor: theme.line, borderTopWidth: 2, flexDirection: 'row', gap: 10, marginTop: 22, paddingTop: 14, paddingBottom: 5 },
   buttonSlot: { flex: 1 },
-  cancelButton: { alignItems: 'center', backgroundColor: '#FFF3E6', borderColor: '#F4D8B8', borderRadius: 14, borderWidth: 2, justifyContent: 'center', minHeight: 52, width: '100%' },
-  cancelText: { color: '#6B6A80', fontFamily: typography.displayExtraBold, fontSize: 13 },
-  saveButton: { alignItems: 'center', backgroundColor: '#FFC93C', borderColor: '#F2A900', borderRadius: 14, borderWidth: 2, boxShadow: '0px 4px 0px #F2A900', flexDirection: 'row', gap: 7, justifyContent: 'center', minHeight: 52, width: '100%' },
-  saveText: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 13 },
+  cancelButton: { alignItems: 'center', backgroundColor: theme.sand, borderColor: theme.peachLine, borderRadius: 14, borderWidth: 2, justifyContent: 'center', minHeight: 52, width: '100%' },
+  cancelText: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 13 },
+  saveButton: { alignItems: 'center', backgroundColor: theme.sun, borderColor: theme.sunDeep, borderRadius: 14, borderWidth: 2, boxShadow: '0px 4px 0px #F2A900', flexDirection: 'row', gap: 7, justifyContent: 'center', minHeight: 52, width: '100%' },
+  saveText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 13 },
   disabledButton: { opacity: 0.5 },
-});
+}));

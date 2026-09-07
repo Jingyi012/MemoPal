@@ -92,11 +92,11 @@ export default function CustomPalaceEditorScreen() {
         setDescription(draft.description);
         setImageUri(draft.imageUri);
         setLoci(draft.loci);
-        setMessage('Your unfinished Palace draft was restored.');
+        setMessage(t('draftRestored'));
       }
       setDraftHydrated(true);
     });
-  }, [draftHydrated, sceneId, user?.id]);
+  }, [draftHydrated, sceneId, t, user?.id]);
 
   useEffect(() => {
     if (sceneId || !user?.id || !draftHydrated) return;
@@ -116,7 +116,7 @@ export default function CustomPalaceEditorScreen() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       setMessage(
-        'Photo access is needed to use a Palace image. You can enable it in device settings.'
+        t('photoAccessNeeded')
       );
       return;
     }
@@ -133,7 +133,7 @@ export default function CustomPalaceEditorScreen() {
 
   const placeLocus = (event: GestureResponderEvent) => {
     if (!imageUri) {
-      setMessage('Choose a photo first, then tap memorable spots on it.');
+      setMessage(t('choosePhotoBeforeSpots'));
       return;
     }
     const xPercent = Math.max(
@@ -146,7 +146,7 @@ export default function CustomPalaceEditorScreen() {
     );
     if (selectedIndex === loci.length) {
       if (loci.length >= maxLoci) {
-        setMessage(`Your plan allows up to ${maxLoci} loci in this Palace.`);
+        setMessage(t('maxLociMessage').replace('{count}', String(maxLoci)));
         return;
       }
       const nextIndex = loci.length;
@@ -154,7 +154,7 @@ export default function CustomPalaceEditorScreen() {
         ...current,
         {
           position: nextIndex + 1,
-          name: `Spot ${nextIndex + 1}`,
+          name: t('defaultSpotName').replace('{number}', String(nextIndex + 1)),
           xPercent,
           yPercent,
           radiusPercent: 7,
@@ -175,15 +175,15 @@ export default function CustomPalaceEditorScreen() {
 
   const addLocus = () => {
     if (loci.length >= maxLoci) {
-      setMessage(`Your plan allows up to ${maxLoci} loci in this Palace.`);
+      setMessage(t('maxLociMessage').replace('{count}', String(maxLoci)));
       return;
     }
     if (!imageUri) {
-      setMessage('Choose a photo first, then tap memorable spots on it.');
+      setMessage(t('choosePhotoBeforeSpots'));
       return;
     }
     setSelectedIndex(loci.length);
-    setMessage('Now tap the next memorable spot on your image.');
+    setMessage(t('nextMemorableSpot'));
   };
 
   const removeLocus = (index: number) => {
@@ -204,9 +204,9 @@ export default function CustomPalaceEditorScreen() {
       router.push('/premium' as Href);
       return;
     }
-    if (!name.trim()) return setMessage('Give this Palace a name first.');
-    if (!imageUri) return setMessage('Choose a photo for your Palace.');
-    if (!loci.length) return setMessage('Tap at least one memorable spot on your image.');
+    if (!name.trim()) return setMessage(t('givePalaceName'));
+    if (!imageUri) return setMessage(t('choosePalacePhoto'));
+    if (!loci.length) return setMessage(t('addMemorableSpot'));
 
     setIsUploading(true);
     setMessage(null);
@@ -234,7 +234,7 @@ export default function CustomPalaceEditorScreen() {
       }
       router.replace({ pathname: '/palaces/create-memory', params: { sceneId: scene.id } });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Could not save your Palace. Try again.');
+      setMessage(error instanceof Error ? error.message : t('couldNotSave'));
     } finally {
       setIsUploading(false);
     }
@@ -259,7 +259,7 @@ export default function CustomPalaceEditorScreen() {
           <View style={styles.flex}>
             <Text style={styles.privacyTitle}>{t('privateDefault')}</Text>
             <Text style={styles.privacyBody}>
-              Your image is used only for your Palace. Avoid faces, addresses, or school details.
+              {t('customPrivacyBody')}
             </Text>
           </View>
         </View>
@@ -271,7 +271,7 @@ export default function CustomPalaceEditorScreen() {
             </View>
             <Text style={styles.upgradeTitle}>{t('customPremium')}</Text>
             <Text style={styles.upgradeBody}>
-              Use the starter scenes for free, or unlock your own photo-based routes.
+              {t('customPremiumBody')}
             </Text>
             <AnimatedPressable
               onPress={() => router.push('/premium' as Href)}
@@ -286,8 +286,10 @@ export default function CustomPalaceEditorScreen() {
           value={name}
           onChangeText={setName}
           maxLength={200}
-          placeholder="e.g. Grandma's kitchen"
+          placeholder={t('customNamePlaceholder')}
           placeholderTextColor="#AAA7B5"
+          selectionColor={theme.violetDeep}
+          cursorColor={theme.violetDeep}
           style={styles.input}
         />
         <Text style={styles.label}>
@@ -300,6 +302,8 @@ export default function CustomPalaceEditorScreen() {
           multiline
           placeholder={t('familiarPrompt')}
           placeholderTextColor="#AAA7B5"
+          selectionColor={theme.violetDeep}
+          cursorColor={theme.violetDeep}
           style={[styles.input, styles.descriptionInput]}
         />
 
@@ -312,7 +316,7 @@ export default function CustomPalaceEditorScreen() {
               <Text style={styles.imageButtonEmoji}>🖼️</Text>
               <Text style={styles.imageButtonTitle}>{t('choosePhoto')}</Text>
               <Text style={styles.imageButtonBody}>
-                A room, route, desk, or any place you know well
+                {t('customPhotoHint')}
               </Text>
             </>
           )}
@@ -322,8 +326,7 @@ export default function CustomPalaceEditorScreen() {
           <View style={styles.flex}>
             <Text style={styles.label}>{t('setupLoci')}</Text>
             <Text style={styles.helper}>
-              Select a marker, then tap the image to move it. Add a new marker for another memorable
-              spot.
+              {t('customLocusHelper')}
             </Text>
           </View>
           <Text style={styles.counter}>
@@ -351,7 +354,7 @@ export default function CustomPalaceEditorScreen() {
           {loci.map((locus, index) => (
             <Pressable
               key={locus.id ?? index}
-              accessibilityLabel={`Locus ${index + 1}: ${locus.name}`}
+              accessibilityLabel={t('locusAccessibility').replace('{number}', String(index + 1)).replace('{name}', locus.name)}
               onPress={(event) => {
                 event.stopPropagation();
                 setSelectedIndex(index);
@@ -368,15 +371,15 @@ export default function CustomPalaceEditorScreen() {
         <AnimatedPressable onPress={addLocus} style={styles.addLocusButton}>
           <Plus size={17} color={theme.violetDeep} />
           <Text style={styles.addLocusText}>
-            {selectedIndex === loci.length ? 'Tap the image to place it' : 'Add a locus'}
+            {selectedIndex === loci.length ? t('tapSpotToPlace') : t('addLocus')}
           </Text>
         </AnimatedPressable>
         <Text style={styles.canvasMode}>
           {selectedIndex === loci.length
-            ? 'Adding a new locus · tap the image'
+            ? t('addingLocusMode')
             : selectedIndex !== null
-              ? `Moving locus ${selectedIndex + 1} · tap the image`
-              : 'Select a marker to edit its position'}
+              ? t('movingLocusMode').replace('{number}', String(selectedIndex + 1))
+              : t('selectMarkerToMove')}
         </Text>
 
         <View style={styles.locusList}>
@@ -399,10 +402,12 @@ export default function CustomPalaceEditorScreen() {
                 onFocus={() => setSelectedIndex(index)}
                 placeholder={t('spotName')}
                 placeholderTextColor="#AAA7B5"
+                selectionColor={theme.violetDeep}
+                cursorColor={theme.violetDeep}
                 style={styles.locusInput}
               />
               <AnimatedPressable
-                accessibilityLabel={`Remove locus ${index + 1}`}
+                accessibilityLabel={`${t('removeAccessibility')} ${t('locusLabel')} ${index + 1}`}
                 onPress={() => removeLocus(index)}
                 style={styles.deleteButton}>
                 <Trash2 size={17} color={theme.inkSoft} />
@@ -426,14 +431,14 @@ export default function CustomPalaceEditorScreen() {
           <Check size={19} color={theme.ink} />
           <Text style={styles.saveText}>
             {isUploading
-              ? 'Uploading image…'
+              ? t('uploadingImage')
               : createCustom.isPending || updateCustom.isPending
-                ? 'Saving…'
+                ? t('saving')
                 : canSave
                   ? sceneId
-                    ? 'Save Palace changes'
-                    : 'Save my Palace'
-                  : 'Unlock custom Palaces'}
+                    ? t('savePalaceChanges')
+                    : t('savePalace')
+                  : t('unlockCustomPalaces')}
           </Text>
         </AnimatedPressable>
       </ScrollView>

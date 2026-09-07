@@ -1,3 +1,4 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -7,7 +8,7 @@ import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { NumberPegItemCard } from '@/features/number-peg/components/NumberPegItemCard';
-import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { useNumberPegOverview } from '@/features/number-peg/hooks/useNumberPegOverview';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
@@ -19,6 +20,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
 
 export default function NumberPegHomeScreen() {
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const { t } = useTranslation('numberPeg');
   const { colorScheme } = useColorScheme();
@@ -127,7 +129,7 @@ export default function NumberPegHomeScreen() {
             title={t('empty')}
             body={t('emptyBody')}
             actionLabel={t('makeMemory')}
-            actionIcon={<ArrowRight size={16} color={theme.ink} />}
+            actionIcon={<ArrowRight size={16} color={theme.onSun} />}
             onAction={() => router.push('/number-peg/create' as Href)}
           />
         )}
@@ -136,12 +138,12 @@ export default function NumberPegHomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 40 },
   heroEmoji: { fontSize: 27 },
-  familiarityCard: { minHeight: 72, borderRadius: 18, borderWidth: 2, borderColor: '#FFD9E2', backgroundColor: '#FFF0F4', padding: 12, marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  familiarityIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  familiarityCard: { minHeight: 72, borderRadius: 18, borderWidth: 2, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 12, marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  familiarityIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
   familiarityEmoji: { fontSize: 21 },
   familiarityCopy: { flex: 1 },
   familiarityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
@@ -156,9 +158,9 @@ const styles = StyleSheet.create({
   sectionEyebrow: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
   sectionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 3 },
   sectionHeadingCopy: { flex: 1, paddingRight: 10 },
-  seeAllButton: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: '#FFF0F4', paddingLeft: 11, paddingRight: 7 },
+  seeAllButton: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: theme.berryTint, paddingLeft: 11, paddingRight: 7 },
   seeAllText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   pegRail: { marginHorizontal: -16, paddingLeft: 16 },
   unlockHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, marginTop: 8 },
   loadingFrame: { height: 150, overflow: 'hidden', borderRadius: 20 },
-});
+}));

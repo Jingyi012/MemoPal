@@ -4,10 +4,12 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { typography } from '@/theme/typography';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 
 const RECONNECTED_MESSAGE_DURATION = 2_400;
 
 export function NetworkStatusBanner() {
+  const { styles, theme } = useStyles();
   const { isOnline, isReady } = useNetworkStatus();
   const wasOffline = useRef(false);
   const [showReconnected, setShowReconnected] = useState(false);
@@ -61,7 +63,7 @@ export function NetworkStatusBanner() {
       accessibilityLiveRegion="polite"
       accessibilityRole="alert"
       style={[styles.banner, reconnected ? styles.reconnected : styles.offline, { opacity }]}>
-      {reconnected ? <Wifi color="#1B6B55" size={18} /> : <WifiOff color="#8D4A1F" size={18} />}
+      {reconnected ? <Wifi color={theme.successText} size={18} /> : <WifiOff color={theme.inkSoft} size={18} />}
       <View style={styles.copy}>
         <Text style={styles.title}>{reconnected ? 'Back online' : 'You are offline'}</Text>
         <Text style={styles.description}>
@@ -72,7 +74,7 @@ export function NetworkStatusBanner() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   banner: {
     alignItems: 'center',
     borderBottomWidth: 1,
@@ -82,26 +84,26 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   offline: {
-    backgroundColor: '#FFF1E4',
-    borderBottomColor: '#F2C79F',
+    backgroundColor: theme.peachTint,
+    borderBottomColor: theme.peachLine,
   },
   reconnected: {
-    backgroundColor: '#E5F6EF',
-    borderBottomColor: '#A9DCC6',
+    backgroundColor: theme.mintTint,
+    borderBottomColor: theme.mintLine,
   },
   copy: {
     flex: 1,
     gap: 1,
   },
   title: {
-    color: '#2C241F',
+    color: theme.ink,
     fontFamily: typography.bodyExtraBold,
     fontSize: 13,
   },
   description: {
-    color: '#665A51',
+    color: theme.inkSoft,
     fontFamily: typography.bodySemibold,
     fontSize: 12,
     lineHeight: 17,
   },
-});
+}));

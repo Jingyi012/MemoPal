@@ -1,3 +1,4 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -6,7 +7,7 @@ import { MemorySetRow } from '@/components/MemorySetRow';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
 import { useMemorySets } from '@/features/memory-sets';
-import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
@@ -17,6 +18,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
 
 export default function PalaceHomeScreen() {
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const { t } = useTranslation('palace');
   const { colorScheme } = useColorScheme();
@@ -171,7 +173,7 @@ export default function PalaceHomeScreen() {
             title={t('firstJourney')}
             body={t('firstJourneyBody')}
             actionLabel={t('buildAPalace')}
-            actionIcon={<ChevronRight size={16} color={theme.ink} />}
+            actionIcon={<ChevronRight size={16} color={theme.onSun} />}
             onAction={() => router.push('/palaces/create-memory' as Href)}
           />
         )}
@@ -180,7 +182,7 @@ export default function PalaceHomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 40 },
   sectionHeadingRow: {
@@ -193,7 +195,7 @@ const styles = StyleSheet.create({
   sectionEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
   sectionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 3 },
   sectionHeadingCopy: { flex: 1, paddingRight: 10 },
-  seeAllButton: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: '#EEE9FF', paddingLeft: 11, paddingRight: 7 },
+  seeAllButton: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: theme.violetTint, paddingLeft: 11, paddingRight: 7 },
   seeAllText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   sceneRail: { gap: 12, paddingRight: 8 },
   sceneCardWrap: { width: 112, height: 76 },
@@ -202,9 +204,9 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: '#CFC6F4',
+    backgroundColor: theme.violetTint,
     borderWidth: 2,
-    borderColor: '#E5DFFF',
+    borderColor: theme.line,
   },
   sceneImage: { ...StyleSheet.absoluteFillObject },
   sceneShade: {
@@ -212,18 +214,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(43,42,61,0.25)',
   },
   sceneCopy: { position: 'absolute', left: 7, right: 7, bottom: 6 },
-  sceneEditButton: { position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 8, backgroundColor: 'rgba(255,255,255,.9)', alignItems: 'center', justifyContent: 'center' },
+  sceneEditButton: { position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 8, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
   sceneName: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 10, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   sceneMeta: { color: 'rgba(255,255,255,0.85)', fontFamily: typography.bodyBold, fontSize: 8.5, marginTop: 1 },
   heroEmoji: { fontSize: 27 },
   sceneLoading: { height: 72, overflow: 'hidden', borderRadius: 14 },
   memoryLoading: { height: 150, overflow: 'hidden', borderRadius: 20 },
-  customCard: { marginTop: 14, borderRadius: 18, borderWidth: 1.5, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 13, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  customIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#EEE9FF', alignItems: 'center', justifyContent: 'center' },
+  customCard: { marginTop: 14, borderRadius: 18, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, padding: 13, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  customIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: theme.violetTint, alignItems: 'center', justifyContent: 'center' },
   customEmoji: { fontSize: 20 },
   customCopy: { flex: 1 },
   customEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8 },
   customTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, marginTop: 2 },
   customBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, marginTop: 2 },
   customArrow: { color: theme.violetDeep, fontFamily: typography.display, fontSize: 22 },
-});
+}));

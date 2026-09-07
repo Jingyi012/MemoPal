@@ -1,6 +1,6 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { groupMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { ArrowRight, CalendarClock } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
@@ -13,6 +13,7 @@ export function UpcomingReviewCard({
   reviews: DueMemoryReview[];
   onOpen: (review: DueMemoryReview) => void;
 }) {
+  const { styles, theme } = useStyles();
   const { language, t } = useTranslation('home');
   const groupedReviews = groupMemoryReviews(reviews);
   return (
@@ -47,18 +48,18 @@ function formatShortDate(value: string, language: 'en' | 'zh') {
   return new Date(value).toLocaleDateString(language === 'zh' ? 'zh-CN' : 'en-US', { month: 'short', day: 'numeric' });
 }
 
-const styles = StyleSheet.create({
-  card: { marginTop: 12, borderRadius: 21, borderWidth: 2, borderColor: '#E0D9FF', backgroundColor: '#FBFAFF', padding: 14 },
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
+  card: { marginTop: 12, borderRadius: 21, borderWidth: 2, borderColor: theme.violetLine, backgroundColor: theme.paper, padding: 14 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  icon: { width: 40, height: 40, borderRadius: 13, backgroundColor: '#EAF7FC', alignItems: 'center', justifyContent: 'center' },
+  icon: { width: 40, height: 40, borderRadius: 13, backgroundColor: theme.skyTint, alignItems: 'center', justifyContent: 'center' },
   copy: { flex: 1, minWidth: 0 },
   eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.7 },
   title: { color: theme.ink, fontFamily: typography.display, fontSize: 15, marginTop: 3 },
   subtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 3 },
   list: { gap: 7, marginTop: 12 },
-  row: { minHeight: 54, borderRadius: 14, backgroundColor: 'white', paddingHorizontal: 9, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 9 },
-  dateBadge: { minWidth: 56, borderRadius: 10, backgroundColor: '#F2EEFF', paddingHorizontal: 7, paddingVertical: 7, alignItems: 'center' },
+  row: { minHeight: 54, borderRadius: 14, backgroundColor: theme.paper, paddingHorizontal: 9, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 9 },
+  dateBadge: { minWidth: 56, borderRadius: 10, backgroundColor: theme.violetTint, paddingHorizontal: 7, paddingVertical: 7, alignItems: 'center' },
   dateText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   rowTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
   rowMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 2 },
-});
+}));

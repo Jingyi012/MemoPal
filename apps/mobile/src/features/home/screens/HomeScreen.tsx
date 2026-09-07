@@ -1,3 +1,4 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
@@ -10,7 +11,7 @@ import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
 import { useGamificationRules } from '@/features/gamification/shared/hooks/useGamificationRules';
 import { WeeklyActivityCard } from '@/features/gamification/shared/components/WeeklyActivityCard';
 import { typography } from '@/theme/typography';
-import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { Href, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, Check, Circle, Plus } from 'lucide-react-native';
@@ -23,6 +24,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
 
 export default function HomeScreen() {
+  const { styles } = useStyles();
   const router = useRouter();
   const { t } = useTranslation('home');
   const { colorScheme } = useColorScheme();
@@ -147,7 +149,7 @@ export default function HomeScreen() {
           <>
             <Text style={[styles.sectionLabel, { color: activeTheme.inkSoft }]}>{t('todaysPick')}</Text>
             <AnimatedPressable onPress={openTodayPick} style={styles.todayCard}>
-              <LinearGradient colors={['#FFF7E0', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.todayGradient}>
+              <LinearGradient colors={[activeTheme.sunTint, activeTheme.paper]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.todayGradient}>
                 <Text style={styles.todayIcon}>🕯️</Text>
                 <View style={styles.todayBody}>
                   <Text numberOfLines={1} style={styles.todayTitle}>{todayPickMemorySet.title}</Text>
@@ -165,9 +167,9 @@ export default function HomeScreen() {
 
         <Text style={[styles.sectionLabel, { color: activeTheme.inkSoft }]}>{t('thisWeek')}</Text>
         <View style={styles.statRow}>
-          <StatTile value={`${practiceStatsQuery.data?.sessionsCompleted ?? 0}`} label={t('practiceSessions')} />
-          <StatTile value={`${practiceStatsQuery.data?.wordsLearned ?? 0}`} label={t('words')} />
-          <StatTile value={`${practiceStatsQuery.data?.firstAttemptRecallPercent ?? 0}%`} label={t('firstTryRecall')} />
+          <StatTile value={`${practiceStatsQuery.data?.sessionsCompleted ?? 0}`} label={t('practiceSessions')} emoji="⚡" tone="sun" />
+          <StatTile value={`${practiceStatsQuery.data?.wordsLearned ?? 0}`} label={t('words')} emoji="🌱" tone="mint" />
+          <StatTile value={`${practiceStatsQuery.data?.firstAttemptRecallPercent ?? 0}%`} label={t('firstTryRecall')} emoji="🎯" tone="violet" />
         </View>
 
         <WeeklyActivityCard title={t('weekActivity')} activity={practiceStatsQuery.data?.weeklyActivity} events={activityQuery.events} />
@@ -185,6 +187,7 @@ function GettingStartedCard({
   steps: { practiced: boolean; createdOwn: boolean; exploredPalace: boolean };
   onNext: () => void;
 }) {
+  const { styles } = useStyles();
   const { t } = useTranslation('home');
   const rows = [
     { done: true, label: t('starterCreated') },
@@ -245,6 +248,7 @@ function DailyFocusCard({
   streak: number;
   onPress: () => void;
 }) {
+  const { styles } = useStyles();
   const { t } = useTranslation('home');
   const isDraft = memorySet?.status === 'draft';
   const title = review
@@ -297,6 +301,7 @@ const MEMORY_TIPS = [
 ];
 
 function MemoryTipCard() {
+  const { styles } = useStyles();
   const { t } = useTranslation('home');
   const tip = MEMORY_TIPS[(new Date().getDate() - 1) % MEMORY_TIPS.length];
   const tipIndex = (new Date().getDate() - 1) % MEMORY_TIPS.length + 1;
@@ -313,6 +318,7 @@ function MemoryTipCard() {
 }
 
 function ContinueSessionCardShim({ memorySet, latestAttempt, onPress }: { memorySet: MemorySet; latestAttempt: PracticeAttempt | null; onPress: () => void }) {
+  const { styles, theme } = useStyles();
   const { t } = useTranslation('home');
   const isPalace = memorySet.techniqueKey === 'palace';
   const recalledCount = latestAttempt?.mode === 'recall'
@@ -341,46 +347,50 @@ function ContinueSessionCardShim({ memorySet, latestAttempt, onPress }: { memory
               : `${memorySet.items.length} ${t('itemsReady')}`}
         </Text>
       </View>
-      <ArrowRight size={18} color="#6B6A80" />
+      <ArrowRight size={18} color={theme.inkSoft} />
     </AnimatedPressable>
   );
 }
 
-function StatTile({ value, label }: { value: string; label: string }) {
+function StatTile({ value, label, emoji, tone }: { value: string; label: string; emoji: string; tone: 'sun' | 'mint' | 'violet' }) {
+  const { styles } = useStyles();
+  const { colorScheme } = useColorScheme();
+  const palette = memopalThemes[colorScheme ?? 'light'];
   return (
-    <View style={styles.statTile}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+    <View style={[styles.statTile, { backgroundColor: palette[`${tone}Tint`], borderColor: palette[`${tone}Line`] }]}>
+      <Text accessible={false} style={{ fontSize: 23, marginBottom: 6 }}>{emoji}</Text>
+      <Text style={[styles.statValue, { color: palette.ink }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: palette.inkSoft }]}>{label}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 128 },
-  focusCard: { marginBottom: 16 },
+  content: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 128 },
+  focusCard: { marginBottom: 22 },
   focusTopRow: { zIndex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  focusEyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  focusEyebrowRow: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   focusEyebrow: { color: theme.sun, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase' },
   focusReward: { color: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
   focusStreak: { backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
   focusStreakText: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 11.5 },
-  focusTitle: { zIndex: 1, color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 20, marginTop: 12 },
-  focusBody: { zIndex: 1, color: '#C9C5E0', fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 4, maxWidth: '88%' },
-  focusAction: { zIndex: 1, alignSelf: 'flex-start', minHeight: 42, flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: theme.sun, borderRadius: 13, paddingHorizontal: 15, marginTop: 14 },
-  focusActionText: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 12.5 },
+  focusTitle: { zIndex: 1, color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 28, marginTop: 18 },
+  focusBody: { zIndex: 1, color: '#C9C5E0', fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21, marginTop: 6, maxWidth: '90%' },
+  focusAction: { zIndex: 1, alignSelf: 'flex-start', minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: theme.sun, borderRadius: 13, paddingHorizontal: 15, marginTop: 14 },
+  focusActionText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 14 },
   gettingStartedCard: { borderRadius: 19, borderWidth: 2, borderColor: theme.skyLine, backgroundColor: theme.skyTint, padding: 15, marginBottom: 16 },
   gettingStartedTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  gettingStartedEyebrow: { color: theme.sky, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8, textTransform: 'uppercase' },
+  gettingStartedEyebrow: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8, textTransform: 'uppercase' },
   gettingStartedTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15, marginTop: 2 },
   gettingStartedCount: { color: theme.ink, backgroundColor: theme.paper, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
   gettingStartedRows: { gap: 8, marginTop: 13 },
   gettingStartedRow: { minHeight: 24, flexDirection: 'row', alignItems: 'center', gap: 9 },
   stepDone: { width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.grass },
   gettingStartedLabel: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 11.5 },
-  gettingStartedLabelDone: { color: '#858095', textDecorationLine: 'line-through' },
-  gettingStartedAction: { minHeight: 42, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 13, backgroundColor: theme.sun, paddingHorizontal: 14, marginTop: 13 },
-  gettingStartedActionText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  gettingStartedLabelDone: { color: theme.inkMuted, textDecorationLine: 'line-through' },
+  gettingStartedAction: { minHeight: 48, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 13, backgroundColor: theme.sun, paddingHorizontal: 14, marginTop: 13 },
+  gettingStartedActionText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   emptyIconEmoji: { fontSize: 24 },
   continueCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 18, padding: 13, boxShadow: '0px 8px 20px rgba(43,42,61,0.08)' },
   techniqueBadge: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
@@ -388,29 +398,29 @@ const styles = StyleSheet.create({
   palaceBadge: { backgroundColor: theme.violetTint },
   pegBadge: { backgroundColor: theme.berryTint },
   continueBody: { flex: 1, minWidth: 0 },
-  continueLabel: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10.5 },
-  continueTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 1, marginBottom: 6 },
+  continueLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5 },
+  continueTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 1, marginBottom: 6 },
   continueTrack: { height: 6, backgroundColor: theme.line, borderRadius: 999, overflow: 'hidden' },
   continueFill: { height: '100%', backgroundColor: theme.violet, borderRadius: 999 },
-  continueMeta: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 5 },
-  sectionLabel: { color: '#6B6A80', fontFamily: typography.displayExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },
-  todayCard: { borderWidth: 2, borderColor: '#FFE6A3', borderRadius: 18, overflow: 'hidden', boxShadow: '0px 8px 20px rgba(43,42,61,0.08)' },
+  continueMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 5 },
+  sectionLabel: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },
+  todayCard: { borderWidth: 2, borderColor: theme.sunLine, borderRadius: 18, overflow: 'hidden', boxShadow: '0px 8px 20px rgba(43,42,61,0.08)' },
   todayGradient: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 13 },
   todayIcon: { fontSize: 26 },
   todayBody: { flex: 1, minWidth: 0 },
-  todayTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 13.5 },
-  todaySubtitle: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 2 },
-  startButton: { backgroundColor: '#FFC93C', borderRadius: 11, paddingHorizontal: 14, paddingVertical: 9 },
-  startButtonText: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 12 },
+  todayTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 13.5 },
+  todaySubtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 2 },
+  startButton: { backgroundColor: theme.sun, borderRadius: 11, paddingHorizontal: 14, paddingVertical: 9 },
+  startButtonText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 12 },
   statRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
   statTile: { flex: 1, alignItems: 'center', backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 8 },
-  statValue: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 19 },
-  statLabel: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 2 },
+  statValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 },
+  statLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, textAlign: 'center', marginTop: 2 },
   loadingFrame: { height: 145, borderRadius: 18, overflow: 'hidden' },
   tipCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: theme.mintTint, borderWidth: 2, borderColor: theme.mintLine, borderRadius: 18, padding: 14, marginTop: 22 },
   tipEmoji: { fontSize: 24, lineHeight: 30 },
   tipCopy: { flex: 1 },
-  tipEyebrow: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8 },
-  tipTitle: { color: '#2B2A3D', fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 2 },
-  tipBody: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 3 },
-});
+  tipEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8 },
+  tipTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 2 },
+  tipBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 3 },
+}));

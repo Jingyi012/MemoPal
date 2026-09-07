@@ -11,7 +11,7 @@ import { useGeneratePalaceAssociations } from '@/features/palace-scenes/hooks/us
 import type { PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
 import { getPalaceLocusDescription, getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import {
@@ -41,6 +41,7 @@ const MAX_PALACE_ITEMS = 100;
 
 export default function PalaceMemoryComposerScreen() {
   const { language, t } = useTranslation('palace');
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const params = useLocalSearchParams<{
     title?: string | string[];
@@ -471,7 +472,9 @@ export default function PalaceMemoryComposerScreen() {
               onChangeText={setTitle}
               onFocus={() => handleInputFocus(titleInputRef.current)}
               placeholder={t('titlePlaceholder')}
-              placeholderTextColor="#AAA7B5"
+              placeholderTextColor={theme.inkSoft}
+              selectionColor={theme.violetDeep}
+              cursorColor={theme.violetDeep}
               style={styles.input}
             />
           </>
@@ -515,7 +518,9 @@ export default function PalaceMemoryComposerScreen() {
                   accessibilityLabel={t('searchScenes')}
                   onChangeText={setSceneSearch}
                   placeholder={t('searchScenes')}
-                  placeholderTextColor="#AAA7B5"
+                  placeholderTextColor={theme.inkSoft}
+                  selectionColor={theme.violetDeep}
+                  cursorColor={theme.violetDeep}
                   style={styles.sceneSearchInput}
                   value={sceneSearch}
                 />
@@ -573,7 +578,7 @@ export default function PalaceMemoryComposerScreen() {
           <View style={styles.emptyScenes}>
             <Text style={styles.sceneImageEmoji}>🖼️</Text>
               <Text style={styles.helper}>{t('noPublishedScenes')}</Text>
-              <AnimatedPressable onPress={() => scenesQuery.refetch()} style={styles.refreshButton}><RefreshCcw size={15} color={theme.ink} /><Text style={styles.refreshText}>{t('refresh')}</Text></AnimatedPressable>
+              <AnimatedPressable onPress={() => scenesQuery.refetch()} style={styles.refreshButton}><RefreshCcw size={15} color={theme.onSun} /><Text style={styles.refreshText}>{t('refresh')}</Text></AnimatedPressable>
           </View>
         )}
           </>
@@ -639,7 +644,9 @@ export default function PalaceMemoryComposerScreen() {
                     onSubmitEditing={addItem}
                     returnKeyType="done"
                     placeholder={t('itemPlaceholder')}
-                    placeholderTextColor="#AAA7B5"
+                    placeholderTextColor={theme.inkSoft}
+                    selectionColor={theme.violetDeep}
+                    cursorColor={theme.violetDeep}
                     style={[styles.input, { flex: 1 }]}
                   />
                   <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} style={styles.addButton}><Plus size={21} color="white" /></AnimatedPressable>
@@ -669,7 +676,7 @@ export default function PalaceMemoryComposerScreen() {
                 onPress={continueToPlacement}
                 style={[styles.continueButton, noFittingScene && styles.continueButtonDisabled]}>
               <Text style={[styles.continueText, noFittingScene && styles.continueTextDisabled]}>{t('continuePlace')}</Text>
-                <ArrowRight size={18} color={noFittingScene ? '#B8B3C5' : theme.ink} />
+                <ArrowRight size={18} color={noFittingScene ? theme.inkSoft : theme.onSun} />
               </AnimatedPressable>
             </View>
           </>
@@ -686,7 +693,7 @@ export default function PalaceMemoryComposerScreen() {
         {step === 'place' && (
           <View style={styles.fullWidthButton}>
             <AnimatedPressable disabled={createMemorySet.isPending} onPress={save} style={[styles.saveButton, createMemorySet.isPending && { opacity: 0.5 }]}>
-              <Check size={19} color={theme.ink} /><Text style={styles.saveText}>{createMemorySet.isPending ? t('saving') : error ? t('trySavingAgain') : t('savePalace')}</Text><ArrowRight size={18} color={theme.ink} />
+              <Check size={19} color={theme.onSun} /><Text style={styles.saveText}>{createMemorySet.isPending ? t('saving') : error ? t('trySavingAgain') : t('savePalace')}</Text><ArrowRight size={18} color={theme.onSun} />
             </AnimatedPressable>
           </View>
         )}
@@ -695,10 +702,10 @@ export default function PalaceMemoryComposerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 42 },
-  infoCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 19, backgroundColor: '#EEE9FF', borderWidth: 1.5, borderColor: '#DCD4FF', padding: 14 },
-  infoIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white' },
+  infoCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 19, backgroundColor: theme.violetTint, borderWidth: 1.5, borderColor: theme.violetLine, padding: 14 },
+  infoIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
   infoEmoji: { fontSize: 25, lineHeight: 30 }, infoCopy: { flex: 1, minWidth: 0 }, infoTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 19 }, infoText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
   sceneImageEmoji: { fontSize: 24 },
   draftCard: {
@@ -706,13 +713,13 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#FFE6A3',
-    backgroundColor: '#FFF7E0',
+    borderColor: theme.sunLine,
+    backgroundColor: theme.sunTint,
     paddingHorizontal: 14,
     paddingVertical: 15,
   },
   draftEyebrow: {
-    color: theme.sunDeep,
+    color: theme.violetDeep,
     fontFamily: typography.bodyExtraBold,
     fontSize: 10,
     lineHeight: 14,
@@ -737,26 +744,26 @@ const styles = StyleSheet.create({
     minHeight: 44,
     marginTop: 10,
     borderRadius: 11,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     borderWidth: 1.5,
-    borderColor: '#DCD4FF',
+    borderColor: theme.violetLine,
     paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
   editContentText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 }, optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: '#7A68E0', fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 18 },
-  sceneHeadingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between' }, sceneHeadingCopy: { flex: 1 }, sceneLabel: { marginBottom: 2 }, sceneCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginBottom: 9 }, seeAllScenesButton: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: '#EEE9FF', marginBottom: 8, paddingLeft: 11, paddingRight: 7 }, seeAllScenesText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 }, sceneSearchWrap: { alignItems: 'center', backgroundColor: 'white', borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 8, marginBottom: 10, paddingHorizontal: 12 }, sceneSearchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13, minHeight: 44 }, sceneGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }, sceneOptionGrid: { marginRight: 0, marginBottom: 10, width: '48%' }, noMatchingScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, paddingVertical: 16, textAlign: 'center' },
-  input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 14, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
-  sceneRail: { marginHorizontal: -16, paddingLeft: 16 }, sceneOption: { width: 172, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8, marginRight: 10 }, sceneOptionActive: { borderColor: '#7A68E0', backgroundColor: '#F7F5FF' }, sceneOptionLimited: { opacity: 0.72 }, sceneThumb: { height: 92, borderRadius: 12 }, sceneName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 8 }, sceneMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 2 },
-  canvasHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, textAlign: 'center', marginTop: 8 }, capacityCard: { marginTop: 11, borderRadius: 14, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 12 }, capacityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 }, capacityText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 3 },
-  emptyScenes: { borderWidth: 2, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.paper, padding: 18, alignItems: 'center' }, helper: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center' }, refreshButton: { marginTop: 10, flexDirection: 'row', gap: 6, backgroundColor: theme.sun, borderRadius: 11, paddingHorizontal: 12, paddingVertical: 8 }, refreshText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  addRow: { flexDirection: 'row', gap: 9 }, addButton: { width: 50, height: 50, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center' },
-  itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line }, itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: '#9B8CFF', alignItems: 'center', justifyContent: 'center' }, itemNumberText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 11 }, itemText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginLeft: 11 }, locusText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginLeft: 11, marginTop: 2 }, deleteButton: { width: 39, height: 39, alignItems: 'center', justifyContent: 'center' },
-  errorCard: { marginTop: 14, borderRadius: 14, backgroundColor: '#FFF0F4', borderWidth: 1.5, borderColor: '#FFD2DC', padding: 12 }, errorText: { color: '#B53A5F', fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 }, optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 18 },
+  sceneHeadingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between' }, sceneHeadingCopy: { flex: 1 }, sceneLabel: { marginBottom: 2 }, sceneCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginBottom: 9 }, seeAllScenesButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: theme.violetTint, marginBottom: 8, paddingLeft: 11, paddingRight: 7 }, seeAllScenesText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 }, sceneSearchWrap: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 8, marginBottom: 10, paddingHorizontal: 12 }, sceneSearchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13, minHeight: 44 }, sceneGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }, sceneOptionGrid: { marginRight: 0, marginBottom: 10, width: '48%' }, noMatchingScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, paddingVertical: 16, textAlign: 'center' },
+  input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 14, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
+  sceneRail: { marginHorizontal: -16, paddingLeft: 16 }, sceneOption: { width: 172, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8, marginRight: 10 }, sceneOptionActive: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint }, sceneOptionLimited: { opacity: 0.72 }, sceneThumb: { height: 92, borderRadius: 12 }, sceneName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 8 }, sceneMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 2 },
+  canvasHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, textAlign: 'center', marginTop: 8 }, capacityCard: { marginTop: 11, borderRadius: 14, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 12 }, capacityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 }, capacityText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 3 },
+  emptyScenes: { borderWidth: 2, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.paper, padding: 18, alignItems: 'center' }, helper: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center' }, refreshButton: { marginTop: 10, flexDirection: 'row', gap: 6, backgroundColor: theme.sun, borderRadius: 11, paddingHorizontal: 12, paddingVertical: 8 }, refreshText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  addRow: { flexDirection: 'row', gap: 9 }, addButton: { width: 50, height: 50, borderRadius: 14, backgroundColor: theme.night, alignItems: 'center', justifyContent: 'center' },
+  itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line }, itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: theme.violet, alignItems: 'center', justifyContent: 'center' }, itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 }, itemText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginLeft: 11 }, locusText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginLeft: 11, marginTop: 2 }, deleteButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  errorCard: { marginTop: 14, borderRadius: 14, backgroundColor: theme.berryTint, borderWidth: 1.5, borderColor: theme.berryLine, padding: 12 }, errorText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   fullWidthButton: { alignSelf: 'stretch' },
-  continueButton: { width: '100%', minHeight: 53, marginTop: 20, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 5px 0px ${theme.sunDeep}` }, continueButtonDisabled: { backgroundColor: '#EDEAF4', boxShadow: 'none' }, continueText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 }, continueTextDisabled: { color: '#9C97AA' },
-  editSetupButton: { width: '100%', minHeight: 45, marginTop: 18, borderRadius: 14, borderWidth: 1.5, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center' }, editSetupText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  saveButton: { width: '100%', minHeight: 53, marginTop: 20, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 5px 0px ${theme.sunDeep}` }, saveText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-});
+  continueButton: { width: '100%', minHeight: 53, marginTop: 20, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 5px 0px ${theme.sunDeep}` }, continueButtonDisabled: { backgroundColor: theme.disabled, boxShadow: 'none' }, continueText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 }, continueTextDisabled: { color: theme.inkSoft },
+  editSetupButton: { width: '100%', minHeight: 45, marginTop: 18, borderRadius: 14, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center' }, editSetupText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  saveButton: { width: '100%', minHeight: 53, marginTop: 20, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 5px 0px ${theme.sunDeep}` }, saveText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+}));

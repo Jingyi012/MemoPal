@@ -350,6 +350,8 @@ function ReviewState({
               placeholder={t('scanItemPlaceholder')}
               placeholderTextColor="#AAA7B5"
               maxLength={500}
+              selectionColor={theme.violetDeep}
+              cursorColor={theme.violetDeep}
               style={styles.itemInput}
             />
             <AnimatedPressable

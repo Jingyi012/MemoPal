@@ -1,5 +1,5 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { ChevronRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
@@ -13,6 +13,7 @@ type MemorySetRowProps = {
 };
 
 export function MemorySetRow({ tone, title, badgeText, subtitle, onPress }: MemorySetRowProps) {
+  const { styles, theme } = useStyles();
   const isPeg = tone === 'peg';
   return (
     <AnimatedPressable
@@ -31,7 +32,7 @@ export function MemorySetRow({ tone, title, badgeText, subtitle, onPress }: Memo
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: { minHeight: 76, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 13, marginBottom: 10, flexDirection: 'row', alignItems: 'center' },
   badge: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   pegBadge: { backgroundColor: theme.berryTint },
@@ -42,4 +43,4 @@ const styles = StyleSheet.create({
   meta: { flex: 1, marginHorizontal: 12 },
   title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
   subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, marginTop: 3 },
-});
+}));

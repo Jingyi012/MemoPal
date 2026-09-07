@@ -1,5 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { useColorScheme } from 'nativewind';
+import { memopalThemes, type MemoPalTheme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { RefreshCcw } from 'lucide-react-native';
 import type { ReactNode } from 'react';
@@ -25,6 +26,9 @@ export function ModuleNoticeCard({
   actionIcon,
   onAction,
 }: ModuleNoticeCardProps) {
+  const { colorScheme } = useColorScheme();
+  const theme = memopalThemes[colorScheme ?? 'light'];
+  const styles = createStyles(theme);
   return (
     <View style={styles.card}>
       {emoji ? <Text style={styles.emoji}>{emoji}</Text> : icon ? <View style={styles.icon}>{icon}</View> : null}
@@ -36,7 +40,7 @@ export function ModuleNoticeCard({
           accessibilityRole="button"
           onPress={onAction}
           style={styles.retryButton}>
-          {actionIcon ?? <RefreshCcw size={16} color={theme.ink} />}
+          {actionIcon ?? <RefreshCcw size={16} color={memopalThemes.light.ink} />}
           <Text style={styles.retryText}>{actionLabel}</Text>
         </AnimatedPressable>
       ) : null}
@@ -44,31 +48,31 @@ export function ModuleNoticeCard({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: MemoPalTheme) => StyleSheet.create({
   card: {
     alignItems: 'center',
-    backgroundColor: theme.paper,
-    borderColor: theme.line,
-    borderRadius: 20,
+    backgroundColor: theme.sunTint,
+    borderColor: theme.sunLine,
+    borderRadius: 26,
     borderWidth: 2,
-    padding: 20,
+    padding: 24,
   },
   icon: {
     alignItems: 'center',
     backgroundColor: theme.mintTint,
     borderRadius: 14,
-    height: 42,
+    height: 56,
     justifyContent: 'center',
     marginBottom: 9,
-    width: 42,
+    width: 56,
   },
   emoji: { fontSize: 31, marginBottom: 9 },
-  title: { color: theme.ink, fontFamily: typography.display, fontSize: 15, textAlign: 'center' },
+  title: { color: theme.ink, fontFamily: typography.display, fontSize: 18, textAlign: 'center' },
   body: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' },
   retryButton: {
     alignItems: 'center',
     backgroundColor: theme.sun,
-    borderRadius: 12,
+    borderRadius: 16,
     flexDirection: 'row',
     gap: 7,
     marginTop: 14,
@@ -76,5 +80,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  retryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  retryText: { color: memopalThemes.light.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
 });

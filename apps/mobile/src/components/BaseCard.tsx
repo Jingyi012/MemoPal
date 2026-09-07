@@ -37,8 +37,8 @@ const CARD_SHADOW_CLASS: Record<CardShadow, string> = {
 
 const CARD_SHADOW_STYLE: Record<CardShadow, ViewStyle | undefined> = {
   none: undefined,
-  sm: { boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.08)' },
-  md: { boxShadow: '0px 4px 14px rgba(43, 42, 61, 0.12)' },
+  sm: { boxShadow: '0px 4px 0px rgba(105, 80, 204, 0.07)' },
+  md: { boxShadow: '0px 6px 0px rgba(105, 80, 204, 0.10)' },
 };
 
 export const CARD_SURFACE_CLASS = 'bg-surface';
@@ -46,7 +46,7 @@ export const CARD_SURFACE_CLASS = 'bg-surface';
 export function getBaseCardClassName({
   className,
   padding = 'md',
-  radius = '2xl',
+  radius = '3xl',
   shadow = 'sm',
   bordered = true,
 }: {
@@ -70,7 +70,7 @@ export const BaseCard: React.FC<BaseCardProps> = ({
   className,
   children,
   padding = 'md',
-  radius = '2xl',
+  radius = '3xl',
   shadow = 'sm',
   bordered = true,
   style,

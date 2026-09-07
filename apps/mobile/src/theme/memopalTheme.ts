@@ -2,6 +2,10 @@ export type MemoPalTheme = Readonly<{
   ink: string;
   inkSoft: string;
   inkMuted: string;
+  onSun: string;
+  onAccent: string;
+  link: string;
+  successText: string;
   disabled: string;
   paper: string;
   canvas: string;
@@ -35,10 +39,14 @@ const lightTheme: MemoPalTheme = {
   ink: '#2B2A3D',
   inkSoft: '#6B6A80',
   inkMuted: '#9A97A7',
+  onSun: '#2B2A3D',
+  onAccent: '#FFFFFF',
+  link: '#24718D',
+  successText: '#267A55',
   disabled: '#D8D4E2',
   paper: '#FFFFFF',
   canvas: '#FFFFFF',
-  line: '#E5DFFF',
+  line: '#E9DFF0',
   sand: '#FFF3E6',
   berryTint: '#FFF0F4',
   berryLine: '#FFD9E2',
@@ -55,9 +63,9 @@ const lightTheme: MemoPalTheme = {
   sun: '#FFC93C',
   sunDeep: '#F2A900',
   berry: '#FF6F91',
-  berryDeep: '#E8527A',
+  berryDeep: '#C73565',
   violet: '#9B8CFF',
-  violetDeep: '#7A68E0',
+  violetDeep: '#6950CC',
   grass: '#3FB87F',
   sky: '#4FC0E8',
   night: '#2B2641',
@@ -68,6 +76,10 @@ const darkTheme: MemoPalTheme = {
   ink: '#F8F6FF',
   inkSoft: '#C9C5E0',
   inkMuted: '#AAA6B8',
+  onSun: '#2B2A3D',
+  onAccent: '#2B2A3D',
+  link: '#6DD2F2',
+  successText: '#75D8A6',
   disabled: '#51496F',
   paper: '#2B2641',
   canvas: '#1E1A30',

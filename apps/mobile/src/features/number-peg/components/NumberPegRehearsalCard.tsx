@@ -1,6 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
 import { typography } from '@/theme/typography';
 import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react-native';
@@ -31,6 +31,7 @@ export function NumberPegRehearsalCard({
   onPrevious,
   onNext,
 }: NumberPegRehearsalCardProps) {
+  const { styles, theme } = useStyles();
   const { t } = useTranslation('numberPeg');
   const localizedPeg = useMemo(() => localizeNumberPeg(peg, t), [peg, t]);
   const { playSound, feedbackEnabled } = useSoundEffects();
@@ -139,12 +140,12 @@ export function NumberPegRehearsalCard({
           disabled={isFirst}
           onPress={onPrevious}
           style={[styles.roundButton, isFirst && styles.disabled]}>
-          <ArrowLeft size={19} color={theme.ink} />
+          <ArrowLeft size={19} color={theme.onSun} />
         </AnimatedPressable>
         <View style={styles.nextButtonWrap}>
           <AnimatedPressable onPress={onNext} style={styles.nextButton}>
             <Text style={styles.nextText}>{isLast ? t('startRecall') : t('next')}</Text>
-            <ArrowRight size={17} color={theme.ink} />
+            <ArrowRight size={17} color={theme.onSun} />
           </AnimatedPressable>
         </View>
       </View>
@@ -166,7 +167,7 @@ function fallbackRecipe(item: string, peg: NumberPegItem) {
   };
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: {
     backgroundColor: theme.paper,
     borderColor: theme.line,
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
   headerRow: { alignItems: 'center', flexDirection: 'row', gap: 11 },
   icon: {
     alignItems: 'center',
-    backgroundColor: '#FFF0F4',
+    backgroundColor: theme.berryTint,
     borderRadius: 13,
     height: 38,
     justifyContent: 'center',
@@ -195,8 +196,8 @@ const styles = StyleSheet.create({
   progress: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3 },
   sceneVisual: {
     alignItems: 'center',
-    backgroundColor: '#FFFCF4',
-    borderColor: '#EADFC4',
+    backgroundColor: theme.sunTint,
+    borderColor: theme.sunLine,
     borderRadius: 14,
     borderStyle: 'dashed',
     borderWidth: 1.5,
@@ -209,8 +210,8 @@ const styles = StyleSheet.create({
   },
   pegBubble: {
     alignItems: 'center',
-    backgroundColor: '#FFF0F4',
-    borderColor: '#FFD9E2',
+    backgroundColor: theme.berryTint,
+    borderColor: theme.berryLine,
     borderRadius: 40,
     borderWidth: 2,
     height: 80,
@@ -257,30 +258,30 @@ const styles = StyleSheet.create({
   },
   replayButton: {
     alignItems: 'center',
-    backgroundColor: '#EEE9FF',
+    backgroundColor: theme.violetTint,
     borderRadius: 18,
-    height: 36,
+    height: 44,
     justifyContent: 'center',
-    width: 36,
+    width: 44,
   },
   sceneSparkle: { fontSize: 20 },
   wordTag: {
     alignSelf: 'center',
-    backgroundColor: '#E3F6ED',
-    borderColor: '#BFE7D6',
+    backgroundColor: theme.mintTint,
+    borderColor: theme.mintLine,
     borderRadius: 8,
     borderWidth: 1,
     marginTop: 10,
     paddingHorizontal: 9,
     paddingVertical: 3,
   },
-  wordTagText: { color: '#247B67', fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  wordTagText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   actions: { alignItems: 'center', flexDirection: 'row', gap: 9, marginTop: 18, width: '100%' },
   roundButton: {
     alignItems: 'center',
     backgroundColor: theme.sun,
     borderRadius: 23,
-    height: 46,
+    minHeight: 46,
     justifyContent: 'center',
     width: 46,
   },
@@ -293,8 +294,10 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     gap: 7,
-    height: 46,
+    minHeight: 46,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     justifyContent: 'center',
   },
-  nextText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-});
+  nextText: { color: theme.onSun, flexShrink: 1, textAlign: 'center', fontFamily: typography.bodyExtraBold, fontSize: 12 },
+}));

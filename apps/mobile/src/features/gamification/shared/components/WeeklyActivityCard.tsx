@@ -1,3 +1,4 @@
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import type { XpEventRecord } from '@/features/gamification/shared/api/xpEvent';
 import { typography } from '@/theme/typography';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,6 +14,7 @@ type WeeklyActivityCardProps = {
 
 /** Shared seven-day XP activity card used on Home and Progress. */
 export function WeeklyActivityCard({ title, events = [], activity }: WeeklyActivityCardProps) {
+  const { styles } = useStyles();
   const { t } = useTranslation('home');
   const weekdayLabels = useMemo(() => [
     t('weekdaySun'),
@@ -29,7 +31,8 @@ export function WeeklyActivityCard({ title, events = [], activity }: WeeklyActiv
       const max = Math.max(1, ...values);
       return values.map((value, index) => ({
         label: formatWeekday(activity[index]?.date, weekdayLabels),
-        percent: value ? Math.max(10, Math.round((value / max) * 100)) : 6,
+        value,
+        percent: Math.round((value / max) * 100),
         today: index === values.length - 1,
       }));
     }
@@ -51,23 +54,30 @@ export function WeeklyActivityCard({ title, events = [], activity }: WeeklyActiv
     const max = Math.max(1, ...values);
     return values.map((value, index) => ({
       label: formatWeekday(days[index], weekdayLabels),
-      percent: value ? Math.max(10, Math.round((value / max) * 100)) : 6,
+      value,
+      percent: Math.round((value / max) * 100),
       today: index === 6,
     }));
   }, [activity, events, weekdayLabels]);
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.heading}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.unit}>{activity ? t('practiceSessions') : 'XP'}</Text>
+      </View>
       <View style={styles.barChart}>
         {chartActivity.map((day, index) => (
-          <View key={`${day.label}-${index}`} style={styles.barColumn}>
+          <View key={`${day.label}-${index}`} style={styles.barColumn} accessible accessibilityLabel={`${day.label}: ${day.value}`}>
+            <Text style={styles.barValue}>{day.value}</Text>
+            <View style={styles.barPlot}>
             <LinearGradient
               colors={day.today ? ['#FFC93C', '#F2A900'] : ['#4FC0E8', '#3A9DC4']}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={[styles.bar, { height: `${day.percent}%` }]}
             />
+            </View>
             <Text style={styles.barLabel}>{day.label}</Text>
           </View>
         ))}
@@ -84,28 +94,29 @@ function formatWeekday(value: string | Date | undefined, labels: string[]) {
   return Number.isNaN(date.getTime()) ? '' : labels[date.getDay()] ?? '';
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5DFFF',
-    borderRadius: 16,
+    backgroundColor: theme.paper,
+    borderColor: theme.line,
+    borderRadius: 24,
     borderWidth: 2,
     marginTop: 14,
-    padding: 12,
+    padding: 18,
   },
+  heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 },
+  unit: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, fontFamily: typography.bodyBold, fontSize: 10 },
   title: {
-    color: '#6B6A80',
+    color: theme.inkSoft,
     fontFamily: typography.displayExtraBold,
-    fontSize: 11.5,
+    fontSize: 14,
     letterSpacing: 0.3,
-    marginBottom: 8,
     textTransform: 'uppercase',
   },
   barChart: {
     alignItems: 'flex-end',
     flexDirection: 'row',
     gap: 8,
-    height: 94,
+    height: 132,
     paddingBottom: 2,
     paddingHorizontal: 2,
     paddingTop: 8,
@@ -117,6 +128,8 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'flex-end',
   },
+  barPlot: { flex: 1, minHeight: 0, width: '100%', borderRadius: 8, backgroundColor: theme.violetTint, justifyContent: 'flex-end', overflow: 'hidden' },
+  barValue: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   bar: { borderRadius: 6, width: '100%' },
-  barLabel: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 9.5 },
-});
+  barLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
+}));
