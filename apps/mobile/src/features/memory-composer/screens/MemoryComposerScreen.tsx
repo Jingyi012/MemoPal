@@ -1,7 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import type { MemoryGoalType } from '@/features/memory-sets';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, ClipboardList, Plus, ScanText, Trash2 } from 'lucide-react-native';
@@ -29,6 +29,7 @@ type MemoryComposerProps = {
 };
 
 export default function MemoryComposerScreen({ initialTechnique, initialSceneId }: MemoryComposerProps = {}) {
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const params = useLocalSearchParams<{
     title?: string | string[];
@@ -226,7 +227,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                 onFocus={() => handleInputFocus(titleInputRef.current)}
                 maxLength={200}
                 placeholder={t('memoryPlaceholder')}
-                placeholderTextColor="#AAA7B5"
+                placeholderTextColor={theme.inkSoft}
                 selectionColor={theme.violetDeep}
                 cursorColor={theme.violetDeep}
                 style={styles.input}
@@ -288,14 +289,14 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                     multiline
                     maxLength={6000}
                     placeholder={'rhythm\nseparate\ncalendar'}
-                    placeholderTextColor="#AAA7B5"
+                    placeholderTextColor={theme.inkSoft}
                     selectionColor={theme.violetDeep}
                     cursorColor={theme.violetDeep}
                     style={[styles.input, styles.bulkInput]}
                   />
                   <AnimatedPressable onPress={addBulkItems} style={styles.bulkButton}>
                     <Text style={styles.bulkButtonText}>{t('addLines')}</Text>
-                    <ArrowRight size={16} color={theme.ink} />
+                    <ArrowRight size={16} color={theme.onSun} />
                   </AnimatedPressable>
                 </View>
               ) : null}
@@ -309,7 +310,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                   returnKeyType="done"
                   maxLength={500}
                   placeholder={t('itemPlaceholder')}
-                  placeholderTextColor="#AAA7B5"
+                  placeholderTextColor={theme.inkSoft}
                   selectionColor={theme.violetDeep}
                   cursorColor={theme.violetDeep}
                   style={[styles.input, styles.addInput]}
@@ -323,7 +324,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                 {items.map((item, index) => (
                   <View key={`${item}-${index}`} style={styles.itemChip}>
                     <View style={styles.itemChipNumber}><Text style={styles.itemChipNumberText}>{index + 1}</Text></View>
-                    <Text numberOfLines={1} style={styles.itemChipText}>{item}</Text>
+                    <Text style={styles.itemChipText}>{item}</Text>
                     <AnimatedPressable
                       accessibilityLabel={`${t('removeAccessibility')} ${item}`}
                       onPress={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))}
@@ -339,7 +340,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
             {message && <MessageCard message={message} />}
             <AnimatedPressable onPress={continueToTechniques} style={styles.primaryButton}>
               <Text style={styles.primaryButtonText}>{t('continue')}</Text>
-              <ArrowRight size={18} color={theme.ink} />
+              <ArrowRight size={18} color={theme.onSun} />
             </AnimatedPressable>
           </>
         ) : (
@@ -375,6 +376,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
 }
 
 function TechniqueCard({ technique, recommended, onPress }: { technique: TechniqueChoice; recommended: boolean; onPress: () => void }) {
+  const { styles, theme } = useStyles();
   const { t } = useTranslation('memoryComposer');
   const isPeg = technique === 'number-peg';
   const bestFor = isPeg
@@ -406,10 +408,11 @@ function TechniqueCard({ technique, recommended, onPress }: { technique: Techniq
 }
 
 function MessageCard({ message }: { message: string }) {
+  const { styles } = useStyles();
   return <View style={styles.messageCard}><Text style={styles.messageText}>{message}</Text></View>;
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 42 },
   progressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 15 },
@@ -418,7 +421,7 @@ const styles = StyleSheet.create({
   progressLine: { width: 70, height: 2, backgroundColor: theme.line, marginHorizontal: 7 },
   progressLineActive: { backgroundColor: theme.sunDeep },
   inputCard: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 20, padding: 16, boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.08)' },
-  cardIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF0F4' },
+  cardIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.berryTint },
   cardIconEmoji: { fontSize: 21 },
   cardTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 10 },
   cardBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
@@ -429,55 +432,55 @@ const styles = StyleSheet.create({
   importActionSelected: { borderColor: theme.berry, backgroundColor: theme.berryTint },
   importActionIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   pasteIcon: { backgroundColor: theme.berryTint },
-  scanIcon: { backgroundColor: '#EEE9FF' },
+  scanIcon: { backgroundColor: theme.violetTint },
   importActionText: { flex: 1, color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11.5, lineHeight: 15 },
-  bulkCard: { borderRadius: 15, borderWidth: 1.5, borderColor: '#FFD2DC', backgroundColor: '#FFF7F9', padding: 10, marginBottom: 10 },
+  bulkCard: { borderRadius: 15, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 10, marginBottom: 10 },
   bulkTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginBottom: 7 },
-  bulkInput: { minHeight: 105, paddingTop: 12, textAlignVertical: 'top', backgroundColor: 'white' },
-  bulkButton: { minHeight: 40, borderRadius: 11, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8 },
-  bulkButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  bulkInput: { minHeight: 105, paddingTop: 12, textAlignVertical: 'top', backgroundColor: theme.paper },
+  bulkButton: { minHeight: 44, borderRadius: 11, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8 },
+  bulkButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
-  input: { minHeight: 49, borderRadius: 12, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 12, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
+  input: { minHeight: 49, borderRadius: 12, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 12, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
   goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  goalChip: { minWidth: '47%', flexGrow: 1, minHeight: 43, borderRadius: 12, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  goalChipSelected: { borderColor: theme.sunDeep, backgroundColor: '#FFF7E0' },
+  goalChip: { minWidth: '47%', flexGrow: 1, minHeight: 44, borderRadius: 12, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  goalChipSelected: { borderColor: theme.sunDeep, backgroundColor: theme.sunTint },
   goalEmoji: { fontSize: 17 },
   goalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
   goalLabelSelected: { color: theme.ink },
   addRow: { flexDirection: 'row', gap: 8 },
   addInput: { flex: 1 },
   addButtonContainer: { width: 52, minHeight: 52 },
-  addButton: { width: '100%', minHeight: 52, borderRadius: 14, backgroundColor: theme.ink, alignItems: 'center', justifyContent: 'center' },
+  addButton: { width: '100%', minHeight: 52, borderRadius: 14, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.night, alignItems: 'center', justifyContent: 'center' },
   chipRow: { gap: 7, marginTop: 12 },
-  itemChip: { minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: theme.line, borderRadius: 12, backgroundColor: 'white', paddingHorizontal: 8 },
+  itemChip: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: theme.line, borderRadius: 12, backgroundColor: theme.paper, paddingHorizontal: 8 },
   itemChipNumber: { width: 20, height: 20, borderRadius: 10, backgroundColor: theme.sun, alignItems: 'center', justifyContent: 'center' },
-  itemChipNumberText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  itemChipNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   itemChipText: { flex: 1, color: theme.ink, fontFamily: typography.bodyBold, fontSize: 13 },
-  itemChipRemove: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  itemChipRemove: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: 12 },
   primaryButton: { minHeight: 53, marginTop: 16, borderRadius: 15, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
-  primaryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
-  messageCard: { marginTop: 13, borderRadius: 13, borderWidth: 1.5, borderColor: '#FFD2DC', backgroundColor: '#FFF0F4', padding: 11 },
+  primaryButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 15 },
+  messageCard: { marginTop: 13, borderRadius: 13, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 11 },
   messageText: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
-  recommendationBanner: { flexDirection: 'row', gap: 11, borderRadius: 18, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 14, marginBottom: 16 },
+  recommendationBanner: { flexDirection: 'row', gap: 11, borderRadius: 18, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 14, marginBottom: 16 },
   recommendationEmoji: { fontSize: 27 },
   recommendationTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   recommendationBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17, marginTop: 3 },
   techniqueCard: { position: 'relative', borderWidth: 2, borderColor: theme.line, borderRadius: 20, backgroundColor: theme.paper, padding: 15, marginBottom: 13 },
   techniqueCardRecommended: { borderColor: theme.sunDeep, borderWidth: 2.5 },
   ribbon: { position: 'absolute', right: 13, top: -11, borderRadius: 999, backgroundColor: theme.sun, paddingHorizontal: 10, paddingVertical: 4, boxShadow: '0px 2px 4px rgba(43, 42, 61, 0.15)' },
-  ribbonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.4 },
+  ribbonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.4 },
   techniqueHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 },
   techniqueIcon: { width: 47, height: 47, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  pegIcon: { backgroundColor: '#FFF0F4' },
-  palaceIcon: { backgroundColor: '#EEE9FF' },
+  pegIcon: { backgroundColor: theme.berryTint },
+  palaceIcon: { backgroundColor: theme.violetTint },
   techniqueIconEmoji: { fontSize: 25 },
   techniqueMeta: { flex: 1, minWidth: 0, paddingTop: 2 },
   techniqueName: { color: theme.ink, fontFamily: typography.display, fontSize: 16, lineHeight: 21 },
   techniqueTag: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, marginTop: 2 },
   techniqueDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12.5, lineHeight: 18, marginTop: 12 },
   bestForRow: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 11 },
-  bestFor: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodyBold, fontSize: 10.5, backgroundColor: 'white', borderWidth: 1.5, borderColor: theme.line, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
-  changeButton: { minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 2 },
+  bestFor: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodyBold, fontSize: 10.5, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
+  changeButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 2 },
   changeButtonText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
-});
+}));
