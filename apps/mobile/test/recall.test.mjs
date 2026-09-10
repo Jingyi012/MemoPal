@@ -1,5 +1,23 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createNumberPegRecallOrder, restoreNumberPegRecallOrder } from '../src/features/number-peg/utils/numberPegRecall.ts';
+
+test('number recall shuffles item identities and keeps ordered lists sequential', () => {
+  const items = [{ id: 'one' }, { id: 'two' }, { id: 'three' }];
+  const shuffled = createNumberPegRecallOrder(items, false, () => 0);
+  assert.deepEqual(shuffled, ['two', 'three', 'one']);
+  assert.deepEqual(createNumberPegRecallOrder(items, true, () => 0), ['one', 'two', 'three']);
+  assert.deepEqual(restoreNumberPegRecallOrder(items, shuffled), shuffled);
+  assert.deepEqual(restoreNumberPegRecallOrder(items, ['one', 'one', 'three']), ['one', 'two', 'three']);
+  assert.deepEqual(restoreNumberPegRecallOrder(items, ['one', 'two', 'deleted']), ['one', 'two', 'three']);
+});
+
+test('later retries cannot reduce previously used hints or inflate actual attempts', () => {
+  const hinted = [{ memoryItemId: 'one', isCorrect: false, attemptCount: 0, responseMs: 0, hintCount: 3 }];
+  const answered = upsertRecallResponse(hinted, 'one', true, 500, 1);
+  assert.equal(answered[0].hintCount, 3);
+  assert.equal(answered[0].attemptCount, 1);
+});
 import {
   getSpellingHint,
   normalizeRecallAnswer,
@@ -118,6 +136,15 @@ test('builds a handoff route without losing the prepared list', () => {
   assert.match(route, /^\/number-peg\/build\?/);
   assert.match(route, /title=Friday%20spelling/);
   assert.match(route, /items=%5B%22rhythm%22%2C%22separate%22%5D/);
+});
+
+test('preserves hint usage without treating it as another answer attempt', () => {
+  const hinted = [{ memoryItemId: 'item-1', isCorrect: false, attemptCount: 0, responseMs: 0, hintCount: 2 }];
+  const answered = upsertRecallResponse(hinted, 'item-1', true, 180, 2);
+
+  assert.equal(answered.length, 1);
+  assert.equal(answered[0].attemptCount, 1);
+  assert.equal(answered[0].hintCount, 2);
 });
 
 test('uses localized Palace locus copy and keeps custom copy as fallback', () => {

@@ -118,6 +118,7 @@ public sealed class GetPracticeAttemptHistoryQueryHandler
             response.MemoryItemId,
             response.IsCorrect,
             response.AttemptCount,
+            response.HintCount,
             response.ResponseMs,
             response.CreatedAt,
             response.UpdatedAt,

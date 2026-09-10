@@ -1,8 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Haptics from 'expo-haptics';
 import {
-  AccessibilityInfo,
-  InteractionManager,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -12,15 +10,10 @@ import {
   View,
 } from 'react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ArrowLeft,
-  ArrowRight,
-  PencilLine,
-  Play,
-  RefreshCw,
-} from 'lucide-react-native';
+import { ArrowLeft, ArrowRight } from 'lucide-react-native';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import type {
@@ -29,7 +22,6 @@ import type {
   PegSceneRecipe,
 } from '@/features/memory-sets';
 import { useMemorySetMutations } from '@/features/memory-sets';
-import { useSoundEffects } from '@/core/audio/useSoundEffects';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import {
   buildAllNumberPegItems,
@@ -49,18 +41,19 @@ import {
 import { typography } from '@/theme/typography';
 import {
   buildInitialSceneCandidates,
-  buildSceneCandidates,
-  buildSceneCaption,
-  getBoosterPresentation,
-  getCandidateSetForAction,
-  type BoosterKey,
   type SceneAnchor,
-  type SceneCandidate,
 } from '@/features/number-peg/utils/numberPegMovie';
-import { NumberPegMovieStage } from '@/features/number-peg/components/NumberPegMovieStage';
 import { useOnboardingMutations } from '@/features/onboarding/hooks/useOnboardingMutations';
+import { useGenerateNumberPegStories } from '@/features/number-peg/hooks/useGenerateNumberPegStories';
 
-type SceneDraft = { answer: string; sceneText: string; recipe: PegSceneRecipe };
+type SceneDraft = {
+  answer: string;
+  sceneText: string;
+  userDetail?: string;
+  creativeQuestion?: string;
+  source?: string;
+  recipe: PegSceneRecipe;
+};
 type StudioDraft = {
   schemaVersion: 1;
   kind: 'number-peg-studio';
@@ -71,17 +64,6 @@ type StudioDraft = {
   scenes: SceneDraft[];
   index: number;
 };
-const BOOSTERS: BoosterKey[] = [
-  'loud',
-  'sticky',
-  'hot',
-  'icy',
-  'giant',
-  'tiny',
-  'smelly',
-  'funny',
-  'surprising',
-] as const;
 const GOALS: {
   key: MemoryGoalType;
   label: 'goalSpelling' | 'goalList' | 'goalFacts' | 'goalOther';
@@ -92,9 +74,70 @@ const GOALS: {
   { key: 'facts', label: 'goalFacts', emoji: '💡' },
   { key: 'custom', label: 'goalOther', emoji: '✨' },
 ];
+const storyCopy = {
+  zh: {
+    title: '数字记忆',
+    story: '联想故事',
+    intro: '用一个奇特的联想故事，把目标词和固定数字挂钩连起来。',
+    generating: '正在构思故事…',
+    stopGenerating: '先用当前联想',
+    generate: '生成联想故事',
+    ai: 'AI 联想',
+    template: '备用联想 · 可编辑',
+    mixed: 'AI 与备用联想',
+    manual: '我的故事',
+    another: '换个故事',
+    editStory: '自己编辑',
+    done: '完成编辑',
+    personalize: '加入我的元素',
+    explanation: '加入你熟悉的人、地点或物品，让故事更好记。',
+    detail: '比如：我家的猫、学校食堂',
+    refine: '融入故事',
+    preview: '新故事预览',
+    previewHint: '原故事还在上方。喜欢这个版本，再采用它。',
+    useStory: '采用新故事',
+    keepOriginal: '保留原故事',
+    accept: '就记这个，下一张',
+    fallback:
+      '本次未获得完整的 AI 生成结果，故事中包含备用模板。你可以重试 AI 生成，或保留原故事并自己编辑。',
+    generationError: '故事生成失败，原来的联想已保留。可以重试或自己编辑。',
+    offlineSave: '当前离线，故事草稿已保留。联网后再点击保存。',
+  },
+  en: {
+    title: 'Number memory',
+    story: 'Association story',
+    intro: 'Connect each target to its fixed number peg with a memorable story.',
+    generating: 'Creating a story…',
+    stopGenerating: 'Use the current story',
+    generate: 'Create association stories',
+    ai: 'AI association',
+    template: 'Fallback association · editable',
+    mixed: 'AI and fallback associations',
+    manual: 'My story',
+    another: 'Try another story',
+    editStory: 'Edit it myself',
+    done: 'Finish editing',
+    personalize: 'Add my own elements',
+    explanation: 'Add a familiar person, place, or object to make the story easier to remember.',
+    detail: 'For example: my cat, the school cafeteria',
+    refine: 'Blend into story',
+    preview: 'New story preview',
+    previewHint: 'Your original story is still above. Adopt this version only if you prefer it.',
+    useStory: 'Use new story',
+    keepOriginal: 'Keep original',
+    accept: 'Keep this · next',
+    fallback:
+      'AI generation did not return a complete result. These stories include fallback templates. Retry AI generation, or keep and edit your original story.',
+    generationError:
+      'Story generation failed. Your previous association is kept; retry or edit it yourself.',
+    offlineSave: 'You are offline. Your story draft is kept; reconnect and tap Save again.',
+  },
+};
 export default function NumberPegComposerScreen() {
-  const { t } = useTranslation('numberPeg');
+  const { t, language } = useTranslation('numberPeg');
+  const copy = storyCopy[language === 'zh' ? 'zh' : 'en'];
   const { styles, theme } = useStyles();
+  const { isReady: networkReady, isOnline } = useNetworkStatus();
   const router = useRouter();
   const params = useLocalSearchParams<{
     title?: string | string[];
@@ -104,8 +147,8 @@ export default function NumberPegComposerScreen() {
   }>();
   const { createMemorySet } = useMemorySetMutations();
   const { linkMemory: linkOnboardingMemory } = useOnboardingMutations();
+  const generateStories = useGenerateNumberPegStories();
   const { user } = useCurrentUser();
-  const { playSound, feedbackEnabled } = useSoundEffects();
   const unlocked = getUnlockedPegCount(user?.level ?? 1);
   const pegs = useMemo(() => buildAllNumberPegItems(), []);
   const anchors = useMemo<SceneAnchor[]>(
@@ -145,14 +188,19 @@ export default function NumberPegComposerScreen() {
   const [index, setIndex] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const generatingRef = useRef(false);
+  const requestVersion = useRef(0);
+  const generationController = useRef<AbortController | null>(null);
+  const autoGenerated = useRef(false);
+  const [editDetail, setEditDetail] = useState(false);
+  const [storyPreview, setStoryPreview] = useState<{ index: number; scene: SceneDraft } | null>(
+    null
+  );
+  const [editStory, setEditStory] = useState(false);
   const savingRef = useRef(false);
   const [loaded, setLoaded] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [playSignal, setPlaySignal] = useState(0);
-  const [customMode, setCustomMode] = useState(false);
-  const [candidateSet, setCandidateSet] = useState(0);
   const progressScrollRef = useRef<ScrollView>(null);
-  const autoPreviewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftKey = useMemo(
     () =>
       `@memopal:number-peg-studio:${user?.id ?? 'local'}:${fromShared ? `${firstParam(params.title) ?? ''}:${initialItems.join('|')}` : 'direct'}`,
@@ -161,40 +209,95 @@ export default function NumberPegComposerScreen() {
   const current = scenes[index];
   const pegNumber = (index % Math.max(1, unlocked)) + 1;
   const currentAnchor = current?.recipe.anchorSnapshot ?? anchors[pegNumber - 1];
-  const candidates = useMemo(
-    () =>
-      buildSceneCandidates(currentAnchor, current?.answer ?? '', candidateSet, (key) =>
-        t(key as any)
-      ),
-    [candidateSet, current?.answer, currentAnchor, t]
+  useEffect(
+    () => () => {
+      requestVersion.current += 1;
+      generationController.current?.abort();
+    },
+    []
   );
-  const currentSoundPreset = current?.recipe.soundPreset ?? 'complete';
-  const currentHapticPreset = current?.recipe.hapticPreset;
-  const hasCurrentScene = Boolean(current);
-  const previewScene = useCallback(
-    (withFeedback = true) => {
+  const cancelGeneration = () => {
+    requestVersion.current += 1;
+    generationController.current?.abort();
+    generatingRef.current = false;
+    setIsGenerating(false);
+  };
+  const generate = useCallback(
+    async (values: SceneDraft[], positions: number[], preview = false) => {
+      if (generatingRef.current || savingRef.current) return;
+      generatingRef.current = true;
+      setIsGenerating(true);
       setMessage(null);
-      setPlaySignal((signal) => signal + 1);
-      if (withFeedback) {
-        playSound(currentSoundPreset);
-        if (feedbackEnabled && currentHapticPreset)
-          void Haptics.impactAsync(
-            currentHapticPreset === 'success'
-              ? Haptics.ImpactFeedbackStyle.Light
-              : Haptics.ImpactFeedbackStyle.Medium
-          ).catch(() => undefined);
+      const version = ++requestVersion.current;
+      const controller = new AbortController();
+      generationController.current = controller;
+      try {
+        const result = await generateStories.mutateAsync({
+          signal: controller.signal,
+          locale: language === 'zh' ? 'zh' : 'en',
+          style: 'playful',
+          items: positions.map((position) => {
+            const scene = values[position];
+            const anchor = scene.recipe.anchorSnapshot!;
+            return {
+              position: position + 1,
+              pegNumber: anchor.pegNumber,
+              pegKeyword: anchor.keyword,
+              word: scene.answer,
+              existingStory: preview || scene.source ? scene.sceneText : undefined,
+              userDetail: preview ? scene.userDetail?.trim() || undefined : undefined,
+            };
+          }),
+        });
+        if (requestVersion.current !== version) return;
+        const suggestions = new Map(
+          result.suggestions.map((suggestion) => [suggestion.position, suggestion])
+        );
+        const nextScenes = values.map((scene, i): SceneDraft => {
+          const suggestion = suggestions.get(i + 1);
+          return suggestion
+            ? {
+                ...scene,
+                sceneText: suggestion.story,
+                creativeQuestion: suggestion.creativeQuestion ?? undefined,
+                source: result.source,
+                recipe: {
+                  ...scene.recipe,
+                  caption: suggestion.story,
+                  associationSource: preview ? 'customized' : 'suggested',
+                },
+              }
+            : scene;
+        });
+        if (preview) {
+          const previewIndex = positions[0];
+          if (!suggestions.has(previewIndex + 1)) throw new Error(copy.generationError);
+          setStoryPreview({ index: previewIndex, scene: nextScenes[previewIndex] });
+        } else setScenes(nextScenes);
+        if (result.source !== 'ai') setMessage(copy.fallback);
+      } catch (error) {
+        if (requestVersion.current === version) {
+          setScenes(values);
+          setMessage(getNumberPegErrorMessage(error, copy.generationError));
+        }
+      } finally {
+        if (requestVersion.current === version) {
+          generatingRef.current = false;
+          setIsGenerating(false);
+        }
       }
     },
-    [currentHapticPreset, currentSoundPreset, feedbackEnabled, playSound]
+    [copy.fallback, copy.generationError, generateStories, language]
   );
-
   useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then(setReducedMotion)
-      .catch(() => undefined);
-    const s = AccessibilityInfo.addEventListener('reduceMotionChanged', setReducedMotion);
-    return () => s.remove();
-  }, []);
+    if (!loaded || !fromShared || autoGenerated.current || !scenes.length) return;
+    autoGenerated.current = true;
+    if (!scenes.some((scene) => scene.source))
+      void generate(
+        scenes,
+        scenes.map((_, i) => i)
+      );
+  }, [fromShared, generate, loaded, scenes]);
   useEffect(() => {
     progressScrollRef.current?.scrollTo({
       x: Math.max(0, index * 32 - 112),
@@ -243,37 +346,12 @@ export default function NumberPegComposerScreen() {
         } satisfies StudioDraft)
       );
   }, [draftKey, goalType, index, items, loaded, scenes, step, title]);
-  useEffect(() => {
-    if (!loaded || step !== 'studio' || !hasCurrentScene) return;
-    if (autoPreviewTimerRef.current) clearTimeout(autoPreviewTimerRef.current);
-    const interaction = InteractionManager.runAfterInteractions(() => {
-      autoPreviewTimerRef.current = setTimeout(() => {
-        autoPreviewTimerRef.current = null;
-        previewScene();
-      }, 120);
-    });
-    return () => {
-      interaction.cancel();
-      if (autoPreviewTimerRef.current) {
-        clearTimeout(autoPreviewTimerRef.current);
-        autoPreviewTimerRef.current = null;
-      }
-    };
-  }, [
-    current?.answer,
-    current?.recipe.actionPreset,
-    current?.recipe.sensoryBoosters,
-    hasCurrentScene,
-    index,
-    loaded,
-    previewScene,
-    step,
-  ]);
   if (step === 'items' || !current) {
     const addItem = () => {
+      if (generatingRef.current) return;
       const value = newItem.trim();
       if (!value) return;
-      if (items.length >= MAX_NUMBER_PEGS) {
+      if (value.length > 500 || items.length >= MAX_NUMBER_PEGS) {
         setMessage(t('maxItemsMessage'));
         return;
       }
@@ -283,19 +361,23 @@ export default function NumberPegComposerScreen() {
     };
     const removeItem = (removeIndex: number) =>
       setItems((all) => all.filter((_, i) => i !== removeIndex));
-    const buildScenes = () => {
+    const buildScenes = async () => {
+      if (generatingRef.current) return;
       if (!items.length) {
         setMessage(t('addThingMessage'));
         return;
       }
       const generatedScenes = initialScenes(items, unlocked, anchors, t);
-      setScenes((all) =>
-        items.map((value, i) => (all[i]?.answer === value ? all[i] : generatedScenes[i]))
+      const next = items.map((value, i) =>
+        scenes[i]?.answer === value ? scenes[i] : generatedScenes[i]
       );
+      setScenes(next);
       setIndex(0);
-      setCandidateSet(0);
       setStep('studio');
-      setMessage(null);
+      await generate(
+        next,
+        next.map((_, i) => i)
+      );
     };
     return (
       <KeyboardAvoidingView
@@ -314,6 +396,7 @@ export default function NumberPegComposerScreen() {
           <Text style={[styles.heading, styles.formHeading]}>{t('nameMemory')}</Text>
           <TextInput
             value={title}
+            maxLength={200}
             onChangeText={setTitle}
             placeholder={t('namePlaceholder')}
             placeholderTextColor={theme.inkSoft}
@@ -336,6 +419,7 @@ export default function NumberPegComposerScreen() {
           <Text style={[styles.heading, styles.formHeading]}>{t('addItems')}</Text>
           <TextInput
             value={newItem}
+            maxLength={500}
             onChangeText={setNewItem}
             onSubmitEditing={addItem}
             placeholder={t('itemPlaceholder')}
@@ -374,106 +458,39 @@ export default function NumberPegComposerScreen() {
               <Text style={styles.messageText}>{message}</Text>
             </View>
           ) : null}
-          <AnimatedPressable onPress={buildScenes} style={styles.next}>
-            <Text style={styles.buttonText}>{t('buildScenes')}</Text>
+          <AnimatedPressable
+            disabled={isGenerating}
+            onPress={buildScenes}
+            style={[styles.next, isGenerating && styles.disabled]}>
+            <Text style={styles.buttonText}>{isGenerating ? copy.generating : copy.generate}</Text>
             <ArrowRight size={17} color={theme.onSun} />
           </AnimatedPressable>
         </ScrollView>
       </KeyboardAvoidingView>
     );
   }
-  const choose = (scene: SceneCandidate) => {
-    setScenes((all) =>
-      all.map((s, i) =>
-        i === index
-          ? {
-              answer: current.answer,
-              sceneText: scene.sceneText,
-              recipe: scene.recipe,
-            }
-          : s
-      )
-    );
-    setCustomMode(false);
-    setMessage(null);
-  };
-  const booster = (value: BoosterKey) => {
-    const selectedBooster = current.recipe.sensoryBoosters[0] === value ? undefined : value;
-    const presentation = getBoosterPresentation(selectedBooster);
-    const caption =
-      current.recipe.associationSource === 'user-written'
-        ? current.sceneText
-        : buildSceneCaption(
-            currentAnchor.keyword,
-            current.answer,
-            current.recipe.actionPreset,
-            (key) => t(key as any),
-            selectedBooster
-          );
-    setScenes((all) =>
-      all.map((s, i) =>
-        i === index
-          ? {
-              ...s,
-              sceneText: caption,
-              recipe: {
-                ...s.recipe,
-                caption,
-                associationSource:
-                  s.recipe.associationSource === 'user-written' ? 'user-written' : 'customized',
-                sensoryBoosters: selectedBooster ? [selectedBooster] : [],
-                soundPreset: presentation.soundPreset,
-                hapticPreset: presentation.hapticPreset,
-              },
-            }
-          : s
-      )
-    );
-    setMessage(null);
-  };
-  const updateCustomScene = (sceneText: string) => {
-    setScenes((all) =>
-      all.map((scene, sceneIndex) =>
-        sceneIndex === index
-          ? {
-              ...scene,
-              sceneText,
-              recipe: {
-                ...scene.recipe,
-                caption: sceneText,
-                associationSource: 'user-written',
-              },
-            }
-          : scene
-      )
-    );
-    setMessage(null);
-  };
-  const playScene = () => {
-    if (!current.sceneText.trim()) {
-      setMessage(t('sceneRequiredMessage'));
-      return;
-    }
-    previewScene(true);
-  };
   const openScene = (sceneIndex: number) => {
+    if (generatingRef.current || savingRef.current) return;
     setIndex(sceneIndex);
-    setCandidateSet(getCandidateSetForAction(scenes[sceneIndex].recipe.actionPreset));
-    setCustomMode(false);
+    setStoryPreview(null);
+    setEditDetail(false);
+    setEditStory(false);
     setMessage(null);
   };
   const advance = () => {
+    if (generatingRef.current || savingRef.current) return;
     if (index === items.length - 1) {
       void save();
       return;
     }
-    setIndex((v) => v + 1);
-    setCandidateSet(getCandidateSetForAction(scenes[index + 1].recipe.actionPreset));
-    setCustomMode(false);
-    setMessage(null);
+    openScene(index + 1);
   };
   async function save() {
-    if (savingRef.current) return;
+    if (savingRef.current || generatingRef.current) return;
+    if (networkReady && !isOnline) {
+      setMessage(copy.offlineSave);
+      return;
+    }
     if (!items.length) {
       setMessage(t('addThingMessage'));
       return;
@@ -489,7 +506,9 @@ export default function NumberPegComposerScreen() {
     try {
       if (onboardingLessonId && onboardingMemoryIdRef.current) {
         await linkOnboardingMemory.mutateAsync(onboardingMemoryIdRef.current);
-        router.replace(`/number-peg/${onboardingMemoryIdRef.current}?returnTo=practice&mode=recall` as Href);
+        router.replace(
+          `/number-peg/${onboardingMemoryIdRef.current}?returnTo=practice&mode=recall` as Href
+        );
         return;
       }
       const size = Math.max(1, Math.min(unlocked, MAX_NUMBER_PEGS));
@@ -550,9 +569,15 @@ export default function NumberPegComposerScreen() {
       <CommonHeader
         compact
         eyebrow={t('eyebrow')}
-        title={t('memoryMovies')}
+        title={copy.title}
         description={`${t('sceneOf')} ${index + 1} ${t('of')} ${items.length}`}
-        backAction={() => (fromShared ? router.back() : setStep('items'))}
+        backAction={() => {
+          if (!savingRef.current) {
+            if (generatingRef.current) cancelGeneration();
+            if (fromShared) router.back();
+            else setStep('items');
+          }
+        }}
       />
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -569,6 +594,7 @@ export default function NumberPegComposerScreen() {
               key={`${item}-${i}`}
               accessibilityLabel={`${t('sceneFor')} ${item}`}
               accessibilityState={{ selected: i === index }}
+              disabled={isGenerating || isSaving}
               onPress={() => openScene(i)}
               style={[styles.dot, i === index && styles.activeDot]}>
               <Text style={[styles.dotLabel, i === index && { color: theme.onSun }]}>{i + 1}</Text>
@@ -577,8 +603,8 @@ export default function NumberPegComposerScreen() {
         </ScrollView>
         {isOnboarding ? (
           <View style={styles.guidedCard}>
-            <Text style={styles.guidedTitle}>{t('guidedMovieTitle')}</Text>
-            <Text style={styles.guidedBody}>{t('guidedMovieBody')}</Text>
+            <Text style={styles.guidedTitle}>{copy.title}</Text>
+            <Text style={styles.guidedBody}>{copy.intro}</Text>
           </View>
         ) : null}
         {index === 0 && items.length > unlocked ? (
@@ -595,129 +621,179 @@ export default function NumberPegComposerScreen() {
           <View style={styles.stageTopRow}>
             <View style={styles.anchorPill}>
               <Text style={styles.anchorPillEmoji}>{currentAnchor.image}</Text>
-              <Text numberOfLines={1} style={styles.anchorPillText}>
+              <Text style={styles.anchorPillText}>
                 {t('pegLabel')} {pegNumber} · {currentAnchor.keyword}
               </Text>
             </View>
-            <View style={styles.autoPill}>
-              <View style={styles.liveDot} />
-              <Text style={styles.autoPillText}>{t('autoPreview')}</Text>
-            </View>
           </View>
-          <NumberPegMovieStage
-            pegNumber={pegNumber}
-            pegImage={currentAnchor.image}
-            pegKeyword={currentAnchor.keyword}
-            targetLabel={current.answer}
-            recipe={current.recipe}
-            playSignal={playSignal}
-            reducedMotion={reducedMotion}
-          />
           <View style={styles.captionPanel}>
-            <Text style={styles.caption}>{current.sceneText}</Text>
-            <AnimatedPressable
-              accessibilityLabel={t('replayScene')}
-              onPress={playScene}
-              style={styles.replay}>
-              <Play size={14} color={theme.berryDeep} />
-              <Text style={styles.replayText}>{t('replayScene')}</Text>
-            </AnimatedPressable>
+            {isGenerating ? (
+              <View style={styles.storyTools}>
+                <ActivityIndicator color={theme.berryDeep} accessibilityLabel={copy.generating} />
+                <AnimatedPressable onPress={cancelGeneration} style={styles.replay}>
+                  <Text style={styles.replayText}>{copy.stopGenerating}</Text>
+                </AnimatedPressable>
+              </View>
+            ) : null}
+            <Text style={styles.heading}>{copy.story}</Text>
+            <Text style={styles.targetWord}>{current.answer}</Text>
+            <Text style={styles.sectionHint}>
+              {isGenerating
+                ? copy.generating
+                : current.source === 'ai'
+                  ? copy.ai
+                  : current.source === 'manual'
+                    ? copy.manual
+                    : current.source === 'mixed'
+                      ? copy.mixed
+                      : copy.template}
+            </Text>
+            {editStory ? (
+              <TextInput
+                multiline
+                maxLength={1000}
+                accessibilityLabel={copy.editStory}
+                editable={!isGenerating && !isSaving}
+                value={current.sceneText}
+                onChangeText={(value) =>
+                  setScenes((all) =>
+                    all.map((scene, i) =>
+                      i === index
+                        ? {
+                            ...scene,
+                            sceneText: value,
+                            source: 'manual',
+                            recipe: {
+                              ...scene.recipe,
+                              caption: value,
+                              associationSource: 'user-written',
+                            },
+                          }
+                        : scene
+                    )
+                  )
+                }
+                style={[styles.input, styles.customInput]}
+              />
+            ) : (
+              <Text style={styles.caption}>{current.sceneText}</Text>
+            )}
+            {!storyPreview && (
+              <View style={styles.storyActionGroup}>
+                <View style={styles.storyActionRow}>
+                  <AnimatedPressable
+                    containerStyle={styles.equalSlot}
+                    disabled={isGenerating || isSaving}
+                    onPress={() => void generate(scenes, [index])}
+                    style={[styles.storyAction, (isGenerating || isSaving) && styles.disabled]}>
+                    <Text accessible={false} style={styles.storyActionIcon}>
+                      🔄
+                    </Text>
+                    <Text style={styles.storyActionText}>
+                      {isGenerating ? copy.generating : copy.another}
+                    </Text>
+                  </AnimatedPressable>
+                  <AnimatedPressable
+                    containerStyle={styles.equalSlot}
+                    disabled={isGenerating || isSaving}
+                    accessibilityState={{ expanded: editStory }}
+                    onPress={() => {
+                      setEditStory(!editStory);
+                      setEditDetail(false);
+                    }}
+                    style={[
+                      styles.storyAction,
+                      editStory && styles.storyActionActive,
+                      (isGenerating || isSaving) && styles.disabled,
+                    ]}>
+                    <Text accessible={false} style={styles.storyActionIcon}>
+                      ✏️
+                    </Text>
+                    <Text style={styles.storyActionText}>
+                      {editStory ? copy.done : copy.editStory}
+                    </Text>
+                  </AnimatedPressable>
+                </View>
+                <AnimatedPressable
+                  disabled={isGenerating || isSaving}
+                  accessibilityState={{ expanded: editDetail }}
+                  onPress={() => {
+                    setEditDetail(!editDetail);
+                    setEditStory(false);
+                  }}
+                  style={[
+                    styles.storyAction,
+                    editDetail && styles.storyActionActive,
+                    (isGenerating || isSaving) && styles.disabled,
+                  ]}>
+                  <Text accessible={false} style={styles.storyActionIcon}>
+                    ✨
+                  </Text>
+                  <Text style={styles.storyActionText}>{copy.personalize}</Text>
+                </AnimatedPressable>
+              </View>
+            )}
           </View>
-        </View>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.heading}>{t('chooseAction')}</Text>
-          <Text style={styles.sectionHint}>{t('tapToPreview')}</Text>
-        </View>
-        <View style={styles.choices}>
-          {candidates.map((candidate) => (
-            <AnimatedPressable
-              key={candidate.recipe.actionPreset}
-              containerStyle={styles.equalSlot}
-              accessibilityState={{
-                selected: current.recipe.actionPreset === candidate.recipe.actionPreset,
-              }}
-              onPress={() => choose(candidate)}
-              style={[
-                styles.choice,
-                current.recipe.actionPreset === candidate.recipe.actionPreset && styles.selected,
-              ]}>
-              <Text style={styles.choiceEmoji}>{candidate.emoji}</Text>
-              <Text numberOfLines={2} style={styles.choiceTitle}>
-                {t(candidate.titleKey)}
-              </Text>
-            </AnimatedPressable>
-          ))}
-        </View>
-        {!isOnboarding ? (
-          <View style={styles.ideaActions}>
-            <AnimatedPressable
-              containerStyle={styles.equalSlot}
-              onPress={() => {
-                const nextSet = candidateSet + 1;
-                setCandidateSet(nextSet);
-                const next = buildSceneCandidates(currentAnchor, current.answer, nextSet, (key) =>
-                  t(key as any)
-                )[0];
-                choose(next);
-              }}
-              style={styles.another}>
-              <RefreshCw size={15} color={theme.berryDeep} />
-              <Text style={styles.anotherText}>{t('anotherIdea')}</Text>
-            </AnimatedPressable>
-            <AnimatedPressable
-              containerStyle={styles.equalSlot}
-              onPress={() => setCustomMode((visible) => !visible)}
-              style={[styles.customToggle, customMode && styles.customToggleActive]}>
-              <PencilLine size={15} color={theme.berryDeep} />
-              <Text numberOfLines={1} style={styles.anotherText}>
-                {customMode ? t('hideCustomScene') : t('writeMyOwn')}
-              </Text>
-            </AnimatedPressable>
-          </View>
-        ) : null}
-        {!isOnboarding && customMode ? (
-          <View style={styles.customEditor}>
-            <Text style={styles.customEditorLabel}>{t('customScenePrompt')}</Text>
-            <TextInput
-              value={current.sceneText}
-              onChangeText={updateCustomScene}
-              multiline
-              maxLength={1000}
-              placeholder={t('associationPlaceholder')}
-              placeholderTextColor={theme.inkSoft}
-              selectionColor={theme.berryDeep}
-              cursorColor={theme.berryDeep}
-              textAlignVertical="top"
-              style={[styles.input, styles.customInput]}
-            />
-          </View>
-        ) : null}
-        {!isOnboarding ? (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.heading}>{t('addBooster')}</Text>
-            <Text style={styles.sectionHint}>{t('optional')}</Text>
-          </View>
-        ) : null}
-        {!isOnboarding ? (
-          <ScrollView
-            horizontal
-            nestedScrollEnabled
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.boosters}>
-            {BOOSTERS.map((boosterKey) => (
+          {editDetail && !storyPreview ? (
+            <View style={styles.customEditor}>
+              <Text style={styles.sectionHint}>{copy.explanation}</Text>
+              <TextInput
+                multiline
+                maxLength={500}
+                editable={!isGenerating && !isSaving}
+                accessibilityLabel={copy.personalize}
+                value={current.userDetail ?? ''}
+                onChangeText={(value) =>
+                  setScenes((all) =>
+                    all.map((scene, i) => (i === index ? { ...scene, userDetail: value } : scene))
+                  )
+                }
+                placeholder={copy.detail}
+                placeholderTextColor={theme.inkSoft}
+                style={[styles.input, styles.customInput]}
+              />
               <AnimatedPressable
-                key={boosterKey}
-                onPress={() => booster(boosterKey)}
+                disabled={isGenerating || isSaving || !current.userDetail?.trim()}
+                onPress={() => void generate(scenes, [index], true)}
                 style={[
-                  styles.booster,
-                  current.recipe.sensoryBoosters[0] === boosterKey && styles.boosterSelected,
+                  styles.replay,
+                  (isGenerating || !current.userDetail?.trim()) && styles.disabled,
                 ]}>
-                <Text style={styles.boosterEmoji}>{getBoosterPresentation(boosterKey).emoji}</Text>
-                <Text style={styles.boosterText}>{t(`booster_${boosterKey}` as any)}</Text>
+                <Text style={styles.replayText}>
+                  {isGenerating ? copy.generating : copy.refine}
+                </Text>
               </AnimatedPressable>
-            ))}
-          </ScrollView>
-        ) : null}
+            </View>
+          ) : null}
+          {storyPreview ? (
+            <View style={styles.customEditor} accessibilityLiveRegion="polite">
+              <Text style={styles.heading}>{copy.preview}</Text>
+              <Text style={styles.sectionHint}>{copy.previewHint}</Text>
+              <Text style={styles.caption}>{storyPreview.scene.sceneText}</Text>
+              <AnimatedPressable
+                style={[styles.next, styles.previewAction]}
+                onPress={() => {
+                  setScenes((all) =>
+                    all.map((scene, i) => (i === storyPreview.index ? storyPreview.scene : scene))
+                  );
+                  setStoryPreview(null);
+                  setEditDetail(false);
+                  setMessage(null);
+                }}>
+                <Text style={styles.buttonText}>{copy.useStory}</Text>
+              </AnimatedPressable>
+              <AnimatedPressable
+                style={styles.replay}
+                onPress={() => {
+                  setStoryPreview(null);
+                  setEditDetail(false);
+                  setMessage(null);
+                }}>
+                <Text style={styles.replayText}>{copy.keepOriginal}</Text>
+              </AnimatedPressable>
+            </View>
+          ) : null}
+        </View>
         {message && (
           <View style={styles.message}>
             <Text style={styles.messageText}>{message}</Text>
@@ -733,9 +809,12 @@ export default function NumberPegComposerScreen() {
         <View style={styles.actions}>
           <AnimatedPressable
             containerStyle={styles.equalSlot}
-            disabled={!index || isSaving}
+            disabled={!index || isSaving || isGenerating || Boolean(storyPreview)}
             onPress={() => openScene(Math.max(0, index - 1))}
-            style={[styles.back, (!index || isSaving) && styles.disabled]}>
+            style={[
+              styles.back,
+              (!index || isSaving || isGenerating || Boolean(storyPreview)) && styles.disabled,
+            ]}>
             <ArrowLeft size={17} color={theme.ink} />
             <Text style={[styles.buttonText, styles.navigationButtonText, { color: theme.ink }]}>
               {t('previousScene')}
@@ -743,10 +822,13 @@ export default function NumberPegComposerScreen() {
           </AnimatedPressable>
           <AnimatedPressable
             containerStyle={styles.equalSlot}
-            disabled={isSaving}
+            disabled={isSaving || isGenerating || Boolean(storyPreview)}
             onPress={advance}
-            accessibilityState={{ disabled: isSaving }}
-            style={[styles.next, isSaving && styles.disabled]}>
+            accessibilityState={{ disabled: isSaving || isGenerating || Boolean(storyPreview) }}
+            style={[
+              styles.next,
+              (isSaving || isGenerating || Boolean(storyPreview)) && styles.disabled,
+            ]}>
             <Text style={[styles.buttonText, styles.navigationButtonText]}>
               {isSaving
                 ? t('saving')
@@ -754,7 +836,7 @@ export default function NumberPegComposerScreen() {
                   ? isOnboarding
                     ? t('startRecall')
                     : t('saveMemory')
-                  : t('nextScene')}
+                  : copy.accept}
             </Text>
             <ArrowRight size={17} color={theme.onSun} />
           </AnimatedPressable>
@@ -851,366 +933,285 @@ function isValidRecipe(recipe: unknown): recipe is PegSceneRecipe {
   );
 }
 
-const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: 'transparent' },
-  content: {
-    width: '100%',
-    alignItems: 'stretch',
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 48,
-  },
-  emptyComposer: { padding: 16 },
-  goalRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  goal: {
-    minHeight: 42,
-    minWidth: '47%',
-    flexGrow: 1,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
-  },
-  goalSelected: { borderColor: theme.sunDeep, backgroundColor: theme.sunTint },
-  itemList: { gap: 7, marginTop: 12 },
-  itemRow: {
-    minHeight: 42,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    gap: 9,
-  },
-  itemNumber: {
-    color: theme.berryDeep,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 12,
-    width: 20,
-  },
-  itemText: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13 },
-  remove: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  capacityCard: {
-    marginTop: 12,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: theme.sunLine,
-    backgroundColor: theme.sunTint,
-    padding: 12,
-  },
-  capacityTitle: {
-    color: theme.ink,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 12,
-  },
-  capacityBody: {
-    color: theme.inkSoft,
-    fontFamily: typography.bodySemibold,
-    fontSize: 11,
-    lineHeight: 17,
-    marginTop: 4,
-  },
-  progress: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 14,
-    paddingHorizontal: 4,
-  },
-  dot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dotLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 9 },
-  activeDot: { backgroundColor: theme.sun, borderColor: theme.sunDeep },
-  guidedCard: {
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: theme.violetLine,
-    backgroundColor: theme.violetTint,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 14,
-  },
-  guidedTitle: {
-    color: theme.violetDeep,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 12.5,
-  },
-  guidedBody: {
-    color: theme.inkSoft,
-    fontFamily: typography.bodySemibold,
-    fontSize: 11.5,
-    lineHeight: 17,
-    marginTop: 3,
-  },
-  stageCard: {
-    borderRadius: 26,
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    padding: 10,
-    boxShadow: '0px 8px 0px rgba(43,42,61,0.07)',
-  },
-  stageTopRow: {
-    minHeight: 42,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    paddingHorizontal: 3,
-    paddingBottom: 8,
-  },
-  anchorPill: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  anchorPillEmoji: { fontSize: 18 },
-  anchorPillText: {
-    flex: 1,
-    color: theme.ink,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 12,
-  },
-  autoPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    borderRadius: 999,
-    backgroundColor: theme.berryTint,
-    paddingHorizontal: 9,
-    minHeight: 28,
-  },
-  liveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: theme.berry,
-  },
-  autoPillText: {
-    color: theme.berryDeep,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 9,
-  },
-  captionPanel: {
-    borderRadius: 16,
-    backgroundColor: theme.violetTint,
-    borderWidth: 1.5,
-    borderColor: theme.violetLine,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginTop: 9,
-  },
-  caption: {
-    color: theme.ink,
-    fontFamily: typography.bodySemibold,
-    fontSize: 13,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  replay: {
-    minHeight: 44,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 5,
-    marginTop: 7,
-    paddingHorizontal: 10,
-  },
-  replayText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  buttonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    gap: 10,
-    marginTop: 20,
-    marginBottom: 9,
-    paddingHorizontal: 2,
-  },
-  heading: {
-    color: theme.ink,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 14,
-  },
-  formHeading: { marginTop: 18, marginBottom: 9 },
-  sectionHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
-  choices: {
-    width: '100%',
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 2,
-    paddingBottom: 4,
-  },
-  equalSlot: { flexGrow: 1, flexBasis: 0, minWidth: 0 },
-  choice: {
-    width: '100%',
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    borderRadius: 17,
-    paddingHorizontal: 6,
-    paddingVertical: 10,
-    minHeight: 102,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-  },
-  selected: {
-    borderColor: theme.sunDeep,
-    backgroundColor: theme.sunTint,
-    boxShadow: '0px 5px 0px rgba(255,190,45,0.18)',
-  },
-  choiceEmoji: { fontSize: 25 },
-  choiceTitle: {
-    color: theme.ink,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 11,
-    lineHeight: 15,
-    minHeight: 30,
-    textAlign: 'center',
-  },
-  ideaActions: {
-    width: '100%',
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
-  },
-  another: {
-    width: '100%',
-    minHeight: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderRadius: 13,
-    borderWidth: 1.5,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    paddingHorizontal: 8,
-  },
-  anotherText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  customToggle: {
-    width: '100%',
-    minHeight: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderRadius: 13,
-    borderWidth: 1.5,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    paddingHorizontal: 8,
-  },
-  customToggleActive: { backgroundColor: theme.sunTint, borderColor: theme.sunLine },
-  customEditor: {
-    borderRadius: 15,
-    borderWidth: 1.5,
-    borderColor: theme.violetLine,
-    backgroundColor: theme.violetTint,
-    padding: 11,
-    marginBottom: 4,
-  },
-  customEditorLabel: {
-    color: theme.ink,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  customInput: { minHeight: 92, paddingTop: 12 },
-  boosters: { gap: 7, paddingHorizontal: 2, paddingBottom: 4 },
-  booster: {
-    minHeight: 56,
-    minWidth: 70,
-    borderWidth: 1.5,
-    borderColor: theme.line,
-    borderRadius: 15,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.paper,
-    gap: 2,
-  },
-  boosterSelected: { borderColor: theme.berry, backgroundColor: theme.berryTint },
-  boosterEmoji: { fontSize: 18 },
-  boosterText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
-  input: {
-    minHeight: 48,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    color: theme.ink,
-    paddingHorizontal: 12,
-    fontFamily: typography.bodySemibold,
-    fontSize: 14,
-    marginTop: 10,
-  },
-  message: {
-    marginTop: 12,
-    borderRadius: 12,
-    backgroundColor: theme.berryTint,
-    borderWidth: 1.5,
-    borderColor: theme.berryLine,
-    padding: 11,
-  },
-  messageText: {
-    color: theme.berryDeep,
-    fontFamily: typography.bodyBold,
-    fontSize: 12,
-    lineHeight: 17,
-    textAlign: 'center',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 18,
-    width: '100%',
-    alignSelf: 'stretch',
-  },
-  back: {
-    width: '100%',
-    minHeight: 49,
-    borderRadius: 13,
-    backgroundColor: theme.paper,
-    borderWidth: 1.5,
-    borderColor: theme.line,
-    paddingHorizontal: 11,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  next: {
-    width: '100%',
-    minHeight: 49,
-    borderRadius: 13,
-    backgroundColor: theme.sun,
-    paddingHorizontal: 11,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  navigationButtonText: { flexShrink: 1, textAlign: 'center', fontSize: 12 },
-  disabled: { opacity: 0.35 },
-}));
+const useStyles = createThemedStyles((theme) =>
+  StyleSheet.create({
+    page: { flex: 1, backgroundColor: 'transparent' },
+    content: {
+      width: '100%',
+      alignItems: 'stretch',
+      paddingHorizontal: 14,
+      paddingTop: 10,
+      paddingBottom: 48,
+    },
+    emptyComposer: { padding: 16 },
+    goalRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+    goal: {
+      minHeight: 44,
+      minWidth: '47%',
+      flexGrow: 1,
+      borderRadius: 11,
+      borderWidth: 1.5,
+      borderColor: theme.line,
+      backgroundColor: theme.paper,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5,
+      paddingHorizontal: 8,
+    },
+    goalSelected: { borderColor: theme.sunDeep, backgroundColor: theme.sunTint },
+    itemList: { gap: 7, marginTop: 12 },
+    itemRow: {
+      minHeight: 42,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: theme.line,
+      backgroundColor: theme.paper,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      gap: 9,
+    },
+    itemNumber: {
+      color: theme.berryDeep,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 12,
+      width: 20,
+    },
+    itemText: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13 },
+    remove: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+    capacityCard: {
+      marginTop: 12,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderColor: theme.sunLine,
+      backgroundColor: theme.sunTint,
+      padding: 12,
+    },
+    capacityTitle: {
+      color: theme.ink,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 12,
+    },
+    capacityBody: {
+      color: theme.inkSoft,
+      fontFamily: typography.bodySemibold,
+      fontSize: 11,
+      lineHeight: 17,
+      marginTop: 4,
+    },
+    progress: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 14,
+      paddingHorizontal: 4,
+    },
+    dot: {
+      width: 44,
+      height: 44,
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: theme.line,
+      backgroundColor: theme.paper,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dotLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+    activeDot: { backgroundColor: theme.sun, borderColor: theme.sunDeep },
+    guidedCard: {
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: theme.violetLine,
+      backgroundColor: theme.violetTint,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      marginBottom: 14,
+    },
+    guidedTitle: {
+      color: theme.violetDeep,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 12.5,
+    },
+    guidedBody: {
+      color: theme.inkSoft,
+      fontFamily: typography.bodySemibold,
+      fontSize: 11.5,
+      lineHeight: 17,
+      marginTop: 3,
+    },
+    stageCard: {
+      borderRadius: 26,
+      borderWidth: 2,
+      borderColor: theme.line,
+      backgroundColor: theme.paper,
+      padding: 10,
+      boxShadow: '0px 8px 0px rgba(43,42,61,0.07)',
+    },
+    stageTopRow: {
+      minHeight: 42,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+      paddingHorizontal: 3,
+      paddingBottom: 8,
+    },
+    anchorPill: {
+      flex: 1,
+      minWidth: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    anchorPillEmoji: { fontSize: 18 },
+    anchorPillText: {
+      flex: 1,
+      color: theme.ink,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 12,
+    },
+    captionPanel: {
+      borderRadius: 16,
+      backgroundColor: theme.violetTint,
+      borderWidth: 1.5,
+      borderColor: theme.violetLine,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      marginTop: 9,
+    },
+    caption: {
+      color: theme.ink,
+      fontFamily: typography.bodySemibold,
+      fontSize: 17,
+      lineHeight: 27,
+      marginTop: 12,
+    },
+    replay: {
+      minHeight: 44,
+      alignSelf: 'center',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+      gap: 5,
+      marginTop: 7,
+      paddingHorizontal: 10,
+    },
+    replayText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+    buttonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+    heading: {
+      color: theme.ink,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 14,
+    },
+    formHeading: { marginTop: 18, marginBottom: 9 },
+    sectionHint: {
+      color: theme.inkSoft,
+      fontFamily: typography.bodySemibold,
+      fontSize: 12,
+      marginTop: 8,
+    },
+    targetWord: {
+      color: theme.ink,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 24,
+      marginTop: 10,
+    },
+    storyTools: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+    storyActionGroup: { marginTop: 18, gap: 10 },
+    storyActionRow: { flexDirection: 'row', gap: 10 },
+    storyAction: {
+      minHeight: 48,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: theme.line,
+      backgroundColor: theme.paper,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      gap: 8,
+    },
+    storyActionActive: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint },
+    storyActionIcon: { fontSize: 17 },
+    storyActionText: {
+      color: theme.ink,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 13,
+      flexShrink: 1,
+      textAlign: 'center',
+    },
+    equalSlot: { flexGrow: 1, flexBasis: 0, minWidth: 0 },
+    customEditor: {
+      marginTop: 12,
+      borderRadius: 15,
+      borderWidth: 1.5,
+      borderColor: theme.violetLine,
+      backgroundColor: theme.violetTint,
+      padding: 11,
+      marginBottom: 4,
+    },
+    customInput: { minHeight: 92, paddingTop: 12 },
+    previewAction: { marginTop: 16 },
+    input: {
+      minHeight: 48,
+      borderRadius: 11,
+      borderWidth: 2,
+      borderColor: theme.line,
+      backgroundColor: theme.paper,
+      color: theme.ink,
+      paddingHorizontal: 12,
+      fontFamily: typography.bodySemibold,
+      fontSize: 14,
+      marginTop: 10,
+    },
+    message: {
+      marginTop: 12,
+      borderRadius: 12,
+      backgroundColor: theme.berryTint,
+      borderWidth: 1.5,
+      borderColor: theme.berryLine,
+      padding: 11,
+    },
+    messageText: {
+      color: theme.berryDeep,
+      fontFamily: typography.bodyBold,
+      fontSize: 12,
+      lineHeight: 17,
+      textAlign: 'center',
+    },
+    actions: {
+      flexDirection: 'row',
+      gap: 8,
+      marginTop: 18,
+      width: '100%',
+      alignSelf: 'stretch',
+    },
+    back: {
+      width: '100%',
+      minHeight: 49,
+      borderRadius: 13,
+      backgroundColor: theme.paper,
+      borderWidth: 1.5,
+      borderColor: theme.line,
+      paddingHorizontal: 11,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+    },
+    next: {
+      width: '100%',
+      minHeight: 49,
+      borderRadius: 13,
+      backgroundColor: theme.sun,
+      paddingHorizontal: 11,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+    },
+    navigationButtonText: { flexShrink: 1, textAlign: 'center', fontSize: 12 },
+    disabled: { opacity: 0.35 },
+  })
+);

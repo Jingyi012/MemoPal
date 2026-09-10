@@ -60,6 +60,11 @@ public static class DependencyInjection
                 .Value;
             client.Timeout = TimeSpan.FromSeconds(Math.Clamp(settings.TimeoutSeconds, 5, 120));
         });
+        services.AddHttpClient<INumberPegStoryGenerator, NumberPegStoryGenerator>((serviceProvider, client) =>
+        {
+            var settings = serviceProvider.GetRequiredService<IOptions<PalaceAssociationGenerationOptions>>().Value;
+            client.Timeout = TimeSpan.FromSeconds(Math.Clamp(settings.TimeoutSeconds, 5, 120));
+        }).RemoveAllLoggers();
 
         return services;
     }

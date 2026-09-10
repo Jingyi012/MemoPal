@@ -4,7 +4,7 @@ import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { MemorySetRow } from '@/components/MemorySetRow';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
-import { TechniqueHeroCard } from '@/components/TechniqueHeroCard';
+import { NumberPegStoryHero } from '@/features/number-peg/components/NumberPegStoryHero';
 import { useMemorySets } from '@/features/memory-sets';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { NumberPegItemCard } from '@/features/number-peg/components/NumberPegItemCard';
@@ -50,15 +50,7 @@ export default function NumberPegHomeScreen() {
         refreshControl={
           <RefreshControl refreshing={memorySets.isRefetching} onRefresh={memorySets.refetch} />
         }>
-        <TechniqueHeroCard
-          tone="peg"
-          icon={<Text style={styles.heroEmoji}>🕯️</Text>}
-          eyebrow={t('eyebrow')}
-          title={t('memoryMovies')}
-          body={t('heroBody')}
-          actionLabel={t('makeMemory')}
-          onAction={() => router.push('/number-peg/create' as Href)}
-        />
+        <NumberPegStoryHero onStart={() => router.push('/number-peg/create' as Href)} />
 
         <AnimatedPressable onPress={() => router.push('/number-peg/familiarity' as Href)} style={styles.familiarityCard}>
           <View style={styles.familiarityIcon}><Text style={styles.familiarityEmoji}>🧠</Text></View>

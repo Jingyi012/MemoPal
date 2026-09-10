@@ -56,6 +56,10 @@ The API sends one request per internal batch (12 items by default), so a list
 of 100 items does not create 100 user-facing requests. Failed or unavailable
 provider calls fall back to starter text for the affected batch.
 
+Number Peg story generation reuses the same `AI:PalaceAssociations` provider,
+model, endpoint, timeout, and secret configuration. The mobile app sends the
+validated peg keyword snapshot; the API never infers an anchor from a number.
+
 ## Run
 ```bash
 dotnet restore

@@ -20,13 +20,16 @@ export function upsertRecallResponse(
   memoryItemId: string,
   isCorrect: boolean,
   responseMs: number,
+  hintCount = 0,
 ) {
   const existing = current.find((response) => response.memoryItemId === memoryItemId);
+  const effectiveHintCount = Math.max(hintCount, existing?.hintCount ?? 0);
   const nextResponse: PracticeResponseInput = {
     memoryItemId,
     isCorrect,
     attemptCount: (existing?.attemptCount ?? 0) + 1,
     responseMs,
+    ...(effectiveHintCount > 0 ? { hintCount: Math.max(0, Math.min(3, effectiveHintCount)) } : {}),
   };
 
   return existing

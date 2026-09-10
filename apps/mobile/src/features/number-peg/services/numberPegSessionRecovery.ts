@@ -8,6 +8,7 @@ export type NumberPegSessionSnapshot = {
   memorySetVersion: number;
   tab: 'scenes' | 'recall';
   questionIndex: number;
+  questionOrder?: string[];
   score: number;
   clientAttemptId: string;
   startedAt: string;

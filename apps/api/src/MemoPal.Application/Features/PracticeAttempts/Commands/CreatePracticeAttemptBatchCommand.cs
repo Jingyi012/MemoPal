@@ -124,7 +124,7 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
             CompletedAt = now,
             DurationMs = input.DurationMs,
             CorrectCount = input.Responses.Count(x => x.IsCorrect),
-            FirstAttemptCorrectCount = input.Responses.Count(x => x.IsCorrect && x.AttemptCount == 1),
+            FirstAttemptCorrectCount = input.Responses.Count(x => x.IsCorrect && x.AttemptCount == 1 && x.HintCount == 0),
             TotalCount = input.Responses.Count,
             Responses = input.Responses.Select(response => new PracticeResponse
             {
@@ -132,6 +132,7 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
                 MemoryItemId = response.MemoryItemId,
                 IsCorrect = response.IsCorrect,
                 AttemptCount = response.AttemptCount,
+                HintCount = response.HintCount,
                 ResponseMs = response.ResponseMs
             }).ToList()
         };
@@ -164,7 +165,12 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
                 schedule.LastAttemptId = attempt.Id;
                 schedule.LastResultCorrect = response.IsCorrect;
                 var isEarlyCorrectRecall = response.IsCorrect && schedule.DueAt > now;
-                if (isEarlyCorrectRecall)
+                if (response.IsCorrect && response.HintCount > 0)
+                {
+                    // A hinted success records the result but does not advance
+                    // the schedule or count as unaided learning.
+                }
+                else if (isEarlyCorrectRecall)
                 {
                     // An early success is useful practice, but must not let a
                     // user fast-forward the spaced-repetition schedule.
@@ -377,8 +383,8 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
             throw new ValidationAppException("durationMs must be between 0 and 86400000.");
         if (input.Responses.Count is < 1 or > 100)
             throw new ValidationAppException("Provide between 1 and 100 responses.");
-        if (input.Responses.Any(x => x.AttemptCount < 1 || x.ResponseMs < 0))
-            throw new ValidationAppException("attemptCount must be positive and responseMs cannot be negative.");
+        if (input.Responses.Any(x => x.AttemptCount < 1 || x.HintCount is < 0 or > 3 || x.ResponseMs < 0))
+            throw new ValidationAppException("attemptCount must be positive, hintCount must be between 0 and 3, and responseMs cannot be negative.");
         if (input.StartedAt is { } startedAt && startedAt > DateTime.UtcNow.AddMinutes(5))
             throw new ValidationAppException("startedAt cannot be in the future.");
     }
@@ -409,6 +415,7 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
             response.MemoryItemId,
             response.IsCorrect,
             response.AttemptCount,
+            response.HintCount,
             response.ResponseMs,
             response.CreatedAt,
             response.UpdatedAt,

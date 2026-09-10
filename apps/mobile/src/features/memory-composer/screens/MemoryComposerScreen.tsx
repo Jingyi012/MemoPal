@@ -96,7 +96,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
 
       scrollView.getNativeScrollRef()?.measureInWindow((_scrollX, scrollY, _scrollWidth, scrollHeight) => {
         input.measureInWindow((_inputX, inputY, _inputWidth, inputHeight) => {
-          const keyboardTop = Keyboard.metrics()?.screenY ?? scrollY + scrollHeight;
+          const keyboardTop = Keyboard.metrics?.()?.screenY ?? scrollY + scrollHeight;
           const visibleBottom = Math.min(scrollY + scrollHeight, keyboardTop) - 16;
           const overlap = inputY + inputHeight - visibleBottom;
 

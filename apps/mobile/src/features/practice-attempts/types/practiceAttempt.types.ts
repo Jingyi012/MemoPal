@@ -5,6 +5,7 @@ export type PracticeResponseInput = {
   isCorrect: boolean;
   attemptCount: number;
   responseMs: number;
+  hintCount?: number;
 };
 
 export type PracticeAttemptInput = {

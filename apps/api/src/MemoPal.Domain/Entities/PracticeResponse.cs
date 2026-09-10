@@ -8,6 +8,7 @@ public sealed class PracticeResponse : AuditableBaseEntity
     public string MemoryItemId { get; set; } = string.Empty;
     public bool IsCorrect { get; set; }
     public int AttemptCount { get; set; }
+    public int HintCount { get; set; }
     public int ResponseMs { get; set; }
 
     public PracticeAttempt? PracticeAttempt { get; set; }

@@ -5,6 +5,7 @@ public sealed class PracticeResponseInput
     public string MemoryItemId { get; set; } = string.Empty;
     public bool IsCorrect { get; set; }
     public int AttemptCount { get; set; } = 1;
+    public int HintCount { get; set; }
     public int ResponseMs { get; set; }
 }
 
@@ -28,6 +29,7 @@ public sealed record PracticeResponseDto(
     string MemoryItemId,
     bool IsCorrect,
     int AttemptCount,
+    int HintCount,
     int ResponseMs,
     DateTime CreatedAt,
     DateTime UpdatedAt,
