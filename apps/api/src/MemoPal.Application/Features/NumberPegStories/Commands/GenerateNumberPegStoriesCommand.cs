@@ -3,16 +3,16 @@ using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.NumberPegStories.DTOs;
+using MemoPal.Application.Features.AiCredits;
 
 namespace MemoPal.Application.Features.NumberPegStories.Commands;
 
 public sealed record GenerateNumberPegStoriesCommand(string UserId, GenerateNumberPegStoriesRequest Request) : IRequest<ApiResponse<GenerateNumberPegStoriesResponse>>;
 
-public sealed class GenerateNumberPegStoriesCommandHandler(INumberPegStoryGenerator generator) : IRequestHandler<GenerateNumberPegStoriesCommand, ApiResponse<GenerateNumberPegStoriesResponse>>
+public sealed class GenerateNumberPegStoriesCommandHandler(INumberPegStoryGenerator generator, IAiCredits credits) : IRequestHandler<GenerateNumberPegStoriesCommand, ApiResponse<GenerateNumberPegStoriesResponse>>
 {
     public async Task<ApiResponse<GenerateNumberPegStoriesResponse>> Handle(GenerateNumberPegStoriesCommand request, CancellationToken cancellationToken)
     {
-        _ = request.UserId;
         if (request.Request.Items is null || request.Request.Items.Count is < 1 or > 100) throw new ValidationAppException("Generate between 1 and 100 number peg stories at a time.");
         if (request.Request.Items.Any(item => item is null))
             throw new ValidationAppException("Each number peg story item is required.");
@@ -42,8 +42,13 @@ public sealed class GenerateNumberPegStoriesCommandHandler(INumberPegStoryGenera
         }
         var locale = request.Request.Locale?.Trim().StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true ? "zh" : "en";
         var style = string.Equals(request.Request.Style?.Trim(), "vivid", StringComparison.OrdinalIgnoreCase) ? "vivid" : "playful";
-        var result = await generator.GenerateAsync(items, locale, style, cancellationToken);
-        var suggestions = result.Suggestions.OrderBy(x => x.Position).Select(x => new NumberPegStorySuggestionDto(x.Position, x.Story, x.CreativeQuestion)).ToList();
-        return ApiResponse<GenerateNumberPegStoriesResponse>.Ok(new(suggestions, items.Count, suggestions.Count, result.Source));
+        var response = await CreditGeneration.RunAsync(credits, request.UserId, request.Request.RequestId,
+            "number-peg-text", new { items, locale, style }, items.Count, async ct =>
+            {
+                var result = await generator.GenerateAsync(items, locale, style, ct);
+                var suggestions = result.Suggestions.OrderBy(x => x.Position).Select(x => new NumberPegStorySuggestionDto(x.Position, x.Story, x.CreativeQuestion, x.IsAi ? "ai" : "template")).ToList();
+                return (new GenerateNumberPegStoriesResponse(suggestions, items.Count, suggestions.Count, result.Source), result.Suggestions.Count(x => x.IsAi));
+            }, cancellationToken, request.Request.MaxCredits);
+        return ApiResponse<GenerateNumberPegStoriesResponse>.Ok(response);
     }
 }

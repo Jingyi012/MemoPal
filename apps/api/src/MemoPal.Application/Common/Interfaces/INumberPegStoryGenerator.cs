@@ -1,7 +1,7 @@
 namespace MemoPal.Application.Common.Interfaces;
 
 public sealed record NumberPegStoryGenerationItem(int Position, int PegNumber, string PegKeyword, string PegDescription, string Word, string? UserDetail, string? ExistingStory);
-public sealed record NumberPegStoryGenerationSuggestion(int Position, string Story, string? CreativeQuestion = null);
+public sealed record NumberPegStoryGenerationSuggestion(int Position, string Story, string? CreativeQuestion = null, bool IsAi = false);
 public sealed record NumberPegStoryGenerationResult(IReadOnlyList<NumberPegStoryGenerationSuggestion> Suggestions, string Source);
 
 public interface INumberPegStoryGenerator

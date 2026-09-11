@@ -1,3 +1,4 @@
+import AiConfigTab from "../../configs/components/AiConfigTab";
 import { ModalForm, ProFormText, ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { useMutation } from "@tanstack/react-query";
@@ -27,6 +28,7 @@ const SYSTEM_SETTINGS_SECTIONS = [
   "privacy-policy",
   "premium-subscription",
   "number-peg-definitions",
+  "ai",
   "advanced",
 ] as const;
 
@@ -68,7 +70,7 @@ export default function SystemSettingsPage() {
 
   const columns: ProColumns<SystemSettingDto>[] = [
     { title: "Key", dataIndex: "key" },
-    { title: "Value", dataIndex: "value" },
+    { title: "Value", dataIndex: "value", render: (_, record) => record.key.startsWith("ai.") ? "Manage in AI Configuration" : record.value },
     { title: "Description", dataIndex: "description" },
     { title: "Updated", dataIndex: "updatedAt", valueType: "dateTime" },
   ];
@@ -84,6 +86,7 @@ export default function SystemSettingsPage() {
           borderRadius: 12,
         }}
         items={[
+          { key: "ai", label: "AI Configuration", children: <AiConfigTab /> },
           {
             key: "feature-limits",
             label: "Feature Limits",

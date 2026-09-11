@@ -16,7 +16,8 @@ public sealed class PalaceAssociationGenerationTests
                 new PalaceAssociationGenerationSuggestion(1, "First vivid scene", "spin", "bright")
             ],
             "ai");
-        var handler = new GeneratePalaceAssociationsCommandHandler(generator);
+        using var db = AiCreditTests.CreateDb();
+        var handler = new GeneratePalaceAssociationsCommandHandler(generator, AiCreditTests.CreateService(db, paid: false));
 
         var response = await handler.Handle(
             new GeneratePalaceAssociationsCommand(
@@ -24,6 +25,7 @@ public sealed class PalaceAssociationGenerationTests
                 new GeneratePalaceAssociationsRequest
                 {
                     Locale = "zh-CN",
+                    RequestId = Guid.NewGuid().ToString("N"),
                     Style = "vivid",
                     Items =
                     [
@@ -57,7 +59,7 @@ public sealed class PalaceAssociationGenerationTests
     [Fact]
     public async Task Handler_RejectsDuplicatePositions()
     {
-        var handler = new GeneratePalaceAssociationsCommandHandler(new StubGenerator([], "template"));
+        var handler = new GeneratePalaceAssociationsCommandHandler(new StubGenerator([], "template"), null!);
         var command = new GeneratePalaceAssociationsCommand(
             "user-1",
             new GeneratePalaceAssociationsRequest
@@ -75,7 +77,7 @@ public sealed class PalaceAssociationGenerationTests
     [Fact]
     public async Task Handler_RejectsMoreThanOneHundredItems()
     {
-        var handler = new GeneratePalaceAssociationsCommandHandler(new StubGenerator([], "template"));
+        var handler = new GeneratePalaceAssociationsCommandHandler(new StubGenerator([], "template"), null!);
         var items = Enumerable.Range(1, 101)
             .Select(position => new PalaceAssociationItemInput
             {

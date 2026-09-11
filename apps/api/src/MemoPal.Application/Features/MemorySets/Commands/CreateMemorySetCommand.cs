@@ -32,6 +32,7 @@ public sealed class CreateMemorySetCommandHandler
             request.UserId,
             request.Request,
             cancellationToken);
+        await MemorySetAiImageValidator.ValidateAsync(_db, request.UserId, request.Request, cancellationToken);
         var entity = MemorySetAggregate.Create(request.UserId, request.Request);
         await _db.MemorySets.AddAsync(entity, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);

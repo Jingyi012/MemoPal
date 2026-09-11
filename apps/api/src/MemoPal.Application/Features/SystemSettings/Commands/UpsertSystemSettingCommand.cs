@@ -30,6 +30,14 @@ public sealed class UpsertSystemSettingCommandHandler
 
         var key = request.Request.Key.Trim();
         var normalizedValue = request.Request.Value ?? string.Empty;
+        if (key.StartsWith("ai.", StringComparison.OrdinalIgnoreCase))
+        {
+            if (key is not (AiSettings.Text or AiSettings.Images or AiSettings.Credits))
+                return ApiResponse<SystemSettingDto>.Fail("Unknown AI settings key.");
+            try { AiSettings.Validate(key, normalizedValue); }
+            catch (Exception ex) when (ex is JsonException or ArgumentException or InvalidOperationException)
+            { return ApiResponse<SystemSettingDto>.Fail("Invalid AI configuration. Check provider, fields, URLs, costs and limits."); }
+        }
         if (string.Equals(key, SystemSettingKeys.LevelConfigs, StringComparison.Ordinal))
         {
             normalizedValue = NormalizeLevelConfigValue(normalizedValue);

@@ -48,5 +48,6 @@ export const adminMenuItems: AdminMenuItem[] = [
     ],
   },
   { path: adminPaths.subscriptions, name: "Subscriptions", icon: "generic" },
+  { path: adminPaths.aiCredits, name: "AI Credits", icon: "generic" },
   { path: adminPaths.systemSettings, name: "System Settings", icon: "generic" },
 ];

@@ -23,5 +23,6 @@ export const adminPaths = {
   referralUsers: '/admin/referrals/users',
 
   subscriptions: '/admin/subscriptions',
+  aiCredits: '/admin/ai-credits',
   systemSettings: '/admin/system-settings',
 } as const;

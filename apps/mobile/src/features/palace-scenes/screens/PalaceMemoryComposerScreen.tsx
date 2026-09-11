@@ -248,8 +248,8 @@ export default function PalaceMemoryComposerScreen() {
           ? 'aiGeneratedMixed'
           : 'aiGenerated';
       setGenerationMessage(t(messageKey).replace('{count}', String(result.generatedCount)));
-    } catch {
-      setGenerationMessage(t('aiGenerationFailed'));
+    } catch (error) {
+      setGenerationMessage(getNumberPegErrorMessage(error, t('aiGenerationFailed')));
     }
   };
 
@@ -289,8 +289,8 @@ export default function PalaceMemoryComposerScreen() {
       )));
       const messageKey = result.source === 'template' ? 'aiGeneratedTemplate' : 'aiGenerated';
       setGenerationMessage(t(messageKey).replace('{count}', '1'));
-    } catch {
-      setGenerationMessage(t('aiGenerationFailed'));
+    } catch (error) {
+      setGenerationMessage(getNumberPegErrorMessage(error, t('aiGenerationFailed')));
     } finally {
       setGeneratingIndex(null);
     }

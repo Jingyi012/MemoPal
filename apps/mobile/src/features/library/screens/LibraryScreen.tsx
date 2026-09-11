@@ -506,7 +506,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   filterTextSelected: { color: theme.onAccent},
   viewToolbar: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   viewActions: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  headerLessonButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 19, borderWidth: 1.5, height: 40, justifyContent: 'center', width: 40 },
+  headerLessonButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 16, borderWidth: 1.5, height: 44, justifyContent: 'center', width: 44 },
   headerLessonEmoji: { fontSize: 20 },
   viewModeLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   viewToggle: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 12, borderWidth: 1.5, flexDirection: 'row', padding: 3 },

@@ -17,6 +17,11 @@ internal static class CommunityMemorySetPublishingValidator
             memorySet.Items.All(x => x.IsDeleted) || memorySet.TechniquePlan is null || memorySet.TechniquePlan.IsDeleted)
             throw new ValidationAppException("Complete this memory before sharing it publicly.");
 
+        if (memorySet.TechniquePlan.PegBindings.Where(x => !x.IsDeleted).Select(x => x.SceneAssetUrl)
+            .Concat(memorySet.TechniquePlan.PalaceBindings.Where(x => !x.IsDeleted).Select(x => x.SceneAssetUrl))
+            .Any(url => url?.Contains("/v1/ai-credits/images/", StringComparison.OrdinalIgnoreCase) == true))
+            throw new ValidationAppException("AI illustrations are private. Remove the illustration before sharing this memory publicly.");
+
         var hasPrivateAssets =
             memorySet.Items.Any(x => !x.IsDeleted && !string.IsNullOrWhiteSpace(x.PronunciationAudioUrl)) ||
             memorySet.TechniquePlan.PegBindings.Any(x => !x.IsDeleted && !string.IsNullOrWhiteSpace(x.SceneAssetUrl)) ||

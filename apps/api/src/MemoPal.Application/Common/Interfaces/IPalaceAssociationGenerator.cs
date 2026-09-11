@@ -10,7 +10,8 @@ public sealed record PalaceAssociationGenerationSuggestion(
     int Position,
     string AssociationText,
     string Action,
-    string SensoryDetail);
+    string SensoryDetail,
+    bool IsAi = false);
 
 public sealed record PalaceAssociationGenerationResult(
     IReadOnlyList<PalaceAssociationGenerationSuggestion> Suggestions,

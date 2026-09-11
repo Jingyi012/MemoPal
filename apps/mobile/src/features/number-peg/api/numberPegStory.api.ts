@@ -10,11 +10,14 @@ export type NumberPegStoryItem = {
   existingStory?: string | null;
 };
 export type GenerateNumberPegStoriesRequest = {
+  requestId?: string;
+  maxCredits?: number;
   locale: 'en' | 'zh';
   style?: 'playful' | 'vivid';
   items: NumberPegStoryItem[];
 };
 export type NumberPegStorySuggestion = {
+  source: 'ai' | 'template';
   position: number;
   story: string;
   creativeQuestion?: string | null;

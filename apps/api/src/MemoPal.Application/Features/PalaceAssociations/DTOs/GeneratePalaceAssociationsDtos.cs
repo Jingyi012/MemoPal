@@ -2,6 +2,8 @@ namespace MemoPal.Application.Features.PalaceAssociations.DTOs;
 
 public sealed class GeneratePalaceAssociationsRequest
 {
+    public string RequestId { get; set; } = string.Empty;
+    public int? MaxCredits { get; set; }
     public string Locale { get; set; } = "en";
     public string Style { get; set; } = "playful";
     public bool ChainMode { get; set; }
@@ -20,7 +22,8 @@ public sealed record PalaceAssociationSuggestionDto(
     int Position,
     string AssociationText,
     string Action,
-    string SensoryDetail);
+    string SensoryDetail,
+    string Source = "template");
 
 public sealed record GeneratePalaceAssociationsResponse(
     IReadOnlyList<PalaceAssociationSuggestionDto> Suggestions,

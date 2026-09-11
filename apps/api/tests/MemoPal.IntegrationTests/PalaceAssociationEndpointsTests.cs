@@ -34,6 +34,7 @@ public sealed class PalaceAssociationEndpointsTests : IClassFixture<CustomWebApp
         var response = await client.PostAsJsonAsync("/v1/palace-associations/generate", new
         {
             locale = "en",
+            requestId = Guid.NewGuid().ToString("N"),
             style = "vivid",
             items = new[]
             {

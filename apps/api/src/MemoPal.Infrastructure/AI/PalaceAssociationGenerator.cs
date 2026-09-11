@@ -185,11 +185,13 @@ public sealed class PalaceAssociationGenerator(
             options = new { temperature = 0.9 }
         };
 
-        using var response = await httpClient.PostAsJsonAsync(
-            settings.OllamaEndpoint.Trim(),
-            request,
-            JsonOptions,
-            cancellationToken);
+        using var messageRequest = new HttpRequestMessage(HttpMethod.Post, settings.OllamaEndpoint.Trim())
+        {
+            Content = JsonContent.Create(request, options: JsonOptions)
+        };
+        if (!string.IsNullOrWhiteSpace(settings.OllamaApiKey))
+            messageRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", settings.OllamaApiKey.Trim());
+        using var response = await httpClient.SendAsync(messageRequest, cancellationToken);
         response.EnsureSuccessStatusCode();
         var payload = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions, cancellationToken);
         if (payload.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
@@ -323,6 +325,7 @@ Input:
                         x.AssociationText.Trim().Length <= 500)
             .Select(x => x with
             {
+                IsAi = true,
                 AssociationText = x.AssociationText.Trim(),
                 Action = x.Action.Trim(),
                 SensoryDetail = x.SensoryDetail.Trim()

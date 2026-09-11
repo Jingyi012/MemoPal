@@ -101,7 +101,13 @@ public sealed class NumberPegStoryGenerator(
             },
             options = new { temperature = 0.9 }
         };
-        using var response = await client.PostAsJsonAsync(settings.OllamaEndpoint.Trim(), request, JsonOptions, cancellationToken);
+        using var messageRequest = new HttpRequestMessage(HttpMethod.Post, settings.OllamaEndpoint.Trim())
+        {
+            Content = JsonContent.Create(request, options: JsonOptions)
+        };
+        if (!string.IsNullOrWhiteSpace(settings.OllamaApiKey))
+            messageRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", settings.OllamaApiKey.Trim());
+        using var response = await client.SendAsync(messageRequest, cancellationToken);
         response.EnsureSuccessStatusCode();
         var payload = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions, cancellationToken);
         if (!TryGetProperty(payload, "message", out var message) || !TryGetProperty(message, "content", out var content) || content.ValueKind != JsonValueKind.String)
@@ -152,7 +158,7 @@ public sealed class NumberPegStoryGenerator(
                 story.Length > 1000 || !ContainsTargetAndPeg(story, item)) continue;
             var question = TryGetString(value, "creativeQuestion", out var creativeQuestion)
                 ? creativeQuestion[..Math.Min(200, creativeQuestion.Length)] : null;
-            result.Add(new(position, story, question));
+            result.Add(new(position, story, question, true));
         }
         return result;
     }

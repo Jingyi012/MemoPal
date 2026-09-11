@@ -78,6 +78,10 @@ export default function RootLayout() {
           persister: queryPersister,
           buster: QUERY_CACHE_BUSTER,
           maxAge: 1000 * 60 * 60 * 24,
+          dehydrateOptions: {
+            shouldDehydrateQuery: (query) => query.state.status === 'success' &&
+              !['ai-image', 'ai-credits'].includes(String(query.queryKey[0])),
+          },
         }}>
         <AuthProvider>
           <UserStateProvider>

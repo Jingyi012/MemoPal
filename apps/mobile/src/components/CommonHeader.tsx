@@ -8,6 +8,8 @@ import { NotificationBell } from './NotificationBell';
 import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { useColorScheme } from 'nativewind';
+import { useRouter } from 'expo-router';
+import { AiCreditCoinButton } from '@/features/ai-credits/components/AiCreditBalanceLink';
 
 interface Actions {
   icon?: LucideIcon;
@@ -29,6 +31,8 @@ interface HeaderProps {
   backAction?: () => void;
   showNotification?: boolean;
   showHomeButton?: boolean;
+  /** Show the compact AI credit wallet affordance in the header. */
+  showAiCredits?: boolean;
   /** Use a shorter header for focused practice sessions. */
   compact?: boolean;
 }
@@ -44,9 +48,11 @@ export const CommonHeader: React.FC<HeaderProps> = ({
   backAction,
   showNotification = false,
   showHomeButton = false,
+  showAiCredits = true,
   compact = false,
 }) => {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
 
@@ -62,7 +68,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
               <HeaderIconButton
                 icon={ChevronLeft}
                 accessibilityLabel="Go back"
-                onPress={backAction}
+                onPress={backAction ?? (() => router.back())}
               />
             )
           ) : (
@@ -97,6 +103,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
               })}
             {showNotification && <NotificationBell />}
             {showHomeButton && <HomeButton />}
+            {showAiCredits && <AiCreditCoinButton />}
           </View>
         </View>
 

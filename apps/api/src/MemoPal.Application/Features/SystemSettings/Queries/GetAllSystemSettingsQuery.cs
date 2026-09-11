@@ -25,7 +25,7 @@ public sealed class GetAllSystemSettingsQueryHandler
     {
         var settings = await _db.SystemSettings
             .AsNoTracking()
-            .Where(x => !x.IsDeleted)
+            .Where(x => !x.IsDeleted && !x.Key.StartsWith("ai."))
             .OrderBy(x => x.Key)
             .Select(x => new SystemSettingDto(x.Id, x.Key, x.Value, x.Description, x.CreatedAt, x.UpdatedAt))
             .ToListAsync(cancellationToken);

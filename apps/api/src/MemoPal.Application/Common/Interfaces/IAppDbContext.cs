@@ -5,6 +5,9 @@ namespace MemoPal.Application.Common.Interfaces;
 
 public interface IAppDbContext
 {
+    DbSet<AiCreditGrant> AiCreditGrants { get; }
+    DbSet<AiGeneration> AiGenerations { get; }
+    DbSet<AiCreditEntry> AiCreditEntries { get; }
     DbSet<User> Users { get; }
     DbSet<UserAuthIdentity> UserAuthIdentities { get; }
     DbSet<RefreshTokenSession> RefreshTokenSessions { get; }

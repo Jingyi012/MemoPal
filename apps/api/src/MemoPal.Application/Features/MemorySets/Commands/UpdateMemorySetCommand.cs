@@ -52,6 +52,7 @@ public sealed class UpdateMemorySetCommandHandler
             request.Request,
             cancellationToken);
 
+        await MemorySetAiImageValidator.ValidateAsync(_db, request.UserId, request.Request, cancellationToken);
         MemorySetAggregate.Update(entity, request.Request);
         if (entity.Visibility == MemoPal.Domain.Entities.MemorySetVisibilities.Public)
             entity.SharesPrivateAssets = await CommunityMemorySetPublishingValidator.ValidateAsync(

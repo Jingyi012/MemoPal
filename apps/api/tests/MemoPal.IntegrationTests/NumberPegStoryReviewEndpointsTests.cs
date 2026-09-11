@@ -27,6 +27,7 @@ public sealed class NumberPegStoryReviewEndpointsTests(CustomWebApplicationFacto
         var response = await client.PostAsJsonAsync("/v1/number-peg-stories/generate", new
         {
             locale = "en",
+            requestId = Guid.NewGuid().ToString("N"),
             items = new[]
             {
                 new

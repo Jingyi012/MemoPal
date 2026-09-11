@@ -7,6 +7,9 @@ namespace MemoPal.Infrastructure.Persistence;
 
 public class AppDbContext : DbContext, IAppDbContext
 {
+    public DbSet<AiCreditGrant> AiCreditGrants => Set<AiCreditGrant>();
+    public DbSet<AiGeneration> AiGenerations => Set<AiGeneration>();
+    public DbSet<AiCreditEntry> AiCreditEntries => Set<AiCreditEntry>();
     private readonly ICurrentUserAccessor? _currentUserAccessor;
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUserAccessor? currentUserAccessor = null)
@@ -45,6 +48,9 @@ public class AppDbContext : DbContext, IAppDbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfiguration(new AiCreditGrantConfiguration());
+        modelBuilder.ApplyConfiguration(new AiGenerationConfiguration());
+        modelBuilder.ApplyConfiguration(new AiCreditEntryConfiguration());
         modelBuilder.Entity<User>(b =>
         {
             b.HasKey(x => x.Id);

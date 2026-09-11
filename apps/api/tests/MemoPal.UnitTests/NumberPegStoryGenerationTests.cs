@@ -13,9 +13,22 @@ namespace MemoPal.UnitTests;
 public sealed class NumberPegStoryGenerationTests
 {
     [Fact]
+    public async Task OllamaUsesConfiguredBearerCredential()
+    {
+        var handler = new QueueHttpHandler(JsonResponse("""{"message":{"content":"{\"suggestions\":[{\"position\":1,\"story\":\"A candle hugs apple\"}]}"}}"""));
+        var generator = new NumberPegStoryGenerator(new HttpClient(handler),
+            Options.Create(new PalaceAssociationGenerationOptions { Provider = "ollama", OllamaApiKey = "test-credential" }),
+            NullLogger<NumberPegStoryGenerator>.Instance);
+        var result = await generator.GenerateAsync([Item()], "en", "playful");
+        Assert.Equal("ai", result.Source);
+        Assert.Equal("Bearer", handler.Requests.Single().Headers.Authorization?.Scheme);
+        Assert.Equal("test-credential", handler.Requests.Single().Headers.Authorization?.Parameter);
+    }
+
+    [Fact]
     public async Task Handler_RejectsNullItemBeforeSorting()
     {
-        var handler = new GenerateNumberPegStoriesCommandHandler(new StubGenerator());
+        var handler = new GenerateNumberPegStoriesCommandHandler(new StubGenerator(), null!);
         var request = new GenerateNumberPegStoriesRequest { Items = [null!] };
         await Assert.ThrowsAsync<ValidationAppException>(() => handler.Handle(new("user", request), default));
     }
@@ -109,7 +122,7 @@ public sealed class NumberPegStoryGenerationTests
     [Fact]
     public async Task Handler_RejectsRefinementThatCannotFitPersistedStoryLimit()
     {
-        var handler = new GenerateNumberPegStoriesCommandHandler(new StubGenerator());
+        var handler = new GenerateNumberPegStoriesCommandHandler(new StubGenerator(), null!);
         var request = new GenerateNumberPegStoriesRequest
         {
             Items = [new NumberPegStoryItemInput

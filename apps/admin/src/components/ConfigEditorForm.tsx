@@ -2,6 +2,7 @@ import React from "react";
 import { withTheme } from "@rjsf/core";
 import { Theme as AntdTheme } from "@rjsf/antd";
 import Validator from "@rjsf/validator-ajv8";
+import type { UiSchema } from "@rjsf/utils";
 import {
   App,
   Button,
@@ -20,6 +21,7 @@ const Form = withTheme(AntdTheme);
 
 interface ConfigEditorFormProps {
   schema: Record<string, unknown>;
+  uiSchema?: UiSchema;
   formData: Record<string, unknown>;
   onSubmit: (data: Record<string, unknown>) => Promise<void>;
   onCancel?: () => void;
@@ -227,6 +229,7 @@ const ObjectFieldTemplate = (props: any) => {
 
 export const ConfigEditorForm: React.FC<ConfigEditorFormProps> = ({
   schema,
+  uiSchema,
   formData,
   onSubmit,
   onCancel,
@@ -241,7 +244,6 @@ export const ConfigEditorForm: React.FC<ConfigEditorFormProps> = ({
       await onSubmit(formData);
       message.success("Configuration updated successfully");
     } catch (error) {
-      console.error("Submission error:", error);
       message.error(
         extractApiErrorMessage(error, "Failed to save configuration"),
       );
@@ -260,6 +262,7 @@ export const ConfigEditorForm: React.FC<ConfigEditorFormProps> = ({
       <Spin spinning={loading || isSubmitting}>
         <Form
           schema={schema as any}
+          uiSchema={uiSchema}
           formData={formData}
           validator={Validator}
           onSubmit={handleSubmit}

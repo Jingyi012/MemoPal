@@ -3,6 +3,7 @@ using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.PalaceAssociations.DTOs;
+using MemoPal.Application.Features.AiCredits;
 
 namespace MemoPal.Application.Features.PalaceAssociations.Commands;
 
@@ -12,37 +13,28 @@ public sealed record GeneratePalaceAssociationsCommand(
     : IRequest<ApiResponse<GeneratePalaceAssociationsResponse>>;
 
 public sealed class GeneratePalaceAssociationsCommandHandler(
-    IPalaceAssociationGenerator generator)
+    IPalaceAssociationGenerator generator, IAiCredits credits)
     : IRequestHandler<GeneratePalaceAssociationsCommand, ApiResponse<GeneratePalaceAssociationsResponse>>
 {
     public async Task<ApiResponse<GeneratePalaceAssociationsResponse>> Handle(
         GeneratePalaceAssociationsCommand request,
         CancellationToken cancellationToken)
     {
-        _ = request.UserId;
         var items = NormalizeAndValidate(request.Request);
-        var result = await generator.GenerateAsync(
-            items,
-            NormalizeLocale(request.Request.Locale),
-            NormalizeStyle(request.Request.Style),
-            request.Request.ChainMode,
-            cancellationToken);
-
-        var suggestions = result.Suggestions
-            .OrderBy(x => x.Position)
-            .Select(x => new PalaceAssociationSuggestionDto(
-                x.Position,
-                x.AssociationText,
-                x.Action,
-                x.SensoryDetail))
-            .ToList();
-
-        return ApiResponse<GeneratePalaceAssociationsResponse>.Ok(
-            new GeneratePalaceAssociationsResponse(
-                suggestions,
-                items.Count,
-                suggestions.Count,
-                result.Source));
+        var response = await CreditGeneration.RunAsync(credits, request.UserId, request.Request.RequestId,
+            "palace-text", request.Request, items.Count, async ct =>
+            {
+                var result = await generator.GenerateAsync(
+                    items, NormalizeLocale(request.Request.Locale), NormalizeStyle(request.Request.Style),
+                    request.Request.ChainMode, ct);
+                var suggestions = result.Suggestions.OrderBy(x => x.Position)
+                    .Select(x => new PalaceAssociationSuggestionDto(
+                        x.Position, x.AssociationText, x.Action, x.SensoryDetail, x.IsAi ? "ai" : "template"))
+                    .ToList();
+                return (new GeneratePalaceAssociationsResponse(suggestions, items.Count, suggestions.Count, result.Source),
+                    result.Suggestions.Count(x => x.IsAi));
+            }, cancellationToken, request.Request.MaxCredits);
+        return ApiResponse<GeneratePalaceAssociationsResponse>.Ok(response);
     }
 
     private static IReadOnlyList<PalaceAssociationGenerationItem> NormalizeAndValidate(
@@ -53,6 +45,7 @@ public sealed class GeneratePalaceAssociationsCommandHandler(
             throw new ValidationAppException("Generate between 1 and 100 Palace associations at a time.");
         }
 
+        if (request.Items.Any(x => x is null)) throw new ValidationAppException("Each Palace item is required.");
         var positions = new HashSet<int>();
         var items = new List<PalaceAssociationGenerationItem>(request.Items.Count);
         foreach (var item in request.Items.OrderBy(x => x.Position))

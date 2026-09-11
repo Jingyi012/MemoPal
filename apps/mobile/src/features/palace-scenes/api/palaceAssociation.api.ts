@@ -9,6 +9,8 @@ export type PalaceAssociationGenerationItem = {
 };
 
 export type GeneratePalaceAssociationsRequest = {
+  requestId?: string;
+  maxCredits?: number;
   locale: 'en' | 'zh';
   style?: 'playful' | 'vivid';
   chainMode?: boolean;
@@ -16,6 +18,7 @@ export type GeneratePalaceAssociationsRequest = {
 };
 
 export type PalaceAssociationSuggestion = {
+  source: 'ai' | 'template';
   position: number;
   associationText: string;
   action: string;

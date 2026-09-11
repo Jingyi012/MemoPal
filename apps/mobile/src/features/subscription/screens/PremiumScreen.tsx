@@ -3,6 +3,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { BaseCard } from '@/components/BaseCard';
 import LoadingView from '@/components/LoadingView';
 import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import {
   DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG,
@@ -12,19 +13,24 @@ import { PremiumSubscriptionConfig } from '@/features/subscription/types/premium
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Check, Crown, Sparkles, X } from 'lucide-react-native';
+import { Check, ChevronRight, Crown, Sparkles, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TermsAndConditionSheet from '../components/TermsAndConditionSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
+import { AiCreditCoinButton } from '@/features/ai-credits/components/AiCreditBalanceLink';
+import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
+import { useUserState } from '@/contexts/UserStateContext';
 
 const PremiumScreen: React.FC = () => {
   const router = useRouter();
   const { t } = useTranslation('subscription');
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
+  const { user, isLoading: isUserLoading } = useCurrentUser();
+  const { userState } = useUserState();
   const insets = useSafeAreaInsets();
   const termsRef = useRef<BottomSheetModal>(null);
   const [config, setConfig] = useState<PremiumSubscriptionConfig | null>(null);
@@ -95,22 +101,30 @@ const PremiumScreen: React.FC = () => {
     void loadPremiumConfig(true);
   }, [loadPremiumConfig]);
 
-  if (isLoading) {
+  if (isLoading || isUserLoading) {
     return <LoadingView />;
   }
 
+  if (user?.isPremium) {
+    return <PremiumMemberView theme={activeTheme}
+      expiresAt={userState.subscription.expiresAt} onClose={() => router.back()} />;
+  }
+
   const topBar = (
-    <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+      <View style={[styles.topBar, { paddingTop: insets.top + 8, backgroundColor: activeTheme.canvas, borderBottomColor: activeTheme.line }]}>
       <View style={styles.topBarPill}>
-        <Sparkles size={14} color={theme.berryDeep} strokeWidth={2.5} />
-        <Text style={styles.topBarLabel}>{t('upgrade')}</Text>
+        <Sparkles size={14} color={activeTheme.berryDeep} strokeWidth={2.5} />
+        <Text style={[styles.topBarLabel, { color: activeTheme.berryDeep }]}>{t('upgrade')}</Text>
       </View>
+      <View style={styles.topBarActions}>
+      <AiCreditCoinButton />
       <AnimatedPressable
         accessibilityLabel="Close premium page"
         onPress={() => router.back()}
-        style={styles.closeButton}>
-        <X size={19} color={theme.inkSoft} />
+        style={[styles.closeButton, { backgroundColor: activeTheme.sand }]}>
+        <X size={19} color={activeTheme.inkSoft} />
       </AnimatedPressable>
+      </View>
     </View>
   );
 
@@ -141,14 +155,14 @@ const PremiumScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.page}>
+    <View style={[styles.page, { backgroundColor: activeTheme.canvas }] }>
       {topBar}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}>
         {loadError ? (
-          <View style={styles.errorBanner}>
+          <View style={[styles.errorBanner, { borderColor: activeTheme.berryLine, backgroundColor: activeTheme.berryTint }]}>
             <Text style={styles.errorTitle}>{t('refreshUnavailable')}</Text>
             <Text style={styles.errorBody}>{loadError}</Text>
           </View>
@@ -178,7 +192,7 @@ const PremiumScreen: React.FC = () => {
           </View>
         </LinearGradient>
 
-        <View style={styles.body}>
+        <View style={[styles.body, { backgroundColor: activeTheme.canvas }]}>
           <BaseCard radius="3xl" padding="lg" shadow="sm" style={styles.featuresCard}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{config.sections.includedTitle}</Text>
@@ -193,8 +207,8 @@ const PremiumScreen: React.FC = () => {
                     <Check size={15} color={theme.violetDeep} strokeWidth={3} />
                   </View>
                   <View style={styles.featureCopy}>
-                    <Text style={styles.featureTitle}>{feature.title}</Text>
-                    <Text style={styles.featureDescription}>{feature.description}</Text>
+                    <Text style={[styles.featureTitle, { color: activeTheme.ink }]}>{feature.title}</Text>
+                    <Text style={[styles.featureDescription, { color: activeTheme.inkSoft }]}>{feature.description}</Text>
                   </View>
                 </View>
               ))}
@@ -210,7 +224,7 @@ const PremiumScreen: React.FC = () => {
                   activeOpacity={0.8}
                   onPress={() => setSelectedPlanId(plan.key)}
                   style={[
-                    styles.planCard,
+                    [styles.planCard, { backgroundColor: activeTheme.paper, borderColor: activeTheme.line }],
                     plan.isBestValue && styles.planCardBestValue,
                     selected && styles.planCardSelected,
                   ]}>
@@ -233,15 +247,15 @@ const PremiumScreen: React.FC = () => {
                     <View style={styles.planDetails}>
                       <Text
                         numberOfLines={1}
-                        style={[styles.planName, selected && styles.planNameSelected]}>
+                        style={[styles.planName, { color: selected ? activeTheme.violetDeep : activeTheme.ink }]}>
                         {plan.name}
                       </Text>
-                      {!!plan.savings && <Text style={styles.planSavings}>{plan.savings}</Text>}
-                      {!!plan.subtext && <Text style={styles.planSubtext}>{plan.subtext}</Text>}
+                      {!!plan.savings && <Text style={[styles.planSavings, { color: activeTheme.grass }]}>{plan.savings}</Text>}
+                      {!!plan.subtext && <Text style={[styles.planSubtext, { color: activeTheme.inkSoft }]}>{plan.subtext}</Text>}
                     </View>
                     <View style={styles.priceBlock}>
-                      <Text style={styles.planPrice}>{plan.price}</Text>
-                      <Text style={styles.planLabel}>{plan.label}</Text>
+                      <Text style={[styles.planPrice, { color: activeTheme.ink }]}>{plan.price}</Text>
+                      <Text style={[styles.planLabel, { color: activeTheme.inkSoft }]}>{plan.label}</Text>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -273,9 +287,9 @@ const PremiumScreen: React.FC = () => {
           </AnimatedPressable>
 
           <View style={styles.footer}>
-            <Text style={styles.finePrint}>{config.footer.finePrint}</Text>
+            <Text style={[styles.finePrint, { color: activeTheme.inkMuted }]}>{config.footer.finePrint}</Text>
             <TouchableOpacity onPress={() => termsRef.current?.present()}>
-              <Text style={styles.termsLink}>{config.terms.buttonLabel}</Text>
+              <Text style={[styles.termsLink, { color: activeTheme.berryDeep }]}>{config.terms.buttonLabel}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -288,7 +302,7 @@ const PremiumScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  topBar: { minHeight: 64, paddingHorizontal: 16, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: theme.canvas, borderBottomWidth: 1, borderBottomColor: theme.line },
+  topBarActions: { flexDirection: 'row', alignItems: 'center', gap: 8 }, topBar: { minHeight: 64, paddingHorizontal: 16, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: theme.canvas, borderBottomWidth: 1, borderBottomColor: theme.line },
   topBarPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, borderWidth: 1.3, borderColor: theme.berryLine, backgroundColor: theme.berryTint, paddingHorizontal: 10, paddingVertical: 5 },
   topBarLabel: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase' },
   closeButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.sand },
@@ -356,3 +370,36 @@ const styles = StyleSheet.create({
 });
 
 export default PremiumScreen;
+
+function PremiumMemberView({ theme, expiresAt, onClose }: {
+  theme: typeof memopalThemes.light; expiresAt?: string | null; onClose: () => void;
+}) {
+  const { styles } = useMemberStyles();
+  const { language } = useTranslation('numberPeg');
+  const zh = language === 'zh';
+  return <View style={styles.memberPage}>
+    <View style={styles.memberTop}><View style={styles.memberEyebrow}><Crown size={15} color={theme.sun} /><Text style={styles.memberEyebrowText}>MEMOPAL PREMIUM</Text></View>
+      <View style={styles.memberActions}><AiCreditCoinButton /><AnimatedPressable accessibilityLabel="Close premium page" onPress={onClose} style={styles.memberClose}><X size={19} color={theme.inkSoft} /></AnimatedPressable></View>
+    </View>
+    <ScrollView contentContainerStyle={styles.memberContent}>
+      <View style={styles.memberHero}><View style={styles.memberOrb}><Crown size={32} color={theme.sun} strokeWidth={2.3} /></View>
+        <Text style={styles.memberTitle}>{zh ? '你的 Premium 旅程正在进行' : 'Your Premium journey is active'}</Text>
+        <Text style={styles.memberSubtitle}>{zh ? '继续建立更深、更有趣的记忆。' : 'Keep building deeper, more playful memories.'}</Text>
+        <View style={styles.activeBadge}><Sparkles size={13} color={theme.sun} /><Text style={styles.activeBadgeText}>{zh ? '已激活' : 'ACTIVE'}</Text></View>
+      </View>
+      <View style={styles.memberSection}><Text style={styles.memberSectionTitle}>{zh ? '本期权益' : 'This period'}</Text>
+        <View style={styles.memberRow}><View style={styles.checkCircle}><Check size={14} color={theme.onAccent} strokeWidth={3} /></View><Text style={styles.memberRowText}>{zh ? '所有 Premium 记忆工具已解锁' : 'All Premium memory tools are unlocked'}</Text></View>
+        <View style={styles.memberRow}><View style={styles.checkCircle}><Check size={14} color={theme.onAccent} strokeWidth={3} /></View><Text style={styles.memberRowText}>{zh ? 'AI credit 可用于联想故事和图片' : 'AI credits are ready for stories and images'}</Text></View>
+      </View>
+      <View style={styles.manageCard}><View style={styles.manageCopy}><Text style={styles.manageTitle}>{zh ? '管理订阅' : 'Manage subscription'}</Text><Text style={styles.manageBody}>{expiresAt ? `${zh ? '当前周期至' : 'Current period ends'} ${new Date(expiresAt).toLocaleDateString()}` : (zh ? '订阅状态由账户同步。' : 'Subscription status is synced to your account.')}</Text></View><ChevronRight size={20} color={theme.inkSoft} /></View>
+    </ScrollView>
+  </View>;
+}
+
+const useMemberStyles = createThemedStyles((theme) => StyleSheet.create({
+  memberPage: { flex: 1, backgroundColor: theme.canvas }, memberTop: { minHeight: 64, paddingHorizontal: 16, paddingTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: theme.line },
+  memberActions: { flexDirection: 'row', alignItems: 'center', gap: 8 }, memberEyebrow: { flexDirection: 'row', alignItems: 'center', gap: 7 }, memberEyebrowText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 }, memberClose: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.paper },
+  memberContent: { padding: 16, gap: 16, paddingBottom: 40 }, memberHero: { borderRadius: 28, padding: 22, backgroundColor: theme.night, overflow: 'hidden' }, memberOrb: { width: 62, height: 62, borderRadius: 22, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,201,60,0.16)', borderWidth: 1, borderColor: 'rgba(255,201,60,0.35)' },
+  memberTitle: { color: '#FFF', fontFamily: typography.displayExtraBold, fontSize: 27, lineHeight: 34, marginTop: 18 }, memberSubtitle: { color: 'rgba(255,255,255,0.75)', fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20, marginTop: 5 }, activeBadge: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 5, marginTop: 18, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: 'rgba(255,201,60,0.16)' }, activeBadgeText: { color: theme.sun, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
+  memberSection: { borderRadius: 22, padding: 17, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, gap: 14 }, memberSectionTitle: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase' }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 10 }, checkCircle: { width: 26, height: 26, borderRadius: 10, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.grass }, memberRowText: { flex: 1, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 }, manageCard: { minHeight: 76, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.violetTint, borderWidth: 1.5, borderColor: theme.violetLine }, manageCopy: { flex: 1 }, manageTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 }, manageBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, marginTop: 4 },
+}));

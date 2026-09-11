@@ -223,6 +223,7 @@ export default function ProfileScreen() {
         title={t('yourProgress')}
         description={t('levelXpStreak')}
         hideBackButton
+        showAiCredits={false}
       />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={[styles.profileHead, { backgroundColor: activeTheme.violetTint, borderColor: activeTheme.violetLine }]}>

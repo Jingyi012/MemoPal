@@ -1,3 +1,4 @@
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Infrastructure.Auth;
 using MemoPal.Infrastructure.AI;
@@ -36,6 +37,21 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+        services.AddOptions<AiCreditOptions>()
+            .Validate(x => x.TextCost is > 0 and <= 10000 && x.ImageCost is > 0 and <= 10000, "AI credit costs must be between 1 and 10000.")
+            .ValidateOnStart();
+        services.AddScoped<AiCreditService>();
+        services.AddScoped<DatabaseAiSettings>();
+        services.AddScoped<IOptions<AiCreditOptions>>(sp => sp.GetRequiredService<DatabaseAiSettings>().Read(AiSettings.Credits, sp.GetRequiredService<IOptionsFactory<AiCreditOptions>>()));
+        services.AddScoped<IOptions<AiImageGenerationOptions>>(sp => sp.GetRequiredService<DatabaseAiSettings>().Read(AiSettings.Images, sp.GetRequiredService<IOptionsFactory<AiImageGenerationOptions>>()));
+        services.AddScoped<IOptions<PalaceAssociationGenerationOptions>>(sp => sp.GetRequiredService<DatabaseAiSettings>().Read(AiSettings.Text, sp.GetRequiredService<IOptionsFactory<PalaceAssociationGenerationOptions>>()));
+        services.AddScoped<IAiCredits>(sp => sp.GetRequiredService<AiCreditService>());
+        services.AddHttpClient<NumberPegImageGenerator>(client =>
+        {
+            client.Timeout = TimeSpan.FromMinutes(3);
+            client.MaxResponseContentBufferSize = 10_000_000;
+        }).RemoveAllLoggers();
+        services.AddHostedService<AiImageWorker>();
 
         var jwtOptions = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
         var socialAuthOptions = configuration.GetSection(SocialAuthOptions.SectionName).Get<SocialAuthOptions>() ?? new SocialAuthOptions();
@@ -51,19 +67,17 @@ public static class DependencyInjection
 
         services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
         services.AddHttpClient<IFacebookTokenValidator, FacebookTokenValidator>();
-        services.Configure<PalaceAssociationGenerationOptions>(
-            configuration.GetSection(PalaceAssociationGenerationOptions.SectionName));
-        services.AddHttpClient<IPalaceAssociationGenerator, PalaceAssociationGenerator>((serviceProvider, client) =>
+
+        // Provider settings are database-backed and scoped per request. The
+        // HttpClient factory runs from the root provider, so keep transport
+        // timeout configuration independent from scoped AI settings.
+        services.AddHttpClient<IPalaceAssociationGenerator, PalaceAssociationGenerator>(client =>
         {
-            var settings = serviceProvider
-                .GetRequiredService<IOptions<PalaceAssociationGenerationOptions>>()
-                .Value;
-            client.Timeout = TimeSpan.FromSeconds(Math.Clamp(settings.TimeoutSeconds, 5, 120));
-        });
-        services.AddHttpClient<INumberPegStoryGenerator, NumberPegStoryGenerator>((serviceProvider, client) =>
+            client.Timeout = TimeSpan.FromSeconds(120);
+        }).RemoveAllLoggers();
+        services.AddHttpClient<INumberPegStoryGenerator, NumberPegStoryGenerator>(client =>
         {
-            var settings = serviceProvider.GetRequiredService<IOptions<PalaceAssociationGenerationOptions>>().Value;
-            client.Timeout = TimeSpan.FromSeconds(Math.Clamp(settings.TimeoutSeconds, 5, 120));
+            client.Timeout = TimeSpan.FromSeconds(120);
         }).RemoveAllLoggers();
 
         return services;

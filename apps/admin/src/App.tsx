@@ -13,6 +13,7 @@ const ReferralConfigPage = lazy(() => import('./pages/ReferralConfigPage'));
 const ReferralUsersPage = lazy(() => import('./pages/ReferralUsersPage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
 const SubscriptionsPage = lazy(() => import('./pages/SubscriptionsPage'));
+const AiCreditsPage = lazy(() => import('./features/ai-credits/pages/AiCreditsPage'));
 const SystemSettingsPage = lazy(() => import('./pages/SystemSettingsPage'));
 const XpConfigsPage = lazy(() => import('./pages/XpConfigsPage'));
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
@@ -59,6 +60,7 @@ export default function App() {
               <Route path="users" element={<ReferralUsersPage />} />
             </Route>
             <Route path="subscriptions" element={<SubscriptionsPage />} />
+            <Route path="ai-credits" element={<AiCreditsPage />} />
             <Route path="system-settings" element={<SystemSettingsPage />} />
           </Route>
         </Route>

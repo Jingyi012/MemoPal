@@ -8,6 +8,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useMemo } from 'react';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
+import { AiGeneratedImage } from '@/features/ai-credits/components/AiGeneratedImage';
 
 type NumberPegRehearsalCardProps = {
   item: MemoryItem;
@@ -51,6 +52,7 @@ export function NumberPegRehearsalCard({
       </View>
       <Text style={styles.prompt}>{t('promptPause')}</Text>
       <Text style={styles.sceneText}>{binding?.sceneText ?? t('sceneInteraction')}</Text>
+      {binding?.sceneAssetUrl?.startsWith('/v1/ai-credits/images/') && <AiGeneratedImage path={binding.sceneAssetUrl} description={binding.sceneText} />}
       <View style={styles.wordTag}>
         <Text style={styles.wordTagText}>{item.answer}</Text>
       </View>
