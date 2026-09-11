@@ -5,7 +5,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemorySet } from '@/features/memory-sets';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Archive, ArchiveRestore, Copy, Globe2, LockKeyhole, Trash2 } from 'lucide-react-native';
+import { Archive, ArchiveRestore, Copy, Folder, Globe2, LockKeyhole, Trash2 } from 'lucide-react-native';
 import { forwardRef, type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,14 +14,15 @@ type MemoryActionsSheetProps = {
   memorySet?: MemorySet;
   isBusy?: boolean;
   onDismiss: () => void;
-  onDuplicate: (memorySet: MemorySet) => void;
-  onToggleArchived: (memorySet: MemorySet) => void;
-  onDelete: (memorySet: MemorySet) => void;
-  onRequestVisibility: (memorySet: MemorySet) => void;
+  onDuplicate?: (memorySet: MemorySet) => void;
+  onToggleArchived?: (memorySet: MemorySet) => void;
+  onDelete?: (memorySet: MemorySet) => void;
+  onRequestVisibility?: (memorySet: MemorySet) => void;
+  onMove?: (memorySet: MemorySet) => void;
 };
 
 export const MemoryActionsSheet = forwardRef<BottomSheetModal, MemoryActionsSheetProps>(
-  ({ memorySet, isBusy = false, onDismiss, onDuplicate, onToggleArchived, onDelete, onRequestVisibility }, ref) => {
+  ({ memorySet, isBusy = false, onDismiss, onDuplicate, onToggleArchived, onDelete, onRequestVisibility, onMove }, ref) => {
   const { styles, theme } = useStyles();
     const { t } = useTranslation('library');
     const insets = useSafeAreaInsets();
@@ -39,21 +40,21 @@ export const MemoryActionsSheet = forwardRef<BottomSheetModal, MemoryActionsShee
           <Text style={styles.description}>{t('actionsDescription')}</Text>
 
           <View style={styles.actions}>
-            <ActionRow
+            {onDuplicate ? <ActionRow
               label={t('duplicate')}
               icon={<Copy size={20} color={theme.violetDeep} />}
               iconBackground={theme.violetTint}
               disabled={!memorySet || isBusy}
               onPress={() => memorySet && onDuplicate(memorySet)}
-            />
-            <ActionRow
+            /> : null}
+            {onRequestVisibility ? <ActionRow
               label={memorySet?.visibility === 'public' ? t('makePrivate') : t('makePublic')}
               icon={memorySet?.visibility === 'public' ? <LockKeyhole size={20} color={theme.inkSoft} /> : <Globe2 size={20} color={theme.grass} />}
               iconBackground={memorySet?.visibility === 'public' ? theme.canvas : theme.mintTint}
               disabled={!memorySet || isBusy}
               onPress={() => memorySet && onRequestVisibility(memorySet)}
-            />
-            <ActionRow
+            /> : null}
+            {onToggleArchived ? <ActionRow
               label={isArchived ? t('restore') : t('archive')}
               icon={isArchived
                 ? <ArchiveRestore size={20} color={theme.grass} />
@@ -61,15 +62,22 @@ export const MemoryActionsSheet = forwardRef<BottomSheetModal, MemoryActionsShee
               iconBackground={isArchived ? theme.mintTint : theme.canvas}
               disabled={!memorySet || isBusy}
               onPress={() => memorySet && onToggleArchived(memorySet)}
-            />
-            <ActionRow
+            /> : null}
+            {onMove ? <ActionRow
+              label={t('moveToFolder')}
+              icon={<Folder size={20} color={theme.violetDeep} />}
+              iconBackground={theme.violetTint}
+              disabled={!memorySet || isBusy}
+              onPress={() => memorySet && onMove(memorySet)}
+            /> : null}
+            {onDelete ? <ActionRow
               label={t('delete')}
               icon={<Trash2 size={20} color={theme.berryDeep} />}
               iconBackground={theme.berryTint}
               destructive
               disabled={!memorySet || isBusy}
               onPress={() => memorySet && onDelete(memorySet)}
-            />
+            /> : null}
           </View>
 
           {isBusy ? (

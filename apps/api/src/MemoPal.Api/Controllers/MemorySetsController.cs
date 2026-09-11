@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MemoPal.Application.Features.CommunityMemorySets.Commands;
 using MemoPal.Application.Features.CommunityMemorySets.DTOs;
+using MemoPal.Application.Features.MemoryFolders.DTOs;
 
 namespace MemoPal.Api.Controllers;
 
@@ -18,10 +19,15 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? folderId = null,
+        [FromQuery] bool unfiled = false,
+        CancellationToken cancellationToken = default)
     {
         var result = await Sender.Send(
-            new GetPagedMemorySetsQuery(GetUserIdOrThrow(), pageNumber, pageSize),
+            new GetPagedMemorySetsQuery(GetUserIdOrThrow(), pageNumber, pageSize, folderId, unfiled),
             cancellationToken);
         return Ok(result);
     }
@@ -63,6 +69,18 @@ public sealed class MemorySetsController : ApiControllerBase
     {
         var result = await Sender.Send(
             new DuplicateMemorySetCommand(GetUserIdOrThrow(), memorySetId),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPatch("{memorySetId}/folder")]
+    public async Task<IActionResult> MoveToFolder(
+        string memorySetId,
+        [FromBody] MoveMemorySetToFolderRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new MoveMemorySetToFolderCommand(GetUserIdOrThrow(), memorySetId, request),
             cancellationToken);
         return Ok(result);
     }

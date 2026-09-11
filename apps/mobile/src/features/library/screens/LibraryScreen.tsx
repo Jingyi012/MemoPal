@@ -6,6 +6,8 @@ import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import LoadingView from '@/components/LoadingView';
 import { useInfiniteMemorySets, useMemorySetMutations } from '@/features/memory-sets';
+import { useMemoryFolderMutations, useMemoryFolders } from '../hooks/useMemoryFolders';
+import type { MemoryFolder } from '../types/memoryFolder.types';
 import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
 import { MemorySetCard } from '@/components/MemorySetCard';
 import { usePalaceScenes } from '@/features/palace-scenes';
@@ -18,14 +20,17 @@ import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Href, useRouter } from 'expo-router';
-import { Globe2, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
+import { FolderPlus, Globe2, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
 import Toast from 'react-native-toast-message';
 import { MemoryActionsSheet } from '../components/MemoryActionsSheet';
 import { DiscoverMemorySetsScreen } from './DiscoverMemorySetsScreen';
+import { MemoryFolderCard } from '../components/MemoryFolderCard';
+import { FolderNameModal } from '../components/FolderNameModal';
+import { MemoryMoveModal } from '../components/MemoryMoveModal';
 
 type LibraryFilter = 'all' | MemoryTechniqueKey | 'archived';
 type LibraryViewMode = 'card' | 'list';
@@ -43,19 +48,26 @@ export default function LibraryScreen() {
   const router = useRouter();
   const { t } = useTranslation('library');
   const { userState, updateState } = useUserState();
-  const pagedMemorySets = useInfiniteMemorySets();
+  const [filter, setFilter] = useState<LibraryFilter>('all');
+  const pagedMemorySets = useInfiniteMemorySets(filter === 'archived' ? undefined : { unfiled: true });
+  const foldersQuery = useMemoryFolders();
   const palaceScenes = usePalaceScenes();
   const dueReviews = useDueMemoryReviews();
   const upcomingReviews = useUpcomingMemoryReviews(30);
-  const { duplicateMemorySet, setMemorySetArchived, setMemorySetVisibility, deleteMemorySet } = useMemorySetMutations();
+  const { duplicateMemorySet, setMemorySetArchived, setMemorySetVisibility, deleteMemorySet, moveMemorySet } = useMemorySetMutations();
+  const { createFolder, renameFolder, deleteFolder } = useMemoryFolderMutations();
   const memoryActionsRef = useRef<BottomSheetModal>(null);
-  const [filter, setFilter] = useState<LibraryFilter>('all');
   const [libraryTab, setLibraryTab] = useState<LibraryTab>('mine');
   const [actionMemorySet, setActionMemorySet] = useState<MemorySet>();
   const [deleteConfirmationMemory, setDeleteConfirmationMemory] = useState<MemorySet>();
   const [visibilityConfirmationMemory, setVisibilityConfirmationMemory] = useState<MemorySet>();
+  const [moveMemory, setMoveMemory] = useState<MemorySet>();
+  const [folderNameModal, setFolderNameModal] = useState<{ folder?: MemoryFolder } | null>(null);
+  const [deleteFolderConfirmation, setDeleteFolderConfirmation] = useState<MemoryFolder>();
   const pendingDeleteRef = useRef<MemorySet | undefined>(undefined);
   const pendingVisibilityRef = useRef<MemorySet | undefined>(undefined);
+  const pendingMovePickerRef = useRef<MemorySet | undefined>(undefined);
+  const pendingMoveMemoryRef = useRef<MemorySet | undefined>(undefined);
   const viewMode: LibraryViewMode = userState.ui.libraryViewMode ?? 'card';
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
@@ -75,7 +87,12 @@ export default function LibraryScreen() {
       .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt));
   }, [filter, pagedMemorySets.data]);
 
-  const activeCount = pagedMemorySets.data?.pages.flatMap((page) => page.items).filter((memorySet) => memorySet.status !== 'archived').length ?? 0;
+  const folders = foldersQuery.data ?? [];
+  const showFolders = filter !== 'archived';
+  const hasExplorerEntries = (showFolders && folders.length > 0) || visibleSets.length > 0;
+  const memoryCount = filter === 'archived'
+    ? pagedMemorySets.data?.pages[0]?.totalCount ?? 0
+    : (pagedMemorySets.data?.pages[0]?.totalCount ?? 0) + folders.reduce((total, folder) => total + folder.memorySetCount, 0);
   const palaceSceneById = useMemo(
     () => new Map((palaceScenes.data ?? []).map((scene) => [scene.id, scene])),
     [palaceScenes.data],
@@ -113,6 +130,9 @@ export default function LibraryScreen() {
     const pendingVisibility = pendingVisibilityRef.current;
     pendingVisibilityRef.current = undefined;
     if (pendingVisibility) setVisibilityConfirmationMemory(pendingVisibility);
+    const pendingMove = pendingMovePickerRef.current;
+    pendingMovePickerRef.current = undefined;
+    if (pendingMove) setMoveMemory(pendingMove);
   };
 
   const duplicateSelectedMemory = (memorySet: MemorySet) => {
@@ -165,6 +185,40 @@ export default function LibraryScreen() {
 
   const requestVisibilityChange = (memorySet: MemorySet) => {
     pendingVisibilityRef.current = memorySet;
+    memoryActionsRef.current?.dismiss();
+  };
+
+  const createOrRenameFolder = (name: string) => {
+    const current = folderNameModal?.folder;
+    const onSuccess = (created?: MemoryFolder) => {
+      setFolderNameModal(null);
+      const pendingMemory = pendingMoveMemoryRef.current;
+      pendingMoveMemoryRef.current = undefined;
+      if (!current && created && pendingMemory) {
+        moveMemorySet.mutate({ memorySetId: pendingMemory.id, folderId: created.id }, { onSuccess: () => Toast.show({ type: 'success', text1: t('memoryMoved') }), onError: () => Toast.show({ type: 'error', text1: t('moveError') }) });
+      } else Toast.show({ type: 'success', text1: current ? t('folderRenamed') : t('folderCreated') });
+    };
+    const onError = () => Toast.show({ type: 'error', text1: t('folderError') });
+    if (current) renameFolder.mutate({ folderId: current.id, request: { name } }, { onSuccess, onError });
+    else createFolder.mutate({ name }, { onSuccess, onError });
+  };
+
+  const showFolderActions = (folder: MemoryFolder) => {
+    Alert.alert(folder.name, undefined, [
+      { text: t('renameFolder'), onPress: () => setFolderNameModal({ folder }) },
+      { text: t('deleteFolder'), style: 'destructive', onPress: () => setDeleteFolderConfirmation(folder) },
+      { text: t('cancel'), style: 'cancel' },
+    ]);
+  };
+
+  const deleteSelectedFolder = () => {
+    const folder = deleteFolderConfirmation;
+    if (!folder) return;
+    deleteFolder.mutate(folder.id, { onSuccess: () => { setDeleteFolderConfirmation(undefined); Toast.show({ type: 'success', text1: t('folderDeleted') }); }, onError: () => { setDeleteFolderConfirmation(undefined); Toast.show({ type: 'error', text1: t('folderError') }); } });
+  };
+
+  const requestMoveMemory = (memorySet: MemorySet) => {
+    pendingMovePickerRef.current = memorySet;
     memoryActionsRef.current?.dismiss();
   };
 
@@ -224,8 +278,8 @@ export default function LibraryScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={pagedMemorySets.isRefetching || dueReviews.isRefetching || upcomingReviews.isRefetching}
-            onRefresh={() => { void Promise.allSettled([pagedMemorySets.refetch(), palaceScenes.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
+            refreshing={pagedMemorySets.isRefetching || foldersQuery.isRefetching || dueReviews.isRefetching || upcomingReviews.isRefetching}
+            onRefresh={() => { void Promise.allSettled([pagedMemorySets.refetch(), foldersQuery.refetch(), palaceScenes.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
           />
         }>
         <NightEmphasisCard style={styles.summaryCard}>
@@ -235,8 +289,8 @@ export default function LibraryScreen() {
           <View style={styles.summaryCopy}>
             <Text style={styles.summaryEyebrow}>{t('collection')}</Text>
             <Text style={styles.summaryTitle}>
-              {activeCount}{' '}
-              {activeCount === 1 ? t('memory') : t('memories')}
+              {memoryCount}{' '}
+              {memoryCount === 1 ? t('memory') : t('memories')}
             </Text>
             <Text style={styles.summaryBody}>{t('collectionBody')}</Text>
           </View>
@@ -265,9 +319,11 @@ export default function LibraryScreen() {
         </View>
 
         <View style={styles.viewToolbar}>
-          <Text style={styles.viewModeLabel}>{t('viewMode')}</Text>
-          <View style={styles.viewActions}>
-            <View style={styles.viewToggle}>
+          <AnimatedPressable accessibilityLabel={t('newFolder')} onPress={() => setFolderNameModal({})} style={styles.newFolderButton}>
+            <FolderPlus size={17} color={theme.onAccent} />
+            <Text style={styles.newFolderText}>{t('newFolder')}</Text>
+          </AnimatedPressable>
+          <View accessibilityLabel={t('viewMode')} style={styles.viewToggle}>
             <AnimatedPressable
               accessibilityRole="button"
               accessibilityLabel={t('cardView')}
@@ -286,9 +342,10 @@ export default function LibraryScreen() {
               style={[styles.viewOption, viewMode === 'list' && styles.viewOptionSelected]}>
               <ListIcon size={16} color={viewMode === 'list' ? theme.onAccent : theme.violetDeep} />
             </AnimatedPressable>
-            </View>
           </View>
         </View>
+
+        {foldersQuery.isLoading ? <Text style={styles.folderStatus}>{t('loadingFolders')}</Text> : foldersQuery.isError ? <View style={styles.folderError}><Text style={styles.folderStatus}>{t('foldersUnavailable')}</Text><AnimatedPressable onPress={() => foldersQuery.refetch()}><Text style={styles.retryText}>{t('retry')}</Text></AnimatedPressable></View> : null}
 
         {pagedMemorySets.isLoading ? (
           <View style={styles.loadingFrame}>
@@ -305,8 +362,18 @@ export default function LibraryScreen() {
               <Text style={styles.retryText}>{t('retry')}</Text>
             </AnimatedPressable>
           </View>
-        ) : visibleSets.length ? (
+        ) : hasExplorerEntries ? (
           <View style={[styles.cardList, viewMode === 'list' ? styles.listCardList : styles.cardGrid]}>
+            {showFolders ? folders.map((folder) => (
+              <View key={`folder-${folder.id}`} style={viewMode === 'card' ? styles.cardGridItem : undefined}>
+                <MemoryFolderCard
+                  folder={folder}
+                  variant={viewMode}
+                  onOpen={() => router.push(`/memory-folders/${folder.id}` as Href)}
+                  onActions={() => showFolderActions(folder)}
+                />
+              </View>
+            )) : null}
             {visibleSets.map((memorySet) => (
               <View key={memorySet.id} style={viewMode === 'card' ? styles.cardGridItem : undefined}>
                 <MemorySetCard
@@ -355,6 +422,7 @@ export default function LibraryScreen() {
         onToggleArchived={toggleSelectedMemoryArchived}
         onDelete={requestDeleteMemory}
         onRequestVisibility={requestVisibilityChange}
+        onMove={requestMoveMemory}
       />
       <ConfirmModal
         visible={Boolean(visibilityConfirmationMemory)}
@@ -396,6 +464,37 @@ export default function LibraryScreen() {
         isLoading={deleteMemorySet.isPending}
         onConfirm={deleteSelectedMemory}
         onCancel={() => setDeleteConfirmationMemory(undefined)}
+      />
+      <ConfirmModal
+        visible={Boolean(deleteFolderConfirmation)}
+        icon={<Trash2 size={28} color={theme.berryDeep} />}
+        title={t('deleteFolderTitle')}
+        subject={deleteFolderConfirmation?.name}
+        description={t('deleteFolderDescription')}
+        confirmText={t('deleteFolder')}
+        cancelText={t('cancel')}
+        destructive
+        isLoading={deleteFolder.isPending}
+        onConfirm={deleteSelectedFolder}
+        onCancel={() => setDeleteFolderConfirmation(undefined)}
+      />
+      <FolderNameModal visible={Boolean(folderNameModal)} initialName={folderNameModal?.folder?.name} isLoading={createFolder.isPending || renameFolder.isPending} onCancel={() => { pendingMoveMemoryRef.current = undefined; setFolderNameModal(null); }} onSubmit={createOrRenameFolder} />
+      <MemoryMoveModal
+        memorySet={moveMemory}
+        folders={folders}
+        isLoading={moveMemorySet.isPending}
+        onCancel={() => setMoveMemory(undefined)}
+        onCreateFolder={() => {
+          pendingMoveMemoryRef.current = moveMemory;
+          setMoveMemory(undefined);
+          setFolderNameModal({});
+        }}
+        onSelect={(folderId) => {
+          const memorySet = moveMemory;
+          if (!memorySet) return;
+          setMoveMemory(undefined);
+          moveMemorySet.mutate({ memorySetId: memorySet.id, folderId }, { onSuccess: () => Toast.show({ type: 'success', text1: t('memoryMoved') }), onError: () => Toast.show({ type: 'error', text1: t('moveError') }) });
+        }}
       />
     </View>
   );
@@ -490,6 +589,10 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  newFolderButton: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 13, flexDirection: 'row', gap: 7, minHeight: 46, paddingHorizontal: 15 },
+  newFolderText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  folderStatus: { color: theme.inkSoft, fontSize: 13, paddingVertical: 8 },
+  folderError: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 14, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12 },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 18 },
   filterChip: {
     minHeight: 44,
@@ -504,12 +607,10 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   filterChipSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetDeep },
   filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   filterTextSelected: { color: theme.onAccent},
-  viewToolbar: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  viewActions: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  viewToolbar: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
   headerLessonButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 16, borderWidth: 1.5, height: 44, justifyContent: 'center', width: 44 },
   headerLessonEmoji: { fontSize: 20 },
-  viewModeLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  viewToggle: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 12, borderWidth: 1.5, flexDirection: 'row', padding: 3 },
+  viewToggle: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 13, borderWidth: 1.5, flexDirection: 'row', padding: 3 },
   viewOption: { alignItems: 'center', borderRadius: 9, height: 44, justifyContent: 'center', width: 44 },
   viewOptionSelected: { backgroundColor: theme.violetDeep },
   cardList: { gap: 10 },

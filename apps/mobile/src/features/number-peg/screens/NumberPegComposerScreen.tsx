@@ -150,6 +150,7 @@ export default function NumberPegComposerScreen() {
     items?: string | string[];
     goalType?: string | string[];
     onboardingLessonId?: string | string[];
+    memoryFolderId?: string | string[];
   }>();
   const { createMemorySet } = useMemorySetMutations();
   const { linkMemory: linkOnboardingMemory } = useOnboardingMutations();
@@ -178,6 +179,7 @@ export default function NumberPegComposerScreen() {
   );
   const fromShared = initialItems.length > 0;
   const onboardingLessonId = firstParam(params.onboardingLessonId);
+  const memoryFolderId = firstParam(params.memoryFolderId);
   const isOnboarding = Boolean(onboardingLessonId);
   const onboardingMemoryIdRef = useRef<string | null>(null);
   const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
@@ -229,7 +231,7 @@ export default function NumberPegComposerScreen() {
     setIsGenerating(false);
   };
   const generate = useCallback(
-    async (values: SceneDraft[], positions: number[], preview = false) => {
+    async (values: SceneDraft[], positions: number[], preview = false, skipConfirmation = false) => {
       if (generatingRef.current || savingRef.current) return;
       generatingRef.current = true;
       setIsGenerating(true);
@@ -254,6 +256,7 @@ export default function NumberPegComposerScreen() {
               userDetail: preview ? scene.userDetail?.trim() || undefined : undefined,
             };
           }),
+          skipConfirmation,
         });
         if (requestVersion.current !== version) return;
         const suggestions = new Map(
@@ -514,6 +517,7 @@ export default function NumberPegComposerScreen() {
       for (const chunk of chunks) {
         const suffix = chunks.length > 1 ? ` · ${chunk.n + 1}/${chunks.length}` : '';
         const req: MemorySetUpsertRequest = {
+          memoryFolderId,
           title: `${(title.trim() || suggestMemoryTitle(goalType, items)).slice(0, 200 - suffix.length)}${suffix}`,
           goalType,
           techniqueKey: 'number-peg',
@@ -687,7 +691,7 @@ export default function NumberPegComposerScreen() {
                   <AnimatedPressable
                     containerStyle={styles.equalSlot}
                     disabled={isGenerating || isSaving}
-                    onPress={() => void generate(scenes, [index])}
+                    onPress={() => void generate(scenes, [index], false, true)}
                     style={[styles.storyAction, (isGenerating || isSaving) && styles.disabled]}>
                     <Text accessible={false} style={styles.storyActionIcon}>
                       🔄

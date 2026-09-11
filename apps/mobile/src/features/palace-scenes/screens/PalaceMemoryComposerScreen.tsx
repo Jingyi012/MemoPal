@@ -49,6 +49,7 @@ export default function PalaceMemoryComposerScreen() {
     goalType?: string | string[];
     sceneId?: string | string[];
     origin?: string | string[];
+    memoryFolderId?: string | string[];
   }>();
   const scenesQuery = usePalaceScenes();
   const { user, isLoading: isUserLoading } = useCurrentUser();
@@ -67,6 +68,7 @@ export default function PalaceMemoryComposerScreen() {
   const [activeLocusIndex, setActiveLocusIndex] = useState(0);
   const [selectedSceneId, setSelectedSceneId] = useState(() => firstParam(params.sceneId) ?? '');
   const origin: ComposerOrigin = parseComposerOrigin(params.origin);
+  const memoryFolderId = firstParam(params.memoryFolderId);
   const availableScenes = useMemo(
     () => getAvailablePalaceScenes(scenesQuery.data ?? [], Boolean(user?.isPremium)),
     [scenesQuery.data, user?.isPremium],
@@ -92,8 +94,9 @@ export default function PalaceMemoryComposerScreen() {
         goalType,
         items: JSON.stringify(items),
         editContent: editContent ? '1' : '0',
-        ...(selectedSceneId ? { sceneId: selectedSceneId } : {}),
-      },
+          ...(selectedSceneId ? { sceneId: selectedSceneId } : {}),
+          ...(memoryFolderId ? { memoryFolderId } : {}),
+        },
     });
   };
 
@@ -375,6 +378,7 @@ export default function PalaceMemoryComposerScreen() {
     void (async () => {
       try {
         const request: MemorySetUpsertRequest = {
+          memoryFolderId,
           title: normalizedTitle,
           goalType,
           techniqueKey: 'palace',

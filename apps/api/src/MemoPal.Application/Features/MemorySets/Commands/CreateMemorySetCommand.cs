@@ -4,6 +4,7 @@ using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.MemorySets.DTOs;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.MemorySets.Commands;
 
@@ -27,6 +28,15 @@ public sealed class CreateMemorySetCommandHandler
     {
         if (request.Request.Visibility != MemorySetVisibilities.Private)
             throw new ValidationAppException("New memories must be private. Use the visibility endpoint after completing the memory.");
+        if (request.Request.MemoryFolderId is not null)
+        {
+            var folderExists = await _db.MemoryFolders.AnyAsync(
+                x => x.Id == request.Request.MemoryFolderId &&
+                    x.UserId == request.UserId && !x.IsDeleted,
+                cancellationToken);
+            if (!folderExists)
+                throw new NotFoundAppException("Memory folder not found.");
+        }
         await MemorySetPalaceValidator.ValidateAsync(
             _db,
             request.UserId,

@@ -16,11 +16,12 @@ export function useGenerateNumberPegStories() {
     networkMode: 'always',
     mutationFn: async ({
       signal,
+      skipConfirmation = false,
       ...request
-    }: GenerateNumberPegStoriesRequest & { signal?: AbortSignal }) => {
+    }: GenerateNumberPegStoriesRequest & { signal?: AbortSignal; skipConfirmation?: boolean }) => {
       const input = JSON.stringify(request);
       if (retry.current?.input !== input) {
-        const approval = await confirm(request.items.length);
+        const approval = await confirm(request.items.length, false, !skipConfirmation);
         if (!approval) throw new Error('AI generation cancelled.');
         retry.current = { input, id: Crypto.randomUUID(), maxCredits: approval.maxCredits };
       }

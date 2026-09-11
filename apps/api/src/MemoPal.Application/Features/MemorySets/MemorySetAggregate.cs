@@ -187,6 +187,7 @@ internal static class MemorySetAggregate
         var entity = new MemorySet
         {
             UserId = userId,
+            MemoryFolderId = request.MemoryFolderId,
             Version = 1
         };
 
@@ -243,6 +244,7 @@ internal static class MemorySetAggregate
 
         var request = new MemorySetUpsertRequest
         {
+            MemoryFolderId = source.MemoryFolderId,
             Title = copyTitle,
             Description = source.Description,
             GoalType = source.GoalType,
@@ -383,6 +385,7 @@ internal static class MemorySetAggregate
             entity.TechniqueKey,
             entity.Status,
             entity.Visibility,
+            entity.MemoryFolderId,
             entity.Version,
             items,
             plan,

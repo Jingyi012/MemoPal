@@ -15,9 +15,11 @@ export function buildTechniqueRoute(
   items: string[],
   sceneId?: string,
   origin: ComposerOrigin = 'global',
+  memoryFolderId?: string,
 ) {
   const path = technique === 'palace' ? '/palaces/build' : '/number-peg/build';
   const sceneParam = technique === 'palace' && sceneId ? `&sceneId=${encodeURIComponent(sceneId)}` : '';
   const originParam = technique === 'palace' ? `&origin=${origin}` : '';
-  return `${path}?title=${encodeURIComponent(title)}&goalType=${encodeURIComponent(goalType)}&items=${encodeURIComponent(JSON.stringify(items))}${sceneParam}${originParam}`;
+  const folderParam = memoryFolderId ? `&memoryFolderId=${encodeURIComponent(memoryFolderId)}` : '';
+  return `${path}?title=${encodeURIComponent(title)}&goalType=${encodeURIComponent(goalType)}&items=${encodeURIComponent(JSON.stringify(items))}${sceneParam}${originParam}${folderParam}`;
 }

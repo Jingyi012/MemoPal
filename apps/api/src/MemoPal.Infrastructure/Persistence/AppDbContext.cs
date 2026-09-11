@@ -32,6 +32,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<ReferralRecord> ReferralRecords => Set<ReferralRecord>();
     public DbSet<ReferralMilestoneReward> ReferralMilestoneRewards => Set<ReferralMilestoneReward>();
     public DbSet<MemorySet> MemorySets => Set<MemorySet>();
+    public DbSet<MemoryFolder> MemoryFolders => Set<MemoryFolder>();
     public DbSet<MemorySetReport> MemorySetReports => Set<MemorySetReport>();
     public DbSet<MemoryItem> MemoryItems => Set<MemoryItem>();
     public DbSet<TechniquePlan> TechniquePlans => Set<TechniquePlan>();
@@ -199,8 +200,10 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.SharesPrivateAssets).HasDefaultValue(false);
             b.Property(x => x.HiddenReason).HasMaxLength(500);
             b.Property(x => x.CopiedFromMemorySetId).HasMaxLength(64);
+            b.Property(x => x.MemoryFolderId).HasMaxLength(64);
             b.HasIndex(x => new { x.UserId, x.UpdatedAt });
             b.HasIndex(x => new { x.UserId, x.Status, x.IsDeleted });
+            b.HasIndex(x => new { x.UserId, x.MemoryFolderId, x.UpdatedAt });
             b.HasIndex(x => new { x.Visibility, x.CommunityStatus, x.PublishedAt, x.IsDeleted });
             b.HasIndex(x => new { x.UserId, x.CopiedFromMemorySetId })
                 .IsUnique()
@@ -220,6 +223,10 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasOne(x => x.CopiedFromMemorySet)
                 .WithMany(x => x.Copies)
                 .HasForeignKey(x => x.CopiedFromMemorySetId)
+                .OnDelete(DeleteBehavior.SetNull);
+            b.HasOne(x => x.MemoryFolder)
+                .WithMany(x => x.MemorySets)
+                .HasForeignKey(x => x.MemoryFolderId)
                 .OnDelete(DeleteBehavior.SetNull);
             b.HasMany(x => x.Reports)
                 .WithOne(x => x.MemorySet)
@@ -273,6 +280,20 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasMany(x => x.Responses)
                 .WithOne(x => x.PracticeAttempt)
                 .HasForeignKey(x => x.PracticeAttemptId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MemoryFolder>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.Name).HasMaxLength(200);
+            b.HasIndex(x => new { x.UserId, x.Name })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

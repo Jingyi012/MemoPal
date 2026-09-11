@@ -38,6 +38,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
     sceneId?: string | string[];
     editContent?: string | string[];
     ocrDraftId?: string | string[];
+    memoryFolderId?: string | string[];
   }>();
   const { t } = useTranslation('memoryComposer');
   const initialItems = useMemo(() => parseComposerItems(params.items), [params.items]);
@@ -171,7 +172,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
   };
 
   const openTechnique = (technique: TechniqueChoice, routeTitle = title.trim()) => {
-    router.push(buildTechniqueRoute(technique, routeTitle, goalType, items, sceneId, origin) as Href);
+    router.push(buildTechniqueRoute(technique, routeTitle, goalType, items, sceneId, origin, firstParam(params.memoryFolderId)) as Href);
   };
 
   const handleBack = () => {

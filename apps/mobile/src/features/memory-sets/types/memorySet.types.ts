@@ -58,6 +58,7 @@ export type TechniquePlan = {
 
 export type MemorySet = {
   id: string;
+  memoryFolderId?: string | null;
   title: string;
   description?: string | null;
   goalType: MemoryGoalType;
@@ -118,6 +119,7 @@ export type PalaceBindingInput = {
 };
 
 export type MemorySetUpsertRequest = {
+  memoryFolderId?: string | null;
   title: string;
   description?: string | null;
   goalType: MemoryGoalType;

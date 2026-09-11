@@ -14,8 +14,8 @@ export const memorySetApi = {
     const response = await api.get<PagedResponse<MemorySet[]>>('/v1/memory-sets', { params: { pageNumber: 1, pageSize: 50 } });
     return unwrap(response.data, 'Could not load your memory sets.');
   },
-  async getPage(pageNumber = 1, pageSize = 20) {
-    const response = await api.get<PagedResponse<MemorySet[]>>('/v1/memory-sets', { params: { pageNumber, pageSize } });
+  async getPage(pageNumber = 1, pageSize = 20, filters?: { folderId?: string; unfiled?: boolean }) {
+    const response = await api.get<PagedResponse<MemorySet[]>>('/v1/memory-sets', { params: { pageNumber, pageSize, ...filters } });
     return { items: unwrap(response.data, 'Could not load your memory sets.'), pageNumber: response.data.pagination.pageNumber, pageSize: response.data.pagination.pageSize, totalCount: response.data.pagination.totalCount };
   },
 
@@ -74,5 +74,13 @@ export const memorySetApi = {
       `/v1/memory-sets/${encodeURIComponent(memorySetId)}`
     );
     unwrap(response.data, 'Could not delete this memory set.');
+  },
+
+  async moveToFolder(memorySetId: string, folderId: string | null): Promise<MemorySet> {
+    const response = await api.patch<GeneralResponse<MemorySet>>(
+      `/v1/memory-sets/${encodeURIComponent(memorySetId)}/folder`,
+      { folderId },
+    );
+    return unwrap(response.data, 'Could not move this memory set.');
   },
 };

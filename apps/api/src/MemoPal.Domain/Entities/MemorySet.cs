@@ -16,6 +16,7 @@ public sealed class MemorySet : UserOwnedEntity
     public string? HiddenReason { get; set; }
     public bool SharesPrivateAssets { get; set; }
     public string? CopiedFromMemorySetId { get; set; }
+    public string? MemoryFolderId { get; set; }
     public int Version { get; set; } = 1;
 
     public ICollection<MemoryItem> Items { get; set; } = new List<MemoryItem>();
@@ -23,6 +24,7 @@ public sealed class MemorySet : UserOwnedEntity
     public MemorySet? CopiedFromMemorySet { get; set; }
     public ICollection<MemorySet> Copies { get; set; } = new List<MemorySet>();
     public ICollection<MemorySetReport> Reports { get; set; } = new List<MemorySetReport>();
+    public MemoryFolder? MemoryFolder { get; set; }
 }
 
 public static class MemorySetCommunityStatuses

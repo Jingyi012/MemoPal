@@ -57,6 +57,7 @@ public sealed record MemorySetDto(
     string TechniqueKey,
     string Status,
     string Visibility,
+    string? MemoryFolderId,
     int Version,
     IReadOnlyList<MemoryItemDto> Items,
     TechniquePlanDto? TechniquePlan,
@@ -67,6 +68,7 @@ public sealed record MemorySetDto(
 
 public sealed class MemorySetUpsertRequest
 {
+    public string? MemoryFolderId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string GoalType { get; set; } = "custom";

@@ -38,16 +38,20 @@ export function useMemorySets(techniqueKey?: MemoryTechniqueKey) {
   });
 }
 
-export function useInfiniteMemorySets() {
+export function useInfiniteMemorySets(filters?: { folderId?: string; unfiled?: boolean }) {
   return useInfiniteQuery({
-    queryKey: [...MEMORY_SET_KEYS.lists(), 'paged'],
+    queryKey: [...MEMORY_SET_KEYS.lists(), 'paged', filters ?? {}],
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => {
       try {
-        return await memorySetApi.getPage(pageParam, 20);
+        return await memorySetApi.getPage(pageParam, 20, filters);
       } catch (error) {
         if (!isLocalPreviewEnabled) throw error;
-        const all = getLocalPreviewMemorySets();
+        const all = getLocalPreviewMemorySets().filter((memorySet) => filters?.folderId
+          ? memorySet.memoryFolderId === filters.folderId
+          : filters?.unfiled
+            ? !memorySet.memoryFolderId
+            : true);
         const start = (pageParam - 1) * 20;
         return { items: all.slice(start, start + 20), pageNumber: pageParam, pageSize: 20, totalCount: all.length };
       }
@@ -175,6 +179,16 @@ export function useMemorySetMutations() {
     },
   });
 
+  const moveMemorySet = useMutation({
+    mutationFn: ({ memorySetId, folderId }: { memorySetId: string; folderId: string | null }) => memorySetApi.moveToFolder(memorySetId, folderId),
+    retry: false,
+    onSuccess: (memorySet) => {
+      queryClient.setQueryData(MEMORY_SET_KEYS.detail(memorySet.id), memorySet);
+      void queryClient.invalidateQueries({ queryKey: MEMORY_SET_KEYS.lists() });
+      void queryClient.invalidateQueries({ queryKey: ['memory-folders'] });
+    },
+  });
+
   return {
     createMemorySet,
     updateMemorySet,
@@ -182,5 +196,6 @@ export function useMemorySetMutations() {
     setMemorySetArchived,
     setMemorySetVisibility,
     deleteMemorySet,
+    moveMemorySet,
   };
 }
