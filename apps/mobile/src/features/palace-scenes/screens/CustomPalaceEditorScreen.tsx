@@ -19,8 +19,10 @@ import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { Check, Plus, Trash2 } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  findNodeHandle,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -53,6 +55,19 @@ export default function CustomPalaceEditorScreen() {
   const [isUploading, setIsUploading] = useState(false);
   const [hydratedSceneId, setHydratedSceneId] = useState<string | null>(null);
   const [draftHydrated, setDraftHydrated] = useState(Boolean(sceneId));
+  const scrollViewRef = useRef<ScrollView>(null);
+  const locusInputRefs = useRef<(TextInput | null)[]>([]);
+  const focusedLocusInputRef = useRef<TextInput | null>(null);
+
+  useEffect(() => {
+    const subscription = Keyboard.addListener('keyboardDidShow', () => {
+      const inputHandle = findNodeHandle(focusedLocusInputRef.current);
+      if (inputHandle !== null) {
+        scrollViewRef.current?.scrollResponderScrollNativeHandleToKeyboard(inputHandle, 24, true);
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     if (!sceneQuery.data || hydratedSceneId === sceneQuery.data.id) return;
@@ -242,7 +257,7 @@ export default function CustomPalaceEditorScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.page}>
       <CommonHeader
         eyebrow={t('custom')}
@@ -251,7 +266,9 @@ export default function CustomPalaceEditorScreen() {
         backAction={() => router.back()}
       />
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={styles.content}
+        keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
         <View style={styles.privacyCard}>
@@ -391,6 +408,7 @@ export default function CustomPalaceEditorScreen() {
                 <Text style={styles.locusNumberText}>{index + 1}</Text>
               </View>
               <TextInput
+                ref={(input) => { locusInputRefs.current[index] = input; }}
                 value={locus.name}
                 onChangeText={(value) =>
                   setLoci((current) =>
@@ -399,7 +417,18 @@ export default function CustomPalaceEditorScreen() {
                     )
                   )
                 }
-                onFocus={() => setSelectedIndex(index)}
+                onFocus={() => {
+                  const focusedInput = locusInputRefs.current[index];
+                  focusedLocusInputRef.current = focusedInput;
+                  setSelectedIndex(index);
+                  requestAnimationFrame(() => {
+                    const inputHandle = findNodeHandle(focusedInput);
+                    if (inputHandle !== null) {
+                      scrollViewRef.current?.scrollResponderScrollNativeHandleToKeyboard(inputHandle, 24, true);
+                    }
+                  });
+                }}
+                onBlur={() => { focusedLocusInputRef.current = null; }}
                 placeholder={t('spotName')}
                 placeholderTextColor="#AAA7B5"
                 selectionColor={theme.violetDeep}
