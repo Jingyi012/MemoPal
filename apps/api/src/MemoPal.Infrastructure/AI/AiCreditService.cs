@@ -12,7 +12,7 @@ using Npgsql;
 namespace MemoPal.Infrastructure.AI;
 
 public sealed class AiCreditService(AppDbContext db, IOptions<AiCreditOptions> options,
-    IOptions<PalaceAssociationGenerationOptions> textOptions,
+    IOptions<AiTextGenerationOptions> textOptions,
     IOptions<AiImageGenerationOptions> imageOptions) : IAiCredits
 {
     // Fixed stripes keep the test/in-memory lock table bounded. Production uses database locks.
@@ -236,8 +236,7 @@ public sealed class AiCreditService(AppDbContext db, IOptions<AiCreditOptions> o
     private void Entry(string userId, string reference, string kind, int amount) => db.AiCreditEntries.Add(new AiCreditEntry
         { Id = Guid.NewGuid().ToString("N"), UserId = userId, Reference = reference, Kind = kind, Amount = amount });
 
-    private int TextCost() => textOptions.Value.Provider.Trim().ToLowerInvariant() is "gemini" or "ollama" &&
-        !(textOptions.Value.Provider.Equals("gemini", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(textOptions.Value.GeminiApiKey))
+    private int TextCost() => textOptions.Value.IsConfigured
         ? options.Value.TextCost : 0;
     private bool ImagesEnabled() => options.Value.ImagesEnabled && imageOptions.Value.IsConfigured;
 }

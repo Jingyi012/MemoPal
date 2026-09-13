@@ -93,6 +93,37 @@ public sealed class AiCreditEndpointsTests : IClassFixture<AiCreditEndpointsTest
         factory.Provider.Fail = false;
     }
 
+    [Fact]
+    public async Task DisabledVisualizeDoesNotStartPreviouslyQueuedImages()
+    {
+        var (client, userId) = await Register();
+        using var user = client;
+        await Grant(userId, 10);
+        var reserved = await Data(await user.PostAsJsonAsync("/v1/ai-credits/number-peg-images", new {
+            requestId = Guid.NewGuid().ToString("N"), input = new { pegNumber = 1, pegKeyword = "candle", word = "apple", story = "A candle hugs an apple." } }));
+        var jobId = reserved.GetProperty("id").GetString()!;
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MemoPal.Infrastructure.Persistence.AppDbContext>();
+        var setting = new MemoPal.Domain.Entities.SystemSetting { Id = Guid.NewGuid().ToString("N"),
+            Key = "ai.credits", Value = """{"imagesEnabled":false}""" };
+        db.SystemSettings.Add(setting);
+        await db.SaveChangesAsync();
+        try
+        {
+            var before = factory.Provider.Calls;
+            Assert.False(await Worker().ProcessNextAsync(default));
+            Assert.Equal(before, factory.Provider.Calls);
+            var jobs = await Data(await user.GetAsync("/v1/ai-credits/generations"));
+            Assert.Equal("reserved", jobs.EnumerateArray().Single(x => x.GetProperty("id").GetString() == jobId).GetProperty("status").GetString());
+        }
+        finally
+        {
+            await scope.ServiceProvider.GetRequiredService<AiCreditService>().FailAsync(userId, jobId, default);
+            db.SystemSettings.Remove(setting);
+            await db.SaveChangesAsync();
+        }
+    }
+
     private AiImageWorker Worker() => new(factory.Services.GetRequiredService<IServiceScopeFactory>(), NullLogger<AiImageWorker>.Instance);
     private async Task Grant(string id, int amount)
     {

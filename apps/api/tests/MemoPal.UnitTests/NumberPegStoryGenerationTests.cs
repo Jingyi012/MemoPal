@@ -13,11 +13,66 @@ namespace MemoPal.UnitTests;
 public sealed class NumberPegStoryGenerationTests
 {
     [Fact]
+    public async Task OpenRouterRepairsRejectedChineseStoryOnceAndSendsReadableChinese()
+    {
+        var handler = new QueueHttpHandler(OpenRouterResponse("""{"suggestions":[{"position":1,"story":"一片红色的云飘过。"}]}"""),
+            OpenRouterResponse("""{"suggestions":[{"position":1,"story":"红色的蜡烛跳进喷泉。"}]}"""));
+        var generator = new NumberPegStoryGenerator(new HttpClient(handler), Options.Create(new AiTextGenerationOptions {
+            Provider = "openrouter", Model = "test-model", ApiKey = "test-key", Endpoint = "https://openrouter.ai/api/v1/chat/completions"
+        }), NullLogger<NumberPegStoryGenerator>.Instance);
+        var result = await generator.GenerateAsync([new(1, 1, "蜡烛", "一支蜡烛", "红色", null, null)], "zh", "playful");
+        Assert.Equal("ai", result.Source);
+        Assert.Equal("红色的蜡烛跳进喷泉。", result.Suggestions.Single().Story);
+        Assert.Equal(2, handler.Requests.Count);
+        using var body = System.Text.Json.JsonDocument.Parse(handler.RequestBodies[0]);
+        var prompt = body.RootElement.GetProperty("messages")[0].GetProperty("content").GetString()!;
+        Assert.Contains("红色", prompt);
+        Assert.Contains("蜡烛", prompt);
+        Assert.DoesNotContain("\\u", prompt);
+    }
+
+    [Fact]
+    public async Task FailedRepairKeepsAcceptedStoriesAndDoesNotRetryAgain()
+    {
+        var handler = new QueueHttpHandler(OpenRouterResponse("""{"suggestions":[{"position":1,"story":"A candle hugs apple"}]}"""),
+            new HttpResponseMessage(HttpStatusCode.TooManyRequests));
+        var generator = new NumberPegStoryGenerator(new HttpClient(handler), Options.Create(new AiTextGenerationOptions {
+            Provider = "openrouter", Model = "test-model", ApiKey = "test-key", Endpoint = "https://openrouter.ai/api/v1/chat/completions"
+        }), NullLogger<NumberPegStoryGenerator>.Instance);
+        var result = await generator.GenerateAsync([Item(), Item(2) with { ExistingStory = "My original story" }], "en", "playful");
+        Assert.Equal("mixed", result.Source);
+        Assert.True(result.Suggestions[0].IsAi);
+        Assert.Equal("My original story", result.Suggestions[1].Story);
+        Assert.Equal(2, handler.Requests.Count);
+    }
+
+    private static HttpResponseMessage OpenRouterResponse(string content) => JsonResponse(
+        System.Text.Json.JsonSerializer.Serialize(new { choices = new[] { new { message = new { content } } } }));
+
+    [Theory]
+    [InlineData("en")]
+    [InlineData("zh")]
+    public async Task FailedRefinementsPreserveOriginalAcrossRepeatedRetries(string locale)
+    {
+        var original = "A candle hugs apple beside the candle peg";
+        var item = Item() with { ExistingStory = original, UserDetail = "red scarf" };
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var generator = CreateGenerator(new QueueHttpHandler(new HttpResponseMessage(HttpStatusCode.BadRequest)));
+            var result = await generator.GenerateAsync([item], locale, "playful");
+            Assert.Equal("template", result.Source);
+            Assert.Equal(original, result.Suggestions.Single().Story);
+            Assert.False(result.Suggestions.Single().IsAi);
+            item = item with { ExistingStory = result.Suggestions.Single().Story };
+        }
+    }
+
+    [Fact]
     public async Task OllamaUsesConfiguredBearerCredential()
     {
         var handler = new QueueHttpHandler(JsonResponse("""{"message":{"content":"{\"suggestions\":[{\"position\":1,\"story\":\"A candle hugs apple\"}]}"}}"""));
         var generator = new NumberPegStoryGenerator(new HttpClient(handler),
-            Options.Create(new PalaceAssociationGenerationOptions { Provider = "ollama", OllamaApiKey = "test-credential" }),
+            Options.Create(new AiTextGenerationOptions { Provider = "ollama", Model = "test-model", ApiKey = "test-credential", Endpoint = "http://localhost/api/chat" }),
             NullLogger<NumberPegStoryGenerator>.Instance);
         var result = await generator.GenerateAsync([Item()], "en", "playful");
         Assert.Equal("ai", result.Source);
@@ -100,11 +155,11 @@ public sealed class NumberPegStoryGenerationTests
         var handler = new QueueHttpHandler(
             new Func<HttpResponseMessage>(() => throw new TaskCanceledException("provider timeout")),
             JsonResponse("""{"message":{"content":"{\"suggestions\":[{\"position\":2,\"story\":\"A candle hugs apple beside the candle peg\"}]}"}}"""));
-        var options = Options.Create(new PalaceAssociationGenerationOptions
+        var options = Options.Create(new AiTextGenerationOptions
         {
-            Provider = "ollama",
+            Provider = "ollama", Model = "test-model",
             BatchSize = 1,
-            OllamaEndpoint = "http://localhost/api/chat"
+            Endpoint = "http://localhost/api/chat"
         });
         var generator = new NumberPegStoryGenerator(new HttpClient(handler), options, NullLogger<NumberPegStoryGenerator>.Instance);
         var refined = Item(1) with { ExistingStory = new string('o', 100), UserDetail = "my red scarf" };
@@ -112,7 +167,7 @@ public sealed class NumberPegStoryGenerationTests
         var result = await generator.GenerateAsync([refined, Item(2)], "en", "playful");
 
         Assert.Equal("mixed", result.Source);
-        Assert.Contains("my red scarf", result.Suggestions[0].Story);
+        Assert.Equal(refined.ExistingStory, result.Suggestions[0].Story);
         Assert.True(result.Suggestions[0].Story.Length <= 1000);
         Assert.Equal(2, handler.Requests.Count);
         Assert.Contains("my red scarf", handler.RequestBodies[0]);
@@ -139,7 +194,7 @@ public sealed class NumberPegStoryGenerationTests
 
     private static NumberPegStoryGenerator CreateGenerator(HttpMessageHandler handler) => new(
         new HttpClient(handler),
-        Options.Create(new PalaceAssociationGenerationOptions { Provider = "ollama", OllamaEndpoint = "http://localhost/api/chat" }),
+        Options.Create(new AiTextGenerationOptions { Provider = "ollama", Model = "test-model", Endpoint = "http://localhost/api/chat" }),
         NullLogger<NumberPegStoryGenerator>.Instance);
 
     private static NumberPegStoryGenerationItem Item(int position = 1) => new(position, position, "candle", "one candle", "apple", null, null);

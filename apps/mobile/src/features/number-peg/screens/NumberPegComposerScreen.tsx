@@ -86,7 +86,6 @@ const storyCopy = {
     story: '联想故事',
     intro: '用一个奇特的联想故事，把目标词和固定数字挂钩连起来。',
     generating: '正在构思故事…',
-    stopGenerating: '先用当前联想',
     generate: '生成联想故事',
     ai: 'AI 联想',
     template: '备用联想 · 可编辑',
@@ -104,8 +103,6 @@ const storyCopy = {
     useStory: '采用新故事',
     keepOriginal: '保留原故事',
     accept: '就记这个，下一张',
-    fallback:
-      '本次未获得完整的 AI 生成结果，故事中包含备用模板。你可以重试 AI 生成，或保留原故事并自己编辑。',
     generationError: '故事生成失败，原来的联想已保留。可以重试或自己编辑。',
     offlineSave: '当前离线，故事草稿已保留。联网后再点击保存。',
   },
@@ -114,7 +111,6 @@ const storyCopy = {
     story: 'Association story',
     intro: 'Connect each target to its fixed number peg with a memorable story.',
     generating: 'Creating a story…',
-    stopGenerating: 'Use the current story',
     generate: 'Create association stories',
     ai: 'AI association',
     template: 'Fallback association · editable',
@@ -132,8 +128,6 @@ const storyCopy = {
     useStory: 'Use new story',
     keepOriginal: 'Keep original',
     accept: 'Keep this · next',
-    fallback:
-      'AI generation did not return a complete result. These stories include fallback templates. Retry AI generation, or keep and edit your original story.',
     generationError:
       'Story generation failed. Your previous association is kept; retry or edit it yourself.',
     offlineSave: 'You are offline. Your story draft is kept; reconnect and tap Save again.',
@@ -257,7 +251,7 @@ export default function NumberPegComposerScreen() {
               pegNumber: anchor.pegNumber,
               pegKeyword: anchor.keyword,
               word: scene.answer,
-              existingStory: preview || scene.source ? scene.sceneText : undefined,
+              existingStory: scene.sceneText,
               userDetail: preview ? scene.userDetail?.trim() || undefined : undefined,
             };
           }),
@@ -269,7 +263,7 @@ export default function NumberPegComposerScreen() {
         );
         const nextScenes = values.map((scene, i): SceneDraft => {
           const suggestion = suggestions.get(i + 1);
-          return suggestion
+          return suggestion?.source === 'ai'
             ? {
                 ...scene,
                 sceneText: suggestion.story,
@@ -286,9 +280,17 @@ export default function NumberPegComposerScreen() {
         if (preview) {
           const previewIndex = positions[0];
           if (!suggestions.has(previewIndex + 1)) throw new Error(copy.generationError);
-          setStoryPreview({ index: previewIndex, scene: nextScenes[previewIndex] });
+          if (suggestions.get(previewIndex + 1)?.source === 'ai')
+            setStoryPreview({ index: previewIndex, scene: nextScenes[previewIndex] });
         } else setScenes(nextScenes);
-        if (result.source !== 'ai') setMessage(copy.fallback);
+        const acceptedCount = result.suggestions.filter((suggestion) => suggestion.source === 'ai').length;
+        if (acceptedCount < positions.length) setMessage(language === 'zh'
+          ? acceptedCount === 0
+            ? '本次没有生成可用的新联想。原故事已保留，未扣费。'
+            : '部分联想未生成成功，未成功的故事已原样保留，且未扣除对应积分。'
+          : acceptedCount === 0
+            ? 'No usable new story was generated. Your original story is unchanged. No credits charged.'
+            : 'Some stories could not be generated. Those stories are unchanged and were not charged.');
       } catch (error) {
         if (requestVersion.current === version) {
           setScenes(values);
@@ -301,7 +303,7 @@ export default function NumberPegComposerScreen() {
         }
       }
     },
-    [copy.fallback, copy.generationError, generateStories, language]
+    [copy.generationError, generateStories, language]
   );
   useEffect(() => {
     progressScrollRef.current?.scrollTo({
@@ -636,19 +638,11 @@ export default function NumberPegComposerScreen() {
             </View>
           </View>
           <View style={styles.captionPanel}>
-            {isGenerating ? (
-              <View style={styles.storyTools}>
-                <ActivityIndicator color={theme.berryDeep} accessibilityLabel={copy.generating} />
-                <AnimatedPressable onPress={cancelGeneration} style={styles.replay}>
-                  <Text style={styles.replayText}>{copy.stopGenerating}</Text>
-                </AnimatedPressable>
-              </View>
-            ) : null}
             <Text style={styles.heading}>{copy.story}</Text>
             <Text style={styles.targetWord}>{current.answer}</Text>
             <Text style={styles.sectionHint}>
               {isGenerating
-                ? copy.generating
+                ? language === 'zh' ? '当前联想 · 暂时保留' : 'Current story · kept while generating'
                 : current.source === 'ai'
                   ? copy.ai
                   : current.source === 'manual'
@@ -695,7 +689,21 @@ export default function NumberPegComposerScreen() {
               onAdopt={(path, story) => setScenes((all) => all.map((scene, i) => i === index ? { ...scene, sceneAssetUrl: path, imageStory: story } : scene))}
               onRemove={() => setScenes((all) => all.map((scene, i) => i === index ? { ...scene, sceneAssetUrl: undefined, imageStory: undefined, imageJobId: undefined } : scene))}
             />
-            {!storyPreview && (
+            {isGenerating && (
+              <View style={styles.generatingPanel} accessibilityLiveRegion="polite" accessibilityState={{ busy: true }}>
+                <View style={styles.generatingHeading}>
+                  <ActivityIndicator size="small" color={theme.berryDeep} />
+                  <Text style={styles.generatingTitle}>{copy.generating}</Text>
+                </View>
+                <Text style={styles.generatingHint}>{language === 'zh'
+                  ? '新联想准备好后才会替换，当前故事会保留。'
+                  : 'Your current story stays here until the new one is ready.'}</Text>
+                <AnimatedPressable onPress={cancelGeneration} style={styles.stopWaiting}>
+                  <Text style={styles.replayText}>{language === 'zh' ? '停止等待' : 'Stop waiting'}</Text>
+                </AnimatedPressable>
+              </View>
+            )}
+            {!storyPreview && !isGenerating && (
               <View style={styles.storyActionGroup}>
                 <View style={styles.storyActionRow}>
                   <AnimatedPressable
@@ -751,7 +759,7 @@ export default function NumberPegComposerScreen() {
               </View>
             )}
           </View>
-          {editDetail && !storyPreview ? (
+          {editDetail && !storyPreview && !isGenerating ? (
             <View style={styles.customEditor}>
               <Text style={styles.sectionHint}>{copy.explanation}</Text>
               <TextInput
@@ -1144,6 +1152,11 @@ const useStyles = createThemedStyles((theme) =>
       marginTop: 10,
     },
     storyTools: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+    generatingPanel: { marginTop: 18, padding: 16, borderRadius: 16, backgroundColor: theme.paper, gap: 10 },
+    generatingHeading: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
+    generatingTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
+    generatingHint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20, textAlign: 'center' },
+    stopWaiting: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
     storyActionGroup: { marginTop: 18, gap: 10 },
     storyActionRow: { flexDirection: 'row', gap: 10 },
     storyAction: {

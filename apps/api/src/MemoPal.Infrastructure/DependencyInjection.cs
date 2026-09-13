@@ -45,7 +45,7 @@ public static class DependencyInjection
         services.AddScoped<DatabaseAiSettings>();
         services.AddScoped<IOptions<AiCreditOptions>>(sp => sp.GetRequiredService<DatabaseAiSettings>().Read(AiSettings.Credits, sp.GetRequiredService<IOptionsFactory<AiCreditOptions>>()));
         services.AddScoped<IOptions<AiImageGenerationOptions>>(sp => sp.GetRequiredService<DatabaseAiSettings>().Read(AiSettings.Images, sp.GetRequiredService<IOptionsFactory<AiImageGenerationOptions>>()));
-        services.AddScoped<IOptions<PalaceAssociationGenerationOptions>>(sp => sp.GetRequiredService<DatabaseAiSettings>().Read(AiSettings.Text, sp.GetRequiredService<IOptionsFactory<PalaceAssociationGenerationOptions>>()));
+        services.AddScoped<IOptions<AiTextGenerationOptions>>(sp => sp.GetRequiredService<DatabaseAiSettings>().Read(AiSettings.Text, sp.GetRequiredService<IOptionsFactory<AiTextGenerationOptions>>()));
         services.AddScoped<IAiCredits>(sp => sp.GetRequiredService<AiCreditService>());
         services.AddHttpClient<NumberPegImageGenerator>(client =>
         {

@@ -19,23 +19,18 @@ public sealed class DatabaseAiSettings(AppDbContext db)
         {
             AiSettings.Validate(key, json);
             var settings = JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
-            if (settings is PalaceAssociationGenerationOptions text)
+            if (settings is AiTextGenerationOptions text)
             {
                 using var doc = JsonDocument.Parse(json);
                 var root = doc.RootElement;
-                // Generic fields override the legacy provider-specific fields when present.
-                if (text.Provider == "gemini")
-                {
-                    if (root.TryGetProperty("model", out var model)) text.GeminiModel = model.GetString()!;
-                    if (root.TryGetProperty("endpoint", out var endpoint)) text.GeminiEndpoint = endpoint.GetString()!;
-                    if (root.TryGetProperty("apiKey", out var apiKey)) text.GeminiApiKey = apiKey.GetString()!;
-                }
-                else if (text.Provider == "ollama")
-                {
-                    if (root.TryGetProperty("model", out var model)) text.OllamaModel = model.GetString()!;
-                    if (root.TryGetProperty("endpoint", out var endpoint)) text.OllamaEndpoint = endpoint.GetString()!;
-                    if (root.TryGetProperty("apiKey", out var apiKey)) text.OllamaApiKey = apiKey.GetString()!;
-                }
+                // Compatibility stays at the storage boundary; transports use only generic fields.
+                var prefix = text.Provider == "openrouter" ? "openRouter" : text.Provider;
+                if (!root.TryGetProperty("model", out _) && root.TryGetProperty(prefix + "Model", out var model))
+                    text.Model = model.GetString()!;
+                if (!root.TryGetProperty("endpoint", out _) && root.TryGetProperty(prefix + "Endpoint", out var endpoint))
+                    text.Endpoint = endpoint.GetString()!;
+                if (!root.TryGetProperty("apiKey", out _) && root.TryGetProperty(prefix + "ApiKey", out var apiKey))
+                    text.ApiKey = apiKey.GetString()!;
             }
             return Options.Create(settings);
         }

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace MemoPal.Infrastructure.AI;
 
@@ -41,6 +42,11 @@ public sealed class AiImageWorker(IServiceScopeFactory scopes, ILogger<AiImageWo
             .OrderBy(userId => userId)
             .Take(20).ToListAsync(ct);
         foreach (var user in expiredUsers) await credits.ReconcileAsync(user, ct);
+        // Credit expiry cleanup above also covers text requests; it does not generate images.
+        // Do not start queued image work while the Admin switch is off.
+        if (!scope.ServiceProvider.GetRequiredService<IOptions<AiCreditOptions>>().Value.ImagesEnabled ||
+            !scope.ServiceProvider.GetRequiredService<IOptions<AiImageGenerationOptions>>().Value.IsConfigured)
+            return expiredUsers.Count > 0;
         var candidate = await db.AiGenerations.AsNoTracking().Where(x => x.Kind == "number-peg-image" && x.Status == "reserved")
             .OrderBy(x => x.CreatedAt).Select(x => new { x.Id, x.UserId }).FirstOrDefaultAsync(ct);
         if (candidate is null) return expiredUsers.Count > 0;

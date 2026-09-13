@@ -21,7 +21,7 @@ public sealed class NumberPegStoryReviewEndpointsTests(CustomWebApplicationFacto
     }
 
     [Fact]
-    public async Task FallbackRefinement_PreservesAnchorOriginalStoryAndPersonalDetail()
+    public async Task FallbackRefinement_PreservesOriginalStoryUnchanged()
     {
         using var client = await AuthenticatedClient();
         var response = await client.PostAsJsonAsync("/v1/number-peg-stories/generate", new
@@ -46,7 +46,7 @@ public sealed class NumberPegStoryReviewEndpointsTests(CustomWebApplicationFacto
         Assert.Contains("Candle", story);
         Assert.Contains("passport", story);
         Assert.Contains("airport", story);
-        Assert.Contains("wax", story);
+        Assert.Equal("Candle melts a passport at the airport.", story);
     }
 
     [Fact]

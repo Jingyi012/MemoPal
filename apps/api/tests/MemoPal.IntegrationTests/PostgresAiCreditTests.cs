@@ -61,7 +61,7 @@ public sealed class PostgresAiCreditTests
     }
 
     private static AiCreditService Service(AppDbContext db) => new(db, Options.Create(new AiCreditOptions()),
-        Options.Create(new PalaceAssociationGenerationOptions { Provider = "ollama" }), Options.Create(new AiImageGenerationOptions()));
+        Options.Create(new AiTextGenerationOptions { Provider = "ollama", Model = "test-model", Endpoint = "http://localhost/api/chat" }), Options.Create(new AiImageGenerationOptions()));
 
     private sealed class PostgresCreditFactAttribute : FactAttribute
     {

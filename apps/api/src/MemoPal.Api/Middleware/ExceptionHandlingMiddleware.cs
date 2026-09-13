@@ -27,6 +27,12 @@ public sealed class ExceptionHandlingMiddleware
         {
             await _next(context);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            // The caller is gone. Do not turn normal request cancellation into
+            // a 500 or attempt to write an error body to a disconnected client.
+            if (!context.Response.HasStarted) context.Response.StatusCode = 499;
+        }
         catch (AppException ex)
         {
             context.Response.StatusCode = ex.StatusCode;

@@ -1,5 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { imageJobState } from '../src/features/number-peg/utils/imageJobState.ts';
+
+test('Visualize off never displays a cached image failure or pending job', () => {
+  for (const status of ['failed', 'reserved', 'processing']) {
+    assert.deepEqual(imageJobState(false, 'image-job', { id: 'image-job', kind: 'number-peg-image', status }),
+      { visible: false, pending: false, failed: false });
+  }
+});
+test('only an explicitly requested matching image job displays an image failure', () => {
+  assert.equal(imageJobState(true, undefined, undefined).failed, false);
+  assert.equal(imageJobState(true, 'text-job', { id: 'text-job', kind: 'number-peg-text', status: 'failed' }).failed, false);
+  assert.equal(imageJobState(true, 'image-job', { id: 'image-job', kind: 'number-peg-image', status: 'failed' }).failed, true);
+});
 import {
   buildInitialSceneCandidates,
   buildSceneCandidates,

@@ -12,6 +12,21 @@ namespace MemoPal.UnitTests;
 public sealed class AiCreditTests
 {
     [Theory]
+    [InlineData("test-key", "vendor/model", 1)]
+    [InlineData("", "vendor/model", 0)]
+    [InlineData("test-key", "", 0)]
+    public async Task OpenRouterMeteringRequiresConfiguredTextProvider(string key, string model, int expected)
+    {
+        using var db = CreateDb();
+        await SeedUser(db);
+        var credits = new AiCreditService(db, Options.Create(new AiCreditOptions()),
+            Options.Create(new AiTextGenerationOptions
+                { Provider = "openrouter", Endpoint = "https://openrouter.ai/api/v1/chat/completions", ApiKey = key, Model = model }),
+            Options.Create(new AiImageGenerationOptions()));
+        Assert.Equal(expected, (await credits.BalanceAsync("user", default)).TextCost);
+    }
+
+    [Theory]
     [InlineData("gemini", "image-key", true)]
     [InlineData("gemini", "", false)]
     [InlineData("unsupported", "image-key", false)]
@@ -21,7 +36,7 @@ public sealed class AiCreditTests
         await SeedUser(db);
         var credits = new AiCreditService(db,
             Options.Create(new AiCreditOptions { ImagesEnabled = true }),
-            Options.Create(new PalaceAssociationGenerationOptions { Provider = "template", GeminiApiKey = "text-only-key" }),
+            Options.Create(new AiTextGenerationOptions { Provider = "template", ApiKey = "text-only-key" }),
             Options.Create(new AiImageGenerationOptions { Provider = provider, Model = "image-model", ApiKey = key }));
         var balance = await credits.BalanceAsync("user", default);
         Assert.Equal(expected, balance.ImagesEnabled);
@@ -31,7 +46,7 @@ public sealed class AiCreditTests
     internal static AppDbContext CreateDb(string? name = null) => new(new DbContextOptionsBuilder<AppDbContext>()
         .UseInMemoryDatabase(name ?? Guid.NewGuid().ToString()).Options);
     internal static AiCreditService CreateService(AppDbContext db, bool paid = true) => new(db,
-        Options.Create(new AiCreditOptions()), Options.Create(new PalaceAssociationGenerationOptions { Provider = paid ? "ollama" : "template" }), Options.Create(new AiImageGenerationOptions()));
+        Options.Create(new AiCreditOptions()), Options.Create(new AiTextGenerationOptions { Provider = paid ? "ollama" : "template", Model = "test-model", Endpoint = "http://localhost/api/chat" }), Options.Create(new AiImageGenerationOptions()));
     private static async Task SeedUser(AppDbContext db)
     {
         db.Users.Add(new User { Id = "user", Email = "credits@example.com", DisplayName = "Credits" });

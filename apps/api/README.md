@@ -31,32 +31,31 @@ Required for non-test runtime:
 - `Jwt__Secret` (required, min length 32)
 - `Jwt__ExpiryMinutes`
 
-Palace association generation is usable without an external service: the
-default `AI:PalaceAssociations:Provider=template` setting creates deterministic
-starter text. For richer scenes, configure one provider on the API (never in
-the mobile app):
+Configure text generation in Admin → System Settings → AI → Text generation.
+The database setting `ai.text` stores `provider`, `model`, `endpoint`, `apiKey`,
+`batchSize`, `maxConcurrentRequests`, and `timeoutSeconds`. Changes apply to new
+requests without restarting. Do not put credentials in the mobile app or repository.
+No external model is selected by default; missing configuration uses free templates.
 
-```text
-AI__PalaceAssociations__Provider=gemini
-AI__PalaceAssociations__GeminiApiKey=<secret>
-AI__PalaceAssociations__GeminiModel=gemini-3.5-flash-lite
-```
+OpenRouter also uses Admin's `maxOutputTokens` (default 2048 per batch) and
+`reasoningEnabled` (default false). Short mnemonic requests should leave extended
+reasoning off. Otherwise a reasoning model can return HTTP 200 headers and keep
+sending whitespace while it thinks, exceeding the request deadline before the
+final JSON arrives. These defaults also apply to existing rows missing the fields.
 
-For local development, keep the key out of the repository by using .NET user
-secrets:
+Supported text providers are `gemini`, `ollama`, and `openrouter`. Enter the
+selected provider's model ID and endpoint explicitly. Gemini uses its API base
+URL; Ollama uses the full `/api/chat` URL; OpenRouter uses
+`https://openrouter.ai/api/v1/chat/completions`. Only local Ollama permits an
+empty key and HTTP. Legacy provider-specific database fields remain readable,
+but new Admin saves use generic fields. Environment settings under the old
+`AI:PalaceAssociations` section are not used; configure the database through Admin.
 
-```bash
-dotnet user-secrets set "AI:PalaceAssociations:Provider" "gemini" --project apps/api/src/MemoPal.Api
-dotnet user-secrets set "AI:PalaceAssociations:GeminiApiKey" "<secret>" --project apps/api/src/MemoPal.Api
-```
-
-For a local model, use `Provider=ollama` with
-`AI__PalaceAssociations__OllamaEndpoint` and `AI__PalaceAssociations__OllamaModel`.
 The API sends one request per internal batch (12 items by default), so a list
 of 100 items does not create 100 user-facing requests. Failed or unavailable
 provider calls fall back to starter text for the affected batch.
 
-Number Peg story generation reuses the same `AI:PalaceAssociations` provider,
+Number Peg story generation reuses the same `ai.text` provider,
 model, endpoint, timeout, and secret configuration. The mobile app sends the
 validated peg keyword snapshot; the API never infers an anchor from a number.
 

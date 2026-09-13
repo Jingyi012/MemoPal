@@ -8,11 +8,11 @@ namespace MemoPal.Infrastructure.AI;
 
 public sealed class PalaceAssociationGenerator(
     HttpClient httpClient,
-    IOptions<PalaceAssociationGenerationOptions> options,
+    IOptions<AiTextGenerationOptions> options,
     ILogger<PalaceAssociationGenerator> logger) : IPalaceAssociationGenerator
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    private readonly PalaceAssociationGenerationOptions settings = options.Value;
+    private readonly AiTextGenerationOptions settings = options.Value;
 
     public async Task<PalaceAssociationGenerationResult> GenerateAsync(
         IReadOnlyList<PalaceAssociationGenerationItem> items,
@@ -23,14 +23,9 @@ public sealed class PalaceAssociationGenerator(
     {
         var orderedItems = items.OrderBy(x => x.Position).ToArray();
         var provider = (settings.Provider ?? "template").Trim().ToLowerInvariant();
-        if (provider is not ("gemini" or "ollama"))
-        {
-            return BuildTemplateResult(orderedItems, locale);
-        }
-
         // A missing credential/model should never make the composer unusable.
         // The deterministic fallback also keeps local development working.
-        if (provider == "gemini" && string.IsNullOrWhiteSpace(settings.GeminiApiKey))
+        if (!settings.IsConfigured)
         {
             return BuildTemplateResult(orderedItems, locale);
         }
@@ -86,7 +81,10 @@ public sealed class PalaceAssociationGenerator(
     {
         try
         {
-            var generated = provider == "gemini"
+            var generated = provider == "openrouter"
+                ? ParseSuggestions(await OpenRouterTextClient.GenerateAsync(httpClient, settings,
+                    BuildPrompt(chunk, locale, style, chainMode), cancellationToken))
+                : provider == "gemini"
                 ? await GenerateGeminiChunkAsync(chunk, locale, style, chainMode, cancellationToken)
                 : await GenerateOllamaChunkAsync(chunk, locale, style, chainMode, cancellationToken);
             var normalized = NormalizeSuggestions(generated, chunk);
@@ -127,9 +125,9 @@ public sealed class PalaceAssociationGenerator(
         bool chainMode,
         CancellationToken cancellationToken)
     {
-        var endpoint = settings.GeminiEndpoint.TrimEnd('/');
-        var model = Uri.EscapeDataString(settings.GeminiModel.Trim());
-        var apiKey = Uri.EscapeDataString(settings.GeminiApiKey.Trim());
+        var endpoint = settings.Endpoint.TrimEnd('/');
+        var model = Uri.EscapeDataString(settings.Model.Trim());
+        var apiKey = Uri.EscapeDataString(settings.ApiKey.Trim());
         var request = new
         {
             contents = new[]
@@ -174,7 +172,7 @@ public sealed class PalaceAssociationGenerator(
     {
         var request = new
         {
-            model = settings.OllamaModel.Trim(),
+            model = settings.Model.Trim(),
             stream = false,
             format = "json",
             messages = new[]
@@ -185,12 +183,12 @@ public sealed class PalaceAssociationGenerator(
             options = new { temperature = 0.9 }
         };
 
-        using var messageRequest = new HttpRequestMessage(HttpMethod.Post, settings.OllamaEndpoint.Trim())
+        using var messageRequest = new HttpRequestMessage(HttpMethod.Post, settings.Endpoint.Trim())
         {
             Content = JsonContent.Create(request, options: JsonOptions)
         };
-        if (!string.IsNullOrWhiteSpace(settings.OllamaApiKey))
-            messageRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", settings.OllamaApiKey.Trim());
+        if (!string.IsNullOrWhiteSpace(settings.ApiKey))
+            messageRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", settings.ApiKey.Trim());
         using var response = await httpClient.SendAsync(messageRequest, cancellationToken);
         response.EnsureSuccessStatusCode();
         var payload = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions, cancellationToken);

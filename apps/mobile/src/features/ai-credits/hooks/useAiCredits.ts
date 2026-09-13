@@ -10,11 +10,11 @@ export function useAiCredits() {
   });
 }
 
-export function useAiGenerations() {
+export function useAiGenerations(enabled = true) {
   const { user } = useAuth();
   const client = useQueryClient();
   return useQuery({
-    queryKey: ['ai-credits', user?.id, 'generations'], enabled: Boolean(user),
+    queryKey: ['ai-credits', user?.id, 'generations'], enabled: Boolean(user) && enabled,
     queryFn: async () => {
       const result = await aiCreditsApi.generations();
       void client.invalidateQueries({ queryKey: ['ai-credits', user?.id, 'balance'] });

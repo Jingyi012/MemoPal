@@ -53,7 +53,6 @@ export default function PracticeScreen() {
   const unlockedPegCount = getUnlockedPegCount(user?.level ?? 1);
   const palaceScenes = usePalaceScenes();
   const lessons = usePredefinedMemoryLessons();
-  const [filter, setFilter] = useState<'all' | 'number-peg' | 'palace'>('all');
   const [lessonCategoryId, setLessonCategoryId] = useState<string>('all');
   const lessonCategories = useMemo(() => {
     const byId = new Map<string, PredefinedMemoryLesson['category']>();
@@ -70,9 +69,8 @@ export default function PracticeScreen() {
   const recentSets = useMemo(
     () => (memorySets.data ?? [])
       .filter((memorySet) => memorySet.status !== 'archived')
-      .filter((memorySet) => filter === 'all' || memorySet.techniqueKey === filter)
-      .slice(0, 4),
-    [filter, memorySets.data]
+      .slice(0, 2),
+    [memorySets.data]
   );
   const reviewByMemorySetId = useMemo(() => {
     const nextReviewBySet = new Map<string, DueMemoryReview>();
@@ -98,16 +96,50 @@ export default function PracticeScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ModuleNoticeCard
-          icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
-          title={t('newMemory')}
-          body={t('newMemoryBody')}
-          actionLabel={t('tapToStart')}
-          actionIcon={<Plus size={15} color={theme.onSun} />}
-          onAction={() => router.push('/create-memory' as Href)}
-        />
+        {(!isOffline && memorySets.isLoading) || (canShowRequestErrors && memorySets.isError) || recentSets.length > 0 ? <View style={styles.recentSection}>
+          <View style={styles.sectionHeadingRow}>
+            <Text style={[styles.sectionLabel, styles.recentHeading, { color: activeTheme.ink }]}>{t('recentPractice')}</Text>
+            <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/(tabs)/library' as Href)} style={styles.seeAllButton}>
+              <Text style={styles.seeAll}>{t('seeAll')} →</Text>
+            </AnimatedPressable>
+          </View>
 
-        <Text style={[styles.sectionLabel, { color: activeTheme.ink }]}>{t('jumpTechnique')}</Text>
+          {!isOffline && memorySets.isLoading ? (
+            <View style={styles.emptyCard}><Text style={styles.emptyBody}>{t('recentPractice')}</Text></View>
+          ) : canShowRequestErrors && memorySets.isError ? (
+            <ModuleNoticeCard
+              icon={<RefreshCcw size={22} color={theme.inkSoft} />}
+              title={t('recentPractice')}
+              body={t('description')}
+              actionLabel={t('tryAgain')}
+              onAction={() => memorySets.refetch()}
+            />
+          ) : recentSets.length ? (
+            <View style={styles.sessionList}>
+              {recentSets.map((memorySet) => (
+                <MemorySetCard
+                  key={memorySet.id}
+                  memorySet={memorySet}
+                  reviewAt={reviewByMemorySetId.get(memorySet.id)?.dueAt}
+                  actionLabel={t('practiceNow')}
+                  onOpen={() => openMemorySet(router, memorySet)}
+                />
+              ))}
+            </View>
+          ) : null}
+        </View> : null}
+
+        <View style={styles.techniqueHeadingRow}>
+          <Text style={[styles.sectionLabel, styles.techniqueHeading, { color: activeTheme.ink }]}>{t('jumpTechnique')}</Text>
+          <AnimatedPressable
+            accessibilityRole="button"
+            accessibilityLabel={t('newMemory')}
+            onPress={() => router.push('/create-memory' as Href)}
+            style={styles.newMemoryButton}>
+            <Plus size={15} color={theme.onSun} />
+            <Text style={styles.newMemoryButtonText}>{t('newMemory')}</Text>
+          </AnimatedPressable>
+        </View>
         <View style={styles.techniqueRow}>
           {modules.map((module) => {
             const isPeg = module.key === 'number-peg';
@@ -117,8 +149,10 @@ export default function PracticeScreen() {
                   onPress={() => router.push(module.route as Href)}
                   style={[styles.techniqueJump, { backgroundColor: isPeg ? activeTheme.berryTint : activeTheme.violetTint, borderColor: isPeg ? activeTheme.berryLine : activeTheme.violetLine }]}>
                   <Text style={styles.techniqueJumpEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
-                  <Text style={[styles.techniqueJumpName, { color: activeTheme.ink }]}>{isPeg ? t('numberPeg') : t('palace')}</Text>
-                  <Text style={[styles.techniqueJumpLink, { color: isPeg ? activeTheme.berryDeep : activeTheme.violetDeep }]}>{t('tapToStart')} →</Text>
+                  <View style={styles.techniqueJumpCopy}>
+                    <Text numberOfLines={1} style={[styles.techniqueJumpName, { color: activeTheme.ink }]}>{isPeg ? t('numberPeg') : t('palace')}</Text>
+                    <Text style={[styles.techniqueJumpLink, { color: isPeg ? activeTheme.berryDeep : activeTheme.violetDeep }]}>{t('tapToStart')} →</Text>
+                  </View>
                 </AnimatedPressable>
               </View>
             );
@@ -218,58 +252,6 @@ export default function PracticeScreen() {
           )}
         </View>
 
-        <View style={styles.sectionHeadingRow}>
-          <Text style={[styles.sectionLabel, { marginBottom: 0, color: activeTheme.ink }]}>{t('recentPractice')}</Text>
-          <AnimatedPressable onPress={() => router.push('/(tabs)/library' as Href)}>
-            <Text style={styles.seeAll}>{t('seeAll')} →</Text>
-          </AnimatedPressable>
-        </View>
-
-        <View style={styles.filterRow}>
-          {SESSION_FILTERS.filter((option) => option.key === 'all' || (option.key === 'palace' ? palaceEnabled : numberPegEnabled)).map((option) => (
-            <AnimatedPressable
-              key={option.key}
-              onPress={() => setFilter(option.key)}
-              style={[styles.filterChip, filter === option.key && styles.filterChipActive]}>
-              <Text style={[styles.filterChipText, filter === option.key && styles.filterChipTextActive]}>
-                {option.key === 'all' ? t('all') : option.key === 'number-peg' ? t('numberPeg') : t('palace')}
-              </Text>
-            </AnimatedPressable>
-          ))}
-        </View>
-
-        {!isOffline && memorySets.isLoading ? (
-          <View style={styles.emptyCard}><Text style={styles.emptyBody}>{t('recentPractice')}</Text></View>
-        ) : canShowRequestErrors && memorySets.isError ? (
-          <ModuleNoticeCard
-            icon={<RefreshCcw size={22} color={theme.inkSoft} />}
-            title={t('recentPractice')}
-            body={t('description')}
-            actionLabel={t('tryAgain')}
-            onAction={() => memorySets.refetch()}
-          />
-        ) : recentSets.length ? (
-          <View style={styles.sessionList}>
-            {recentSets.map((memorySet) => (
-                <MemorySetCard
-                key={memorySet.id}
-                memorySet={memorySet}
-                reviewAt={reviewByMemorySetId.get(memorySet.id)?.dueAt}
-                actionLabel={t('practiceNow')}
-                onOpen={() => openMemorySet(router, memorySet)}
-              />
-            ))}
-          </View>
-        ) : (
-          <ModuleNoticeCard
-            icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
-            title={t('newMemory')}
-            body={t('newMemoryBody')}
-            actionLabel={t('tapToStart')}
-            actionIcon={<Plus size={15} color={theme.onSun} />}
-            onAction={() => router.push('/create-memory' as Href)}
-          />
-        )}
       </ScrollView>
     </View>
   );
@@ -301,12 +283,20 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   content: { padding: 20, paddingBottom: 42 },
   progressHeaderWrap: { paddingHorizontal: 20, paddingTop: 10 },
   sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 22, marginBottom: 10 },
+  techniqueHeadingRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 22, marginBottom: 10 },
+  techniqueHeading: { flexShrink: 1, marginTop: 0, marginBottom: 0 },
+  newMemoryButton: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 13, flexDirection: 'row', gap: 5, justifyContent: 'center', minHeight: 44, paddingHorizontal: 11 },
+  newMemoryButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  recentSection: { marginBottom: 2 },
+  recentHeading: { marginTop: 0, marginBottom: 10 },
+  seeAllButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 },
   techniqueRow: { width: '100%', flexDirection: 'row', gap: 8 },
-  techniqueJumpWrap: { flex: 1, minWidth: 0, minHeight: 140 },
-  techniqueJump: { width: '100%', minHeight: 140, borderRadius: 24, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingVertical: 18, paddingHorizontal: 10, alignItems: 'center' },
-  techniqueJumpEmoji: { fontSize: 38, lineHeight: 46 },
-  techniqueJumpName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center', marginTop: 7 },
-  techniqueJumpLink: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 10.5, marginTop: 3 },
+  techniqueJumpWrap: { flex: 1, minWidth: 0 },
+  techniqueJump: { width: '100%', minHeight: 70, borderRadius: 18, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingVertical: 10, paddingHorizontal: 11, flexDirection: 'row', alignItems: 'center', gap: 9 },
+  techniqueJumpEmoji: { fontSize: 26, lineHeight: 32 },
+  techniqueJumpCopy: { flex: 1, minWidth: 0 },
+  techniqueJumpName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
+  techniqueJumpLink: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 9.5, marginTop: 3 },
   sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 1 },
   discoverySection: { marginTop: 24 },
   discoveryTitle: { marginTop: 0, marginBottom: 0 },
@@ -332,12 +322,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   lessonTechniquePalace: { color: theme.violetDeep, backgroundColor: theme.violetTint },
   lessonCategory: { color: theme.inkSoft, backgroundColor: theme.peachTint, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
   lessonLoading: { minHeight: 92, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 18, justifyContent: 'center', marginTop: 10 },
-  filterRow: { flexDirection: 'row', gap: 7, marginTop: 9, marginBottom: 11 },
-  filterChip: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 8 },
-  filterChipActive: { borderColor: theme.ink, backgroundColor: theme.ink },
-  filterChipText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
-  filterChipTextActive: { color: theme.paper},
-  seeAll: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 11.5, marginTop: 22 },
+  seeAll: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 11.5 },
   sessionList: { gap: 10 },
   emptyIconEmoji: { fontSize: 24 },
   sessionCard: { minHeight: 70, borderRadius: 16, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -356,10 +341,4 @@ const PEG_ANCHORS = [
   { number: 8, emoji: '⛄', name: 'Snowman' },
   { number: 9, emoji: '🎈', name: 'Balloon' },
   { number: 10, emoji: '⚾', name: 'Bat & ball' },
-];
-
-const SESSION_FILTERS: { key: 'all' | 'number-peg' | 'palace' }[] = [
-  { key: 'all' },
-  { key: 'number-peg' },
-  { key: 'palace' },
 ];

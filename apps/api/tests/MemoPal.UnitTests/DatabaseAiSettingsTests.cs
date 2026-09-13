@@ -11,30 +11,58 @@ namespace MemoPal.UnitTests;
 public sealed class DatabaseAiSettingsTests
 {
     [Fact]
+    public async Task AdminOutputControlsAreReadFromSavedSettings()
+    {
+        using var db = AiCreditTests.CreateDb();
+        var result = await new UpsertSystemSettingCommandHandler(db).Handle(new(new UpsertSystemSettingRequest
+            { Key = AiSettings.Text, Value = """{"provider":"openrouter","maxOutputTokens":4096,"reasoningEnabled":true}""" }), default);
+        Assert.True(result.Success);
+        var settings = new DatabaseAiSettings(db).Read(AiSettings.Text, new OptionsFactory<AiTextGenerationOptions>([], [])).Value;
+        Assert.Equal(4096, settings.MaxOutputTokens);
+        Assert.True(settings.ReasoningEnabled);
+    }
+
+    [Fact]
+    public async Task UnconfiguredTextUsesTemplateWithoutAnImplicitModel()
+    {
+        using var db = AiCreditTests.CreateDb();
+        var options = new DatabaseAiSettings(db).Read(AiSettings.Text, new OptionsFactory<AiTextGenerationOptions>([], [])).Value;
+        Assert.Equal("template", options.Provider);
+        Assert.Empty(options.Model);
+        Assert.Empty(options.ApiKey);
+        Assert.Empty(options.Endpoint);
+        Assert.False(options.IsConfigured);
+        Assert.Equal(2048, options.MaxOutputTokens);
+        Assert.False(options.ReasoningEnabled);
+        AiSettings.Validate(AiSettings.Text, """{"provider":"template","model":"","endpoint":"","apiKey":""}""");
+    }
+
+    [Fact]
     public async Task LegacyTextRowsRemainReadable()
     {
         using var db = AiCreditTests.CreateDb();
         db.SystemSettings.Add(new SystemSetting { Id = "legacy", Key = AiSettings.Text,
             Value = "{\"provider\":\"gemini\",\"geminiModel\":\"legacy-model\",\"geminiApiKey\":\"legacy-key\"}" });
         await db.SaveChangesAsync();
-        var settings = new DatabaseAiSettings(db).Read(AiSettings.Text, new OptionsFactory<PalaceAssociationGenerationOptions>([], [])).Value;
-        Assert.Equal("legacy-model", settings.GeminiModel);
-        Assert.Equal("legacy-key", settings.GeminiApiKey);
+        var settings = new DatabaseAiSettings(db).Read(AiSettings.Text, new OptionsFactory<AiTextGenerationOptions>([], [])).Value;
+        Assert.Equal("legacy-model", settings.Model);
+        Assert.Equal("legacy-key", settings.ApiKey);
     }
 
     [Theory]
     [InlineData("gemini", "https://example.test/v1beta")]
     [InlineData("ollama", "http://localhost:11434/api/chat")]
+    [InlineData("openrouter", "https://openrouter.ai/api/v1/chat/completions")]
     public async Task GenericTextFieldsSelectTheCorrectTransport(string provider, string endpoint)
     {
         using var db = AiCreditTests.CreateDb();
         var json = System.Text.Json.JsonSerializer.Serialize(new { provider, model = "chosen-model", endpoint, apiKey = "chosen-key" });
         var saved = await new UpsertSystemSettingCommandHandler(db).Handle(new(new UpsertSystemSettingRequest { Key = AiSettings.Text, Value = json }), default);
         Assert.True(saved.Success);
-        var settings = new DatabaseAiSettings(db).Read(AiSettings.Text, new OptionsFactory<PalaceAssociationGenerationOptions>([], [])).Value;
-        Assert.Equal("chosen-model", provider == "gemini" ? settings.GeminiModel : settings.OllamaModel);
-        Assert.Equal(endpoint, provider == "gemini" ? settings.GeminiEndpoint : settings.OllamaEndpoint);
-        Assert.Equal("chosen-key", provider == "gemini" ? settings.GeminiApiKey : settings.OllamaApiKey);
+        var settings = new DatabaseAiSettings(db).Read(AiSettings.Text, new OptionsFactory<AiTextGenerationOptions>([], [])).Value;
+        Assert.Equal("chosen-model", settings.Model);
+        Assert.Equal(endpoint, settings.Endpoint);
+        Assert.Equal("chosen-key", settings.ApiKey);
     }
 
     [Fact]
@@ -59,12 +87,30 @@ public sealed class DatabaseAiSettingsTests
         Assert.DoesNotContain(publicSettings.Data!, x => x.Key.StartsWith("ai."));
     }
 
+    [Fact]
+    public async Task ExplicitGenericEmptyValuesDoNotRestoreLegacyCredentials()
+    {
+        using var db = AiCreditTests.CreateDb();
+        db.SystemSettings.Add(new SystemSetting { Id = "mixed", Key = AiSettings.Text,
+            Value = """{"provider":"gemini","model":"","apiKey":"","endpoint":"","geminiModel":"old-model","geminiApiKey":"old-key","geminiEndpoint":"https://example.test"}""" });
+        await db.SaveChangesAsync();
+        var settings = new DatabaseAiSettings(db).Read(AiSettings.Text, new OptionsFactory<AiTextGenerationOptions>([], [])).Value;
+        Assert.Empty(settings.Model);
+        Assert.Empty(settings.ApiKey);
+        Assert.Empty(settings.Endpoint);
+        Assert.False(settings.IsConfigured);
+    }
+
     [Theory]
     [InlineData("ai.credits", "{\"textCost\":0}")]
     [InlineData("ai.images", "{\"provider\":\"ollama\"}")]
     [InlineData("ai.images", "{\"endpoint\":\"file:///tmp\"}")]
     [InlineData("ai.text", "{\"geminiApiKey\":null}")]
     [InlineData("ai.text", "not-json")]
+    [InlineData("ai.text", "{\"maxOutputTokens\":0}")]
+    [InlineData("ai.text", "{\"maxOutputTokens\":32769}")]
+    [InlineData("ai.text", "{\"reasoningEnabled\":\"false\"}")]
+    [InlineData("ai.text", "{\"provider\":\"openrouter\",\"endpoint\":\"http://openrouter.ai/api/v1/chat/completions\"}")]
     public async Task RejectsInvalidSettingsWithoutSaving(string key, string value)
     {
         using var db = AiCreditTests.CreateDb();
