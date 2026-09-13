@@ -25,6 +25,7 @@ internal static class OpenRouterTextClient
             {
                 model = settings.Model.Trim(),
                 stream = false,
+                response_format = new { type = "json_object" },
                 max_tokens = Math.Clamp(settings.MaxOutputTokens, 128, 32768),
                 // Short mnemonic text needs a final answer, not the provider's default
                 // extended reasoning. Admin can explicitly enable it when needed.
@@ -37,7 +38,13 @@ internal static class OpenRouterTextClient
             statusCode = (int)response.StatusCode;
             phase = "reading-body";
             response.EnsureSuccessStatusCode();
-            var body = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
+            JsonElement body;
+            try { body = await response.Content.ReadFromJsonAsync<JsonElement>(ct); }
+            catch (JsonException ex)
+            {
+                ex.Data["ResponseLayer"] = "provider-envelope";
+                throw;
+            }
             // Error payloads can also arrive with HTTP 200. Never expose their raw contents.
             if (body.ValueKind == JsonValueKind.Object && !body.TryGetProperty("error", out _) &&
                 body.TryGetProperty("choices", out var choices) && choices.ValueKind == JsonValueKind.Array &&
@@ -45,7 +52,18 @@ internal static class OpenRouterTextClient
                 choices[0].TryGetProperty("message", out var message) && message.ValueKind == JsonValueKind.Object &&
                 message.TryGetProperty("content", out var content) && content.ValueKind == JsonValueKind.String &&
                 !string.IsNullOrWhiteSpace(content.GetString()))
+            {
+                // HTTP 200 does not mean the model finished producing the JSON.
+                if (choices[0].TryGetProperty("finish_reason", out var reason) && reason.ValueKind == JsonValueKind.String &&
+                    reason.GetString() is "length" or "content_filter" or "error")
+                {
+                    var error = new InvalidOperationException("OpenRouter did not finish the text completion.");
+                    error.Data["ResponseLayer"] = "model-completion";
+                    error.Data["FinishReason"] = reason.GetString();
+                    throw error;
+                }
                 return content.GetString()!;
+            }
             throw new InvalidOperationException("OpenRouter returned no text completion.");
         }
         catch (OperationCanceledException ex) when (!callerToken.IsCancellationRequested)

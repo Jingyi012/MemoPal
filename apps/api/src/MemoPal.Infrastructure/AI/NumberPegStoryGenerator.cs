@@ -63,7 +63,11 @@ public sealed class NumberPegStoryGenerator(
                 : await GenerateOllamaAsync(batch, locale, style, cancellationToken);
             List<NumberPegStoryGenerationSuggestion> parsed;
             try { parsed = Parse(text, batch); }
-            catch (JsonException) when (provider == "openrouter") { parsed = []; }
+            catch (JsonException ex) when (provider == "openrouter")
+            {
+                LogInvalidJson(ex, text.Length, "initial");
+                parsed = [];
+            }
             if (provider == "openrouter" && parsed.Count < batch.Count)
             {
                 // One bounded format/content repair, only for rejected positions.
@@ -74,12 +78,17 @@ public sealed class NumberPegStoryGenerator(
                 {
                     var repaired = await OpenRouterTextClient.GenerateAsync(client, settings,
                         BuildPrompt(missing, locale, style) + "\nYour previous response failed validation. Return valid JSON only. Copy each literal word and pegKeyword into its story unchanged, and copy its integer position exactly.", cancellationToken);
-                    parsed.AddRange(Parse(repaired, missing));
+                    try { parsed.AddRange(Parse(repaired, missing)); }
+                    catch (JsonException ex)
+                    {
+                        LogInvalidJson(ex, repaired.Length, "repair");
+                    }
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
                 catch (Exception ex) when (ex is HttpRequestException or JsonException or InvalidOperationException or OperationCanceledException)
                 {
-                    logger.LogWarning("Number peg content repair failed; keeping accepted results. ReasonType={ReasonType}", ex.GetType().Name);
+                    logger.LogWarning("Number peg content repair failed; keeping accepted results. ReasonType={ReasonType} ResponseLayer={ResponseLayer} FinishReason={FinishReason}",
+                        ex.GetType().Name, ex.Data["ResponseLayer"], ex.Data["FinishReason"]);
                 }
             }
             var byPosition = parsed.ToDictionary(x => x.Position);
@@ -101,9 +110,10 @@ public sealed class NumberPegStoryGenerator(
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or InvalidOperationException)
         {
-            logger.LogWarning("Number peg story provider failed; using deterministic fallback. Provider={Provider} ReasonType={ReasonType} StatusCode={StatusCode} TransportError={TransportError}",
+            logger.LogWarning("Number peg story provider failed; using deterministic fallback. Provider={Provider} ReasonType={ReasonType} StatusCode={StatusCode} TransportError={TransportError} ResponseLayer={ResponseLayer} FinishReason={FinishReason}",
                 provider, ex.GetType().Name, ex is HttpRequestException http ? (int?)http.StatusCode : null,
-                ex is HttpRequestException transport ? transport.HttpRequestError.ToString() : null);
+                ex is HttpRequestException transport ? transport.HttpRequestError.ToString() : null,
+                ex.Data["ResponseLayer"], ex.Data["FinishReason"]);
             return new(batch.Select(item => TemplateItem(item, locale)).ToList(), 0);
         }
     }
@@ -165,7 +175,7 @@ public sealed class NumberPegStoryGenerator(
         return $"""
             You write short, strange, age-friendly mnemonic stories in {language}.
             Style: {style}. Make each exact target word interact with its exact peg keyword through vivid action and one sensory detail.
-            Keep each story 12-35 words. Return JSON only with suggestions containing position, story, and optional creativeQuestion.
+            Keep each story 12-35 words. Return JSON only with suggestions containing position and story. No Markdown fences or explanation. Escape quotation marks and newlines inside JSON strings.
             Every story must include the exact target word and exact peg keyword, including refinements of existingStory.
             Never translate or substitute those two literal strings, even when writing a Chinese story. Embed them unchanged.
             Output one object with this exact shape: {schema}.
@@ -182,7 +192,7 @@ public sealed class NumberPegStoryGenerator(
 
     private List<NumberPegStoryGenerationSuggestion> Parse(string content, IReadOnlyList<NumberPegStoryGenerationItem> items)
     {
-        using var document = JsonDocument.Parse(StripCodeFence(content));
+        using var document = JsonDocument.Parse(StripCodeFence(content), new JsonDocumentOptions { AllowTrailingCommas = true });
         var root = document.RootElement;
         var values = root.ValueKind == JsonValueKind.Array ? root : TryGetProperty(root, "suggestions", out var suggestions) ? suggestions : default;
         if (values.ValueKind != JsonValueKind.Array) throw new JsonException("The generated response did not contain suggestions.");
@@ -212,12 +222,19 @@ public sealed class NumberPegStoryGenerator(
 
     private static string StripCodeFence(string content)
     {
-        var json = content.Trim();
-        if (!json.StartsWith("```", StringComparison.Ordinal)) return json;
-        var firstNewline = json.IndexOf('\n');
+        var json = content.Trim().TrimStart('\uFEFF');
+        // Preserve JSON string contents, including literal backticks in a story.
+        if (json.StartsWith('{') || json.StartsWith('[')) return json;
+        var firstFence = json.IndexOf("```", StringComparison.Ordinal);
+        if (firstFence < 0) return json;
+        var firstNewline = json.IndexOf('\n', firstFence);
         var lastFence = json.LastIndexOf("```", StringComparison.Ordinal);
         return firstNewline >= 0 && lastFence > firstNewline ? json[(firstNewline + 1)..lastFence].Trim() : json;
     }
+
+    private void LogInvalidJson(JsonException error, int contentLength, string attempt) =>
+        logger.LogWarning("Number peg AI JSON invalid. ResponseLayer=generated-content Attempt={Attempt} Characters={Characters} Line={Line} BytePosition={BytePosition}",
+            attempt, contentLength, error.LineNumber, error.BytePositionInLine);
 
     private static bool ContainsTargetAndPeg(string story, NumberPegStoryGenerationItem item) =>
         story.Contains(item.Word, StringComparison.OrdinalIgnoreCase) && story.Contains(item.PegKeyword, StringComparison.OrdinalIgnoreCase);

@@ -110,6 +110,25 @@ public sealed class OpenRouterGenerationTests
         Assert.Equal(0, handler.Calls);
     }
 
+    [Theory]
+    [InlineData("length")]
+    [InlineData("content_filter")]
+    [InlineData("error")]
+    public async Task IncompleteCompletionDoesNotBecomeAChargeableStoryEvenWithValidJson(string finishReason)
+    {
+        var handler = new Handler(new { choices = new[] { new { finish_reason = finishReason, message = new {
+            content = """{"suggestions":[{"position":1,"story":"A candle hugs apple"}]}"""
+        } } } });
+        using var client = new HttpClient(handler);
+        const string original = "An apple hugs a candle.";
+        var result = await new NumberPegStoryGenerator(client, Options.Create(Settings()), NullLogger<NumberPegStoryGenerator>.Instance)
+            .GenerateAsync([new(1, 1, "candle", "one candle", "apple", original, true)], "en", "playful");
+        Assert.Equal("template", result.Source);
+        Assert.Equal(original, result.Suggestions.Single().Story);
+        Assert.False(result.Suggestions.Single().IsAi);
+        Assert.Equal(1, handler.Calls);
+    }
+
     private sealed class Handler(object response, HttpStatusCode status = HttpStatusCode.OK) : HttpMessageHandler
     {
         public int Calls { get; private set; }
@@ -123,6 +142,7 @@ public sealed class OpenRouterGenerationTests
             var body = await request.Content!.ReadFromJsonAsync<JsonElement>(ct);
             Assert.Equal("vendor/model", body.GetProperty("model").GetString());
             Assert.False(body.GetProperty("stream").GetBoolean());
+            Assert.Equal("json_object", body.GetProperty("response_format").GetProperty("type").GetString());
             Assert.Equal(2048, body.GetProperty("max_tokens").GetInt32());
             Assert.False(body.GetProperty("reasoning").GetProperty("enabled").GetBoolean());
             Assert.Contains("apple", body.GetProperty("messages")[0].GetProperty("content").GetString());

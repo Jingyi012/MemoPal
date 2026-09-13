@@ -6,12 +6,82 @@ using MemoPal.Application.Features.NumberPegStories.Commands;
 using MemoPal.Application.Features.NumberPegStories.DTOs;
 using MemoPal.Infrastructure.AI;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace MemoPal.UnitTests;
 
 public sealed class NumberPegStoryGenerationTests
 {
+    [Theory]
+    [InlineData("这里是改进的故事：\n```json\n{\"suggestions\":[{\"position\":1,\"story\":\"红色蜡烛喊着\\\"跳舞吧\\\"，在窗台转圈。\"}]}\n```\n希望你喜欢。")]
+    [InlineData("\uFEFF{\"suggestions\":[{\"position\":1,\"story\":\"红色蜡烛喊着\\\"跳舞吧\\\"，在窗台转圈。\",},],}")]
+    public async Task ImprovementAcceptsCompleteJsonWithCommonModelFormatting(string content)
+    {
+        var handler = new QueueHttpHandler(OpenRouterResponse(content));
+        var generator = CreateOpenRouterGenerator(handler);
+        var result = await generator.GenerateAsync([new(1, 1, "蜡烛", "一支蜡烛", "红色", "红色蜡烛在窗台。", true)], "zh", "playful");
+        Assert.True(result.Suggestions.Single().IsAi);
+        Assert.Equal("红色蜡烛喊着\"跳舞吧\"，在窗台转圈。", result.Suggestions.Single().Story);
+        Assert.Single(handler.Requests);
+    }
+
+    [Fact]
+    public async Task MalformedInitialResponseCanBeRepairedWithoutLosingEditedStoryContext()
+    {
+        var handler = new QueueHttpHandler(OpenRouterResponse("not json"),
+            OpenRouterResponse("Here is the story:\n```json\n{\"suggestions\":[{\"position\":1,\"story\":\"A candle hugs apple on the windowsill.\"}]}\n```"));
+        var result = await CreateOpenRouterGenerator(handler).GenerateAsync(
+            [Item() with { ExistingStory = "A candle and apple on the windowsill.", ImproveExisting = true }], "en", "playful");
+        Assert.True(result.Suggestions.Single().IsAi);
+        Assert.Contains("windowsill", result.Suggestions.Single().Story);
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Contains("A candle and apple on the windowsill.", handler.RequestBodies[1]);
+    }
+
+    [Theory]
+    [InlineData("{\"suggestions\":[{\"position\":1,\"story\":\"A candle hugs apple PRIVATE_MARKER\"")]
+    [InlineData("{\"suggestions\":[{\"position\":1,\"story\":\"A candle says \"PRIVATE_MARKER\" to apple\"}]}")]
+    public async Task InvalidJsonNeverBecomesAStoryAndDiagnosticsDoNotExposeContent(string content)
+    {
+        var handler = new QueueHttpHandler(OpenRouterResponse(content), OpenRouterResponse(content));
+        var logger = new StoryLogger();
+        const string original = "A candle hugs apple beside my window.";
+        var result = await CreateOpenRouterGenerator(handler, logger).GenerateAsync(
+            [Item() with { ExistingStory = original, ImproveExisting = true }], "en", "playful");
+        Assert.Equal(original, result.Suggestions.Single().Story);
+        Assert.False(result.Suggestions.Single().IsAi);
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Contains(logger.Messages, entry => entry.Contains("ResponseLayer=generated-content Attempt=repair"));
+        Assert.DoesNotContain(logger.Messages, entry => entry.Contains("PRIVATE_MARKER") || entry.Contains(original));
+    }
+
+    [Fact]
+    public async Task MalformedProviderEnvelopeIsDiagnosedSeparatelyWithoutContentRepair()
+    {
+        var handler = new QueueHttpHandler(JsonResponse("PRIVATE_MARKER not JSON"));
+        var logger = new StoryLogger();
+        var result = await CreateOpenRouterGenerator(handler, logger).GenerateAsync([Item()], "en", "playful");
+        Assert.Equal("template", result.Source);
+        Assert.Single(handler.Requests);
+        Assert.Contains(logger.Messages, entry => entry.Contains("ResponseLayer=provider-envelope"));
+        Assert.DoesNotContain(logger.Messages, entry => entry.Contains("PRIVATE_MARKER"));
+    }
+
+    private static NumberPegStoryGenerator CreateOpenRouterGenerator(HttpMessageHandler handler, ILogger<NumberPegStoryGenerator>? logger = null) =>
+        new(new HttpClient(handler), Options.Create(new AiTextGenerationOptions {
+            Provider = "openrouter", Model = "test-model", ApiKey = "test-key", Endpoint = "https://openrouter.ai/api/v1/chat/completions"
+        }), logger ?? NullLogger<NumberPegStoryGenerator>.Instance);
+
+    private sealed class StoryLogger : ILogger<NumberPegStoryGenerator>
+    {
+        public List<string> Messages { get; } = [];
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+            Messages.Add(formatter(state, exception));
+    }
+
     [Fact]
     public async Task OpenRouterRepairsRejectedChineseStoryOnceAndSendsReadableChinese()
     {

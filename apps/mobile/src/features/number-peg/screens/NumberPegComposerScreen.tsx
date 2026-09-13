@@ -736,7 +736,7 @@ export default function NumberPegComposerScreen() {
                     <Text style={styles.sectionHint}>{copy.improveHint}</Text>
                     <AnimatedPressable
                       disabled={isGenerating || isSaving || !current.sceneText.trim()}
-                      onPress={() => void generate(scenes, [index], true)}
+                      onPress={() => void generate(scenes, [index], true, true)}
                       style={[
                         styles.storyAction,
                         styles.improveStoryAction,
