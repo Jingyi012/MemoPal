@@ -20,7 +20,7 @@ import { memopalThemes } from '@/theme/memopalTheme';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { Plus, RefreshCcw } from 'lucide-react-native';
+import { ChevronRight, Plus, RefreshCcw } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
@@ -163,8 +163,10 @@ export default function PracticeScreen() {
         <View style={styles.discoverySection}>
           <View style={styles.sectionHeadingRow}>
             <Text style={[styles.sectionLabel, styles.discoveryTitle, { color: activeTheme.ink }]}>{t('tryLesson')}</Text>
-            <AnimatedPressable onPress={() => router.push('/lessons' as Href)} hitSlop={8}>
-              <Text style={styles.seeAll}>{t('seeAll')} →</Text>
+            <AnimatedPressable accessibilityRole="button" accessibilityLabel={t('allLessons')} onPress={() => router.push('/lessons' as Href)} style={styles.lessonLibraryButton}>
+              <Text style={styles.lessonLibraryEmoji}>📚</Text>
+              <Text style={styles.lessonLibraryText}>{t('allLessons')}</Text>
+              <ChevronRight size={15} color={activeTheme.violetDeep} />
             </AnimatedPressable>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.lessonFilterRow}>
@@ -308,6 +310,9 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 1 },
   discoverySection: { marginTop: 24 },
   discoveryTitle: { marginTop: 0, marginBottom: 0 },
+  lessonLibraryButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 13, borderWidth: 1.5, flexDirection: 'row', gap: 6, justifyContent: 'center', minHeight: 44, paddingHorizontal: 10 },
+  lessonLibraryEmoji: { fontSize: 15 },
+  lessonLibraryText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
   lessonHint: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 0 },
   lessonList: { gap: 10, paddingTop: 10, paddingBottom: 10, paddingRight: 12 },
   lessonFilterRow: { flexDirection: 'row', gap: 7, marginTop: 10, paddingRight: 12 },

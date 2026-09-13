@@ -302,7 +302,6 @@ export default function LibraryScreen() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        actions={[{ component: <AnimatedPressable accessibilityLabel={t('lessonLibrary')} onPress={() => router.push('/lessons' as Href)} style={styles.headerLessonButton}><Text style={styles.headerLessonEmoji}>📚</Text></AnimatedPressable> }]}
         hideBackButton
       />
 
@@ -655,8 +654,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   filterTextSelected: { color: theme.onAccent},
   viewToolbar: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
-  headerLessonButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 16, borderWidth: 1.5, height: 44, justifyContent: 'center', width: 44 },
-  headerLessonEmoji: { fontSize: 20 },
   viewToggle: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 13, borderWidth: 1.5, flexDirection: 'row', padding: 3 },
   viewOption: { alignItems: 'center', borderRadius: 9, height: 44, justifyContent: 'center', width: 44 },
   viewOptionSelected: { backgroundColor: theme.violetDeep },
