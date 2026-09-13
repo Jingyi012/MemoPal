@@ -17,7 +17,7 @@ public sealed class OpenRouterGenerationTests
         using var client = new HttpClient(new CancelledHandler(cancellation));
         var result = await new NumberPegStoryGenerator(client, Options.Create(Settings()),
             NullLogger<NumberPegStoryGenerator>.Instance)
-            .GenerateAsync([new(1, 1, "candle", "one candle", "apple", null, null)], "en", "playful");
+            .GenerateAsync([new(1, 1, "candle", "one candle", "apple", null)], "en", "playful");
         Assert.Equal("template", result.Source);
         Assert.Equal("http-transport", cancellation.Data["CancellationSource"]);
         Assert.Equal("waiting-for-headers", cancellation.Data["Phase"]);
@@ -35,7 +35,7 @@ public sealed class OpenRouterGenerationTests
         using var client = new HttpClient(new CancelledBodyHandler(error));
         var result = await new NumberPegStoryGenerator(client, Options.Create(Settings()),
             NullLogger<NumberPegStoryGenerator>.Instance)
-            .GenerateAsync([new(1, 1, "candle", "one candle", "apple", null, "An apple hugs a candle.")], "en", "playful");
+            .GenerateAsync([new(1, 1, "candle", "one candle", "apple", "An apple hugs a candle.")], "en", "playful");
         Assert.Equal("template", result.Source);
         Assert.Equal("An apple hugs a candle.", result.Suggestions.Single().Story);
         Assert.Equal("reading-body", error.Data["Phase"]);
@@ -68,7 +68,7 @@ public sealed class OpenRouterGenerationTests
         using var client = new HttpClient(handler);
         var options = Options.Create(Settings());
         var story = await new NumberPegStoryGenerator(client, options, NullLogger<NumberPegStoryGenerator>.Instance)
-            .GenerateAsync([new(1, 1, "candle", "one candle", "apple", null, null)], "en", "playful");
+            .GenerateAsync([new(1, 1, "candle", "one candle", "apple", null)], "en", "playful");
         var palace = await new PalaceAssociationGenerator(client, options, NullLogger<PalaceAssociationGenerator>.Instance)
             .GenerateAsync([new(1, "apple", "desk", null)], "en", "vivid", false);
         Assert.Equal("ai", story.Source);
@@ -89,7 +89,7 @@ public sealed class OpenRouterGenerationTests
         using var client = new HttpClient(handler);
         var options = Options.Create(Settings());
         var story = await new NumberPegStoryGenerator(client, options, NullLogger<NumberPegStoryGenerator>.Instance)
-            .GenerateAsync([new(1, 1, "candle", "one candle", "apple", null, null)], "en", "playful");
+            .GenerateAsync([new(1, 1, "candle", "one candle", "apple", null)], "en", "playful");
         var palace = await new PalaceAssociationGenerator(client, options, NullLogger<PalaceAssociationGenerator>.Instance)
             .GenerateAsync([new(1, "apple", "desk", null)], "en", "vivid", false);
         Assert.Equal("template", story.Source);
@@ -105,7 +105,7 @@ public sealed class OpenRouterGenerationTests
         using var client = new HttpClient(handler);
         var options = Options.Create(settings);
         var result = await new NumberPegStoryGenerator(client, options, NullLogger<NumberPegStoryGenerator>.Instance)
-            .GenerateAsync([new(1, 1, "candle", "one candle", "apple", null, null)], "en", "playful");
+            .GenerateAsync([new(1, 1, "candle", "one candle", "apple", null)], "en", "playful");
         Assert.Equal("template", result.Source);
         Assert.Equal(0, handler.Calls);
     }

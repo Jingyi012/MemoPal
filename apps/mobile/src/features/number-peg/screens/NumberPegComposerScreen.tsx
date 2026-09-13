@@ -55,8 +55,6 @@ type SceneDraft = {
   imageJobId?: string;
   answer: string;
   sceneText: string;
-  userDetail?: string;
-  creativeQuestion?: string;
   source?: string;
   recipe: PegSceneRecipe;
 };
@@ -94,12 +92,10 @@ const storyCopy = {
     another: '换个故事',
     editStory: '自己编辑',
     done: '完成编辑',
-    personalize: '加入我的元素',
-    explanation: '加入你熟悉的人、地点或物品，让故事更好记。',
-    detail: '比如：我家的猫、学校食堂',
-    refine: '融入故事',
-    preview: '新故事预览',
-    previewHint: '原故事还在上方。喜欢这个版本，再采用它。',
+    improveStory: 'AI 改进故事',
+    improveHint: '先编辑故事，再让 AI 帮你润色；原故事会保留供比较。',
+    preview: 'AI 改进预览',
+    previewHint: '你编辑后的原故事仍会保留。喜欢这个版本，再采用它。',
     useStory: '采用新故事',
     keepOriginal: '保留原故事',
     accept: '就记这个，下一张',
@@ -119,12 +115,10 @@ const storyCopy = {
     another: 'Try another story',
     editStory: 'Edit it myself',
     done: 'Finish editing',
-    personalize: 'Add my own elements',
-    explanation: 'Add a familiar person, place, or object to make the story easier to remember.',
-    detail: 'For example: my cat, the school cafeteria',
-    refine: 'Blend into story',
-    preview: 'New story preview',
-    previewHint: 'Your original story is still above. Adopt this version only if you prefer it.',
+    improveStory: 'Improve story with AI',
+    improveHint: 'Edit your story first, then let AI polish it. Your original stays available to compare.',
+    preview: 'AI improvement preview',
+    previewHint: 'Your edited original is kept. Adopt this version only if you prefer it.',
     useStory: 'Use new story',
     keepOriginal: 'Keep original',
     accept: 'Keep this · next',
@@ -200,7 +194,6 @@ export default function NumberPegComposerScreen() {
   const generatingRef = useRef(false);
   const requestVersion = useRef(0);
   const generationController = useRef<AbortController | null>(null);
-  const [editDetail, setEditDetail] = useState(false);
   const [storyPreview, setStoryPreview] = useState<{ index: number; scene: SceneDraft } | null>(
     null
   );
@@ -252,7 +245,7 @@ export default function NumberPegComposerScreen() {
               pegKeyword: anchor.keyword,
               word: scene.answer,
               existingStory: scene.sceneText,
-              userDetail: preview ? scene.userDetail?.trim() || undefined : undefined,
+              improveExisting: preview,
             };
           }),
           skipConfirmation,
@@ -267,7 +260,6 @@ export default function NumberPegComposerScreen() {
             ? {
                 ...scene,
                 sceneText: suggestion.story,
-                creativeQuestion: suggestion.creativeQuestion ?? undefined,
                 source: suggestion.source,
                 recipe: {
                   ...scene.recipe,
@@ -280,8 +272,10 @@ export default function NumberPegComposerScreen() {
         if (preview) {
           const previewIndex = positions[0];
           if (!suggestions.has(previewIndex + 1)) throw new Error(copy.generationError);
-          if (suggestions.get(previewIndex + 1)?.source === 'ai')
+          if (suggestions.get(previewIndex + 1)?.source === 'ai') {
             setStoryPreview({ index: previewIndex, scene: nextScenes[previewIndex] });
+            setEditStory(false);
+          }
         } else setScenes(nextScenes);
         const acceptedCount = result.suggestions.filter((suggestion) => suggestion.source === 'ai').length;
         if (acceptedCount < positions.length) setMessage(language === 'zh'
@@ -476,7 +470,6 @@ export default function NumberPegComposerScreen() {
     if (generatingRef.current || savingRef.current) return;
     setIndex(sceneIndex);
     setStoryPreview(null);
-    setEditDetail(false);
     setEditStory(false);
     setMessage(null);
   };
@@ -724,7 +717,6 @@ export default function NumberPegComposerScreen() {
                     accessibilityState={{ expanded: editStory }}
                     onPress={() => {
                       setEditStory(!editStory);
-                      setEditDetail(false);
                     }}
                     style={[
                       styles.storyAction,
@@ -739,57 +731,25 @@ export default function NumberPegComposerScreen() {
                     </Text>
                   </AnimatedPressable>
                 </View>
-                <AnimatedPressable
-                  disabled={isGenerating || isSaving}
-                  accessibilityState={{ expanded: editDetail }}
-                  onPress={() => {
-                    setEditDetail(!editDetail);
-                    setEditStory(false);
-                  }}
-                  style={[
-                    styles.storyAction,
-                    editDetail && styles.storyActionActive,
-                    (isGenerating || isSaving) && styles.disabled,
-                  ]}>
-                  <Text accessible={false} style={styles.storyActionIcon}>
-                    ✨
-                  </Text>
-                  <Text style={styles.storyActionText}>{copy.personalize}</Text>
-                </AnimatedPressable>
+                {(editStory || current.source === 'manual') && (
+                  <>
+                    <Text style={styles.sectionHint}>{copy.improveHint}</Text>
+                    <AnimatedPressable
+                      disabled={isGenerating || isSaving || !current.sceneText.trim()}
+                      onPress={() => void generate(scenes, [index], true)}
+                      style={[
+                        styles.storyAction,
+                        styles.improveStoryAction,
+                        (isGenerating || isSaving || !current.sceneText.trim()) && styles.disabled,
+                      ]}>
+                      <Text accessible={false} style={styles.storyActionIcon}>✨</Text>
+                      <Text style={styles.storyActionText}>{copy.improveStory}</Text>
+                    </AnimatedPressable>
+                  </>
+                )}
               </View>
             )}
           </View>
-          {editDetail && !storyPreview && !isGenerating ? (
-            <View style={styles.customEditor}>
-              <Text style={styles.sectionHint}>{copy.explanation}</Text>
-              <TextInput
-                multiline
-                maxLength={500}
-                editable={!isGenerating && !isSaving}
-                accessibilityLabel={copy.personalize}
-                value={current.userDetail ?? ''}
-                onChangeText={(value) =>
-                  setScenes((all) =>
-                    all.map((scene, i) => (i === index ? { ...scene, userDetail: value } : scene))
-                  )
-                }
-                placeholder={copy.detail}
-                placeholderTextColor={theme.inkSoft}
-                style={[styles.input, styles.customInput]}
-              />
-              <AnimatedPressable
-                disabled={isGenerating || isSaving || !current.userDetail?.trim()}
-                onPress={() => void generate(scenes, [index], true)}
-                style={[
-                  styles.replay,
-                  (isGenerating || !current.userDetail?.trim()) && styles.disabled,
-                ]}>
-                <Text style={styles.replayText}>
-                  {isGenerating ? copy.generating : copy.refine}
-                </Text>
-              </AnimatedPressable>
-            </View>
-          ) : null}
           {storyPreview ? (
             <View style={styles.customEditor} accessibilityLiveRegion="polite">
               <Text style={styles.heading}>{copy.preview}</Text>
@@ -802,7 +762,7 @@ export default function NumberPegComposerScreen() {
                     all.map((scene, i) => (i === storyPreview.index ? storyPreview.scene : scene))
                   );
                   setStoryPreview(null);
-                  setEditDetail(false);
+                  setEditStory(false);
                   setMessage(null);
                 }}>
                 <Text style={styles.buttonText}>{copy.useStory}</Text>
@@ -811,7 +771,7 @@ export default function NumberPegComposerScreen() {
                 style={styles.replay}
                 onPress={() => {
                   setStoryPreview(null);
-                  setEditDetail(false);
+                  setEditStory(false);
                   setMessage(null);
                 }}>
                 <Text style={styles.replayText}>{copy.keepOriginal}</Text>
@@ -1173,6 +1133,7 @@ const useStyles = createThemedStyles((theme) =>
       gap: 8,
     },
     storyActionActive: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint },
+    improveStoryAction: { borderColor: theme.violetLine, backgroundColor: theme.violetTint },
     storyActionIcon: { fontSize: 17 },
     storyActionText: {
       color: theme.ink,

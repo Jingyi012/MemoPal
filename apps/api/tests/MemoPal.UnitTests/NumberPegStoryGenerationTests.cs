@@ -20,7 +20,7 @@ public sealed class NumberPegStoryGenerationTests
         var generator = new NumberPegStoryGenerator(new HttpClient(handler), Options.Create(new AiTextGenerationOptions {
             Provider = "openrouter", Model = "test-model", ApiKey = "test-key", Endpoint = "https://openrouter.ai/api/v1/chat/completions"
         }), NullLogger<NumberPegStoryGenerator>.Instance);
-        var result = await generator.GenerateAsync([new(1, 1, "蜡烛", "一支蜡烛", "红色", null, null)], "zh", "playful");
+        var result = await generator.GenerateAsync([new(1, 1, "蜡烛", "一支蜡烛", "红色", null)], "zh", "playful");
         Assert.Equal("ai", result.Source);
         Assert.Equal("红色的蜡烛跳进喷泉。", result.Suggestions.Single().Story);
         Assert.Equal(2, handler.Requests.Count);
@@ -29,6 +29,26 @@ public sealed class NumberPegStoryGenerationTests
         Assert.Contains("红色", prompt);
         Assert.Contains("蜡烛", prompt);
         Assert.DoesNotContain("\\u", prompt);
+    }
+
+    [Fact]
+    public async Task OpenRouterImprovesEditedStoryInsteadOfReplacingItsCoreIdea()
+    {
+        const string editedStory = "A red candle melts beside an old window while an apple sails past.";
+        var handler = new QueueHttpHandler(OpenRouterResponse("""{"suggestions":[{"position":1,"story":"A red candle flickers beside the old window as an apple sails past."}]}"""));
+        var generator = new NumberPegStoryGenerator(new HttpClient(handler), Options.Create(new AiTextGenerationOptions {
+            Provider = "openrouter", Model = "test-model", ApiKey = "test-key", Endpoint = "https://openrouter.ai/api/v1/chat/completions"
+        }), NullLogger<NumberPegStoryGenerator>.Instance);
+
+        var result = await generator.GenerateAsync([Item() with { ExistingStory = editedStory, ImproveExisting = true }], "en", "playful");
+
+        Assert.Equal("ai", result.Source);
+        Assert.Equal("A red candle flickers beside the old window as an apple sails past.", result.Suggestions.Single().Story);
+        var prompt = handler.RequestBodies.Single();
+        Assert.Contains(editedStory, prompt);
+        Assert.Contains("improveExisting", prompt);
+        Assert.Contains("When improveExisting is true", prompt);
+        Assert.Contains("Preserve its core event, setting, and useful concrete details", prompt);
     }
 
     [Fact]
@@ -55,7 +75,7 @@ public sealed class NumberPegStoryGenerationTests
     public async Task FailedRefinementsPreserveOriginalAcrossRepeatedRetries(string locale)
     {
         var original = "A candle hugs apple beside the candle peg";
-        var item = Item() with { ExistingStory = original, UserDetail = "red scarf" };
+        var item = Item() with { ExistingStory = original, ImproveExisting = true };
         for (var attempt = 0; attempt < 5; attempt++)
         {
             var generator = CreateGenerator(new QueueHttpHandler(new HttpResponseMessage(HttpStatusCode.BadRequest)));
@@ -162,7 +182,7 @@ public sealed class NumberPegStoryGenerationTests
             Endpoint = "http://localhost/api/chat"
         });
         var generator = new NumberPegStoryGenerator(new HttpClient(handler), options, NullLogger<NumberPegStoryGenerator>.Instance);
-        var refined = Item(1) with { ExistingStory = new string('o', 100), UserDetail = "my red scarf" };
+        var refined = Item(1) with { ExistingStory = new string('o', 100), ImproveExisting = true };
 
         var result = await generator.GenerateAsync([refined, Item(2)], "en", "playful");
 
@@ -170,8 +190,8 @@ public sealed class NumberPegStoryGenerationTests
         Assert.Equal(refined.ExistingStory, result.Suggestions[0].Story);
         Assert.True(result.Suggestions[0].Story.Length <= 1000);
         Assert.Equal(2, handler.Requests.Count);
-        Assert.Contains("my red scarf", handler.RequestBodies[0]);
         Assert.Contains("existingStory", handler.RequestBodies[0], StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("improveExisting", handler.RequestBodies[0], StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -183,7 +203,7 @@ public sealed class NumberPegStoryGenerationTests
             Items = [new NumberPegStoryItemInput
             {
                 Position = 1, PegNumber = 1, PegKeyword = "candle", Word = "apple",
-                ExistingStory = new string('o', 500), UserDetail = new string('d', 500)
+                ExistingStory = new string('o', 850), ImproveExisting = true
             }]
         };
 
@@ -197,7 +217,7 @@ public sealed class NumberPegStoryGenerationTests
         Options.Create(new AiTextGenerationOptions { Provider = "ollama", Model = "test-model", Endpoint = "http://localhost/api/chat" }),
         NullLogger<NumberPegStoryGenerator>.Instance);
 
-    private static NumberPegStoryGenerationItem Item(int position = 1) => new(position, position, "candle", "one candle", "apple", null, null);
+    private static NumberPegStoryGenerationItem Item(int position = 1) => new(position, position, "candle", "one candle", "apple", null);
     private static HttpResponseMessage JsonResponse(string content) => new(HttpStatusCode.OK)
     {
         Content = new StringContent(content, Encoding.UTF8, "application/json")

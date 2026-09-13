@@ -15,8 +15,8 @@ public sealed class NumberPegStoryItemInput
     public string Word { get; set; } = string.Empty;
     public string PegKeyword { get; set; } = string.Empty;
     public string PegDescription { get; set; } = string.Empty;
-    public string? UserDetail { get; set; }
     public string? ExistingStory { get; set; }
+    public bool ImproveExisting { get; set; }
 }
 public sealed record NumberPegStorySuggestionDto(int Position, string Story, string? CreativeQuestion, string Source = "template");
 public sealed record GenerateNumberPegStoriesResponse(IReadOnlyList<NumberPegStorySuggestionDto> Suggestions, int RequestedCount, int GeneratedCount, string Source);

@@ -27,18 +27,17 @@ public sealed class GenerateNumberPegStoriesCommandHandler(INumberPegStoryGenera
             var word = item.Word?.Trim() ?? string.Empty;
             var keyword = item.PegKeyword?.Trim() ?? string.Empty;
             var description = item.PegDescription?.Trim() ?? string.Empty;
-            var detail = item.UserDetail?.Trim();
             var existing = item.ExistingStory?.Trim();
             if (item.Position is < 1 or > 100 || !seen.Add(item.Position) || item.PegNumber is < 1 or > 100 || string.IsNullOrWhiteSpace(word) || string.IsNullOrWhiteSpace(keyword)) throw new ValidationAppException("Each number peg story needs a unique position, peg, anchor, and word.");
-            if (word.Length > 500 || keyword.Length > 200 || description.Length > 500 || detail?.Length > 500 || existing?.Length > 1000)
+            if (word.Length > 500 || keyword.Length > 200 || description.Length > 500 || existing?.Length > 1000)
             {
                 throw new ValidationAppException("Number peg story input is too long.");
             }
-            if ((existing?.Length ?? 0) + (detail?.Length ?? 0) + word.Length + keyword.Length > 850)
+            if ((existing?.Length ?? 0) + word.Length + keyword.Length > 850)
             {
-                throw new ValidationAppException("The existing story and user detail are too long to keep the refined story under 1000 characters.");
+                throw new ValidationAppException("The existing story is too long to keep the refined story under 1000 characters.");
             }
-            items.Add(new(item.Position, item.PegNumber, keyword, description, word, detail, existing));
+            items.Add(new(item.Position, item.PegNumber, keyword, description, word, existing, item.ImproveExisting));
         }
         var locale = request.Request.Locale?.Trim().StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true ? "zh" : "en";
         var style = string.Equals(request.Request.Style?.Trim(), "vivid", StringComparison.OrdinalIgnoreCase) ? "vivid" : "playful";

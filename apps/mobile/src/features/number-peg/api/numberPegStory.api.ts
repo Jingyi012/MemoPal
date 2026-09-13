@@ -6,8 +6,8 @@ export type NumberPegStoryItem = {
   pegNumber: number;
   pegKeyword: string;
   word: string;
-  userDetail?: string | null;
   existingStory?: string | null;
+  improveExisting?: boolean;
 };
 export type GenerateNumberPegStoriesRequest = {
   requestId?: string;

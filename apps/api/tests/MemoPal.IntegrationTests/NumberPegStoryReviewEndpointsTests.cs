@@ -35,7 +35,7 @@ public sealed class NumberPegStoryReviewEndpointsTests(CustomWebApplicationFacto
                     position = 1, pegNumber = 1, pegKeyword = "Candle",
                     pegDescription = "A candle looks like one.", word = "passport",
                     existingStory = "Candle melts a passport at the airport.",
-                    userDetail = "The whole airport fills with wax."
+                    improveExisting = true
                 }
             }
         });
