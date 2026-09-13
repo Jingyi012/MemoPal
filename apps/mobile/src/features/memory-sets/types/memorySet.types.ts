@@ -61,6 +61,7 @@ export type MemorySet = {
   memoryFolderId?: string | null;
   title: string;
   description?: string | null;
+  emoji?: string | null;
   goalType: MemoryGoalType;
   techniqueKey: MemoryTechniqueKey;
   status: MemorySetStatus;
@@ -122,6 +123,7 @@ export type MemorySetUpsertRequest = {
   memoryFolderId?: string | null;
   title: string;
   description?: string | null;
+  emoji?: string | null;
   goalType: MemoryGoalType;
   techniqueKey: MemoryTechniqueKey;
   status: MemorySetStatus;

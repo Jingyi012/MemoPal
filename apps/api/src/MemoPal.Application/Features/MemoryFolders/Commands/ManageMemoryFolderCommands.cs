@@ -32,7 +32,13 @@ public sealed class CreateMemoryFolderCommandHandler(IAppDbContext db)
         var name = NormalizeName(request.Request.Name);
         await EnsureNameAvailable(db, request.UserId, name, null, cancellationToken);
 
-        var folder = new MemoryFolder { UserId = request.UserId, Name = name };
+        var folder = new MemoryFolder
+        {
+            UserId = request.UserId,
+            Name = name,
+            Emoji = NormalizeEmoji(request.Request.Emoji),
+            Description = NormalizeDescription(request.Request.Description)
+        };
         await db.MemoryFolders.AddAsync(folder, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -47,6 +53,24 @@ public sealed class CreateMemoryFolderCommandHandler(IAppDbContext db)
         var normalized = name.Trim();
         if (normalized.Length > 200)
             throw new ValidationAppException("A folder name cannot exceed 200 characters.");
+
+        return normalized;
+    }
+
+    internal static string NormalizeEmoji(string? emoji)
+    {
+        var normalized = string.IsNullOrWhiteSpace(emoji) ? "📚" : emoji.Trim();
+        if (normalized.Length > 16)
+            throw new ValidationAppException("A collection emoji cannot exceed 16 characters.");
+
+        return normalized;
+    }
+
+    internal static string NormalizeDescription(string? description)
+    {
+        var normalized = description?.Trim() ?? string.Empty;
+        if (normalized.Length > 500)
+            throw new ValidationAppException("A collection description cannot exceed 500 characters.");
 
         return normalized;
     }
@@ -66,7 +90,8 @@ public sealed class CreateMemoryFolderCommandHandler(IAppDbContext db)
 
     internal static MemoryFolderDto ToDto(MemoryFolder folder)
     {
-        return new MemoryFolderDto(folder.Id, folder.Name, 0, 0, folder.CreatedAt, folder.UpdatedAt);
+        return new MemoryFolderDto(
+            folder.Id, folder.Name, folder.Emoji, folder.Description, 0, 0, folder.CreatedAt, folder.UpdatedAt);
     }
 }
 
@@ -86,6 +111,10 @@ public sealed class RenameMemoryFolderCommandHandler(IAppDbContext db)
             db, request.UserId, name, folder.Id, cancellationToken);
 
         folder.Name = name;
+        if (request.Request.Emoji is not null)
+            folder.Emoji = CreateMemoryFolderCommandHandler.NormalizeEmoji(request.Request.Emoji);
+        if (request.Request.Description is not null)
+            folder.Description = CreateMemoryFolderCommandHandler.NormalizeDescription(request.Request.Description);
         await db.SaveChangesAsync(cancellationToken);
 
         // Counts are deliberately projected by the server rather than trusting the request.
@@ -113,8 +142,7 @@ public sealed class DeleteMemoryFolderCommandHandler(IAppDbContext db)
             .ToListAsync(cancellationToken);
         foreach (var memorySet in memorySets)
         {
-            memorySet.MemoryFolderId = null;
-            memorySet.MemoryFolder = null;
+            db.MemorySets.Remove(memorySet);
         }
 
         db.MemoryFolders.Remove(folder);

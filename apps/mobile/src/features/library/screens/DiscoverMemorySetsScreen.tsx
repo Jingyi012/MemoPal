@@ -14,6 +14,7 @@ import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 type DiscoverMemorySetsScreenProps = { embedded?: boolean };
 
@@ -23,6 +24,7 @@ export function DiscoverMemorySetsScreen({ embedded = false }: DiscoverMemorySet
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const router = useRouter();
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const [search, setSearch] = useState('');
   const [techniqueKey, setTechniqueKey] = useState<CommunityMemorySetFilters['techniqueKey']>();
   const [goalType, setGoalType] = useState<CommunityMemorySetFilters['goalType']>();
@@ -89,8 +91,8 @@ export function DiscoverMemorySetsScreen({ embedded = false }: DiscoverMemorySet
         columnWrapperStyle={styles.cardRow}
         renderItem={({ item }) => <CommunityMemoryCard item={item} onPress={() => router.push(`/community/memory-sets/${item.id}` as Href)} t={t} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListEmptyComponent={query.isLoading ? <View style={styles.loading}><LoadingView description={t('discoverLoading')} /></View> : query.isError ? <View style={styles.empty}><Text style={styles.emptyEmoji}>🫧</Text><Text style={styles.emptyTitle}>{t('discoverUnavailable')}</Text><Text style={styles.emptyBody}>{t('connectionRetry')}</Text><AnimatedPressable onPress={() => void query.refetch()} style={styles.retry}><Text style={styles.retryText}>{t('retry')}</Text></AnimatedPressable></View> : <View style={styles.empty}><Text style={styles.emptyEmoji}>🌱</Text><Text style={styles.emptyTitle}>{t('discoverEmpty')}</Text><Text style={styles.emptyBody}>{t('discoverEmptyBody')}</Text></View>}
-        ListFooterComponent={query.hasNextPage ? <AnimatedPressable disabled={query.isFetchingNextPage} onPress={() => void query.fetchNextPage()} style={styles.loadMore}>{query.isFetchingNextPage ? <ActivityIndicator color={theme.violetDeep} /> : <><Text style={styles.loadMoreText}>{t('loadMore')}</Text><ArrowRight size={15} color={theme.violetDeep} /></>}</AnimatedPressable> : <View style={styles.footerSpace} />}
+        ListEmptyComponent={!isOffline && query.isLoading ? <View style={styles.loading}><LoadingView description={t('discoverLoading')} /></View> : canShowRequestErrors && query.isError ? <View style={styles.empty}><Text style={styles.emptyEmoji}>🫧</Text><Text style={styles.emptyTitle}>{t('discoverUnavailable')}</Text><Text style={styles.emptyBody}>{t('connectionRetry')}</Text><AnimatedPressable onPress={() => void query.refetch()} style={styles.retry}><Text style={styles.retryText}>{t('retry')}</Text></AnimatedPressable></View> : !isOffline ? <View style={styles.empty}><Text style={styles.emptyEmoji}>🌱</Text><Text style={styles.emptyTitle}>{t('discoverEmpty')}</Text><Text style={styles.emptyBody}>{t('discoverEmptyBody')}</Text></View> : null}
+        ListFooterComponent={!isOffline && query.hasNextPage ? <AnimatedPressable disabled={query.isFetchingNextPage} onPress={() => void query.fetchNextPage()} style={styles.loadMore}>{query.isFetchingNextPage ? <ActivityIndicator color={theme.violetDeep} /> : <><Text style={styles.loadMoreText}>{t('loadMore')}</Text><ArrowRight size={15} color={theme.violetDeep} /></>}</AnimatedPressable> : <View style={styles.footerSpace} />}
       />
     </View>
   );

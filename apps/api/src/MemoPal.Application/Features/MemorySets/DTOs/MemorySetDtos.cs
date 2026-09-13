@@ -53,6 +53,7 @@ public sealed record MemorySetDto(
     string Id,
     string Title,
     string? Description,
+    string? Emoji,
     string GoalType,
     string TechniqueKey,
     string Status,
@@ -71,6 +72,7 @@ public sealed class MemorySetUpsertRequest
     public string? MemoryFolderId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public string? Emoji { get; set; }
     public string GoalType { get; set; } = "custom";
     public string TechniqueKey { get; set; } = "number-peg";
     public string Status { get; set; } = "draft";

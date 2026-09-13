@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
+import { useTranslation } from '@/core/i18n/useTranslation';
 import { typography } from '@/theme/typography';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 
@@ -10,6 +11,7 @@ const RECONNECTED_MESSAGE_DURATION = 2_400;
 
 export function NetworkStatusBanner() {
   const { styles, theme } = useStyles();
+  const { t } = useTranslation('network');
   const { isOnline, isReady } = useNetworkStatus();
   const wasOffline = useRef(false);
   const [showReconnected, setShowReconnected] = useState(false);
@@ -65,9 +67,9 @@ export function NetworkStatusBanner() {
       style={[styles.banner, reconnected ? styles.reconnected : styles.offline, { opacity }]}>
       {reconnected ? <Wifi color={theme.successText} size={18} /> : <WifiOff color={theme.inkSoft} size={18} />}
       <View style={styles.copy}>
-        <Text style={styles.title}>{reconnected ? 'Back online' : 'You are offline'}</Text>
+        <Text style={styles.title}>{reconnected ? t('backOnline') : t('offline')}</Text>
         <Text style={styles.description}>
-          {reconnected ? 'Syncing your latest progress now.' : 'Saved lessons remain available on this device.'}
+          {reconnected ? t('syncing') : t('offlineDescription')}
         </Text>
       </View>
     </Animated.View>

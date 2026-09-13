@@ -3,6 +3,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
+import { MemoryVisibilityBadge } from '@/components/MemoryVisibilityBadge';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
 import { memopalThemes } from '@/theme/memopalTheme';
@@ -15,6 +16,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { TranslationKey } from '@/core/i18n/i18n';
 import { useColorScheme } from 'nativewind';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: string }) {
   const { styles, theme } = useStyles();
@@ -22,23 +24,24 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
   const { t } = useTranslation('memoryDetails');
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const query = useMemorySet(memorySetId);
   const historyQuery = usePracticeAttemptHistory(memorySetId);
 
-  if (query.isLoading) return <LoadingView description={t('title')} />;
+  if (!isOffline && query.isLoading) return <LoadingView description={t('title')} />;
 
-  if (query.isError || !query.data) {
+  if (!query.data) {
     return (
       <View style={styles.page}>
-        <CommonHeader eyebrow={t('eyebrow')} title={t('title')} description={t('unavailable')} backAction={() => router.back()} />
-        <View style={styles.centerState}>
+        <CommonHeader eyebrow={t('eyebrow')} title={t('title')} description={canShowRequestErrors ? t('unavailable') : undefined} backAction={() => router.back()} />
+        {canShowRequestErrors ? <View style={styles.centerState}>
           <ModuleNoticeCard
             emoji="🧩"
             title={t('loadError')}
             body={t('checkConnection')}
             onAction={() => query.refetch()}
           />
-        </View>
+        </View> : null}
       </View>
     );
   }
@@ -82,7 +85,7 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
                 {status === 'not-tried' ? <AlertCircle size={13} color={theme.inkSoft} /> : null}
                 {status === 'ready' ? <Circle size={11} color={theme.inkSoft} /> : null}
                 <Text style={[styles.readyText, status === 'needs-review' && styles.needsReviewText, status === 'not-tried' && styles.notTriedText]}>
-                  {statusLabel(status, t)}
+                  {memorySet.status === 'draft' ? t('statusDraft') : statusLabel(status, t)}
                 </Text>
               </View>
               </View>
@@ -91,6 +94,14 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
           })}
         </View>
 
+        {memorySet.status === 'draft' ? <AnimatedPressable style={styles.modeCard} onPress={() => router.push({
+          pathname: isPalace ? '/palaces/create-memory' : '/number-peg/create',
+          params: { memorySetId: memorySet.id, expectedVersion: String(memorySet.version), title: memorySet.title,
+            description: memorySet.description ?? '', memoryFolderId: memorySet.memoryFolderId ?? '', goalType: memorySet.goalType,
+            items: JSON.stringify(memorySet.items.slice().sort((a, b) => a.position - b.position).map((item) => item.answer)) },
+        } as Href)}>
+          <Text style={styles.modeTitle}>{t('draftSetup')}</Text>
+        </AnimatedPressable> : <>
         <View style={styles.modeSection}>
           <Text style={styles.modeSectionTitle}>{t('chooseMode')}</Text>
           <Text style={styles.modeSectionBody}>{t('chooseModeBody')}</Text>
@@ -115,6 +126,7 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
           <RefreshCcw size={16} color={theme.inkSoft} />
           <Text style={styles.secondaryButtonText}>{t('restartPractice')}</Text>
         </AnimatedPressable>
+        </>}
       </ScrollView>
     </View>
   );
@@ -135,16 +147,20 @@ function SummaryCard({
   return (
     <View style={styles.summaryCard}>
       <View style={[styles.summaryIcon, isPalace ? styles.summaryIconPalace : styles.summaryIconPeg]}>
-        <Text style={styles.techniqueEmoji}>{isPalace ? '🏰' : '🕯️'}</Text>
+        <Text style={styles.techniqueEmoji}>{memorySet.emoji || (isPalace ? '🏰' : '🕯️')}</Text>
       </View>
       <View style={styles.summaryCopy}>
         <Text style={[styles.techniqueLabel, isPalace ? styles.palaceLabel : styles.pegLabel]}>
           {isPalace ? t('techniquePalace') : t('techniqueNumberPeg')}
         </Text>
       <Text style={styles.summaryTitle}>{memorySet.title}</Text>
+      <View style={styles.visibilityRow}>
+        <Text style={styles.visibilityLabel}>{t('visibility')}</Text>
+        <MemoryVisibilityBadge visibility={memorySet.visibility} label={getVisibilityLabel(memorySet.visibility, t)} compact />
+      </View>
       <Text style={styles.summaryMeta}>{summaryMeta}</Text>
       <Text style={[styles.reviewSchedule, isReviewDue(latestAttempt) && styles.reviewScheduleDue]}>
-        {getReviewScheduleLabel(latestAttempt, t)}
+        {memorySet.status === 'draft' ? t('draftSetup') : getReviewScheduleLabel(latestAttempt, t)}
       </Text>
       </View>
     </View>
@@ -166,6 +182,12 @@ function statusLabel(status: ItemStatus, t: (key: TranslationKey<'memoryDetails'
     case 'not-tried': return t('statusNotTried');
     default: return t('statusReady');
   }
+}
+
+function getVisibilityLabel(visibility: MemorySet['visibility'], t: (key: TranslationKey<'memoryDetails'>) => string) {
+  if (visibility === 'public') return t('visibilityPublic');
+  if (visibility === 'unlisted') return t('visibilityUnlisted');
+  return t('visibilityPrivate');
 }
 
 function localizeItemPrompt(
@@ -192,6 +214,7 @@ function getSummaryMeta(
   t: (key: TranslationKey<'memoryDetails'>) => string,
 ) {
   const itemLabel = memorySet.items.length === 1 ? t('item') : t('items');
+  if (memorySet.status === 'draft') return `${memorySet.items.length} ${itemLabel} · ${t('statusDraft')}`;
   if (!latestAttempt) return `${memorySet.items.length} ${itemLabel} · ${t('readyToPractice')}`;
   const latestResponseByItem = new Map(
     latestAttempt.responses.map((response) => [response.memoryItemId, response]),
@@ -235,6 +258,8 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   palaceLabel: { color: theme.violetDeep },
   pegLabel: { color: theme.berryDeep },
   summaryTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 18, marginTop: 4 },
+  visibilityRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 7 },
+  visibilityLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
   summaryMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, marginTop: 3 },
   reviewSchedule: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 6 },
   reviewScheduleDue: { color: theme.berryDeep },

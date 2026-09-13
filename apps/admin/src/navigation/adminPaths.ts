@@ -8,6 +8,7 @@ export const adminPaths = {
   users: '/admin/users',
   communityMemorySets: '/admin/community-memory-sets',
   contentRoot: '/admin/content',
+  memoryCollections: '/admin/content/memory-collections',
   palaceScenes: '/admin/content/palace-scenes',
   predefinedMemoryLessons: '/admin/content/predefined-memory-lessons',
   predefinedMemoryLessonCategories: '/admin/content/predefined-memory-lesson-categories',

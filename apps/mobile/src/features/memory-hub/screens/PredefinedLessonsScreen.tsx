@@ -1,78 +1,198 @@
-import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
+import { MemoryLearningCard } from '@/components/MemoryLearningCard';
+import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { useInfinitePredefinedMemoryLessons } from '@/features/predefined-memory-lessons';
-import type { PredefinedMemoryLesson } from '@/features/predefined-memory-lessons';
+import {
+  usePredefinedMemoryLessons,
+} from '@/features/predefined-memory-lessons';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { Search } from 'lucide-react-native';
+import { ChevronRight, RefreshCcw, Search, Sparkles } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useMemoryCollections } from '@/features/predefined-memory-lessons/hooks/useMemoryCollections';
+import type { MemoryCollection } from '@/features/predefined-memory-lessons/api/memoryCollections.api';
+
+type LessonCollection = MemoryCollection & {
+  itemCount: number;
+};
 
 export default function PredefinedLessonsScreen({ embedded = false }: { embedded?: boolean }) {
   const { styles, theme } = useStyles();
   const router = useRouter();
   const { language, t } = useTranslation('practice');
-  const lessons = useInfinitePredefinedMemoryLessons();
-  const [categoryId, setCategoryId] = useState('all');
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
+  const lessonsQuery = usePredefinedMemoryLessons();
+  const collectionsQuery = useMemoryCollections();
   const [search, setSearch] = useState('');
-  const categories = useMemo(() => {
-    const map = new Map<string, PredefinedMemoryLesson['category']>();
-    (lessons.data?.pages.flatMap((page) => page.items) ?? []).forEach((lesson) => map.set(lesson.categoryId, lesson.category));
-    return [...map.values()].sort((a, b) => a.sortOrder - b.sortOrder);
-  }, [lessons.data]);
-  const allLessons = lessons.data?.pages.flatMap((page) => page.items) ?? [];
-  const visible = allLessons.filter((lesson) => {
-    const matchesCategory = categoryId === 'all' || lesson.categoryId === categoryId;
+
+  const collections = useMemo(() => {
+    return (collectionsQuery.data ?? []).map((collection): LessonCollection => ({
+      ...collection,
+      itemCount: collection.lessons.reduce((count, lesson) => count + lesson.items.length, 0),
+    }));
+  }, [collectionsQuery.data]);
+  const groupedLessonIds = new Set(collections.flatMap((collection) => collection.lessons.map((lesson) => lesson.id)));
+  const standaloneLessons = (lessonsQuery.data ?? []).filter((lesson) => !groupedLessonIds.has(lesson.id) &&
+    [lesson.titleEn, lesson.titleZh].some((title) => title.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())));
+
+  const visibleCollections = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
-    const matchesSearch = !query || [lesson.titleEn, lesson.titleZh, lesson.descriptionEn, lesson.descriptionZh]
-      .some((value) => value.toLocaleLowerCase().includes(query));
-    return matchesCategory && matchesSearch;
-  });
-  const columns = [visible.filter((_, index) => index % 2 === 0), visible.filter((_, index) => index % 2 === 1)];
+    if (!query) return collections;
+    return collections.filter(({ titleEn, titleZh, descriptionEn, descriptionZh, lessons }) => [
+      titleEn,
+      titleZh,
+      descriptionEn,
+      descriptionZh,
+      ...lessons.flatMap((lesson) => [lesson.titleEn, lesson.titleZh]),
+    ].some((value) => value.toLocaleLowerCase().includes(query)));
+  }, [collections, search]);
+
+  const entries = [
+    ...visibleCollections.map((collection) => ({ kind: 'collection' as const, collection })),
+    ...standaloneLessons.map((lesson) => ({ kind: 'lesson' as const, lesson })),
+  ];
+  const columns = [
+    entries.filter((_, index) => index % 2 === 0),
+    entries.filter((_, index) => index % 2 === 1),
+  ];
+
   return (
     <View style={styles.page}>
-      <CommonHeader eyebrow={t('tryLesson')} title={t('allLessons')} description={t('allLessonsBody')} {...(!embedded ? { backAction: () => router.back() } : {})} />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={lessons.isRefetching && !lessons.isFetchingNextPage} onRefresh={() => void lessons.refetch()} tintColor={theme.violetDeep} colors={[theme.violetDeep]} />} onScroll={({ nativeEvent }) => { const { layoutMeasurement, contentOffset, contentSize } = nativeEvent; if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 240 && lessons.hasNextPage && !lessons.isFetchingNextPage) void lessons.fetchNextPage(); }} scrollEventThrottle={200}>
-        <View style={styles.search}><Search size={18} color={theme.inkSoft} /><TextInput value={search} onChangeText={setSearch} placeholder={language === 'zh' ? '搜索课程' : 'Search lessons'} placeholderTextColor={theme.inkSoft} style={styles.searchInput} /></View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
-          {[{ id: 'all', name: t('all'), emoji: '' }, ...categories.map((c) => ({ id: c.id, name: language === 'zh' ? c.nameZh : c.nameEn, emoji: c.emoji }))].map((category) => (
-            <AnimatedPressable key={category.id} onPress={() => setCategoryId(category.id)} style={[styles.filter, categoryId === category.id && styles.filterActive]}>
-              <Text style={[styles.filterText, categoryId === category.id && styles.filterTextActive]}>{category.emoji ? `${category.emoji} ` : ''}{category.name}</Text>
-            </AnimatedPressable>
-          ))}
-        </ScrollView>
-        <View style={styles.grid}>
-          {columns.map((column, columnIndex) => <View key={columnIndex} style={styles.gridColumn}>
-          {column.map((lesson) => {
-            const title = language === 'zh' ? lesson.titleZh : lesson.titleEn;
-            const description = language === 'zh' ? lesson.descriptionZh : lesson.descriptionEn;
-            return <AnimatedPressable key={lesson.id} onPress={() => openLesson(router, lesson, language)} style={styles.card}>
-              <View style={styles.cardTop}><View style={[styles.emojiWrap, lesson.techniqueKey === 'palace' && styles.emojiWrapPalace]}><Text style={styles.emoji}>{lesson.emoji}</Text></View><View style={styles.badge}><Text style={styles.badgeText}>{lesson.techniqueKey === 'palace' ? t('palace') : t('numberPeg')}</Text></View></View>
-              <Text style={styles.title}>{title}</Text><Text numberOfLines={2} style={styles.description}>{description}</Text>
-              <View style={styles.meta}><Text style={styles.metaText}>{lesson.items.length} {lesson.items.length === 1 ? t('item') : t('items')}</Text></View>
-            </AnimatedPressable>;
-          })}
-          </View>)}
+      <CommonHeader
+        eyebrow={t('tryLesson')}
+        title={t('allLessons')}
+        description={t('lessonCollectionsBody')}
+        {...(!embedded ? { backAction: () => router.back() } : {})}
+      />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={(
+          <RefreshControl
+            refreshing={lessonsQuery.isRefetching || collectionsQuery.isRefetching}
+            onRefresh={() => void Promise.all([lessonsQuery.refetch(), collectionsQuery.refetch()])}
+            tintColor={theme.violetDeep}
+            colors={[theme.violetDeep]}
+          />
+        )}>
+        <View style={styles.search}>
+          <Search size={18} color={theme.inkSoft} />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder={t('searchCollections')}
+            placeholderTextColor={theme.inkSoft}
+            style={styles.searchInput}
+          />
         </View>
-        {lessons.isFetchingNextPage ? <Text style={styles.loadingMore}>{language === 'zh' ? '正在载入更多课程…' : 'Loading more lessons…'}</Text> : null}
+
+        {!isOffline && (lessonsQuery.isLoading || collectionsQuery.isLoading) ? (
+          <View style={styles.stateCard}><Text style={styles.stateText}>{t('loadingLessons')}</Text></View>
+        ) : canShowRequestErrors && (lessonsQuery.isError || collectionsQuery.isError) ? (
+          <ModuleNoticeCard
+            icon={<RefreshCcw size={22} color={theme.inkSoft} />}
+            title={t('lessonsUnavailable')}
+            body={t('lessonsUnavailableBody')}
+            actionLabel={t('tryAgain')}
+            onAction={() => Promise.all([lessonsQuery.refetch(), collectionsQuery.refetch()])}
+          />
+        ) : isOffline && !lessonsQuery.data && !collectionsQuery.data ? null : entries.length ? (
+          <View style={styles.grid}>
+            {columns.map((column, columnIndex) => (
+              <View key={columnIndex} style={styles.gridColumn}>
+                {column.map((entry, index) => {
+                  if (entry.kind === 'lesson') {
+                    const { lesson } = entry;
+                    const title = language === 'zh' ? lesson.titleZh : lesson.titleEn;
+                    return <MemoryLearningCard key={lesson.id}
+                      techniqueKey={lesson.techniqueKey}
+                      title={title}
+                      description={language === 'zh' ? lesson.descriptionZh : lesson.descriptionEn}
+                      metadata={`${lesson.items.length} ${t('items')}`}
+                      artwork={<Text style={styles.emoji}>{lesson.emoji}</Text>}
+                      accessibilityLabel={`${title}, ${lesson.techniqueKey === 'palace' ? t('palace') : t('numberPeg')}`}
+                      onPress={() => {
+                        const path = lesson.techniqueKey === 'palace' ? '/palaces/create-memory' : '/number-peg/create';
+                        router.push({ pathname: path, params: { title, emoji: lesson.emoji, goalType: lesson.goalType,
+                          items: JSON.stringify(lesson.items.slice().sort((a, b) => a.position - b.position)
+                            .map((item) => language === 'zh' ? item.contentZh : item.contentEn)) } } as Href);
+                      }} />;
+                  }
+                  const { collection } = entry;
+                  const name = language === 'zh' ? collection.titleZh : collection.titleEn;
+                  const description = language === 'zh'
+                    ? collection.descriptionZh
+                    : collection.descriptionEn;
+                  const tone = (index * 2 + columnIndex) % 4;
+                  return (
+                    <AnimatedPressable
+                      lively
+                      key={collection.id}
+                      accessibilityLabel={`${name}, ${collection.lessons.length} ${collection.lessons.length === 1 ? t('course') : t('courses')}`}
+                      accessibilityRole="button"
+                      onPress={() => router.push(`/lessons/${collection.id}?collection=1` as Href)}
+                      style={[
+                        styles.collectionCard,
+                        tone === 0 && styles.collectionCardViolet,
+                        tone === 1 && styles.collectionCardBerry,
+                        tone === 2 && styles.collectionCardSky,
+                        tone === 3 && styles.collectionCardSun,
+                      ]}>
+                      <View style={styles.artworkRow}>
+                        <View style={styles.emojiHalo}>
+                          <Text style={styles.emoji}>{collection.emoji}</Text>
+                        </View>
+                        <View style={styles.enterButton}>
+                          <ChevronRight size={18} color={theme.violetDeep} />
+                        </View>
+                      </View>
+                      <Text style={styles.collectionTitle}>{name}</Text>
+                      <Text numberOfLines={3} style={styles.collectionDescription}>{description}</Text>
+                      <View style={styles.collectionMeta}>
+                        <Sparkles size={13} color={theme.berryDeep} />
+                        <Text style={styles.collectionMetaText}>
+                          {collection.lessons.length} {collection.lessons.length === 1 ? t('course') : t('courses')} · {collection.itemCount} {t('items')}
+                        </Text>
+                      </View>
+                    </AnimatedPressable>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.stateCard}><Text style={styles.stateText}>{t('noCollections')}</Text></View>
+        )}
       </ScrollView>
     </View>
   );
 }
 
-function openLesson(router: ReturnType<typeof useRouter>, lesson: PredefinedMemoryLesson, language: 'en' | 'zh') {
-  const title = language === 'zh' ? lesson.titleZh : lesson.titleEn;
-  const items = lesson.items.map((item) => language === 'zh' ? item.contentZh : item.contentEn);
-  const path = lesson.techniqueKey === 'palace' ? '/palaces/create-memory' : '/number-peg/build';
-  router.push(`${path}?title=${encodeURIComponent(title)}&goalType=${lesson.goalType}&items=${encodeURIComponent(JSON.stringify(items))}` as Href);
-}
-
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 36 },
+  page: { flex: 1, backgroundColor: 'transparent' },
+  content: { padding: 16, paddingBottom: 36, gap: 16 },
   search: { height: 48, borderRadius: 16, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 8 },
-  searchInput: { flex: 1, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 }, filters: { gap: 8, paddingVertical: 16 },
-  filter: { borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, paddingHorizontal: 14, paddingVertical: 9, backgroundColor: theme.paper }, filterActive: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep }, filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 }, filterTextActive: { color: theme.onAccent },
-  grid: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' }, gridColumn: { flex: 1, gap: 12 }, card: { width: '100%', minHeight: 178, borderRadius: 18, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 13, shadowColor: theme.violetDeep, shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 2 }, cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, emojiWrap: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.berryTint }, emojiWrapPalace: { backgroundColor: theme.violetTint }, emoji: { color: theme.ink, fontSize: 27 }, badge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: theme.skyTint }, badgeText: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 9 }, title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 11 }, description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, marginTop: 5 }, meta: { marginTop: 16, gap: 8 }, metaText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 }, loadingMore: { textAlign: 'center', color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, paddingVertical: 18 },
+  searchInput: { flex: 1, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
+  grid: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+  gridColumn: { flex: 1, gap: 12 },
+  collectionCard: { width: '100%', minHeight: 205, borderRadius: 26, borderWidth: 1.5, padding: 14, shadowColor: theme.violetDeep, shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 2 },
+  collectionCardViolet: { backgroundColor: theme.violetTint, borderColor: theme.violetLine },
+  collectionCardBerry: { backgroundColor: theme.berryTint, borderColor: theme.berryLine },
+  collectionCardSky: { backgroundColor: theme.skyTint, borderColor: theme.skyLine },
+  collectionCardSun: { backgroundColor: theme.sunTint, borderColor: theme.sunLine },
+  lessonCard: { backgroundColor: theme.paper, borderColor: theme.line },
+  artworkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  emojiHalo: { width: 58, height: 58, borderRadius: 21, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-3deg' }] },
+  emoji: { fontSize: 31 },
+  enterButton: { width: 34, height: 34, borderRadius: 17, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
+  collectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17, lineHeight: 22, marginTop: 15 },
+  collectionDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11.5, lineHeight: 17, marginTop: 5 },
+  collectionMeta: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 14 },
+  collectionMetaText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  stateCard: { minHeight: 120, borderRadius: 22, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center', padding: 20 },
+  stateText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
 }));

@@ -41,6 +41,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 type SessionTab = 'scenes' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
@@ -86,6 +87,7 @@ export default function NumberPegSessionScreen({
   const { styles } = useStyles();
   const router = useRouter();
   const { language, t } = useTranslation('numberPeg');
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const memorySetQuery = useMemorySet(memorySetId);
   const history = usePracticeAttemptHistory(memorySetId);
   const pegs = useMemo(() => buildAllNumberPegItems(), []);
@@ -356,20 +358,20 @@ export default function NumberPegSessionScreen({
       restartRecall();
   };
 
-  if (memorySetQuery.isLoading) return <LoadingView description={t('loading')} />;
+  if (!isOffline && memorySetQuery.isLoading) return <LoadingView description={t('loading')} />;
 
-  if (memorySetQuery.isError || !memorySetQuery.data) {
+  if (!memorySetQuery.data) {
     return (
       <View style={styles.page}>
-        <CommonHeader title={t('title')} description={t('unavailable')} backAction={leaveSession} />
-        <View style={styles.centerState}>
+        <CommonHeader title={t('title')} description={canShowRequestErrors ? t('unavailable') : undefined} backAction={leaveSession} />
+        {canShowRequestErrors ? <View style={styles.centerState}>
           <ModuleNoticeCard
             emoji="🧩"
             title={t('unavailable')}
             body={getNumberPegErrorMessage(memorySetQuery.error, t('connection'))}
             onAction={() => memorySetQuery.refetch()}
           />
-        </View>
+        </View> : null}
       </View>
     );
   }

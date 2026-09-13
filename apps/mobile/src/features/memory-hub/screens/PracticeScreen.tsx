@@ -24,6 +24,7 @@ import { Plus, RefreshCcw } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 export default function PracticeScreen() {
   const { styles, theme } = useStyles();
@@ -31,6 +32,7 @@ export default function PracticeScreen() {
   const { language, t } = useTranslation('practice');
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const modules = useEnabledMemoryModules();
   const numberPegEnabled = modules.some((module) => module.key === 'number-peg');
   const palaceEnabled = modules.some((module) => module.key === 'palace');
@@ -177,9 +179,9 @@ export default function PracticeScreen() {
               </AnimatedPressable>
             ))}
           </ScrollView>
-          {lessons.isLoading ? (
+          {!isOffline && lessons.isLoading ? (
             <View style={styles.lessonLoading}><Text style={styles.emptyBody}>{t('loadingLessons')}</Text></View>
-          ) : lessons.isError ? (
+          ) : canShowRequestErrors && lessons.isError ? (
             <ModuleNoticeCard
               icon={<RefreshCcw size={22} color={theme.inkSoft} />}
               title={t('lessonsUnavailable')}
@@ -234,9 +236,9 @@ export default function PracticeScreen() {
           ))}
         </View>
 
-        {memorySets.isLoading ? (
+        {!isOffline && memorySets.isLoading ? (
           <View style={styles.emptyCard}><Text style={styles.emptyBody}>{t('recentPractice')}</Text></View>
-        ) : memorySets.isError ? (
+        ) : canShowRequestErrors && memorySets.isError ? (
           <ModuleNoticeCard
             icon={<RefreshCcw size={22} color={theme.inkSoft} />}
             title={t('recentPractice')}
@@ -284,7 +286,7 @@ function localizeLesson(lesson: PredefinedMemoryLesson, language: 'en' | 'zh') {
 
 function openLesson(router: ReturnType<typeof useRouter>, lesson: PredefinedMemoryLesson, language: 'en' | 'zh') {
   const localized = localizeLesson(lesson, language);
-  const path = lesson.techniqueKey === 'palace' ? '/palaces/create-memory' : '/number-peg/build';
+  const path = lesson.techniqueKey === 'palace' ? '/palaces/create-memory' : '/number-peg/create';
   router.push(`${path}?title=${encodeURIComponent(localized.title)}&goalType=${lesson.goalType}&items=${encodeURIComponent(JSON.stringify(localized.items))}` as Href);
 }
 

@@ -16,8 +16,8 @@ public sealed class AiImageWorker(IServiceScopeFactory scopes, ILogger<AiImageWo
         {
             try
             {
-                await ProcessNextAsync(stoppingToken);
-                await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
+                var didWork = await ProcessNextAsync(stoppingToken);
+                await Task.Delay(didWork ? TimeSpan.FromSeconds(3) : TimeSpan.FromSeconds(15), stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
             catch (Exception ex)
@@ -28,7 +28,7 @@ public sealed class AiImageWorker(IServiceScopeFactory scopes, ILogger<AiImageWo
         }
     }
 
-    public async Task ProcessNextAsync(CancellationToken ct)
+    public async Task<bool> ProcessNextAsync(CancellationToken ct)
     {
         using var scope = scopes.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -38,11 +38,12 @@ public sealed class AiImageWorker(IServiceScopeFactory scopes, ILogger<AiImageWo
             (x.Status == "reserved" || x.Status == "processing") && x.LeaseExpiresAt <= now)
             .Select(x => x.UserId)
             .Union(db.AiCreditGrants.Where(x => x.Remaining > 0 && x.ExpiresAt <= now).Select(x => x.UserId))
+            .OrderBy(userId => userId)
             .Take(20).ToListAsync(ct);
         foreach (var user in expiredUsers) await credits.ReconcileAsync(user, ct);
         var candidate = await db.AiGenerations.AsNoTracking().Where(x => x.Kind == "number-peg-image" && x.Status == "reserved")
             .OrderBy(x => x.CreatedAt).Select(x => new { x.Id, x.UserId }).FirstOrDefaultAsync(ct);
-        if (candidate is null) return;
+        if (candidate is null) return expiredUsers.Count > 0;
         var input = await credits.LockedAsync(candidate.UserId, async () =>
         {
             var job = await db.AiGenerations.SingleAsync(x => x.Id == candidate.Id, ct);
@@ -51,7 +52,7 @@ public sealed class AiImageWorker(IServiceScopeFactory scopes, ILogger<AiImageWo
             job.LeaseExpiresAt = DateTime.UtcNow.AddMinutes(5);
             return JsonSerializer.Deserialize<NumberPegImageInput>(job.InputJson!, new JsonSerializerOptions(JsonSerializerDefaults.Web));
         }, ct);
-        if (input is null) return;
+        if (input is null) return true;
         try
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -66,5 +67,6 @@ public sealed class AiImageWorker(IServiceScopeFactory scopes, ILogger<AiImageWo
             logger.LogWarning(ex, "AI image generation failed. ReasonType={ReasonType} Error={Error}",
                 ex.GetType().Name, ex.Message);
         }
+        return true;
     }
 }

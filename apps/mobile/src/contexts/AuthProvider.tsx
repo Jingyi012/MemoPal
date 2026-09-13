@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (!cancelled) {
             setUser(remoteUser);
           }
-          await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
+          queryClient.setQueryData(CURRENT_USER_KEYS.all, remoteUser);
         } catch (error) {
           const statusCode = (error as ApiClientError | undefined)?.statusCode;
           const shouldInvalidateSession = statusCode === 401 || statusCode === 403;
@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               AsyncStorage.multiRemove([AUTH_STORAGE_KEY, USER_STATE_STORAGE_KEY]),
               clearAuthTokens(),
             ]);
-            await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
+            queryClient.removeQueries({ queryKey: CURRENT_USER_KEYS.all });
             if (!cancelled) {
               setUser(null);
             }
@@ -206,7 +206,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     ]);
 
     setUser(sessionUser);
-    await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
+    queryClient.setQueryData(CURRENT_USER_KEYS.all, sessionUser);
   };
 
   const login = async (req: LoginRequest) => {

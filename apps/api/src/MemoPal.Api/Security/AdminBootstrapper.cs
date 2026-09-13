@@ -10,8 +10,7 @@ namespace MemoPal.Api.Security;
 
 /// <summary>
 /// Seeds the minimum data required to operate a fresh MemoPal environment,
-/// including the curated starter Palace catalog. User-created content remains
-/// managed through the API and admin application.
+/// including the curated starter Palace catalog.
 /// </summary>
 public sealed class AdminBootstrapper
 {
@@ -271,13 +270,17 @@ public sealed class AdminBootstrapper
     private async Task EnsurePredefinedMemoryLessonsAsync(CancellationToken cancellationToken)
     {
         var categories = await _db.PredefinedMemoryLessonCategories
-            .Where(x => !x.IsDeleted)
             .ToDictionaryAsync(x => x.Id, cancellationToken);
-        if (categories.Count == 0) return;
+        EnsureCountriesLessonCategory(categories);
 
         foreach (var definition in GetPredefinedMemoryLessons())
         {
-            if (!categories.ContainsKey(definition.CategoryId)) continue;
+            if (!categories.TryGetValue(definition.CategoryId, out var category) ||
+                category.IsDeleted ||
+                !category.IsActive)
+            {
+                continue;
+            }
 
             var existing = await _db.PredefinedMemoryLessons
                 .Include(x => x.Items)
@@ -323,6 +326,85 @@ public sealed class AdminBootstrapper
                 ApplyPredefinedMemoryLessonSeed(existing, definition);
             }
         }
+        const string countriesId = "collection-countries";
+        if (!await _db.PredefinedMemoryCollections.AnyAsync(x => x.Id == countriesId, cancellationToken))
+        {
+            _db.PredefinedMemoryCollections.Add(new PredefinedMemoryCollection
+            {
+                Id = countriesId, TitleEn = "Countries", TitleZh = "国家",
+                DescriptionEn = "Explore countries, one region at a time.", DescriptionZh = "按地区探索世界各国。",
+                Emoji = "🌏", CategoryId = "lesson-category-countries", IsPublished = true, SortOrder = 10,
+                CreatedBy = "system", UpdatedBy = "system",
+                Lessons = [
+                    new() { CollectionId = countriesId, LessonId = "lesson-countries-asia-10", Position = 1 },
+                    new() { CollectionId = countriesId, LessonId = "lesson-countries-europe-15", Position = 2 }
+                ]
+            });
+        }
+    }
+
+    private void EnsureCountriesLessonCategory(
+        IDictionary<string, PredefinedMemoryLessonCategory> categories)
+    {
+        const string categoryId = "lesson-category-countries";
+        var now = DateTime.UtcNow;
+        if (!categories.TryGetValue(categoryId, out var category))
+        {
+            category = new PredefinedMemoryLessonCategory
+            {
+                Id = categoryId,
+                Key = "countries",
+                NameEn = "Countries",
+                NameZh = "国家",
+                DescriptionEn = "Country lists grouped by region.",
+                DescriptionZh = "按地区整理的国家清单。",
+                Emoji = "🌏",
+                SortOrder = 45,
+                IsActive = true,
+                Version = 1,
+                CreatedAt = now,
+                UpdatedAt = now,
+                CreatedBy = "system",
+                UpdatedBy = "system"
+            };
+            categories[categoryId] = category;
+            _db.PredefinedMemoryLessonCategories.Add(category);
+            return;
+        }
+
+        if (category.CreatedBy != "system")
+        {
+            return;
+        }
+
+        var changed = category.Key != "countries" ||
+            category.NameEn != "Countries" ||
+            category.NameZh != "国家" ||
+            category.DescriptionEn != "Country lists grouped by region." ||
+            category.DescriptionZh != "按地区整理的国家清单。" ||
+            category.Emoji != "🌏" ||
+            category.SortOrder != 45 ||
+            !category.IsActive ||
+            category.IsDeleted;
+        if (!changed)
+        {
+            return;
+        }
+
+        category.Key = "countries";
+        category.NameEn = "Countries";
+        category.NameZh = "国家";
+        category.DescriptionEn = "Country lists grouped by region.";
+        category.DescriptionZh = "按地区整理的国家清单。";
+        category.Emoji = "🌏";
+        category.SortOrder = 45;
+        category.IsActive = true;
+        category.IsDeleted = false;
+        category.DeletedAt = null;
+        category.DeletedBy = null;
+        category.Version = Math.Max(category.Version + 1, 1);
+        category.UpdatedAt = now;
+        category.UpdatedBy = "system";
     }
 
     private static void ApplyPredefinedMemoryLessonSeed(
@@ -515,6 +597,14 @@ public sealed class AdminBootstrapper
             "Build a Palace route for six country-and-capital pairs.", "为六组国家和首都建立一条宫殿路线。", "🌐",
             "lesson-category-geography", MemoryTechniqueKeys.Palace, MemoryGoalTypes.Facts, 80, false,
             [new("Malaysia — Kuala Lumpur", "马来西亚 — 吉隆坡"), new("Japan — Tokyo", "日本 — 东京"), new("Egypt — Cairo", "埃及 — 开罗"), new("Canada — Ottawa", "加拿大 — 渥太华"), new("Australia — Canberra", "澳大利亚 — 堪培拉"), new("Norway — Oslo", "挪威 — 奥斯陆")]),
+        new("lesson-countries-asia-10", "countries-asia-10", "10 Asian Countries", "亚洲 10 国",
+            "Remember ten Asian countries in order.", "按顺序记住十个亚洲国家。", "🌏",
+            "lesson-category-countries", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 10, false,
+            [new("China", "中国"), new("Japan", "日本"), new("South Korea", "韩国"), new("India", "印度"), new("Thailand", "泰国"), new("Vietnam", "越南"), new("Malaysia", "马来西亚"), new("Singapore", "新加坡"), new("Indonesia", "印度尼西亚"), new("Philippines", "菲律宾")]),
+        new("lesson-countries-europe-15", "countries-europe-15", "15 European Countries", "欧洲 15 国",
+            "Remember fifteen European countries in order.", "按顺序记住十五个欧洲国家。", "🗺️",
+            "lesson-category-countries", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 20, false,
+            [new("United Kingdom", "英国"), new("France", "法国"), new("Germany", "德国"), new("Italy", "意大利"), new("Spain", "西班牙"), new("Portugal", "葡萄牙"), new("Netherlands", "荷兰"), new("Belgium", "比利时"), new("Switzerland", "瑞士"), new("Austria", "奥地利"), new("Sweden", "瑞典"), new("Norway", "挪威"), new("Denmark", "丹麦"), new("Finland", "芬兰"), new("Greece", "希腊")]),
         new("lesson-general-weather-week", "general-weather-week", "Weather Week", "一周天气",
             "Remember seven weather words for the week.", "记住一周会用到的七个天气词。", "☀️",
             "lesson-category-general", MemoryTechniqueKeys.NumberPeg, MemoryGoalTypes.OrderedList, 85, false,

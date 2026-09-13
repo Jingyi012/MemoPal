@@ -22,6 +22,7 @@ import { TodayReviewCard } from '../components/TodayReviewCard';
 import { UpcomingReviewCard } from '../components/UpcomingReviewCard';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 export default function HomeScreen() {
   const { styles } = useStyles();
@@ -29,6 +30,7 @@ export default function HomeScreen() {
   const { t } = useTranslation('home');
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const { user } = useCurrentUser();
   const memorySets = useMemorySets();
   const dueReviews = useDueMemoryReviews();
@@ -112,9 +114,9 @@ export default function HomeScreen() {
           />
         ) : null}
 
-        {memorySets.isLoading ? (
+        {!isOffline && memorySets.isLoading ? (
           <View style={styles.loadingFrame}><LoadingView description={t('loading')} /></View>
-        ) : memorySets.isError ? (
+        ) : canShowRequestErrors && memorySets.isError ? (
           <ModuleNoticeCard
             title={t('recentError')}
             body={t('retry')}

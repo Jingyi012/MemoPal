@@ -35,6 +35,7 @@ import { firstParam, parseComposerGoal, parseComposerItems, parseComposerOrigin,
 import type { ComposerOrigin } from '@/features/memory-composer/utils/techniqueRecommendation';
 import { ComposerProgress } from '@/features/memory-composer/components/ComposerProgress';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 type ComposerStep = 'setup' | 'place';
 const MAX_PALACE_ITEMS = 100;
@@ -42,18 +43,24 @@ const MAX_PALACE_ITEMS = 100;
 export default function PalaceMemoryComposerScreen() {
   const { language, t } = useTranslation('palace');
   const { styles, theme } = useStyles();
+  const { canShowRequestErrors } = useNetworkStatus();
   const router = useRouter();
   const params = useLocalSearchParams<{
     title?: string | string[];
+    emoji?: string | string[];
     items?: string | string[];
     goalType?: string | string[];
     sceneId?: string | string[];
     origin?: string | string[];
     memoryFolderId?: string | string[];
+    memorySetId?: string | string[];
+    expectedVersion?: string | string[];
+    description?: string | string[];
   }>();
   const scenesQuery = usePalaceScenes();
   const { user, isLoading: isUserLoading } = useCurrentUser();
-  const { createMemorySet } = useMemorySetMutations();
+  const { createMemorySet, updateMemorySet } = useMemorySetMutations();
+  const editingMemorySetId = firstParam(params.memorySetId);
   const generatePalaceAssociations = useGeneratePalaceAssociations();
   const prefilledItems = useMemo(() => parseComposerItems(params.items), [params.items]);
   const fromSharedComposer = prefilledItems.length > 0;
@@ -68,7 +75,7 @@ export default function PalaceMemoryComposerScreen() {
   const [activeLocusIndex, setActiveLocusIndex] = useState(0);
   const [selectedSceneId, setSelectedSceneId] = useState(() => firstParam(params.sceneId) ?? '');
   const origin: ComposerOrigin = parseComposerOrigin(params.origin);
-  const memoryFolderId = firstParam(params.memoryFolderId);
+  const memoryFolderId = firstParam(params.memoryFolderId) || undefined;
   const availableScenes = useMemo(
     () => getAvailablePalaceScenes(scenesQuery.data ?? [], Boolean(user?.isPremium)),
     [scenesQuery.data, user?.isPremium],
@@ -379,6 +386,9 @@ export default function PalaceMemoryComposerScreen() {
       try {
         const request: MemorySetUpsertRequest = {
           memoryFolderId,
+          description: firstParam(params.description),
+          emoji: firstParam(params.emoji),
+          expectedVersion: editingMemorySetId ? Number(firstParam(params.expectedVersion)) : undefined,
           title: normalizedTitle,
           goalType,
           techniqueKey: 'palace',
@@ -400,7 +410,9 @@ export default function PalaceMemoryComposerScreen() {
             }),
           },
         };
-        const created = await createMemorySet.mutateAsync(request);
+        const created = editingMemorySetId
+          ? await updateMemorySet.mutateAsync({ memorySetId: editingMemorySetId, request })
+          : await createMemorySet.mutateAsync(request);
         if (created) {
           const returnTo = fromSharedComposer ? 'practice' : 'palaces';
           router.replace(`/palaces/memory/${created.id}?returnTo=${returnTo}` as Href);
@@ -411,9 +423,9 @@ export default function PalaceMemoryComposerScreen() {
     })();
   };
 
-  const error = createMemorySet.isError
+  const error = updateMemorySet.isError ? getNumberPegErrorMessage(updateMemorySet.error, t('couldNotSave')) : createMemorySet.isError
     ? getNumberPegErrorMessage(createMemorySet.error, t('couldNotSave'))
-    : scenesQuery.isError
+    : canShowRequestErrors && scenesQuery.isError
       ? getNumberPegErrorMessage(scenesQuery.error, t('couldNotLoad'))
       : null;
 
@@ -696,7 +708,7 @@ export default function PalaceMemoryComposerScreen() {
         {(message || error) && <View style={styles.errorCard}><Text style={styles.errorText}>{message ?? error}</Text></View>}
         {step === 'place' && (
           <View style={styles.fullWidthButton}>
-            <AnimatedPressable disabled={createMemorySet.isPending} onPress={save} style={[styles.saveButton, createMemorySet.isPending && { opacity: 0.5 }]}>
+            <AnimatedPressable disabled={createMemorySet.isPending || updateMemorySet.isPending} onPress={save} style={[styles.saveButton, (createMemorySet.isPending || updateMemorySet.isPending) && { opacity: 0.5 }]}>
               <Check size={19} color={theme.onSun} /><Text style={styles.saveText}>{createMemorySet.isPending ? t('saving') : error ? t('trySavingAgain') : t('savePalace')}</Text><ArrowRight size={18} color={theme.onSun} />
             </AnimatedPressable>
           </View>

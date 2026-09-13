@@ -46,11 +46,11 @@ public sealed class AiCreditEndpointsTests : IClassFixture<AiCreditEndpointsTest
         var id = reserved.GetProperty("id").GetString();
         Assert.Equal(10, (await Data(await user.GetAsync("/v1/ai-credits"))).GetProperty("available").GetInt32());
         var callsBefore = factory.Provider.Calls;
-        await Worker().ProcessNextAsync(default);
+        Assert.True(await Worker().ProcessNextAsync(default));
         var replay = await Data(await user.PostAsJsonAsync("/v1/ai-credits/number-peg-images", request));
         Assert.Equal(id, replay.GetProperty("id").GetString());
         Assert.Equal("completed", replay.GetProperty("status").GetString());
-        await Worker().ProcessNextAsync(default);
+        Assert.False(await Worker().ProcessNextAsync(default));
         Assert.Equal(callsBefore + 1, factory.Provider.Calls);
         var path = $"/v1/ai-credits/images/{id}";
         Assert.Equal(HttpStatusCode.OK, (await user.GetAsync(path)).StatusCode);

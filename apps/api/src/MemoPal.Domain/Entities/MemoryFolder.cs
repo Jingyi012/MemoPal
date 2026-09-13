@@ -8,6 +8,9 @@ namespace MemoPal.Domain.Entities;
 public sealed class MemoryFolder : UserOwnedEntity
 {
     public string Name { get; set; } = string.Empty;
+    public string Emoji { get; set; } = "📚";
+    public string Description { get; set; } = string.Empty;
+    public string? SourceCollectionId { get; set; }
 
     public ICollection<MemorySet> MemorySets { get; set; } = new List<MemorySet>();
 }

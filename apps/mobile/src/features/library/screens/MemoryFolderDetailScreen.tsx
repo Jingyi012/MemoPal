@@ -18,14 +18,17 @@ import type { MemorySet } from '@/features/memory-sets';
 import Toast from 'react-native-toast-message';
 import { FolderNameModal } from '../components/FolderNameModal';
 import { MemoryMoveModal } from '../components/MemoryMoveModal';
+import type { MemoryFolderCreateRequest } from '../types/memoryFolder.types';
 import { useUserState } from '@/contexts/UserStateContext';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 export default function MemoryFolderDetailScreen() {
   const { styles, theme } = useStyles();
   const { t } = useTranslation('library');
   const router = useRouter();
   const { userState } = useUserState();
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const { folderId } = useLocalSearchParams<{ folderId: string }>();
   const folderQuery = useMemoryFolders();
   const setsQuery = useInfiniteMemorySets(folderId ? { folderId } : undefined);
@@ -99,10 +102,10 @@ export default function MemoryFolderDetailScreen() {
     ));
   };
 
-  const createFolderAndMove = (name: string) => {
+  const createFolderAndMove = (collection: MemoryFolderCreateRequest) => {
     const memorySet = newFolderMemory;
     if (!memorySet) return;
-    createFolder.mutate({ name }, {
+    createFolder.mutate(collection, {
       onSuccess: (created) => {
         setNewFolderMemory(undefined);
         moveMemorySet.mutate({ memorySetId: memorySet.id, folderId: created.id }, {
@@ -116,8 +119,8 @@ export default function MemoryFolderDetailScreen() {
   return <View style={styles.page}>
     <CommonHeader eyebrow={t('folderEyebrow')} title={folder?.name ?? t('folder')} description={folder ? `${folder.memorySetCount} ${folder.memorySetCount === 1 ? t('list') : t('lists')} · ${folder.itemCount} ${folder.itemCount === 1 ? t('item') : t('items')}` : undefined} backAction={() => router.back()} actions={[{ component: <AnimatedPressable accessibilityLabel={t('create')} onPress={() => router.push(`/create-memory?memoryFolderId=${encodeURIComponent(folderId ?? '')}` as Href)} style={styles.addButton}><Plus size={20} color={theme.onSun} /></AnimatedPressable> }]} />
     <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={setsQuery.isRefetching} onRefresh={() => { void Promise.allSettled([folderQuery.refetch(), setsQuery.refetch()]); }} />}>
-      {setsQuery.isLoading ? <View style={styles.loading}><LoadingView description={t('loading')} /></View> : setsQuery.isError ? <View style={styles.notice}><Text style={styles.noticeTitle}>{t('unavailable')}</Text><Text style={styles.noticeBody}>{getNumberPegErrorMessage(setsQuery.error, t('connectionRetry'))}</Text><AnimatedPressable onPress={() => setsQuery.refetch()} style={styles.retry}><RefreshCcw size={16} color={theme.onSun} /><Text style={styles.retryText}>{t('retry')}</Text></AnimatedPressable></View> : sets.length ? <View style={styles.list}>{sets.map((memorySet) => <MemorySetCard key={memorySet.id} memorySet={memorySet} onOpen={() => router.push(`/memory-details/${memorySet.id}` as Href)} onActions={() => { setActionMemorySet(memorySet); actionsRef.current?.present(); }} layout="row" variant="list" />)}</View> : <View style={styles.notice}><Text style={styles.empty}>📁</Text><Text style={styles.noticeTitle}>{t('folderEmpty')}</Text><Text style={styles.noticeBody}>{t('folderEmptyBody')}</Text><AnimatedPressable onPress={() => router.push(`/create-memory?memoryFolderId=${encodeURIComponent(folderId ?? '')}` as Href)} style={styles.create}><Plus size={17} color={theme.onAccent} /><Text style={styles.createText}>{t('create')}</Text></AnimatedPressable></View>}
-      {setsQuery.hasNextPage ? <AnimatedPressable onPress={() => void setsQuery.fetchNextPage()} style={styles.loadMore}><Text style={styles.loadMoreText}>{t('loadMore')}</Text></AnimatedPressable> : null}
+      {sets.length ? <View style={[styles.list, userState.ui.libraryViewMode !== 'list' && styles.cardGrid]}>{sets.map((memorySet) => <View key={memorySet.id} style={userState.ui.libraryViewMode !== 'list' ? styles.cardGridItem : undefined}><MemorySetCard memorySet={memorySet} onOpen={() => router.push(`/memory-details/${memorySet.id}` as Href)} onActions={() => { setActionMemorySet(memorySet); actionsRef.current?.present(); }} layout={userState.ui.libraryViewMode === 'list' ? 'row' : 'grid'} variant={userState.ui.libraryViewMode === 'list' ? 'list' : 'card'} /></View>)}</View> : !isOffline && setsQuery.isLoading ? <View style={styles.loading}><LoadingView description={t('loading')} /></View> : canShowRequestErrors && setsQuery.isError ? <View style={styles.notice}><Text style={styles.noticeTitle}>{t('unavailable')}</Text><Text style={styles.noticeBody}>{getNumberPegErrorMessage(setsQuery.error, t('connectionRetry'))}</Text><AnimatedPressable onPress={() => setsQuery.refetch()} style={styles.retry}><RefreshCcw size={16} color={theme.onSun} /><Text style={styles.retryText}>{t('retry')}</Text></AnimatedPressable></View> : !isOffline ? <View style={styles.notice}><Text style={styles.empty}>{folder?.emoji ?? '📚'}</Text><Text style={styles.noticeTitle}>{t('folderEmpty')}</Text><Text style={styles.noticeBody}>{t('folderEmptyBody')}</Text><AnimatedPressable onPress={() => router.push(`/create-memory?memoryFolderId=${encodeURIComponent(folderId ?? '')}` as Href)} style={styles.create}><Plus size={17} color={theme.onAccent} /><Text style={styles.createText}>{t('create')}</Text></AnimatedPressable></View> : null}
+      {!isOffline && setsQuery.hasNextPage ? <AnimatedPressable onPress={() => void setsQuery.fetchNextPage()} style={styles.loadMore}><Text style={styles.loadMoreText}>{t('loadMore')}</Text></AnimatedPressable> : null}
     </ScrollView>
     <MemoryActionsSheet
       ref={actionsRef}
@@ -151,5 +154,7 @@ export default function MemoryFolderDetailScreen() {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
+  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 16 },
+  cardGridItem: { width: '48.5%' },
   page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 20, paddingBottom: 40 }, addButton: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 14, height: 44, justifyContent: 'center', width: 44 }, loading: { height: 180, borderRadius: 20, overflow: 'hidden' }, list: { gap: 8 }, notice: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 20, borderWidth: 2, padding: 22 }, empty: { fontSize: 32, marginBottom: 8 }, noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center' }, noticeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' }, retry: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 12, flexDirection: 'row', gap: 7, marginTop: 14, paddingHorizontal: 14, paddingVertical: 10 }, retryText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 13 }, create: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 13, flexDirection: 'row', gap: 7, marginTop: 15, paddingHorizontal: 15, paddingVertical: 11 }, createText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 }, loadMore: { alignSelf: 'center', backgroundColor: theme.skyTint, borderRadius: 999, marginTop: 16, paddingHorizontal: 18, paddingVertical: 10 }, loadMoreText: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 11 },
 }));

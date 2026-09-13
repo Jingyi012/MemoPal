@@ -6,6 +6,7 @@ public sealed class MemorySet : UserOwnedEntity
 {
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public string? Emoji { get; set; }
     public string GoalType { get; set; } = MemoryGoalTypes.Custom;
     public string TechniqueKey { get; set; } = MemoryTechniqueKeys.NumberPeg;
     public string Status { get; set; } = MemorySetStatuses.Draft;

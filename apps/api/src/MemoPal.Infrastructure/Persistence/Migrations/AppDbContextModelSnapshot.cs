@@ -249,6 +249,20 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("📚");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -256,6 +270,10 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SourceCollectionId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -273,6 +291,10 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Name")
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = FALSE");
+
+                    b.HasIndex("UserId", "SourceCollectionId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = FALSE AND \"SourceCollectionId\" IS NOT NULL");
 
                     b.ToTable("MemoryFolders");
                 });
@@ -443,6 +465,10 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Emoji")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
 
                     b.Property<string>("GoalType")
                         .IsRequired()
@@ -1115,6 +1141,96 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("PracticeResponses");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PredefinedMemoryCollection", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CategoryId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DescriptionEn")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DescriptionZh")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TitleEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("TitleZh")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("PredefinedMemoryCollections");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PredefinedMemoryCollectionLesson", b =>
+                {
+                    b.Property<string>("CollectionId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LessonId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.HasKey("CollectionId", "LessonId");
+
+                    b.HasIndex("LessonId");
+
+                    b.ToTable("PredefinedMemoryCollectionLesson");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.PredefinedMemoryLesson", b =>
@@ -2279,6 +2395,36 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Navigation("PracticeAttempt");
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.PredefinedMemoryCollection", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.PredefinedMemoryLessonCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PredefinedMemoryCollectionLesson", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.PredefinedMemoryCollection", "Collection")
+                        .WithMany("Lessons")
+                        .HasForeignKey("CollectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MemoPal.Domain.Entities.PredefinedMemoryLesson", "Lesson")
+                        .WithMany()
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Collection");
+
+                    b.Navigation("Lesson");
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.PredefinedMemoryLesson", b =>
                 {
                     b.HasOne("MemoPal.Domain.Entities.PredefinedMemoryLessonCategory", "Category")
@@ -2392,6 +2538,11 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("MemoPal.Domain.Entities.PracticeAttempt", b =>
                 {
                     b.Navigation("Responses");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.PredefinedMemoryCollection", b =>
+                {
+                    b.Navigation("Lessons");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.PredefinedMemoryLesson", b =>

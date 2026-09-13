@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, PressableProps, StyleProp, ViewStyle } from 'react-native';
 import { cssInterop } from 'nativewind';
 import Animated, {
@@ -7,6 +7,7 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 
 const PressableBase = cssInterop(Pressable, {
@@ -20,6 +21,8 @@ interface AnimatedPressableProps extends PressableProps {
   className?: string;
   /** Trigger the action on touch-down for controls that must work above the keyboard. */
   pressOnIn?: boolean;
+  /** Gentle card arrival and tactile tilt, respecting reduced motion. */
+  lively?: boolean;
 }
 
 const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
@@ -28,15 +31,25 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   containerStyle,
   onPress,
   pressOnIn = false,
+  lively = false,
   className,
   accessibilityRole = 'button',
   ...rest
 }) => {
   const scale = useSharedValue(1);
   const reduceMotion = useReducedMotion();
+  const arrival = useSharedValue(lively && !reduceMotion ? 0 : 1);
+  useEffect(() => {
+    arrival.value = reduceMotion || !lively ? 1 : withTiming(1, { duration: 320 });
+  }, [arrival, lively, reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: reduceMotion ? 1 : scale.value }],
+    opacity: lively ? arrival.value : 1,
+    transform: [
+      { translateY: lively && !reduceMotion ? (1 - arrival.value) * 10 : 0 },
+      { scale: reduceMotion ? 1 : scale.value },
+      { rotate: `${lively && !reduceMotion ? (1 - scale.value) * -20 : 0}deg` },
+    ],
   }));
   const classNameProps = className ? { className } : {};
   const firePress = (event: Parameters<NonNullable<PressableProps['onPress']>>[0]) => {

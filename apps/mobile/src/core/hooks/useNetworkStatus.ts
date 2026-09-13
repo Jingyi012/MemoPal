@@ -1,7 +1,7 @@
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { useEffect, useState } from 'react';
 
-import { isNetworkStateOnline } from '@/core/network/networkStatus';
+import { getNetworkUiState } from '@/core/network/networkState';
 
 export function useNetworkStatus() {
   const [networkState, setNetworkState] = useState<NetInfoState | null>(null);
@@ -18,9 +18,10 @@ export function useNetworkStatus() {
     };
   }, []);
 
+  const uiState = getNetworkUiState(networkState);
+
   return {
-    isReady: networkState !== null,
-    isOnline: isNetworkStateOnline(networkState),
+    ...uiState,
     isConnected: networkState?.isConnected ?? false,
     isInternetReachable: networkState?.isInternetReachable ?? false,
     type: networkState?.type ?? 'unknown',

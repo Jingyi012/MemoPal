@@ -23,6 +23,7 @@ public interface IAppDbContext
     DbSet<ReferralMilestoneReward> ReferralMilestoneRewards { get; }
     DbSet<MemorySet> MemorySets { get; }
     DbSet<MemoryFolder> MemoryFolders { get; }
+    DbSet<PredefinedMemoryCollection> PredefinedMemoryCollections { get; }
     DbSet<MemorySetReport> MemorySetReports { get; }
     DbSet<MemoryItem> MemoryItems { get; }
     DbSet<TechniquePlan> TechniquePlans { get; }

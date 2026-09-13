@@ -16,6 +16,7 @@ import { ChevronRight, Pencil } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 export default function PalaceHomeScreen() {
   const { styles, theme } = useStyles();
@@ -23,6 +24,7 @@ export default function PalaceHomeScreen() {
   const { t } = useTranslation('palace');
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const memorySets = useMemorySets('palace');
   const scenes = usePalaceScenes();
   const isRefreshing = memorySets.isRefetching || scenes.isRefetching;
@@ -86,11 +88,11 @@ export default function PalaceHomeScreen() {
           ) : null}
         </View>
 
-        {scenes.isLoading ? (
+          {!isOffline && scenes.isLoading ? (
           <View style={styles.sceneLoading}>
             <LoadingView description={t('loading')} />
           </View>
-        ) : scenes.isError ? (
+        ) : canShowRequestErrors && scenes.isError ? (
           <ModuleNoticeCard
             title={t('doorsStuck')}
             body={getNumberPegErrorMessage(scenes.error, t('connection'))}
@@ -146,11 +148,11 @@ export default function PalaceHomeScreen() {
           </View>
         </View>
 
-        {memorySets.isLoading ? (
+          {!isOffline && memorySets.isLoading ? (
           <View style={styles.memoryLoading}>
             <LoadingView description={t('finding')} />
           </View>
-        ) : memorySets.isError ? (
+        ) : canShowRequestErrors && memorySets.isError ? (
           <ModuleNoticeCard
             title={t('doorsStuck')}
             body={getNumberPegErrorMessage(memorySets.error, t('connection'))}

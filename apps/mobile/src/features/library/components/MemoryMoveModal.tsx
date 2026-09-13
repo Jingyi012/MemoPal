@@ -3,7 +3,7 @@ import type { MemorySet } from '@/features/memory-sets';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { Check, Folder, FolderPlus, Inbox } from 'lucide-react-native';
+import { Check, Layers, Inbox } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { MemoryFolder } from '../types/memoryFolder.types';
@@ -40,12 +40,12 @@ export function MemoryMoveModal({ memorySet, folders, isLoading = false, onCance
               <MoveOption
                 key={folder.id}
                 label={folder.name}
-                icon={<Folder size={20} color={theme.violetDeep} />}
+                icon={<Layers size={20} color={theme.violetDeep} />}
                 disabled={isLoading}
                 onPress={() => onSelect(folder.id)}
               />
             ))}
-            <MoveOption label={t('newFolder')} icon={<FolderPlus size={20} color={theme.violetDeep} />} disabled={isLoading} onPress={onCreateFolder} />
+            <MoveOption label={t('newFolder')} icon={<Layers size={20} color={theme.violetDeep} />} disabled={isLoading} onPress={onCreateFolder} />
           </ScrollView>
           <AnimatedPressable disabled={isLoading} onPress={onCancel} style={styles.cancel}>
             <Text style={styles.cancelText}>{t('cancel')}</Text>

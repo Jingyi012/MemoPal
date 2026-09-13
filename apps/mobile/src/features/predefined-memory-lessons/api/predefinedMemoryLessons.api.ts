@@ -11,7 +11,13 @@ export const predefinedMemoryLessonsApi = {
     return { items: response.data.data ?? [], pageNumber: response.data.pagination.pageNumber, pageSize: response.data.pagination.pageSize, totalCount: response.data.pagination.totalCount };
   },
   async getPublished(): Promise<PredefinedMemoryLesson[]> {
-    const page = await this.getPublishedPage(1, 50);
-    return page.items;
+    const firstPage = await this.getPublishedPage(1, 50);
+    const lessons = [...firstPage.items];
+    const pageCount = Math.ceil(firstPage.totalCount / firstPage.pageSize);
+    for (let pageNumber = 2; pageNumber <= pageCount; pageNumber += 1) {
+      const page = await this.getPublishedPage(pageNumber, firstPage.pageSize);
+      lessons.push(...page.items);
+    }
+    return lessons;
   },
 };

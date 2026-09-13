@@ -8,25 +8,26 @@ function isExpired(expiresAt?: string) {
 
 export function useSubscriptionGuard(enabled: boolean) {
   const { userState, updateState } = useUserState();
+  const { isPremium, expiresAt } = userState.subscription;
 
   useEffect(() => {
     if (!enabled) return;
 
     const run = async () => {
-      const expired = isExpired(userState.subscription.expiresAt);
-      const shouldDowngrade = userState.subscription.isPremium && expired;
+      const expired = isExpired(expiresAt);
+      const shouldDowngrade = isPremium && expired;
       if (!shouldDowngrade) return;
 
-      await updateState({
+      await updateState((current) => ({
         subscription: {
-          ...userState.subscription,
+          ...current.subscription,
           isPremium: false,
           status: 'canceled',
           autoRenew: false,
         },
-      });
+      }));
     };
 
-    run();
-  }, [enabled, userState.subscription, updateState]);
+    void run();
+  }, [enabled, expiresAt, isPremium, updateState]);
 }

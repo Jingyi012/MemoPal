@@ -147,17 +147,22 @@ export default function NumberPegComposerScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     title?: string | string[];
+    emoji?: string | string[];
     items?: string | string[];
     goalType?: string | string[];
     onboardingLessonId?: string | string[];
     memoryFolderId?: string | string[];
+    memorySetId?: string | string[];
+    expectedVersion?: string | string[];
+    description?: string | string[];
   }>();
-  const { createMemorySet } = useMemorySetMutations();
+  const { createMemorySet, updateMemorySet } = useMemorySetMutations();
+  const editingMemorySetId = firstParam(params.memorySetId);
   const { linkMemory: linkOnboardingMemory } = useOnboardingMutations();
   const generateStories = useGenerateNumberPegStories();
   const aiCredits = useAiCredits();
   const { user } = useCurrentUser();
-  const unlocked = getUnlockedPegCount(user?.level ?? 1);
+  const unlocked = editingMemorySetId ? MAX_NUMBER_PEGS : getUnlockedPegCount(user?.level ?? 1);
   const pegs = useMemo(() => buildAllNumberPegItems(), []);
   const anchors = useMemo<SceneAnchor[]>(
     () =>
@@ -179,7 +184,7 @@ export default function NumberPegComposerScreen() {
   );
   const fromShared = initialItems.length > 0;
   const onboardingLessonId = firstParam(params.onboardingLessonId);
-  const memoryFolderId = firstParam(params.memoryFolderId);
+  const memoryFolderId = firstParam(params.memoryFolderId) || undefined;
   const isOnboarding = Boolean(onboardingLessonId);
   const onboardingMemoryIdRef = useRef<string | null>(null);
   const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
@@ -211,8 +216,8 @@ export default function NumberPegComposerScreen() {
   const progressScrollRef = useRef<ScrollView>(null);
   const draftKey = useMemo(
     () =>
-      `@memopal:number-peg-studio:${user?.id ?? 'local'}:${fromShared ? `${firstParam(params.title) ?? ''}:${initialItems.join('|')}` : 'direct'}`,
-    [fromShared, initialItems, params.title, user?.id]
+      `@memopal:number-peg-studio:${user?.id ?? 'local'}:${editingMemorySetId ?? (fromShared ? `${firstParam(params.title) ?? ''}:${initialItems.join('|')}` : 'direct')}`,
+    [editingMemorySetId, fromShared, initialItems, params.title, user?.id]
   );
   const current = scenes[index];
   const pegNumber = (index % Math.max(1, unlocked)) + 1;
@@ -518,6 +523,9 @@ export default function NumberPegComposerScreen() {
         const suffix = chunks.length > 1 ? ` · ${chunk.n + 1}/${chunks.length}` : '';
         const req: MemorySetUpsertRequest = {
           memoryFolderId,
+          description: firstParam(params.description),
+          emoji: firstParam(params.emoji),
+          expectedVersion: editingMemorySetId ? Number(firstParam(params.expectedVersion)) : undefined,
           title: `${(title.trim() || suggestMemoryTitle(goalType, items)).slice(0, 200 - suffix.length)}${suffix}`,
           goalType,
           techniqueKey: 'number-peg',
@@ -541,7 +549,9 @@ export default function NumberPegComposerScreen() {
             })),
           },
         };
-        created.push(await createMemorySet.mutateAsync(req));
+        created.push(editingMemorySetId
+          ? await updateMemorySet.mutateAsync({ memorySetId: editingMemorySetId, request: req })
+          : await createMemorySet.mutateAsync(req));
       }
       await AsyncStorage.removeItem(draftKey);
       if (created[0]) {

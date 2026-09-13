@@ -17,6 +17,8 @@ internal static class MemoryFolderQuery
         return query.Select(folder => new MemoryFolderDto(
             folder.Id,
             folder.Name,
+            folder.Emoji,
+            folder.Description,
             folder.MemorySets.Count(memorySet => !memorySet.IsDeleted),
             folder.MemorySets
                 .Where(memorySet => !memorySet.IsDeleted)

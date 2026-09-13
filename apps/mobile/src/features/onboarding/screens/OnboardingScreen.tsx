@@ -16,12 +16,14 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useOnboardingMutations } from '../hooks/useOnboardingMutations';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
   const { language, t } = useTranslation('onboarding');
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const lessonsQuery = usePredefinedMemoryLessons();
   const { start, skip } = useOnboardingMutations();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
@@ -142,7 +144,7 @@ export function OnboardingScreen() {
     );
   }
 
-  if (lessonsQuery.isLoading) return <LoadingView description={t('loadingLessons')} />;
+  if (!isOffline && lessonsQuery.isLoading) return <LoadingView description={t('loadingLessons')} />;
 
   return (
     <View style={styles.page}>
@@ -176,7 +178,7 @@ export function OnboardingScreen() {
           </View>
         </View>
 
-        {lessonsQuery.isError ? (
+        {canShowRequestErrors && lessonsQuery.isError ? (
           <View style={styles.stateCard}>
             <RefreshCcw size={24} color={theme.violetDeep} />
             <Text style={styles.stateTitle}>{t('lessonsUnavailable')}</Text>
@@ -187,7 +189,7 @@ export function OnboardingScreen() {
               <Text style={styles.secondaryActionText}>{t('tryAgain')}</Text>
             </AnimatedPressable>
           </View>
-        ) : !starterLessons.length ? (
+        ) : isOffline ? null : !starterLessons.length ? (
           <View style={styles.stateCard}>
             <Text style={styles.stateEmoji}>🧩</Text>
             <Text style={styles.stateTitle}>{t('noStarterLessons')}</Text>

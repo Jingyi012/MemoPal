@@ -16,6 +16,7 @@ import { useState } from 'react';
 import Toast from 'react-native-toast-message';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 export function PublicMemorySetDetailScreen({ memorySetId }: { memorySetId: string }) {
   const { styles, theme } = useStyles();
@@ -23,14 +24,15 @@ export function PublicMemorySetDetailScreen({ memorySetId }: { memorySetId: stri
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const router = useRouter();
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const query = useCommunityMemorySet(memorySetId);
   const copyMutation = useCopyCommunityMemorySet();
   const reportMutation = useReportCommunityMemorySet();
   const [confirmCopy, setConfirmCopy] = useState(false);
   const [confirmReport, setConfirmReport] = useState(false);
 
-  if (query.isLoading) return <LoadingView description={t('discoverLoading')} />;
-  if (query.isError || !query.data) return <View style={styles.page}><CommonHeader eyebrow={t('discoverEyebrow')} title={t('discoverUnavailable')} backAction={() => router.back()} /><View style={styles.error}><Text style={styles.emptyEmoji}>🫧</Text><Text style={styles.emptyTitle}>{t('discoverUnavailable')}</Text><Text style={styles.emptyBody}>{t('connectionRetry')}</Text><AnimatedPressable onPress={() => void query.refetch()} style={styles.retry}><RefreshCcw size={15} color={theme.onSun} /><Text style={styles.retryText}>{t('retry')}</Text></AnimatedPressable></View></View>;
+  if (!isOffline && query.isLoading) return <LoadingView description={t('discoverLoading')} />;
+  if (!query.data) return <View style={styles.page}><CommonHeader eyebrow={t('discoverEyebrow')} title={canShowRequestErrors ? t('discoverUnavailable') : t('discoverEyebrow')} backAction={() => router.back()} />{canShowRequestErrors ? <View style={styles.error}><Text style={styles.emptyEmoji}>🫧</Text><Text style={styles.emptyTitle}>{t('discoverUnavailable')}</Text><Text style={styles.emptyBody}>{t('connectionRetry')}</Text><AnimatedPressable onPress={() => void query.refetch()} style={styles.retry}><RefreshCcw size={15} color={theme.onSun} /><Text style={styles.retryText}>{t('retry')}</Text></AnimatedPressable></View> : null}</View>;
 
   const memorySet = query.data;
   const isAuthor = memorySet.existingCopyId === memorySet.id;

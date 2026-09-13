@@ -18,6 +18,7 @@ import { ArrowRight, ChevronRight } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 export default function NumberPegHomeScreen() {
   const { styles, theme } = useStyles();
@@ -25,6 +26,7 @@ export default function NumberPegHomeScreen() {
   const { t } = useTranslation('numberPeg');
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const { items } = useNumberPegOverview();
   const { user } = useCurrentUser();
   const memorySets = useMemorySets('number-peg');
@@ -94,11 +96,11 @@ export default function NumberPegHomeScreen() {
           </View>
         </View>
 
-        {memorySets.isLoading ? (
+        {!isOffline && memorySets.isLoading ? (
           <View style={styles.loadingFrame}>
             <LoadingView description={t('loading')} />
           </View>
-        ) : memorySets.isError ? (
+        ) : canShowRequestErrors && memorySets.isError ? (
           <ModuleNoticeCard
             title={t('unavailable')}
             body={getNumberPegErrorMessage(memorySets.error, t('connection'))}

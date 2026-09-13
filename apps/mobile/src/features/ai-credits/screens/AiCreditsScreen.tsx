@@ -11,11 +11,13 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { useAiCredits, useAiGenerations } from '../hooks/useAiCredits';
 import { aiCreditsApi, type AiCreditEntry } from '../api/aiCredits.api';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 export default function AiCreditsScreen() {
   const { user } = useAuth(); const { language } = useTranslation('numberPeg'); const zh = language === 'zh';
   const balance = useAiCredits(); const generations = useAiGenerations(); const [skip, setSkip] = useState(0); const [historyEntries, setHistoryEntries] = useState<AiCreditEntry[]>([]); const [historyHasMore, setHistoryHasMore] = useState(false);
   const { styles, theme } = useStyles();
+  const { canShowRequestErrors } = useNetworkStatus();
   const history = useQuery({ queryKey: ['ai-credits', user?.id, 'history', skip], queryFn: () => aiCreditsApi.history(skip), enabled: Boolean(user), staleTime: 0 });
   useEffect(() => {
     if (!history.data) return;
@@ -39,7 +41,7 @@ export default function AiCreditsScreen() {
       {balance.data && <View style={styles.breakdown}><View style={styles.breakdownCell}><Text style={styles.breakdownValue}>{balance.data.subscription}</Text><Text style={styles.breakdownLabel}>{zh ? '订阅赠送' : 'Subscription'}</Text></View><View style={styles.divider} /><View style={styles.breakdownCell}><Text style={styles.breakdownValue}>{balance.data.purchased}</Text><Text style={styles.breakdownLabel}>{zh ? '充值／其他' : 'Purchased'}</Text></View></View>}
       {balance.data?.nextExpiry && <View style={styles.notice}><WalletCards size={16} color={theme.ink} /><Text style={styles.noticeText}>{zh ? `有额度将在 ${new Date(balance.data.nextExpiry).toLocaleDateString()} 到期，系统会优先使用。` : `Some credits expire on ${new Date(balance.data.nextExpiry).toLocaleDateString()} and will be used first.`}</Text></View>}
       <View style={styles.infoCard}><Text style={styles.sectionTitle}>{zh ? '怎么使用' : 'How credits work'}</Text><Text style={styles.body}>{zh ? 'AI 联想故事和图片会消耗 credits。手动编辑、模板联想和查看历史结果免费。充值功能将在支付接入后开放。' : 'AI stories and illustrations use credits. Manual editing, templates, and viewing saved results are free. Top-ups will open after billing is connected.'}</Text></View>
-      {(balance.isError || history.isError || generations.isError) && <View style={styles.error}><Text style={styles.errorText}>{zh ? '加载失败，点击重试。' : 'Could not load wallet. Tap to retry.'}</Text><AnimatedPressable onPress={refresh} style={styles.retry}><Text style={styles.retryText}>{zh ? '重试' : 'Retry'}</Text></AnimatedPressable></View>}
+      {canShowRequestErrors && (balance.isError || history.isError || generations.isError) && <View style={styles.error}><Text style={styles.errorText}>{zh ? '加载失败，点击重试。' : 'Could not load wallet. Tap to retry.'}</Text><AnimatedPressable onPress={refresh} style={styles.retry}><Text style={styles.retryText}>{zh ? '重试' : 'Retry'}</Text></AnimatedPressable></View>}
       <View style={styles.sectionHeader}><History size={17} color={theme.violetDeep} /><Text style={styles.sectionTitle}>{zh ? '最近生成' : 'Recent generations'}</Text></View>
       {generations.isPending && <ActivityIndicator color={theme.violetDeep} />}
       {visibleGenerations.length === 0 && <Text style={styles.empty}>{failedGenerationCount > 0

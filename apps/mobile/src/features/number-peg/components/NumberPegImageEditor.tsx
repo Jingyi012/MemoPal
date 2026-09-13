@@ -14,6 +14,7 @@ import { getNumberPegErrorMessage } from '../utils/numberPegErrors';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { ImagePlus } from 'lucide-react-native';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 type Props = {
   input: NumberPegImageInput; imagePath?: string; imageStory?: string; jobId?: string; disabled: boolean;
@@ -23,6 +24,7 @@ export function NumberPegImageEditor({ input, imagePath, imageStory, jobId, disa
   const { language } = useTranslation('numberPeg');
   const zh = language === 'zh';
   const { styles, theme } = useStyles();
+  const { canShowRequestErrors } = useNetworkStatus();
   const { balance, confirm } = useAiCreditConfirmation();
   const generations = useAiGenerations();
   const client = useQueryClient();
@@ -101,7 +103,7 @@ export function NumberPegImageEditor({ input, imagePath, imageStory, jobId, disa
         </AnimatedPressable>
       </View>
     )}
-    {generations.isError && <AnimatedPressable onPress={() => void generations.refetch()} style={{ minHeight: 44 }}><Text>{zh ? '无法读取状态，点击重试' : 'Could not load status. Tap to retry.'}</Text></AnimatedPressable>}
+    {canShowRequestErrors && generations.isError && <AnimatedPressable onPress={() => void generations.refetch()} style={{ minHeight: 44 }}><Text>{zh ? '无法读取状态，点击重试' : 'Could not load status. Tap to retry.'}</Text></AnimatedPressable>}
     {error && <Text accessibilityRole="alert">{error}</Text>}
   </View>;
 }

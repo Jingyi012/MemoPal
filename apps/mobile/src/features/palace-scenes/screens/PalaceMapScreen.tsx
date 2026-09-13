@@ -12,10 +12,12 @@ import { Href, useRouter } from 'expo-router';
 import { ArrowRight } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 export default function PalaceMapScreen() {
   const router = useRouter();
   const { t } = useTranslation('palace');
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const { user } = useCurrentUser();
   const scenes = usePalaceScenes();
   const isPremium = Boolean(user?.isPremium);
@@ -49,9 +51,9 @@ export default function PalaceMapScreen() {
           <Text style={styles.countPill}>{scenes.data?.length ?? 0} {t('totalCount')}</Text>
         </View>
 
-        {scenes.isLoading ? (
+        {!isOffline && scenes.isLoading ? (
           <View style={styles.loadingFrame}><LoadingView description={t('loading')} /></View>
-        ) : scenes.isError ? (
+        ) : canShowRequestErrors && scenes.isError ? (
           <ModuleNoticeCard
             title={t('doorsStuck')}
             body={getNumberPegErrorMessage(scenes.error, t('connection'))}

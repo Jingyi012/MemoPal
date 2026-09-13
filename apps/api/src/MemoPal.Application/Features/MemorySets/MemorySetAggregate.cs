@@ -19,6 +19,11 @@ internal static class MemorySetAggregate
             throw new ValidationAppException("A memory set title cannot exceed 200 characters.");
         }
 
+        if (request.Emoji?.Trim().Length > 16)
+        {
+            throw new ValidationAppException("A memory set emoji cannot exceed 16 characters.");
+        }
+
         if (!MemoryGoalTypes.All.Contains(request.GoalType))
         {
             throw new ValidationAppException("The selected memory goal is not supported.");
@@ -247,6 +252,7 @@ internal static class MemorySetAggregate
             MemoryFolderId = source.MemoryFolderId,
             Title = copyTitle,
             Description = source.Description,
+            Emoji = source.Emoji,
             GoalType = source.GoalType,
             TechniqueKey = source.TechniqueKey,
             Status = source.Status == MemorySetStatuses.Archived
@@ -381,6 +387,7 @@ internal static class MemorySetAggregate
             entity.Id,
             entity.Title,
             entity.Description,
+            entity.Emoji,
             entity.GoalType,
             entity.TechniqueKey,
             entity.Status,
@@ -399,6 +406,8 @@ internal static class MemorySetAggregate
     {
         entity.Title = request.Title.Trim();
         entity.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+        if (request.Emoji is not null)
+            entity.Emoji = string.IsNullOrWhiteSpace(request.Emoji) ? null : request.Emoji.Trim();
         entity.GoalType = request.GoalType;
         entity.TechniqueKey = request.TechniqueKey;
         entity.Status = request.Status;

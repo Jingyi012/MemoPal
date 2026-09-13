@@ -55,7 +55,7 @@ import {
   ensurePalaceAssociations,
   getAssociationText,
 } from '../src/features/palace-scenes/utils/palaceAuthoring.ts';
-import { isNetworkStateOnline } from '../src/core/network/networkState.ts';
+import { getNetworkUiState, isNetworkStateOnline } from '../src/core/network/networkState.ts';
 import {
   getPalaceLocusDescription,
   getPalaceLocusName,
@@ -136,6 +136,20 @@ test('builds a handoff route without losing the prepared list', () => {
   assert.match(route, /^\/number-peg\/build\?/);
   assert.match(route, /title=Friday%20spelling/);
   assert.match(route, /items=%5B%22rhythm%22%2C%22separate%22%5D/);
+});
+
+test('continues imported drafts through either technique without losing their identity or collection', () => {
+  for (const technique of ['number-peg', 'palace']) {
+    const route = buildTechniqueRoute(technique, 'Edited title', 'ordered-list', ['China', 'Japan'], undefined, 'global', 'folder-1',
+      { memorySetId: 'draft-1', expectedVersion: '3', description: 'A & B' });
+    const url = new URL(route, 'https://example.test');
+    assert.equal(url.pathname, technique === 'palace' ? '/palaces/build' : '/number-peg/build');
+    assert.equal(url.searchParams.get('memorySetId'), 'draft-1');
+    assert.equal(url.searchParams.get('expectedVersion'), '3');
+    assert.equal(url.searchParams.get('memoryFolderId'), 'folder-1');
+    assert.equal(url.searchParams.get('description'), 'A & B');
+    assert.deepEqual(JSON.parse(url.searchParams.get('items')), ['China', 'Japan']);
+  }
 });
 
 test('preserves hint usage without treating it as another answer attempt', () => {
@@ -248,6 +262,27 @@ test('chooses the smallest Palace that fits and explains overflow clearly', () =
     getPalaceCapacityMessage(15, 12),
     'This list has 15 items, but the largest available Palace has 12 loci. Remove 3 items or create a second memory.',
   );
+});
+
+test('shows one global offline state and reserves local request errors for online failures', () => {
+  assert.deepEqual(getNetworkUiState(null), {
+    isReady: false,
+    isOnline: false,
+    isOffline: false,
+    canShowRequestErrors: false,
+  });
+  assert.deepEqual(getNetworkUiState({ isConnected: false, isInternetReachable: false }), {
+    isReady: true,
+    isOnline: false,
+    isOffline: true,
+    canShowRequestErrors: false,
+  });
+  assert.deepEqual(getNetworkUiState({ isConnected: true, isInternetReachable: true }), {
+    isReady: true,
+    isOnline: true,
+    isOffline: false,
+    canShowRequestErrors: true,
+  });
 });
 
 test('resolves configurable level titles from the nearest configured level', () => {

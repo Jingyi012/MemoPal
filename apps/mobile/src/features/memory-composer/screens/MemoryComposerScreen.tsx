@@ -39,6 +39,9 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
     editContent?: string | string[];
     ocrDraftId?: string | string[];
     memoryFolderId?: string | string[];
+    memorySetId?: string | string[];
+    expectedVersion?: string | string[];
+    description?: string | string[];
   }>();
   const { t } = useTranslation('memoryComposer');
   const initialItems = useMemo(() => parseComposerItems(params.items), [params.items]);
@@ -172,7 +175,9 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
   };
 
   const openTechnique = (technique: TechniqueChoice, routeTitle = title.trim()) => {
-    router.push(buildTechniqueRoute(technique, routeTitle, goalType, items, sceneId, origin, firstParam(params.memoryFolderId)) as Href);
+    const memorySetId = firstParam(params.memorySetId);
+    router.push(buildTechniqueRoute(technique, routeTitle, goalType, items, sceneId, origin, firstParam(params.memoryFolderId),
+      memorySetId ? { memorySetId, expectedVersion: firstParam(params.expectedVersion) ?? '', description: firstParam(params.description) } : undefined) as Href);
   };
 
   const handleBack = () => {
@@ -193,7 +198,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <CommonHeader
-        eyebrow={t('eyebrow')}
+        eyebrow={initialTechnique ? t(initialTechnique === 'palace' ? 'memoryPalaceName' : 'numberPegName') : t('eyebrow')}
         title={step === 'content' ? t('addContent') : t('pickTechnique')}
         description={step === 'content' ? t('contentDescription') : t('techniqueDescription')}
         backAction={handleBack}

@@ -16,10 +16,12 @@ export function buildTechniqueRoute(
   sceneId?: string,
   origin: ComposerOrigin = 'global',
   memoryFolderId?: string,
+  draft?: { memorySetId: string; expectedVersion: string; description?: string },
 ) {
   const path = technique === 'palace' ? '/palaces/build' : '/number-peg/build';
   const sceneParam = technique === 'palace' && sceneId ? `&sceneId=${encodeURIComponent(sceneId)}` : '';
   const originParam = technique === 'palace' ? `&origin=${origin}` : '';
   const folderParam = memoryFolderId ? `&memoryFolderId=${encodeURIComponent(memoryFolderId)}` : '';
-  return `${path}?title=${encodeURIComponent(title)}&goalType=${encodeURIComponent(goalType)}&items=${encodeURIComponent(JSON.stringify(items))}${sceneParam}${originParam}${folderParam}`;
+  const draftParam = draft ? `&memorySetId=${encodeURIComponent(draft.memorySetId)}&expectedVersion=${encodeURIComponent(draft.expectedVersion)}&description=${encodeURIComponent(draft.description ?? '')}` : '';
+  return `${path}?title=${encodeURIComponent(title)}&goalType=${encodeURIComponent(goalType)}&items=${encodeURIComponent(JSON.stringify(items))}${sceneParam}${originParam}${folderParam}${draftParam}`;
 }

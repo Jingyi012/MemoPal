@@ -44,7 +44,7 @@ public sealed class MemoryFolderTests
     }
 
     [Fact]
-    public async Task DeletingFolder_Should_UnfileItsMemorySets_WithoutDeletingThem()
+    public async Task DeletingFolder_Should_SoftDeleteItsMemorySets()
     {
         const string userId = "folder-delete-user";
         await using var db = CreateDbContext(userId);
@@ -59,8 +59,11 @@ public sealed class MemoryFolderTests
             .Handle(new DeleteMemoryFolderCommand(userId, folder.Id), default);
 
         Assert.True(folder.IsDeleted);
-        Assert.False(memorySet.IsDeleted);
-        Assert.Null(memorySet.MemoryFolderId);
+        Assert.True(memorySet.IsDeleted);
+        Assert.Equal(folder.Id, memorySet.MemoryFolderId);
+        Assert.Empty(await db.MemorySets
+            .Where(x => !x.IsDeleted && x.MemoryFolderId == folder.Id)
+            .ToListAsync());
         Assert.Null(await db.MemoryFolders.FirstOrDefaultAsync(x => x.Id == folder.Id && !x.IsDeleted));
     }
 

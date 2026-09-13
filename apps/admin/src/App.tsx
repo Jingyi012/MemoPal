@@ -20,6 +20,8 @@ const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const PalaceScenesPage = lazy(() => import('./features/palace-scenes/pages/PalaceScenesPage'));
 const PredefinedMemoryLessonsPage = lazy(() => import('./features/predefined-memory-lessons/pages/PredefinedMemoryLessonsPage'));
+const MemoryCollectionsPage = lazy(() => import('./features/predefined-memory-lessons/pages/MemoryCollectionsPage'));
+const MemoryCollectionEditorPage = lazy(() => import('./features/predefined-memory-lessons/pages/MemoryCollectionEditorPage'));
 const PredefinedMemoryLessonCategoriesPage = lazy(() => import('./features/predefined-memory-lessons/pages/PredefinedMemoryLessonCategoriesPage'));
 const CommunityMemorySetsPage = lazy(() => import('./features/community-memory-sets/pages/CommunityMemorySetsPage'));
 
@@ -45,6 +47,8 @@ export default function App() {
               <Route index element={<Navigate to="palace-scenes" replace />} />
               <Route path="palace-scenes" element={<PalaceScenesPage />} />
               <Route path="predefined-memory-lessons" element={<PredefinedMemoryLessonsPage />} />
+              <Route path="memory-collections" element={<MemoryCollectionsPage />} />
+              <Route path="memory-collections/:collectionId" element={<MemoryCollectionEditorPage />} />
               <Route path="predefined-memory-lesson-categories" element={<PredefinedMemoryLessonCategoriesPage />} />
             </Route>
             <Route path="configs">

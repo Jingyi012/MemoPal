@@ -5,7 +5,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemorySet } from '@/features/memory-sets';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Archive, ArchiveRestore, Copy, Folder, Globe2, LockKeyhole, Trash2 } from 'lucide-react-native';
+import { Archive, ArchiveRestore, Copy, Layers, Globe2, LockKeyhole, Trash2 } from 'lucide-react-native';
 import { forwardRef, type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -65,7 +65,7 @@ export const MemoryActionsSheet = forwardRef<BottomSheetModal, MemoryActionsShee
             /> : null}
             {onMove ? <ActionRow
               label={t('moveToFolder')}
-              icon={<Folder size={20} color={theme.violetDeep} />}
+              icon={<Layers size={20} color={theme.violetDeep} />}
               iconBackground={theme.violetTint}
               disabled={!memorySet || isBusy}
               onPress={() => memorySet && onMove(memorySet)}

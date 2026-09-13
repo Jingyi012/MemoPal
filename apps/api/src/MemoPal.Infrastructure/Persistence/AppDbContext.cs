@@ -33,6 +33,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<ReferralMilestoneReward> ReferralMilestoneRewards => Set<ReferralMilestoneReward>();
     public DbSet<MemorySet> MemorySets => Set<MemorySet>();
     public DbSet<MemoryFolder> MemoryFolders => Set<MemoryFolder>();
+    public DbSet<PredefinedMemoryCollection> PredefinedMemoryCollections => Set<PredefinedMemoryCollection>();
     public DbSet<MemorySetReport> MemorySetReports => Set<MemorySetReport>();
     public DbSet<MemoryItem> MemoryItems => Set<MemoryItem>();
     public DbSet<TechniquePlan> TechniquePlans => Set<TechniquePlan>();
@@ -49,6 +50,23 @@ public class AppDbContext : DbContext, IAppDbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<PredefinedMemoryCollection>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.TitleEn).HasMaxLength(200);
+            b.Property(x => x.TitleZh).HasMaxLength(200);
+            b.Property(x => x.DescriptionEn).HasMaxLength(500);
+            b.Property(x => x.DescriptionZh).HasMaxLength(500);
+            b.Property(x => x.Emoji).HasMaxLength(32);
+            b.Property(x => x.Version).IsConcurrencyToken();
+            b.HasOne(x => x.Category).WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
+            b.HasMany(x => x.Lessons).WithOne(x => x.Collection).HasForeignKey(x => x.CollectionId);
+        });
+        modelBuilder.Entity<PredefinedMemoryCollectionLesson>(b =>
+        {
+            b.HasKey(x => new { x.CollectionId, x.LessonId });
+            b.HasOne(x => x.Lesson).WithMany().HasForeignKey(x => x.LessonId).OnDelete(DeleteBehavior.Restrict);
+        });
         modelBuilder.ApplyConfiguration(new AiCreditGrantConfiguration());
         modelBuilder.ApplyConfiguration(new AiGenerationConfiguration());
         modelBuilder.ApplyConfiguration(new AiCreditEntryConfiguration());
@@ -190,6 +208,7 @@ public class AppDbContext : DbContext, IAppDbContext
         {
             b.HasKey(x => x.Id);
             b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.Emoji).HasMaxLength(16);
             b.Property(x => x.Title).HasMaxLength(200);
             b.Property(x => x.Description).HasMaxLength(1000);
             b.Property(x => x.GoalType).HasMaxLength(32);
@@ -285,9 +304,14 @@ public class AppDbContext : DbContext, IAppDbContext
 
         modelBuilder.Entity<MemoryFolder>(b =>
         {
+            b.Property(x => x.SourceCollectionId).HasMaxLength(64);
+            b.HasIndex(x => new { x.UserId, x.SourceCollectionId }).IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE AND \"SourceCollectionId\" IS NOT NULL");
             b.HasKey(x => x.Id);
             b.Property(x => x.UserId).HasMaxLength(64);
             b.Property(x => x.Name).HasMaxLength(200);
+            b.Property(x => x.Emoji).HasMaxLength(16).HasDefaultValue("📚");
+            b.Property(x => x.Description).HasMaxLength(500).HasDefaultValue(string.Empty);
             b.HasIndex(x => new { x.UserId, x.Name })
                 .IsUnique()
                 .HasFilter("\"IsDeleted\" = FALSE");

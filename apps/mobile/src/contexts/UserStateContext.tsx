@@ -1,11 +1,22 @@
 import { USER_STATE_STORAGE_KEY } from '@/core/storage/constants';
 import { defaultUserState, UserState } from '@/features/onboarding/types/userState';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+
+type UserStateUpdate = Partial<UserState> | ((current: UserState) => Partial<UserState>);
 
 type UserStateContextType = {
   userState: UserState;
-  updateState: (updates: Partial<UserState>) => Promise<void>;
+  updateState: (updates: UserStateUpdate) => Promise<void>;
   updatePreferences: (updates: Partial<UserState['preferences']>) => Promise<void>;
   resetState: () => Promise<void>;
 };
@@ -47,45 +58,49 @@ export const UserStateProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // Save state helper
-  const saveState = async (newState: UserState) => {
+  const saveState = useCallback(async (newState: UserState) => {
     stateRef.current = newState;
     setState(newState);
     await AsyncStorage.setItem(USER_STATE_STORAGE_KEY, JSON.stringify(newState));
-  };
+  }, []);
 
-  const waitForHydration = async () => {
+  const waitForHydration = useCallback(async () => {
     if (!hydratedRef.current) await hydrationPromiseRef.current;
-  };
+  }, []);
 
   // Update full or partial state
-  const updateState = async (updates: Partial<UserState>) => {
+  const updateState = useCallback(async (updates: UserStateUpdate) => {
     await waitForHydration();
     const currentState = stateRef.current;
-    const newState = { ...currentState, ...updates };
+    const resolvedUpdates = typeof updates === 'function' ? updates(currentState) : updates;
+    const newState = { ...currentState, ...resolvedUpdates };
+    if (JSON.stringify(newState) === JSON.stringify(currentState)) return;
     await saveState(newState);
-  };
+  }, [saveState, waitForHydration]);
 
   // Update only preferences
-  const updatePreferences = async (updates: Partial<UserState['preferences']>) => {
+  const updatePreferences = useCallback(async (updates: Partial<UserState['preferences']>) => {
     await waitForHydration();
     const currentState = stateRef.current;
     const newState = { ...currentState, preferences: { ...currentState.preferences, ...updates } };
+    if (JSON.stringify(newState.preferences) === JSON.stringify(currentState.preferences)) return;
     await saveState(newState);
-  };
+  }, [saveState, waitForHydration]);
 
-  const resetState = async () => {
+  const resetState = useCallback(async () => {
     await waitForHydration();
     await saveState({ ...defaultUserState, lastVisitDate: new Date().toISOString() });
-  };
+  }, [saveState, waitForHydration]);
+
+  const contextValue = useMemo(() => ({
+    userState: state,
+    updateState,
+    updatePreferences,
+    resetState,
+  }), [resetState, state, updatePreferences, updateState]);
 
   return (
-    <UserStateContext.Provider
-      value={{
-        userState: state,
-        updateState,
-        updatePreferences,
-        resetState,
-      }}>
+    <UserStateContext.Provider value={contextValue}>
       {children}
     </UserStateContext.Provider>
   );

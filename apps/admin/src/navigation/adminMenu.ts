@@ -25,6 +25,7 @@ export const adminMenuItems: AdminMenuItem[] = [
         name: "Lesson Categories",
       },
       { path: adminPaths.predefinedMemoryLessons, name: "Predefined Lessons" },
+      { path: adminPaths.memoryCollections, name: "Memory Collections" },
     ],
   },
   {
