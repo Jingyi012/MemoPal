@@ -11,7 +11,7 @@ import { firstParam, parseBulkItems, parseComposerGoal, parseComposerItems, sugg
 import { consumeOcrDraft, saveOcrDraft } from '@/features/memory-composer/utils/ocrDraftStore';
 import { buildTechniqueRoute, recommendTechnique, type ComposerOrigin, type TechniqueChoice } from '@/features/memory-composer/utils/techniqueRecommendation';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { DraggableMemoryItemRow } from '@/features/memory-composer/components/DraggableMemoryItemRow';
+import { DraggableMemoryItemRow, MemoryItemReorderProvider } from '@/features/memory-composer/components/DraggableMemoryItemRow';
 import { reorderItems } from '@/features/memory-composer/utils/reorderItems';
 
 type ComposerStep = 'content' | 'technique';
@@ -344,6 +344,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                 </AnimatedPressable>
               </View>
 
+              <MemoryItemReorderProvider>
               <View style={styles.chipRow}>
                 {items.map((item, index) => (
                   <DraggableMemoryItemRow
@@ -373,6 +374,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                 ))}
               </View>
               <Text style={styles.hint}>{t('techniqueDescription')}</Text>
+              </MemoryItemReorderProvider>
             </View>
 
             {message && <MessageCard message={message} />}

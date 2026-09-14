@@ -3,7 +3,7 @@ import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import * as Haptics from 'expo-haptics';
 import { GripVertical, Trash2 } from 'lucide-react-native';
-import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,15 +14,20 @@ import {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   interpolateColor,
-  LinearTransition,
   runOnJS,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 const ITEM_GAP = 8;
-const ITEM_LAYOUT_TRANSITION = LinearTransition.duration(150);
+const ReorderContext = createContext<SharedValue<{ from: number; to: number; stride: number }> | null>(null);
+
+export function MemoryItemReorderProvider({ children }: { children: ReactNode }) {
+  const position = useSharedValue({ from: -1, to: -1, stride: 61 });
+  return <ReorderContext.Provider value={position}>{children}</ReorderContext.Provider>;
+}
 
 export type DraggableMemoryItem = {
   value: string;
@@ -54,6 +59,7 @@ export function DraggableMemoryItemRow({
   onMove: (from: number, to: number) => void;
   onDragStateChange: (dragging: boolean) => void;
 }) {
+  const position = useContext(ReorderContext);
   const translateY = useSharedValue(0);
   const baseOffsetY = useSharedValue(0);
   const rowStride = useSharedValue(61);
@@ -66,23 +72,24 @@ export function DraggableMemoryItemRow({
   const [isDragging, setIsDragging] = useState(false);
   const reduceMotion = useReducedMotion();
 
-  const finishDrag = useCallback((didMove: boolean) => {
-    if (didMove) {
+  const finishDrag = useCallback((from: number, to: number) => {
+    if (from !== to) {
+      onMove(from, to);
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     onDragStateChange(false);
 
-    // Reordering happens continuously during the gesture. Two animation
-    // frames give the final native layout time to commit before the lifted row
-    // settles, so release never targets its previous position.
+    // Commit once on release so native layout cannot race the finger-following
+    // transform. Let the new layout commit before settling into its slot.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setIsDragging(false);
+        if (position) position.value = { from: -1, to: -1, stride: rowStride.value };
         pressProgress.value = withTiming(0, { duration: reduceMotion ? 0 : 100 });
         dragProgress.value = withTiming(0, { duration: reduceMotion ? 0 : 130 });
       });
     });
-  }, [dragProgress, onDragStateChange, pressProgress, reduceMotion]);
+  }, [dragProgress, onDragStateChange, onMove, position, pressProgress, reduceMotion, rowStride]);
 
   const startDrag = useCallback(() => {
     setIsDragging(true);
@@ -98,7 +105,10 @@ export function DraggableMemoryItemRow({
   useLayoutEffect(() => {
     if (!isDragging) return;
     baseOffsetY.value = (index - initialIndex.value) * rowStride.value;
-  }, [baseOffsetY, index, initialIndex, isDragging, rowStride]);
+    if (index !== initialIndex.value && position) {
+      position.value = { from: -1, to: -1, stride: rowStride.value };
+    }
+  }, [baseOffsetY, index, initialIndex, isDragging, position, rowStride]);
 
   const dragGesture = useMemo(
     () =>
@@ -112,6 +122,7 @@ export function DraggableMemoryItemRow({
           dropCompleted.value = false;
           initialIndex.value = index;
           currentIndex.value = index;
+          if (position) position.value = { from: index, to: index, stride: rowStride.value };
           baseOffsetY.value = 0;
           translateY.value = 0;
           dragProgress.value = withTiming(1, { duration: reduceMotion ? 0 : 90 });
@@ -123,40 +134,51 @@ export function DraggableMemoryItemRow({
             0,
             Math.min(itemCount - 1, initialIndex.value + offset)
           );
-          if (targetIndex !== currentIndex.value) {
-            const previousIndex = currentIndex.value;
-            currentIndex.value = targetIndex;
-            runOnJS(onMove)(previousIndex, targetIndex);
-          }
-          translateY.value = event.translationY;
+          currentIndex.value = targetIndex;
+          if (position) position.value = { from: initialIndex.value, to: targetIndex, stride: rowStride.value };
+          translateY.value = Math.max(
+            -initialIndex.value * rowStride.value,
+            Math.min((itemCount - 1 - initialIndex.value) * rowStride.value, event.translationY)
+          );
         })
-        .onEnd((event) => {
-          translateY.value = event.translationY;
+        .onEnd(() => {
           dragActivated.value = false;
           dropCompleted.value = true;
-          runOnJS(finishDrag)(currentIndex.value !== initialIndex.value);
+          runOnJS(finishDrag)(initialIndex.value, currentIndex.value);
         })
         .onFinalize(() => {
           if (dragActivated.value) runOnJS(cancelDrag)();
           dragActivated.value = false;
           if (!dropCompleted.value) {
+            if (position) position.value = { from: -1, to: -1, stride: rowStride.value };
             pressProgress.value = withTiming(0, { duration: reduceMotion ? 0 : 100 });
             dragProgress.value = withTiming(0, { duration: reduceMotion ? 0 : 130 });
             translateY.value = withTiming(0, { duration: reduceMotion ? 0 : 130 });
           }
         }),
-    [baseOffsetY, cancelDrag, currentIndex, dragActivated, dragProgress, dropCompleted, finishDrag, index, initialIndex, itemCount, onMove, pressProgress, reduceMotion, rowStride, startDrag, translateY]
+    [baseOffsetY, cancelDrag, currentIndex, dragActivated, dragProgress, dropCompleted, finishDrag, index, initialIndex, itemCount, position, pressProgress, reduceMotion, rowStride, startDrag, translateY]
   );
 
-  const rowAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: dragProgress.value ? 0.99 : 1,
+  const rowAnimatedStyle = useAnimatedStyle(() => {
+    const drag = position?.value;
+    let offset = 0;
+    if (drag && drag.from >= 0 && index !== drag.from) {
+      if (index > drag.from && index <= drag.to) offset = -drag.stride;
+      if (index < drag.from && index >= drag.to) offset = drag.stride;
+    }
+    return {
     transform: [
       {
-        translateY: (translateY.value - baseOffsetY.value) * dragProgress.value,
+        translateY: dragProgress.value > 0
+          ? (translateY.value - baseOffsetY.value) * dragProgress.value
+          : drag && drag.from >= 0
+            ? withTiming(offset, { duration: reduceMotion ? 0 : 150 })
+            : 0,
       },
       { scale: reduceMotion ? 1 : 1 + dragProgress.value * 0.008 },
     ],
-  }));
+    };
+  });
 
   const handleAnimatedStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
@@ -174,7 +196,6 @@ export function DraggableMemoryItemRow({
 
   return (
     <Animated.View
-      layout={isDragging ? undefined : ITEM_LAYOUT_TRANSITION}
       onLayout={(event) => {
         rowStride.value = event.nativeEvent.layout.height + ITEM_GAP;
       }}
@@ -239,7 +260,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
     elevation: 4,
     borderColor: theme.violetDeep,
-    opacity: 0.96,
   },
   itemNumber: {
     width: 27,

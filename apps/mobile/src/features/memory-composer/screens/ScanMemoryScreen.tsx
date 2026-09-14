@@ -27,7 +27,7 @@ import {
 import { consumeOcrDraft, saveOcrDraft, type OcrDraft } from '../utils/ocrDraftStore';
 import { translations } from '@/core/i18n/i18n';
 import { firstParam } from '../utils/composerParams';
-import { DraggableMemoryItemRow } from '../components/DraggableMemoryItemRow';
+import { DraggableMemoryItemRow, MemoryItemReorderProvider } from '../components/DraggableMemoryItemRow';
 import { ScanPhotoPreview } from '../components/ScanPhotoPreview';
 import { reorderItems } from '../utils/reorderItems';
 
@@ -367,6 +367,7 @@ function ReviewState({
 
       {message ? <MessageCard message={message} /> : null}
 
+      <MemoryItemReorderProvider>
       <View style={styles.itemList}>
         {items.map((item, index) => (
           <DraggableMemoryItemRow
@@ -386,6 +387,7 @@ function ReviewState({
         ))}
         {!items.length ? <Text style={styles.emptyItems}>{t('scanNoText')}</Text> : null}
       </View>
+      </MemoryItemReorderProvider>
 
       <AnimatedPressable onPress={onAdd} style={styles.addItemButton}>
         <Plus size={17} color={theme.berryDeep} />
