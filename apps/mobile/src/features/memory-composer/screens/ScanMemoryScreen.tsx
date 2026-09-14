@@ -3,7 +3,7 @@ import { CommonHeader } from '@/components/CommonHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
-import { Camera, Check, Images, Plus, RefreshCcw, ScanText, Trash2 } from 'lucide-react-native';
+import { Camera, Check, Images, Plus, RefreshCcw, ScanText } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -15,7 +15,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import {
@@ -28,8 +27,18 @@ import {
 import { consumeOcrDraft, saveOcrDraft, type OcrDraft } from '../utils/ocrDraftStore';
 import { translations } from '@/core/i18n/i18n';
 import { firstParam } from '../utils/composerParams';
+import { DraggableOcrItemRow } from '../components/DraggableOcrItemRow';
+import { ScanPhotoPreview } from '../components/ScanPhotoPreview';
+import { reorderItems } from '../utils/reorderItems';
 
 type ScanPhase = 'choose' | 'processing' | 'review';
+type EditableOcrItem = OcrItem & { id: string };
+
+let nextOcrItemId = 0;
+const makeEditableItem = (item: OcrItem): EditableOcrItem => ({
+  ...item,
+  id: `ocr-item-${++nextOcrItemId}`,
+});
 
 export default function ScanMemoryScreen() {
   const router = useRouter();
@@ -37,9 +46,11 @@ export default function ScanMemoryScreen() {
   const { t } = useTranslation('memoryComposer');
   const [phase, setPhase] = useState<ScanPhase>('choose');
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [items, setItems] = useState<OcrItem[]>([]);
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
+  const [items, setItems] = useState<EditableOcrItem[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [sourceDraft, setSourceDraft] = useState<OcrDraft | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
 
   useEffect(() => {
     setSourceDraft(consumeOcrDraft(firstParam(params.sourceDraftId)));
@@ -51,7 +62,7 @@ export default function ScanMemoryScreen() {
     try {
       const recognition = await recognizeMemoryPhoto(uri);
       const recognizedItems = extractMemoryItems(recognition);
-      setItems(recognizedItems);
+      setItems(recognizedItems.map(makeEditableItem));
       setPhase('review');
       if (!recognizedItems.length) setMessage(t('scanNoText'));
     } catch (error) {
@@ -94,11 +105,14 @@ export default function ScanMemoryScreen() {
               allowsEditing: true,
               quality: 0.85,
             });
-      const uri = result.canceled ? null : result.assets?.[0]?.uri;
-      if (!uri) return;
+      const asset = result.canceled ? null : result.assets?.[0];
+      if (!asset?.uri) return;
 
-      setImageUri(uri);
-      await runOcr(uri);
+      setImageUri(asset.uri);
+      setImageAspectRatio(
+        asset.width > 0 && asset.height > 0 ? asset.width / asset.height : null
+      );
+      await runOcr(asset.uri);
     } catch {
       setPhase('choose');
       setMessage(t('scanFailed'));
@@ -107,7 +121,9 @@ export default function ScanMemoryScreen() {
 
   const updateItem = (index: number, value: string) => {
     setItems((current) =>
-      current.map((item, itemIndex) => (itemIndex === index ? { value, needsReview: false } : item))
+      current.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, value, needsReview: false } : item
+      )
     );
   };
 
@@ -120,8 +136,12 @@ export default function ScanMemoryScreen() {
       setMessage(t('maxItemsMessage'));
       return;
     }
-    setItems((current) => [...current, { value: '', needsReview: true }]);
+    setItems((current) => [...current, makeEditableItem({ value: '', needsReview: true })]);
     setMessage(null);
+  };
+
+  const moveItem = (from: number, to: number) => {
+    setItems((current) => reorderItems(current, from, to));
   };
 
   const useItems = () => {
@@ -189,6 +209,7 @@ export default function ScanMemoryScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        scrollEnabled={!isReordering}
         showsVerticalScrollIndicator={false}>
         {phase === 'choose' ? (
           <ChoosePhotoState
@@ -204,10 +225,13 @@ export default function ScanMemoryScreen() {
         ) : (
           <ReviewState
             imageUri={imageUri}
+            imageAspectRatio={imageAspectRatio}
             items={items}
             message={message}
             onChange={updateItem}
             onRemove={removeItem}
+            onMove={moveItem}
+            onDragStateChange={setIsReordering}
             onAdd={addItem}
             onUse={useItems}
             onRetake={() => void choosePhoto('camera')}
@@ -252,7 +276,11 @@ function ChoosePhotoState({
 
       {imageUri ? (
         <View style={styles.previewCard}>
-          <Image source={{ uri: imageUri }} contentFit="cover" style={styles.previewImage} />
+          <Image
+            source={{ uri: imageUri }}
+            contentFit="contain"
+            style={styles.previewImage}
+          />
           <View style={styles.previewActions}>
             <Text style={styles.previewLabel}>{t('scanTryAgain')}</Text>
             <AnimatedPressable onPress={onRetry} style={styles.smallAction}>
@@ -282,7 +310,7 @@ function ProcessingState({ imageUri, t }: { imageUri: string | null; t: Translat
   return (
     <View style={styles.processingCard}>
       {imageUri ? (
-        <Image source={{ uri: imageUri }} contentFit="cover" style={styles.processingImage} />
+        <Image source={{ uri: imageUri }} contentFit="contain" style={styles.processingImage} />
       ) : null}
       <View style={styles.processingSpinner}>
         <ActivityIndicator size="large" color={theme.violetDeep} />
@@ -295,20 +323,26 @@ function ProcessingState({ imageUri, t }: { imageUri: string | null; t: Translat
 
 function ReviewState({
   imageUri,
+  imageAspectRatio,
   items,
   message,
   onChange,
   onRemove,
+  onMove,
+  onDragStateChange,
   onAdd,
   onUse,
   onRetake,
   t,
 }: {
   imageUri: string | null;
-  items: OcrItem[];
+  imageAspectRatio: number | null;
+  items: EditableOcrItem[];
   message: string | null;
   onChange: (index: number, value: string) => void;
   onRemove: (index: number) => void;
+  onMove: (from: number, to: number) => void;
+  onDragStateChange: (dragging: boolean) => void;
   onAdd: () => void;
   onUse: () => void;
   onRetake: () => void;
@@ -317,7 +351,12 @@ function ReviewState({
   return (
     <>
       {imageUri ? (
-        <Image source={{ uri: imageUri }} contentFit="cover" style={styles.reviewImage} />
+        <ScanPhotoPreview
+          imageUri={imageUri}
+          imageAspectRatio={imageAspectRatio}
+          openLabel={t('scanOpenPhoto')}
+          closeLabel={t('scanClosePhoto')}
+        />
       ) : null}
       <View style={styles.reviewIntro}>
         <View style={styles.reviewIcon}>
@@ -338,29 +377,20 @@ function ReviewState({
 
       <View style={styles.itemList}>
         {items.map((item, index) => (
-          <View
-            key={`ocr-${index}`}
-            style={[styles.itemRow, item.needsReview && styles.itemRowNeedsReview]}>
-            <View style={styles.itemNumber}>
-              <Text style={styles.itemNumberText}>{index + 1}</Text>
-            </View>
-            <TextInput
-              value={item.value}
-              onChangeText={(value) => onChange(index, value)}
-              placeholder={t('scanItemPlaceholder')}
-              placeholderTextColor="#AAA7B5"
-              maxLength={500}
-              selectionColor={theme.violetDeep}
-              cursorColor={theme.violetDeep}
-              style={styles.itemInput}
-            />
-            <AnimatedPressable
-              accessibilityLabel={`${t('removeAccessibility')} ${item.value || `${index + 1}`}`}
-              onPress={() => onRemove(index)}
-              style={styles.removeButton}>
-              <Trash2 size={16} color={theme.inkSoft} />
-            </AnimatedPressable>
-          </View>
+          <DraggableOcrItemRow
+            key={item.id}
+            item={item}
+            index={index}
+            itemCount={items.length}
+            placeholder={t('scanItemPlaceholder')}
+            removeLabel={t('removeAccessibility')}
+            reorderLabel={t('scanReorderItem')}
+            reorderHint={t('scanReorderHint')}
+            onChange={(value) => onChange(index, value)}
+            onRemove={() => onRemove(index)}
+            onMove={onMove}
+            onDragStateChange={onDragStateChange}
+          />
         ))}
         {!items.length ? <Text style={styles.emptyItems}>{t('scanNoText')}</Text> : null}
       </View>
@@ -543,14 +573,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
     paddingHorizontal: 22,
   },
-  reviewImage: {
-    width: '100%',
-    height: 155,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.sand,
-  },
   reviewIntro: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -587,36 +609,6 @@ const styles = StyleSheet.create({
   },
   countBadgeText: { color: '#25865C', fontFamily: typography.bodyExtraBold, fontSize: 10 },
   itemList: { gap: 8, marginTop: 13 },
-  itemRow: {
-    minHeight: 53,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
-    paddingHorizontal: 9,
-  },
-  itemRowNeedsReview: { borderColor: '#FFD06A', backgroundColor: '#FFF9E9' },
-  itemNumber: {
-    width: 27,
-    height: 27,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.violet,
-  },
-  itemNumberText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  itemInput: {
-    flex: 1,
-    minHeight: 43,
-    color: theme.ink,
-    fontFamily: typography.bodySemibold,
-    fontSize: 14,
-    paddingVertical: 8,
-  },
-  removeButton: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   emptyItems: {
     color: theme.inkSoft,
     fontFamily: typography.bodySemibold,

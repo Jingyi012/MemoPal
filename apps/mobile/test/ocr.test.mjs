@@ -3,6 +3,7 @@ import test from 'node:test';
 
 const { extractMemoryItems, MAX_OCR_ITEMS } = await import('../src/features/memory-composer/utils/ocrParsing.ts');
 const { saveOcrDraft, consumeOcrDraft } = await import('../src/features/memory-composer/utils/ocrDraftStore.ts');
+const { reorderItems } = await import('../src/features/memory-composer/utils/reorderItems.ts');
 
 const box = (x, y, width = 100, height = 20) => ({ x, y, width, height });
 const line = (text, x, y) => ({ text, boundingBox: box(x, y), elements: [] });
@@ -50,4 +51,11 @@ test('hands scan results back once without putting text in route parameters', ()
     goalType: 'spelling',
   });
   assert.equal(consumeOcrDraft(id), null);
+});
+
+test('reorders scanned words without mutating the original list', () => {
+  const original = ['first', 'second', 'third', 'fourth'];
+
+  assert.deepEqual(reorderItems(original, 1, 3), ['first', 'third', 'fourth', 'second']);
+  assert.deepEqual(original, ['first', 'second', 'third', 'fourth']);
 });
