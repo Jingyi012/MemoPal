@@ -6,6 +6,9 @@ import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { MemoryVisibilityBadge } from '@/components/MemoryVisibilityBadge';
 import { useMemorySet } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
+import { usePalaceScene } from '@/features/palace-scenes';
+import { AppImage } from '@/components/AppImage';
+import { getMemorySetPegIcon } from '@/features/memory-sets/utils/memorySetIcon';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { usePracticeAttemptHistory } from '@/features/practice-attempts';
@@ -26,6 +29,8 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const query = useMemorySet(memorySetId);
+  const palaceSceneId = query.data?.techniqueKey === 'palace' ? query.data.techniquePlan?.palaceSceneId ?? '' : '';
+  const palaceSceneQuery = usePalaceScene(palaceSceneId);
   const historyQuery = usePracticeAttemptHistory(memorySetId);
 
   if (!isOffline && query.isLoading) return <LoadingView description={t('title')} />;
@@ -64,7 +69,7 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
         backAction={() => router.back()}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SummaryCard memorySet={memorySet} latestAttempt={latestAttempt} t={t} />
+        <SummaryCard memorySet={memorySet} latestAttempt={latestAttempt} palaceScene={palaceSceneQuery.data} t={t} />
 
         <Text style={[styles.sectionLabel, { color: activeTheme.ink }]}>{t('yourMemoryItems')}</Text>
         <View style={styles.itemList}>
@@ -135,19 +140,24 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
 function SummaryCard({
   memorySet,
   latestAttempt,
+  palaceScene,
   t,
 }: {
   memorySet: MemorySet;
   latestAttempt: PracticeAttempt | null;
+  palaceScene?: { imageUrl: string; imageSource?: number };
   t: (key: TranslationKey<'memoryDetails'>) => string;
 }) {
   const { styles } = useStyles();
   const isPalace = memorySet.techniqueKey === 'palace';
   const summaryMeta = getSummaryMeta(memorySet, latestAttempt, t);
+  const hasPalaceImage = isPalace && !memorySet.emoji && Boolean(palaceScene?.imageUrl || palaceScene?.imageSource);
   return (
     <View style={styles.summaryCard}>
       <View style={[styles.summaryIcon, isPalace ? styles.summaryIconPalace : styles.summaryIconPeg]}>
-        <Text style={styles.techniqueEmoji}>{memorySet.emoji || (isPalace ? '🏰' : '🕯️')}</Text>
+        {memorySet.emoji ? <Text style={styles.techniqueEmoji}>{memorySet.emoji}</Text>
+          : hasPalaceImage ? <AppImage imageUrl={palaceScene?.imageUrl} imageSource={palaceScene?.imageSource} style={styles.summaryImage} />
+            : <Text style={styles.techniqueEmoji}>{isPalace ? '🏰' : getMemorySetPegIcon(memorySet)}</Text>}
       </View>
       <View style={styles.summaryCopy}>
         <Text style={[styles.techniqueLabel, isPalace ? styles.palaceLabel : styles.pegLabel]}>
@@ -250,6 +260,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   content: { padding: 16, paddingBottom: 42 },
   summaryCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 21, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 15 },
   summaryIcon: { width: 52, height: 52, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  summaryImage: { width: '100%', height: '100%', borderRadius: 17 },
   techniqueEmoji: { fontSize: 25 },
   summaryIconPalace: { backgroundColor: theme.violetTint },
   summaryIconPeg: { backgroundColor: theme.berryTint },
