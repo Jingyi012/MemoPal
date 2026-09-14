@@ -1,6 +1,7 @@
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
+import { MemoryLearningCard } from '@/components/MemoryLearningCard';
 import { CommonHeader } from '@/components/CommonHeader';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import LoadingView from '@/components/LoadingView';
@@ -193,22 +194,26 @@ DiscoverFiltersSheet.displayName = 'DiscoverFiltersSheet';
 function CommunityMemoryCard({ item, onPress, t }: { item: CommunityMemorySetSummary; onPress: () => void; t: (key: any) => string }) {
   const { styles } = useStyles();
   const isPalace = item.techniqueKey === 'palace';
-  return <AnimatedPressable containerStyle={styles.cardContainer} onPress={onPress} style={styles.card}>
-    <View style={[styles.cover, isPalace ? styles.palaceCover : styles.pegCover]}>
-      {isPalace && item.coverImageUrl ? <AppImage imageUrl={item.coverImageUrl} style={styles.coverImage} /> : <>
-        <View style={styles.posterOrbLarge} /><View style={styles.posterOrbSmall} />
-        <Text style={styles.coverEmoji}>{isPalace ? '🏰' : '🕯️'}</Text>
-        {!isPalace ? <Text style={styles.posterWord}>{item.title.slice(0, 18)}</Text> : null}
-      </>}
-      <View style={styles.coverBadge}><Text style={styles.coverBadgeText}>{t('publicBadge')}</Text></View>
+  const artwork = isPalace && item.coverImageUrl ? (
+    <AppImage imageUrl={item.coverImageUrl} style={styles.coverImage} />
+  ) : (
+    <Text style={styles.coverEmoji}>{isPalace ? '🏰' : '🕯️'}</Text>
+  );
+
+  return (
+    <View style={styles.cardContainer}>
+      <MemoryLearningCard
+        techniqueKey={item.techniqueKey}
+        title={item.title}
+        description={item.description ?? undefined}
+        metadata={`${item.itemCount} ${item.itemCount === 1 ? t('item') : t('items')} · ${item.author.displayName}`}
+        secondaryMetadata={`${item.copyCount} ${t('copies')} · ${goalLabel(item.goalType, t)}`}
+        artwork={artwork}
+        accessibilityLabel={`${item.title}, ${isPalace ? t('techniquePalace') : t('techniqueNumberPeg')}, ${item.itemCount} ${t('items')}, ${item.author.displayName}, ${item.copyCount} ${t('copies')}`}
+        onPress={onPress}
+      />
     </View>
-    <View style={styles.cardBody}>
-      <Text style={[styles.cardLabel, isPalace ? styles.palaceLabel : styles.pegLabel]}>{isPalace ? t('techniquePalace') : t('techniqueNumberPeg')}</Text>
-      <Text numberOfLines={2} style={styles.cardTitle}>{item.title}</Text>
-      <Text numberOfLines={1} style={styles.cardMeta}>{item.itemCount} {item.itemCount === 1 ? t('item') : t('items')} · {item.author.displayName}</Text>
-      <Text numberOfLines={1} style={styles.cardStats}>↗ {item.copyCount} {t('copies')} · {goalLabel(item.goalType, t)}</Text>
-    </View>
-  </AnimatedPressable>;
+  );
 }
 
 function goalLabel(goal: string, t: (key: any) => string) {
@@ -248,19 +253,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   resultCount: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   cardRow: { justifyContent: 'space-between' },
   cardContainer: { width: '48.5%' },
-  card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1.5, marginBottom: 12, overflow: 'hidden', width: '100%' },
-  cover: { alignItems: 'center', height: 112, justifyContent: 'center', overflow: 'hidden', position: 'relative' },
-  palaceCover: { backgroundColor: theme.violetTint }, pegCover: { backgroundColor: theme.berryTint },
   coverImage: { height: '100%', width: '100%' },
-  posterOrbLarge: { backgroundColor: 'rgba(255,111,145,0.16)', borderRadius: 70, height: 140, position: 'absolute', right: -30, top: -45, width: 140 },
-  posterOrbSmall: { backgroundColor: 'rgba(155,140,255,0.17)', borderRadius: 38, bottom: -22, height: 76, left: -15, position: 'absolute', width: 76 },
-  coverEmoji: { fontSize: 38 },
-  posterWord: { color: theme.berryDeep, fontFamily: typography.displayExtraBold, fontSize: 10, marginTop: 5, maxWidth: '78%' },
-  coverBadge: { backgroundColor: theme.mintTint, borderRadius: 8, left: 8, paddingHorizontal: 6, paddingVertical: 4, position: 'absolute', top: 8 },
-  coverBadgeText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 7.5 },
-  cardBody: { minHeight: 107, padding: 10 },
-  cardLabel: { fontFamily: typography.bodyExtraBold, fontSize: 8.5, letterSpacing: .7 }, palaceLabel: { color: theme.violetDeep }, pegLabel: { color: theme.berryDeep },
-  cardTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15, lineHeight: 19, marginTop: 4 },
-  cardMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9.5, marginTop: 7 }, cardStats: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 8.5, marginTop: 4 },
+  coverEmoji: { fontSize: 29 },
   separator: { height: 9 }, loading: { height: 200, overflow: 'hidden' }, empty: { alignItems: 'center', paddingHorizontal: 25, paddingVertical: 64 }, emptyEmoji: { fontSize: 34 }, emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, marginTop: 11, textAlign: 'center' }, emptyBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' }, retry: { backgroundColor: theme.sun, borderRadius: 13, marginTop: 15, paddingHorizontal: 18, paddingVertical: 11 }, retryText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 13 }, loadMore: { alignItems: 'center', alignSelf: 'center', backgroundColor: theme.violetTint, borderRadius: 14, flexDirection: 'row', gap: 7, justifyContent: 'center', marginTop: 17, minHeight: 44, paddingHorizontal: 17 }, loadMoreText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 }, footerSpace: { height: 10 },
 }));

@@ -13,6 +13,7 @@ type MemoryLearningCardProps = {
   title: string;
   description?: string;
   metadata: string;
+  secondaryMetadata?: string;
   visibility?: MemorySetVisibility;
   visibilityLabel?: string;
   artwork: ReactNode;
@@ -30,6 +31,7 @@ export function MemoryLearningCard({
   title,
   description,
   metadata,
+  secondaryMetadata,
   visibility,
   visibilityLabel,
   artwork,
@@ -75,6 +77,7 @@ export function MemoryLearningCard({
       {description ? <Text numberOfLines={3} style={styles.description}>{description}</Text> : null}
       <View style={styles.footer}>
         <Text numberOfLines={1} style={styles.metadata}>{metadata}</Text>
+        {secondaryMetadata ? <Text numberOfLines={1} style={styles.secondaryMetadata}>{secondaryMetadata}</Text> : null}
         {visibility && visibilityLabel ? <MemoryVisibilityBadge visibility={visibility} label={visibilityLabel} compact /> : null}
         {reviewLabel ? (
           <View style={[styles.review, reviewIsDue && styles.reviewDue]}>
@@ -121,6 +124,7 @@ const createStyles = (theme: MemoPalTheme) => StyleSheet.create({
   description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, marginTop: 5 },
   footer: { marginTop: 12, gap: 8 },
   metadata: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, lineHeight: 14 },
+  secondaryMetadata: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, lineHeight: 13 },
   review: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderRadius: 9, flexDirection: 'row', gap: 4, maxWidth: '100%', paddingHorizontal: 7, paddingVertical: 5 },
   reviewDue: { backgroundColor: theme.berryTint },
   reviewText: { color: theme.violetDeep, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 10 },
