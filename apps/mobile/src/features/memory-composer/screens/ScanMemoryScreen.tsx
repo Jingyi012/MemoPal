@@ -27,7 +27,7 @@ import {
 import { consumeOcrDraft, saveOcrDraft, type OcrDraft } from '../utils/ocrDraftStore';
 import { translations } from '@/core/i18n/i18n';
 import { firstParam } from '../utils/composerParams';
-import { DraggableOcrItemRow } from '../components/DraggableOcrItemRow';
+import { DraggableMemoryItemRow } from '../components/DraggableMemoryItemRow';
 import { ScanPhotoPreview } from '../components/ScanPhotoPreview';
 import { reorderItems } from '../utils/reorderItems';
 
@@ -377,7 +377,7 @@ function ReviewState({
 
       <View style={styles.itemList}>
         {items.map((item, index) => (
-          <DraggableOcrItemRow
+          <DraggableMemoryItemRow
             key={item.id}
             item={item}
             index={index}

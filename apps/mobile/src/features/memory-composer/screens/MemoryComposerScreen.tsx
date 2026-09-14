@@ -4,15 +4,24 @@ import type { MemoryGoalType } from '@/features/memory-sets';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, ClipboardList, Plus, ScanText, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, ClipboardList, Plus, ScanText } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { firstParam, parseBulkItems, parseComposerGoal, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import { consumeOcrDraft, saveOcrDraft } from '@/features/memory-composer/utils/ocrDraftStore';
 import { buildTechniqueRoute, recommendTechnique, type ComposerOrigin, type TechniqueChoice } from '@/features/memory-composer/utils/techniqueRecommendation';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { DraggableMemoryItemRow } from '@/features/memory-composer/components/DraggableMemoryItemRow';
+import { reorderItems } from '@/features/memory-composer/utils/reorderItems';
 
 type ComposerStep = 'content' | 'technique';
+type ComposerItem = { id: string; value: string };
+
+let nextComposerItemId = 0;
+const makeComposerItem = (value: string): ComposerItem => ({
+  id: `composer-item-${++nextComposerItemId}`,
+  value,
+});
 
 const goals: { key: MemoryGoalType; translationKey: 'goalSpelling' | 'goalList' | 'goalFacts' | 'goalOther'; emoji: string }[] = [
   { key: 'spelling', translationKey: 'goalSpelling', emoji: '✏️' },
@@ -53,9 +62,10 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
   const [newItem, setNewItem] = useState('');
   const [bulkInput, setBulkInput] = useState('');
   const [bulkMode, setBulkMode] = useState(false);
-  const [items, setItems] = useState<string[]>(initialItems);
+  const [items, setItems] = useState<ComposerItem[]>(() => initialItems.map(makeComposerItem));
   const [message, setMessage] = useState<string | null>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
+  const [isReordering, setIsReordering] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const focusedInputRef = useRef<TextInput | null>(null);
   const scrollOffsetRef = useRef(0);
@@ -70,10 +80,12 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
 
     setItems((current) => {
       const seen = new Set<string>();
-      return [...current, ...draft.items]
-        .map((item) => item.trim())
+      return [
+        ...current.map((item) => ({ ...item, value: item.value.trim() })),
+        ...draft.items.map((item) => makeComposerItem(item.trim())),
+      ]
         .filter((item) => {
-          const key = item.normalize('NFKC').toLocaleLowerCase();
+          const key = item.value.normalize('NFKC').toLocaleLowerCase();
           if (!key || seen.has(key)) return false;
           seen.add(key);
           return true;
@@ -89,6 +101,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
     if (firstParam(params.editContent) === '1') setStep('content');
   }, [params.editContent]);
 
+  const itemValues = useMemo(() => items.map((item) => item.value), [items]);
   const recommendation = useMemo(() => recommendTechnique(goalType, items.length), [goalType, items.length]);
 
   const keepFocusedInputVisible = useCallback(() => {
@@ -140,7 +153,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
       setMessage(t('maxItemsMessage'));
       return;
     }
-    setItems((current) => [...current, value]);
+    setItems((current) => [...current, makeComposerItem(value)]);
     setNewItem('');
     setMessage(null);
   };
@@ -151,18 +164,22 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
       setMessage(t('pasteManyMessage'));
       return;
     }
-    setItems((current) => [...current, ...pastedItems]);
+    setItems((current) => [...current, ...pastedItems.map(makeComposerItem)]);
     setBulkInput('');
     setBulkMode(false);
     setMessage(null);
   };
+
+  const moveItem = useCallback((from: number, to: number) => {
+    setItems((current) => reorderItems(current, from, to));
+  }, []);
 
   const continueToTechniques = () => {
     if (!items.length) {
       setMessage(t('addThingMessage'));
       return;
     }
-    const resolvedTitle = title.trim() || suggestMemoryTitle(goalType, items);
+    const resolvedTitle = title.trim() || suggestMemoryTitle(goalType, itemValues);
     if (!title.trim()) setTitle(resolvedTitle);
     setMessage(null);
 
@@ -176,7 +193,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
 
   const openTechnique = (technique: TechniqueChoice, routeTitle = title.trim()) => {
     const memorySetId = firstParam(params.memorySetId);
-    router.push(buildTechniqueRoute(technique, routeTitle, goalType, items, sceneId, origin, firstParam(params.memoryFolderId),
+    router.push(buildTechniqueRoute(technique, routeTitle, goalType, itemValues, sceneId, origin, firstParam(params.memoryFolderId),
       memorySetId ? { memorySetId, expectedVersion: firstParam(params.expectedVersion) ?? '', description: firstParam(params.description) } : undefined) as Href);
   };
 
@@ -208,6 +225,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
         ref={scrollViewRef}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="none"
+        scrollEnabled={!isReordering}
         showsVerticalScrollIndicator={false}
         onScroll={(event) => { scrollOffsetRef.current = event.nativeEvent.contentOffset.y; }}
         scrollEventThrottle={16}
@@ -270,7 +288,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                 <AnimatedPressable
                   accessibilityLabel={t('scanFromPhotoAccessibility')}
                   onPress={() => {
-                    const draftId = saveOcrDraft(items, {
+                    const draftId = saveOcrDraft(itemValues, {
                       title: title.trim() || undefined,
                       goalType,
                     });
@@ -328,16 +346,30 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
 
               <View style={styles.chipRow}>
                 {items.map((item, index) => (
-                  <View key={`${item}-${index}`} style={styles.itemChip}>
-                    <View style={styles.itemChipNumber}><Text style={styles.itemChipNumberText}>{index + 1}</Text></View>
-                    <Text style={styles.itemChipText}>{item}</Text>
-                    <AnimatedPressable
-                      accessibilityLabel={`${t('removeAccessibility')} ${item}`}
-                      onPress={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-                      style={styles.itemChipRemove}>
-                      <Trash2 size={13} color={theme.inkSoft} />
-                    </AnimatedPressable>
-                  </View>
+                  <DraggableMemoryItemRow
+                    key={item.id}
+                    item={{ value: item.value, needsReview: false }}
+                    index={index}
+                    itemCount={items.length}
+                    placeholder={t('itemPlaceholder')}
+                    removeLabel={t('removeAccessibility')}
+                    reorderLabel={t('scanReorderItem')}
+                    reorderHint={t('scanReorderHint')}
+                    onChange={(value) =>
+                      setItems((current) =>
+                        current.map((currentItem, itemIndex) =>
+                          itemIndex === index ? { ...currentItem, value } : currentItem
+                        )
+                      )
+                    }
+                    onRemove={() =>
+                      setItems((current) =>
+                        current.filter((_, itemIndex) => itemIndex !== index)
+                      )
+                    }
+                    onMove={moveItem}
+                    onDragStateChange={setIsReordering}
+                  />
                 ))}
               </View>
               <Text style={styles.hint}>{t('techniqueDescription')}</Text>
@@ -458,11 +490,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   addButtonContainer: { width: 52, minHeight: 52 },
   addButton: { width: '100%', minHeight: 52, borderRadius: 14, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.night, alignItems: 'center', justifyContent: 'center' },
   chipRow: { gap: 7, marginTop: 12 },
-  itemChip: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: theme.line, borderRadius: 12, backgroundColor: theme.paper, paddingHorizontal: 8 },
-  itemChipNumber: { width: 20, height: 20, borderRadius: 10, backgroundColor: theme.sun, alignItems: 'center', justifyContent: 'center' },
-  itemChipNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  itemChipText: { flex: 1, color: theme.ink, fontFamily: typography.bodyBold, fontSize: 13 },
-  itemChipRemove: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: 12 },
   primaryButton: { minHeight: 53, marginTop: 16, borderRadius: 15, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
   primaryButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 15 },
