@@ -1,6 +1,7 @@
 import { systemSettingsApi } from '@/core/settings/api/systemSettings';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { BaseCard } from '@/components/BaseCard';
+import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 import { createThemedStyles } from '@/theme/createThemedStyles';
@@ -375,13 +376,15 @@ function PremiumMemberView({ theme, expiresAt, onClose }: {
   theme: typeof memopalThemes.light; expiresAt?: string | null; onClose: () => void;
 }) {
   const { styles } = useMemberStyles();
-  const { language } = useTranslation('numberPeg');
+  const { language, t } = useTranslation('subscription');
   const zh = language === 'zh';
   return <View style={styles.memberPage}>
-    <View style={styles.memberTop}><View style={styles.memberEyebrow}><Crown size={15} color={theme.sun} /><Text style={styles.memberEyebrowText}>MEMOPAL PREMIUM</Text></View>
-      <View style={styles.memberActions}><AiCreditCoinButton /><AnimatedPressable accessibilityLabel="Close premium page" onPress={onClose} style={styles.memberClose}><X size={19} color={theme.inkSoft} /></AnimatedPressable></View>
-    </View>
-    <ScrollView contentContainerStyle={styles.memberContent}>
+    <CommonHeader
+      title={t('manage')}
+      eyebrow="MEMOPAL PREMIUM"
+      backAction={onClose}
+    />
+    <ScrollView contentContainerStyle={styles.memberContent} showsVerticalScrollIndicator={false}>
       <View style={styles.memberHero}><View style={styles.memberOrb}><Crown size={32} color={theme.sun} strokeWidth={2.3} /></View>
         <Text style={styles.memberTitle}>{zh ? '你的 Premium 旅程正在进行' : 'Your Premium journey is active'}</Text>
         <Text style={styles.memberSubtitle}>{zh ? '继续建立更深、更有趣的记忆。' : 'Keep building deeper, more playful memories.'}</Text>
@@ -397,8 +400,7 @@ function PremiumMemberView({ theme, expiresAt, onClose }: {
 }
 
 const useMemberStyles = createThemedStyles((theme) => StyleSheet.create({
-  memberPage: { flex: 1, backgroundColor: theme.canvas }, memberTop: { minHeight: 64, paddingHorizontal: 16, paddingTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: theme.line },
-  memberActions: { flexDirection: 'row', alignItems: 'center', gap: 8 }, memberEyebrow: { flexDirection: 'row', alignItems: 'center', gap: 7 }, memberEyebrowText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 }, memberClose: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.paper },
+  memberPage: { flex: 1, backgroundColor: theme.canvas },
   memberContent: { padding: 16, gap: 16, paddingBottom: 40 }, memberHero: { borderRadius: 28, padding: 22, backgroundColor: theme.night, overflow: 'hidden' }, memberOrb: { width: 62, height: 62, borderRadius: 22, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,201,60,0.16)', borderWidth: 1, borderColor: 'rgba(255,201,60,0.35)' },
   memberTitle: { color: '#FFF', fontFamily: typography.displayExtraBold, fontSize: 27, lineHeight: 34, marginTop: 18 }, memberSubtitle: { color: 'rgba(255,255,255,0.75)', fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20, marginTop: 5 }, activeBadge: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 5, marginTop: 18, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: 'rgba(255,201,60,0.16)' }, activeBadgeText: { color: theme.sun, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
   memberSection: { borderRadius: 22, padding: 17, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, gap: 14 }, memberSectionTitle: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase' }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 10 }, checkCircle: { width: 26, height: 26, borderRadius: 10, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.grass }, memberRowText: { flex: 1, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 }, manageCard: { minHeight: 76, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.violetTint, borderWidth: 1.5, borderColor: theme.violetLine }, manageCopy: { flex: 1 }, manageTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 }, manageBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, marginTop: 4 },

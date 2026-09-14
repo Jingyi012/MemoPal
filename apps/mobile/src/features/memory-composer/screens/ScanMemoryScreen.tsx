@@ -46,7 +46,6 @@ export default function ScanMemoryScreen() {
   const { t } = useTranslation('memoryComposer');
   const [phase, setPhase] = useState<ScanPhase>('choose');
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
   const [items, setItems] = useState<EditableOcrItem[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [sourceDraft, setSourceDraft] = useState<OcrDraft | null>(null);
@@ -109,9 +108,6 @@ export default function ScanMemoryScreen() {
       if (!asset?.uri) return;
 
       setImageUri(asset.uri);
-      setImageAspectRatio(
-        asset.width > 0 && asset.height > 0 ? asset.width / asset.height : null
-      );
       await runOcr(asset.uri);
     } catch {
       setPhase('choose');
@@ -225,7 +221,6 @@ export default function ScanMemoryScreen() {
         ) : (
           <ReviewState
             imageUri={imageUri}
-            imageAspectRatio={imageAspectRatio}
             items={items}
             message={message}
             onChange={updateItem}
@@ -323,7 +318,6 @@ function ProcessingState({ imageUri, t }: { imageUri: string | null; t: Translat
 
 function ReviewState({
   imageUri,
-  imageAspectRatio,
   items,
   message,
   onChange,
@@ -336,7 +330,6 @@ function ReviewState({
   t,
 }: {
   imageUri: string | null;
-  imageAspectRatio: number | null;
   items: EditableOcrItem[];
   message: string | null;
   onChange: (index: number, value: string) => void;
@@ -353,7 +346,6 @@ function ReviewState({
       {imageUri ? (
         <ScanPhotoPreview
           imageUri={imageUri}
-          imageAspectRatio={imageAspectRatio}
           openLabel={t('scanOpenPhoto')}
           closeLabel={t('scanClosePhoto')}
         />
