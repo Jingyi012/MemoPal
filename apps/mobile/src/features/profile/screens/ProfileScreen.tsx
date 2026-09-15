@@ -22,7 +22,7 @@ import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { EditProfileSheet } from '../components/EditProfileSheet';
 import HelpSheet from '../components/HelpSheet';
-import PrivacyPolicySheet from '../components/PrivacyPolicySheet';
+import AboutSheet from '../components/AboutSheet';
 import { ReviewScheduleSheet } from '../components/ReviewScheduleSheet';
 import type { AppLanguage, AppTheme } from '@/features/onboarding/types/userState';
 import { LanguageSheet } from '../components/LanguageSheet';
@@ -361,7 +361,7 @@ export default function ProfileScreen() {
         }}
       />
       <HelpSheet ref={helpRef} router={router} />
-      <PrivacyPolicySheet ref={privacyRef} />
+      <AboutSheet ref={privacyRef} />
       <ActionSheet
         ref={logoutRef}
         onAction={logout}
