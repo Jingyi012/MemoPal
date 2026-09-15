@@ -1,17 +1,24 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useEffect, useState } from 'react';
+import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemoryFolderCreateRequest } from '../types/memoryFolder.types';
 
 export function FolderNameModal({ visible, initialName, initialEmoji, initialDescription, isLoading, onCancel, onSubmit }: { visible: boolean; initialName?: string; initialEmoji?: string; initialDescription?: string; isLoading?: boolean; onCancel: () => void; onSubmit: (collection: MemoryFolderCreateRequest) => void }) {
   const { styles, theme } = useStyles();
   const { t } = useTranslation('library');
+  const sheetRef = useRef<BottomSheetModal>(null);
   const [name, setName] = useState(initialName ?? '');
   const [emoji, setEmoji] = useState(initialEmoji ?? '📚');
   const [description, setDescription] = useState(initialDescription ?? '');
+  useEffect(() => {
+    if (visible) sheetRef.current?.present();
+    else sheetRef.current?.dismiss();
+  }, [visible]);
   useEffect(() => {
     if (!visible) return;
     setName(initialName ?? '');
@@ -22,10 +29,10 @@ export function FolderNameModal({ visible, initialName, initialEmoji, initialDes
     const value = name.trim();
     if (value) onSubmit({ name: value, emoji: emoji.trim() || '📚', description: description.trim() });
   };
-  return <Modal transparent animationType="fade" visible={visible} statusBarTranslucent accessibilityViewIsModal onRequestClose={onCancel}>
-    <KeyboardAvoidingView style={styles.keyboardAvoiding} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <View style={styles.backdrop}><ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.dialog}>
+  const close = () => { sheetRef.current?.dismiss(); onCancel(); };
+  return <CustomBottomSheetModal ref={sheetRef} enableDynamicSizing backgroundStyle={styles.sheetBackground}>
+    <BottomSheetScrollView contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled">
+      <View style={styles.dialog}>
           <Text style={styles.title}>{initialName ? t('editCollection') : t('newFolder')}</Text>
           <Text style={styles.body}>{t('folderNamePrompt')}</Text>
           <TextInput autoFocus value={name} onChangeText={setName} editable={!isLoading} maxLength={80} placeholder={t('folderNamePlaceholder')} placeholderTextColor={theme.inkSoft} style={styles.input} accessibilityLabel={t('folderNamePrompt')} returnKeyType="next" />
@@ -38,24 +45,22 @@ export function FolderNameModal({ visible, initialName, initialEmoji, initialDes
             <TextInput value={description} onChangeText={setDescription} editable={!isLoading} maxLength={500} multiline numberOfLines={3} textAlignVertical="top" placeholder={t('collectionDescriptionPlaceholder')} placeholderTextColor={theme.inkSoft} style={[styles.input, styles.descriptionInput]} accessibilityLabel={t('collectionDescription')} />
           </View>
           <View style={styles.actions}>
-            <AnimatedPressable containerStyle={styles.actionContainer} disabled={isLoading} pressOnIn onPress={onCancel} style={styles.cancel}>
+            <AnimatedPressable containerStyle={styles.actionContainer} disabled={isLoading} pressOnIn onPress={close} style={styles.cancel}>
               <Text style={styles.cancelText}>{t('cancel')}</Text>
             </AnimatedPressable>
             <AnimatedPressable containerStyle={styles.actionContainer} disabled={isLoading || !name.trim()} pressOnIn onPress={submit} style={[styles.confirm, (!name.trim() || isLoading) && styles.disabled]}>
               <Text style={styles.confirmText}>{initialName ? t('save') : t('create')}</Text>
             </AnimatedPressable>
           </View>
-        </View>
-      </ScrollView></View>
-    </KeyboardAvoidingView>
-  </Modal>;
+      </View>
+    </BottomSheetScrollView>
+  </CustomBottomSheetModal>;
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  keyboardAvoiding: { flex: 1 },
-  backdrop: { alignItems: 'center', backgroundColor: 'rgba(30, 26, 48, 0.58)', flex: 1, justifyContent: 'center', padding: 24 },
-  scrollContent: { flexGrow: 1, justifyContent: 'center' },
-  dialog: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 24, borderWidth: 1, maxWidth: 360, padding: 22, width: '100%' },
+  sheetBackground: { backgroundColor: theme.paper, borderRadius: 30 },
+  sheetContent: { paddingBottom: 24, paddingHorizontal: 20, paddingTop: 8 },
+  dialog: { backgroundColor: theme.paper, width: '100%' },
   title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 21, textAlign: 'center' },
   body: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, marginTop: 9, textAlign: 'center' },
   input: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, color: theme.ink, fontSize: 16, marginTop: 18, minHeight: 50, paddingHorizontal: 14 },
