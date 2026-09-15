@@ -16,7 +16,7 @@ export function useGeneratePalaceAssociations() {
     mutationFn: async (request: GeneratePalaceAssociationsRequest) => {
       const input = JSON.stringify(request);
       if (retry.current?.input !== input) {
-        const approval = await confirm(request.items.length);
+        const approval = await confirm(request.items.length, false, false);
         if (!approval) throw new Error('AI generation cancelled.');
         retry.current = { input, id: Crypto.randomUUID(), maxCredits: approval.maxCredits };
       }

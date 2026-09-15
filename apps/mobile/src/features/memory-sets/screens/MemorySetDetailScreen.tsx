@@ -99,13 +99,17 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
           })}
         </View>
 
-        {memorySet.status === 'draft' ? <AnimatedPressable style={styles.modeCard} onPress={() => router.push({
+        {memorySet.status === 'draft' ? <AnimatedPressable style={[styles.modeCard, styles.setupCard]} onPress={() => router.push({
           pathname: isPalace ? '/palaces/create-memory' : '/number-peg/create',
           params: { memorySetId: memorySet.id, expectedVersion: String(memorySet.version), title: memorySet.title,
             description: memorySet.description ?? '', memoryFolderId: memorySet.memoryFolderId ?? '', goalType: memorySet.goalType,
             items: JSON.stringify(memorySet.items.slice().sort((a, b) => a.position - b.position).map((item) => item.answer)) },
         } as Href)}>
-          <Text style={styles.modeTitle}>{t('draftSetup')}</Text>
+          <View style={[styles.modeIcon, styles.setupIcon]}><Text style={styles.modeEmoji}>✨</Text></View>
+          <View style={styles.modeCopy}>
+            <Text style={styles.modeTitle}>{t('draftSetup')}</Text>
+            <View style={styles.modeActionRow}><Text style={styles.modeAction}>{t('draftSetup')}</Text><ArrowRight size={14} color={theme.violetDeep} /></View>
+          </View>
         </AnimatedPressable> : <>
         <View style={styles.modeSection}>
           <Text style={styles.modeSectionTitle}>{t('chooseMode')}</Text>
@@ -279,10 +283,12 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   modeSectionBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4, marginBottom: 11 },
   modeCard: { alignItems: 'center', borderRadius: 18, borderWidth: 2, flexDirection: 'row', marginBottom: 10, minHeight: 92, padding: 13 },
   rehearseCard: { backgroundColor: theme.violetTint, borderColor: theme.violetLine },
+  setupCard: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, marginTop: 24 },
   recallCard: { backgroundColor: theme.sunTint, borderColor: theme.sunLine },
   recallCardDue: { borderColor: theme.berry },
   modeIcon: { alignItems: 'center', borderRadius: 15, height: 52, justifyContent: 'center', width: 52 },
   rehearseIcon: { backgroundColor: theme.violetLine },
+  setupIcon: { backgroundColor: theme.violetLine },
   recallIcon: { backgroundColor: theme.sunLine },
   modeEmoji: { fontSize: 25 },
   modeCopy: { flex: 1, marginLeft: 12 },
