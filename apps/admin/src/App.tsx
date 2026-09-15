@@ -19,7 +19,6 @@ const XpConfigsPage = lazy(() => import('./pages/XpConfigsPage'));
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const PalaceScenesPage = lazy(() => import('./features/palace-scenes/pages/PalaceScenesPage'));
-const PredefinedMemoryLessonsPage = lazy(() => import('./features/predefined-memory-lessons/pages/PredefinedMemoryLessonsPage'));
 const MemoryCollectionsPage = lazy(() => import('./features/predefined-memory-lessons/pages/MemoryCollectionsPage'));
 const MemoryCollectionEditorPage = lazy(() => import('./features/predefined-memory-lessons/pages/MemoryCollectionEditorPage'));
 const PredefinedMemoryLessonCategoriesPage = lazy(() => import('./features/predefined-memory-lessons/pages/PredefinedMemoryLessonCategoriesPage'));
@@ -44,11 +43,15 @@ export default function App() {
             <Route path="users" element={<UsersPage />} />
             <Route path="community-memory-sets" element={<CommunityMemorySetsPage />} />
             <Route path="content">
-              <Route index element={<Navigate to="palace-scenes" replace />} />
+              <Route index element={<Navigate to="memory-collections" replace />} />
               <Route path="palace-scenes" element={<PalaceScenesPage />} />
-              <Route path="predefined-memory-lessons" element={<PredefinedMemoryLessonsPage />} />
+              <Route path="palace-scenes/:sceneId" element={<PalaceScenesPage />} />
+              <Route path="predefined-memory-lessons" element={<MemoryCollectionsPage />} />
+              <Route path="predefined-memory-lessons/:lessonId" element={<MemoryCollectionsPage />} />
               <Route path="memory-collections" element={<MemoryCollectionsPage />} />
               <Route path="memory-collections/:collectionId" element={<MemoryCollectionEditorPage />} />
+              <Route path="memory-collections/:collectionId/lessons" element={<MemoryCollectionsPage />} />
+              <Route path="memory-collections/:collectionId/lessons/:lessonId" element={<MemoryCollectionsPage />} />
               <Route path="predefined-memory-lesson-categories" element={<PredefinedMemoryLessonCategoriesPage />} />
             </Route>
             <Route path="configs">

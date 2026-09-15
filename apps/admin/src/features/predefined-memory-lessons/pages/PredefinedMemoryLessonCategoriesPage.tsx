@@ -1,122 +1,50 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Card, Col, Empty, Flex, Form, Input, InputNumber, Modal, Popconfirm, Row, Spin, Switch, Tag, Typography } from 'antd';
+import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Alert, App, Button, Empty, Flex, Input, Select, Skeleton, Space, Tag, Tooltip, Typography } from 'antd';
 import { useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { adminPredefinedMemoryLessonCategoriesApi } from '../../../api/adminPredefinedMemoryLessonsApi';
+import { ContentStudioNav } from '../../../components/content/ContentStudioNav';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
 import { extractApiErrorMessage } from '../../../lib/errorMessage';
-import type { PredefinedMemoryLessonCategoryDto, PredefinedMemoryLessonCategoryUpsertRequest } from '../../../types/predefinedMemoryLesson';
-
-const queryKey = ['admin-predefined-memory-lesson-categories'] as const;
-const lessonQueryKey = ['admin-predefined-memory-lessons'] as const;
-const blankDraft = (): PredefinedMemoryLessonCategoryUpsertRequest => ({
-  key: '', nameEn: '', nameZh: '', descriptionEn: '', descriptionZh: '',
-  emoji: '📚', sortOrder: 100, isActive: true,
-});
+import { adminPaths } from '../../../navigation/adminPaths';
+import type { PredefinedMemoryLessonCategoryDto } from '../../../types/predefinedMemoryLesson';
+import { CategoryEditor } from '../components/CategoryEditor';
+import { invalidateContentLibrary, useContentLibrary } from '../hooks/useContentLibrary';
 
 export default function PredefinedMemoryLessonCategoriesPage() {
-  const { message } = App.useApp();
-  const queryClient = useQueryClient();
-  const categoriesQuery = useQuery({ queryKey, queryFn: adminPredefinedMemoryLessonCategoriesApi.list });
-  const [editing, setEditing] = useState<PredefinedMemoryLessonCategoryDto | null>(null);
-  const [draft, setDraft] = useState<PredefinedMemoryLessonCategoryUpsertRequest>(blankDraft);
-  const [open, setOpen] = useState(false);
-
-  const openEditor = (category?: PredefinedMemoryLessonCategoryDto) => {
-    setEditing(category ?? null);
-    setDraft(category ? {
-      key: category.key,
-      nameEn: category.nameEn,
-      nameZh: category.nameZh,
-      descriptionEn: category.descriptionEn,
-      descriptionZh: category.descriptionZh,
-      emoji: category.emoji,
-      sortOrder: category.sortOrder,
-      isActive: category.isActive,
-      expectedVersion: category.version,
-    } : blankDraft());
-    setOpen(true);
-  };
-
-  const saveMutation = useMutation({
-    mutationFn: () => editing
-      ? adminPredefinedMemoryLessonCategoriesApi.update(editing.id, draft)
-      : adminPredefinedMemoryLessonCategoriesApi.create(draft),
-    retry: false,
-    onSuccess: () => {
-      message.success(editing ? 'Category updated.' : 'Category created.');
-      setOpen(false);
-      void queryClient.invalidateQueries({ queryKey });
-      void queryClient.invalidateQueries({ queryKey: lessonQueryKey });
-    },
-    onError: (error) => message.error(extractApiErrorMessage(error, 'Could not save category.')),
-  });
-  const deleteMutation = useMutation({
-    mutationFn: adminPredefinedMemoryLessonCategoriesApi.delete,
-    retry: false,
-    onSuccess: () => {
-      message.success('Category deleted.');
-      void queryClient.invalidateQueries({ queryKey });
-    },
-    onError: (error) => message.error(extractApiErrorMessage(error, 'Could not delete category.')),
-  });
-  const canSave = Boolean(draft.key.trim().length >= 2 && draft.nameEn.trim() && draft.nameZh.trim() && draft.emoji.trim());
-
-  return (
-    <PortalPageContainer>
-      <Flex justify='space-between' align='center' wrap='wrap' gap={12} style={{ marginBottom: 20 }}>
-        <div>
-          <Typography.Title level={2} style={{ margin: 0 }}>Lesson Categories</Typography.Title>
-          <Typography.Text type='secondary'>Organise lessons into any content type, such as languages, science, daily life, history, or exam revision.</Typography.Text>
-        </div>
-        <Button type='primary' icon={<PlusOutlined />} onClick={() => openEditor()}>New category</Button>
-      </Flex>
-
-      {categoriesQuery.isError ? (
-        <Alert type='error' showIcon message='Could not load lesson categories.' action={<Button onClick={() => void categoriesQuery.refetch()}>Retry</Button>} />
-      ) : categoriesQuery.isLoading ? <Spin /> : categoriesQuery.data?.length ? (
-        <Row gutter={[16, 16]}>
-          {categoriesQuery.data.map((category) => (
-            <Col xs={24} md={12} xl={8} key={category.id}>
-              <Card actions={[
-                <EditOutlined key='edit' onClick={() => openEditor(category)} />,
-                <Popconfirm key='delete' title='Delete this category?' description='Categories used by lessons cannot be deleted.' onConfirm={() => deleteMutation.mutate(category.id)}><DeleteOutlined /></Popconfirm>,
-              ]}>
-                <Flex gap={12} align='flex-start'>
-                  <Typography.Text style={{ fontSize: 32, lineHeight: 1 }}>{category.emoji}</Typography.Text>
-                  <div>
-                    <Typography.Title level={5} style={{ margin: 0 }}>{category.nameEn}</Typography.Title>
-                    <Typography.Text>{category.nameZh}</Typography.Text>
-                    <div style={{ marginTop: 10 }}><Tag color={category.isActive ? 'green' : 'default'}>{category.isActive ? 'Active' : 'Hidden'}</Tag><Tag>Order {category.sortOrder}</Tag></div>
-                  </div>
-                </Flex>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      ) : <Empty description='No lesson categories yet' />}
-
-      <Modal
-        open={open}
-        onCancel={() => setOpen(false)}
-        title={editing ? `Edit ${editing.nameEn}` : 'Create lesson category'}
-        okText={saveMutation.isPending ? 'Saving…' : 'Save category'}
-        okButtonProps={{ loading: saveMutation.isPending, disabled: !canSave }}
-        onOk={() => saveMutation.mutate()}
-      >
-        <Form layout='vertical'>
-          <Row gutter={12}>
-            <Col span={16}><Form.Item label='Stable key' required><Input value={draft.key} placeholder='language-learning' onChange={(event) => setDraft({ ...draft, key: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} /></Form.Item></Col>
-            <Col span={8}><Form.Item label='Emoji' required><Input value={draft.emoji} onChange={(event) => setDraft({ ...draft, emoji: event.target.value })} /></Form.Item></Col>
-            <Col span={12}><Form.Item label='English name' required><Input value={draft.nameEn} onChange={(event) => setDraft({ ...draft, nameEn: event.target.value })} /></Form.Item></Col>
-            <Col span={12}><Form.Item label='Chinese name' required><Input value={draft.nameZh} onChange={(event) => setDraft({ ...draft, nameZh: event.target.value })} /></Form.Item></Col>
-            <Col span={12}><Form.Item label='English description'><Input.TextArea rows={3} value={draft.descriptionEn} onChange={(event) => setDraft({ ...draft, descriptionEn: event.target.value })} /></Form.Item></Col>
-            <Col span={12}><Form.Item label='Chinese description'><Input.TextArea rows={3} value={draft.descriptionZh} onChange={(event) => setDraft({ ...draft, descriptionZh: event.target.value })} /></Form.Item></Col>
-            <Col span={12}><Form.Item label='Sort order'><InputNumber min={0} max={10000} value={draft.sortOrder} onChange={(value) => setDraft({ ...draft, sortOrder: value ?? 0 })} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col span={12}><Form.Item label='Available in Practice'><Switch checked={draft.isActive} onChange={(isActive) => setDraft({ ...draft, isActive })} checkedChildren='Active' unCheckedChildren='Hidden' /></Form.Item></Col>
-          </Row>
-        </Form>
-      </Modal>
-    </PortalPageContainer>
-  );
+  const { message, modal } = App.useApp();
+  const client = useQueryClient();
+  const library = useContentLibrary();
+  const [params, setParams] = useSearchParams();
+  const search = params.get('q') ?? '';
+  const status = params.get('status') ?? 'all';
+  const [editing, setEditing] = useState<PredefinedMemoryLessonCategoryDto | 'new'>();
+  const categories = library.categories.data ?? [];
+  const counts = (id: string) => ({ lessons: library.lessons.data?.filter(l => l.categoryId === id).length ?? 0, collections: library.collections.data?.filter(c => c.categoryId === id).length ?? 0 });
+  const filtered = categories.filter(c => `${c.nameEn} ${c.nameZh} ${c.key}`.toLowerCase().includes(search.toLowerCase()) && (status === 'all' || c.isActive === (status === 'active')))
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.nameEn.localeCompare(b.nameEn));
+  const filter = (key: string, value: string) => setParams(previous => { const next = new URLSearchParams(previous); if (!value || value === 'all') next.delete(key); else next.set(key, value); return next; });
+  const remove = useMutation({ mutationFn: adminPredefinedMemoryLessonCategoriesApi.delete, retry: false, meta: { suppressGlobalErrorToast: true },
+    onSuccess: async () => { await invalidateContentLibrary(client); message.success('Category deleted.'); },
+    onError: error => message.error(extractApiErrorMessage(error, 'Could not delete category.')) });
+  return <PortalPageContainer>
+    <ContentStudioNav />
+    <header className='studio-header'><div><div className='studio-eyebrow'>CONTENT STUDIO / ORGANIZATION</div><Typography.Title level={2}>Categories</Typography.Title><Typography.Paragraph type='secondary'>Give your library a clear structure. Group lessons and collections by topic.</Typography.Paragraph></div><Button aria-label='New category' type='primary' size='large' icon={<PlusOutlined />} onClick={() => setEditing('new')}>New category</Button></header>
+    <div className='studio-stats'>{[['Total categories', categories.length], ['Active in catalogue', categories.filter(c => c.isActive).length], ['Hidden categories', categories.filter(c => !c.isActive).length]].map(([label, value]) => <div className='studio-stat' key={label}><span>{label}</span><strong>{library.loading ? '—' : value}</strong></div>)}</div>
+    <div className='studio-toolbar'><Input prefix={<SearchOutlined />} allowClear aria-label='Search categories' placeholder='Search English, Chinese, or key…' value={search} onChange={e => filter('q', e.target.value)} /><Select aria-label='Category visibility' value={status} onChange={value => filter('status', value)} options={[{ value: 'all', label: 'All visibility' }, { value: 'active', label: 'Active' }, { value: 'hidden', label: 'Hidden' }]} /><Button aria-label='Refresh categories' icon={<ReloadOutlined />} loading={library.categories.isFetching} onClick={() => void library.retry()} /></div>
+    {library.error ? <Alert showIcon type='error' message='Could not load categories and their usage' action={<Button onClick={() => void library.retry()}>Retry</Button>} /> : library.loading ? <Skeleton active /> : !filtered.length ? <Empty description={categories.length ? 'No categories match your filters' : 'Create a category to organize your first lessons'}><Button onClick={() => categories.length ? setParams({}) : setEditing('new')}>{categories.length ? 'Clear filters' : 'New category'}</Button></Empty> : <div className='studio-card-grid'>
+      {filtered.map(category => { const usage = counts(category.id); const inUse = usage.lessons + usage.collections > 0;
+        return <article className='studio-card' key={category.id}>
+          <div className='studio-card-body'><Flex gap={14} align='start'><span className='studio-category-icon'>{category.emoji}</span><div><Typography.Title level={4} style={{ margin: '0 0 4px' }}>{category.nameEn}</Typography.Title><Typography.Text type='secondary'>{category.nameZh}</Typography.Text></div></Flex>
+            <Typography.Paragraph className='studio-card-description' ellipsis={{ rows: 2 }}>{category.descriptionEn || category.descriptionZh || 'Add a description to explain what belongs in this category.'}</Typography.Paragraph>
+            <Space wrap><Tag color={category.isActive ? 'green' : 'default'}>{category.isActive ? 'Active' : 'Hidden'}</Tag><Typography.Text type='secondary'>Order {category.sortOrder}</Typography.Text></Space>
+            <div style={{ marginTop: 16 }}><Link to={`${adminPaths.memoryCollections}?category=${category.id}`}>{usage.lessons} lessons</Link><Typography.Text type='secondary'> · {usage.collections} collections</Typography.Text></div>
+          </div>
+          <div className='studio-card-footer'><Button aria-label="Edit category" icon={<EditOutlined />} onClick={() => setEditing(category)}>Edit category</Button><Tooltip title={inUse ? 'Reassign its lessons and collections before deleting.' : 'Delete category'}><span><Button type='text' danger disabled={inUse || remove.isPending} aria-label={`Delete ${category.nameEn}`} icon={<DeleteOutlined />} onClick={() => modal.confirm({ title: `Delete ${category.nameEn}?`, content: 'This unused category will be removed from the catalogue.', okText: 'Delete category', okButtonProps: { danger: true }, onOk: () => remove.mutateAsync(category.id) })} /></span></Tooltip></div>
+        </article>;
+      })}
+    </div>}
+    {editing && <CategoryEditor key={editing === 'new' ? 'new' : editing.id} category={editing === 'new' ? undefined : editing} onClose={() => setEditing(undefined)} />}
+  </PortalPageContainer>;
 }

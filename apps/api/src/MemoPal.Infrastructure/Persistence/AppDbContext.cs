@@ -454,6 +454,7 @@ public class AppDbContext : DbContext, IAppDbContext
         modelBuilder.Entity<PredefinedMemoryLesson>(b =>
         {
             b.HasKey(x => x.Id);
+            b.Property(x => x.Version).IsConcurrencyToken();
             b.Property(x => x.Key).HasMaxLength(100);
             b.Property(x => x.TitleEn).HasMaxLength(200);
             b.Property(x => x.TitleZh).HasMaxLength(200);

@@ -20,6 +20,14 @@ public sealed class AdminMemoryCollectionsController(ISender sender) : ApiContro
     public async Task<IActionResult> Create([FromBody] PredefinedMemoryCollectionRequest request, CancellationToken ct) =>
         Ok(await Sender.Send(new SaveMemoryCollectionCommand(null, request), ct));
 
+    [HttpPost("lessons/{lessonId}/move")]
+    public async Task<IActionResult> MoveLesson(string lessonId, [FromBody] MoveCollectionLessonRequest request, CancellationToken ct) =>
+        Ok(await Sender.Send(new MoveCollectionLessonCommand(lessonId, request), ct));
+
+    [HttpDelete("{collectionId}")]
+    public async Task<IActionResult> Delete(string collectionId, [FromQuery] int expectedVersion, CancellationToken ct) =>
+        Ok(await Sender.Send(new DeleteMemoryCollectionCommand(collectionId, expectedVersion), ct));
+
     [HttpPut("{collectionId}")]
     public async Task<IActionResult> Update(string collectionId, [FromBody] PredefinedMemoryCollectionRequest request, CancellationToken ct) =>
         Ok(await Sender.Send(new SaveMemoryCollectionCommand(collectionId, request), ct));

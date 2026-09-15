@@ -9,7 +9,9 @@ export const adminPaths = {
   communityMemorySets: '/admin/community-memory-sets',
   contentRoot: '/admin/content',
   memoryCollections: '/admin/content/memory-collections',
+  memoryCollectionLessons: (collectionId: string) => `/admin/content/memory-collections/${collectionId}/lessons`,
   palaceScenes: '/admin/content/palace-scenes',
+  palaceSceneEditor: (sceneId: string) => `/admin/content/palace-scenes/${sceneId}`,
   predefinedMemoryLessons: '/admin/content/predefined-memory-lessons',
   predefinedMemoryLessonCategories: '/admin/content/predefined-memory-lesson-categories',
 

@@ -43,6 +43,8 @@ export interface PredefinedMemoryLessonItemInput {
 }
 
 export interface PredefinedMemoryLessonUpsertRequest {
+  collectionId?: string;
+  expectedCollectionVersion?: number;
   key: string;
   titleEn: string;
   titleZh: string;

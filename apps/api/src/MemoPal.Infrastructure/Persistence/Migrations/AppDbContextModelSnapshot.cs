@@ -1313,6 +1313,7 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("Version")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer");
 
                     b.HasKey("Id");

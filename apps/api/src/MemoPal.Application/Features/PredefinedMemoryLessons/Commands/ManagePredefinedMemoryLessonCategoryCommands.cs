@@ -72,6 +72,8 @@ public sealed class DeletePredefinedMemoryLessonCategoryCommandHandler(IAppDbCon
             cancellationToken) ?? throw new NotFoundAppException("Predefined lesson category not found.");
         if (await db.PredefinedMemoryLessons.AnyAsync(x => x.CategoryId == category.Id && !x.IsDeleted, cancellationToken))
             throw new ConflictAppException("This category is used by lessons. Reassign them before deleting it.");
+        if (await db.PredefinedMemoryCollections.AnyAsync(x => x.CategoryId == category.Id && !x.IsDeleted, cancellationToken))
+            throw new ConflictAppException("This category is used by collections. Reassign them before deleting it.");
 
         db.PredefinedMemoryLessonCategories.Remove(category);
         await db.SaveChangesAsync(cancellationToken);

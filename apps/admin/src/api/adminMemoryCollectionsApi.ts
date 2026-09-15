@@ -11,7 +11,20 @@ export interface MemoryCollectionDto extends Omit<MemoryCollectionInput, 'lesson
   id: string; version: number; lessons: PredefinedMemoryLessonDto[];
 }
 const endpoint = '/admin/memory-collections';
+export interface MoveCollectionLessonInput {
+  sourceCollectionId: string | null;
+  targetCollectionId: string | null;
+  expectedSourceVersion?: number;
+  expectedTargetVersion?: number;
+  expectedLessonVersion: number;
+}
 export const adminMemoryCollectionsApi = {
+  async moveLesson(lessonId: string, input: MoveCollectionLessonInput) {
+    return (await apiClient.post<ApiResponse<boolean>>(`${endpoint}/lessons/${lessonId}/move`, input)).data.data;
+  },
+  async delete(id: string, expectedVersion: number) {
+    return (await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${id}`, { params: { expectedVersion } })).data.data;
+  },
   async list() { return (await apiClient.get<ApiResponse<MemoryCollectionDto[]>>(endpoint)).data.data ?? []; },
   async save(id: string | undefined, input: MemoryCollectionInput) {
     const response = id ? await apiClient.put<ApiResponse<MemoryCollectionDto>>(`${endpoint}/${id}`, input)

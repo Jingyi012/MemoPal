@@ -12,27 +12,34 @@ interface ImageUploadFieldProps {
   value?: string;
   onChange?: (value: string) => void;
   category: ImageCategory;
+  disabled?: boolean;
+  onUploadingChange?: (uploading: boolean) => void;
+  onUploadError?: (error: unknown) => void;
 }
 
-export function ImageUploadField({ value, onChange, category }: ImageUploadFieldProps) {
+export function ImageUploadField({ value, onChange, category, disabled, onUploadingChange, onUploadError }: ImageUploadFieldProps) {
   const { uploadImage, resolveMediaPath } = useAdminMediaApi();
   const [uploading, setUploading] = useState(false);
 
   const uploadProps: UploadProps = {
+    disabled: disabled || uploading,
     accept: 'image/*',
     showUploadList: false,
     customRequest: async (options) => {
       try {
         setUploading(true);
+        onUploadingChange?.(true);
         const originalFile = options.file as File;
         const optimizedFile = await compressImageForUpload(originalFile);
         const uploadedPath = await uploadImage(optimizedFile, category);
         onChange?.(uploadedPath);
         options.onSuccess?.({}, new XMLHttpRequest());
       } catch (error) {
+        onUploadError?.(error);
         options.onError?.(error as Error);
       } finally {
         setUploading(false);
+        onUploadingChange?.(false);
       }
     },
   };
@@ -42,7 +49,7 @@ export function ImageUploadField({ value, onChange, category }: ImageUploadField
   return (
     <Space direction='vertical' size={8} style={{ width: '100%' }}>
       <Upload {...uploadProps}>
-        <Button icon={<UploadOutlined />} loading={uploading}>
+        <Button icon={<UploadOutlined />} loading={uploading} disabled={disabled}>
           Upload Image
         </Button>
       </Upload>

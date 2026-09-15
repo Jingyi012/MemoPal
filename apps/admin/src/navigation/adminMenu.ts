@@ -16,16 +16,15 @@ export const adminMenuItems: AdminMenuItem[] = [
   { path: adminPaths.communityMemorySets, name: "Community Memory Sets", icon: "moderation" },
   {
     path: adminPaths.contentRoot,
-    name: "Content Setup",
+    name: "Content Studio",
     icon: "content",
     routes: [
-      { path: adminPaths.palaceScenes, name: "Palace Scene Studio" },
+      { path: adminPaths.memoryCollections, name: "Content library" },
+      { path: adminPaths.palaceScenes, name: "Palace scenes" },
       {
         path: adminPaths.predefinedMemoryLessonCategories,
-        name: "Lesson Categories",
+        name: "Categories",
       },
-      { path: adminPaths.predefinedMemoryLessons, name: "Predefined Lessons" },
-      { path: adminPaths.memoryCollections, name: "Memory Collections" },
     ],
   },
   {

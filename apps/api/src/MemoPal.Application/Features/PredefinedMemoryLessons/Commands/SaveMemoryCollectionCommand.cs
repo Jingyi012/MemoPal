@@ -63,7 +63,7 @@ public sealed class SaveMemoryCollectionCommandHandler(IAppDbContext db)
             membership.Position = i + 1;
         }
         if (command.CollectionId is null) db.PredefinedMemoryCollections.Add(entity);
-        await db.SaveChangesAsync(ct);
+        await ContentLibraryPersistence.SaveChangesAsync(db, ct);
         return ApiResponse<PredefinedMemoryCollectionDto>.Ok(PredefinedMemoryCollectionQuery.ToDto(entity, false));
     }
 }

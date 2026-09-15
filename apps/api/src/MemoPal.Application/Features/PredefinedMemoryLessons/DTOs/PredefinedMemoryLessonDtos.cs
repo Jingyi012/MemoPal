@@ -34,6 +34,8 @@ public sealed record PredefinedMemoryLessonDto(
 
 public sealed class PredefinedMemoryLessonUpsertRequest
 {
+    public string? CollectionId { get; set; }
+    public int? ExpectedCollectionVersion { get; set; }
     public string Key { get; set; } = string.Empty;
     public string TitleEn { get; set; } = string.Empty;
     public string TitleZh { get; set; } = string.Empty;

@@ -32,8 +32,23 @@ public sealed class CreatePredefinedMemoryLessonCommandHandler(IAppDbContext db)
 
         var lesson = PredefinedMemoryLessonAggregate.Create(request.Request);
         lesson.Category = category;
+        if (request.Request.CollectionId is { } collectionId)
+        {
+            var collection = await db.PredefinedMemoryCollections.WithLessons()
+                .FirstOrDefaultAsync(x => x.Id == collectionId && !x.IsDeleted, cancellationToken)
+                ?? throw new NotFoundAppException("Collection not found.");
+            if (request.Request.ExpectedCollectionVersion != collection.Version)
+                throw new ConflictAppException("This collection changed. Reload before adding a lesson.");
+            if (collection.Lessons.Count(x => !x.Lesson.IsDeleted) >= 100)
+                throw new ValidationAppException("A collection can contain at most 100 lessons.");
+            if (collection.IsPublished && !PredefinedMemoryCollectionQuery.IsAvailable(lesson))
+                throw new ValidationAppException("Publish the lesson first, or unpublish the collection to add drafts.");
+            collection.Lessons.Add(new() { CollectionId = collection.Id, LessonId = lesson.Id, Lesson = lesson,
+                Position = collection.Lessons.Select(x => x.Position).DefaultIfEmpty(0).Max() + 1 });
+            collection.Version++;
+        }
         await db.PredefinedMemoryLessons.AddAsync(lesson, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
+        await ContentLibraryPersistence.SaveChangesAsync(db, cancellationToken);
         return ApiResponse<PredefinedMemoryLessonDto>.Ok(PredefinedMemoryLessonMapper.ToDto(lesson));
     }
 }
@@ -67,7 +82,7 @@ public sealed class UpdatePredefinedMemoryLessonCommandHandler(IAppDbContext db)
 
         PredefinedMemoryLessonAggregate.Update(lesson, request.Request);
         lesson.Category = category;
-        await db.SaveChangesAsync(cancellationToken);
+        await ContentLibraryPersistence.SaveChangesAsync(db, cancellationToken);
         return ApiResponse<PredefinedMemoryLessonDto>.Ok(PredefinedMemoryLessonMapper.ToDto(lesson));
     }
 }
@@ -82,9 +97,18 @@ public sealed class DeletePredefinedMemoryLessonCommandHandler(IAppDbContext db)
         var lesson = await db.PredefinedMemoryLessons.Include(x => x.Items)
             .FirstOrDefaultAsync(x => x.Id == request.LessonId && !x.IsDeleted, cancellationToken)
             ?? throw new NotFoundAppException("Predefined lesson not found.");
+        var collections = await db.PredefinedMemoryCollections.WithLessons()
+            .Where(x => !x.IsDeleted && x.Lessons.Any(m => m.LessonId == lesson.Id)).ToListAsync(cancellationToken);
+        foreach (var collection in collections)
+        {
+            collection.Lessons.Remove(collection.Lessons.Single(x => x.LessonId == lesson.Id));
+            if (!collection.Lessons.Any(x => !x.Lesson.IsDeleted)) collection.IsPublished = false;
+            collection.Version++;
+        }
         foreach (var item in lesson.Items.Where(x => !x.IsDeleted)) db.PredefinedMemoryLessonItems.Remove(item);
+        lesson.Version++;
         db.PredefinedMemoryLessons.Remove(lesson);
-        await db.SaveChangesAsync(cancellationToken);
+        await ContentLibraryPersistence.SaveChangesAsync(db, cancellationToken);
         return ApiResponse<bool>.Ok(true);
     }
 }
