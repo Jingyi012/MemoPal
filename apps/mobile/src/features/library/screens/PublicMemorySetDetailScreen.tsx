@@ -21,6 +21,7 @@ import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 export function PublicMemorySetDetailScreen({ memorySetId }: { memorySetId: string }) {
   const { styles, theme } = useStyles();
   const { t } = useTranslation('library');
+  const { t: memoryDetailsT } = useTranslation('memoryDetails');
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const router = useRouter();
@@ -59,7 +60,7 @@ export function PublicMemorySetDetailScreen({ memorySetId }: { memorySetId: stri
       <View style={styles.stats}><Stat label={t('items')} value={String(memorySet.itemCount)} /><Stat label={t('copies')} value={String(memorySet.copyCount)} /><Stat label={t('goalLabel')} value={goalLabel(memorySet.goalType, t)} /></View>
       {memorySet.description ? <Text style={styles.description}>{memorySet.description}</Text> : null}
       <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{t('previewItems')}</Text>
-      <View style={styles.items}>{memorySet.items.map((item) => <View key={item.id} style={styles.itemRow}><View style={styles.itemNumber}><Text style={styles.itemNumberText}>{item.position}</Text></View><View style={styles.itemCopy}><Text style={styles.itemPrompt}>{item.prompt}</Text><Text numberOfLines={2} style={styles.itemAnswer}>{item.answer}</Text></View></View>)}</View>
+      <View style={styles.items}>{memorySet.items.map((item) => <View key={item.id} style={styles.itemRow}><View style={styles.itemNumber}><Text style={styles.itemNumberText}>{item.position}</Text></View><View style={styles.itemCopy}><Text style={styles.itemPrompt}>{localizeItemPrompt(item.prompt, item.position, memoryDetailsT)}</Text><Text numberOfLines={2} style={styles.itemAnswer}>{item.answer}</Text></View></View>)}</View>
       <AnimatedPressable onPress={() => memorySet.existingCopyId ? router.push(`/memory-details/${memorySet.existingCopyId}` as Href) : setConfirmCopy(true)} disabled={copyMutation.isPending} style={styles.copyButton}>{copyMutation.isPending ? <ActivityIndicator color={theme.onSun} /> : <Copy size={18} color={theme.onSun} />}<Text style={styles.copyButtonText}>{copyMutation.isPending ? t('copying') : memorySet.existingCopyId ? t('openOwnCopy') : t('copyToLibrary')}</Text></AnimatedPressable>
       {!isAuthor ? <AnimatedPressable style={styles.reportButton} onPress={() => setConfirmReport(true)}><Flag size={15} color={theme.inkSoft} /><Text style={styles.reportText}>{t('reportMemory')}</Text></AnimatedPressable> : null}
     </ScrollView>
@@ -96,6 +97,13 @@ function HeroCard({ memorySet, t }: { memorySet: CommunityMemorySetDetail; t: (k
 function Stat({ label, value }: { label: string; value: string }) {
   const { styles } = useStyles(); return <View style={styles.stat}><Text style={styles.statValue}>{value}</Text><Text style={styles.statLabel}>{label}</Text></View>; }
 function goalLabel(goal: string, t: (key: any) => string) { const key = `goal${goal.replace(/(^|-)(.)/g, (_, __, letter) => letter.toUpperCase())}`; return t(key); }
+function localizeItemPrompt(prompt: string, position: number, t: (key: any) => string) {
+  const normalizedPrompt = prompt.trim().toLowerCase();
+  if (normalizedPrompt.startsWith('recall locus')) return `${t('recallLocus')} ${position}`;
+  if (normalizedPrompt.startsWith('spell item')) return `${t('spellItem')} ${position}`;
+  if (normalizedPrompt.startsWith('recall item')) return `${t('recallItem')} ${position}`;
+  return prompt;
+}
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { backgroundColor: 'transparent', flex: 1 }, content: { padding: 16, paddingBottom: 40 },
