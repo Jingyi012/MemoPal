@@ -84,9 +84,7 @@ export const PushNotificationService = {
         body: copy.reviewBody(params.memorySetTitle),
         data: {
           memorySetId: params.memorySetId,
-          url: params.techniqueKey === 'palace'
-            ? `/palaces/memory/${params.memorySetId}?mode=recall`
-            : `/number-peg/${params.memorySetId}?mode=recall`,
+          url: `/memory-review/${params.memorySetId}?scope=due`,
         },
         badge: 1,
       },

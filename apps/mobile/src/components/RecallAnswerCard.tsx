@@ -25,6 +25,8 @@ type RecallAnswerCardProps = {
   actionAreaRef?: (view: View | null) => void;
   onAnswerChange: (value: string) => void;
   onSubmit: () => void;
+  onSkip?: () => void;
+  skipLabel?: string;
 };
 
 /** Shared recall interaction surface used by both technique players. */
@@ -46,6 +48,8 @@ export function RecallAnswerCard({
   actionAreaRef,
   onAnswerChange,
   onSubmit,
+  onSkip,
+  skipLabel,
 }: RecallAnswerCardProps) {
   const { styles, theme } = useStyles();
   const isPeg = tone === 'peg';
@@ -63,11 +67,10 @@ export function RecallAnswerCard({
         onSubmitEditing={onSubmit}
         returnKeyType={feedback ? 'next' : 'done'}
         submitBehavior="submit"
-        // Keep focus and the keyboard between questions. A correct answer is
-        // locked until the user advances; an incorrect answer can be edited
-        // immediately and checked again.
+        // Keep keyboard focus while feedback is shown. Callers ignore edits
+        // until advancing so a retry happens later with the answer hidden.
         editable
-        caretHidden={feedback === 'correct'}
+        caretHidden={feedback !== null}
         onFocus={onAnswerFocus}
         accessibilityLabel={answerAccessibilityLabel}
         autoCapitalize="characters"
@@ -99,6 +102,11 @@ export function RecallAnswerCard({
           <Text style={styles.actionText}>{actionLabel}</Text>
         </AnimatedPressable>
       </View>
+      {!feedback && onSkip && skipLabel ? (
+        <AnimatedPressable accessibilityRole="button" disabled={actionDisabled} onPress={onSkip} style={styles.skipButton}>
+          <Text style={styles.progress}>{skipLabel}</Text>
+        </AnimatedPressable>
+      ) : null}
       <Text style={styles.progress}>{progressLabel}</Text>
     </View>
   );
@@ -122,5 +130,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   actionButton: { width: '100%', minHeight: 48, borderRadius: 14, backgroundColor: theme.night, borderWidth: 1.5, borderColor: theme.violetLine, paddingHorizontal: 12, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
   actionText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 14 },
   disabledButton: { opacity: 0.4 },
+  skipButton: { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   progress: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center', marginTop: 15 },
 }));

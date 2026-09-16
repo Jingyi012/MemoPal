@@ -5,9 +5,18 @@ import type {
   PracticeAttempt,
   PracticeAttemptInput,
   PracticeStats,
+  MemoryReviewProgress,
 } from '@/features/practice-attempts/types/practiceAttempt.types';
 
 export const practiceAttemptApi = {
+  async getReviewProgress(memorySetId: string): Promise<MemoryReviewProgress> {
+    const response = await api.get<GeneralResponse<MemoryReviewProgress>>(
+      `/v1/reviews/memory-set/${encodeURIComponent(memorySetId)}/progress`
+    );
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
+
   async createBatch(attempts: PracticeAttemptInput[]): Promise<PracticeAttempt[]> {
     const response = await api.post<GeneralResponse<PracticeAttempt[]>>(
       '/v1/practice-attempts/batch',

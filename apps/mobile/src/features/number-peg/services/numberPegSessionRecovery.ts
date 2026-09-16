@@ -9,6 +9,8 @@ export type NumberPegSessionSnapshot = {
   tab: 'scenes' | 'recall';
   questionIndex: number;
   questionOrder?: string[];
+  feedback?: 'correct' | 'wrong' | null;
+  questionHintCount?: number;
   score: number;
   clientAttemptId: string;
   startedAt: string;
@@ -18,12 +20,12 @@ export type NumberPegSessionSnapshot = {
   savedAt: string;
 };
 
-function getKey(memorySetId: string) {
-  return `${SESSION_KEY_PREFIX}${memorySetId}`;
+function getKey(memorySetId: string, scope?: string) {
+  return `${SESSION_KEY_PREFIX}${memorySetId}${scope ? ':' + scope : ''}`;
 }
 
-export async function readNumberPegSession(memorySetId: string): Promise<NumberPegSessionSnapshot | null> {
-  const raw = await AsyncStorage.getItem(getKey(memorySetId));
+export async function readNumberPegSession(memorySetId: string, scope?: string): Promise<NumberPegSessionSnapshot | null> {
+  const raw = await AsyncStorage.getItem(getKey(memorySetId, scope));
   if (!raw) return null;
 
   try {
@@ -38,15 +40,15 @@ export async function readNumberPegSession(memorySetId: string): Promise<NumberP
     }
     return parsed;
   } catch {
-    await clearNumberPegSession(memorySetId);
+    await clearNumberPegSession(memorySetId, scope);
     return null;
   }
 }
 
-export async function writeNumberPegSession(snapshot: NumberPegSessionSnapshot) {
-  await AsyncStorage.setItem(getKey(snapshot.memorySetId), JSON.stringify(snapshot));
+export async function writeNumberPegSession(snapshot: NumberPegSessionSnapshot, scope?: string) {
+  await AsyncStorage.setItem(getKey(snapshot.memorySetId, scope), JSON.stringify(snapshot));
 }
 
-export async function clearNumberPegSession(memorySetId: string) {
-  await AsyncStorage.removeItem(getKey(memorySetId));
+export async function clearNumberPegSession(memorySetId: string, scope?: string) {
+  await AsyncStorage.removeItem(getKey(memorySetId, scope));
 }

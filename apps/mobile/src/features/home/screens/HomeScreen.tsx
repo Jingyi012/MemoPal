@@ -225,10 +225,7 @@ function GettingStartedCard({
 }
 
 function openReview(router: ReturnType<typeof useRouter>, review: DueMemoryReview) {
-  const route = review.techniqueKey === 'palace'
-    ? `/palaces/memory/${review.memorySetId}?mode=recall`
-    : `/number-peg/${review.memorySetId}?mode=recall`;
-  router.push(route as Href);
+  router.push({ pathname: '/memory-review/[memorySetId]', params: { memorySetId: review.memorySetId, scope: 'due' } });
 }
 
 function DailyFocusCard({

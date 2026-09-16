@@ -65,3 +65,24 @@ export type PracticeStats = {
   firstAttemptRecallPercent: number;
   weeklyActivity: PracticeActivityDay[];
 };
+
+export type MemoryItemReviewProgress = {
+  memoryItemId: string;
+  recallSessionsCompleted: number;
+  completedStages: number;
+  remainingRecalls: number;
+  needsRelearning: boolean;
+  dueAt: string | null;
+  isDue: boolean;
+};
+
+export type MemoryReviewProgress = {
+  memorySetId: string;
+  recallSessionsCompleted: number;
+  reviewSessionsCompleted: number;
+  stageIntervalsDays: number[];
+  longTermItemCount: number;
+  minimumRemainingRecalls: number | null;
+  nextReviewAt: string | null;
+  items: MemoryItemReviewProgress[];
+};

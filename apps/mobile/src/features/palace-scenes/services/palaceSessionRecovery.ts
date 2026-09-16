@@ -8,6 +8,8 @@ export type PalaceSessionSnapshot = {
   memorySetVersion: number;
   mode: PalaceSessionMode;
   activeIndex: number;
+  recallOrder?: string[];
+  feedback?: 'correct' | 'wrong' | null;
   score: number;
   clientAttemptId: string;
   startedAt: string;
@@ -19,12 +21,12 @@ export type PalaceSessionSnapshot = {
 
 const SESSION_KEY_PREFIX = 'memopal:palace-session:';
 
-function getKey(memorySetId: string) {
-  return `${SESSION_KEY_PREFIX}${memorySetId}`;
+function getKey(memorySetId: string, scope?: string) {
+  return `${SESSION_KEY_PREFIX}${memorySetId}${scope ? ':' + scope : ''}`;
 }
 
-export async function readPalaceSession(memorySetId: string): Promise<PalaceSessionSnapshot | null> {
-  const raw = await AsyncStorage.getItem(getKey(memorySetId));
+export async function readPalaceSession(memorySetId: string, scope?: string): Promise<PalaceSessionSnapshot | null> {
+  const raw = await AsyncStorage.getItem(getKey(memorySetId, scope));
   if (!raw) return null;
 
   try {
@@ -36,20 +38,20 @@ export async function readPalaceSession(memorySetId: string): Promise<PalaceSess
       !Number.isInteger(parsed.activeIndex) ||
       !Array.isArray(parsed.responses)
     ) {
-      await clearPalaceSession(memorySetId);
+      await clearPalaceSession(memorySetId, scope);
       return null;
     }
     return parsed;
   } catch {
-    await clearPalaceSession(memorySetId);
+    await clearPalaceSession(memorySetId, scope);
     return null;
   }
 }
 
-export async function writePalaceSession(snapshot: PalaceSessionSnapshot) {
-  await AsyncStorage.setItem(getKey(snapshot.memorySetId), JSON.stringify(snapshot));
+export async function writePalaceSession(snapshot: PalaceSessionSnapshot, scope?: string) {
+  await AsyncStorage.setItem(getKey(snapshot.memorySetId, scope), JSON.stringify(snapshot));
 }
 
-export async function clearPalaceSession(memorySetId: string) {
-  await AsyncStorage.removeItem(getKey(memorySetId));
+export async function clearPalaceSession(memorySetId: string, scope?: string) {
+  await AsyncStorage.removeItem(getKey(memorySetId, scope));
 }

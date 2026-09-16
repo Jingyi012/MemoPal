@@ -9,29 +9,32 @@ import type { MemorySet } from '@/features/memory-sets';
 import { usePalaceScene } from '@/features/palace-scenes';
 import { AppImage } from '@/components/AppImage';
 import { getMemorySetPegIcon } from '@/features/memory-sets/utils/memorySetIcon';
-import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
-import { usePracticeAttemptHistory } from '@/features/practice-attempts';
-import type { PracticeAttempt } from '@/features/practice-attempts';
-import { Href, useRouter } from 'expo-router';
-import { AlertCircle, ArrowRight, Check, Circle, RefreshCcw, X } from 'lucide-react-native';
+import { useMemoryReviewProgress, usePracticeAttemptHistory } from '@/features/practice-attempts';
+import { MemoryItemProgress, MemoryReviewProgressCard } from '../components/MemoryReviewProgressCard';
+import { MemoryReviewTaskCard } from '../components/MemoryReviewTaskCard';
+import { useCallback, type ReactNode } from 'react';
+import { Href, useRouter, useFocusEffect } from 'expo-router';
+import { AlertCircle, ArrowRight, Check, Circle, X } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { TranslationKey } from '@/core/i18n/i18n';
-import { useColorScheme } from 'nativewind';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: string }) {
   const { styles, theme } = useStyles();
   const router = useRouter();
   const { t } = useTranslation('memoryDetails');
-  const { colorScheme } = useColorScheme();
-  const activeTheme = memopalThemes[colorScheme ?? 'light'];
+  const { t: planText } = useTranslation('reviewPlan');
   const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const query = useMemorySet(memorySetId);
   const palaceSceneId = query.data?.techniqueKey === 'palace' ? query.data.techniquePlan?.palaceSceneId ?? '' : '';
   const palaceSceneQuery = usePalaceScene(palaceSceneId);
   const historyQuery = usePracticeAttemptHistory(memorySetId);
+  const progressQuery = useMemoryReviewProgress(memorySetId);
+  const { refetch: refetchProgress } = progressQuery;
+  useFocusEffect(useCallback(() => { void refetchProgress(); }, [refetchProgress]));
 
   if (!isOffline && query.isLoading) return <LoadingView description={t('title')} />;
 
@@ -54,37 +57,48 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
   const memorySet = query.data;
   const isPalace = memorySet.techniqueKey === 'palace';
   const latestAttempt = historyQuery.data?.[0] ?? null;
-  const reviewDue = isReviewDue(latestAttempt);
+  const progressByItem = new Map(progressQuery.data?.items.map((item) => [item.memoryItemId, item]) ?? []);
   const responseByItemId = new Map(latestAttempt?.responses.map((response) => [response.memoryItemId, response]) ?? []);
-  const playerRoute = (isPalace ? `/palaces/memory/${memorySet.id}` : `/number-peg/${memorySet.id}`) as Href;
-  const recallRoute = (isPalace ? `/palaces/memory/${memorySet.id}?mode=recall` : `/number-peg/${memorySet.id}?mode=recall`) as Href;
-  const retryRoute = (isPalace ? `/palaces/memory/${memorySet.id}?restart=1` : `/number-peg/${memorySet.id}?restart=1`) as Href;
+  const openSession = (scope: 'due' | 'learn' | 'browse') => router.push({
+    pathname: '/memory-review/[memorySetId]', params: { memorySetId: memorySet.id, scope },
+  });
 
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow={t('eyebrow')}
+        compact
+        showAiCredits={false}
         title={t('title')}
-        description={`${isPalace ? t('techniquePalace') : t('techniqueNumberPeg')} · ${memorySet.items.length} ${memorySet.items.length === 1 ? t('item') : t('items')}`}
         backAction={() => router.back()}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SummaryCard memorySet={memorySet} latestAttempt={latestAttempt} palaceScene={palaceSceneQuery.data} t={t} />
+        <SummaryCard memorySet={memorySet} palaceScene={palaceSceneQuery.data} t={t}>
+        {memorySet.status !== 'draft' && progressQuery.data ? <MemoryReviewTaskCard progress={progressQuery.data}
+          onReview={() => openSession('due')} onLearn={() => openSession('learn')} onBrowse={() => openSession('browse')} /> : null}
+        {memorySet.status !== 'draft' ? <MemoryReviewProgressCard progress={progressQuery.data} isPending={progressQuery.isPending}
+          isError={progressQuery.isError} onRetry={() => { void progressQuery.refetch(); }} /> : null}
+        </SummaryCard>
 
-        <Text style={[styles.sectionLabel, { color: activeTheme.ink }]}>{t('yourMemoryItems')}</Text>
+        <View style={styles.listHeading}>
+          <Text style={styles.sectionLabel}>{planText('itemSchedule')}</Text>
+          <Text style={styles.summaryMeta}>{memorySet.items.length} {t('items')}</Text>
+        </View>
         <View style={styles.itemList}>
           {memorySet.items.map((item, index) => {
             const response = responseByItemId.get(item.id);
             const status = getItemStatus(response, Boolean(latestAttempt));
+            const itemProgress = progressByItem.get(item.id);
             return (
             <View key={item.id} style={[styles.itemRow, index === memorySet.items.length - 1 && styles.itemRowLast]}>
               <View style={[styles.itemNumber, isPalace ? styles.itemNumberPalace : styles.itemNumberPeg]}>
                 <Text style={styles.itemNumberText}>{item.position}</Text>
               </View>
               <View style={styles.itemCopy}>
+                {!itemProgress || memorySet.status === 'draft' ? <>
                 <Text style={styles.itemPrompt}>{localizeItemPrompt(item.prompt, item.position, t)}</Text>
                 <Text style={styles.itemAnswer}>{item.answer}</Text>
-              <View style={styles.readyBadge}>
+                </> : null}
+              {!itemProgress || memorySet.status === 'draft' ? <View style={styles.readyBadge}>
                 {status === 'recalled' ? <Check size={13} color={theme.grass} /> : null}
                 {status === 'needs-review' ? <X size={13} color={theme.berryDeep} /> : null}
                 {status === 'not-tried' ? <AlertCircle size={13} color={theme.inkSoft} /> : null}
@@ -92,7 +106,10 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
                 <Text style={[styles.readyText, status === 'needs-review' && styles.needsReviewText, status === 'not-tried' && styles.notTriedText]}>
                   {memorySet.status === 'draft' ? t('statusDraft') : statusLabel(status, t)}
                 </Text>
-              </View>
+              </View> : null}
+              {memorySet.status !== 'draft' && itemProgress && progressQuery.data ? <MemoryItemProgress progress={itemProgress}
+                title={item.answer} prompt={localizeItemPrompt(item.prompt, item.position, t)}
+                stages={progressQuery.data.stageIntervalsDays} /> : null}
               </View>
             </View>
             );
@@ -110,32 +127,15 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
             <Text style={styles.modeTitle}>{t('draftSetup')}</Text>
             <View style={styles.modeActionRow}><Text style={styles.modeAction}>{t('draftSetup')}</Text><ArrowRight size={14} color={theme.violetDeep} /></View>
           </View>
-        </AnimatedPressable> : <>
-        <View style={styles.modeSection}>
-          <Text style={styles.modeSectionTitle}>{t('chooseMode')}</Text>
-          <Text style={styles.modeSectionBody}>{t('chooseModeBody')}</Text>
-          <AnimatedPressable onPress={() => router.push(playerRoute)} style={[styles.modeCard, styles.rehearseCard]}>
+        </AnimatedPressable> : !progressQuery.data && memorySet.items.length > 0 ? <View style={styles.modeSection}>
+          <AnimatedPressable accessibilityRole="button" onPress={() => openSession('browse')} style={[styles.modeCard, styles.rehearseCard]}>
             <View style={[styles.modeIcon, styles.rehearseIcon]}><Text style={styles.modeEmoji}>👀</Text></View>
             <View style={styles.modeCopy}>
-              <Text style={styles.modeTitle}>{t('rehearse')}</Text>
-              <Text style={styles.modeBody}>{t('rehearseBody')}</Text>
-              <View style={styles.modeActionRow}><Text style={styles.modeAction}>{t('startRehearse')}</Text><ArrowRight size={14} color={theme.violetDeep} /></View>
+              <Text style={styles.modeTitle}>{planText('browse').replace('{count}', String(memorySet.items.length))}</Text>
+              <Text style={styles.modeBody}>{planText('browseNote')}</Text>
             </View>
           </AnimatedPressable>
-          <AnimatedPressable onPress={() => router.push(recallRoute)} style={[styles.modeCard, styles.recallCard, reviewDue && styles.recallCardDue]}>
-            <View style={[styles.modeIcon, styles.recallIcon]}><Text style={styles.modeEmoji}>🧠</Text></View>
-            <View style={styles.modeCopy}>
-              <View style={styles.modeTitleRow}><Text style={styles.modeTitle}>{t('recallMode')}</Text>{reviewDue ? <Text style={styles.dueBadge}>{t('recommended')}</Text> : null}</View>
-              <Text style={styles.modeBody}>{t('recallBody')}</Text>
-              <View style={styles.modeActionRow}><Text style={styles.modeAction}>{t('startRecall')}</Text><ArrowRight size={14} color={theme.berryDeep} /></View>
-            </View>
-          </AnimatedPressable>
-        </View>
-        <AnimatedPressable onPress={() => router.push(retryRoute)} style={styles.secondaryButton}>
-          <RefreshCcw size={16} color={theme.inkSoft} />
-          <Text style={styles.secondaryButtonText}>{t('restartPractice')}</Text>
-        </AnimatedPressable>
-        </>}
+        </View> : null}
       </ScrollView>
     </View>
   );
@@ -143,40 +143,44 @@ export default function MemorySetDetailScreen({ memorySetId }: { memorySetId: st
 
 function SummaryCard({
   memorySet,
-  latestAttempt,
+  children,
   palaceScene,
   t,
 }: {
   memorySet: MemorySet;
-  latestAttempt: PracticeAttempt | null;
+  children?: ReactNode;
   palaceScene?: { imageUrl: string; imageSource?: number };
   t: (key: TranslationKey<'memoryDetails'>) => string;
 }) {
-  const { styles } = useStyles();
+  const { styles, theme } = useStyles();
   const isPalace = memorySet.techniqueKey === 'palace';
-  const summaryMeta = getSummaryMeta(memorySet, latestAttempt, t);
   const hasPalaceImage = isPalace && !memorySet.emoji && Boolean(palaceScene?.imageUrl || palaceScene?.imageSource);
   return (
-    <View style={styles.summaryCard}>
-      <View style={[styles.summaryIcon, isPalace ? styles.summaryIconPalace : styles.summaryIconPeg]}>
-        {memorySet.emoji ? <Text style={styles.techniqueEmoji}>{memorySet.emoji}</Text>
-          : hasPalaceImage ? <AppImage imageUrl={palaceScene?.imageUrl} imageSource={palaceScene?.imageSource} style={styles.summaryImage} />
-            : <Text style={styles.techniqueEmoji}>{isPalace ? '🏰' : getMemorySetPegIcon(memorySet)}</Text>}
+    <View style={styles.summaryShell}>
+    <LinearGradient colors={[isPalace ? theme.violetTint : theme.peachTint, theme.paper, theme.paper]}
+      locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 0.9, y: 1 }} style={styles.summaryCard}>
+      <View pointerEvents="none" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.cardDecoration}>
+        <View style={[styles.orbit, { backgroundColor: isPalace ? theme.violetLine : theme.peachLine }]} />
+        <View style={[styles.orbitSmall, { backgroundColor: isPalace ? theme.violetLine : theme.peachLine }]} />
       </View>
-      <View style={styles.summaryCopy}>
-        <Text style={[styles.techniqueLabel, isPalace ? styles.palaceLabel : styles.pegLabel]}>
-          {isPalace ? t('techniquePalace') : t('techniqueNumberPeg')}
-        </Text>
-      <Text style={styles.summaryTitle}>{memorySet.title}</Text>
-      <View style={styles.visibilityRow}>
-        <Text style={styles.visibilityLabel}>{t('visibility')}</Text>
-        <MemoryVisibilityBadge visibility={memorySet.visibility} label={getVisibilityLabel(memorySet.visibility, t)} compact />
+      <View style={styles.summaryHeader}>
+        <View style={[styles.summaryIcon, isPalace ? styles.summaryIconPalace : styles.summaryIconPeg]}>
+          {memorySet.emoji ? <Text style={styles.techniqueEmoji}>{memorySet.emoji}</Text>
+            : hasPalaceImage ? <AppImage imageUrl={palaceScene?.imageUrl} imageSource={palaceScene?.imageSource} style={styles.summaryImage} />
+              : <Text style={styles.techniqueEmoji}>{isPalace ? '🏰' : getMemorySetPegIcon(memorySet)}</Text>}
+        </View>
+        <View style={styles.summaryCopy}>
+          <Text style={styles.summaryTitle}>{memorySet.title}</Text>
+          <View style={styles.summaryMetadata}>
+          <Text style={[styles.techniqueLabel, isPalace ? styles.palaceLabel : styles.pegLabel]}>
+            {isPalace ? t('techniquePalace') : t('techniqueNumberPeg')}
+          </Text>
+          <MemoryVisibilityBadge visibility={memorySet.visibility} label={getVisibilityLabel(memorySet.visibility, t)} compact />
+          </View>
+        </View>
       </View>
-      <Text style={styles.summaryMeta}>{summaryMeta}</Text>
-      <Text style={[styles.reviewSchedule, isReviewDue(latestAttempt) && styles.reviewScheduleDue]}>
-        {memorySet.status === 'draft' ? t('draftSetup') : getReviewScheduleLabel(latestAttempt, t)}
-      </Text>
-      </View>
+      {children}
+    </LinearGradient>
     </View>
   );
 }
@@ -222,84 +226,43 @@ function localizeItemPrompt(
   return prompt;
 }
 
-function getSummaryMeta(
-  memorySet: MemorySet,
-  latestAttempt: PracticeAttempt | null,
-  t: (key: TranslationKey<'memoryDetails'>) => string,
-) {
-  const itemLabel = memorySet.items.length === 1 ? t('item') : t('items');
-  if (memorySet.status === 'draft') return `${memorySet.items.length} ${itemLabel} · ${t('statusDraft')}`;
-  if (!latestAttempt) return `${memorySet.items.length} ${itemLabel} · ${t('readyToPractice')}`;
-  const latestResponseByItem = new Map(
-    latestAttempt.responses.map((response) => [response.memoryItemId, response]),
-  );
-  const recalledCount = Array.from(latestResponseByItem.values()).filter((response) => response.isCorrect).length;
-  const retryCount = latestAttempt.responses.filter((response) => response.attemptCount > 1).length;
-  if (latestResponseByItem.size < memorySet.items.length) {
-    return `${recalledCount}/${memorySet.items.length} ${t('recalled')} · ${t('inProgress')}`;
-  }
-  if (recalledCount === memorySet.items.length) {
-    return retryCount > 0
-      ? `${recalledCount}/${memorySet.items.length} ${t('recalled')} · ${retryCount} ${t('retried')}`
-      : `${recalledCount}/${memorySet.items.length} ${t('recalled')} · ${t('lastRoundPerfect')}`;
-  }
-  return `${recalledCount}/${memorySet.items.length} ${t('recalled')} · ${t('keepPracticing')}`;
-}
-
-function isReviewDue(latestAttempt: PracticeAttempt | null) {
-  return Boolean(latestAttempt?.nextReviewAt && new Date(latestAttempt.nextReviewAt).getTime() <= Date.now());
-}
-
-function getReviewScheduleLabel(
-  latestAttempt: PracticeAttempt | null,
-  t: (key: TranslationKey<'memoryDetails'>) => string,
-) {
-  if (!latestAttempt?.nextReviewAt) return t('notScheduled');
-  if (isReviewDue(latestAttempt)) return t('reviewDue');
-  return `${t('nextReview')}: ${new Date(latestAttempt.nextReviewAt).toLocaleString()}`;
-}
-
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 42 },
-  summaryCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 21, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 15 },
-  summaryIcon: { width: 52, height: 52, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  summaryShell: { borderRadius: 26, backgroundColor: theme.paper, boxShadow: `0px 6px 0px ${theme.line}` },
+  summaryCard: { borderRadius: 26, borderWidth: 1, borderColor: theme.line, padding: 18, gap: 16, overflow: 'hidden' },
+  cardDecoration: { position: 'absolute', right: -22, top: -32, width: 128, height: 130, opacity: 0.35 },
+  orbit: { position: 'absolute', width: 96, height: 96, borderRadius: 48, right: 0, top: 0, opacity: 0.5 },
+  orbitSmall: { position: 'absolute', width: 32, height: 32, borderRadius: 16, left: 0, bottom: 8, opacity: 0.5 },
+  listHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 24, marginBottom: 12 },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 4 },
+  summaryIcon: { width: 60, height: 60, borderRadius: 19, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: theme.paper, transform: [{ rotate: '-5deg' }], boxShadow: `0px 4px 0px ${theme.line}` },
   summaryImage: { width: '100%', height: '100%', borderRadius: 17 },
-  techniqueEmoji: { fontSize: 25 },
+  techniqueEmoji: { fontSize: 30 },
   summaryIconPalace: { backgroundColor: theme.violetTint },
   summaryIconPeg: { backgroundColor: theme.berryTint },
-  summaryCopy: { flex: 1, marginLeft: 13 },
+  summaryCopy: { flex: 1, minWidth: 0 },
+  summaryMetadata: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 5 },
   techniqueLabel: { fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8 },
   palaceLabel: { color: theme.violetDeep },
   pegLabel: { color: theme.berryDeep },
-  summaryTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 18, marginTop: 4 },
-  visibilityRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 7 },
-  visibilityLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
+  summaryTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 22, marginTop: 4 },
   summaryMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, marginTop: 3 },
-  reviewSchedule: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 6 },
-  reviewScheduleDue: { color: theme.berryDeep },
   modeSection: { marginTop: 24 },
-  modeSectionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 18 },
-  modeSectionBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4, marginBottom: 11 },
   modeCard: { alignItems: 'center', borderRadius: 18, borderWidth: 2, flexDirection: 'row', marginBottom: 10, minHeight: 92, padding: 13 },
   rehearseCard: { backgroundColor: theme.violetTint, borderColor: theme.violetLine },
   setupCard: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, marginTop: 24 },
-  recallCard: { backgroundColor: theme.sunTint, borderColor: theme.sunLine },
-  recallCardDue: { borderColor: theme.berry },
   modeIcon: { alignItems: 'center', borderRadius: 15, height: 52, justifyContent: 'center', width: 52 },
   rehearseIcon: { backgroundColor: theme.violetLine },
   setupIcon: { backgroundColor: theme.violetLine },
-  recallIcon: { backgroundColor: theme.sunLine },
   modeEmoji: { fontSize: 25 },
   modeCopy: { flex: 1, marginLeft: 12 },
   modeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
-  modeTitleRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  dueBadge: { backgroundColor: theme.berryTint, borderRadius: 999, color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, paddingHorizontal: 7, paddingVertical: 3 },
   modeBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11.5, lineHeight: 16, marginTop: 2 },
   modeActionRow: { alignItems: 'center', flexDirection: 'row', gap: 4, marginTop: 7 },
   modeAction: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 24, marginBottom: 10 },
-  itemList: { borderRadius: 19, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 13 },
+  sectionLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 16 },
+  itemList: { borderRadius: 19, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 13 },
   itemRow: { minHeight: 80, paddingVertical: 12, flexDirection: 'row', alignItems: 'flex-start', borderBottomWidth: 1, borderBottomColor: theme.line },
   itemRowLast: { borderBottomWidth: 0 },
   itemNumber: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
@@ -313,9 +276,5 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   readyText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   needsReviewText: { color: theme.berryDeep },
   notTriedText: { color: theme.inkSoft },
-  primaryButton: { minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
-  primaryButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 15 },
-  secondaryButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 4 },
-  secondaryButtonText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   centerState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
 }));

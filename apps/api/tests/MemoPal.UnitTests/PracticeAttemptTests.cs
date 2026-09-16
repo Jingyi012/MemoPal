@@ -398,6 +398,42 @@ public sealed class PracticeAttemptTests
         Assert.Equal(2, result.Data.WeeklyActivity.Sum(day => day.Sessions));
     }
 
+    [Fact]
+    public async Task Due_Retry_Should_Not_Advance_Stage_And_Should_Return_The_Updated_Next_Review()
+    {
+        const string userId = "retry-user";
+        await using var db = CreateDbContext(userId);
+        SeedMemorySet(db, userId, "retry-set", "retry-item");
+        db.MemoryReviewSchedules.Add(new MemoryReviewSchedule
+        {
+            Id = "retry-schedule", UserId = userId, MemorySetId = "retry-set",
+            MemoryItemId = "retry-item", ReviewCount = 3, IntervalDays = 7,
+            DueAt = DateTime.UtcNow.AddDays(-2),
+        });
+        await db.SaveChangesAsync();
+        var request = BuildRecallRequest("retry-client", "retry-set", "retry-item");
+        request.Attempts[0].Responses[0].AttemptCount = 2;
+        var before = DateTime.UtcNow;
+        var handler = new CreatePracticeAttemptBatchCommandHandler(db);
+        var result = await handler.Handle(new CreatePracticeAttemptBatchCommand(userId, request), default);
+        var attempt = Assert.Single(result.Data!);
+        var schedule = await db.MemoryReviewSchedules.SingleAsync();
+
+        Assert.Equal(0, attempt.FirstAttemptCorrectCount);
+        Assert.Equal(1, attempt.CorrectCount);
+        Assert.Equal(3, schedule.ReviewCount);
+        Assert.Equal(0, schedule.IntervalDays);
+        Assert.InRange(schedule.DueAt, before.AddDays(1), DateTime.UtcNow.AddDays(1));
+        Assert.Equal(schedule.DueAt, attempt.NextReviewAt);
+        Assert.Empty((await new GetDueMemoryReviewsQueryHandler(db)
+            .Handle(new GetDueMemoryReviewsQuery(userId), default)).Data!);
+
+        var repeated = await handler.Handle(new CreatePracticeAttemptBatchCommand(userId, request), default);
+        Assert.Equal(attempt.NextReviewAt, Assert.Single(repeated.Data!).NextReviewAt);
+        Assert.Equal(1, await db.PracticeAttempts.CountAsync());
+        Assert.Equal(3, schedule.ReviewCount);
+    }
+
     private static AppDbContext CreateDbContext(string userId)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()

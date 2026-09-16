@@ -18,7 +18,6 @@ public sealed record CreatePracticeAttemptBatchCommand(
 public sealed class CreatePracticeAttemptBatchCommandHandler
     : IRequestHandler<CreatePracticeAttemptBatchCommand, ApiResponse<IReadOnlyList<PracticeAttemptDto>>>
 {
-    private static readonly int[] RecallIntervalsDays = [1, 3, 7, 14, 30];
     private readonly IAppDbContext _db;
 
     public CreatePracticeAttemptBatchCommandHandler(IAppDbContext db)
@@ -141,7 +140,7 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
         var schedules = await _db.MemoryReviewSchedules
             .Where(x => x.UserId == userId && responseIds.Contains(x.MemoryItemId) && !x.IsDeleted)
             .ToListAsync(cancellationToken);
-        var hasDueItems = schedules.Any(schedule => schedule.DueAt <= now);
+        var hasDueItems = input.Mode == PracticeModes.Recall && schedules.Any(schedule => schedule.DueAt <= now);
 
         DateTime? nextReviewAt = schedules.Count == 0 ? null : schedules.Min(schedule => schedule.DueAt);
         if (input.Mode == PracticeModes.Recall)
@@ -162,36 +161,11 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
                     schedules.Add(schedule);
                 }
 
-                schedule.LastAttemptId = attempt.Id;
-                schedule.LastResultCorrect = response.IsCorrect;
-                var isEarlyCorrectRecall = response.IsCorrect && schedule.DueAt > now;
-                if (response.IsCorrect && response.HintCount > 0)
-                {
-                    // A hinted success records the result but does not advance
-                    // the schedule or count as unaided learning.
-                }
-                else if (isEarlyCorrectRecall)
-                {
-                    // An early success is useful practice, but must not let a
-                    // user fast-forward the spaced-repetition schedule.
-                }
-                else if (response.IsCorrect)
-                {
-                    schedule.ReviewCount += 1;
-                    schedule.IntervalDays = RecallIntervalsDays[Math.Min(schedule.ReviewCount - 1, RecallIntervalsDays.Length - 1)];
-                    schedule.DueAt = now.AddDays(schedule.IntervalDays);
-                }
-                else
-                {
-                    schedule.ReviewCount = 0;
-                    schedule.IntervalDays = 0;
-                    schedule.DueAt = now.AddMinutes(10);
-                }
-                schedule.UpdatedAt = now;
-                nextReviewAt = nextReviewAt is null || schedule.DueAt < nextReviewAt
-                    ? schedule.DueAt
-                    : nextReviewAt;
+                schedule.RecordRecall(attempt.Id, response.IsCorrect, response.AttemptCount, response.HintCount, now);
             }
+            // Calculate after every item has been rescheduled; the old minimum
+            // may already be overdue and must not leak into the result screen.
+            nextReviewAt = schedules.Min(schedule => schedule.DueAt);
         }
 
         // A completed practice attempt is the authoritative learning activity

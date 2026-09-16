@@ -5,6 +5,7 @@ import { typography } from '@/theme/typography';
 import { ArrowRight } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { isReviewOverdue } from '@/features/practice-attempts/utils/reviewDate';
 
 type TodayReviewCardProps = {
   reviews: DueMemoryReview[];
@@ -40,8 +41,8 @@ export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewC
               </View>
               <View style={styles.reviewCopy}>
                 <Text numberOfLines={1} style={styles.reviewTitle}>{review.memorySetTitle}</Text>
-                <Text numberOfLines={1} style={[styles.reviewMeta, isOverdue(review.dueAt) && styles.overdueText]}>
-                  {isOverdue(review.dueAt) ? t('overdue') : t('dueToday')} · {itemCount} {itemCount === 1 ? t('itemDue') : t('itemsDue')}
+                <Text numberOfLines={1} style={[styles.reviewMeta, isReviewOverdue(review) && styles.overdueText]}>
+                  {isReviewOverdue(review) ? t('overdue') : t('dueToday')} · {itemCount} {itemCount === 1 ? t('itemDue') : t('itemsDue')}
                 </Text>
               </View>
               <ArrowRight size={16} color={theme.inkSoft} />
@@ -61,10 +62,6 @@ export function TodayReviewCard({ reviews, onOpen, onStartReview }: TodayReviewC
       ) : null}
     </View>
   );
-}
-
-function isOverdue(dueAt: string) {
-  return new Date(dueAt).getTime() < Date.now();
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({

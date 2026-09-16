@@ -18,6 +18,7 @@ type NumberPegRehearsalCardProps = {
   total: number;
   onPrevious: () => void;
   onNext: () => void;
+  lastActionLabel?: string;
 };
 
 export function NumberPegRehearsalCard({
@@ -28,6 +29,7 @@ export function NumberPegRehearsalCard({
   total,
   onPrevious,
   onNext,
+  lastActionLabel,
 }: NumberPegRehearsalCardProps) {
   const { styles, theme } = useStyles();
   const { t } = useTranslation('numberPeg');
@@ -66,7 +68,7 @@ export function NumberPegRehearsalCard({
         </AnimatedPressable>
         <View style={styles.nextButtonWrap}>
           <AnimatedPressable onPress={onNext} style={styles.nextButton}>
-            <Text style={styles.nextText}>{isLast ? t('startRecall') : t('next')}</Text>
+            <Text style={styles.nextText}>{isLast ? lastActionLabel ?? t('startRecall') : t('next')}</Text>
             <ArrowRight size={17} color={theme.onSun} />
           </AnimatedPressable>
         </View>

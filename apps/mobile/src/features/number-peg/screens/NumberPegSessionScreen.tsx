@@ -7,18 +7,16 @@ import { RecallResultCard } from '@/components/RecallResultCard';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useUserState } from '@/contexts/UserStateContext';
 import { NumberPegRehearsalCard } from '@/features/number-peg/components/NumberPegRehearsalCard';
+import { NumberPegRecallHints } from '@/features/number-peg/components/NumberPegRecallHints';
 import { useMemorySet } from '@/features/memory-sets';
-import type { MemoryItem, PegBinding } from '@/features/memory-sets';
+import type { MemorySet, MemoryItem, PegBinding } from '@/features/memory-sets';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { buildAllNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
 import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
-import {
-  createNumberPegRecallOrder,
-  restoreNumberPegRecallOrder,
-} from '@/features/number-peg/utils/numberPegRecall';
+import { createNumberPegRecallOrder } from '@/features/number-peg/utils/numberPegRecall';
 import { useOnboardingMutations } from '@/features/onboarding/hooks/useOnboardingMutations';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
 import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
@@ -27,6 +25,9 @@ import {
   usePracticeAttemptHistory,
   normalizeRecallAnswer,
   upsertRecallResponse,
+  restoreRecallQueue,
+  reinforceRecallQueue,
+  MAX_RECALL_ATTEMPTS,
   type PracticeAttemptInput,
   type PracticeResponseInput,
 } from '@/features/practice-attempts';
@@ -78,8 +79,13 @@ export default function NumberPegSessionScreen({
   restart = false,
   startInRecall = false,
   returnTo,
+  sessionMemorySet, sessionScope, sessionDescription, browseOnly = false,
 }: {
   memorySetId: string;
+  sessionMemorySet?: MemorySet;
+  sessionScope?: string;
+  sessionDescription?: string;
+  browseOnly?: boolean;
   restart?: boolean;
   startInRecall?: boolean;
   returnTo?: 'practice' | 'number-peg';
@@ -87,8 +93,11 @@ export default function NumberPegSessionScreen({
   const { styles } = useStyles();
   const router = useRouter();
   const { language, t } = useTranslation('numberPeg');
+  const { t: reviewText } = useTranslation('review');
   const { isOffline, canShowRequestErrors } = useNetworkStatus();
-  const memorySetQuery = useMemorySet(memorySetId);
+  const sourceQuery = useMemorySet(memorySetId);
+  const memorySetQuery = { ...sourceQuery, data: sessionMemorySet ?? sourceQuery.data };
+  const { t: planText } = useTranslation('reviewPlan');
   const history = usePracticeAttemptHistory(memorySetId);
   const pegs = useMemo(() => buildAllNumberPegItems(), []);
   const [tab, setTab] = useState<SessionTab>(startInRecall ? 'recall' : 'scenes');
@@ -97,6 +106,7 @@ export default function NumberPegSessionScreen({
   const [questionOrder, setQuestionOrder] = useState<string[]>([]);
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<Feedback>(null);
+  const [questionHintCount, setQuestionHintCount] = useState(0);
   const [clientAttemptId, setClientAttemptId] = useState(() => Crypto.randomUUID());
   const [startedAt, setStartedAt] = useState(() => new Date().toISOString());
   const [startedAtMs, setStartedAtMs] = useState(() => Date.now());
@@ -104,6 +114,8 @@ export default function NumberPegSessionScreen({
   const [responses, setResponses] = useState<PracticeResponseInput[]>([]);
   const recalledFirstTry = countFirstAttemptRecalls(responses);
   const checkingAnswerRef = useRef(false);
+  const advancingRef = useRef(false);
+  useEffect(() => { advancingRef.current = false; }, [questionIndex]);
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
   const [hasRestoredSession, setHasRestoredSession] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
@@ -111,6 +123,8 @@ export default function NumberPegSessionScreen({
   const [reminderMessage, setReminderMessage] = useState<string | null>(null);
   const hydratedSessionRef = useRef<string | null>(null);
   const sessionReadyRef = useRef(false);
+  const [isSessionReady, setIsSessionReady] = useState(false);
+  const [recoveryFailed, setRecoveryFailed] = useState(false);
   const recallScrollRef = useRef<ScrollView | null>(null);
   const recallActionRef = useRef<View | null>(null);
   const recallScrollOffsetRef = useRef(0);
@@ -179,6 +193,7 @@ export default function NumberPegSessionScreen({
   ]);
 
   const leaveSession = () => {
+    if (sessionScope) { router.replace({ pathname: '/memory-details/[memorySetId]', params: { memorySetId } }); return; }
     if (returnTo === 'practice') {
       router.replace('/(tabs)/practice');
       return;
@@ -199,32 +214,36 @@ export default function NumberPegSessionScreen({
 
     hydratedSessionRef.current = sessionKey;
     sessionReadyRef.current = false;
-    void readNumberPegSession(memorySet.id).then((snapshot) => {
-      if (restart) {
+    setIsSessionReady(false);
+    void readNumberPegSession(memorySet.id, sessionScope).then((snapshot) => {
+      if (restart || browseOnly) {
         setQuestionOrder(
           createNumberPegRecallOrder(memorySet.items, memorySet.goalType === 'ordered-list')
         );
-        if (snapshot) void clearNumberPegSession(memorySet.id);
+        if (snapshot) void clearNumberPegSession(memorySet.id, sessionScope);
         setHasRestoredSession(false);
         sessionReadyRef.current = true;
+        setIsSessionReady(true);
         return;
       }
 
       if (
         !snapshot ||
         snapshot.memorySetVersion !== memorySet.version ||
-        snapshot.questionIndex >= memorySet.items.length
+        snapshot.questionIndex < 0 ||
+        snapshot.questionIndex >= restoreRecallQueue(memorySet.items, snapshot.questionOrder).length
       ) {
-        if (snapshot) void clearNumberPegSession(memorySet.id);
+        if (snapshot) void clearNumberPegSession(memorySet.id, sessionScope);
         setQuestionOrder(
           createNumberPegRecallOrder(memorySet.items, memorySet.goalType === 'ordered-list')
         );
         sessionReadyRef.current = true;
+        setIsSessionReady(true);
         return;
       }
 
       if (startInRecall && snapshot.tab !== 'recall') {
-        void clearNumberPegSession(memorySet.id);
+        void clearNumberPegSession(memorySet.id, sessionScope);
         checkingAnswerRef.current = false;
         setTab('recall');
         setQuestionIndex(0);
@@ -241,12 +260,13 @@ export default function NumberPegSessionScreen({
         setLastPayload(null);
         setHasRestoredSession(false);
         sessionReadyRef.current = true;
+        setIsSessionReady(true);
         return;
       }
 
       setTab(snapshot.tab);
       setQuestionIndex(snapshot.questionIndex);
-      const restoredOrder = restoreNumberPegRecallOrder(memorySet.items, snapshot.questionOrder);
+      const restoredOrder = restoreRecallQueue(memorySet.items, snapshot.questionOrder);
       setQuestionOrder(restoredOrder);
       setClientAttemptId(snapshot.clientAttemptId);
       setStartedAt(snapshot.startedAt);
@@ -256,16 +276,19 @@ export default function NumberPegSessionScreen({
       const restoredItem = memorySet.items.find(
         (item) => item.id === restoredOrder[snapshot.questionIndex]
       );
-      const alreadyCorrect = snapshot.responses.some(
+      const alreadyCorrect = snapshot.feedback === undefined && snapshot.responses.some(
         (response) => response.memoryItemId === restoredItem?.id && response.isCorrect
       );
-      setAnswer(alreadyCorrect ? (restoredItem?.answer ?? '') : '');
-      setFeedback(alreadyCorrect ? 'correct' : null);
-      checkingAnswerRef.current = alreadyCorrect;
+      const restoredFeedback = snapshot.feedback ?? (alreadyCorrect ? 'correct' : null);
+      setAnswer(restoredFeedback ? (restoredItem?.answer ?? '') : '');
+      setFeedback(restoredFeedback);
+      setQuestionHintCount(snapshot.questionHintCount ?? 0);
+      checkingAnswerRef.current = !!restoredFeedback;
       setHasRestoredSession(true);
       sessionReadyRef.current = true;
-    });
-  }, [memorySetQuery.data, restart, startInRecall]);
+      setIsSessionReady(true);
+    }).catch(() => setRecoveryFailed(true));
+  }, [memorySetQuery.data, restart, startInRecall, sessionScope, browseOnly]);
 
   useEffect(() => {
     if (!hasRestoredSession) return;
@@ -276,14 +299,14 @@ export default function NumberPegSessionScreen({
   useEffect(() => {
     const memorySet = memorySetQuery.data;
     if (
-      !memorySet ||
+      !memorySet || browseOnly ||
       !sessionReadyRef.current ||
       hydratedSessionRef.current !== `${memorySet.id}:${memorySet.version}`
     )
       return;
 
-    if (questionIndex >= memorySet.items.length) {
-      void clearNumberPegSession(memorySet.id);
+    if (questionIndex >= questionOrder.length) {
+      if (practiceAttempt.data) void clearNumberPegSession(memorySet.id, sessionScope);
       return;
     }
 
@@ -293,6 +316,8 @@ export default function NumberPegSessionScreen({
       tab,
       questionIndex,
       questionOrder,
+      feedback,
+      questionHintCount,
       score: recalledFirstTry,
       clientAttemptId,
       startedAt,
@@ -300,12 +325,15 @@ export default function NumberPegSessionScreen({
       questionStartedAtMs,
       responses,
       savedAt: new Date().toISOString(),
-    });
+    }, sessionScope);
   }, [
+    sessionScope, browseOnly, practiceAttempt.data,
     clientAttemptId,
     memorySetQuery.data,
     questionIndex,
     questionOrder,
+    feedback,
+    questionHintCount,
     questionStartedAtMs,
     recalledFirstTry,
     responses,
@@ -316,6 +344,7 @@ export default function NumberPegSessionScreen({
 
   const restartRecall = () => {
     checkingAnswerRef.current = false;
+    advancingRef.current = false;
     setIsFinishing(false);
     setQuestionIndex(0);
     if (memorySetQuery.data)
@@ -327,6 +356,7 @@ export default function NumberPegSessionScreen({
       );
     setAnswer('');
     setFeedback(null);
+    setQuestionHintCount(0);
     setClientAttemptId(Crypto.randomUUID());
     setStartedAt(new Date().toISOString());
     setStartedAtMs(Date.now());
@@ -334,17 +364,18 @@ export default function NumberPegSessionScreen({
     setResponses([]);
     setLastPayload(null);
     setHasRestoredSession(false);
-    void clearNumberPegSession(memorySetId);
+    void clearNumberPegSession(memorySetId, sessionScope);
     practiceAttempt.reset();
   };
 
   const openTab = (nextTab: SessionTab) => {
+    if (browseOnly && nextTab === 'recall') return;
     // Returning to the full stories mid-round would turn an unaided answer
     // into an assisted answer without recording a hint.
     if (
       tab === 'recall' &&
       nextTab === 'scenes' &&
-      questionIndex < (memorySetQuery.data?.items.length ?? 0)
+      questionIndex < questionOrder.length
     )
       return;
     setTab(nextTab);
@@ -357,6 +388,13 @@ export default function NumberPegSessionScreen({
     )
       restartRecall();
   };
+
+  if (sessionScope && recoveryFailed) return <View style={styles.page}>
+    <CommonHeader title={planText('loadError')} backAction={leaveSession} />
+    <ModuleNoticeCard title={planText('loadError')} body={planText('connectionRequired')}
+      actionLabel={planText('backToMemory')} onAction={leaveSession} />
+  </View>;
+  if (sessionScope && !isSessionReady) return <LoadingView description={planText('loading')} />;
 
   if (!isOffline && memorySetQuery.isLoading) return <LoadingView description={t('loading')} />;
 
@@ -378,7 +416,7 @@ export default function NumberPegSessionScreen({
 
   const memorySet = memorySetQuery.data;
   const bindings = memorySet.techniquePlan?.pegBindings ?? [];
-  const isComplete = questionIndex >= memorySet.items.length;
+  const isComplete = questionOrder.length > 0 && questionIndex >= questionOrder.length;
   const currentItem = isComplete
     ? null
     : (memorySet.items.find((item) => item.id === questionOrder[questionIndex]) ??
@@ -389,7 +427,7 @@ export default function NumberPegSessionScreen({
   const currentResponse = currentItem
     ? responses.find((response) => response.memoryItemId === currentItem.id)
     : undefined;
-  const hintCount = currentResponse?.hintCount ?? 0;
+  const hintCount = questionHintCount;
   const previousResponse = history.data
     ?.filter(
       (attempt) =>
@@ -402,7 +440,8 @@ export default function NumberPegSessionScreen({
       attempt.responses.filter((response) => response.memoryItemId === currentItem?.id)
     )[0];
   const requestHint = () => {
-    if (!currentItem || hintCount >= 3 || feedback === 'correct' || isFinishing) return;
+    if (!currentItem || hintCount >= 3 || feedback || isFinishing) return;
+    setQuestionHintCount((count) => Math.min(3, count + 1));
     setResponses((current) => {
       const existing = current.find((response) => response.memoryItemId === currentItem.id);
       if (existing)
@@ -435,11 +474,15 @@ export default function NumberPegSessionScreen({
     }
   };
 
-  const checkOrContinue = () => {
+  const checkOrContinue = (forgot = false) => {
     if (!currentItem) return;
     if (isFinishing) return;
     if (feedback) {
-      if (feedback === 'correct' && questionIndex === memorySet.items.length - 1) {
+      if (!currentResponse || advancingRef.current) return;
+      advancingRef.current = true;
+      const nextOrder = reinforceRecallQueue(questionOrder, questionIndex, currentResponse, hintCount > 0);
+      setQuestionOrder(nextOrder);
+      if (questionIndex === nextOrder.length - 1) {
         playSound('complete');
         const payload: PracticeAttemptInput = {
           clientAttemptId,
@@ -459,30 +502,30 @@ export default function NumberPegSessionScreen({
             setQuestionIndex((current) => current + 1);
             setAnswer('');
             setFeedback(null);
+            setQuestionHintCount(0);
             setQuestionStartedAtMs(Date.now());
           });
         return;
       }
-      if (feedback === 'correct') {
-        checkingAnswerRef.current = false;
-        setQuestionIndex((current) => current + 1);
-        setAnswer('');
-        setFeedback(null);
-        setQuestionStartedAtMs(Date.now());
-        return;
-      }
+      checkingAnswerRef.current = false;
+      setQuestionIndex((current) => current + 1);
+      setAnswer('');
+      setFeedback(null);
+      setQuestionHintCount(0);
+      setQuestionStartedAtMs(Date.now());
+      return;
     }
 
-    if (!answer.trim() || checkingAnswerRef.current) return;
+    if ((!answer.trim() && !forgot) || checkingAnswerRef.current) return;
     checkingAnswerRef.current = true;
-    const isCorrect = normalizeRecallAnswer(answer) === normalizeRecallAnswer(currentItem.answer);
+    const isCorrect = !forgot && normalizeRecallAnswer(answer) === normalizeRecallAnswer(currentItem.answer);
     setResponses((current) =>
       upsertRecallResponse(
         current,
         currentItem.id,
         isCorrect,
         Math.max(0, Date.now() - questionStartedAtMs),
-        currentResponse?.hintCount ?? 0
+        hintCount
       )
     );
     setFeedback(isCorrect ? 'correct' : 'wrong');
@@ -520,10 +563,10 @@ export default function NumberPegSessionScreen({
         compact
         eyebrow={t('eyebrow')}
         title={memorySet.title}
-        description={`${memorySet.items.length} ${t('items')} · ${t('title')}`}
+        description={sessionDescription ?? `${memorySet.items.length} ${t('items')} · ${t('title')}`}
         backAction={leaveSession}
       />
-      <View style={styles.tabs}>
+      {!sessionScope ? <View style={styles.tabs}>
         <View style={styles.tabWrap}>
           <AnimatedPressable
             accessibilityLabel={t('reviewScenes')}
@@ -562,14 +605,14 @@ export default function NumberPegSessionScreen({
             </View>
           </AnimatedPressable>
         </View>
-      </View>
+      </View> : null}
       <View style={styles.tabHint}>
         <Text style={styles.tabHintText}>
-          {tab === 'scenes' ? t('sceneHint') : t('recallHint')}
+          {browseOnly ? planText('browseNote') : tab === 'scenes' ? t('sceneHint') : t('recallHint')}
         </Text>
       </View>
 
-      {hasRestoredSession && tab !== 'recall' && (
+      {hasRestoredSession && (
         <AnimatedPressable
           onPress={() => setHasRestoredSession(false)}
           style={styles.restoreNotice}>
@@ -593,7 +636,7 @@ export default function NumberPegSessionScreen({
               item={sceneItem}
               onNext={() => {
                 if (sceneIndex === memorySet.items.length - 1) {
-                  openTab('recall');
+                  if (browseOnly) leaveSession(); else openTab('recall');
                 } else {
                   setSceneIndex((current) => current + 1);
                 }
@@ -601,6 +644,7 @@ export default function NumberPegSessionScreen({
               onPrevious={() => setSceneIndex((current) => Math.max(0, current - 1))}
               peg={scenePeg}
               total={memorySet.items.length}
+              lastActionLabel={browseOnly ? planText('backToMemory') : undefined}
             />
           ) : null}
           <Text style={styles.rehearsalHint}>{t('rehearsalHint')}</Text>
@@ -634,7 +678,7 @@ export default function NumberPegSessionScreen({
                   ? practiceAttempt.data.currentLevel
                   : undefined
               }
-              body={recalledFirstTry === memorySet.items.length ? t('perfect') : t('niceWork')}
+              body={recalledFirstTry === memorySet.items.length ? t('perfect') : reviewText('needsPracticeBody')}
               saveStatus={
                 practiceAttempt.isPending || completeOnboarding.isPending ? (
                   <Text style={styles.saveState}>{t('savingProgress')}</Text>
@@ -703,9 +747,9 @@ export default function NumberPegSessionScreen({
                   </View>
                 ) : null
               }
-              onRetry={restartRecall}
-              retryLabel={t('tryAgain')}
-              retryAccessibilityLabel={t('tryAgain')}
+              onRetry={sessionScope ? leaveSession : restartRecall}
+              retryLabel={sessionScope ? planText('backToMemory') : t('tryAgain')}
+              retryAccessibilityLabel={sessionScope ? planText('backToMemory') : t('tryAgain')}
               onReturnHome={() => router.replace('/(tabs)')}
               returnHomeLabel={t('backToHome')}
             />
@@ -714,13 +758,13 @@ export default function NumberPegSessionScreen({
               <View style={styles.recallProgressRow}>
                 <Text style={styles.recallProgressLabel}>{t('recallRound')}</Text>
                 <Text style={styles.recallProgressCount}>
-                  {questionIndex + 1} {t('of')} {memorySet.items.length}
+                  {questionIndex + 1} {t('of')} {questionOrder.length}
                 </Text>
               </View>
               <View style={styles.dots}>
-                {memorySet.items.map((item, index) => (
+                {questionOrder.map((itemId, index) => (
                   <View
-                    key={item.id}
+                    key={`${itemId}-${index}`}
                     style={[
                       styles.dot,
                       index < questionIndex && styles.doneDot,
@@ -742,15 +786,16 @@ export default function NumberPegSessionScreen({
                 feedback={feedback}
                 feedbackText={
                   feedback === 'correct'
-                    ? t('nailed')
-                    : language === 'zh'
-                      ? '还没答对，再想一想，或使用下方提示。'
-                      : 'Not quite. Try again or use a hint below.'
+                    ? hintCount > 0
+                      ? reviewText(currentResponse && currentResponse.attemptCount >= MAX_RECALL_ATTEMPTS
+                        ? 'reinforcementFinished' : 'assistedFeedback')
+                      : t('nailed')
+                    : `${reviewText('answerFeedback').replace('{answer}', currentItem?.answer ?? '')} ${currentResponse && currentResponse.attemptCount >= MAX_RECALL_ATTEMPTS ? reviewText('reinforcementFinished') : reviewText('reinforcementLater')}`
                 }
                 actionLabel={
                   isFinishing
                     ? t('savingProgress')
-                    : feedback === 'correct'
+                    : feedback
                       ? t('next')
                       : t('checkAnswer')
                 }
@@ -759,51 +804,28 @@ export default function NumberPegSessionScreen({
                 answerAccessibilityLabel={t('typeYourAnswer')}
                 answerPlaceholder={t('typeYourAnswerPlaceholder')}
                 cue={
-                  <View>
-                    {hintCount > 0 ? (
-                      <Text style={styles.safeHint}>
-                        {localizedCurrentPeg?.image} {localizedCurrentPeg?.keyword}
-                      </Text>
-                    ) : null}
-                    {hintCount >= 2 ? (
-                      <Text style={styles.safeHint}>
-                        {language === 'zh'
-                          ? '想想这个角色在你保存的故事里做了什么，和什么东西发生了互动？'
-                          : 'What did this character do in your saved story, and what did it interact with?'}
-                      </Text>
-                    ) : null}
-                    {hintCount < 3 && feedback !== 'correct' ? (
-                      <AnimatedPressable onPress={requestHint} style={styles.hintButton}>
-                        <Text style={styles.hintButtonText}>
-                          {language === 'zh'
-                            ? hintCount === 0
-                              ? '提示一：数字角色'
-                              : hintCount === 1
-                                ? '提示二：回想故事'
-                                : '想不起来，查看答案'
-                            : hintCount === 0
-                              ? 'Hint 1: number character'
-                              : hintCount === 1
-                                ? 'Hint 2: recall the story'
-                                : 'Reveal the answer'}
-                        </Text>
-                      </AnimatedPressable>
-                    ) : null}
-                    {hintCount >= 3 ? (
-                      <Text style={styles.revealedAnswer}>{currentItem?.answer}</Text>
-                    ) : null}
-                  </View>
+                  currentItem ? <NumberPegRecallHints
+                    item={currentItem}
+                    binding={currentBinding ?? null}
+                    peg={localizedCurrentPeg}
+                    hintCount={hintCount}
+                    feedback={feedback}
+                    disabled={isFinishing}
+                    onHint={requestHint}
+                  /> : null
                 }
                 onAnswerFocus={queueRecallInputScroll}
                 actionAreaRef={(view) => {
                   recallActionRef.current = view;
                 }}
                 onAnswerChange={(value) => {
+                  if (feedback) return;
                   checkingAnswerRef.current = false;
                   setAnswer(value);
-                  if (feedback === 'wrong') setFeedback(null);
                 }}
-                onSubmit={checkOrContinue}
+                onSubmit={() => checkOrContinue()}
+                onSkip={() => checkOrContinue(true)}
+                skipLabel={reviewText('forgot')}
               />
             </>
           )}
@@ -1008,23 +1030,6 @@ const useStyles = createThemedStyles((theme) =>
       fontFamily: typography.bodySemibold,
       fontSize: 12,
       lineHeight: 17,
-      textAlign: 'center',
-    },
-    hintButton: {
-      alignSelf: 'center',
-      minHeight: 44,
-      marginTop: 8,
-      borderRadius: 12,
-      backgroundColor: theme.berryTint,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-    },
-    hintButtonText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-    revealedAnswer: {
-      color: theme.successText,
-      fontFamily: typography.bodyExtraBold,
-      fontSize: 16,
-      marginTop: 8,
       textAlign: 'center',
     },
     saveState: {

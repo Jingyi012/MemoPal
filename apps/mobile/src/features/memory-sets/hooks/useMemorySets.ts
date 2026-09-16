@@ -12,6 +12,7 @@ import {
 } from '@/core/dev/localPreviewData';
 import { memorySetApi } from '../api/memorySet.api';
 import { COMMUNITY_MEMORY_SET_KEYS, MEMORY_SET_KEYS } from '../queryKeys';
+import { PRACTICE_KEYS } from '@/features/practice-attempts/queryKeys';
 import type {
   MemorySet,
   MemorySetUpsertRequest,
@@ -104,6 +105,7 @@ export function useMemorySetMutations() {
     queryClient.setQueryData(MEMORY_SET_KEYS.detail(memorySet.id), memorySet);
     void queryClient.invalidateQueries({ queryKey: MEMORY_SET_KEYS.lists() });
     void queryClient.invalidateQueries({ queryKey: COMMUNITY_MEMORY_SET_KEYS.all });
+    void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.progress(memorySet.id) });
   };
 
   const createMemorySet = useMutation({

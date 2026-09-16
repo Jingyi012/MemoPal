@@ -13,12 +13,3 @@ export function createNumberPegRecallOrder(
   }
   return ids;
 }
-
-export function restoreNumberPegRecallOrder(items: readonly { id: string }[], saved?: string[]) {
-  const valid = new Set(items.map((item) => item.id));
-  return saved?.length === items.length &&
-    new Set(saved).size === items.length &&
-    saved.every((id) => valid.has(id))
-    ? saved
-    : items.map((item) => item.id);
-}

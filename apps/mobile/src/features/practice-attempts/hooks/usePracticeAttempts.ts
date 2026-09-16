@@ -15,13 +15,8 @@ import { resolveNextStreak } from '@/features/gamification/shared/utils/streak';
 import { XP_KEYS } from '@/features/gamification/shared/hooks/useXpEvents';
 import { MILESTONE_KEYS } from '@/features/gamification/shared/hooks/useMilestones';
 
-export const PRACTICE_KEYS = {
-  all: ['practice-attempts'] as const,
-  stats: () => [...PRACTICE_KEYS.all, 'stats'] as const,
-  due: () => [...PRACTICE_KEYS.all, 'due'] as const,
-  upcoming: (days = 30) => [...PRACTICE_KEYS.all, 'upcoming', days] as const,
-  history: (memorySetId: string) => [...PRACTICE_KEYS.all, 'history', memorySetId] as const,
-};
+import { PRACTICE_KEYS } from '../queryKeys';
+export { PRACTICE_KEYS } from '../queryKeys';
 
 const LOCAL_PREVIEW_ATTEMPTS_KEY = 'memopal:preview:practice-attempts';
 
@@ -53,6 +48,7 @@ export function useCreatePracticeAttempt() {
       void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.due() });
       void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.upcoming() });
       void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.history(attempt.memorySetId) });
+      void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.progress(attempt.memorySetId) });
       void queryClient.invalidateQueries({ queryKey: PRACTICE_KEYS.stats() });
       void queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEYS.all });
       void queryClient.invalidateQueries({ queryKey: XP_KEYS.all });
@@ -136,6 +132,20 @@ export function usePracticeAttemptHistory(memorySetId: string) {
       }
       return practiceAttemptApi.getHistory(memorySetId);
     },
+    staleTime: 1000 * 30,
+    networkMode: 'online',
+  });
+}
+
+export function useMemoryReviewProgress(memorySetId: string) {
+  return useQuery({
+    queryKey: PRACTICE_KEYS.progress(memorySetId),
+    enabled: Boolean(memorySetId),
+    refetchInterval: 30_000,
+    refetchOnMount: 'always',
+    // Local preview has no authoritative schedules. Never invent stage counts.
+    queryFn: () => isLocalPreviewEnabled
+      ? Promise.resolve(null) : practiceAttemptApi.getReviewProgress(memorySetId),
     staleTime: 1000 * 30,
     networkMode: 'online',
   });

@@ -7,7 +7,7 @@ import { RecallAnswerCard } from '@/components/RecallAnswerCard';
 import { RecallResultCard } from '@/components/RecallResultCard';
 import { PalaceFocusCard } from '@/features/palace-scenes/components/PalaceFocusCard';
 import { PalaceOrderedList } from '@/features/palace-scenes/components/PalaceOrderedList';
-import { useMemorySet } from '@/features/memory-sets';
+import { useMemorySet, type MemorySet } from '@/features/memory-sets';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
@@ -18,9 +18,11 @@ import {
   writePalaceSession,
 } from '@/features/palace-scenes/services/palaceSessionRecovery';
 import {
-  getSpellingHint,
   normalizeRecallAnswer,
   upsertRecallResponse,
+  restoreRecallQueue,
+  reinforceRecallQueue,
+  MAX_RECALL_ATTEMPTS,
   useCreatePracticeAttempt,
   type PracticeAttemptInput,
   type PracticeResponseInput,
@@ -41,8 +43,13 @@ export default function PalaceMemorySessionScreen({
   restart = false,
   startInRecall = false,
   returnTo,
+  sessionMemorySet, sessionScope, sessionDescription, browseOnly = false,
 }: {
   memorySetId: string;
+  sessionMemorySet?: MemorySet;
+  sessionScope?: string;
+  sessionDescription?: string;
+  browseOnly?: boolean;
   restart?: boolean;
   startInRecall?: boolean;
   returnTo?: 'practice' | 'palaces';
@@ -50,26 +57,38 @@ export default function PalaceMemorySessionScreen({
   const { styles } = useStyles();
   const router = useRouter();
   const { language, t } = useTranslation('palace');
-  const memorySetQuery = useMemorySet(memorySetId);
+  const { t: reviewText } = useTranslation('review');
+  const sourceQuery = useMemorySet(memorySetId);
+  const memorySetQuery = { ...sourceQuery, data: sessionMemorySet ?? sourceQuery.data };
+  const { t: planText } = useTranslation('reviewPlan');
   const sceneId = memorySetQuery.data?.techniquePlan?.palaceSceneId ?? '';
   const sceneQuery = usePalaceScene(sceneId);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [recallOrder, setRecallOrder] = useState<string[]>([]);
   const [mode, setMode] = useState<SessionMode>(startInRecall ? 'recall' : 'browse');
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<Feedback>(null);
+  const checkingAnswerRef = useRef(false);
+  const advancingRef = useRef(false);
+  useEffect(() => {
+    checkingAnswerRef.current = false;
+    advancingRef.current = false;
+  }, [activeIndex]);
   const [clientAttemptId, setClientAttemptId] = useState(() => Crypto.randomUUID());
   const [startedAt, setStartedAt] = useState(() => new Date().toISOString());
   const [startedAtMs, setStartedAtMs] = useState(() => Date.now());
   const [questionStartedAtMs, setQuestionStartedAtMs] = useState(() => Date.now());
   const [responses, setResponses] = useState<PracticeResponseInput[]>([]);
   const recalledFirstTry = responses.filter(
-    (response) => response.isCorrect && response.attemptCount === 1
+    (response) => response.isCorrect && response.attemptCount === 1 && !response.hintCount
   ).length;
   const [lastPayload, setLastPayload] = useState<PracticeAttemptInput | null>(null);
   const [hasRestoredSession, setHasRestoredSession] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const hydratedSessionRef = useRef<string | null>(null);
   const sessionReadyRef = useRef(false);
+  const [isSessionReady, setIsSessionReady] = useState(false);
+  const [recoveryFailed, setRecoveryFailed] = useState(false);
   const recallScrollRef = useRef<ScrollView | null>(null);
   const recallActionRef = useRef<View | null>(null);
   const recallScrollOffsetRef = useRef(0);
@@ -125,6 +144,7 @@ export default function PalaceMemorySessionScreen({
     queueRecallInputScroll();
   }, [activeIndex, feedback, mode, queueRecallInputScroll, recallKeyboardInset, recallKeyboardOverlay]);
   const leaveSession = () => {
+    if (sessionScope) { router.replace({ pathname: '/memory-details/[memorySetId]', params: { memorySetId } }); return; }
     if (returnTo === 'practice') {
       router.replace('/(tabs)/practice');
       return;
@@ -145,26 +165,32 @@ export default function PalaceMemorySessionScreen({
 
     hydratedSessionRef.current = sessionKey;
     sessionReadyRef.current = false;
-    void readPalaceSession(memorySet.id).then((snapshot) => {
-      if (restart) {
-        if (snapshot) void clearPalaceSession(memorySet.id);
+    setIsSessionReady(false);
+    void readPalaceSession(memorySet.id, sessionScope).then((snapshot) => {
+      if (restart || browseOnly) {
+        if (snapshot) void clearPalaceSession(memorySet.id, sessionScope);
         setHasRestoredSession(false);
         sessionReadyRef.current = true;
+        setIsSessionReady(true);
         return;
       }
 
       if (
         !snapshot ||
         snapshot.memorySetVersion !== memorySet.version ||
-        snapshot.activeIndex > memorySet.items.length
+        snapshot.activeIndex < 0 ||
+        snapshot.activeIndex >= (snapshot.mode === 'recall'
+          ? restoreRecallQueue(memorySet.items, snapshot.recallOrder).length
+          : memorySet.items.length)
       ) {
-        if (snapshot) void clearPalaceSession(memorySet.id);
+        if (snapshot) void clearPalaceSession(memorySet.id, sessionScope);
         sessionReadyRef.current = true;
+        setIsSessionReady(true);
         return;
       }
 
       if (startInRecall && snapshot.mode !== 'recall') {
-        void clearPalaceSession(memorySet.id);
+        void clearPalaceSession(memorySet.id, sessionScope);
         setMode('recall');
         setActiveIndex(0);
         setAnswer('');
@@ -177,11 +203,14 @@ export default function PalaceMemorySessionScreen({
         setLastPayload(null);
         setHasRestoredSession(false);
         sessionReadyRef.current = true;
+        setIsSessionReady(true);
         return;
       }
 
       setMode(snapshot.mode);
       setActiveIndex(snapshot.activeIndex);
+      setRecallOrder(restoreRecallQueue(memorySet.items, snapshot.recallOrder));
+      setFeedback(snapshot.feedback ?? null);
       setClientAttemptId(snapshot.clientAttemptId);
       setStartedAt(snapshot.startedAt);
       setStartedAtMs(snapshot.startedAtMs);
@@ -189,8 +218,9 @@ export default function PalaceMemorySessionScreen({
       setResponses(snapshot.responses);
       setHasRestoredSession(true);
       sessionReadyRef.current = true;
-    });
-  }, [memorySetQuery.data, restart, startInRecall]);
+      setIsSessionReady(true);
+    }).catch(() => setRecoveryFailed(true));
+  }, [memorySetQuery.data, restart, startInRecall, sessionScope, browseOnly]);
 
   useEffect(() => {
     if (!hasRestoredSession) return;
@@ -201,14 +231,14 @@ export default function PalaceMemorySessionScreen({
   useEffect(() => {
     const memorySet = memorySetQuery.data;
     if (
-      !memorySet ||
+      !memorySet || browseOnly ||
       !sessionReadyRef.current ||
       hydratedSessionRef.current !== `${memorySet.id}:${memorySet.version}`
     )
       return;
 
-    if (activeIndex >= memorySet.items.length) {
-      void clearPalaceSession(memorySet.id);
+    if (activeIndex >= (mode === 'recall' ? (recallOrder.length || memorySet.items.length) : memorySet.items.length)) {
+      if (practiceAttempt.data) void clearPalaceSession(memorySet.id, sessionScope);
       return;
     }
 
@@ -217,6 +247,8 @@ export default function PalaceMemorySessionScreen({
       memorySetVersion: memorySet.version,
       mode,
       activeIndex,
+      recallOrder: recallOrder.length ? recallOrder : memorySet.items.map((item) => item.id),
+      feedback,
       score: recalledFirstTry,
       clientAttemptId,
       startedAt,
@@ -224,9 +256,12 @@ export default function PalaceMemorySessionScreen({
       questionStartedAtMs,
       responses,
       savedAt: new Date().toISOString(),
-    });
+    }, sessionScope);
   }, [
+    sessionScope, browseOnly, practiceAttempt.data,
     activeIndex,
+    recallOrder,
+    feedback,
     clientAttemptId,
     memorySetQuery.data,
     mode,
@@ -247,6 +282,13 @@ export default function PalaceMemorySessionScreen({
       return { item, binding, locus: scene.loci.find((locus) => locus.id === binding?.locusId) };
     });
   }, [memorySetQuery.data, sceneQuery.data]);
+
+  if (sessionScope && recoveryFailed) return <View style={styles.page}>
+    <CommonHeader title={planText('loadError')} backAction={leaveSession} />
+    <ModuleNoticeCard title={planText('loadError')} body={planText('connectionRequired')}
+      actionLabel={planText('backToMemory')} onAction={leaveSession} />
+  </View>;
+  if (sessionScope && !isSessionReady) return <LoadingView description={planText('loading')} />;
 
   if (memorySetQuery.isLoading || (sceneId && sceneQuery.isLoading)) {
     return <LoadingView description={t('loading')} />;
@@ -276,14 +318,20 @@ export default function PalaceMemorySessionScreen({
 
   const memorySet = memorySetQuery.data;
   const scene = sceneQuery.data;
-  const isSpelling = memorySet.goalType === 'spelling';
-  const active = placements[activeIndex];
-  const recallComplete = mode === 'recall' && activeIndex >= placements.length;
+  const currentRecallOrder = recallOrder.length ? recallOrder : memorySet.items.map((item) => item.id);
+  const active = mode === 'recall'
+    ? placements.find((placement) => placement.item.id === currentRecallOrder[activeIndex])
+    : placements[activeIndex];
+  const recallComplete = mode === 'recall' && activeIndex >= currentRecallOrder.length;
 
   const startRecall = () => {
+    if (browseOnly) return;
+    checkingAnswerRef.current = false;
+    advancingRef.current = false;
     setIsFinishing(false);
     setMode('recall');
     setActiveIndex(0);
+    setRecallOrder(memorySet.items.map((item) => item.id));
     setAnswer('');
     setFeedback(null);
     setClientAttemptId(Crypto.randomUUID());
@@ -295,11 +343,16 @@ export default function PalaceMemorySessionScreen({
     practiceAttempt.reset();
   };
 
-  const checkOrContinue = () => {
+  const checkOrContinue = (forgot = false) => {
     if (!active) return;
     if (isFinishing) return;
     if (feedback) {
-      if (feedback === 'correct' && activeIndex === placements.length - 1) {
+      const response = responses.find((item) => item.memoryItemId === active.item.id);
+      if (!response || advancingRef.current) return;
+      advancingRef.current = true;
+      const nextOrder = reinforceRecallQueue(currentRecallOrder, activeIndex, response, false);
+      setRecallOrder(nextOrder);
+      if (activeIndex === nextOrder.length - 1) {
         playSound('complete');
         const payload: PracticeAttemptInput = {
           clientAttemptId,
@@ -323,17 +376,16 @@ export default function PalaceMemorySessionScreen({
           });
         return;
       }
-      if (feedback === 'correct') {
-        setActiveIndex((value) => value + 1);
-        setAnswer('');
-        setFeedback(null);
-        setQuestionStartedAtMs(Date.now());
-        return;
-      }
+      setActiveIndex((value) => value + 1);
+      setAnswer('');
+      setFeedback(null);
+      setQuestionStartedAtMs(Date.now());
+      return;
     }
 
-    if (!answer.trim()) return;
-    const isCorrect = normalizeRecallAnswer(answer) === normalizeRecallAnswer(active.item.answer);
+    if ((!answer.trim() && !forgot) || checkingAnswerRef.current) return;
+    checkingAnswerRef.current = true;
+    const isCorrect = !forgot && normalizeRecallAnswer(answer) === normalizeRecallAnswer(active.item.answer);
     setResponses((current) =>
       upsertRecallResponse(
         current,
@@ -398,7 +450,8 @@ export default function PalaceMemorySessionScreen({
           <Pressable
             accessibilityRole="tab"
             accessibilityLabel={t('rehearseMode')}
-            accessibilityState={{ selected: isRehearsing }}
+            accessibilityState={{ selected: isRehearsing, disabled: !isRehearsing && !recallComplete }}
+            disabled={!isRehearsing && !recallComplete}
             onPress={() => {
               if (!isRehearsing) openRehearsalView('browse');
             }}
@@ -413,10 +466,11 @@ export default function PalaceMemorySessionScreen({
               </Text>
             </View>
           </Pressable>
-          <Pressable
+          {!browseOnly ? <Pressable
             accessibilityRole="tab"
             accessibilityLabel={t('recallMode')}
-            accessibilityState={{ selected: mode === 'recall' }}
+            accessibilityState={{ selected: mode === 'recall', disabled: mode === 'recall' && !recallComplete }}
+            disabled={mode === 'recall' && !recallComplete}
             onPress={startRecall}
             style={[styles.modeCard, mode === 'recall' && styles.modeCardActive]}>
             <Text style={styles.modeEmoji}>🧠</Text>
@@ -428,7 +482,7 @@ export default function PalaceMemorySessionScreen({
                 {t('recallModeBody')}
               </Text>
             </View>
-          </Pressable>
+          </Pressable> : null}
         </View>
         {isRehearsing ? (
           <View style={styles.subModeRail}>
@@ -477,7 +531,7 @@ export default function PalaceMemorySessionScreen({
         body={
           recalledFirstTry === placements.length
             ? t('recallPerfectBody')
-            : t('recallNeedsPracticeBody')
+            : reviewText('needsPracticeBody')
         }
         saveStatus={
           practiceAttempt.isPending ? (
@@ -502,10 +556,10 @@ export default function PalaceMemorySessionScreen({
             </Text>
           ) : null
         }
-        onRetry={startRecall}
-        retryLabel={t('tryAgain')}
-        retryAccessibilityLabel={t('tryAgain')}
-        secondaryAction={{
+        onRetry={sessionScope ? leaveSession : startRecall}
+        retryLabel={sessionScope ? planText('backToMemory') : t('tryAgain')}
+        retryAccessibilityLabel={sessionScope ? planText('backToMemory') : t('tryAgain')}
+        secondaryAction={sessionScope ? undefined : {
           label: t('walkAgain'),
           onPress: () => {
             setMode('walk');
@@ -519,24 +573,21 @@ export default function PalaceMemorySessionScreen({
       <RecallAnswerCard
         tone="palace"
         icon={<Text style={styles.recallEmoji}>🧠</Text>}
-        eyebrow={`${t('locusLabel').toUpperCase()} ${activeIndex + 1} · ${active.locus ? getPalaceLocusName(active.locus, language).toUpperCase() : t('memorySpot')}`}
+        eyebrow={`${t('locusLabel').toUpperCase()} ${active.item.position} · ${active.locus ? getPalaceLocusName(active.locus, language).toUpperCase() : t('memorySpot')}`}
         prompt={t('recallPrompt')}
         answer={answer}
         feedback={feedback}
         feedbackText={
           feedback === 'correct'
             ? t('correctFeedback')
-            : isSpelling
-              ? t('checkSpellingFeedback').replace(
-                  '{hint}',
-                  getSpellingHint(active.item.answer, answer)
-                )
-              : t('wrongAnswerFeedback').replace('{answer}', active.item.answer)
+            : `${reviewText('answerFeedback').replace('{answer}', active.item.answer)} ${
+              (responses.find((item) => item.memoryItemId === active.item.id)?.attemptCount ?? 0) >= MAX_RECALL_ATTEMPTS
+                ? reviewText('reinforcementFinished') : reviewText('reinforcementLater')}`
         }
         actionLabel={
           isFinishing
             ? t('savingProgress')
-            : feedback === 'correct'
+            : feedback
               ? t('nextLocusAction')
               : t('checkAnswer')
         }
@@ -544,16 +595,23 @@ export default function PalaceMemorySessionScreen({
         answerAccessibilityLabel={t('typeYourAnswer')}
         answerPlaceholder={t('typeYourAnswer')}
         progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${placements.length}`}
-        cue={renderRecallCue()}
+        cue={<View>
+          {renderRecallCue()}
+          {feedback === 'wrong' && active.binding?.associationText ? (
+            <Text style={styles.saveState}>{active.binding.associationText}</Text>
+          ) : null}
+        </View>}
         onAnswerFocus={queueRecallInputScroll}
         actionAreaRef={(view) => {
           recallActionRef.current = view;
         }}
         onAnswerChange={(value) => {
+          if (feedback) return;
           setAnswer(value);
-          if (feedback === 'wrong') setFeedback(null);
         }}
-        onSubmit={checkOrContinue}
+        onSubmit={() => checkOrContinue()}
+        onSkip={() => checkOrContinue(true)}
+        skipLabel={reviewText('forgot')}
       />
     ) : null;
 
@@ -623,7 +681,7 @@ export default function PalaceMemorySessionScreen({
                 ? setActiveIndex(0)
                 : setActiveIndex((value) => value + 1)
             }
-            onStartRecall={startRecall}
+            onStartRecall={browseOnly ? undefined : startRecall}
             scene={scene}
             total={placements.length}
           />
@@ -665,8 +723,8 @@ export default function PalaceMemorySessionScreen({
             style={styles.primaryButton}>
             <Text style={styles.primaryText}>🚶 {t('walkThrough')}</Text>
           </AnimatedPressable>
-          <AnimatedPressable onPress={startRecall} style={styles.secondaryButton}>
-            <Text style={styles.secondaryText}>{t('recallChallenge')}</Text>
+          <AnimatedPressable onPress={browseOnly ? leaveSession : startRecall} style={styles.secondaryButton}>
+            <Text style={styles.secondaryText}>{browseOnly ? planText('backToMemory') : t('recallChallenge')}</Text>
           </AnimatedPressable>
         </>
       )}
@@ -679,7 +737,7 @@ export default function PalaceMemorySessionScreen({
         compact
         eyebrow={t('eyebrow')}
         title={memorySet.title}
-        description={`${scene.name} · ${placements.length} ${t(
+        description={sessionDescription ?? `${scene.name} · ${placements.length} ${t(
           placements.length === 1 ? 'locusSingular' : 'lociPlural'
         )}`}
         backAction={leaveSession}
@@ -707,14 +765,14 @@ export default function PalaceMemorySessionScreen({
               ? t('activeLocusHint')
               : t('routeNavigationHint')}
           </Text>
-          {hasRestoredSession && mode !== 'recall' ? (
+          {hasRestoredSession ? (
             <AnimatedPressable
               onPress={() => setHasRestoredSession(false)}
               style={styles.restoreNotice}>
               <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
             </AnimatedPressable>
           ) : null}
-          {renderModeRail()}
+          {sessionScope && startInRecall ? null : renderModeRail()}
           {renderSessionPanel()}
         </View>
       </ScrollView>

@@ -295,6 +295,10 @@ The existing image folders may be treated as raw authoring assets. Use each suit
 
 ## 7. Shared review and learning system
 
+The implemented interval, reinforcement, and overdue rules are documented in
+[review-mechanism.md](review-mechanism.md). The state suggestions below remain
+product direction rather than additional persisted states.
+
 Progress should be tracked per memory item, not only per lesson. Use a simple scheduler first and keep the scheduling strategy replaceable.
 
 Suggested item states:

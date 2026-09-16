@@ -49,8 +49,11 @@ public sealed class NumberPegStoryReviewEndpointsTests(CustomWebApplicationFacto
         Assert.Equal("Candle melts a passport at the airport.", story);
     }
 
-    [Fact]
-    public async Task HintedRecall_RoundTripsWithoutIndependentCredit_AndIsIdempotentAndPrivate()
+    [Theory]
+    [InlineData(1, 2)]
+    [InlineData(2, 0)]
+    public async Task AssistedRecall_SchedulesConfirmationWithoutIndependentCredit_AndIsIdempotentAndPrivate(
+        int attemptCount, int hintCount)
     {
         using var client = await AuthenticatedClient();
         var create = await client.PostAsJsonAsync("/v1/memory-sets", new
@@ -72,22 +75,31 @@ public sealed class NumberPegStoryReviewEndpointsTests(CustomWebApplicationFacto
         {
             clientAttemptId = Guid.NewGuid().ToString(), memorySetId = setId,
             mode = "recall", startedAt = DateTime.UtcNow, durationMs = 1000,
-            responses = new[] { new { memoryItemId = itemId, isCorrect = true, attemptCount = 1, hintCount = 2, responseMs = 1000 } }
+            responses = new[] { new { memoryItemId = itemId, isCorrect = true, attemptCount, hintCount, responseMs = 1000 } }
         };
         var payload = new { attempts = new[] { attempt } };
         var saved = await client.PostAsJsonAsync("/v1/practice-attempts/batch", payload);
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         var first = (await saved.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("data")[0];
         Assert.Equal(0, first.GetProperty("firstAttemptCorrectCount").GetInt32());
-        Assert.Equal(2, first.GetProperty("responses")[0].GetProperty("hintCount").GetInt32());
-        Assert.Equal(1, first.GetProperty("responses")[0].GetProperty("attemptCount").GetInt32());
+        Assert.Equal(hintCount, first.GetProperty("responses")[0].GetProperty("hintCount").GetInt32());
+        Assert.Equal(attemptCount, first.GetProperty("responses")[0].GetProperty("attemptCount").GetInt32());
+        var nextReviewAt = first.GetProperty("nextReviewAt").GetDateTime();
+        Assert.Equal(first.GetProperty("completedAt").GetDateTime().AddDays(1), nextReviewAt);
+        var upcoming = await client.GetFromJsonAsync<JsonElement>("/v1/reviews/upcoming");
+        var schedule = Assert.Single(upcoming.GetProperty("data").EnumerateArray());
+        Assert.Equal(nextReviewAt, schedule.GetProperty("dueAt").GetDateTime());
+        Assert.Equal(0, schedule.GetProperty("reviewCount").GetInt32());
+        var due = await client.GetFromJsonAsync<JsonElement>("/v1/reviews/due");
+        Assert.Empty(due.GetProperty("data").EnumerateArray());
         var replay = await client.PostAsJsonAsync("/v1/practice-attempts/batch", payload);
         Assert.Equal(HttpStatusCode.OK, replay.StatusCode);
         var replayData = (await replay.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("data")[0];
         Assert.Equal(first.GetProperty("id").GetString(), replayData.GetProperty("id").GetString());
+        Assert.Equal(nextReviewAt, replayData.GetProperty("nextReviewAt").GetDateTime());
         var history = await client.GetFromJsonAsync<JsonElement>($"/v1/practice-attempts/memory-set/{setId}");
         Assert.Equal(1, history.GetProperty("data").GetArrayLength());
-        Assert.Equal(2, history.GetProperty("data")[0].GetProperty("responses")[0].GetProperty("hintCount").GetInt32());
+        Assert.Equal(hintCount, history.GetProperty("data")[0].GetProperty("responses")[0].GetProperty("hintCount").GetInt32());
         using var other = await AuthenticatedClient();
         var forbidden = await other.PostAsJsonAsync("/v1/practice-attempts/batch", payload);
         Assert.True(forbidden.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden);
