@@ -68,6 +68,50 @@ The result's next review time is calculated from the updated schedules of
 the submitted items. Retrying the same client attempt ID does not reschedule
 items or award XP again. Rehearsal does not qualify for due-review XP.
 
+## Progress shown in memory details
+
+`GET /v1/reviews/memory-set/{memorySetId}/progress` returns owner-only progress
+for the memory and its non-deleted items. It counts all saved recall rounds,
+not the history endpoint's latest twenty records. “Reviewed N times” excludes
+rounds containing only first-time items, including later-added new subsets.
+Same-round retries count once; rehearsal does not
+count. Per-item round counts include the item's first recall.
+
+The UI shows earned stages against the domain's interval list, the number of
+items currently at the thirty-day interval, and a lower bound on independent
+recalls remaining to reach that interval. The memory-wide estimate is the
+maximum of its items' estimates, including new items without a schedule.
+It assumes each later recall occurs when due and succeeds on the first try
+without hints. Relearning adds the scheduler's confirmation checks, including
+for an item that previously reached the final stage. Deleted items do not
+contribute to current stage totals or the next due time.
+
+Reaching the final interval is labelled **long-term consolidation**, not
+permanent mastery. The UI explicitly says continued reviews are needed.
+Network failures do not become zero counts, and local preview does not invent
+server scheduling progress. Completing a recall or editing a memory invalidates
+the matching progress query.
+
+## Action-first detail page and scoped rounds
+
+The detail page prioritizes the current task: due items, new items, or rest.
+Item rows show the next scheduled date; earned interval stages and minimum
+remaining recalls are expandable details, not competing countdowns.
+
+`/memory-review/[memorySetId]?scope=due|learn|browse` is shared by both players.
+The progress endpoint's server-computed `isDue` selects due items; new learning
+selects items with no schedule. A new round refreshes the server query before
+selecting items, and never falls back to the whole set on failure. The original
+item positions, peg bindings and Palace loci are preserved. Only selected
+responses are submitted; unselected schedules remain unchanged.
+
+The selected subset is frozen during a round. Recovery is separated by user
+and scope, retaining the exact subset and bounded reinforcement queue. A
+failed save retains the final response for an idempotent retry. Browse-only
+mode never switches automatically to recall or submits a practice attempt.
+Home review links and newly scheduled notifications use the due-only route;
+legacy creation/onboarding routes retain their initial-learning behavior.
+
 ## Validation and later work
 
 Domain tests cover the main interval sequence, early and overdue recall,

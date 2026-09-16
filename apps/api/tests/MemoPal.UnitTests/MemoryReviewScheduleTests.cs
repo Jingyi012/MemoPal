@@ -100,4 +100,29 @@ public sealed class MemoryReviewScheduleTests
         IntervalDays = 7,
         DueAt = Now,
     };
+
+    [Theory]
+    [InlineData(0, 0, 5)]
+    [InlineData(1, 1, 4)]
+    [InlineData(3, 7, 2)]
+    [InlineData(4, 14, 1)]
+    [InlineData(5, 30, 0)]
+    [InlineData(8, 30, 0)]
+    [InlineData(3, 0, 3)]
+    [InlineData(3, 1, 2)]
+    [InlineData(5, 0, 2)]
+    [InlineData(5, 1, 1)]
+    public void Remaining_Recalls_Should_Match_The_Actual_Path_To_LongTerm(
+        int earnedCount, int interval, int expected)
+    {
+        var schedule = new MemoryReviewSchedule { ReviewCount = earnedCount, IntervalDays = interval, DueAt = Now };
+        Assert.Equal(expected, schedule.GetRemainingRecallsToLongTerm());
+        for (var recall = 0; recall < expected; recall++)
+        {
+            Assert.NotEqual(30, schedule.IntervalDays);
+            schedule.RecordRecall($"next-{recall}", true, 1, 0, schedule.DueAt);
+        }
+        Assert.Equal(30, schedule.IntervalDays);
+        Assert.Equal(0, schedule.GetRemainingRecallsToLongTerm());
+    }
 }

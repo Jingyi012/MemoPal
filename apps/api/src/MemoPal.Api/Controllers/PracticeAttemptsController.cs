@@ -55,6 +55,14 @@ public sealed class PracticeAttemptsController : ApiControllerBase
         return Ok(result);
     }
 
+    [HttpGet("/v1/reviews/memory-set/{memorySetId}/progress")]
+    public async Task<IActionResult> GetProgress(string memorySetId, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new GetMemoryReviewProgressQuery(GetUserIdOrThrow(), memorySetId), cancellationToken);
+        return Ok(result);
+    }
+
     [HttpGet("/v1/reviews/upcoming")]
     public async Task<IActionResult> GetUpcoming(
         [FromQuery] int days = 30,
