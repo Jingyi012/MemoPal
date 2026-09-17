@@ -1,3 +1,4 @@
+import { SpotlightTarget, usePageTour } from '@/features/onboarding/components/SpotlightTourProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ActivityIndicator,
@@ -61,6 +62,7 @@ type SceneDraft = {
 type StudioDraft = {
   schemaVersion: 1;
   kind: 'number-peg-studio';
+  savedMemorySetId?: string;
   step: 'items' | 'studio';
   title: string;
   goalType: MemoryGoalType;
@@ -138,6 +140,7 @@ export default function NumberPegComposerScreen() {
     emoji?: string | string[];
     items?: string | string[];
     goalType?: string | string[];
+    guidedStarter?: string | string[];
     onboardingLessonId?: string | string[];
     memoryFolderId?: string | string[];
     memorySetId?: string | string[];
@@ -173,6 +176,7 @@ export default function NumberPegComposerScreen() {
   const fromShared = initialItems.length > 0;
   const onboardingLessonId = firstParam(params.onboardingLessonId);
   const memoryFolderId = firstParam(params.memoryFolderId) || undefined;
+  const guidedStarter = Boolean(onboardingLessonId) && firstParam(params.guidedStarter) === '1';
   const isOnboarding = Boolean(onboardingLessonId);
   const onboardingMemoryIdRef = useRef<string | null>(null);
   const [title, setTitle] = useState(() => firstParam(params.title) ?? '');
@@ -201,6 +205,9 @@ export default function NumberPegComposerScreen() {
   const savingRef = useRef(false);
   const [loaded, setLoaded] = useState(false);
   const progressScrollRef = useRef<ScrollView>(null);
+  const studioScroll = useRef<ScrollView>(null);
+  const replayBuilderTour = usePageTour('builder', guidedStarter, loaded && step === 'studio');
+  const { t: tourT } = useTranslation('onboarding');
   const draftKey = useMemo(
     () =>
       `@memopal:number-peg-studio:${user?.id ?? 'local'}:${editingMemorySetId ?? (fromShared ? `${firstParam(params.title) ?? ''}:${initialItems.join('|')}` : 'direct')}`,
@@ -317,6 +324,7 @@ export default function NumberPegComposerScreen() {
               ? JSON.stringify(d.items) === JSON.stringify(initialItems)
               : d.items.length > 0)
           ) {
+            if (isOnboarding && typeof d.savedMemorySetId === 'string') onboardingMemoryIdRef.current = d.savedMemorySetId;
             setTitle(d.title);
             setGoalType(d.goalType);
             setItems(d.items);
@@ -330,7 +338,7 @@ export default function NumberPegComposerScreen() {
       }
       setLoaded(true);
     });
-  }, [draftKey, fromShared, initialItems, loaded]);
+  }, [draftKey, fromShared, initialItems, loaded, isOnboarding]);
   useEffect(() => {
     if (loaded && items.length)
       void AsyncStorage.setItem(
@@ -338,6 +346,7 @@ export default function NumberPegComposerScreen() {
         JSON.stringify({
           schemaVersion: 1,
           kind: 'number-peg-studio',
+          savedMemorySetId: onboardingMemoryIdRef.current ?? undefined,
           step,
           title,
           goalType,
@@ -500,10 +509,11 @@ export default function NumberPegComposerScreen() {
     savingRef.current = true;
     setIsSaving(true);
     try {
-      if (onboardingLessonId && onboardingMemoryIdRef.current) {
+      if (isOnboarding && onboardingMemoryIdRef.current) {
         await linkOnboardingMemory.mutateAsync(onboardingMemoryIdRef.current);
+        await AsyncStorage.removeItem(draftKey);
         router.replace(
-          `/number-peg/${onboardingMemoryIdRef.current}?returnTo=practice&mode=recall` as Href
+          guidedStarter ? `/(tabs)/library?guidedMemory=${onboardingMemoryIdRef.current}` : `/number-peg/${onboardingMemoryIdRef.current}?returnTo=practice&mode=recall` as Href
         );
         return;
       }
@@ -548,14 +558,16 @@ export default function NumberPegComposerScreen() {
           ? await updateMemorySet.mutateAsync({ memorySetId: editingMemorySetId, request: req })
           : await createMemorySet.mutateAsync(req));
       }
-      await AsyncStorage.removeItem(draftKey);
       if (created[0]) {
-        if (onboardingLessonId) {
+        if (isOnboarding) {
           onboardingMemoryIdRef.current = created[0].id;
+          await AsyncStorage.setItem(draftKey, JSON.stringify({ schemaVersion: 1, kind: 'number-peg-studio',
+            step, title, goalType, items, scenes, index, savedMemorySetId: created[0].id } satisfies StudioDraft));
           await linkOnboardingMemory.mutateAsync(created[0].id);
         }
+        await AsyncStorage.removeItem(draftKey);
         router.replace(
-          `/number-peg/${created[0].id}?returnTo=${fromShared ? 'practice' : 'number-peg'}${isOnboarding ? '&mode=recall' : ''}` as Href
+          guidedStarter ? `/(tabs)/library?guidedMemory=${created[0].id}` : `/number-peg/${created[0].id}?returnTo=${fromShared ? 'practice' : 'number-peg'}${isOnboarding ? '&mode=recall' : ''}` as Href
         );
       }
     } catch {
@@ -583,6 +595,7 @@ export default function NumberPegComposerScreen() {
         }}
       />
       <ScrollView
+        ref={studioScroll}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="none"
         refreshControl={<RefreshControl refreshing={aiCredits.isRefetching} onRefresh={() => void aiCredits.refetch()} />}
@@ -621,7 +634,9 @@ export default function NumberPegComposerScreen() {
             </Text>
           </View>
         ) : null}
+        <AnimatedPressable onPress={replayBuilderTour} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: theme.link }}>{tourT('guideEntry')}</Text></AnimatedPressable>
         <View style={styles.stageCard}>
+          <SpotlightTarget id="builderScene" onReveal={() => studioScroll.current?.scrollTo({ y: 0, animated: false })}>
           <View style={styles.stageTopRow}>
             <View style={styles.anchorPill}>
               <Text style={styles.anchorPillEmoji}>{currentAnchor.image}</Text>
@@ -630,6 +645,7 @@ export default function NumberPegComposerScreen() {
               </Text>
             </View>
           </View>
+          </SpotlightTarget>
           <View style={styles.captionPanel}>
             <Text style={styles.heading}>{copy.story}</Text>
             <Text style={styles.targetWord}>{current.answer}</Text>
@@ -812,8 +828,9 @@ export default function NumberPegComposerScreen() {
               {t('previousScene')}
             </Text>
           </AnimatedPressable>
+          <View style={styles.equalSlot}>
+          <SpotlightTarget id="builderNext" onReveal={() => studioScroll.current?.scrollToEnd({ animated: false })} onActivate={advance}>
           <AnimatedPressable
-            containerStyle={styles.equalSlot}
             disabled={isSaving || isGenerating || Boolean(storyPreview)}
             onPress={advance}
             accessibilityState={{ disabled: isSaving || isGenerating || Boolean(storyPreview) }}
@@ -825,13 +842,15 @@ export default function NumberPegComposerScreen() {
               {isSaving
                 ? t('saving')
                 : index === items.length - 1
-                  ? isOnboarding
+                  ? isOnboarding && !guidedStarter
                     ? t('startRecall')
                     : t('saveMemory')
                   : copy.accept}
             </Text>
             <ArrowRight size={17} color={theme.onSun} />
           </AnimatedPressable>
+          </SpotlightTarget>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

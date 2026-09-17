@@ -1,3 +1,4 @@
+import { SpotlightTarget } from '@/features/onboarding/components/SpotlightTourProvider';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
 import { createThemedStyles } from '@/theme/createThemedStyles';
@@ -19,6 +20,8 @@ type NumberPegRehearsalCardProps = {
   onPrevious: () => void;
   onNext: () => void;
   lastActionLabel?: string;
+  onRevealScene?: () => void;
+  onRevealNext?: () => void;
 };
 
 export function NumberPegRehearsalCard({
@@ -30,6 +33,8 @@ export function NumberPegRehearsalCard({
   onPrevious,
   onNext,
   lastActionLabel,
+  onRevealScene,
+  onRevealNext,
 }: NumberPegRehearsalCardProps) {
   const { styles, theme } = useStyles();
   const { t } = useTranslation('numberPeg');
@@ -53,7 +58,9 @@ export function NumberPegRehearsalCard({
         </View>
       </View>
       <Text style={styles.prompt}>{t('promptPause')}</Text>
+      <SpotlightTarget id="sessionScene" onReveal={onRevealScene}>
       <Text style={styles.sceneText}>{binding?.sceneText ?? t('sceneInteraction')}</Text>
+      </SpotlightTarget>
       {binding?.sceneAssetUrl?.startsWith('/v1/ai-credits/images/') && <AiGeneratedImage path={binding.sceneAssetUrl} description={binding.sceneText} />}
       <View style={styles.wordTag}>
         <Text style={styles.wordTagText}>{item.answer}</Text>
@@ -67,10 +74,12 @@ export function NumberPegRehearsalCard({
           <ArrowLeft size={19} color={theme.onSun} />
         </AnimatedPressable>
         <View style={styles.nextButtonWrap}>
+          <SpotlightTarget id="sessionRecall" onReveal={onRevealNext} onActivate={onNext}>
           <AnimatedPressable onPress={onNext} style={styles.nextButton}>
             <Text style={styles.nextText}>{isLast ? lastActionLabel ?? t('startRecall') : t('next')}</Text>
             <ArrowRight size={17} color={theme.onSun} />
           </AnimatedPressable>
+          </SpotlightTarget>
         </View>
       </View>
     </View>

@@ -1,3 +1,4 @@
+import { useSpotlightTour } from '@/features/onboarding/components/SpotlightTourProvider';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ActionSheet } from '@/components/ActionSheet';
@@ -35,10 +36,12 @@ import { useColorScheme } from 'nativewind';
 export default function ProfileScreen() {
   const { styles, theme } = useStyles();
   const router = useRouter();
+  const { start: startTour } = useSpotlightTour();
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
   const { userState, updateState, updatePreferences } = useUserState();
   const { language, t } = useTranslation('profile');
+  const { t: onboardingT } = useTranslation('onboarding');
   const { t: languageT } = useTranslation('language');
   const { logout } = useAuth();
   const { colorScheme } = useColorScheme();
@@ -269,6 +272,11 @@ export default function ProfileScreen() {
 
         <Text style={[styles.sectionLabel, { color: activeTheme.ink }]}>{t('settings')}</Text>
         <View style={styles.settingsList}>
+          <ProfileSettingsRow
+            icon={<Text style={styles.settingsEmoji}>🧭</Text>}
+            title={onboardingT('guideEntry')}
+            onPress={() => startTour()}
+          />
           <ProfileSettingsRow
             icon={<Text style={styles.settingsEmoji}>🔔</Text>}
             title={t('reviewReminders')}

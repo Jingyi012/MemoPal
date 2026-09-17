@@ -22,6 +22,8 @@ type RecallAnswerCardProps = {
   answerAccessibilityLabel?: string;
   answerPlaceholder?: string;
   onAnswerFocus?: () => void;
+  inputRef?: { current: TextInput | null };
+  inputAreaRef?: (view: View | null) => void;
   actionAreaRef?: (view: View | null) => void;
   onAnswerChange: (value: string) => void;
   onSubmit: () => void;
@@ -46,6 +48,8 @@ export function RecallAnswerCard({
   answerPlaceholder = 'TYPE YOUR ANSWER',
   onAnswerFocus,
   actionAreaRef,
+  inputAreaRef,
+  inputRef,
   onAnswerChange,
   onSubmit,
   onSkip,
@@ -61,7 +65,9 @@ export function RecallAnswerCard({
       <Text style={[styles.eyebrow, { color: accent }]}>{eyebrow}</Text>
       <Text style={styles.prompt}>{prompt}</Text>
       {cue ? <View style={styles.cue}>{cue}</View> : null}
+      <View ref={inputAreaRef} collapsable={false} style={{ alignSelf: 'stretch' }}>
       <TextInput
+        ref={inputRef}
         value={answer}
         onChangeText={onAnswerChange}
         onSubmitEditing={onSubmit}
@@ -85,6 +91,7 @@ export function RecallAnswerCard({
           feedback === 'wrong' && styles.wrongInput,
         ]}
       />
+      </View>
       {feedback ? (
         <View style={styles.feedback} accessibilityLiveRegion="polite">
           {feedback === 'correct' ? <Check size={18} color={theme.successText} /> : <X size={18} color={theme.berryDeep} />}

@@ -1,3 +1,5 @@
+import { CircleHelp } from 'lucide-react-native';
+import { useSpotlightTour } from '@/features/onboarding/components/SpotlightTourProvider';
 import { User } from '@/features/profile/types/users';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,6 +17,8 @@ interface HomeHeaderProps {
 
 export function HomeHeader({ userData }: HomeHeaderProps) {
   const router = useRouter();
+  const { start } = useSpotlightTour();
+  const { t: onboardingT } = useTranslation('onboarding');
   const { t } = useTranslation('home');
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t('greetingMorning') : hour < 18 ? t('greetingAfternoon') : t('greetingEvening');
@@ -29,6 +33,7 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
         eyebrow="MemoPal"
         title={t('title')}
         description={t('description')}
+        actions={[{ icon: CircleHelp, onPress: () => start(), accessibilityLabel: onboardingT('guideEntry') }]}
         hideBackButton
       />
       <View style={styles.greetingRow}>

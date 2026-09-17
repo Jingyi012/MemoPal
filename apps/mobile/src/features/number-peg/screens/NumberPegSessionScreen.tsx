@@ -1,3 +1,5 @@
+import { usePageTour, useSpotlightTour } from '@/features/onboarding/components/SpotlightTourProvider';
+import { CircleHelp } from 'lucide-react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -41,7 +43,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 
 type SessionTab = 'scenes' | 'recall';
@@ -76,12 +78,14 @@ function countFirstAttemptRecalls(responses: PracticeResponseInput[]) {
 
 export default function NumberPegSessionScreen({
   memorySetId,
+  guided = false,
   restart = false,
   startInRecall = false,
   returnTo,
   sessionMemorySet, sessionScope, sessionDescription, browseOnly = false,
 }: {
   memorySetId: string;
+  guided?: boolean;
   sessionMemorySet?: MemorySet;
   sessionScope?: string;
   sessionDescription?: string;
@@ -125,6 +129,8 @@ export default function NumberPegSessionScreen({
   const sessionReadyRef = useRef(false);
   const [isSessionReady, setIsSessionReady] = useState(false);
   const [recoveryFailed, setRecoveryFailed] = useState(false);
+  const answerInputRef = useRef<TextInput>(null);
+  const sceneScrollRef = useRef<ScrollView>(null);
   const recallScrollRef = useRef<ScrollView | null>(null);
   const recallActionRef = useRef<View | null>(null);
   const recallScrollOffsetRef = useRef(0);
@@ -133,6 +139,10 @@ export default function NumberPegSessionScreen({
   const [recallKeyboardOverlay, setRecallKeyboardOverlay] = useState(0);
   const practiceAttempt = useCreatePracticeAttempt();
   const { user } = useAuth();
+  const { register } = useSpotlightTour();
+  const { t: tourT } = useTranslation('onboarding');
+  const replaySessionTour = usePageTour(tab === 'scenes' ? 'learn' : 'recall', guided || (user?.onboardingStatus === 'in-progress' && user.onboardingMemorySetId === memorySetId), Boolean(memorySetQuery.data) && isSessionReady && !(questionOrder.length > 0 && questionIndex >= questionOrder.length));
+  const inputTourRef = useCallback((node: View | null) => register('recallAnswer', node ? { node, reveal: () => recallScrollRef.current?.scrollToEnd({ animated: false }), activate: () => { requestAnimationFrame(() => answerInputRef.current?.focus()); } } : null), [register]);
   const { userState, updateState } = useUserState();
   const { complete: completeOnboarding } = useOnboardingMutations();
   const { playSound, feedbackEnabled } = useSoundEffects();
@@ -565,6 +575,7 @@ export default function NumberPegSessionScreen({
         title={memorySet.title}
         description={sessionDescription ?? `${memorySet.items.length} ${t('items')} · ${t('title')}`}
         backAction={leaveSession}
+        actions={[{ icon: CircleHelp, onPress: replaySessionTour, accessibilityLabel: tourT('guideEntry') }]}
       />
       {!sessionScope ? <View style={styles.tabs}>
         <View style={styles.tabWrap}>
@@ -621,7 +632,7 @@ export default function NumberPegSessionScreen({
       )}
 
       {tab === 'scenes' ? (
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView ref={sceneScrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.coachCard}>
             <Text style={styles.coachEmoji}>🎬</Text>
             <View style={{ flex: 1 }}>
@@ -631,6 +642,8 @@ export default function NumberPegSessionScreen({
           </View>
           {sceneItem && scenePeg ? (
             <NumberPegRehearsalCard
+              onRevealScene={() => sceneScrollRef.current?.scrollTo({ y: 0, animated: false })}
+              onRevealNext={() => sceneScrollRef.current?.scrollToEnd({ animated: false })}
               binding={sceneBinding ?? undefined}
               index={sceneIndex}
               item={sceneItem}
@@ -774,6 +787,8 @@ export default function NumberPegSessionScreen({
                 ))}
               </View>
               <RecallAnswerCard
+                inputRef={answerInputRef}
+                inputAreaRef={inputTourRef}
                 tone="peg"
                 icon={
                   <Text style={styles.quizEmoji}>

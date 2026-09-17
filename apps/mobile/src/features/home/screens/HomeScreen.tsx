@@ -1,3 +1,5 @@
+import { usePageTour } from '@/features/onboarding/components/SpotlightTourProvider';
+import { useAuth } from '@/contexts/AuthProvider';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import LoadingView from '@/components/LoadingView';
@@ -12,10 +14,10 @@ import { useGamificationRules } from '@/features/gamification/shared/hooks/useGa
 import { WeeklyActivityCard } from '@/features/gamification/shared/components/WeeklyActivityCard';
 import { typography } from '@/theme/typography';
 import { memopalThemes } from '@/theme/memopalTheme';
-import { Href, useRouter } from 'expo-router';
+import { Href, useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, Check, Circle, Plus } from 'lucide-react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HomeHeader } from '../components/Header/HomeHeader';
 import { TodayReviewCard } from '../components/TodayReviewCard';
@@ -27,6 +29,10 @@ import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 export default function HomeScreen() {
   const { styles } = useStyles();
   const router = useRouter();
+  const { user: authUser } = useAuth();
+  const replayTour = usePageTour('overview', authUser?.onboardingStatus === 'not-started');
+  const { tour } = useLocalSearchParams<{ tour?: string }>();
+  useEffect(() => { if (tour === '1') { replayTour(); router.setParams({ tour: undefined }); } }, [tour, replayTour, router]);
   const { t } = useTranslation('home');
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];

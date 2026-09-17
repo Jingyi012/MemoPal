@@ -1,3 +1,6 @@
+import { useIsFocused } from '@react-navigation/native';
+import { useAuth } from '@/contexts/AuthProvider';
+import { SpotlightTarget, usePageTour } from '@/features/onboarding/components/SpotlightTourProvider';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -5,7 +8,7 @@ import { ConfirmModal } from '@/components/ConfirmModal';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import LoadingView from '@/components/LoadingView';
-import { useInfiniteMemorySets, useMemorySetMutations } from '@/features/memory-sets';
+import { useInfiniteMemorySets, useMemorySetMutations, useMemorySet } from '@/features/memory-sets';
 import { useMemoryFolderMutations, useMemoryFolders } from '../hooks/useMemoryFolders';
 import type { MemoryFolder, MemoryFolderCreateRequest } from '../types/memoryFolder.types';
 import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
@@ -19,8 +22,8 @@ import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Href, useRouter } from 'expo-router';
-import { Globe2, Layers, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
+import { Href, useRouter, useLocalSearchParams } from 'expo-router';
+import { CircleHelp, Globe2, Layers, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -48,6 +51,20 @@ const filters: { key: LibraryFilter }[] = [
 export default function LibraryScreen() {
   const { styles, theme } = useStyles();
   const router = useRouter();
+  const scroll = useRef<ScrollView>(null);
+  const isFocused = useIsFocused();
+  const shownGuidedMemory = useRef<string | null>(null);
+  const [replayRequested, setReplayRequested] = useState(false);
+  const { user: authUser } = useAuth();
+  const { guidedMemory: requestedGuidedMemory } = useLocalSearchParams<{ guidedMemory?: string }>();
+  const guidedMemory = authUser?.onboardingStatus === 'in-progress' ? requestedGuidedMemory : undefined;
+  const { t: tourT } = useTranslation('onboarding');
+  const starterId = guidedMemory || authUser?.onboardingMemorySetId || '';
+  const starter = useMemorySet(starterId);
+  const [showStarter, setShowStarter] = useState(Boolean(guidedMemory) || authUser?.onboardingStatus === 'not-started' || authUser?.onboardingStatus === 'in-progress');
+  const revealTop = () => scroll.current?.scrollTo({ y: 0, animated: false });
+  const createMemory = () => router.push((showStarter && !starterId ? '/onboarding?replay=true' : '/create-memory') as Href);
+  const openStarter = () => router.push(`/number-peg/${starterId}?guided=1&returnTo=practice` as Href);
   const { t } = useTranslation('library');
   const { userState, updateState } = useUserState();
   const [filter, setFilter] = useState<LibraryFilter>('all');
@@ -61,6 +78,19 @@ export default function LibraryScreen() {
   const memoryActionsRef = useRef<BottomSheetModal>(null);
   const collectionActionsRef = useRef<BottomSheetModal>(null);
   const [libraryTab, setLibraryTab] = useState<LibraryTab>('mine');
+  const replayTour = usePageTour('libraryPage', Boolean(guidedMemory) || authUser?.onboardingStatus === 'not-started', libraryTab === 'mine' && (!starterId || !starter.isPending));
+  useEffect(() => { if (guidedMemory) { setShowStarter(true); setLibraryTab('mine'); setFilter('all'); } }, [guidedMemory]);
+  useEffect(() => {
+    if (!isFocused || libraryTab !== 'mine' || (starterId && !starter.data)) return;
+    if (replayRequested || (guidedMemory && shownGuidedMemory.current !== guidedMemory)) {
+      setShowStarter(true); setReplayRequested(false);
+      shownGuidedMemory.current = guidedMemory ?? null;
+      replayTour();
+    }
+  }, [isFocused, libraryTab, starterId, starter.data, replayRequested, guidedMemory, replayTour]);
+  useEffect(() => {
+    if (authUser?.onboardingStatus === 'completed' || authUser?.onboardingStatus === 'skipped') setShowStarter(false);
+  }, [authUser?.onboardingStatus]);
   const [actionMemorySet, setActionMemorySet] = useState<MemorySet>();
   const [actionCollection, setActionCollection] = useState<MemoryFolder>();
   const [deleteConfirmationMemory, setDeleteConfirmationMemory] = useState<MemorySet>();
@@ -302,6 +332,7 @@ export default function LibraryScreen() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
+        actions={[{ icon: CircleHelp, onPress: () => { setShowStarter(true); setLibraryTab('mine'); setReplayRequested(true); }, accessibilityLabel: tourT('guideEntry') }]}
         hideBackButton
       />
 
@@ -327,6 +358,7 @@ export default function LibraryScreen() {
       </View>
 
       {libraryTab === 'discover' ? <DiscoverMemorySetsScreen embedded /> : <ScrollView
+        ref={scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -335,6 +367,17 @@ export default function LibraryScreen() {
             onRefresh={() => { void Promise.allSettled([pagedMemorySets.refetch(), foldersQuery.refetch(), palaceScenes.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
           />
         }>
+        {showStarter && starterId ? starter.data && starter.data.status !== 'archived' ? (
+          <SpotlightTarget id="libraryStarter" onReveal={revealTop} onActivate={openStarter}>
+            <MemorySetCard memorySet={starter.data} variant="list" onOpen={openStarter} actionLabel={tourT('starterOpen')} />
+          </SpotlightTarget>
+        ) : <SpotlightTarget id="libraryStarter" onReveal={revealTop}>
+          <ModuleNoticeCard title={tourT('starterUnavailable')} body={tourT('starterRetryBody')}
+            actionLabel={tourT('tryAgain')} onAction={() => starter.refetch()} />
+          <AnimatedPressable onPress={() => router.push('/onboarding?replay=true' as Href)} style={{ minHeight: 44, justifyContent: 'center' }}>
+            <Text style={{ color: theme.link }}>{tourT('starterNew')}</Text>
+          </AnimatedPressable>
+        </SpotlightTarget> : null}
         <NightEmphasisCard style={styles.summaryCard}>
           <View style={styles.summaryIcon}>
             <Text style={styles.summaryEmoji}>🧠</Text>
@@ -347,14 +390,20 @@ export default function LibraryScreen() {
             </Text>
             <Text style={styles.summaryBody}>{t('collectionBody')}</Text>
           </View>
-          <AnimatedPressable
-            accessibilityLabel={t('create')}
-            onPress={() => router.push('/create-memory' as Href)}
-            style={styles.addButton}>
-            <Plus size={21} color={theme.onSun} />
-          </AnimatedPressable>
+          {showStarter && starterId ? (
+            <AnimatedPressable accessibilityLabel={t('create')} onPress={createMemory} style={styles.addButton}>
+              <Plus size={21} color={theme.onSun} />
+            </AnimatedPressable>
+          ) : (
+            <SpotlightTarget id="libraryStarter" onReveal={revealTop} onActivate={createMemory}>
+              <AnimatedPressable accessibilityLabel={t('create')} onPress={createMemory} style={styles.addButton}>
+                <Plus size={21} color={theme.onSun} />
+              </AnimatedPressable>
+            </SpotlightTarget>
+          )}
         </NightEmphasisCard>
 
+        <SpotlightTarget id="libraryFilter" onReveal={() => scroll.current?.scrollTo({ y: showStarter && starterId ? 220 : 0, animated: false })}>
         <View style={styles.filterRow}>
           {filters.map((item) => {
             const selected = item.key === filter;
@@ -371,6 +420,7 @@ export default function LibraryScreen() {
           })}
         </View>
 
+        </SpotlightTarget>
         <View style={styles.viewToolbar}>
           <AnimatedPressable accessibilityLabel={t('newFolder')} onPress={() => setFolderNameModal({})} style={styles.newFolderButton}>
             <Layers size={17} color={theme.onAccent} />
@@ -437,14 +487,14 @@ export default function LibraryScreen() {
             body={t('newMemoryBody')}
             actionLabel={t('tapToStart')}
             actionIcon={<Plus size={15} color={theme.onSun} />}
-            onAction={() => router.push('/create-memory' as Href)}
+            onAction={createMemory}
           />
         ) : !isOffline && !explorerHasError ? (
           <View style={styles.noticeCard}>
             <Text style={styles.emptyEmoji}>{filter === 'palace' ? '🏡' : filter === 'number-peg' ? '🦢' : '📦'}</Text>
             <Text style={styles.noticeTitle}>{filter === 'archived' ? t('archiveEmpty') : t('collectionEmpty')}</Text>
             <Text style={styles.noticeBody}>{filter === 'archived' ? t('archiveBody') : t('buildFirstBody')}</Text>
-            {filter !== 'archived' && <AnimatedPressable onPress={() => router.push('/create-memory' as Href)} style={styles.emptyButton}><Plus size={17} color={theme.onAccent} /><Text style={styles.emptyButtonText}>{t('create')}</Text></AnimatedPressable>}
+            {filter !== 'archived' && <AnimatedPressable onPress={createMemory} style={styles.emptyButton}><Plus size={17} color={theme.onAccent} /><Text style={styles.emptyButtonText}>{t('create')}</Text></AnimatedPressable>}
           </View>
         ) : null}
         {!isOffline && pagedMemorySets.hasNextPage && !pagedMemorySets.isFetchingNextPage ? (

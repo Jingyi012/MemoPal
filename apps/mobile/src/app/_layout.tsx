@@ -1,3 +1,4 @@
+import { SpotlightTourProvider } from '@/features/onboarding/components/SpotlightTourProvider';
 import { AuthProvider } from '@/contexts/AuthProvider';
 import { NetworkStatusBanner } from '@/components/NetworkStatusBanner';
 import { UserStateProvider, useUserState } from '@/contexts/UserStateContext';
@@ -49,6 +50,7 @@ function AppLayout() {
           className={`${colorScheme === 'dark' ? 'dark' : ''} flex-1 bg-canvas`}
           style={nativewindThemes[themeMode]}>
           <NetworkStatusBanner />
+          <SpotlightTourProvider>
           <Stack
             initialRouteName="index"
             screenOptions={{
@@ -63,6 +65,7 @@ function AppLayout() {
             <Stack.Screen name="notifications" />
             <Stack.Screen name="rewards-history" />
           </Stack>
+          </SpotlightTourProvider>
         </SafeAreaView>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

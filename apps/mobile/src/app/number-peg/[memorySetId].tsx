@@ -4,6 +4,7 @@ import { Redirect, useLocalSearchParams } from 'expo-router';
 export default function NumberPegSessionRoute() {
   const params = useLocalSearchParams<{
     memorySetId?: string | string[];
+    guided?: string;
     restart?: string | string[];
     mode?: string | string[];
     returnTo?: string | string[];
@@ -15,5 +16,5 @@ export default function NumberPegSessionRoute() {
   const returnTo = returnToParam === 'practice' || returnToParam === 'number-peg' ? returnToParam : undefined;
 
   if (!memorySetId) return <Redirect href="/number-peg" />;
-  return <NumberPegSessionScreen memorySetId={memorySetId} restart={restart} startInRecall={mode === 'recall'} returnTo={returnTo} />;
+  return <NumberPegSessionScreen guided={params.guided === '1'} memorySetId={memorySetId} restart={restart} startInRecall={mode === 'recall'} returnTo={returnTo} />;
 }
