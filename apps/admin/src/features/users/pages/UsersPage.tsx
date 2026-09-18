@@ -26,8 +26,11 @@ export default function UsersPage() {
     useUserMutations(refresh);
 
   return (
-    <PortalPageContainer>
+    <PortalPageContainer title="Users" description="Manage accounts, roles and access across MemoPal." eyebrow="People"
+      actions={<Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>New user</Button>}
+    >
       <ProTable<ManagedUserDto>
+        scroll={{ x: 840 }}
         key={includeDeleted ? "all-users" : "active-users"}
         rowKey="id"
         actionRef={actionRef}
@@ -37,10 +40,10 @@ export default function UsersPage() {
           (id) => restoreMutation.mutate(id),
           user?.id,
         )}
-        headerTitle="User Management"
-        search={{ labelWidth: "auto" }}
+        headerTitle="User directory"
+        search={{ labelWidth: "auto", collapseRender: false, defaultCollapsed: false }}
         request={async (params) => {
-          const search = String(params.displayName || params.email || "");
+          const search = String(params.search || "");
           const pageNumber = params.current || 1;
           const pageSize = params.pageSize || 20;
           const page = await queryClient.fetchQuery({
@@ -55,14 +58,7 @@ export default function UsersPage() {
         }}
         toolBarRender={() => [
           <Switch key="deleted" checked={includeDeleted} checkedChildren="Including deactivated" unCheckedChildren="Active only" onChange={setIncludeDeleted} />,
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setCreateOpen(true)}
-            key="add"
-          >
-            New User
-          </Button>,
+
         ]}
       />
 

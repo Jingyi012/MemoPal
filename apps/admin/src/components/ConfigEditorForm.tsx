@@ -121,7 +121,7 @@ const ArrayFieldTemplate = (props: any) => {
       <Collapse
         ghost
         expandIconPosition="end"
-        style={{ background: "#fafafa", borderRadius: 6 }}
+        style={{ background: "#f8faf9", borderRadius: 12 }}
         items={(items || []).map((item: any, index: number) => {
           const itemProps = item.props || {};
           const data = (itemProps.itemData || {}) as Record<string, unknown>;
@@ -177,9 +177,9 @@ const ObjectFieldTemplate = (props: any) => {
     <div
       style={{
         marginBottom: shouldWrap ? 12 : 0,
-        padding: shouldWrap ? "8px 12px" : 0,
-        border: shouldWrap ? "1px solid #f0f0f0" : "none",
-        borderRadius: 6,
+        padding: shouldWrap ? "20px" : 0,
+        border: shouldWrap ? "1px solid #e5eae9" : "none",
+        borderRadius: 12,
         background: shouldWrap ? "white" : "transparent",
       }}
     >
@@ -199,9 +199,9 @@ const ObjectFieldTemplate = (props: any) => {
 
       <div
         style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 4,
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))",
+          gap: 16,
           paddingLeft: depth > 1 ? 8 : 0,
           borderLeft: depth > 1 ? "1px dashed #e8e8e8" : "none",
         }}
@@ -256,10 +256,10 @@ export const ConfigEditorForm: React.FC<ConfigEditorFormProps> = ({
     <ConfigProvider
       theme={{
         algorithm: theme.defaultAlgorithm,
-        token: { borderRadius: 6 },
+        token: { borderRadius: 8 },
       }}
     >
-      <Spin spinning={loading || isSubmitting}>
+      <Spin spinning={loading || isSubmitting} wrapperClassName="portal-config-form">
         <Form
           schema={schema as any}
           uiSchema={uiSchema}

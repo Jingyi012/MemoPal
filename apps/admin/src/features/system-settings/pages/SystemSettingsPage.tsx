@@ -3,7 +3,7 @@ import { ModalForm, ProFormText, ProTable } from "@ant-design/pro-components";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
-import { App, Button, Tabs } from "antd";
+import { App, Button, Grid, Tabs } from "antd";
 import { useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { PortalPageContainer } from "../../../components/PortalPageContainer";
@@ -36,6 +36,7 @@ type SystemSettingsSection = (typeof SYSTEM_SETTINGS_SECTIONS)[number];
 
 export default function SystemSettingsPage() {
   const { message } = App.useApp();
+  const screens = Grid.useBreakpoint();
   const queryClient = useQueryClient();
   const { listSystemSettings, upsertSystemSetting } = useAdminSystemSettingsApi();
   const actionRef = useRef<ActionType | null>(null);
@@ -76,11 +77,12 @@ export default function SystemSettingsPage() {
   ];
 
   return (
-    <PortalPageContainer>
+    <PortalPageContainer title="System settings" description="Manage the app experience, service configuration and membership rules." eyebrow="Administration">
       <Tabs
         activeKey={activeSection}
         onChange={handleSectionChange}
-        tabPosition="left"
+        className="portal-settings-tabs"
+        tabPosition={screens.lg ? "left" : "top"}
         tabBarStyle={{
           backgroundColor: "white",
           borderRadius: 12,
@@ -128,6 +130,7 @@ export default function SystemSettingsPage() {
             children: (
               <>
                 <ProTable<SystemSettingDto>
+        scroll={{ x: 960 }}
                   rowKey="id"
                   actionRef={actionRef}
                   columns={columns}

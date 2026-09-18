@@ -34,6 +34,7 @@ export default function CommunityMemorySetsPage() {
       {
         title: "Memory set",
         dataIndex: "title",
+        width: 240,
         render: (_, row) => (
           <Space direction="vertical" size={0}>
             <Typography.Text strong>{row.title}</Typography.Text>
@@ -46,6 +47,7 @@ export default function CommunityMemorySetsPage() {
       {
         title: "Author",
         dataIndex: "author",
+        width: 160,
         search: false,
         render: (_, row) => row.author.displayName || "Unknown author",
       },
@@ -113,8 +115,9 @@ export default function CommunityMemorySetsPage() {
   );
 
   return (
-    <PortalPageContainer>
+    <PortalPageContainer title="Community moderation" description="Review shared memory sets and reports, and manage their visibility." eyebrow="Community">
       <ProTable<CommunityMemorySetView>
+        scroll={{ x: 1260 }}
         rowKey="id"
         key={status ?? "all"}
         headerTitle="Community Memory Sets"

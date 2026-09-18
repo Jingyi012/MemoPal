@@ -57,15 +57,15 @@ export default function Layout() {
         location={{ pathname: location.pathname }}
         menu={{ defaultOpenAll: true }}
         contentStyle={{
-          padding: "20px 24px 28px",
+          padding: "28px 32px 36px",
           width: "100%",
           maxWidth: "100%",
         }}
         token={{
-          bgLayout: "#f4f6fb",
+          bgLayout: "#f4f7f5",
           pageContainer: {
-            colorBgPageContainer: "#f4f6fb",
-            colorBgPageContainerFixed: "#f4f6fb",
+            colorBgPageContainer: "#f4f7f5",
+            colorBgPageContainerFixed: "#f4f7f5",
           },
           sider: {
             colorMenuBackground: "#ffffff",
@@ -73,7 +73,7 @@ export default function Layout() {
           },
           header: {
             colorBgHeader: "#ffffff",
-            colorHeaderTitle: "#0f172a",
+            colorHeaderTitle: "#193c38",
           },
         }}
         route={{

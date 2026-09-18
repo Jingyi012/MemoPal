@@ -38,27 +38,28 @@ export default function SubscriptionsPage() {
       dataIndex: "userEmail",
       render: (_, row) => row.userDisplayName ? `${row.userDisplayName} (${row.userEmail})` : row.userEmail || row.userId,
     },
-    { title: "Plan", dataIndex: "planId" },
-    { title: "Provider", dataIndex: "provider" },
+    { title: "Plan", dataIndex: "planId", search: false },
+    { title: "Provider", dataIndex: "provider", search: false },
     {
       title: "Status",
       dataIndex: "status",
       valueType: "select",
       valueEnum: {
-        active: { text: "active" },
-        canceled: { text: "canceled" },
-        past_due: { text: "past_due" },
-        trialing: { text: "trialing" },
+        active: { text: "Active", status: "Success" },
+        canceled: { text: "Canceled", status: "Default" },
+        past_due: { text: "Past due", status: "Error" },
+        trialing: { text: "Trial", status: "Processing" },
       },
     },
-    { title: "Expires", dataIndex: "expiresAt", valueType: "dateTime" },
-    { title: "AutoRenew", dataIndex: "autoRenew", valueType: "switch" },
+    { title: "Expires", dataIndex: "expiresAt", search: false, valueType: "dateTime" },
+    { title: "Auto renew", dataIndex: "autoRenew", search: false, valueType: "switch" },
     {
       title: "Actions",
       valueType: "option",
       render: (_, row) => [
         <Button
           key="edit"
+          aria-label="Edit subscription"
           size="small"
           icon={<EditOutlined />}
           onClick={() => setEditing(row)}
@@ -68,11 +69,14 @@ export default function SubscriptionsPage() {
   ];
 
   return (
-    <PortalPageContainer>
+    <PortalPageContainer title="Subscriptions" description="Review member plans, subscription status and renewal settings." eyebrow="Billing">
       <ProTable<UserSubscriptionView>
+        scroll={{ x: 800 }}
         rowKey="id"
         actionRef={actionRef}
         columns={columns}
+        headerTitle="Memberships"
+        search={{ labelWidth: "auto" }}
         request={async (params) => {
           const pageNumber = params.current || 1;
           const pageSize = params.pageSize || 20;

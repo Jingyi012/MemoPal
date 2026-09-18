@@ -1,3 +1,4 @@
+import { PortalPageContainer } from "../../../components/PortalPageContainer";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -14,7 +15,6 @@ import {
 } from "antd";
 import {
   ModalForm,
-  PageContainer,
   ProFormDigit,
   ProFormText,
 } from "@ant-design/pro-components";
@@ -35,15 +35,14 @@ export default function AiCreditsPage() {
   const { message } = App.useApp();
   const selectedUser = users.data?.data.find((user) => user.id === userId);
   return (
-    <PageContainer
+    <PortalPageContainer
       title="AI credits"
-      subTitle="Manage server-owned AI balances and audited manual grants"
+      eyebrow="Billing"
+      description="Look up a member's wallet, review credit activity and grant credits."
     >
       <Space direction="vertical" style={{ width: "100%" }} size="middle">
         <Card
           title="Select a user"
-          bordered={false}
-          styles={{ body: { paddingTop: 0 } }}
         >
           <Typography.Text type="secondary">
             Search by email or username, then choose the account whose wallet
@@ -100,6 +99,11 @@ export default function AiCreditsPage() {
               </Button>
             }
           />
+        )}
+        {!userId && (
+          <div className="portal-empty-wallet">
+            <Empty description="Select a user to view their balance and credit history" />
+          </div>
         )}
         {userId && (
           <Card
@@ -165,6 +169,7 @@ export default function AiCreditsPage() {
         )}
         {userId && (
           <Table
+            scroll={{ x: 640 }}
             rowKey="id"
             loading={history.isLoading}
             dataSource={history.data ?? []}
@@ -196,6 +201,6 @@ export default function AiCreditsPage() {
           </Space>
         ) : null}
       </Space>
-    </PageContainer>
+    </PortalPageContainer>
   );
 }

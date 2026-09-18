@@ -1,3 +1,4 @@
+import { PortalSectionNav } from "../../../components/PortalSectionNav";
 import { FilterOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import { useQueryClient } from '@tanstack/react-query';
@@ -24,10 +25,11 @@ export default function ReferralUsersPage() {
   }, [selectedReferrer]);
 
   return (
-    <PortalPageContainer>
+    <PortalPageContainer title="Referral activity" description="Explore referrers, redeemed invitations and the rewards they earned." eyebrow="Referral program" navigation={<PortalSectionNav section="referrals" />}>
       <Space direction='vertical' size={16} style={{ width: '100%' }}>
-        <Card title='Referrer Users'>
+        <Card className='portal-table-card' title='Referrers'>
           <ProTable<ReferralUserView>
+        scroll={{ x: 960 }}
             rowKey='userId'
             search={{ labelWidth: 'auto' }}
             options={false}
@@ -79,10 +81,11 @@ export default function ReferralUsersPage() {
         </Card>
 
         <Card
-          title='Referral Records'
+          className='portal-table-card'
+          title='Referral records'
           extra={
             <Space>
-              {selectedTag ? <Tag color='blue'>{selectedTag}</Tag> : <Tag>All Referrers</Tag>}
+              {selectedTag ? <Tag color='cyan'>{selectedTag}</Tag> : <Tag>All Referrers</Tag>}
               <Button
                 icon={<ReloadOutlined />}
                 onClick={() => setSelectedReferrer(null)}
@@ -94,6 +97,7 @@ export default function ReferralUsersPage() {
           }
         >
           <ProTable<ReferralRecordView>
+        scroll={{ x: 960 }}
             rowKey='id'
             search={{ labelWidth: 'auto' }}
             options={false}

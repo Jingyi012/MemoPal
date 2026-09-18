@@ -1,3 +1,4 @@
+import { PortalSectionNav } from "../../../components/PortalSectionNav";
 import { ProFormDigit, ProFormSelect, ProFormText } from '@ant-design/pro-components';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
 import type { MilestoneDefinitionDto } from '../../../types/config';
@@ -13,7 +14,7 @@ export default function MilestoneDefinitionsPage() {
   } = useAdminConfigsApi();
 
   return (
-    <PortalPageContainer>
+    <PortalPageContainer title="Milestones" description="Define the achievements that celebrate meaningful learning progress." eyebrow="Gamification" navigation={<PortalSectionNav section="configs" />}>
       <DefinitionCrudTab<MilestoneDefinitionDto>
         title='Milestone Definition'
         list={listMilestoneDefinitions}

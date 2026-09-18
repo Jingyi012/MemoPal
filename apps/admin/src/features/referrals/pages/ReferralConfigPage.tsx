@@ -1,3 +1,4 @@
+import { PortalSectionNav } from "../../../components/PortalSectionNav";
 import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import { ModalForm, ProFormDigit, ProFormSwitch, ProFormText } from '@ant-design/pro-components';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -125,7 +126,7 @@ export default function ReferralConfigPage() {
   };
 
   return (
-    <PortalPageContainer>
+    <PortalPageContainer title="Referral rewards" description="Configure the rewards for inviting friends and reaching referral milestones." eyebrow="Referral program" navigation={<PortalSectionNav section="referrals" />}>
       <Card
         title='Referral Rewards'
         loading={configQuery.isLoading}
@@ -221,6 +222,7 @@ export default function ReferralConfigPage() {
             }
           >
             <Table<ReferralMilestoneConfigDto>
+              scroll={{ x: 1000 }}
               rowKey='key'
               pagination={false}
               dataSource={sortedMilestones}

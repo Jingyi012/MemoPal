@@ -10,24 +10,30 @@ export function buildUserColumns(
   currentUserId?: string,
 ): ProColumns<ManagedUserDto>[] {
   return [
-    { title: 'Display Name', dataIndex: 'displayName' },
-    { title: 'Email', dataIndex: 'email', copyable: true },
+    { title: 'Search users', dataIndex: 'search', hideInTable: true, fieldProps: { placeholder: 'Name or email' } },
+    { title: 'Display Name', dataIndex: 'displayName', width: 140, search: false },
+    { title: 'Email', dataIndex: 'email', width: 260, search: false, copyable: true },
     {
       title: 'Role',
       dataIndex: 'role',
+      width: 80,
+      search: false,
       render: (_, row) => <Tag color={row.role === 'Admin' ? 'gold' : 'blue'}>{row.role}</Tag>,
     },
-    { title: 'Level', dataIndex: 'level', width: 80 },
-    { title: 'XP', dataIndex: 'totalXp', width: 100 },
+    { title: 'Level', dataIndex: 'level', search: false, width: 70 },
+    { title: 'XP', dataIndex: 'totalXp', search: false, width: 70 },
     {
       title: 'Status',
       dataIndex: 'isDeleted',
+      width: 90,
       valueType: 'select',
       search: false,
       render: (_, row) => <Tag color={row.isDeleted ? 'default' : 'green'}>{row.isDeleted ? 'Deactivated' : 'Active'}</Tag>,
     },
     {
       title: 'Actions',
+      fixed: 'right',
+      width: 112,
       valueType: 'option',
       render: (_, row) => row.isDeleted ? (
         <Button size="small" icon={<UndoOutlined />} onClick={() => onRestore(row.id)}>Restore</Button>

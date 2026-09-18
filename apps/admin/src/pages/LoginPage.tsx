@@ -1,4 +1,5 @@
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
+import "../components/portal.css";
+import { BookOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Flex, Form, Input, Typography } from 'antd';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -35,13 +36,15 @@ export default function LoginPage() {
     <Flex
       align='center'
       justify='center'
-      style={{ minHeight: '100vh', padding: 16, background: '#f1f5f9' }}
+      className='portal-auth'
     >
-      <Card style={{ width: '100%', maxWidth: 420 }}>
+      <Card className='portal-auth-card'>
+        <div className='portal-auth-mark'><BookOutlined /></div>
+        <div className='portal-eyebrow'>MemoPal administration</div>
         <Typography.Title level={3} style={{ marginBottom: 4 }}>
-          MemoPal
+          Welcome back
         </Typography.Title>
-        <Typography.Text type='secondary'>Sign in to continue.</Typography.Text>
+        <Typography.Text type='secondary'>Sign in to manage your community and learning content.</Typography.Text>
 
         <Form<LoginFormValues>
           form={form}
@@ -59,6 +62,7 @@ export default function LoginPage() {
             ]}
           >
             <Input
+              size='large'
               prefix={<UserOutlined />}
               placeholder='admin@memopal.local'
               autoComplete='email'
@@ -71,6 +75,7 @@ export default function LoginPage() {
             rules={[{ required: true, message: 'Password is required.' }]}
           >
             <Input.Password
+              size='large'
               prefix={<LockOutlined />}
               placeholder='Enter password'
               autoComplete='current-password'
@@ -80,7 +85,7 @@ export default function LoginPage() {
           {error ? <Alert type='error' showIcon message={error} style={{ marginBottom: 16 }} /> : null}
 
           <Form.Item style={{ marginBottom: 0 }}>
-            <Button type='primary' htmlType='submit' block loading={loading}>
+            <Button type='primary' htmlType='submit' size='large' block loading={loading}>
               Sign in
             </Button>
           </Form.Item>
