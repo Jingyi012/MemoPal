@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthProvider';
 import { SpotlightTarget, usePageTour } from '@/features/onboarding/components/SpotlightTourProvider';
+import { practiceCreateHref } from '@/features/onboarding/utils/onboardingRoutes';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { MemorySetCard } from '@/components/MemorySetCard';
@@ -20,7 +21,7 @@ import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
 import { BookOpen, ChevronRight, CircleHelp, RefreshCcw } from 'lucide-react-native';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
 
@@ -30,14 +31,14 @@ export default function PracticeScreen() {
   const scroll = useRef<ScrollView>(null);
   const { user: authUser } = useAuth();
   const { t: tourT } = useTranslation('onboarding');
-  const [guidedEntry, setGuidedEntry] = useState(false);
-  const createMemory = () => {
-    const needsGuide = guidedEntry || authUser?.onboardingStatus === 'not-started' || authUser?.onboardingStatus === 'in-progress';
-    setGuidedEntry(false);
-    router.push((needsGuide ? authUser?.onboardingMemorySetId
-      ? `/(tabs)/library?guidedMemory=${authUser.onboardingMemorySetId}`
-      : '/onboarding?replay=true' : '/create-memory') as Href);
+  const openMemoryFlow = (requestedGuide: boolean) => {
+    router.push(practiceCreateHref(
+      authUser?.onboardingStatus,
+      authUser?.onboardingMemorySetId,
+      requestedGuide,
+    ) as Href);
   };
+  const createMemory = () => openMemoryFlow(false);
   const replayTour = usePageTour('practicePage', authUser?.onboardingStatus === 'not-started');
   const revealTop = () => scroll.current?.scrollTo({ y: 0, animated: false });
   const { t } = useTranslation('practice');
@@ -76,7 +77,7 @@ export default function PracticeScreen() {
 
   return (
     <View style={styles.page}>
-      <CommonHeader eyebrow={t('eyebrow')} title={t('title')} description={t('description')} actions={[{ icon: CircleHelp, onPress: () => { setGuidedEntry(true); replayTour(); }, accessibilityLabel: tourT('guideEntry') }]} hideBackButton />
+      <CommonHeader eyebrow={t('eyebrow')} title={t('title')} description={t('description')} actions={[{ icon: CircleHelp, onPress: replayTour, accessibilityLabel: tourT('guideEntry') }]} hideBackButton />
 
       <ScrollView ref={scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.progressSection}>
@@ -84,7 +85,7 @@ export default function PracticeScreen() {
           <LevelProgressHeader level={practiceLevel} streak={user?.stats?.currentStreak ?? 0} />
         </View>
 
-        <SpotlightTarget id="practiceCreate" onReveal={revealTop} onActivate={createMemory}>
+        <SpotlightTarget id="practiceCreate" onReveal={revealTop} onActivate={() => openMemoryFlow(true)}>
         <NewMemoryCard
           title={t('newMemory')}
           body={t('newMemoryBody')}

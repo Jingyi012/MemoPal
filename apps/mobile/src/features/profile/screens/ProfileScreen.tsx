@@ -273,6 +273,11 @@ export default function ProfileScreen() {
         <Text style={[styles.sectionLabel, { color: activeTheme.ink }]}>{t('settings')}</Text>
         <View style={styles.settingsList}>
           <ProfileSettingsRow
+            icon={<Text style={styles.settingsEmoji}>🧠</Text>}
+            title={onboardingT('starterPickerTitle')}
+            onPress={() => router.push('/onboarding?replay=true')}
+          />
+          <ProfileSettingsRow
             icon={<Text style={styles.settingsEmoji}>🧭</Text>}
             title={onboardingT('guideEntry')}
             onPress={() => startTour()}

@@ -1,4 +1,3 @@
-import { useIsFocused } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthProvider';
 import { SpotlightTarget, usePageTour } from '@/features/onboarding/components/SpotlightTourProvider';
 import { createThemedStyles } from '@/theme/createThemedStyles';
@@ -8,7 +7,7 @@ import { ConfirmModal } from '@/components/ConfirmModal';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import LoadingView from '@/components/LoadingView';
-import { useInfiniteMemorySets, useMemorySetMutations, useMemorySet } from '@/features/memory-sets';
+import { useInfiniteMemorySets, useMemorySetMutations } from '@/features/memory-sets';
 import { useMemoryFolderMutations, useMemoryFolders } from '../hooks/useMemoryFolders';
 import type { MemoryFolder, MemoryFolderCreateRequest } from '../types/memoryFolder.types';
 import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
@@ -22,7 +21,7 @@ import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Href, useRouter, useLocalSearchParams } from 'expo-router';
+import { Href, useRouter } from 'expo-router';
 import { CircleHelp, Globe2, Layers, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -52,19 +51,11 @@ export default function LibraryScreen() {
   const { styles, theme } = useStyles();
   const router = useRouter();
   const scroll = useRef<ScrollView>(null);
-  const isFocused = useIsFocused();
-  const shownGuidedMemory = useRef<string | null>(null);
   const [replayRequested, setReplayRequested] = useState(false);
   const { user: authUser } = useAuth();
-  const { guidedMemory: requestedGuidedMemory } = useLocalSearchParams<{ guidedMemory?: string }>();
-  const guidedMemory = authUser?.onboardingStatus === 'in-progress' ? requestedGuidedMemory : undefined;
   const { t: tourT } = useTranslation('onboarding');
-  const starterId = guidedMemory || authUser?.onboardingMemorySetId || '';
-  const starter = useMemorySet(starterId);
-  const [showStarter, setShowStarter] = useState(Boolean(guidedMemory) || authUser?.onboardingStatus === 'not-started' || authUser?.onboardingStatus === 'in-progress');
   const revealTop = () => scroll.current?.scrollTo({ y: 0, animated: false });
-  const createMemory = () => router.push((showStarter && !starterId ? '/onboarding?replay=true' : '/create-memory') as Href);
-  const openStarter = () => router.push(`/number-peg/${starterId}?guided=1&returnTo=practice` as Href);
+  const createMemory = () => router.push('/create-memory' as Href);
   const { t } = useTranslation('library');
   const { userState, updateState } = useUserState();
   const [filter, setFilter] = useState<LibraryFilter>('all');
@@ -78,19 +69,12 @@ export default function LibraryScreen() {
   const memoryActionsRef = useRef<BottomSheetModal>(null);
   const collectionActionsRef = useRef<BottomSheetModal>(null);
   const [libraryTab, setLibraryTab] = useState<LibraryTab>('mine');
-  const replayTour = usePageTour('libraryPage', Boolean(guidedMemory) || authUser?.onboardingStatus === 'not-started', libraryTab === 'mine' && (!starterId || !starter.isPending));
-  useEffect(() => { if (guidedMemory) { setShowStarter(true); setLibraryTab('mine'); setFilter('all'); } }, [guidedMemory]);
+  const replayTour = usePageTour('libraryPage', authUser?.onboardingStatus === 'not-started', libraryTab === 'mine');
   useEffect(() => {
-    if (!isFocused || libraryTab !== 'mine' || (starterId && !starter.data)) return;
-    if (replayRequested || (guidedMemory && shownGuidedMemory.current !== guidedMemory)) {
-      setShowStarter(true); setReplayRequested(false);
-      shownGuidedMemory.current = guidedMemory ?? null;
-      replayTour();
-    }
-  }, [isFocused, libraryTab, starterId, starter.data, replayRequested, guidedMemory, replayTour]);
-  useEffect(() => {
-    if (authUser?.onboardingStatus === 'completed' || authUser?.onboardingStatus === 'skipped') setShowStarter(false);
-  }, [authUser?.onboardingStatus]);
+    if (libraryTab !== 'mine' || !replayRequested) return;
+    setReplayRequested(false);
+    replayTour();
+  }, [libraryTab, replayRequested, replayTour]);
   const [actionMemorySet, setActionMemorySet] = useState<MemorySet>();
   const [actionCollection, setActionCollection] = useState<MemoryFolder>();
   const [deleteConfirmationMemory, setDeleteConfirmationMemory] = useState<MemorySet>();
@@ -332,7 +316,7 @@ export default function LibraryScreen() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        actions={[{ icon: CircleHelp, onPress: () => { setShowStarter(true); setLibraryTab('mine'); setReplayRequested(true); }, accessibilityLabel: tourT('guideEntry') }]}
+        actions={[{ icon: CircleHelp, onPress: () => { setLibraryTab('mine'); setReplayRequested(true); }, accessibilityLabel: tourT('guideEntry') }]}
         hideBackButton
       />
 
@@ -367,17 +351,6 @@ export default function LibraryScreen() {
             onRefresh={() => { void Promise.allSettled([pagedMemorySets.refetch(), foldersQuery.refetch(), palaceScenes.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
           />
         }>
-        {showStarter && starterId ? starter.data && starter.data.status !== 'archived' ? (
-          <SpotlightTarget id="libraryStarter" onReveal={revealTop} onActivate={openStarter}>
-            <MemorySetCard memorySet={starter.data} variant="list" onOpen={openStarter} actionLabel={tourT('starterOpen')} />
-          </SpotlightTarget>
-        ) : <SpotlightTarget id="libraryStarter" onReveal={revealTop}>
-          <ModuleNoticeCard title={tourT('starterUnavailable')} body={tourT('starterRetryBody')}
-            actionLabel={tourT('tryAgain')} onAction={() => starter.refetch()} />
-          <AnimatedPressable onPress={() => router.push('/onboarding?replay=true' as Href)} style={{ minHeight: 44, justifyContent: 'center' }}>
-            <Text style={{ color: theme.link }}>{tourT('starterNew')}</Text>
-          </AnimatedPressable>
-        </SpotlightTarget> : null}
         <NightEmphasisCard style={styles.summaryCard}>
           <View style={styles.summaryIcon}>
             <Text style={styles.summaryEmoji}>🧠</Text>
@@ -390,20 +363,14 @@ export default function LibraryScreen() {
             </Text>
             <Text style={styles.summaryBody}>{t('collectionBody')}</Text>
           </View>
-          {showStarter && starterId ? (
+          <SpotlightTarget id="libraryStarter" onReveal={revealTop} onActivate={createMemory}>
             <AnimatedPressable accessibilityLabel={t('create')} onPress={createMemory} style={styles.addButton}>
               <Plus size={21} color={theme.onSun} />
             </AnimatedPressable>
-          ) : (
-            <SpotlightTarget id="libraryStarter" onReveal={revealTop} onActivate={createMemory}>
-              <AnimatedPressable accessibilityLabel={t('create')} onPress={createMemory} style={styles.addButton}>
-                <Plus size={21} color={theme.onSun} />
-              </AnimatedPressable>
-            </SpotlightTarget>
-          )}
+          </SpotlightTarget>
         </NightEmphasisCard>
 
-        <SpotlightTarget id="libraryFilter" onReveal={() => scroll.current?.scrollTo({ y: showStarter && starterId ? 220 : 0, animated: false })}>
+        <SpotlightTarget id="libraryFilter" onReveal={revealTop}>
         <View style={styles.filterRow}>
           {filters.map((item) => {
             const selected = item.key === filter;

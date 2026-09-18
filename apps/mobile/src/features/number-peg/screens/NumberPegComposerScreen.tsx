@@ -46,6 +46,7 @@ import {
   type SceneAnchor,
 } from '@/features/number-peg/utils/numberPegMovie';
 import { useOnboardingMutations } from '@/features/onboarding/hooks/useOnboardingMutations';
+import { guidedStarterSessionHref } from '@/features/onboarding/utils/onboardingRoutes';
 import { useGenerateNumberPegStories } from '@/features/number-peg/hooks/useGenerateNumberPegStories';
 import { NumberPegImageEditor } from '../components/NumberPegImageEditor';
 import { useAiCredits } from '@/features/ai-credits/hooks/useAiCredits';
@@ -513,7 +514,7 @@ export default function NumberPegComposerScreen() {
         await linkOnboardingMemory.mutateAsync(onboardingMemoryIdRef.current);
         await AsyncStorage.removeItem(draftKey);
         router.replace(
-          guidedStarter ? `/(tabs)/library?guidedMemory=${onboardingMemoryIdRef.current}` : `/number-peg/${onboardingMemoryIdRef.current}?returnTo=practice&mode=recall` as Href
+          guidedStarter ? guidedStarterSessionHref(onboardingMemoryIdRef.current) : `/number-peg/${onboardingMemoryIdRef.current}?returnTo=practice&mode=recall` as Href
         );
         return;
       }
@@ -567,7 +568,7 @@ export default function NumberPegComposerScreen() {
         }
         await AsyncStorage.removeItem(draftKey);
         router.replace(
-          guidedStarter ? `/(tabs)/library?guidedMemory=${created[0].id}` : `/number-peg/${created[0].id}?returnTo=${fromShared ? 'practice' : 'number-peg'}${isOnboarding ? '&mode=recall' : ''}` as Href
+          guidedStarter ? guidedStarterSessionHref(created[0].id) : `/number-peg/${created[0].id}?returnTo=${fromShared ? 'practice' : 'number-peg'}${isOnboarding ? '&mode=recall' : ''}` as Href
         );
       }
     } catch {

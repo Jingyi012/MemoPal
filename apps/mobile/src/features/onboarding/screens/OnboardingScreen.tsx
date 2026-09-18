@@ -14,6 +14,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOnboardingMutations } from '../hooks/useOnboardingMutations';
 import { getStarterLessons, localizeStarterLesson, starterMemoryParams } from '../utils/starterMemory';
+import { guidedStarterSessionHref } from '../utils/onboardingRoutes';
 
 export function OnboardingScreen() {
   const { styles, theme } = useStyles();
@@ -73,7 +74,10 @@ export function OnboardingScreen() {
     }
   };
   const leave = () => { if (!start.isPending) { if (router.canGoBack()) router.back(); else router.replace('/(tabs)' as Href); } };
-  const resume = user?.onboardingStatus === 'in-progress' && user.onboardingMemorySetId && !chooseAnother;
+  const resumeMemoryId = replay !== 'true' && user?.onboardingStatus === 'in-progress' && !chooseAnother
+    ? user.onboardingMemorySetId
+    : null;
+  const resume = Boolean(resumeMemoryId);
 
   if (!user) return <Redirect href="/" />;
   if (finished && replay !== 'true') return <Redirect href="/(tabs)" />;
@@ -94,7 +98,7 @@ export function OnboardingScreen() {
             <Text style={styles.eyebrow}>{t('memoryReady')}</Text>
             <Text style={styles.title}>{t('finishFirstRecall')}</Text>
             <Text style={styles.body}>{t('finishFirstRecallBody')}</Text>
-            <AnimatedPressable accessibilityRole="button" onPress={() => router.replace(`/(tabs)/library?guidedMemory=${user.onboardingMemorySetId}` as Href)} style={styles.primary}>
+            <AnimatedPressable accessibilityRole="button" onPress={() => resumeMemoryId && router.replace(guidedStarterSessionHref(resumeMemoryId))} style={styles.primary}>
               <Text style={styles.primaryText}>{t('starterContinue')}</Text><ArrowRight size={18} color={theme.onSun} />
             </AnimatedPressable>
             <AnimatedPressable accessibilityRole="button" onPress={() => setChooseAnother(true)} style={styles.textButton}>

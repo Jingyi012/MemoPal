@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { spotlightCardPlacement, tourStorageKey } from '../src/features/onboarding/utils/spotlight.ts';
 import { getStarterLessons, localizeStarterLesson, starterMemoryParams } from '../src/features/onboarding/utils/starterMemory.ts';
+import { guidedStarterSessionHref, practiceCreateHref } from '../src/features/onboarding/utils/onboardingRoutes.ts';
 
 test('page completion is isolated by account and page', () => {
   assert.notEqual(tourStorageKey('alice', 'practicePage'), tourStorageKey('bob', 'practicePage'));
@@ -63,4 +64,18 @@ test('only published active supported starter lessons appear in configured order
   ];
   assert.deepEqual(getStarterLessons([lesson, ...disabled, first]).map(item => item.id), ['first', lesson.id]);
   assert.deepEqual(getStarterLessons(disabled), []);
+});
+
+test('a saved or resumed starter continues directly into guided practice', () => {
+  const href = guidedStarterSessionHref('memory/id');
+  assert.equal(href, '/number-peg/memory%2Fid?guided=1&returnTo=practice');
+  assert.equal(href.includes('library'), false);
+});
+
+test('the Practice guide only resumes a memory while onboarding is in progress', () => {
+  assert.equal(practiceCreateHref('in-progress', 'starter-id', true), '/onboarding?replay=true');
+  assert.equal(practiceCreateHref('in-progress', 'starter-id', false), guidedStarterSessionHref('starter-id'));
+  assert.equal(practiceCreateHref('completed', 'old-starter-id', true), '/onboarding?replay=true');
+  assert.equal(practiceCreateHref('skipped', 'old-starter-id', true), '/onboarding?replay=true');
+  assert.equal(practiceCreateHref('completed', 'old-starter-id', false), '/create-memory');
 });

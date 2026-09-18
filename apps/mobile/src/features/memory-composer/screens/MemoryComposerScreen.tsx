@@ -339,7 +339,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                   cursorColor={theme.violetDeep}
                   style={[styles.input, styles.addInput]}
                 />
-                <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} containerStyle={styles.addButtonContainer} style={styles.addButton}>
+                <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} pressOnIn containerStyle={styles.addButtonContainer} style={styles.addButton}>
                   <Plus size={21} color="white" />
                 </AnimatedPressable>
               </View>
