@@ -34,10 +34,14 @@ export default function PracticeScreen() {
   const { user: authUser } = useAuth();
   const { t: tourT } = useTranslation('onboarding');
   const openMemoryFlow = (requestedGuide: boolean) => {
+    if (!requestedGuide) {
+      router.push('/create-memory' as Href);
+      return;
+    }
     router.push(practiceCreateHref(
       authUser?.onboardingStatus,
       authUser?.onboardingMemorySetId,
-      requestedGuide,
+      true,
     ) as Href);
   };
   const createMemory = () => openMemoryFlow(false);
