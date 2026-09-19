@@ -60,6 +60,8 @@ export default function PalaceHomeScreen() {
           // editor still enforces the server-backed Premium limit when saving.
           onPress={() => router.push('/palaces/create-custom' as Href)}
           style={styles.customCard}>
+          <View style={styles.customGlow} />
+          <View style={styles.customOrbit} />
           <View style={styles.customIcon}>
             <Text style={styles.customEmoji}>🖼️</Text>
           </View>
@@ -68,7 +70,7 @@ export default function PalaceHomeScreen() {
             <Text style={styles.customTitle}>{t('useYourOwnPlace')}</Text>
             <Text style={styles.customBody}>{t('uploadFamiliarPhoto')}</Text>
           </View>
-          <Text style={styles.customArrow}>→</Text>
+          <View style={styles.customArrow}><ChevronRight size={17} color={theme.violetDeep} /></View>
         </AnimatedPressable>
 
         <View style={styles.sectionHeadingRow}>
@@ -222,12 +224,14 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   heroEmoji: { fontSize: 27 },
   sceneLoading: { height: 72, overflow: 'hidden', borderRadius: 14 },
   memoryLoading: { height: 150, overflow: 'hidden', borderRadius: 20 },
-  customCard: { marginTop: 14, borderRadius: 18, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, padding: 13, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  customIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: theme.violetTint, alignItems: 'center', justifyContent: 'center' },
-  customEmoji: { fontSize: 20 },
+  customCard: { marginTop: 14, minHeight: 88, borderRadius: 21, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 11, overflow: 'hidden', shadowColor: theme.violetDeep, shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  customGlow: { position: 'absolute', width: 130, height: 130, borderRadius: 65, right: -48, top: -58, backgroundColor: theme.paper, opacity: 0.55 },
+  customOrbit: { position: 'absolute', width: 112, height: 112, borderRadius: 56, right: -39, top: -49, borderWidth: 1.5, borderColor: theme.paper, opacity: 0.75 },
+  customIcon: { width: 50, height: 50, borderRadius: 16, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center', shadowColor: theme.ink, shadowOpacity: 0.07, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
+  customEmoji: { fontSize: 24 },
   customCopy: { flex: 1 },
   customEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.8 },
-  customTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, marginTop: 2 },
+  customTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15, marginTop: 3 },
   customBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, marginTop: 2 },
-  customArrow: { color: theme.violetDeep, fontFamily: typography.display, fontSize: 22 },
+  customArrow: { width: 32, height: 32, borderRadius: 16, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
 }));
