@@ -20,13 +20,15 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { BookOpen, ChevronRight, CircleHelp, RefreshCcw } from 'lucide-react-native';
+import { ArrowRight, BookOpen, CircleHelp, RefreshCcw } from 'lucide-react-native';
 import { useMemo, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PracticeScreen() {
   const { styles, theme } = useStyles();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const scroll = useRef<ScrollView>(null);
   const { user: authUser } = useAuth();
@@ -112,18 +114,29 @@ export default function PracticeScreen() {
                       borderColor: isPeg ? activeTheme.berryLine : activeTheme.violetLine,
                     },
                   ]}>
-                  <Text style={styles.techniqueEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
-                  <Text numberOfLines={1} style={[styles.techniqueName, { color: activeTheme.ink }]}>
-                    {isPeg ? t('numberPeg') : t('palace')}
-                  </Text>
-                  <Text style={[styles.techniqueLink, { color: isPeg ? activeTheme.berryDeep : activeTheme.violetDeep }]}>
-                    {t('tapToStart')} →
-                  </Text>
+                  <View style={[styles.techniqueGlow, { backgroundColor: isPeg ? activeTheme.berryLine : activeTheme.violetLine }]} />
+                  <View style={[styles.techniqueOrbit, { borderColor: isPeg ? activeTheme.berryLine : activeTheme.violetLine }]} />
+                  <View style={[styles.techniqueIconPlate, { backgroundColor: activeTheme.paper }]}>
+                    <Text style={styles.techniqueEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
+                  </View>
+                  <View style={styles.techniqueTextBlock}>
+                    <Text style={[styles.techniqueKicker, { color: isPeg ? activeTheme.berryDeep : activeTheme.violetDeep }]}>
+                      {isPeg ? t('numberPegKicker') : t('palaceKicker')}
+                    </Text>
+                    <Text numberOfLines={1} style={[styles.techniqueName, { color: activeTheme.ink }]}>
+                      {isPeg ? t('numberPeg') : t('palace')}
+                    </Text>
+                  </View>
+                  <View style={[styles.techniqueAction, { backgroundColor: isPeg ? activeTheme.berryDeep : activeTheme.violetDeep }]}>
+                    <Text style={[styles.techniqueLink, { color: activeTheme.onAccent }]}>{t('tapToStart')}</Text>
+                    <ArrowRight size={14} color={activeTheme.onAccent} />
+                  </View>
                 </AnimatedPressable>
               </View>
             );
           })}
         </View>
+
 
         {(!isOffline && memorySets.isLoading) || (canShowRequestErrors && memorySets.isError) || recentSet ? (
           <View style={styles.recentSection}>
@@ -155,15 +168,16 @@ export default function PracticeScreen() {
           </View>
         ) : null}
 
-        <AnimatedPressable accessibilityRole="button" accessibilityLabel={t('allLessons')} onPress={() => router.push('/lessons' as Href)} style={styles.lessonCard}>
-          <View style={styles.lessonIcon}><BookOpen size={22} color={activeTheme.violetDeep} /></View>
-          <View style={styles.lessonCopy}>
-            <Text style={styles.lessonTitle}>{t('allLessons')}</Text>
-            <Text style={styles.lessonBody}>{t('allLessonsBody')}</Text>
-          </View>
-          <ChevronRight size={20} color={activeTheme.violetDeep} />
-        </AnimatedPressable>
       </ScrollView>
+      <AnimatedPressable
+        accessibilityRole="button"
+        accessibilityLabel={t('allLessons')}
+        accessibilityHint={t('allLessonsBody')}
+        onPress={() => router.push('/lessons' as Href)}
+        style={[styles.lessonFab, { bottom: Math.max(16, insets.bottom + 10), backgroundColor: activeTheme.violetDeep }]}>
+        <BookOpen size={23} color={activeTheme.onAccent} />
+        <View style={[styles.lessonFabDot, { backgroundColor: activeTheme.sun }]} />
+      </AnimatedPressable>
     </View>
   );
 }
@@ -174,26 +188,29 @@ function openMemorySet(router: ReturnType<typeof useRouter>, memorySet: MemorySe
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 42 },
+  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 112 },
   sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase' },
   techniqueHeading: { marginTop: 18, marginBottom: 10 },
   techniqueRow: { flexDirection: 'row', gap: 10, width: '100%' },
   techniqueCardWrap: { flex: 1, minWidth: 0 },
-  techniqueCard: { borderRadius: 18, borderWidth: 1.5, minHeight: 116, paddingHorizontal: 13, paddingVertical: 13, width: '100%' },
-  techniqueEmoji: { fontSize: 28, lineHeight: 34 },
-  techniqueName: { fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 7 },
-  techniqueLink: { fontFamily: typography.bodyExtraBold, fontSize: 10, marginTop: 5 },
+  techniqueCard: { borderRadius: 24, borderWidth: 1.5, minHeight: 176, overflow: 'hidden', paddingHorizontal: 15, paddingVertical: 15, width: '100%', justifyContent: 'space-between' },
+  techniqueGlow: { borderRadius: 80, height: 150, opacity: 0.3, position: 'absolute', right: -62, top: -61, width: 150 },
+  techniqueOrbit: { borderRadius: 65, borderWidth: 1.5, height: 130, opacity: 0.7, position: 'absolute', right: -48, top: -50, width: 130 },
+  techniqueIconPlate: { alignItems: 'center', borderRadius: 18, height: 58, justifyContent: 'center', width: 58, shadowColor: theme.ink, shadowOpacity: 0.08, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  techniqueEmoji: { fontSize: 32, lineHeight: 38 },
+  techniqueTextBlock: { gap: 3, marginTop: 10 },
+  techniqueKicker: { fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 1 },
+  techniqueName: { fontFamily: typography.displayExtraBold, fontSize: 15 },
+  techniqueAction: { alignItems: 'center', borderRadius: 999, flexDirection: 'row', gap: 4, justifyContent: 'center', minHeight: 36, paddingHorizontal: 10 },
+  techniqueLink: { fontFamily: typography.bodyExtraBold, fontSize: 11 },
   recentSection: { marginTop: 24 },
   sectionHeadingRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   flushHeading: { marginBottom: 10 },
   seeAllButton: { justifyContent: 'center', minHeight: 44, paddingHorizontal: 6 },
   seeAll: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 11.5 },
   progressSection: { marginBottom: 2 },
-  lessonCard: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 20, borderWidth: 1.5, flexDirection: 'row', gap: 12, marginTop: 24, minHeight: 78, paddingHorizontal: 14, paddingVertical: 12 },
-  lessonIcon: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: 14, height: 46, justifyContent: 'center', width: 46 },
-  lessonCopy: { flex: 1 },
-  lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  lessonBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 15, marginTop: 2 },
+  lessonFab: { alignItems: 'center', borderRadius: 30, bottom: 16, elevation: 5, height: 58, justifyContent: 'center', position: 'absolute', right: 20, shadowColor: theme.ink, shadowOpacity: 0.22, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 58 },
+  lessonFabDot: { borderColor: theme.paper, borderRadius: 5, borderWidth: 2, height: 10, position: 'absolute', right: 9, top: 8, width: 10 },
   emptyCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 2, padding: 20 },
   emptyBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
 }));

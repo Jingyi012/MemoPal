@@ -42,9 +42,11 @@ forms, and repeated answer words; it does not infer translations or synonyms.
 Both Number Peg and Palace recall show corrective feedback and the saved
 association after a miss. A missed item, or a Number Peg item answered with
 a hint, returns after two other questions where possible. Near the end of a
-round it returns at the tail. Each item has at most three answer attempts
-(the original question plus two reinforcement visits), so a round can end
-even if the user still cannot recall an item.
+round it returns at the tail. Each item has at most two answer attempts (the
+original question plus one reinforcement visit), so a round can end even if
+the user still cannot recall an item. This keeps the round supportive rather
+than repeatedly forcing the same failed recall; the scheduler handles the
+later review.
 
 Answers and per-question hints are hidden again on reinforcement visits.
 The aggregate response retains total answer attempts and hint usage. A

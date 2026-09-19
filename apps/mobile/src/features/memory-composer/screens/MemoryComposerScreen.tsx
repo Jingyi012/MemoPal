@@ -423,7 +423,7 @@ function TechniqueCard({ technique, recommended, onPress }: { technique: Techniq
     ? [t('pegShortLists'), t('pegSpellingWords'), t('pegUpToTen')]
     : [t('palaceLongerLists'), t('palaceSequences'), t('palaceNoFixedLimit')];
   return (
-    <AnimatedPressable onPress={onPress} style={[styles.techniqueCard, recommended && styles.techniqueCardRecommended]}>
+    <AnimatedPressable onPress={onPress} style={[styles.techniqueCard, isPeg ? styles.techniqueCardPeg : styles.techniqueCardPalace, recommended && styles.techniqueCardRecommended]}>
       {recommended && <View style={styles.ribbon}><Text style={styles.ribbonText}>{t('recommended')}</Text></View>}
       <View style={styles.techniqueHead}>
         <View style={[styles.techniqueIcon, isPeg ? styles.pegIcon : styles.palaceIcon]}>
@@ -433,14 +433,20 @@ function TechniqueCard({ technique, recommended, onPress }: { technique: Techniq
           <Text style={styles.techniqueName}>{isPeg ? t('numberPegName') : t('memoryPalaceName')}</Text>
           <Text style={styles.techniqueTag}>{isPeg ? t('numberPegTag') : t('memoryPalaceTag')}</Text>
         </View>
-        <ArrowRight size={18} color={theme.inkSoft} />
+        <View style={[styles.techniqueArrow, isPeg ? styles.pegArrow : styles.palaceArrow]}>
+          <ArrowRight size={17} color={isPeg ? theme.berryDeep : theme.violetDeep} />
+        </View>
       </View>
-      <Text style={styles.techniqueDescription}>
-        {isPeg ? t('numberPegDescription') : t('memoryPalaceDescription')}
-      </Text>
+      <View style={[styles.descriptionBox, isPeg ? styles.pegDescriptionBox : styles.palaceDescriptionBox]}>
+        <Text style={styles.descriptionLabel}>{t('whyItFits')}</Text>
+        <Text style={[styles.techniqueDescription, isPeg ? styles.pegDescription : styles.palaceDescription]}>
+          {isPeg ? t('numberPegDescription') : t('memoryPalaceDescription')}
+        </Text>
+      </View>
+      <View style={styles.bestForHeader}><Text style={styles.bestForLabel}>{t('bestFor')}</Text></View>
       <View style={styles.bestForRow}>
         {bestFor.map((label) => (
-          <Text key={label} style={styles.bestFor}>{label}</Text>
+          <Text key={label} style={[styles.bestFor, isPeg ? styles.pegBestFor : styles.palaceBestFor]}>{label}</Text>
         ))}
       </View>
     </AnimatedPressable>
@@ -501,21 +507,36 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   recommendationEmoji: { fontSize: 27 },
   recommendationTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   recommendationBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17, marginTop: 3 },
-  techniqueCard: { position: 'relative', borderWidth: 2, borderColor: theme.line, borderRadius: 20, backgroundColor: theme.paper, padding: 15, marginBottom: 13 },
+  techniqueCard: { position: 'relative', borderWidth: 1.5, borderColor: theme.line, borderRadius: 22, backgroundColor: theme.paper, padding: 16, marginBottom: 13, shadowColor: theme.ink, shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  techniqueCardPeg: { borderColor: theme.berryLine, backgroundColor: theme.berryTint },
+  techniqueCardPalace: { borderColor: theme.violetLine, backgroundColor: theme.violetTint },
   techniqueCardRecommended: { borderColor: theme.sunDeep, borderWidth: 2.5 },
   ribbon: { position: 'absolute', right: 13, top: -11, borderRadius: 999, backgroundColor: theme.sun, paddingHorizontal: 10, paddingVertical: 4, boxShadow: '0px 2px 4px rgba(43, 42, 61, 0.15)' },
   ribbonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.4 },
   techniqueHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 },
-  techniqueIcon: { width: 47, height: 47, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  pegIcon: { backgroundColor: theme.berryTint },
-  palaceIcon: { backgroundColor: theme.violetTint },
-  techniqueIconEmoji: { fontSize: 25 },
+  techniqueIcon: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },
+  pegIcon: { backgroundColor: theme.paper, borderColor: theme.berryLine },
+  palaceIcon: { backgroundColor: theme.paper, borderColor: theme.violetLine },
+  techniqueIconEmoji: { fontSize: 27 },
   techniqueMeta: { flex: 1, minWidth: 0, paddingTop: 2 },
-  techniqueName: { color: theme.ink, fontFamily: typography.display, fontSize: 16, lineHeight: 21 },
-  techniqueTag: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, marginTop: 2 },
-  techniqueDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12.5, lineHeight: 18, marginTop: 12 },
-  bestForRow: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 11 },
-  bestFor: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodyBold, fontSize: 10.5, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
+  techniqueName: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17, lineHeight: 22 },
+  techniqueTag: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, lineHeight: 16, marginTop: 3, opacity: 0.7 },
+  techniqueArrow: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  pegArrow: { backgroundColor: theme.berryTint },
+  palaceArrow: { backgroundColor: theme.violetTint },
+  descriptionBox: { borderRadius: 14, borderWidth: 1, paddingHorizontal: 11, paddingVertical: 9, marginTop: 14 },
+  pegDescriptionBox: { backgroundColor: theme.paper, borderColor: theme.berryLine },
+  palaceDescriptionBox: { backgroundColor: theme.paper, borderColor: theme.violetLine },
+  descriptionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.7, textTransform: 'uppercase', marginBottom: 3 },
+  techniqueDescription: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17 },
+  pegDescription: { color: theme.berryDeep },
+  palaceDescription: { color: theme.violetDeep },
+  bestForHeader: { marginTop: 11 },
+  bestForLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.7, textTransform: 'uppercase' },
+  bestForRow: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
+  bestFor: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodyBold, fontSize: 10.5, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
+  pegBestFor: { color: theme.berryDeep, borderColor: theme.berryLine },
+  palaceBestFor: { color: theme.violetDeep, borderColor: theme.violetLine },
   changeButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 2 },
   changeButtonText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
 }));

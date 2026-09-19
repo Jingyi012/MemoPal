@@ -220,22 +220,22 @@ test('hinted successes return once with hidden hints while keeping their assiste
   assert.deepEqual(reinforceRecallQueue(queue, 2, retry[0], false), queue);
 });
 
-test('even an entirely forgotten round ends after at most two reinforcement visits per item', () => {
+test('even an entirely forgotten round ends after one gentle revisit per item', () => {
   let queue = ['one', 'two', 'three'];
   let responses = [];
   for (let index = 0; index < queue.length; index += 1) {
-    assert.ok(index < 9, 'the round must not loop indefinitely');
+    assert.ok(index < 6, 'the round must not loop indefinitely');
     responses = upsertRecallResponse(responses, queue[index], false, 100);
     queue = reinforceRecallQueue(queue, index, responses.find((r) => r.memoryItemId === queue[index]), false);
   }
-  assert.equal(queue.length, 9);
+  assert.equal(queue.length, 6);
   assert.equal(responses.length, 3);
-  assert.ok(responses.every((r) => r.attemptCount === 3 && !r.isCorrect));
+  assert.ok(responses.every((r) => r.attemptCount === 2 && !r.isCorrect));
 });
 
 test('a single-item round can finish even when every recall fails', () => {
-  const response = { memoryItemId: 'one', isCorrect: false, attemptCount: 3, responseMs: 100 };
-  assert.deepEqual(reinforceRecallQueue(['one', 'one', 'one'], 2, response, false), ['one', 'one', 'one']);
+  const response = { memoryItemId: 'one', isCorrect: false, attemptCount: 2, responseMs: 100 };
+  assert.deepEqual(reinforceRecallQueue(['one', 'one'], 1, response, false), ['one', 'one']);
 });
 
 test('resuming retains the exact reinforcement queue and rejects missing or over-repeated items', () => {

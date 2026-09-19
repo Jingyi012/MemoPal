@@ -1,6 +1,7 @@
 import type { PracticeResponseInput } from '../types/practiceAttempt.types';
 
-export const MAX_RECALL_ATTEMPTS = 3;
+// Give a missed item one gentle revisit, then leave it for scheduled review.
+export const MAX_RECALL_ATTEMPTS = 2;
 
 /** A resumed round keeps its original subset and reinforcement visits. */
 export function getSavedReviewItemIds(
@@ -17,7 +18,7 @@ export function getSavedReviewItemIds(
   return new Set(saved);
 }
 
-/** Resume the exact queue, including up to two reinforcement visits per item. */
+/** Resume the exact queue, including one reinforcement visit per item. */
 export function restoreRecallQueue(items: readonly { id: string }[], saved?: string[]) {
   const ids = items.map((item) => item.id);
   if (!Array.isArray(saved)) return ids;
