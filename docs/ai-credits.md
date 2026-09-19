@@ -8,13 +8,15 @@ stale reservation recovery, rate/concurrency limits, both existing text generati
 flows, private Number Peg image jobs, mobile wallet/history and image adoption,
 and admin wallet/history/manual grants.
 
-**Billing is not connected.** Monthly subscription grants, à la carte purchases,
-store receipt verification, renewal/refund handling, product prices and monthly
-allowances still require a payment platform and product configuration. Neither
+**Billing is not connected.** Monthly subscription grants, completed à la carte purchases,
+store receipt verification and renewal/refund handling still require a payment
+platform and product configuration. Admin can configure the mobile display catalog,
+custom amount pricing and the Premium monthly allowance, but those settings do not
+mint credits by themselves. Neither
 the existing client `billing/subscribe` endpoint nor the administrative
 subscription simulation grants credits. `IsPremium` and referral rewards do not
-mint credits. The wallet returns `purchasesEnabled: false`; there is no simulated
-checkout that can grant paid credits.
+mint credits. Keep `purchasesEnabled: false` until a verified checkout is connected;
+there is no simulated checkout that can grant paid credits.
 
 These changes do not apply a migration to the developer's current database or
 enable a paid AI provider automatically.
@@ -28,7 +30,7 @@ the existing SystemSettings table are the source of truth:
 | --- | --- |
 | `ai.text` | `provider` (template/gemini/ollama), `model`, `endpoint`, `apiKey`, `batchSize`, `maxConcurrentRequests`, `timeoutSeconds` |
 | `ai.images` | `provider` (gemini), `model`, `endpoint`, `apiKey` |
-| `ai.credits` | `textCost`, `imageCost`, `imagesEnabled` |
+| `ai.credits` | generation costs, purchase visibility, currency, custom amount rules and preset credit packs |
 
 Text configuration is shared by Number Peg and Palace sentences. Images have
 independent credentials, model, and endpoint. An image model and key must be
@@ -112,7 +114,10 @@ supported `/v1` or `/v1beta` base URL. Other Gemini image models use the legacy
 - Admin-only `/v1/ai-credits/users/{userId}` and `/history` read a wallet;
   `/grants` accepts `{ reference, amount, expiresAt }` for an audited manual grant.
 
-The mobile wallet is available from Premium and both association editors. Entering
+The mobile wallet is available from Premium and both association editors. Its
+purchase screen renders the admin-configured custom amount input, unit price,
+currency and preset packs. These are catalog/display settings only until store
+checkout and server-side receipt verification are connected. Entering
 Number Peg starts with free local associations. AI generation requires an explicit
 action and a cost confirmation. Successfully generated results are charged even
 when not adopted; the confirmation explains this. Manual editing and existing

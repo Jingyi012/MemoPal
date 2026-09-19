@@ -8,6 +8,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 
 export const DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG: PremiumSubscriptionConfig = {
+  monthlyAiCredits: 100,
   hero: {
     title: 'Go Premium',
     subtitle: 'Unlock your full memory potential',
@@ -207,6 +208,10 @@ function normalizeConfig(raw?: Partial<PremiumSubscriptionConfig> | null): Premi
   }
 
   return {
+    monthlyAiCredits:
+      typeof raw.monthlyAiCredits === 'number' && Number.isFinite(raw.monthlyAiCredits)
+        ? Math.max(0, Math.floor(raw.monthlyAiCredits))
+        : DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG.monthlyAiCredits,
     hero: {
       title: raw.hero?.title?.trim() || DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG.hero.title,
       subtitle: raw.hero?.subtitle?.trim() || DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG.hero.subtitle,

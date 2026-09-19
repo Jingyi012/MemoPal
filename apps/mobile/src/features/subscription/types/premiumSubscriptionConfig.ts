@@ -24,6 +24,7 @@ export interface PremiumSubscriptionTermsSectionConfig {
 }
 
 export interface PremiumSubscriptionConfig {
+  monthlyAiCredits: number;
   hero: {
     title: string;
     subtitle: string;

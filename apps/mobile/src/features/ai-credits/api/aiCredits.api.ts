@@ -1,9 +1,18 @@
 import api from '@/core/api/apiClient';
 import type { GeneralResponse } from '@/core/types/general';
 
+export type AiCreditPurchasePack = {
+  key: string; credits: number; price: number; label: string; badge: string | null;
+};
+export type AiCreditPurchaseConfig = {
+  currencyCode: string; currencySymbol: string; customPurchaseEnabled: boolean;
+  customMinCredits: number; customMaxCredits: number; customStep: number; pricePerCredit: number;
+  packs: AiCreditPurchasePack[];
+};
 export type AiCreditBalance = {
   available: number; subscription: number; purchased: number; nextExpiry: string | null;
   textCost: number; imageCost: number; imagesEnabled: boolean; purchasesEnabled: boolean; imagesConfigured: boolean;
+  purchaseConfig: AiCreditPurchaseConfig;
 };
 export type AiCreditEntry = { id: string; kind: string; amount: number; createdAt: string };
 export type AiGeneration = {

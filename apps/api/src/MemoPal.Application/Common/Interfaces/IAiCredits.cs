@@ -1,7 +1,12 @@
 namespace MemoPal.Application.Common.Interfaces;
 
+public sealed record AiCreditPurchasePack(string Key, int Credits, decimal Price, string Label, string? Badge);
+public sealed record AiCreditPurchaseConfig(string CurrencyCode, string CurrencySymbol, bool CustomPurchaseEnabled,
+    int CustomMinCredits, int CustomMaxCredits, int CustomStep, decimal PricePerCredit,
+    IReadOnlyList<AiCreditPurchasePack> Packs);
 public sealed record AiCreditBalance(int Available, int Subscription, int Purchased, DateTime? NextExpiry,
-    int TextCost, int ImageCost, bool ImagesEnabled, bool PurchasesEnabled, bool ImagesConfigured);
+    int TextCost, int ImageCost, bool ImagesEnabled, bool PurchasesEnabled, bool ImagesConfigured,
+    AiCreditPurchaseConfig PurchaseConfig);
 public sealed record AiCreditHistoryItem(string Id, string Kind, int Amount, DateTime CreatedAt);
 public sealed record AiGenerationView(string Id, string Kind, string Status, int Reserved, int Charged,
     string? ResultJson, DateTime CreatedAt);

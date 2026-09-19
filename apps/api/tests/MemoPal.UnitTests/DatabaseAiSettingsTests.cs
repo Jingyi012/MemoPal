@@ -101,8 +101,26 @@ public sealed class DatabaseAiSettingsTests
         Assert.False(settings.IsConfigured);
     }
 
+    [Fact]
+    public async Task CreditPurchaseCatalogIsValidatedAndReadFromSavedSettings()
+    {
+        using var db = AiCreditTests.CreateDb();
+        var json = """{"textCost":1,"imageCost":10,"imagesEnabled":false,"purchasesEnabled":true,"currencyCode":"MYR","currencySymbol":"RM","customPurchaseEnabled":true,"customMinCredits":50,"customMaxCredits":5000,"customStep":10,"pricePerCredit":0.05,"purchasePacks":[{"key":"popular","credits":250,"price":9.99,"label":"Popular","badge":"BEST VALUE","isActive":true,"sortOrder":1}]}""";
+
+        var saved = await new UpsertSystemSettingCommandHandler(db).Handle(new(new UpsertSystemSettingRequest
+            { Key = AiSettings.Credits, Value = json }), default);
+
+        Assert.True(saved.Success);
+        var settings = new DatabaseAiSettings(db).Read(AiSettings.Credits, new OptionsFactory<AiCreditOptions>([], [])).Value;
+        Assert.True(settings.PurchasesEnabled);
+        Assert.Equal("MYR", settings.CurrencyCode);
+        Assert.Equal(0.05m, settings.PricePerCredit);
+        Assert.Equal(250, Assert.Single(settings.PurchasePacks).Credits);
+    }
+
     [Theory]
     [InlineData("ai.credits", "{\"textCost\":0}")]
+    [InlineData("ai.credits", "{\"purchasePacks\":[{\"key\":\"same\",\"credits\":100,\"price\":4.99,\"label\":\"One\"},{\"key\":\"same\",\"credits\":200,\"price\":8.99,\"label\":\"Two\"}]}")]
     [InlineData("ai.images", "{\"provider\":\"ollama\"}")]
     [InlineData("ai.images", "{\"endpoint\":\"file:///tmp\"}")]
     [InlineData("ai.text", "{\"geminiApiKey\":null}")]

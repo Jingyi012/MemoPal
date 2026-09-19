@@ -14,7 +14,7 @@ import { PremiumSubscriptionConfig } from '@/features/subscription/types/premium
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Check, ChevronRight, Crown, Sparkles, X } from 'lucide-react-native';
+import { Check, Coins, Crown, Sparkles, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,15 +22,17 @@ import TermsAndConditionSheet from '../components/TermsAndConditionSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
 import { AiCreditCoinButton } from '@/features/ai-credits/components/AiCreditBalanceLink';
+import { useAiCredits } from '@/features/ai-credits/hooks/useAiCredits';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useUserState } from '@/contexts/UserStateContext';
 
 const PremiumScreen: React.FC = () => {
   const router = useRouter();
-  const { t } = useTranslation('subscription');
+  const { t, language } = useTranslation('subscription');
+  const zh = language === 'zh';
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
-  const { user, isLoading: isUserLoading } = useCurrentUser();
+  const { user, isLoading: isUserLoading, refetch: refetchUser } = useCurrentUser();
   const { userState } = useUserState();
   const insets = useSafeAreaInsets();
   const termsRef = useRef<BottomSheetModal>(null);
@@ -98,9 +100,9 @@ const PremiumScreen: React.FC = () => {
     }
   }, [plans, selectedPlanId]);
 
-  const onRefresh = useCallback(() => {
-    void loadPremiumConfig(true);
-  }, [loadPremiumConfig]);
+  const onRefresh = useCallback(async () => {
+    await Promise.all([loadPremiumConfig(true), refetchUser()]);
+  }, [loadPremiumConfig, refetchUser]);
 
   if (isLoading || isUserLoading) {
     return <LoadingView />;
@@ -108,7 +110,9 @@ const PremiumScreen: React.FC = () => {
 
   if (user?.isPremium) {
     return <PremiumMemberView theme={activeTheme}
-      expiresAt={userState.subscription.expiresAt} onClose={() => router.back()} />;
+      config={config ?? DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG}
+      subscription={userState.subscription} isRefreshing={isRefreshing}
+      onRefresh={onRefresh} onClose={() => router.back()} />;
   }
 
   const topBar = (
@@ -150,8 +154,6 @@ const PremiumScreen: React.FC = () => {
   }
 
   const handleSubscribePress = () => {
-    if (!config.subscribeButton.enabled) return;
-
     Alert.alert(t('subscriptionUnavailable'), config.subscribeButton.pendingMessage);
   };
 
@@ -216,6 +218,22 @@ const PremiumScreen: React.FC = () => {
             </View>
           </BaseCard>
 
+          <View style={styles.planHeading}>
+            <View>
+              <Text style={[styles.planHeadingTitle, { color: activeTheme.ink }]}>{zh ? '选择付款周期' : 'Choose your billing cycle'}</Text>
+              <Text style={[styles.planHeadingBody, { color: activeTheme.inkSoft }]}>{zh ? '随时可在应用商店管理或取消' : 'Manage or cancel through the app store'}</Text>
+            </View>
+            <View style={[styles.securePill, { backgroundColor: activeTheme.mintTint }]}><Text style={[styles.securePillText, { color: activeTheme.successText }]}>{zh ? '安全结账' : 'SECURE'}</Text></View>
+          </View>
+
+          <View style={[styles.creditAllowance, { backgroundColor: activeTheme.sunTint, borderColor: activeTheme.sunLine }]}>
+            <View style={[styles.creditAllowanceIcon, { backgroundColor: activeTheme.paper }]}><Coins size={20} color={activeTheme.sunDeep} strokeWidth={2.5} /></View>
+            <View style={styles.creditAllowanceCopy}>
+              <Text style={[styles.creditAllowanceTitle, { color: activeTheme.ink }]}>{config.monthlyAiCredits.toLocaleString()} AI credits / {zh ? '月' : 'month'}</Text>
+              <Text style={[styles.creditAllowanceBody, { color: activeTheme.inkSoft }]}>{zh ? '月付和年付方案均按月发放' : 'Granted monthly on both monthly and yearly plans'}</Text>
+            </View>
+          </View>
+
           <View style={styles.planList}>
             {plans.map((plan) => {
               const selected = plan.key === selectedPlan?.key;
@@ -264,9 +282,22 @@ const PremiumScreen: React.FC = () => {
             })}
           </View>
 
+          {selectedPlan ? (
+            <View style={[styles.selectionSummary, { backgroundColor: activeTheme.paper, borderColor: activeTheme.line }]}>
+              <View style={styles.selectionCopy}>
+                <Text style={[styles.selectionLabel, { color: activeTheme.inkSoft }]}>{zh ? '你选择了' : 'YOUR SELECTION'}</Text>
+                <Text style={[styles.selectionName, { color: activeTheme.ink }]}>{selectedPlan.name}</Text>
+              </View>
+              <View style={styles.selectionPriceBlock}>
+                <Text style={[styles.selectionPrice, { color: activeTheme.ink }]}>{selectedPlan.price}</Text>
+                <Text style={[styles.selectionPeriod, { color: activeTheme.inkSoft }]}>{selectedPlan.label}</Text>
+              </View>
+            </View>
+          ) : null}
+
           <AnimatedPressable
             onPress={handleSubscribePress}
-            disabled={!config.subscribeButton.enabled}
+            accessibilityHint={!config.subscribeButton.enabled ? config.subscribeButton.pendingMessage : undefined}
             style={[
               styles.subscribeButton,
               config.subscribeButton.enabled ? styles.subscribeShadow : styles.subscribeDisabled,
@@ -283,6 +314,7 @@ const PremiumScreen: React.FC = () => {
             ) : (
               <View style={styles.disabledInner}>
                 <Text style={styles.disabledText}>{config.subscribeButton.disabledLabel}</Text>
+                <Text style={styles.disabledHint}>{zh ? '点击查看开放状态' : 'Tap for availability details'}</Text>
               </View>
             )}
           </AnimatedPressable>
@@ -333,7 +365,9 @@ const styles = StyleSheet.create({
   featureCopy: { flex: 1, minWidth: 0 },
   featureTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, lineHeight: 18 },
   featureDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, marginTop: 2 },
-  planList: { gap: 12, marginTop: 20 },
+  planHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 22 }, planHeadingTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 }, planHeadingBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 3 }, securePill: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, backgroundColor: theme.mintTint }, securePillText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 8, letterSpacing: 0.6 },
+  creditAllowance: { minHeight: 72, marginTop: 13, borderRadius: 18, borderWidth: 1.5, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 11, backgroundColor: theme.sunTint, borderColor: theme.sunLine }, creditAllowanceIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper }, creditAllowanceCopy: { flex: 1, minWidth: 0 }, creditAllowanceTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 }, creditAllowanceBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, lineHeight: 15, marginTop: 2 },
+  planList: { gap: 12, marginTop: 13 },
   planCard: { position: 'relative', borderRadius: 20, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 16, paddingVertical: 17 },
   planCardBestValue: { paddingTop: 38 },
   planCardSelected: { borderColor: theme.violet, backgroundColor: theme.violetTint, boxShadow: '0px 4px 10px rgba(122, 104, 224, 0.13)' },
@@ -352,6 +386,7 @@ const styles = StyleSheet.create({
   priceBlock: { alignItems: 'flex-end', marginLeft: 10 },
   planPrice: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 21, lineHeight: 25 },
   planLabel: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 1 },
+  selectionSummary: { minHeight: 70, marginTop: 14, borderRadius: 18, borderWidth: 1.5, paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, backgroundColor: theme.paper }, selectionCopy: { flex: 1, minWidth: 0 }, selectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 8, letterSpacing: 0.7 }, selectionName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 3 }, selectionPriceBlock: { alignItems: 'flex-end' }, selectionPrice: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 }, selectionPeriod: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9 },
   subscribeButton: { width: '100%', minHeight: 56, borderRadius: 18, marginTop: 20, overflow: 'visible' },
   subscribeShadow: { boxShadow: '0px 6px 0px rgba(242, 169, 0, 0.9)' },
   subscribeGradient: { minHeight: 56, borderRadius: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16 },
@@ -359,6 +394,7 @@ const styles = StyleSheet.create({
   subscribeDisabled: { opacity: 0.78 },
   disabledInner: { minHeight: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.line },
   disabledText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 15 },
+  disabledHint: { color: theme.inkMuted, fontFamily: typography.bodySemibold, fontSize: 9, marginTop: 2 },
   footer: { alignItems: 'center', marginTop: 19, marginBottom: 12 },
   finePrint: { color: '#9A97A7', fontFamily: typography.bodySemibold, fontSize: 10, lineHeight: 15, textAlign: 'center' },
   termsLink: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 8, textDecorationLine: 'underline' },
@@ -372,36 +408,84 @@ const styles = StyleSheet.create({
 
 export default PremiumScreen;
 
-function PremiumMemberView({ theme, expiresAt, onClose }: {
-  theme: typeof memopalThemes.light; expiresAt?: string | null; onClose: () => void;
+function PremiumMemberView({ theme, config, subscription, isRefreshing, onRefresh, onClose }: {
+  theme: typeof memopalThemes.light;
+  config: PremiumSubscriptionConfig;
+  subscription: {
+    planId?: string; expiresAt?: string; autoRenew: boolean; status?: string;
+  };
+  isRefreshing: boolean;
+  onRefresh: () => Promise<void>;
+  onClose: () => void;
 }) {
   const { styles } = useMemberStyles();
   const { language, t } = useTranslation('subscription');
+  const credits = useAiCredits();
   const zh = language === 'zh';
+  const plan = config.plans.find((item) =>
+    subscription.planId?.toLowerCase().includes(item.key.toLowerCase())) ?? null;
+  const planName = plan?.name ?? (subscription.planId || (zh ? 'Premium 方案' : 'Premium plan'));
+  const statusLabel = subscription.status === 'trialing'
+    ? (zh ? '试用中' : 'Trial')
+    : subscription.status === 'past_due'
+      ? (zh ? '付款待处理' : 'Payment due')
+      : (zh ? '已激活' : 'Active');
+  const renewalLabel = subscription.autoRenew
+    ? (zh ? '自动续订已开启' : 'Auto-renew is on')
+    : (zh ? '当前周期结束后停止' : 'Ends after this period');
+  const periodDate = subscription.expiresAt
+    ? new Date(subscription.expiresAt).toLocaleDateString()
+    : (zh ? '由账户同步' : 'Synced from your account');
+
   return <View style={styles.memberPage}>
     <CommonHeader
       title={t('manage')}
       eyebrow="MEMOPAL PREMIUM"
       backAction={onClose}
     />
-    <ScrollView contentContainerStyle={styles.memberContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.memberHero}><View style={styles.memberOrb}><Crown size={32} color={theme.sun} strokeWidth={2.3} /></View>
-        <Text style={styles.memberTitle}>{zh ? '你的 Premium 旅程正在进行' : 'Your Premium journey is active'}</Text>
-        <Text style={styles.memberSubtitle}>{zh ? '继续建立更深、更有趣的记忆。' : 'Keep building deeper, more playful memories.'}</Text>
-        <View style={styles.activeBadge}><Sparkles size={13} color={theme.sun} /><Text style={styles.activeBadgeText}>{zh ? '已激活' : 'ACTIVE'}</Text></View>
+    <ScrollView contentContainerStyle={styles.memberContent} showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={isRefreshing || credits.isRefetching}
+        onRefresh={() => void Promise.all([onRefresh(), credits.refetch()])} />}>
+      <View style={styles.memberHero}><View style={styles.memberHeroTop}><View style={styles.memberOrb}><Crown size={27} color={theme.sun} strokeWidth={2.3} /></View><View style={styles.activeBadge}><View style={styles.activeDot} /><Text style={styles.activeBadgeText}>{statusLabel.toUpperCase()}</Text></View></View>
+        <Text style={styles.memberEyebrow}>MEMOPAL PREMIUM</Text>
+        <Text style={styles.memberTitle}>{zh ? 'Premium 已启用' : 'Premium is active'}</Text>
+        <Text style={styles.memberSubtitle}>{zh ? '所有进阶记忆工具和会员权益都已为你解锁。' : 'Your advanced memory tools and member benefits are unlocked.'}</Text>
       </View>
-      <View style={styles.memberSection}><Text style={styles.memberSectionTitle}>{zh ? '本期权益' : 'This period'}</Text>
-        <View style={styles.memberRow}><View style={styles.checkCircle}><Check size={14} color={theme.onAccent} strokeWidth={3} /></View><Text style={styles.memberRowText}>{zh ? '所有 Premium 记忆工具已解锁' : 'All Premium memory tools are unlocked'}</Text></View>
-        <View style={styles.memberRow}><View style={styles.checkCircle}><Check size={14} color={theme.onAccent} strokeWidth={3} /></View><Text style={styles.memberRowText}>{zh ? 'AI credit 可用于联想故事和图片' : 'AI credits are ready for stories and images'}</Text></View>
+
+      <View style={styles.planCard}>
+        <Text style={styles.planCardEyebrow}>{zh ? '当前方案' : 'CURRENT PLAN'}</Text>
+        <Text style={styles.planCardTitle}>{planName}</Text>
+        <View style={styles.planCardDivider} />
+        <View style={styles.detailGrid}>
+          <View style={styles.detailCell}><Text style={styles.detailLabel}>{zh ? '续订方式' : 'Renewal'}</Text><Text style={styles.detailValue}>{renewalLabel}</Text></View>
+          <View style={styles.detailCellDivider} />
+          <View style={styles.detailCell}><Text style={styles.detailLabel}>{zh ? '本期结束' : 'Period ends'}</Text><Text style={styles.detailValue}>{periodDate}</Text></View>
+        </View>
       </View>
-      <View style={styles.manageCard}><View style={styles.manageCopy}><Text style={styles.manageTitle}>{zh ? '管理订阅' : 'Manage subscription'}</Text><Text style={styles.manageBody}>{expiresAt ? `${zh ? '当前周期至' : 'Current period ends'} ${new Date(expiresAt).toLocaleDateString()}` : (zh ? '订阅状态由账户同步。' : 'Subscription status is synced to your account.')}</Text></View><ChevronRight size={20} color={theme.inkSoft} /></View>
+
+      <View style={styles.creditSummary}>
+        <View style={styles.creditSummaryCell}><View style={[styles.creditSummaryIcon, styles.monthlyCreditIcon]}><Coins size={18} color={theme.violetDeep} /></View><Text style={styles.creditSummaryValue}>{config.monthlyAiCredits.toLocaleString()}</Text><Text style={styles.creditSummaryLabel}>{zh ? '每月发放' : 'Credits each month'}</Text></View>
+        <View style={styles.creditSummaryDivider} />
+        <View style={styles.creditSummaryCell}><View style={[styles.creditSummaryIcon, styles.availableCreditIcon]}><Sparkles size={18} color={theme.grass} /></View><Text style={styles.creditSummaryValue}>{credits.isPending ? '…' : (credits.data?.available ?? 0).toLocaleString()}</Text><Text style={styles.creditSummaryLabel}>{zh ? '当前可用' : 'Available now'}</Text></View>
+      </View>
+
+      <View style={styles.memberSection}><Text style={styles.memberSectionTitle}>{zh ? '你的全部权益' : 'Your Premium benefits'}</Text>
+        <View style={styles.creditBenefit}><View style={styles.checkCircle}><Check size={14} color={theme.onAccent} strokeWidth={3} /></View><View style={styles.memberRowCopy}><Text style={styles.memberRowTitle}>{zh ? `每月 ${config.monthlyAiCredits.toLocaleString()} AI credits` : `${config.monthlyAiCredits.toLocaleString()} AI credits every month`}</Text><Text style={styles.memberRowDescription}>{zh ? '可用于生成联想故事和图片，需要时仍可额外充值。' : 'Use them for AI stories and images, with optional top-ups whenever needed.'}</Text></View></View>
+        {config.features.map((feature) => <View key={feature.key} style={styles.memberRow}><View style={styles.checkCircle}><Check size={14} color={theme.onAccent} strokeWidth={3} /></View><View style={styles.memberRowCopy}><Text style={styles.memberRowTitle}>{feature.title}</Text><Text style={styles.memberRowDescription}>{feature.description}</Text></View></View>)}
+      </View>
+
+      <Text style={styles.syncNote}>{zh ? '订阅状态由 MemoPal 账户安全同步。商店订阅管理将在支付服务接入后开放。' : 'Subscription status is securely synced from your MemoPal account. Store management will be available after billing is connected.'}</Text>
+
     </ScrollView>
   </View>;
 }
 
 const useMemberStyles = createThemedStyles((theme) => StyleSheet.create({
   memberPage: { flex: 1, backgroundColor: theme.canvas },
-  memberContent: { padding: 16, gap: 16, paddingBottom: 40 }, memberHero: { borderRadius: 28, padding: 22, backgroundColor: theme.night, overflow: 'hidden' }, memberOrb: { width: 62, height: 62, borderRadius: 22, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,201,60,0.16)', borderWidth: 1, borderColor: 'rgba(255,201,60,0.35)' },
-  memberTitle: { color: '#FFF', fontFamily: typography.displayExtraBold, fontSize: 27, lineHeight: 34, marginTop: 18 }, memberSubtitle: { color: 'rgba(255,255,255,0.75)', fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20, marginTop: 5 }, activeBadge: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 5, marginTop: 18, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: 'rgba(255,201,60,0.16)' }, activeBadgeText: { color: theme.sun, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
-  memberSection: { borderRadius: 22, padding: 17, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, gap: 14 }, memberSectionTitle: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase' }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 10 }, checkCircle: { width: 26, height: 26, borderRadius: 10, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.grass }, memberRowText: { flex: 1, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 }, manageCard: { minHeight: 76, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.violetTint, borderWidth: 1.5, borderColor: theme.violetLine }, manageCopy: { flex: 1 }, manageTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 }, manageBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, marginTop: 4 },
+  memberContent: { padding: 16, gap: 14, paddingBottom: 40 }, memberHero: { borderRadius: 24, padding: 20, backgroundColor: theme.night, overflow: 'hidden' }, memberHeroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, memberOrb: { width: 50, height: 50, borderRadius: 17, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,201,60,0.14)', borderWidth: 1, borderColor: 'rgba(255,201,60,0.28)' },
+  memberEyebrow: { color: theme.sun, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 1, marginTop: 18 }, memberTitle: { color: '#FFF', fontFamily: typography.displayExtraBold, fontSize: 27, lineHeight: 34, marginTop: 4 }, memberSubtitle: { color: 'rgba(255,255,255,0.72)', fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 3, maxWidth: '90%' }, activeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: 'rgba(63,184,127,0.15)', borderWidth: 1, borderColor: 'rgba(95,208,154,0.28)' }, activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.grass }, activeBadgeText: { color: '#8BE0B4', fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.7 },
+  planCard: { borderRadius: 22, padding: 17, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, boxShadow: '0px 4px 0px rgba(105,80,204,0.06)' }, planCardEyebrow: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.8 }, planCardTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 21, marginTop: 4 }, planCardDivider: { height: 1, backgroundColor: theme.line, marginVertical: 14 },
+  detailGrid: { minHeight: 54, flexDirection: 'row', alignItems: 'stretch' }, detailCell: { flex: 1, justifyContent: 'center' }, detailCellDivider: { width: 1, marginHorizontal: 14, backgroundColor: theme.line }, detailLabel: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.4 }, detailValue: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, lineHeight: 16, marginTop: 5 },
+  creditSummary: { minHeight: 118, borderRadius: 22, padding: 15, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line }, creditSummaryCell: { flex: 1, alignItems: 'center' }, creditSummaryIcon: { width: 34, height: 34, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }, monthlyCreditIcon: { backgroundColor: theme.violetTint }, availableCreditIcon: { backgroundColor: theme.mintTint }, creditSummaryValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 23, marginTop: 6 }, creditSummaryLabel: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 1 }, creditSummaryDivider: { width: 1, height: 66, backgroundColor: theme.line },
+  memberSection: { borderRadius: 22, padding: 17, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, gap: 16 }, memberSectionTitle: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.9, textTransform: 'uppercase' }, memberRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 }, creditBenefit: { flexDirection: 'row', alignItems: 'flex-start', gap: 11, paddingBottom: 15, borderBottomWidth: 1, borderBottomColor: theme.line }, checkCircle: { width: 25, height: 25, borderRadius: 9, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.violetDeep }, memberRowCopy: { flex: 1, minWidth: 0 }, memberRowTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, lineHeight: 18 }, memberRowDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, lineHeight: 15, marginTop: 2 }, syncNote: { color: theme.inkMuted, fontFamily: typography.bodySemibold, fontSize: 9, lineHeight: 14, textAlign: 'center', paddingHorizontal: 18, marginTop: 2 },
 }));

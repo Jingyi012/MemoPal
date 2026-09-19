@@ -24,6 +24,7 @@ export interface PremiumTermsSectionConfig {
 }
 
 export interface PremiumSubscriptionConfig {
+  monthlyAiCredits: number;
   hero: {
     title: string;
     subtitle: string;
@@ -55,6 +56,13 @@ export const PREMIUM_SUBSCRIPTION_CONFIG_SCHEMA = {
   title: 'Premium Subscription Configuration',
   description: 'Configure premium page content, terms, and CTA behavior in mobile app',
   properties: {
+    monthlyAiCredits: {
+      type: 'integer',
+      title: 'AI Credits Granted Each Month',
+      description: 'Monthly allowance for every active Premium subscriber, including yearly plans.',
+      minimum: 0,
+      maximum: 1000000,
+    },
     hero: {
       type: 'object',
       title: 'Hero Section',
@@ -182,11 +190,12 @@ export const PREMIUM_SUBSCRIPTION_CONFIG_SCHEMA = {
       additionalProperties: false,
     },
   },
-  required: ['hero', 'sections', 'plans', 'features', 'subscribeButton', 'footer', 'terms'],
+  required: ['monthlyAiCredits', 'hero', 'sections', 'plans', 'features', 'subscribeButton', 'footer', 'terms'],
   additionalProperties: false,
 } as const;
 
 export const PREMIUM_SUBSCRIPTION_CONFIG_DEFAULT: PremiumSubscriptionConfig = {
+  monthlyAiCredits: 100,
   hero: {
     title: 'Go Premium',
     subtitle: 'Unlock your full memory potential',

@@ -25,6 +25,13 @@ function normalizeConfigShape(
   parsedValue: unknown,
   defaultValue: Record<string, unknown>,
 ): Record<string, unknown> {
+  if (configKey === "ai.credits" || configKey === "premium.subscription") {
+    if (parsedValue && typeof parsedValue === "object" && !Array.isArray(parsedValue)) {
+      return { ...defaultValue, ...(parsedValue as Record<string, unknown>) };
+    }
+    return defaultValue;
+  }
+
   if (configKey === "level.configs") {
     if (parsedValue && typeof parsedValue === "object" && !Array.isArray(parsedValue)) {
       const source = parsedValue as Record<string, unknown>;

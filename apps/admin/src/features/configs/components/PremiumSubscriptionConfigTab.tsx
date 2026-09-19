@@ -25,7 +25,7 @@ export const PremiumSubscriptionConfigTab: React.FC = () => {
       <Alert
         type="info"
         message="Premium Subscription"
-        description="Configure premium page content, plans, terms, and whether the subscription CTA is enabled."
+        description="Configure premium page content, monthly AI credit allowance, plans, terms, and whether the subscription CTA is enabled. The allowance applies every month to both monthly and yearly subscribers."
         showIcon
         style={{ marginBottom: 16 }}
       />

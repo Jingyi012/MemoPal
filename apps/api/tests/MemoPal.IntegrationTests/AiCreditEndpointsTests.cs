@@ -30,6 +30,8 @@ public sealed class AiCreditEndpointsTests : IClassFixture<AiCreditEndpointsTest
             var wallet = await Data(await user.GetAsync("/v1/ai-credits"));
             Assert.Equal(0, wallet.GetProperty("available").GetInt32());
             Assert.False(wallet.GetProperty("purchasesEnabled").GetBoolean());
+            Assert.Equal("USD", wallet.GetProperty("purchaseConfig").GetProperty("currencyCode").GetString());
+            Assert.True(wallet.GetProperty("purchaseConfig").GetProperty("customPurchaseEnabled").GetBoolean());
         }
     }
 

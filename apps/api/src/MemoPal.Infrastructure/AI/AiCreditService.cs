@@ -54,9 +54,23 @@ public sealed class AiCreditService(AppDbContext db, IOptions<AiCreditOptions> o
         var grants = await db.AiCreditGrants.AsNoTracking().Where(x => x.UserId == userId && x.Remaining > 0 &&
             (!x.ExpiresAt.HasValue || x.ExpiresAt > now)).ToListAsync(ct);
         var subscription = grants.Where(x => x.Source == "subscription").Sum(x => x.Remaining);
+        var purchaseConfig = new AiCreditPurchaseConfig(
+            options.Value.CurrencyCode,
+            options.Value.CurrencySymbol,
+            options.Value.CustomPurchaseEnabled,
+            options.Value.CustomMinCredits,
+            options.Value.CustomMaxCredits,
+            options.Value.CustomStep,
+            options.Value.PricePerCredit,
+            options.Value.PurchasePacks
+                .Where(x => x.IsActive)
+                .OrderBy(x => x.SortOrder)
+                .Select(x => new AiCreditPurchasePack(x.Key, x.Credits, x.Price, x.Label, x.Badge))
+                .ToList());
         return new AiCreditBalance(grants.Sum(x => x.Remaining), subscription,
             grants.Where(x => x.Source != "subscription").Sum(x => x.Remaining),
-            grants.Min(x => x.ExpiresAt), TextCost(), options.Value.ImageCost, ImagesEnabled(), false, imageOptions.Value.IsConfigured);
+            grants.Min(x => x.ExpiresAt), TextCost(), options.Value.ImageCost, ImagesEnabled(),
+            options.Value.PurchasesEnabled, imageOptions.Value.IsConfigured, purchaseConfig);
     }
 
     public Task ReconcileAsync(string userId, CancellationToken ct) => LockedAsync(userId, async () =>
