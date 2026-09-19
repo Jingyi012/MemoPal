@@ -40,7 +40,7 @@ export function NumberPegItemCard({ item, locked = false, compact = false }: Pro
       <View
         style={{
           position: 'absolute',
-          left: compact ? 31 : 37,
+          left: compact ? 6 : 8,
           top: compact ? 6 : 8,
           minWidth: compact ? 19 : 22,
           height: compact ? 19 : 22,

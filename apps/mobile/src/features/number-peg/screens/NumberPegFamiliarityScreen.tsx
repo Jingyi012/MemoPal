@@ -2,20 +2,27 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
-import { buildNumberPegItems } from '@/features/number-peg/utils/numberPegMap';
+import { buildAllNumberPegItems, getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
+import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight, Check, RefreshCcw, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
 type Feedback = 'correct' | 'wrong' | null;
 
 export default function NumberPegFamiliarityScreen() {
   const router = useRouter();
+  const { width: windowWidth } = useWindowDimensions();
   const { t } = useTranslation('numberPeg');
-  const pegs = useMemo(() => buildNumberPegItems(), []);
+  const { user } = useCurrentUser();
+  const unlockedCount = getUnlockedPegCount(Math.max(1, user?.level ?? 1));
+  const [started, setStarted] = useState(false);
+  const [rangeStart, setRangeStart] = useState(1);
+  const rangeOptions = useMemo(() => Array.from({ length: Math.ceil(unlockedCount / 10) }, (_, index) => index * 10 + 1), [unlockedCount]);
+  const pegs = useMemo(() => buildAllNumberPegItems().slice(rangeStart - 1, Math.min(rangeStart + 9, unlockedCount)), [rangeStart, unlockedCount]);
   const localizedPegs = useMemo(() => pegs.map((peg) => localizeNumberPeg(peg, t)), [pegs, t]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -26,7 +33,21 @@ export default function NumberPegFamiliarityScreen() {
   const current = localizedPegs[questionIndex];
   const choices = useMemo(() => {
     if (!current) return [];
-    return [current, localizedPegs[(questionIndex + 3) % localizedPegs.length], localizedPegs[(questionIndex + 6) % localizedPegs.length]];
+    const ordered = [
+      current,
+      localizedPegs[(questionIndex + 3) % localizedPegs.length],
+      localizedPegs[(questionIndex + 6) % localizedPegs.length],
+    ];
+    // Shuffle each question independently, but deterministically. This keeps
+    // choices stable during re-renders without creating a visible 1-2-3 cycle.
+    let seed = hashChoiceSeed(`${current.id}:${questionIndex}`);
+    return ordered
+      .map((choice) => {
+        seed = nextChoiceSeed(seed);
+        return { choice, sortKey: seed };
+      })
+      .sort((left, right) => left.sortKey - right.sortKey)
+      .map(({ choice }) => choice);
   }, [current, localizedPegs, questionIndex]);
 
   const choose = (pegId: string) => {
@@ -48,6 +69,7 @@ export default function NumberPegFamiliarityScreen() {
     setSelectedId(null);
     setFeedback(null);
     setScore(0);
+    setStarted(true);
   };
 
   return (
@@ -59,7 +81,26 @@ export default function NumberPegFamiliarityScreen() {
         backAction={() => router.back()}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {isComplete ? (
+        {!started ? (
+          <View style={styles.rangeCard}>
+            <Text style={styles.rangeEyebrow}>{t('chooseAnchorRange')}</Text>
+            <Text style={styles.rangeTitle}>{t('chooseAnchorRangeBody')}</Text>
+            <View style={styles.rangeGrid}>
+              {rangeOptions.map((start) => {
+                const end = Math.min(start + 9, unlockedCount);
+                const selected = start === rangeStart;
+                const optionWidth = Math.max(120, Math.floor((windowWidth - 100) / 2));
+                return <AnimatedPressable key={start} accessibilityRole="radio" accessibilityState={{ selected }} onPress={() => setRangeStart(start)} style={[styles.rangeOption, { width: optionWidth }, selected && styles.rangeOptionSelected]}>
+                  <Text style={[styles.rangeNumber, selected && styles.rangeNumberSelected]}>{start}–{end}</Text>
+                  <Text style={[styles.rangeLabel, selected && styles.rangeLabelSelected]}>{t('anchors')}</Text>
+                </AnimatedPressable>;
+              })}
+            </View>
+            <AnimatedPressable onPress={() => setStarted(true)} style={styles.rangeStartButton}>
+              <Text style={styles.rangeStartText}>{t('startRange')}</Text><ArrowRight size={18} color={theme.onSun} />
+            </AnimatedPressable>
+          </View>
+        ) : isComplete ? (
           <View style={styles.completeCard}>
             <Text style={styles.completeEmoji}>{score === pegs.length ? '🎉' : '🌟'}</Text>
             <Text style={styles.completeTitle}>{t('familiarityComplete')}</Text>
@@ -88,9 +129,13 @@ export default function NumberPegFamiliarityScreen() {
               </View>
             </View>
 
-            <View style={styles.progressRow}>
-              {pegs.map((peg, index) => <View key={peg.id} style={[styles.progressDot, index < questionIndex && styles.progressDone, index === questionIndex && styles.progressCurrent]} />)}
-            </View>
+            {pegs.length <= 20 ? (
+              <View style={styles.progressRow}>
+                {pegs.map((peg, index) => <View key={peg.id} style={[styles.progressDot, index < questionIndex && styles.progressDone, index === questionIndex && styles.progressCurrent]} />)}
+              </View>
+            ) : (
+              <Text style={styles.progressCount}>{questionIndex + 1} / {pegs.length}</Text>
+            )}
 
             <View style={styles.questionCard}>
               <View style={styles.numberBadge}><Text style={styles.numberBadgeText}>{current.number}</Text></View>
@@ -141,15 +186,36 @@ export default function NumberPegFamiliarityScreen() {
   );
 }
 
+function hashChoiceSeed(value: string): number {
+  return Array.from(value).reduce((hash, character) => ((hash * 31) + character.charCodeAt(0)) >>> 0, 2166136261);
+}
+
+function nextChoiceSeed(seed: number): number {
+  return (seed * 1664525 + 1013904223) >>> 0;
+}
+
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 42 },
+  rangeCard: { borderRadius: 23, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.paper, padding: 18 },
+  rangeEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase' },
+  rangeTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 20, lineHeight: 27, marginTop: 7 },
+  rangeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 17 },
+  rangeOption: { minHeight: 65, alignItems: 'center', justifyContent: 'center', borderRadius: 15, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.canvas, padding: 7 },
+  rangeOptionSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint },
+  rangeNumber: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 },
+  rangeNumberSelected: { color: theme.violetDeep },
+  rangeLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9, marginTop: 2 },
+  rangeLabelSelected: { color: theme.violetDeep },
+  rangeStartButton: { minHeight: 49, marginTop: 17, borderRadius: 14, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
+  rangeStartText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   tipCard: { flexDirection: 'row', gap: 11, borderRadius: 18, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 14 },
   tipIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF0F4' },
   tipEmoji: { fontSize: 21 },
   tipTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   tipBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 3 },
   progressRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 7, marginVertical: 19 },
+  progressCount: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center', marginVertical: 18 },
   progressDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: theme.line },
   progressDone: { backgroundColor: theme.grass },
   progressCurrent: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.25 }] },
