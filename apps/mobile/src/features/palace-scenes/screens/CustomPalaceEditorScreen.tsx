@@ -52,6 +52,7 @@ export default function CustomPalaceEditorScreen() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [canvasSize, setCanvasSize] = useState<CanvasSize>({ width: 1, height: 1 });
   const [message, setMessage] = useState<string | null>(null);
+  const [editorStep, setEditorStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const [hydratedSceneId, setHydratedSceneId] = useState<string | null>(null);
   const [draftHydrated, setDraftHydrated] = useState(Boolean(sceneId));
@@ -281,6 +282,17 @@ export default function CustomPalaceEditorScreen() {
           </View>
         </View>
 
+        <View style={styles.workflowCard}>
+          {[t('namePalace'), t('sceneImage'), t('setupLoci')].map((step, index) => (
+            <View key={step} style={styles.workflowStep}>
+              <View style={[styles.workflowNumber, index + 1 === editorStep && styles.workflowNumberActive]}>
+                <Text style={[styles.workflowNumberText, index + 1 === editorStep && styles.workflowNumberTextActive]}>{index + 1}</Text>
+              </View>
+              <Text numberOfLines={1} style={[styles.workflowLabel, index + 1 === editorStep && styles.workflowLabelActive]}>{step}</Text>
+            </View>
+          ))}
+        </View>
+
         {!canSave ? (
           <View style={styles.upgradeCard}>
             <View style={styles.upgradeIcon}>
@@ -298,7 +310,8 @@ export default function CustomPalaceEditorScreen() {
           </View>
         ) : null}
 
-        <Text style={styles.label}>{t('namePalace')}</Text>
+        {editorStep === 1 ? <View style={styles.stepPanel}>
+        <Text style={styles.panelTitle}>{t('namePalace')}</Text>
         <TextInput
           value={name}
           onChangeText={setName}
@@ -323,11 +336,29 @@ export default function CustomPalaceEditorScreen() {
           cursorColor={theme.violetDeep}
           style={[styles.input, styles.descriptionInput]}
         />
+        <AnimatedPressable
+          containerStyle={styles.nextButtonFull}
+          onPress={() => setEditorStep(2)}
+          style={[styles.nextButton, styles.nextButtonFull]}>
+          <Text style={styles.nextButtonText}>{t('continue')}</Text>
+        </AnimatedPressable>
+        </View> : null}
 
-        <Text style={styles.label}>{t('sceneImage')}</Text>
-        <AnimatedPressable onPress={chooseImage} style={styles.imageButton}>
+        {editorStep === 2 ? <View style={styles.stepPanel}>
+        <Text style={styles.panelTitle}>{t('sceneImage')}</Text>
+        <AnimatedPressable
+          accessibilityRole="button"
+          accessibilityLabel={imageUri ? t('replacePhoto') : t('choosePhoto')}
+          onPress={chooseImage}
+          style={styles.imageButton}>
           {imageUri ? (
-            <AppImage source={{ uri: imageUri }} style={styles.imagePreview} />
+            <View pointerEvents="none" style={styles.imagePreviewWrap}>
+              <AppImage source={{ uri: imageUri }} style={styles.imagePreview} />
+              <View style={styles.imagePreviewShade} />
+              <View style={styles.imageReplacePill}>
+                <Text style={styles.imageReplaceText}>{t('replacePhoto')}</Text>
+              </View>
+            </View>
           ) : (
             <>
               <Text style={styles.imageButtonEmoji}>🖼️</Text>
@@ -338,7 +369,19 @@ export default function CustomPalaceEditorScreen() {
             </>
           )}
         </AnimatedPressable>
+        <View style={styles.stepActions}>
+          <AnimatedPressable onPress={() => setEditorStep(1)} style={styles.backButton}><Text style={styles.backButtonText}>{t('back')}</Text></AnimatedPressable>
+          <AnimatedPressable
+            containerStyle={styles.nextButtonInRow}
+            disabled={!imageUri}
+            onPress={() => setEditorStep(3)}
+            style={[styles.nextButton, styles.nextButtonFull, styles.nextButtonInRowInner, !imageUri && styles.disabled]}>
+            <Text style={styles.nextButtonText}>{t('continue')}</Text>
+          </AnimatedPressable>
+        </View>
+        </View> : null}
 
+        {editorStep === 3 ? <View style={styles.stepPanel}>
         <View style={styles.locusHeading}>
           <View style={styles.flex}>
             <Text style={styles.label}>{t('setupLoci')}</Text>
@@ -470,6 +513,8 @@ export default function CustomPalaceEditorScreen() {
                   : t('unlockCustomPalaces')}
           </Text>
         </AnimatedPressable>
+        <AnimatedPressable onPress={() => setEditorStep(2)} style={styles.backButton}><Text style={styles.backButtonText}>{t('back')}</Text></AnimatedPressable>
+        </View> : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -497,6 +542,46 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginTop: 3,
   },
+  workflowCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingVertical: 3 },
+  workflowStep: { alignItems: 'center', flex: 1, gap: 5 },
+  workflowNumber: { width: 25, height: 25, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.canvas, borderWidth: 1.5, borderColor: theme.line },
+  workflowNumberActive: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
+  workflowNumberText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  workflowNumberTextActive: { color: theme.onAccent },
+  workflowLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, textAlign: 'center' },
+  workflowLabelActive: { color: theme.violetDeep },
+  stepPanel: { marginTop: 4 },
+  panelTitle: {
+    color: theme.ink,
+    fontFamily: typography.displayExtraBold,
+    fontSize: 19,
+    marginTop: 12,
+    marginBottom: 2,
+  },
+  stepActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  nextButton: {
+    minHeight: 50,
+    borderRadius: 14,
+    backgroundColor: theme.sun,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  nextButtonFull: { width: '100%' },
+  nextButtonInRow: { flex: 1, minWidth: 0 },
+  nextButtonInRowInner: { marginTop: 0 },
+  nextButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  backButton: {
+    minHeight: 50,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: theme.line,
+    backgroundColor: theme.canvas,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+  },
+  backButtonText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   upgradeCard: {
     marginTop: 14,
     borderRadius: 19,
@@ -548,11 +633,11 @@ const styles = StyleSheet.create({
   },
   optional: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
   input: {
-    minHeight: 50,
+    minHeight: 52,
     borderRadius: 14,
     borderWidth: 2,
     borderColor: theme.line,
-    backgroundColor: 'white',
+    backgroundColor: theme.paper,
     paddingHorizontal: 14,
     color: theme.ink,
     fontFamily: typography.bodySemibold,
@@ -564,19 +649,29 @@ const styles = StyleSheet.create({
     height: 185,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#DCD4FF',
+    borderColor: theme.violetLine,
     borderStyle: 'dashed',
-    backgroundColor: '#F7F5FF',
+    backgroundColor: theme.violetTint,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   imagePreview: { ...StyleSheet.absoluteFillObject },
+  imagePreviewWrap: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'flex-end' },
+  imagePreviewShade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(28, 24, 50, 0.12)' },
+  imageReplacePill: {
+    marginBottom: 12,
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+  },
+  imageReplaceText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   imageButtonTitle: {
     color: theme.violetDeep,
     fontFamily: typography.bodyExtraBold,
     fontSize: 14,
-    marginTop: 8,
+    marginTop: 9,
   },
   imageButtonEmoji: { fontSize: 28 },
   imageButtonBody: {
@@ -601,9 +696,9 @@ const styles = StyleSheet.create({
     marginTop: 5,
     borderRadius: 21,
     borderWidth: 2,
-    borderColor: '#DCD4FF',
+    borderColor: theme.violetLine,
     overflow: 'hidden',
-    backgroundColor: '#EEE9FF',
+    backgroundColor: theme.violetTint,
   },
   canvasEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
   canvasEmptyText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
