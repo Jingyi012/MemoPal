@@ -28,6 +28,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { MemoryActionsSheet } from '../components/MemoryActionsSheet';
 import { DiscoverMemorySetsScreen } from './DiscoverMemorySetsScreen';
@@ -50,6 +51,7 @@ const filters: { key: LibraryFilter }[] = [
 export default function LibraryScreen() {
   const { styles, theme } = useStyles();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const scroll = useRef<ScrollView>(null);
   const [replayRequested, setReplayRequested] = useState(false);
   const { user: authUser } = useAuth();
@@ -470,6 +472,16 @@ export default function LibraryScreen() {
           </AnimatedPressable>
         ) : pagedMemorySets.isFetchingNextPage ? <Text style={styles.loadMoreText}>{t('loading')}</Text> : null}
       </ScrollView>}
+      {libraryTab === 'mine' ? (
+        <AnimatedPressable
+          accessibilityRole="button"
+          accessibilityLabel={t('create')}
+          accessibilityHint={t('newMemoryBody')}
+          onPress={createMemory}
+          style={[styles.createFab, { bottom: Math.max(16, insets.bottom + 10), backgroundColor: activeTheme.sun }]}>
+          <Plus size={26} color={activeTheme.onSun} strokeWidth={2.8} />
+        </AnimatedPressable>
+      ) : null}
 
       <MemoryActionsSheet
         ref={memoryActionsRef}
@@ -627,7 +639,8 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   libraryTabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   libraryTabEmoji: { fontSize: 16, lineHeight: 20 },
   libraryTabTextSelected: { color: theme.onAccent},
-  content: { padding: 20, paddingBottom: 40 },
+  content: { padding: 20, paddingBottom: 112 },
+  createFab: { alignItems: 'center', borderRadius: 30, elevation: 6, height: 60, justifyContent: 'center', position: 'absolute', right: 20, shadowColor: theme.ink, shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 60 },
   summaryCard: {
     minHeight: 112,
     flexDirection: 'row',
