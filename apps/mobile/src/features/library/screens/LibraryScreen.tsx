@@ -272,6 +272,13 @@ export default function LibraryScreen() {
   const runCollectionActionAfterDismiss = (action: () => void) => {
     pendingCollectionActionRef.current = action;
     collectionActionsRef.current?.dismiss();
+    setTimeout(() => {
+      const pending = pendingCollectionActionRef.current;
+      if (!pending) return;
+      pendingCollectionActionRef.current = undefined;
+      setActionCollection(undefined);
+      pending();
+    }, 260);
   };
 
   const handleCollectionActionsDismiss = () => {

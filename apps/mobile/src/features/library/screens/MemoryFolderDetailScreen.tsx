@@ -31,7 +31,8 @@ export default function MemoryFolderDetailScreen() {
   const insets = useSafeAreaInsets();
   const { userState } = useUserState();
   const { isOffline, canShowRequestErrors } = useNetworkStatus();
-  const { folderId } = useLocalSearchParams<{ folderId: string }>();
+  const params = useLocalSearchParams<{ folderId?: string | string[] }>();
+  const folderId = Array.isArray(params.folderId) ? params.folderId[0] : params.folderId;
   const folderQuery = useMemoryFolders();
   const setsQuery = useInfiniteMemorySets(folderId ? { folderId } : undefined);
   const { createFolder, renameFolder } = useMemoryFolderMutations();
@@ -126,8 +127,18 @@ export default function MemoryFolderDetailScreen() {
       onError: () => Toast.show({ type: 'error', text1: t('folderError') }),
     });
   };
+  const openFolderEditor = () => {
+    if (folder) {
+      setEditFolder(folder);
+      return;
+    }
+    void folderQuery.refetch().then((result) => {
+      const refreshed = result.data?.find((item) => item.id === folderId);
+      if (refreshed) setEditFolder(refreshed);
+    });
+  };
   return <View style={styles.page}>
-    <CommonHeader eyebrow={t('folderEyebrow')} title={folder?.name ?? t('folder')} description={folder ? `${folder.memorySetCount} ${folder.memorySetCount === 1 ? t('list') : t('lists')} · ${folder.itemCount} ${folder.itemCount === 1 ? t('item') : t('items')}` : undefined} backAction={() => router.back()} actions={[{ component: <AnimatedPressable accessibilityLabel={t('editCollection')} disabled={!folder} onPress={() => folder && setEditFolder(folder)} style={styles.editButton}><Pencil size={18} color={theme.violetDeep} /></AnimatedPressable> }]} />
+    <CommonHeader eyebrow={t('folderEyebrow')} title={folder?.name ?? t('folder')} description={folder ? `${folder.memorySetCount} ${folder.memorySetCount === 1 ? t('list') : t('lists')} · ${folder.itemCount} ${folder.itemCount === 1 ? t('item') : t('items')}` : undefined} backAction={() => router.back()} actions={[{ icon: Pencil, accessibilityLabel: t('editCollection'), onPress: openFolderEditor }]} />
     <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={setsQuery.isRefetching} onRefresh={() => { void Promise.allSettled([folderQuery.refetch(), setsQuery.refetch()]); }} />}>
       {sets.length ? <View style={[styles.list, userState.ui.libraryViewMode !== 'list' && styles.cardGrid]}>{sets.map((memorySet) => <View key={memorySet.id} style={userState.ui.libraryViewMode !== 'list' ? styles.cardGridItem : undefined}><MemorySetCard memorySet={memorySet} onOpen={() => router.push(`/memory-details/${memorySet.id}` as Href)} onActions={() => { setActionMemorySet(memorySet); actionsRef.current?.present(); }} layout={userState.ui.libraryViewMode === 'list' ? 'row' : 'grid'} variant={userState.ui.libraryViewMode === 'list' ? 'list' : 'card'} /></View>)}</View> : !isOffline && setsQuery.isLoading ? <View style={styles.loading}><LoadingView description={t('loading')} /></View> : canShowRequestErrors && setsQuery.isError ? <View style={styles.notice}><Text style={styles.noticeTitle}>{t('unavailable')}</Text><Text style={styles.noticeBody}>{getNumberPegErrorMessage(setsQuery.error, t('connectionRetry'))}</Text><AnimatedPressable onPress={() => setsQuery.refetch()} style={styles.retry}><RefreshCcw size={16} color={theme.onSun} /><Text style={styles.retryText}>{t('retry')}</Text></AnimatedPressable></View> : !isOffline ? <View style={styles.notice}><Text style={styles.empty}>{folder?.emoji ?? '📚'}</Text><Text style={styles.noticeTitle}>{t('folderEmpty')}</Text><Text style={styles.noticeBody}>{t('folderEmptyBody')}</Text><AnimatedPressable onPress={() => router.push(`/create-memory?memoryFolderId=${encodeURIComponent(folderId ?? '')}` as Href)} style={styles.create}><Plus size={17} color={theme.onAccent} /><Text style={styles.createText}>{t('create')}</Text></AnimatedPressable></View> : null}
       {!isOffline && setsQuery.hasNextPage ? <AnimatedPressable onPress={() => void setsQuery.fetchNextPage()} style={styles.loadMore}><Text style={styles.loadMoreText}>{t('loadMore')}</Text></AnimatedPressable> : null}

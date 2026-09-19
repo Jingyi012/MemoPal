@@ -1,24 +1,17 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemoryFolderCreateRequest } from '../types/memoryFolder.types';
 
 export function FolderNameModal({ visible, initialName, initialEmoji, initialDescription, isLoading, onCancel, onSubmit }: { visible: boolean; initialName?: string; initialEmoji?: string; initialDescription?: string; isLoading?: boolean; onCancel: () => void; onSubmit: (collection: MemoryFolderCreateRequest) => void }) {
   const { styles, theme } = useStyles();
   const { t } = useTranslation('library');
-  const sheetRef = useRef<BottomSheetModal>(null);
   const [name, setName] = useState(initialName ?? '');
   const [emoji, setEmoji] = useState(initialEmoji ?? '📚');
   const [description, setDescription] = useState(initialDescription ?? '');
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
   useEffect(() => {
     if (!visible) return;
     setName(initialName ?? '');
@@ -29,10 +22,13 @@ export function FolderNameModal({ visible, initialName, initialEmoji, initialDes
     const value = name.trim();
     if (value) onSubmit({ name: value, emoji: emoji.trim() || '📚', description: description.trim() });
   };
-  const close = () => { sheetRef.current?.dismiss(); onCancel(); };
-  return <CustomBottomSheetModal ref={sheetRef} enableDynamicSizing backgroundStyle={styles.sheetBackground}>
-    <BottomSheetScrollView contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled">
-      <View style={styles.dialog}>
+  const close = () => onCancel();
+  return <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalRoot}>
+      <Pressable style={styles.backdrop} onPress={close} />
+      <View style={styles.sheet}>
+        <ScrollView contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.dialog}>
           <Text style={styles.title}>{initialName ? t('editCollection') : t('newFolder')}</Text>
           <Text style={styles.body}>{t('folderNamePrompt')}</Text>
           <TextInput autoFocus value={name} onChangeText={setName} editable={!isLoading} maxLength={80} placeholder={t('folderNamePlaceholder')} placeholderTextColor={theme.inkSoft} style={styles.input} accessibilityLabel={t('folderNamePrompt')} returnKeyType="next" />
@@ -52,13 +48,17 @@ export function FolderNameModal({ visible, initialName, initialEmoji, initialDes
               <Text style={styles.confirmText}>{initialName ? t('save') : t('create')}</Text>
             </AnimatedPressable>
           </View>
+          </View>
+        </ScrollView>
       </View>
-    </BottomSheetScrollView>
-  </CustomBottomSheetModal>;
+    </KeyboardAvoidingView>
+  </Modal>;
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  sheetBackground: { backgroundColor: theme.paper, borderRadius: 30 },
+  modalRoot: { flex: 1, justifyContent: 'flex-end' },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(22, 20, 35, 0.42)' },
+  sheet: { maxHeight: '90%', backgroundColor: theme.paper, borderTopLeftRadius: 30, borderTopRightRadius: 30, overflow: 'hidden' },
   sheetContent: { paddingBottom: 24, paddingHorizontal: 20, paddingTop: 8 },
   dialog: { backgroundColor: theme.paper, width: '100%' },
   title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 21, textAlign: 'center' },
