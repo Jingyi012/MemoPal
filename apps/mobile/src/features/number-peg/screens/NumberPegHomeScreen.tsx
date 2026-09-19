@@ -55,12 +55,14 @@ export default function NumberPegHomeScreen() {
         <NumberPegStoryHero onStart={() => router.push('/number-peg/create' as Href)} />
 
         <AnimatedPressable onPress={() => router.push('/number-peg/familiarity' as Href)} style={styles.familiarityCard}>
+          <View style={styles.familiarityGlow} />
           <View style={styles.familiarityIcon}><Text style={styles.familiarityEmoji}>🧠</Text></View>
           <View style={styles.familiarityCopy}>
+            <View style={styles.familiarityMeta}><Text style={styles.familiarityKicker}>{t('familiarityKicker')}</Text><Text style={styles.familiarityBadge}>1–100</Text></View>
             <Text style={styles.familiarityTitle}>{t('familiarityTitle')}</Text>
             <Text style={styles.familiarityBody}>{t('familiarityBody')}</Text>
           </View>
-          <ArrowRight size={18} color={theme.inkSoft} />
+          <View style={styles.familiarityArrow}><ArrowRight size={17} color={theme.violetDeep} /></View>
         </AnimatedPressable>
 
         <View style={styles.sectionHeadingRow}>
@@ -134,27 +136,32 @@ export default function NumberPegHomeScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 16, paddingBottom: 40 },
+  content: { padding: 16, paddingBottom: 44 },
   heroEmoji: { fontSize: 27 },
-  familiarityCard: { minHeight: 72, borderRadius: 18, borderWidth: 2, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 12, marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  familiarityIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
+  familiarityCard: { minHeight: 82, borderRadius: 20, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, padding: 12, marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 11, overflow: 'hidden', shadowColor: theme.ink, shadowOpacity: 0.06, shadowRadius: 7, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  familiarityGlow: { position: 'absolute', width: 110, height: 110, borderRadius: 55, right: -36, top: -48, backgroundColor: theme.paper, opacity: 0.55 },
+  familiarityIcon: { width: 46, height: 46, borderRadius: 15, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center', shadowColor: theme.ink, shadowOpacity: 0.07, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
   familiarityEmoji: { fontSize: 21 },
   familiarityCopy: { flex: 1 },
-  familiarityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  familiarityBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 3 },
+  familiarityMeta: { alignItems: 'center', flexDirection: 'row', gap: 6, marginBottom: 2 },
+  familiarityKicker: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 8, letterSpacing: 1 },
+  familiarityBadge: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, backgroundColor: theme.paper, borderRadius: 999, paddingHorizontal: 6, paddingVertical: 2 },
+  familiarityTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 },
+  familiarityBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 15, marginTop: 2 },
+  familiarityArrow: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
   sectionHeadingRow: {
-    marginTop: 28,
-    marginBottom: 11,
+    marginTop: 24,
+    marginBottom: 9,
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  sectionEyebrow: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
-  sectionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 3 },
+  sectionEyebrow: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 1.1 },
+  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, marginTop: 3 },
   sectionHeadingCopy: { flex: 1, paddingRight: 10 },
-  seeAllButton: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: theme.berryTint, paddingLeft: 11, paddingRight: 7 },
-  seeAllText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  seeAllButton: { minHeight: 38, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: theme.violetTint, borderWidth: 1, borderColor: theme.violetLine, paddingLeft: 11, paddingRight: 7 },
+  seeAllText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   pegRail: { marginHorizontal: -16, paddingLeft: 16 },
-  unlockHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, marginTop: 8 },
+  unlockHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, lineHeight: 14, marginTop: 6 },
   loadingFrame: { height: 150, overflow: 'hidden', borderRadius: 20 },
 }));

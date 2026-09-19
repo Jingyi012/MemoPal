@@ -20,33 +20,43 @@ export function NumberPegItemCard({ item, locked = false, compact = false }: Pro
   return (
     <View
       style={{
-        width: compact ? 78 : 92,
-        height: compact ? 94 : 116,
-        marginRight: compact ? 0 : 10,
+        width: compact ? 82 : 96,
+        height: compact ? 104 : 120,
+        marginRight: compact ? 8 : 10,
         padding: compact ? 6 : 10,
         borderRadius: compact ? 14 : 18,
-        backgroundColor: theme.paper,
-        borderWidth: 2,
-        borderColor: theme.line,
+        backgroundColor: locked ? theme.canvas : theme.paper,
+        borderWidth: 1.5,
+        borderColor: locked ? theme.line : theme.line,
+        shadowColor: theme.ink,
+        shadowOpacity: locked ? 0 : 0.06,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: locked ? 0 : 1,
         alignItems: 'center',
         justifyContent: 'center',
+        gap: compact ? 3 : 5,
       }}>
       <View
         style={{
           position: 'absolute',
-          left: compact ? 5 : 7,
-          top: compact ? 5 : 7,
+          left: compact ? 31 : 37,
+          top: compact ? 6 : 8,
           minWidth: compact ? 19 : 22,
           height: compact ? 19 : 22,
           paddingHorizontal: compact ? 4 : 5,
           borderRadius: compact ? 10 : 11,
-          backgroundColor: theme.berry,
+          backgroundColor: locked ? theme.canvas : theme.paper,
+          borderWidth: 1.5,
+          borderColor: locked ? theme.line : theme.berryLine,
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-        <Text style={{ fontFamily: typography.bodyExtraBold, fontSize: compact ? 9 : 11, color: theme.onSun }}>{item.number}</Text>
+        <Text style={{ fontFamily: typography.bodyExtraBold, fontSize: compact ? 9 : 11, color: locked ? theme.inkMuted : theme.berryDeep }}>{item.number}</Text>
       </View>
-      <Text style={{ fontSize: compact ? 26 : 34, opacity: locked ? 0.35 : 1 }}>{locked ? '🔒' : item.image}</Text>
+      <View style={{ width: compact ? 46 : 58, height: compact ? 42 : 53, borderRadius: compact ? 13 : 16, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper, opacity: locked ? 0.55 : 1 }}>
+        <Text style={{ fontSize: compact ? 26 : 34 }}>{locked ? '🔒' : item.image}</Text>
+      </View>
       <Text
         numberOfLines={1}
         style={{ marginTop: compact ? 4 : 7, fontFamily: typography.bodyExtraBold, fontSize: compact ? 10 : 12, color: locked ? theme.inkSoft : theme.ink }}>
