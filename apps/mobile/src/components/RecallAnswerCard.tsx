@@ -9,7 +9,7 @@ export type RecallFeedback = 'correct' | 'wrong' | null;
 
 type RecallAnswerCardProps = {
   tone: 'peg' | 'palace';
-  icon: ReactNode;
+  icon?: ReactNode;
   eyebrow: string;
   prompt: string;
   answer: string;
@@ -61,7 +61,7 @@ export function RecallAnswerCard({
 
   return (
     <View style={[styles.card, !isPeg && styles.palaceCard]}>
-      <View style={[styles.icon, isPeg ? styles.pegIcon : styles.palaceIcon]}>{icon}</View>
+      {icon ? <View style={[styles.icon, isPeg ? styles.pegIcon : styles.palaceIcon]}>{icon}</View> : null}
       <Text style={[styles.eyebrow, { color: accent }]}>{eyebrow}</Text>
       <Text style={styles.prompt}>{prompt}</Text>
       {cue ? <View style={styles.cue}>{cue}</View> : null}
@@ -126,14 +126,14 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   pegIcon: { backgroundColor: theme.berryTint },
   palaceIcon: { backgroundColor: theme.violetTint },
   eyebrow: { fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
-  prompt: { color: theme.ink, fontFamily: typography.display, fontSize: 20, textAlign: 'center', marginTop: 12, marginBottom: 16 },
-  cue: { alignSelf: 'stretch', marginBottom: 14 },
+  prompt: { color: theme.ink, fontFamily: typography.display, fontSize: 20, lineHeight: 28, textAlign: 'center', marginTop: 12, marginBottom: 18 },
+  cue: { alignSelf: 'stretch', marginBottom: 18 },
   answerInput: { width: '100%', minHeight: 54, borderRadius: 14, borderWidth: 2.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 13, color: theme.ink, textAlign: 'center', fontFamily: typography.bodyExtraBold, fontSize: 16, letterSpacing: 1 },
   correctInput: { borderColor: theme.grass, backgroundColor: theme.mintTint },
   wrongInput: { borderColor: theme.berry, backgroundColor: theme.berryTint },
   feedback: { alignItems: 'center', alignSelf: 'stretch', flexDirection: 'row', gap: 7, marginTop: 12 },
   feedbackText: { flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
-  actionButtonWrap: { alignSelf: 'stretch', marginTop: 16 },
+  actionButtonWrap: { alignSelf: 'stretch', marginTop: 18 },
   actionButton: { width: '100%', minHeight: 48, borderRadius: 14, backgroundColor: theme.night, borderWidth: 1.5, borderColor: theme.violetLine, paddingHorizontal: 12, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
   actionText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 14 },
   disabledButton: { opacity: 0.4 },

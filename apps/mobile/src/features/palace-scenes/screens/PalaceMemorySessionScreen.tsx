@@ -7,6 +7,7 @@ import { RecallAnswerCard } from '@/components/RecallAnswerCard';
 import { RecallResultCard } from '@/components/RecallResultCard';
 import { PalaceFocusCard } from '@/features/palace-scenes/components/PalaceFocusCard';
 import { PalaceOrderedList } from '@/features/palace-scenes/components/PalaceOrderedList';
+import { PalaceRecallHints } from '@/features/palace-scenes/components/PalaceRecallHints';
 import { useMemorySet, type MemorySet } from '@/features/memory-sets';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
 import { createThemedStyles } from '@/theme/createThemedStyles';
@@ -68,11 +69,13 @@ export default function PalaceMemorySessionScreen({
   const [mode, setMode] = useState<SessionMode>(startInRecall ? 'recall' : 'browse');
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<Feedback>(null);
+  const [questionHintCount, setQuestionHintCount] = useState(0);
   const checkingAnswerRef = useRef(false);
   const advancingRef = useRef(false);
   useEffect(() => {
     checkingAnswerRef.current = false;
     advancingRef.current = false;
+    setQuestionHintCount(0);
   }, [activeIndex]);
   const [clientAttemptId, setClientAttemptId] = useState(() => Crypto.randomUUID());
   const [startedAt, setStartedAt] = useState(() => new Date().toISOString());
@@ -403,6 +406,17 @@ export default function PalaceMemorySessionScreen({
     }
   };
 
+  const requestHint = () => {
+    if (!active || questionHintCount >= 3 || feedback || isFinishing) return;
+    setQuestionHintCount((count) => Math.min(3, count + 1));
+    setResponses((current) => {
+      const existing = current.find((response) => response.memoryItemId === active.item.id);
+      if (existing) return current.map((response) => response.memoryItemId === active.item.id
+        ? { ...response, hintCount: Math.min(3, (response.hintCount ?? 0) + 1) } : response);
+      return [...current, { memoryItemId: active.item.id, isCorrect: false, attemptCount: 0, responseMs: 0, hintCount: 1 }];
+    });
+  };
+
   const renderRecallCue = () => {
     if (!active?.locus) return null;
     const zoom = 2.15;
@@ -572,7 +586,6 @@ export default function PalaceMemorySessionScreen({
     ) : active ? (
       <RecallAnswerCard
         tone="palace"
-        icon={<Text style={styles.recallEmoji}>🧠</Text>}
         eyebrow={`${t('locusLabel').toUpperCase()} ${active.item.position} · ${active.locus ? getPalaceLocusName(active.locus, language).toUpperCase() : t('memorySpot')}`}
         prompt={t('recallPrompt')}
         answer={answer}
@@ -597,6 +610,14 @@ export default function PalaceMemorySessionScreen({
         progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${placements.length}`}
         cue={<View>
           {renderRecallCue()}
+          <PalaceRecallHints
+            item={active.item}
+            binding={active.binding ?? null}
+            hintCount={questionHintCount}
+            feedback={feedback}
+            disabled={isFinishing}
+            onHint={requestHint}
+          />
           {feedback === 'wrong' && active.binding?.associationText ? (
             <Text style={styles.saveState}>{active.binding.associationText}</Text>
           ) : null}
