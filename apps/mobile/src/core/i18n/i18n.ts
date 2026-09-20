@@ -87,6 +87,7 @@ export const translations = {
     },
     profile: {
       title: 'Profile',
+      profileDescription: 'Manage your account and learning preferences',
       yourProgress: 'Your progress',
       levelXpStreak: 'Level, XP, and streak',
       memoryApprentice: 'Memory Apprentice',
@@ -1470,6 +1471,7 @@ export const translations = {
     },
     profile: {
       title: '个人资料',
+      profileDescription: '管理你的账户和学习偏好',
       yourProgress: '你的进度',
       levelXpStreak: '等级、经验值和连续记录',
       memoryApprentice: '记忆学徒',

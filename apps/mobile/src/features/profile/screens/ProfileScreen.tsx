@@ -223,8 +223,8 @@ export default function ProfileScreen() {
     <View style={styles.page}>
       <CommonHeader
         eyebrow={t('title')}
-        title={t('yourProgress')}
-        description={t('levelXpStreak')}
+        title={t('title')}
+        description={t('profileDescription')}
         hideBackButton
         showAiCredits={false}
       />
