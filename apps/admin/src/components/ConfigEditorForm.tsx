@@ -27,11 +27,13 @@ interface ConfigEditorFormProps {
   onCancel?: () => void;
   title?: string;
   loading?: boolean;
+  arrayItemLayout?: "default" | "comfortable";
 }
 
 const ArrayFieldTemplate = (props: any) => {
   const { items, onAddClick, onDropIndexClick, title, canAdd, description } =
     props;
+  const comfortable = props.comfortable === true;
 
   const resolveItemLabel = (
     data: Record<string, unknown>,
@@ -121,7 +123,11 @@ const ArrayFieldTemplate = (props: any) => {
       <Collapse
         ghost
         expandIconPosition="end"
-        style={{ background: "#f8faf9", borderRadius: 12 }}
+        style={{
+          background: "#f8faf9",
+          borderRadius: 12,
+          padding: comfortable ? 4 : 0,
+        }}
         items={(items || []).map((item: any, index: number) => {
           const itemProps = item.props || {};
           const data = (itemProps.itemData || {}) as Record<string, unknown>;
@@ -141,7 +147,13 @@ const ArrayFieldTemplate = (props: any) => {
               />
             ),
             children: (
-              <div style={{ paddingTop: 4, paddingBottom: 4 }}>{item}</div>
+              <div
+                style={{
+                  padding: comfortable ? "12px 8px 8px" : "4px 0",
+                }}
+              >
+                {item}
+              </div>
             ),
           };
         })}
@@ -163,6 +175,7 @@ const ArrayFieldTemplate = (props: any) => {
 
 const ObjectFieldTemplate = (props: any) => {
   const { properties, title, description, name } = props;
+  const comfortable = props.comfortable === true;
   const hiddenSystemFields = new Set([
     "createdAt",
     "updatedAt",
@@ -200,9 +213,12 @@ const ObjectFieldTemplate = (props: any) => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))",
-          gap: 16,
-          paddingLeft: depth > 1 ? 8 : 0,
+          gridTemplateColumns:
+            comfortable && depth > 1
+              ? "repeat(auto-fit, minmax(min(100%, 300px), 1fr))"
+              : "repeat(auto-fit, minmax(min(100%, 240px), 1fr))",
+          gap: comfortable && depth > 1 ? 20 : 16,
+          paddingLeft: depth > 1 ? (comfortable ? 12 : 8) : 0,
           borderLeft: depth > 1 ? "1px dashed #e8e8e8" : "none",
         }}
       >
@@ -234,6 +250,7 @@ export const ConfigEditorForm: React.FC<ConfigEditorFormProps> = ({
   onSubmit,
   onCancel,
   loading = false,
+  arrayItemLayout = "default",
 }) => {
   const { message } = App.useApp();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -269,8 +286,18 @@ export const ConfigEditorForm: React.FC<ConfigEditorFormProps> = ({
           liveValidate
           showErrorList={false}
           templates={{
-            ArrayFieldTemplate,
-            ObjectFieldTemplate,
+            ArrayFieldTemplate: (props: any) => (
+              <ArrayFieldTemplate
+                {...props}
+                comfortable={arrayItemLayout === "comfortable"}
+              />
+            ),
+            ObjectFieldTemplate: (props: any) => (
+              <ObjectFieldTemplate
+                {...props}
+                comfortable={arrayItemLayout === "comfortable"}
+              />
+            ),
             ButtonTemplates: {
               AddButton: () => <React.Fragment />,
               RemoveButton: () => <React.Fragment />,
