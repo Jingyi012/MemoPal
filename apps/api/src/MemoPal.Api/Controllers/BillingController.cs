@@ -39,6 +39,13 @@ public sealed class BillingController : ApiControllerBase
         var result = await Sender.Send(new SubscribeCommand(GetUserIdOrThrow(), request), cancellationToken); return Ok(result);
     }
 
+    [Authorize]
+    [HttpPost("cancel")]
+    public async Task<IActionResult> Cancel(CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new CancelSubscriptionCommand(GetUserIdOrThrow()), cancellationToken); return Ok(result);
+    }
+
     // For provider webhook relay / admin simulation. In production this should be protected by provider signature verification.
     [Authorize(Roles = UserRoles.Admin)]
     [HttpPost("webhooks/subscription")]

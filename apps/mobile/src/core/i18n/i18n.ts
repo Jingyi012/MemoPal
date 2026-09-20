@@ -604,6 +604,11 @@ export const translations = {
       tryAgain: 'Try again',
       refreshUnavailable: 'Unable to refresh premium data',
       subscriptionUnavailable: 'Subscription unavailable',
+      cancelSubscription: 'Cancel subscription',
+      keepSubscription: 'Keep subscription',
+      cancelling: 'Cancelling…',
+      cancelFailed: 'Cancellation failed',
+      subscriptionCancelled: 'Auto-renewal is off. Premium remains active until the period ends.',
     },
     memoryComposer: {
       whyItFits: 'Why it fits',
@@ -1988,6 +1993,11 @@ export const translations = {
       tryAgain: '重试',
       refreshUnavailable: '无法刷新高级内容',
       subscriptionUnavailable: '订阅暂不可用',
+      cancelSubscription: '取消订阅',
+      keepSubscription: '保留订阅',
+      cancelling: '取消中…',
+      cancelFailed: '取消失败',
+      subscriptionCancelled: '自动续订已关闭，Premium 将持续到当前周期结束。',
     },
     memoryComposer: {
       whyItFits: '为什么适合',

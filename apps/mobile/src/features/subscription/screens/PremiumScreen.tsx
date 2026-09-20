@@ -1,4 +1,5 @@
 import { systemSettingsApi } from '@/core/settings/api/systemSettings';
+import { ActionSheet } from '@/components/ActionSheet';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { BaseCard } from '@/components/BaseCard';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -16,7 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Check, Coins, Crown, Sparkles, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TermsAndConditionSheet from '../components/TermsAndConditionSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -25,6 +26,8 @@ import { AiCreditCoinButton } from '@/features/ai-credits/components/AiCreditBal
 import { useAiCredits } from '@/features/ai-credits/hooks/useAiCredits';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useUserState } from '@/contexts/UserStateContext';
+import { billingApi } from '@/features/subscription/api/billing';
+import Toast from 'react-native-toast-message';
 
 const PremiumScreen: React.FC = () => {
   const router = useRouter();
@@ -33,7 +36,7 @@ const PremiumScreen: React.FC = () => {
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const { user, isLoading: isUserLoading, refetch: refetchUser } = useCurrentUser();
-  const { userState } = useUserState();
+  const { userState, updateState } = useUserState();
   const insets = useSafeAreaInsets();
   const termsRef = useRef<BottomSheetModal>(null);
   const [config, setConfig] = useState<PremiumSubscriptionConfig | null>(null);
@@ -104,6 +107,22 @@ const PremiumScreen: React.FC = () => {
     await Promise.all([loadPremiumConfig(true), refetchUser()]);
   }, [loadPremiumConfig, refetchUser]);
 
+  const cancelSubscription = useCallback(async () => {
+    const entitlement = await billingApi.cancelSubscription();
+    await updateState((current) => ({
+      subscription: {
+        ...current.subscription,
+        isPremium: entitlement.isPremium,
+        planId: entitlement.planId ?? undefined,
+        startedAt: entitlement.startedAt ?? undefined,
+        expiresAt: entitlement.expiresAt ?? undefined,
+        autoRenew: entitlement.autoRenew,
+        status: (entitlement.status as any) ?? undefined,
+      },
+    }));
+    await refetchUser();
+  }, [refetchUser, updateState]);
+
   if (isLoading || isUserLoading) {
     return <LoadingView />;
   }
@@ -112,7 +131,7 @@ const PremiumScreen: React.FC = () => {
     return <PremiumMemberView theme={activeTheme}
       config={config ?? DEFAULT_PREMIUM_SUBSCRIPTION_CONFIG}
       subscription={userState.subscription} isRefreshing={isRefreshing}
-      onRefresh={onRefresh} onClose={() => router.back()} />;
+      onRefresh={onRefresh} onCancel={cancelSubscription} onClose={() => router.back()} />;
   }
 
   const topBar = (
@@ -154,7 +173,11 @@ const PremiumScreen: React.FC = () => {
   }
 
   const handleSubscribePress = () => {
-    Alert.alert(t('subscriptionUnavailable'), config.subscribeButton.pendingMessage);
+    Toast.show({
+      type: 'info',
+      text1: t('subscriptionUnavailable'),
+      text2: config.subscribeButton.pendingMessage,
+    });
   };
 
   return (
@@ -408,7 +431,7 @@ const styles = StyleSheet.create({
 
 export default PremiumScreen;
 
-function PremiumMemberView({ theme, config, subscription, isRefreshing, onRefresh, onClose }: {
+function PremiumMemberView({ theme, config, subscription, isRefreshing, onRefresh, onCancel, onClose }: {
   theme: typeof memopalThemes.light;
   config: PremiumSubscriptionConfig;
   subscription: {
@@ -416,6 +439,7 @@ function PremiumMemberView({ theme, config, subscription, isRefreshing, onRefres
   };
   isRefreshing: boolean;
   onRefresh: () => Promise<void>;
+  onCancel: () => Promise<void>;
   onClose: () => void;
 }) {
   const { styles } = useMemberStyles();
@@ -429,6 +453,8 @@ function PremiumMemberView({ theme, config, subscription, isRefreshing, onRefres
     ? (zh ? '试用中' : 'Trial')
     : subscription.status === 'past_due'
       ? (zh ? '付款待处理' : 'Payment due')
+      : subscription.status === 'canceled' || subscription.status === 'cancelled'
+        ? (zh ? '已取消续订' : 'Cancelled')
       : (zh ? '已激活' : 'Active');
   const renewalLabel = subscription.autoRenew
     ? (zh ? '自动续订已开启' : 'Auto-renew is on')
@@ -436,6 +462,7 @@ function PremiumMemberView({ theme, config, subscription, isRefreshing, onRefres
   const periodDate = subscription.expiresAt
     ? new Date(subscription.expiresAt).toLocaleDateString()
     : (zh ? '由账户同步' : 'Synced from your account');
+  const cancelSheetRef = useRef<BottomSheetModal>(null);
 
   return <View style={styles.memberPage}>
     <CommonHeader
@@ -461,6 +488,19 @@ function PremiumMemberView({ theme, config, subscription, isRefreshing, onRefres
           <View style={styles.detailCellDivider} />
           <View style={styles.detailCell}><Text style={styles.detailLabel}>{zh ? '本期结束' : 'Period ends'}</Text><Text style={styles.detailValue}>{periodDate}</Text></View>
         </View>
+        {subscription.status !== 'canceled' && subscription.status !== 'cancelled' ? (
+          <AnimatedPressable
+            accessibilityRole="button"
+            accessibilityLabel={t('cancelSubscription')}
+            onPress={() => cancelSheetRef.current?.present()}
+            style={styles.cancelButton}>
+            <Text style={styles.cancelButtonText}>{t('cancelSubscription')}</Text>
+          </AnimatedPressable>
+        ) : (
+          <View style={styles.cancelledNote}>
+            <Text style={styles.cancelledNoteText}>{t('subscriptionCancelled')}</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.creditSummary}>
@@ -474,9 +514,31 @@ function PremiumMemberView({ theme, config, subscription, isRefreshing, onRefres
         {config.features.map((feature) => <View key={feature.key} style={styles.memberRow}><View style={styles.checkCircle}><Check size={14} color={theme.onAccent} strokeWidth={3} /></View><View style={styles.memberRowCopy}><Text style={styles.memberRowTitle}>{feature.title}</Text><Text style={styles.memberRowDescription}>{feature.description}</Text></View></View>)}
       </View>
 
-      <Text style={styles.syncNote}>{zh ? '订阅状态由 MemoPal 账户安全同步。商店订阅管理将在支付服务接入后开放。' : 'Subscription status is securely synced from your MemoPal account. Store management will be available after billing is connected.'}</Text>
+      <Text style={styles.syncNote}>{zh ? '取消后仍可使用至当前周期结束。订阅状态由 MemoPal 账户安全同步。' : 'After cancelling, you can keep using Premium until the current period ends. Subscription status is securely synced from your MemoPal account.'}</Text>
 
     </ScrollView>
+    <ActionSheet
+      ref={cancelSheetRef}
+      title={zh ? '取消自动续订？' : 'Cancel auto-renewal?'}
+      description={zh
+        ? `取消后你仍可使用 Premium 至 ${periodDate}。之后不会再次扣款。`
+        : `You will keep Premium until ${periodDate}. You will not be charged again after that.`}
+      actionLabel={t('cancelSubscription')}
+      cancelLabel={t('keepSubscription')}
+      variant="destructive"
+      Icon={X}
+      onAction={async () => {
+        try {
+          await onCancel();
+        } catch (error: any) {
+          Toast.show({
+            type: 'error',
+            text1: t('cancelFailed'),
+            text2: error?.message ?? t('tryAgain'),
+          });
+        }
+      }}
+    />
   </View>;
 }
 
@@ -484,7 +546,7 @@ const useMemberStyles = createThemedStyles((theme) => StyleSheet.create({
   memberPage: { flex: 1, backgroundColor: theme.canvas },
   memberContent: { padding: 16, gap: 14, paddingBottom: 40 }, memberHero: { borderRadius: 24, padding: 20, backgroundColor: theme.night, overflow: 'hidden' }, memberHeroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, memberOrb: { width: 50, height: 50, borderRadius: 17, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,201,60,0.14)', borderWidth: 1, borderColor: 'rgba(255,201,60,0.28)' },
   memberEyebrow: { color: theme.sun, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 1, marginTop: 18 }, memberTitle: { color: '#FFF', fontFamily: typography.displayExtraBold, fontSize: 27, lineHeight: 34, marginTop: 4 }, memberSubtitle: { color: 'rgba(255,255,255,0.72)', fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 3, maxWidth: '90%' }, activeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: 'rgba(63,184,127,0.15)', borderWidth: 1, borderColor: 'rgba(95,208,154,0.28)' }, activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.grass }, activeBadgeText: { color: '#8BE0B4', fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.7 },
-  planCard: { borderRadius: 22, padding: 17, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, boxShadow: '0px 4px 0px rgba(105,80,204,0.06)' }, planCardEyebrow: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.8 }, planCardTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 21, marginTop: 4 }, planCardDivider: { height: 1, backgroundColor: theme.line, marginVertical: 14 },
+  planCard: { borderRadius: 22, padding: 17, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, boxShadow: '0px 4px 0px rgba(105,80,204,0.06)' }, planCardEyebrow: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.8 }, planCardTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 21, marginTop: 4 }, planCardDivider: { height: 1, backgroundColor: theme.line, marginVertical: 14 }, cancelButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: 14, borderRadius: 13, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint }, cancelButtonText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 }, cancelledNote: { marginTop: 14, borderRadius: 13, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: theme.mintTint }, cancelledNoteText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 11, textAlign: 'center' },
   detailGrid: { minHeight: 54, flexDirection: 'row', alignItems: 'stretch' }, detailCell: { flex: 1, justifyContent: 'center' }, detailCellDivider: { width: 1, marginHorizontal: 14, backgroundColor: theme.line }, detailLabel: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.4 }, detailValue: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, lineHeight: 16, marginTop: 5 },
   creditSummary: { minHeight: 118, borderRadius: 22, padding: 15, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line }, creditSummaryCell: { flex: 1, alignItems: 'center' }, creditSummaryIcon: { width: 34, height: 34, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }, monthlyCreditIcon: { backgroundColor: theme.violetTint }, availableCreditIcon: { backgroundColor: theme.mintTint }, creditSummaryValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 23, marginTop: 6 }, creditSummaryLabel: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 1 }, creditSummaryDivider: { width: 1, height: 66, backgroundColor: theme.line },
   memberSection: { borderRadius: 22, padding: 17, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, gap: 16 }, memberSectionTitle: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.9, textTransform: 'uppercase' }, memberRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 }, creditBenefit: { flexDirection: 'row', alignItems: 'flex-start', gap: 11, paddingBottom: 15, borderBottomWidth: 1, borderBottomColor: theme.line }, checkCircle: { width: 25, height: 25, borderRadius: 9, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.violetDeep }, memberRowCopy: { flex: 1, minWidth: 0 }, memberRowTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, lineHeight: 18 }, memberRowDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, lineHeight: 15, marginTop: 2 }, syncNote: { color: theme.inkMuted, fontFamily: typography.bodySemibold, fontSize: 9, lineHeight: 14, textAlign: 'center', paddingHorizontal: 18, marginTop: 2 },

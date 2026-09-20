@@ -79,6 +79,35 @@ public class SubscriptionHardeningTests
     }
 
     [Fact]
+    public async Task CancelSubscriptionCommandHandler_Should_Disable_AutoRenew_And_Keep_Entitlement()
+    {
+        await using var db = CreateDbContext();
+        db.UserSubscriptions.Add(new UserSubscription
+        {
+            Id = "sub-cancel",
+            UserId = "user-cancel",
+            PlanId = "premium_monthly",
+            Provider = "manual",
+            Status = "active",
+            StartedAt = DateTime.UtcNow.AddDays(-2),
+            ExpiresAt = DateTime.UtcNow.AddDays(28),
+            AutoRenew = true,
+        });
+        await db.SaveChangesAsync();
+
+        var handler = new CancelSubscriptionCommandHandler(db);
+        var response = await handler.Handle(new CancelSubscriptionCommand("user-cancel"), default);
+
+        Assert.True(response.Success);
+        Assert.True(response.Data!.IsPremium);
+        Assert.False(response.Data.AutoRenew);
+        Assert.Equal("canceled", response.Data.Status);
+        var savedSubscription = await db.UserSubscriptions.SingleAsync();
+        Assert.Equal("canceled", savedSubscription.Status);
+        Assert.False(savedSubscription.AutoRenew);
+    }
+
+    [Fact]
     public async Task HandleSubscriptionWebhookCommandHandler_Should_Update_Subscription_And_User()
     {
         await using var db = CreateDbContext();

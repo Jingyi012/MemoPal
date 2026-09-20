@@ -32,7 +32,7 @@ public sealed class GetEntitlementQueryHandler : IRequestHandler<GetEntitlementQ
         }
 
         var active = subscriptions
-            .Where(x => x.Status == "active" && (!x.ExpiresAt.HasValue || x.ExpiresAt > now))
+            .Where(x => (x.Status == "active" || x.Status == "canceled") && (!x.ExpiresAt.HasValue || x.ExpiresAt > now))
             .OrderByDescending(x => x.ExpiresAt ?? DateTime.MaxValue)
             .ThenByDescending(x => x.StartedAt)
             .FirstOrDefault();

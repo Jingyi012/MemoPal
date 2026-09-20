@@ -8,4 +8,9 @@ export const billingApi = {
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },
+  async cancelSubscription(): Promise<SubscriptionEntitlement> {
+    const response = await api.post<GeneralResponse<SubscriptionEntitlement>>('/billing/cancel');
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
 };
