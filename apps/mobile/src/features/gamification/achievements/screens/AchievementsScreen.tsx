@@ -14,7 +14,7 @@ import { usePracticeStats } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { typography } from '@/theme/typography';
 import { memopalThemes } from '@/theme/memopalTheme';
-import { ArrowRight, Check, History } from 'lucide-react-native';
+import { ArrowRight, Building2, Check, Hash, History } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -125,6 +125,8 @@ export default function AchievementsScreen() {
           value={`${unlockedPegs} / 100 ${t('pegsUnlocked')}`}
           percent={(unlockedPegs / 100) * 100}
           color="#FF6F91"
+          icon={Hash}
+          description={t('numberPeg')}
           onPress={() => router.push('/number-peg/map')}
         />
         <ProgressLine
@@ -132,6 +134,8 @@ export default function AchievementsScreen() {
           value={`${palaceUnlocked} / ${Math.max(1, palaceTotal)} ${t('palacesUnlocked')}`}
           percent={palaceTotal ? (palaceUnlocked / palaceTotal) * 100 : 0}
           color="#9B8CFF"
+          icon={Building2}
+          description={t('memoryPalace')}
           onPress={() => router.push('/palaces/map')}
         />
 
@@ -253,22 +257,34 @@ function ProgressLine({
   value,
   percent,
   color,
+  icon: Icon,
+  description,
   onPress,
 }: {
   label: string;
   value: string;
   percent: number;
   color: string;
+  icon: typeof Hash;
+  description: string;
   onPress: () => void;
 }) {
   const { styles } = useStyles();
   const { t } = useTranslation('achievements');
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
+  const roundedPercent = Math.round(Math.min(100, Math.max(0, percent)));
   return (
-    <View style={[styles.progressLine, { backgroundColor: activeTheme.violetTint, borderColor: activeTheme.violetLine }]}>
+    <View style={[styles.progressLine, { borderColor: activeTheme.line }]}>
       <View style={styles.progressLineHeader}>
-        <Text style={[styles.progressSectionLabel, { color: activeTheme.ink }]}>{label}</Text>
+        <View style={styles.progressTitleGroup}>
+          <View style={[styles.progressIcon, { backgroundColor: `${color}18` }]}><Icon size={18} color={color} strokeWidth={2.5} /></View>
+          <View style={styles.progressTitleCopy}><Text style={[styles.progressSectionLabel, { color: activeTheme.ink }]}>{label}</Text><Text style={[styles.progressDescription, { color: activeTheme.inkSoft }]}>{description}</Text></View>
+        </View>
+        <View style={[styles.progressPercent, { backgroundColor: `${color}18` }]}><Text style={[styles.progressPercentText, { color }]}>{roundedPercent}%</Text></View>
+      </View>
+      <View style={styles.progressMetricRow}>
+        <Text style={[styles.progressLabel, { color: activeTheme.ink }]}>{value}</Text>
         <AnimatedPressable accessibilityLabel={`${t('seeAll')} ${label}`} onPress={onPress} style={styles.seeAll}>
           <View style={styles.seeAllRow}>
             <Text style={[styles.seeAllText, { color: activeTheme.link }]}>{t('seeAll')}</Text>
@@ -276,9 +292,8 @@ function ProgressLine({
           </View>
         </AnimatedPressable>
       </View>
-      <Text style={[styles.progressLabel, { color: activeTheme.inkSoft }]}>{value}</Text>
-      <View style={[styles.progressTrack, { backgroundColor: activeTheme.line }]}>
-        <View style={[styles.progressFill, { width: `${Math.min(100, Math.max(0, percent))}%`, backgroundColor: color }]} />
+      <View style={[styles.progressTrack, { backgroundColor: activeTheme.line }]} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: roundedPercent }}>
+        <View style={[styles.progressFill, { width: `${roundedPercent}%`, backgroundColor: color }]} />
       </View>
     </View>
   );
@@ -291,14 +306,15 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   statTile: { flex: 1, alignItems: 'center', backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 6 },
   statValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 },
   statLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, textAlign: 'center', marginTop: 2 },
-  progressLine: { marginTop: 20, padding: 18, borderRadius: 24, borderWidth: 1, borderColor: theme.violetLine, backgroundColor: theme.violetTint },
-  progressLineHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 },
-  progressSectionLabel: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase' },
-  progressLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, marginBottom: 6 },
+  progressLine: { marginTop: 14, padding: 16, borderRadius: 21, borderWidth: 1.5, backgroundColor: theme.paper, boxShadow: '0px 4px 0px rgba(105,80,204,0.06)' },
+  progressLineHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  progressTitleGroup: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10 }, progressIcon: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }, progressTitleCopy: { flex: 1, minWidth: 0 },
+  progressSectionLabel: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 }, progressDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 2 }, progressPercent: { minWidth: 48, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 6, alignItems: 'center' }, progressPercentText: { fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  progressMetricRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 14 }, progressLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   seeAll: { minHeight: 44, justifyContent: 'center' },
   seeAllRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   seeAllText: { color: theme.link, fontFamily: typography.displayExtraBold, fontSize: 11.5 },
-  progressTrack: { height: 9, backgroundColor: theme.line, borderRadius: 999, overflow: 'hidden' },
+  progressTrack: { height: 9, backgroundColor: theme.line, borderRadius: 999, overflow: 'hidden', marginTop: 10 },
   progressFill: { height: '100%', borderRadius: 999 },
   sectionHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 25, marginBottom: 11 },
   sectionLabel: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17 },
