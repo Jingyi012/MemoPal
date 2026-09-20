@@ -57,7 +57,13 @@ export function NumberPegImageEditor({
       : null;
   const pending =
     starting || status.pending;
-  if (!imagePath && !pending && !result && !job?.status && !balance.data) return null;
+  if (
+    !imagePath &&
+    !pending &&
+    !result &&
+    !job?.status &&
+    (!balance.data || !balance.data.imagesEnabled)
+  ) return null;
   const generate = async () => {
     if (startingRef.current || disabled || pending || !balance.data?.imagesEnabled) return;
     startingRef.current = true;
@@ -138,20 +144,7 @@ export function NumberPegImageEditor({
           </AnimatedPressable>
         </>
       )}
-      {!imagePath && !pending && !result && !balance.data?.imagesEnabled ? (
-        <View style={styles.unavailableBlock}>
-          <ImagePlus size={17} color={theme.inkMuted} />
-          <Text style={styles.unavailableText}>
-            {zh
-              ? balance.data?.imagesConfigured
-                ? 'Visualize 图片功能暂未开启'
-                : 'Visualize 尚未完成图片模型配置'
-              : balance.data?.imagesConfigured
-                ? 'Visualize is turned off'
-                : 'Visualize needs an image model and API key'}
-          </Text>
-        </View>
-      ) : (
+      {balance.data?.imagesEnabled && !imagePath && !pending && !result && (
         <View style={styles.visualizeBlock}>
           <View style={styles.visualizeHeader}>
             <View style={styles.visualizeIcon}>
@@ -229,18 +222,5 @@ const useStyles = createThemedStyles((theme) =>
       lineHeight: 15,
       marginTop: 1,
     },
-    unavailableBlock: {
-      minHeight: 40,
-      marginTop: 5,
-      borderRadius: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      backgroundColor: theme.canvas,
-      borderWidth: 1,
-      borderColor: theme.line,
-    },
-    unavailableText: { color: theme.inkMuted, fontFamily: typography.bodySemibold, fontSize: 10 },
   })
 );
