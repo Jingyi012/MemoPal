@@ -146,14 +146,18 @@ public sealed class PredefinedMemoryLessonEndpointsTests : IClassFixture<CustomW
             LessonId = lesson.Id,
             Position = 1,
             ContentEn = "First item",
-            ContentZh = "第一项"
+            ContentZh = "第一项",
+            AssociationEn = "The first item dances at the first peg.",
+            AssociationZh = "第一项在第一个数字桩上跳舞。"
         });
         lesson.Items.Add(new PredefinedMemoryLessonItem
         {
             LessonId = lesson.Id,
             Position = 2,
             ContentEn = "Second item",
-            ContentZh = "第二项"
+            ContentZh = "第二项",
+            AssociationEn = "The second item dances at the second peg.",
+            AssociationZh = "第二项在第二个数字桩上跳舞。"
         });
         return lesson;
     }

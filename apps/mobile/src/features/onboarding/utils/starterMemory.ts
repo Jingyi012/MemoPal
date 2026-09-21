@@ -19,5 +19,5 @@ export function localizeStarterLesson(lesson: PredefinedMemoryLesson, language: 
 export function starterMemoryParams(lesson: PredefinedMemoryLesson, language: 'en' | 'zh') {
   const localized = localizeStarterLesson(lesson, language);
   return { title: localized.title, items: JSON.stringify(localized.items),
-    goalType: lesson.goalType, onboardingLessonId: lesson.id, guidedStarter: '1' };
+    goalType: lesson.goalType, onboardingLessonId: lesson.id, predefinedLessonId: lesson.id, guidedStarter: '1' };
 }

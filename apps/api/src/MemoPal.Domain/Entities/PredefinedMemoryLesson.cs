@@ -13,6 +13,7 @@ public sealed class PredefinedMemoryLesson : AuditableBaseEntity
     public string CategoryId { get; set; } = string.Empty;
     public string TechniqueKey { get; set; } = MemoryTechniqueKeys.NumberPeg;
     public string GoalType { get; set; } = MemoryGoalTypes.OrderedList;
+    public string? PalaceSceneId { get; set; }
     public int SortOrder { get; set; }
     public bool IsPublished { get; set; }
     public bool IsStarterLesson { get; set; }
@@ -43,6 +44,8 @@ public sealed class PredefinedMemoryLessonItem : AuditableBaseEntity
     public int Position { get; set; }
     public string ContentEn { get; set; } = string.Empty;
     public string ContentZh { get; set; } = string.Empty;
+    public string AssociationEn { get; set; } = string.Empty;
+    public string AssociationZh { get; set; } = string.Empty;
 
     public PredefinedMemoryLesson Lesson { get; set; } = null!;
 }

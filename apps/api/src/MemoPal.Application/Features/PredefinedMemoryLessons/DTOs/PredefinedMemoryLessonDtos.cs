@@ -5,6 +5,8 @@ public sealed record PredefinedMemoryLessonItemDto(
     int Position,
     string ContentEn,
     string ContentZh,
+    string AssociationEn,
+    string AssociationZh,
     DateTime CreatedAt,
     string? CreatedBy,
     DateTime UpdatedAt,
@@ -22,6 +24,7 @@ public sealed record PredefinedMemoryLessonDto(
     PredefinedMemoryLessonCategoryDto Category,
     string TechniqueKey,
     string GoalType,
+    string? PalaceSceneId,
     int SortOrder,
     bool IsPublished,
     bool IsStarterLesson,
@@ -45,6 +48,7 @@ public sealed class PredefinedMemoryLessonUpsertRequest
     public string CategoryId { get; set; } = string.Empty;
     public string TechniqueKey { get; set; } = "number-peg";
     public string GoalType { get; set; } = "ordered-list";
+    public string? PalaceSceneId { get; set; }
     public int SortOrder { get; set; }
     public bool IsPublished { get; set; }
     public bool IsStarterLesson { get; set; }
@@ -87,4 +91,6 @@ public sealed class PredefinedMemoryLessonItemInput
     public int Position { get; set; }
     public string ContentEn { get; set; } = string.Empty;
     public string ContentZh { get; set; } = string.Empty;
+    public string AssociationEn { get; set; } = string.Empty;
+    public string AssociationZh { get; set; } = string.Empty;
 }

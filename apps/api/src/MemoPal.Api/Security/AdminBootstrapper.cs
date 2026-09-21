@@ -302,6 +302,7 @@ public sealed class AdminBootstrapper
                     TechniqueKey = definition.TechniqueKey,
                     GoalType = definition.GoalType,
                     SortOrder = definition.SortOrder,
+                    PalaceSceneId = definition.PalaceSceneId,
                     IsPublished = true,
                     IsStarterLesson = definition.IsStarterLesson,
                     Version = 1,
@@ -422,6 +423,7 @@ public sealed class AdminBootstrapper
             lesson.TechniqueKey != definition.TechniqueKey ||
             lesson.GoalType != definition.GoalType ||
             lesson.SortOrder != definition.SortOrder ||
+            lesson.PalaceSceneId != definition.PalaceSceneId ||
             !lesson.IsPublished ||
             lesson.IsStarterLesson != definition.IsStarterLesson;
 
@@ -434,6 +436,7 @@ public sealed class AdminBootstrapper
         lesson.CategoryId = definition.CategoryId;
         lesson.TechniqueKey = definition.TechniqueKey;
         lesson.GoalType = definition.GoalType;
+        lesson.PalaceSceneId = definition.PalaceSceneId;
         lesson.SortOrder = definition.SortOrder;
         lesson.IsPublished = true;
         lesson.IsStarterLesson = definition.IsStarterLesson;
@@ -443,6 +446,7 @@ public sealed class AdminBootstrapper
         for (var index = 0; index < definition.Items.Length; index++)
         {
             var seed = definition.Items[index];
+            var association = GetAuthoredAssociation(definition.Id, index + 1);
             var isNew = index >= activeItems.Count;
             var item = index < activeItems.Count
                 ? activeItems[index]
@@ -456,10 +460,14 @@ public sealed class AdminBootstrapper
             var itemChanged = item.Position != index + 1 ||
                 item.ContentEn != seed.ContentEn ||
                 item.ContentZh != seed.ContentZh ||
+                item.AssociationEn != association.En ||
+                item.AssociationZh != association.Zh ||
                 item.IsDeleted;
             item.Position = index + 1;
             item.ContentEn = seed.ContentEn;
             item.ContentZh = seed.ContentZh;
+            item.AssociationEn = association.En;
+            item.AssociationZh = association.Zh;
             item.IsDeleted = false;
             item.DeletedAt = null;
             item.DeletedBy = null;
@@ -499,6 +507,8 @@ public sealed class AdminBootstrapper
         Position = position,
         ContentEn = seed.ContentEn,
         ContentZh = seed.ContentZh,
+        AssociationEn = GetAuthoredAssociation(lessonId, position).En,
+        AssociationZh = GetAuthoredAssociation(lessonId, position).Zh,
         CreatedAt = now,
         UpdatedAt = now,
         CreatedBy = "system",
@@ -519,7 +529,233 @@ public sealed class AdminBootstrapper
         string GoalType,
         int SortOrder,
         bool IsStarterLesson,
-        PredefinedLessonItemSeed[] Items);
+        PredefinedLessonItemSeed[] Items)
+    {
+        public string? PalaceSceneId => TechniqueKey == MemoryTechniqueKeys.Palace
+            ? "palace-street-and-curb"
+            : null;
+    }
+
+    private static readonly IReadOnlyDictionary<string, (string En, string Zh)[]> AuthoredLessonAssociations =
+        new Dictionary<string, (string En, string Zh)[]>(StringComparer.Ordinal)
+        {
+            ["lesson-primary-spelling-safari"] =
+            [
+                ("A striped cat pounces onto peg one and rings a tiny bell.", "一只条纹猫跳上第一个数字桩，敲响一只小铃铛。"),
+                ("A bright sun rolls across peg two and leaves a golden trail.", "一轮明亮的太阳滚过第二个数字桩，留下一道金色轨迹。"),
+                ("A silver fish splashes around peg three inside a glass bubble.", "一条银色的鱼在第三个数字桩旁的玻璃泡泡里扑腾。"),
+                ("A giant book opens on peg four and releases a cloud of letters.", "一本巨大的书在第四个数字桩上打开，喷出一团字母。"),
+                ("A leafy tree sprouts from peg five and waves at the sky.", "一棵枝叶茂盛的树从第五个数字桩长出来，向天空挥手。")
+            ],
+            ["lesson-primary-colour-hunt"] =
+            [
+                ("A red kite loops around peg one and tugs at its string.", "一只红色风筝绕着第一个数字桩盘旋，拉紧了风筝线。"),
+                ("A blue whale circles peg two and sends a fountain into the air.", "一条蓝色鲸鱼绕着第二个数字桩游动，喷出高高的水柱。"),
+                ("A green frog lands on peg three with a cheerful splash.", "一只绿色青蛙跳到第三个数字桩上，欢快地溅起水花。"),
+                ("A yellow bus stops at peg four and opens every door at once.", "一辆黄色巴士停在第四个数字桩旁，同时打开所有车门。")
+            ],
+            ["lesson-primary-animal-friends"] =
+            [
+                ("A curious cat curls around peg one and purrs like a tiny engine.", "一只好奇的小猫绕着第一个数字桩蜷成一圈，像小引擎一样呼噜。"),
+                ("A happy dog races around peg two with a red scarf in its mouth.", "一只开心的小狗叼着红围巾绕第二个数字桩奔跑。"),
+                ("A bright bird sings from peg three and shakes loose a shower of feathers.", "一只鲜亮的小鸟站在第三个数字桩上唱歌，抖落一阵羽毛。"),
+                ("A goldfish swims through peg four as if it were a little glass castle.", "一条金鱼穿过第四个数字桩，把它当成一座玻璃小城堡。")
+            ],
+            ["lesson-primary-snack-time"] =
+            [
+                ("A shiny apple bounces onto peg one and rolls into a red basket.", "一颗发亮的苹果弹上第一个数字桩，滚进红篮子里。"),
+                ("A warm loaf of bread wears a paper crown on peg two.", "一条热乎乎的面包戴着纸皇冠坐在第二个数字桩上。"),
+                ("A carton of milk dances around peg three and splashes a white swirl.", "一盒牛奶绕着第三个数字桩跳舞，洒出白色的旋涡。"),
+                ("An egg cracks open on peg four and hatches a tiny yellow chick.", "一只鸡蛋在第四个数字桩上裂开，孵出一只黄色小鸡。")
+            ],
+            ["lesson-primary-school-bag"] =
+            [
+                ("A blue book lands on peg one and flips open to a bright map.", "一本蓝色课本落在第一个数字桩上，翻开一张鲜亮的地图。"),
+                ("A pencil blasts off from peg two like a tiny rocket.", "一支铅笔从第二个数字桩上像小火箭一样发射升空。"),
+                ("A ruler stretches from peg three and becomes a shining bridge.", "一把尺子从第三个数字桩伸展开来，变成一座闪亮的桥。"),
+                ("An eraser sweeps across peg four and wipes away a cloud of mistakes.", "一块橡皮擦过第四个数字桩，抹走一团错误。"),
+                ("A water bottle sprays a cool fountain beside peg five.", "一个水壶在第五个数字桩旁喷出清凉的喷泉。")
+            ],
+            ["lesson-chinese-first-words"] =
+            [
+                ("A cheerful sign flashes 你好 on peg one as a smiling friend waves.", "第一个数字桩亮起“你好”两个字，微笑的朋友正在挥手。"),
+                ("A gift box on peg two opens and says 谢谢 in a warm voice.", "第二个数字桩上的礼物盒打开，用温暖的声音说“谢谢”。"),
+                ("A new friend sits on peg three and shares a bright red balloon.", "一位新朋友坐在第三个数字桩上，分享一只鲜红的气球。"),
+                ("A tiny schoolhouse balances on peg four and rings its morning bell.", "一座小学校稳稳地立在第四个数字桩上，敲响早晨的铃声。"),
+                ("A happy sun dances over peg five and sprinkles the scene with stars.", "一轮开心的太阳在第五个数字桩上跳舞，洒下满天星星。"),
+                ("A whole family gathers around peg six for a cheerful photo.", "一家人围在第六个数字桩旁，开心地拍下一张照片。"),
+                ("A steaming bowl of food spins on peg seven and smells wonderfully rich.", "一碗热腾腾的食物在第七个数字桩上旋转，香气四处飘散。"),
+                ("A blue water fountain bursts from peg eight and splashes a silver cup.", "一座蓝色水喷泉从第八个数字桩喷出，溅满一只银杯。"),
+                ("A calendar stamped 今天 lands on peg nine with a loud clap.", "一张盖着“今天”印章的日历啪地落在第九个数字桩上。"),
+                ("A little rocket labelled 明天 lifts off from peg ten toward the moon.", "一枚写着“明天”的小火箭从第十个数字桩升空，飞向月亮。")
+            ],
+            ["lesson-chinese-30-day-day-one"] =
+            [
+                ("A family photo swings from peg one while everyone waves together.", "一张全家福挂在第一个数字桩上，家人一起挥手。"),
+                ("A lunchbox full of food spins on peg two like a colourful carousel.", "一个装满食物的饭盒在第二个数字桩上像彩色木马一样旋转。"),
+                ("A blue water balloon bounces off peg three without bursting.", "一个蓝色水气球从第三个数字桩弹开，却没有破掉。"),
+                ("A calendar marked 今天 rings a bell on peg four.", "一张标着“今天”的日历在第四个数字桩上敲响铃铛。"),
+                ("A bright sign reading 明天 points from peg five toward a new adventure.", "一块写着“明天”的明亮招牌从第五个数字桩指向新的冒险。"),
+                ("A golden sunrise climbs over peg six and wakes a sleepy bird.", "金色的日出爬过第六个数字桩，叫醒一只打瞌睡的小鸟。"),
+                ("A purple moon rises behind peg seven and lights a quiet street.", "一轮紫色月亮在第七个数字桩后升起，照亮安静的街道。"),
+                ("A polite waiter bows beside peg eight and presents a cup marked 请.", "一位有礼貌的服务员在第八个数字桩旁鞠躬，递上写着“请”的杯子。"),
+                ("A small red heart on peg nine whispers 对不起 and gives a gentle hug.", "第九个数字桩上的小红心轻声说“对不起”，送出一个温柔的拥抱。"),
+                ("A waving train leaves peg ten with a bright sign saying 再见.", "一列挥手的火车从第十个数字桩出发，亮着“再见”的招牌。")
+            ],
+            ["lesson-chinese-classroom"] =
+            [
+                ("A giant book on peg one opens by itself and invites you to 读.", "第一个数字桩上的大书自动打开，邀请你“读”。"),
+                ("A pencil dances on peg two and writes the character 写 in the air.", "一支铅笔在第二个数字桩上跳舞，在空中写出“写”。"),
+                ("A giant ear listens beside peg three while the word 听 rings like a bell.", "一只大耳朵在第三个数字桩旁认真倾听，“听”字像铃声一样响起。"),
+                ("A bright microphone stands on peg four and invites everyone to 说.", "一个明亮的麦克风立在第四个数字桩上，邀请大家“说”。"),
+                ("A question mark bounces onto peg five and asks a very curious 问题.", "一个问号跳上第五个数字桩，提出一个好奇的“问题”。"),
+                ("A glowing answer card lands on peg six and reveals the perfect 答案.", "一张发光的答案卡落在第六个数字桩上，揭晓正确的“答案”。")
+            ],
+            ["lesson-primary-lunchbox-checklist"] =
+            [
+                ("A sandwich opens like a book on peg one and reveals a smiling face.", "一个三明治在第一个数字桩上像书一样打开，露出笑脸。"),
+                ("A red apple rolls around peg two and rings a lunch bell.", "一颗红苹果绕着第二个数字桩滚动，敲响午餐铃。"),
+                ("A water bottle beside peg three sprays a cool rainbow.", "第三个数字桩旁的水壶喷出一道清凉的彩虹。"),
+                ("A cup of yogurt dances on peg four and paints a purple swirl.", "一杯酸奶在第四个数字桩上跳舞，画出紫色旋涡。"),
+                ("A napkin on peg five unfolds into a clean white sail.", "第五个数字桩上的餐巾展开，变成一面洁白的帆。"),
+                ("A silver spoon on peg six conducts a tiny lunchtime orchestra.", "第六个数字桩上的银汤匙指挥一支迷你午餐乐队。")
+            ],
+            ["lesson-everyday-morning-routine"] =
+            [
+                ("An alarm clock leaps onto peg one and shouts Wake up to the room.", "一个闹钟跳上第一个数字桩，对房间大喊“起床”。"),
+                ("A toothbrush on peg two whips up a mountain of minty foam.", "第二个数字桩上的牙刷搅起一座薄荷泡沫山。"),
+                ("A colourful shirt spins around peg three and lands perfectly in place.", "一件彩色衣服绕着第三个数字桩旋转，刚好穿到身上。"),
+                ("A breakfast plate on peg four serves a sunny egg with a smile.", "第四个数字桩上的早餐盘端出一只带笑脸的太阳蛋。"),
+                ("A school bag on peg five packs itself with a cheerful zip.", "第五个数字桩上的书包拉着欢快的拉链，把东西自己装好。"),
+                ("A pair of shoes marches away from peg six toward the front door.", "一双鞋从第六个数字桩出发，朝大门整齐地行进。")
+            ],
+            ["lesson-everyday-grocery-basket"] =
+            [
+                ("A sack of rice balances on peg one and pours a white waterfall.", "一袋米在第一个数字桩上保持平衡，倒出一道白色瀑布。"),
+                ("A milk carton slides around peg two and leaves a creamy trail.", "一盒牛奶绕着第二个数字桩滑行，留下奶油色轨迹。"),
+                ("Two eggs spin on peg three without cracking their golden shells.", "两只鸡蛋在第三个数字桩上旋转，金色蛋壳完好无损。"),
+                ("A tomato on peg four wears a tiny red hat and bows.", "第四个数字桩上的番茄戴着一顶小红帽，正在鞠躬。"),
+                ("A bunch of bananas swings from peg five like a yellow chandelier.", "一串香蕉挂在第五个数字桩上，像黄色吊灯一样摇摆。"),
+                ("A bar of soap on peg six blows a mountain of bubbles.", "第六个数字桩上的肥皂吹出一座泡泡山。"),
+                ("A warm loaf of bread rolls onto peg seven and smells like a bakery.", "一条热面包滚上第七个数字桩，散发面包店的香味。"),
+                ("A teapot on peg eight pours a sparkling stream of tea into a cup.", "第八个数字桩上的茶壶把闪亮的茶水倒进杯子。")
+            ],
+            ["lesson-primary-planet-journey"] =
+            [
+                ("At the standing desk, Mercury skates around a tiny hot Sun and leaves a silver streak.", "在升降桌旁，水星绕着一颗小太阳滑行，拖出银色光痕。"),
+                ("On the desk chair, Venus shines like a glowing jewel wrapped in golden clouds.", "在办公椅上，金色云层包住发光的金星，像一颗宝石。"),
+                ("On the monitor, Earth spins while blue oceans splash across the screen.", "在显示器上，地球旋转起来，蓝色海洋溅满屏幕。"),
+                ("At the desk plant, Mars turns a red leaf into a miniature dusty desert.", "在桌面盆栽旁，火星把一片红叶变成迷你沙漠。"),
+                ("On the bookshelf, Jupiter swells between the books like a giant striped balloon.", "在书架上，木星夹在书本之间，像巨大的条纹气球。"),
+                ("On the pinboard, Saturn pins its bright rings beside a school note.", "在软木留言板上，土星把明亮的光环钉在一张学习便签旁。"),
+                ("Inside the desk drawer, Uranus rolls sideways through an icy blue tunnel.", "在书桌抽屉里，天王星侧着身滚过一条冰蓝色隧道。"),
+                ("Under the floor lamp, Neptune blows a deep-blue storm across the carpet.", "在落地灯下，海王星把深蓝色风暴吹过地毯。")
+            ],
+            ["lesson-science-five-senses"] =
+            [
+                ("At the standing desk, sight opens two enormous eyes that sparkle at every detail.", "在升降桌旁，视觉睁开一双巨大的眼睛，闪闪发亮地看清每个细节。"),
+                ("On the desk chair, hearing beats a drum and makes the whole room vibrate.", "在办公椅上，听觉敲响一面鼓，让整个房间都震动起来。"),
+                ("On the monitor, smell sends a warm cinnamon cloud drifting across the screen.", "在显示器上，嗅觉放出一团温暖的肉桂香气。"),
+                ("At the desk plant, taste grows a lemon tree covered with bright yellow fruit.", "在桌面盆栽旁，味觉长出一棵结满黄果子的柠檬树。"),
+                ("On the bookshelf, touch runs over velvet, sand, and a smooth stone.", "在书架上，触觉依次摸过天鹅绒、沙子和光滑的石头。")
+            ],
+            ["lesson-science-water-cycle"] =
+            [
+                ("A puddle on peg one rises as sparkling steam and becomes evaporation.", "第一个数字桩上的水洼变成闪亮的水汽，这就是蒸发。"),
+                ("A cool cloud forms on peg two and gathers drops through condensation.", "第二个数字桩上形成一朵凉凉的云，水滴在凝结。"),
+                ("A silver cloud on peg three opens its umbrella and sends down rain.", "第三个数字桩上的银云撑开伞，落下阵阵雨水。"),
+                ("A clear bowl on peg four catches the water and completes the collection.", "第四个数字桩上的透明碗接住水滴，完成汇集。")
+            ],
+            ["lesson-secondary-scientific-method"] =
+            [
+                ("A giant question mark lands on peg one and asks the first question.", "一个巨大的问号落在第一个数字桩上，提出第一个问题。"),
+                ("A stack of books on peg two turns into a bright research library.", "第二个数字桩上的书堆变成一座明亮的资料图书馆。"),
+                ("A small crystal ball on peg three glows with a testable hypothesis.", "第三个数字桩上的水晶球亮起一个可以验证的假设。"),
+                ("A lab flask on peg four bubbles through a carefully planned experiment.", "第四个数字桩上的实验瓶在精心设计的实验中咕噜冒泡。"),
+                ("A magnifying glass on peg five sorts the results into neat columns.", "第五个数字桩上的放大镜把结果整理成整齐的栏目。"),
+                ("A judge's gavel on peg six announces the final conclusion.", "第六个数字桩上的法官木槌宣布最后的结论。")
+            ],
+            ["lesson-secondary-cell-biology"] =
+            [
+                ("At the standing desk, a glowing nucleus conducts the cell like a busy control room.", "在升降桌旁，发光的细胞核像繁忙的控制室一样指挥细胞。"),
+                ("On the desk chair, a cell membrane works as a careful gatekeeper for every visitor.", "在办公椅上，细胞膜像谨慎的守门员，控制每位访客进出。"),
+                ("On the monitor, cytoplasm jiggles like clear jelly while tiny reactions happen inside.", "在显示器上，细胞质像透明果冻一样晃动，里面不断发生微小反应。"),
+                ("At the desk plant, mitochondria spark like miniature power stations and release energy.", "在桌面盆栽旁，线粒体像迷你发电站一样冒出火花，释放能量。"),
+                ("On the bookshelf, a ribosome factory stacks bright protein blocks one by one.", "在书架上，核糖体工厂把明亮的蛋白质积木一块块叠起来。"),
+                ("On the pinboard, a clear vacuole stores a cool blue reservoir of water.", "在软木留言板上，液泡储存着一池清凉的蓝色水。")
+            ],
+            ["lesson-geography-continents"] =
+            [
+                ("At the standing desk, Asia unfolds as a huge colourful map under a compass.", "在升降桌旁，亚洲展开成一张巨大的彩色地图，指南针在上面旋转。"),
+                ("On the desk chair, Africa arrives with a friendly elephant carrying a golden sun.", "在办公椅上，非洲和一头友好的大象一起到来，大象背着金色太阳。"),
+                ("On the monitor, Europe lights up its old castles and winding roads.", "在显示器上，欧洲点亮古老城堡和弯弯曲曲的道路。"),
+                ("At the desk plant, North America grows a maple leaf as wide as a sail.", "在桌面盆栽旁，北美洲长出一片像船帆那么大的枫叶。"),
+                ("On the bookshelf, South America pours a green rainforest out of an open atlas.", "在书架上，南美洲从打开的地图册里倒出一片绿色雨林。"),
+                ("On the pinboard, Australia pins a kangaroo beside a bright coral reef.", "在软木留言板上，澳大利亚把袋鼠和明亮的珊瑚礁钉在一起。"),
+                ("Inside the desk drawer, Antarctica builds a sparkling white ice palace.", "在书桌抽屉里，南极洲建起一座闪闪发亮的白色冰宫。")
+            ],
+            ["lesson-secondary-world-capitals"] =
+            [
+                ("At the standing desk, Malaysia raises the Petronas Towers above a map of Kuala Lumpur.", "在升降桌旁，马来西亚把吉隆坡的双子塔高高举过地图。"),
+                ("On the desk chair, Japan sends a Tokyo train rushing past a cherry tree.", "在办公椅上，日本让一列东京列车冲过樱花树。"),
+                ("On the monitor, Egypt projects the pyramids of Cairo in golden light.", "在显示器上，埃及用金色灯光投影出开罗金字塔。"),
+                ("At the desk plant, Canada grows a maple leaf beside Ottawa's parliament.", "在桌面盆栽旁，加拿大让枫叶和渥太华的国会大厦一起长出来。"),
+                ("On the bookshelf, Australia opens a book showing Canberra's parliament dome.", "在书架上，澳大利亚打开一本书，露出堪培拉的国会穹顶。"),
+                ("On the pinboard, Norway pins Oslo beside a bright blue fjord.", "在软木留言板上，挪威把奥斯陆钉在一片明亮的蓝色峡湾旁。")
+            ],
+            ["lesson-countries-asia-10"] =
+            [
+                ("A red dragon carrying China lands on peg one and curls around a lantern.", "一条带着中国的红龙落在第一个数字桩上，绕住一盏灯笼。"),
+                ("Japan's cherry blossoms swirl around peg two like pink snow.", "日本的樱花像粉色雪花一样绕着第二个数字桩飘舞。"),
+                ("A K-pop dancer spins a South Korean flag around peg three.", "一位K-pop舞者让韩国国旗绕着第三个数字桩旋转。"),
+                ("An Indian elephant marches onto peg four carrying a bowl of fragrant spices.", "一头印度大象走上第四个数字桩，背着一碗香喷喷的香料。"),
+                ("A Thai tuk-tuk zips around peg five under a golden temple bell.", "一辆泰国嘟嘟车在第五个数字桩旁飞驰，经过金色寺庙钟。"),
+                ("Vietnamese lanterns float above peg six and paint the floor red and gold.", "越南灯笼飘在第六个数字桩上方，把地面染成红金两色。"),
+                ("A Malaysian hibiscus blooms on peg seven beside a waving flag.", "一朵马来西亚木槿花在第七个数字桩旁盛开，旁边的国旗正在挥舞。"),
+                ("Singapore's Merlion sprays a bright fountain around peg eight.", "新加坡鱼尾狮在第八个数字桩周围喷出明亮的水柱。"),
+                ("An Indonesian volcano rumbles under peg nine and sends up red sparks.", "印度尼西亚的火山在第九个数字桩下轰鸣，喷出红色火星。"),
+                ("A colourful Philippine jeepney circles peg ten with music playing.", "一辆彩色菲律宾吉普尼绕着第十个数字桩行驶，音乐一路响起。")
+            ],
+            ["lesson-countries-europe-15"] =
+            [
+                ("A red double-decker bus from the United Kingdom parks on peg one.", "一辆英国红色双层巴士停在第一个数字桩旁。"),
+                ("France raises a sparkling Eiffel Tower above peg two.", "法国在第二个数字桩上方升起闪闪发光的埃菲尔铁塔。"),
+                ("Germany rolls a giant pretzel around peg three like a golden wheel.", "德国把一个巨大的椒盐卷饼绕着第三个数字桩滚动，像金色车轮。"),
+                ("Italy balances a hot pizza beside a leaning tower on peg four.", "意大利把热腾腾的披萨和斜塔一起平衡在第四个数字桩旁。"),
+                ("A Spanish dancer spins a red fan around peg five.", "一位西班牙舞者挥着红扇绕第五个数字桩旋转。"),
+                ("A yellow Portuguese tram climbs past peg six with a cheerful bell.", "一辆黄色葡萄牙电车经过第六个数字桩，欢快地响着铃。"),
+                ("A Dutch bicycle rides through a field of tulips around peg seven.", "一辆荷兰自行车穿过郁金香花田，绕着第七个数字桩骑行。"),
+                ("A Belgian chocolate fountain bubbles beside peg eight.", "一座比利时巧克力喷泉在第八个数字桩旁咕噜冒泡。"),
+                ("A Swiss mountain train winds around peg nine beneath snowy peaks.", "一列瑞士山地火车在雪山下绕着第九个数字桩蜿蜒前进。"),
+                ("An Austrian violin plays a waltz on peg ten beneath a grand chandelier.", "一把奥地利小提琴在第十个数字桩下的华丽吊灯旁演奏圆舞曲。"),
+                ("A Swedish reindeer trots around peg eleven carrying a blue-and-yellow flag.", "一只瑞典驯鹿绕第十一个数字桩小跑，背着蓝黄两色的国旗。"),
+                ("A Norwegian Viking ship sails around peg twelve through a bright fjord.", "一艘挪威维京船绕着第十二个数字桩驶过明亮的峡湾。"),
+                ("A Danish Lego castle snaps together on peg thirteen, brick by brick.", "一座丹麦乐高城堡在第十三个数字桩上，一块块拼接完成。"),
+                ("A Finnish sauna sends a warm cloud of steam around peg fourteen.", "一间芬兰桑拿房在第十四个数字桩旁升起温暖的蒸汽云。"),
+                ("A Greek column grows from peg fifteen beside a bowl of shining olives.", "一根希腊石柱从第十五个数字桩长出，旁边放着一碗发亮的橄榄。")
+            ],
+            ["lesson-general-weather-week"] =
+            [
+                ("A sunny sky puts sunglasses on peg one and smiles at the whole street.", "晴朗的天空给第一个数字桩戴上太阳眼镜，对整条街微笑。"),
+                ("A fluffy cloudy sheep floats around peg two and blocks the blue sky.", "一只蓬松的多云绵羊飘在第二个数字桩旁，挡住蓝天。"),
+                ("A red umbrella spins on peg three while rainy drops tap its canopy.", "一把红伞在第三个数字桩上旋转，雨滴敲打着伞面。"),
+                ("A windy kite races around peg four and pulls its tail through the air.", "一只风筝在第四个数字桩旁乘风飞奔，尾巴划过空气。"),
+                ("A stormy cloud drums above peg five and flashes a silver bolt.", "一朵暴风雨云在第五个数字桩上方敲鼓，闪出银色电光。"),
+                ("A foggy cloud wraps peg six in a soft grey scarf.", "一团有雾的云给第六个数字桩围上一条柔软的灰围巾。"),
+                ("A snowman builds himself beside peg seven and waves a mitten.", "一个雪人在第七个数字桩旁堆好自己，挥动一只手套。")
+            ]
+        };
+
+    private static (string En, string Zh) GetAuthoredAssociation(string lessonId, int position)
+    {
+        if (!AuthoredLessonAssociations.TryGetValue(lessonId, out var associations) ||
+            position < 1 || position > associations.Length)
+        {
+            throw new InvalidOperationException($"Missing authored association for {lessonId} item {position}.");
+        }
+
+        return associations[position - 1];
+    }
 
     private static PredefinedMemoryLessonSeed[] GetPredefinedMemoryLessons() =>
     [

@@ -1,4 +1,7 @@
-import { SpotlightTarget, usePageTour } from '@/features/onboarding/components/SpotlightTourProvider';
+import {
+  SpotlightTarget,
+  usePageTour,
+} from '@/features/onboarding/components/SpotlightTourProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ActivityIndicator,
@@ -50,6 +53,9 @@ import { guidedStarterSessionHref } from '@/features/onboarding/utils/onboarding
 import { useGenerateNumberPegStories } from '@/features/number-peg/hooks/useGenerateNumberPegStories';
 import { NumberPegImageEditor } from '../components/NumberPegImageEditor';
 import { useAiCredits } from '@/features/ai-credits/hooks/useAiCredits';
+import { usePredefinedMemoryLesson } from '@/features/predefined-memory-lessons/hooks/usePredefinedMemoryLessons';
+import { findPredefinedMemoryLessonItem } from '@/features/predefined-memory-lessons/utils/predefinedMemoryLessonLocalization';
+import type { PredefinedMemoryLesson } from '@/features/predefined-memory-lessons/types/predefinedMemoryLesson.types';
 
 type SceneDraft = {
   sceneAssetUrl?: string;
@@ -96,6 +102,7 @@ const storyCopy = {
     editStory: '自己编辑',
     done: '完成编辑',
     improveStory: 'AI 改进故事',
+    curated: '课程联想',
     improveHint: '先编辑故事，再让 AI 帮你润色；原故事会保留供比较。',
     preview: 'AI 改进预览',
     previewHint: '你编辑后的原故事仍会保留。喜欢这个版本，再采用它。',
@@ -119,7 +126,9 @@ const storyCopy = {
     editStory: 'Edit it myself',
     done: 'Finish editing',
     improveStory: 'Improve story with AI',
-    improveHint: 'Edit your story first, then let AI polish it. Your original stays available to compare.',
+    curated: 'Authored course association',
+    improveHint:
+      'Edit your story first, then let AI polish it. Your original stays available to compare.',
     preview: 'AI improvement preview',
     previewHint: 'Your edited original is kept. Adopt this version only if you prefer it.',
     useStory: 'Use new story',
@@ -147,9 +156,13 @@ export default function NumberPegComposerScreen() {
     memorySetId?: string | string[];
     expectedVersion?: string | string[];
     description?: string | string[];
+    predefinedLessonId?: string | string[];
   }>();
   const { createMemorySet, updateMemorySet } = useMemorySetMutations();
   const editingMemorySetId = firstParam(params.memorySetId);
+  const predefinedLessonId = firstParam(params.predefinedLessonId);
+  const predefinedLessonQuery = usePredefinedMemoryLesson(predefinedLessonId);
+  const predefinedLesson = predefinedLessonQuery.data;
   const { linkMemory: linkOnboardingMemory } = useOnboardingMutations();
   const generateStories = useGenerateNumberPegStories();
   const aiCredits = useAiCredits();
@@ -190,7 +203,15 @@ export default function NumberPegComposerScreen() {
   );
   const [items, setItems] = useState(initialItems);
   const [scenes, setScenes] = useState<SceneDraft[]>(() =>
-    initialScenes(initialItems, unlocked, anchors, t)
+    initialScenes(
+      initialItems,
+      unlocked,
+      anchors,
+      t,
+      predefinedLesson,
+      language,
+      Boolean(predefinedLessonId)
+    )
   );
   const [index, setIndex] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
@@ -211,8 +232,15 @@ export default function NumberPegComposerScreen() {
   const { t: tourT } = useTranslation('onboarding');
   const draftKey = useMemo(
     () =>
-      `@memopal:number-peg-studio:${user?.id ?? 'local'}:${editingMemorySetId ?? (fromShared ? `${firstParam(params.title) ?? ''}:${initialItems.join('|')}` : 'direct')}`,
-    [editingMemorySetId, fromShared, initialItems, params.title, user?.id]
+      `@memopal:number-peg-studio:${user?.id ?? 'local'}:${
+        editingMemorySetId ??
+        (predefinedLessonId
+          ? `predefined:${predefinedLessonId}`
+          : fromShared
+            ? `${firstParam(params.title) ?? ''}:${initialItems.join('|')}`
+            : 'direct')
+      }`,
+    [editingMemorySetId, fromShared, initialItems, params.title, predefinedLessonId, user?.id]
   );
   const current = scenes[index];
   const pegNumber = (index % Math.max(1, unlocked)) + 1;
@@ -231,7 +259,12 @@ export default function NumberPegComposerScreen() {
     setIsGenerating(false);
   };
   const generate = useCallback(
-    async (values: SceneDraft[], positions: number[], preview = false, skipConfirmation = false) => {
+    async (
+      values: SceneDraft[],
+      positions: number[],
+      preview = false,
+      skipConfirmation = false
+    ) => {
       if (generatingRef.current || savingRef.current) return;
       generatingRef.current = true;
       setIsGenerating(true);
@@ -285,14 +318,19 @@ export default function NumberPegComposerScreen() {
             setEditStory(false);
           }
         } else setScenes(nextScenes);
-        const acceptedCount = result.suggestions.filter((suggestion) => suggestion.source === 'ai').length;
-        if (acceptedCount < positions.length) setMessage(language === 'zh'
-          ? acceptedCount === 0
-            ? '本次没有生成可用的新联想。原故事已保留，未扣费。'
-            : '部分联想未生成成功，未成功的故事已原样保留，且未扣除对应积分。'
-          : acceptedCount === 0
-            ? 'No usable new story was generated. Your original story is unchanged. No credits charged.'
-            : 'Some stories could not be generated. Those stories are unchanged and were not charged.');
+        const acceptedCount = result.suggestions.filter(
+          (suggestion) => suggestion.source === 'ai'
+        ).length;
+        if (acceptedCount < positions.length)
+          setMessage(
+            language === 'zh'
+              ? acceptedCount === 0
+                ? '本次没有生成可用的新联想。原故事已保留，未扣费。'
+                : '部分联想未生成成功，未成功的故事已原样保留，且未扣除对应积分。'
+              : acceptedCount === 0
+                ? 'No usable new story was generated. Your original story is unchanged. No credits charged.'
+                : 'Some stories could not be generated. Those stories are unchanged and were not charged.'
+          );
       } catch (error) {
         if (requestVersion.current === version) {
           setScenes(values);
@@ -325,7 +363,8 @@ export default function NumberPegComposerScreen() {
               ? JSON.stringify(d.items) === JSON.stringify(initialItems)
               : d.items.length > 0)
           ) {
-            if (isOnboarding && typeof d.savedMemorySetId === 'string') onboardingMemoryIdRef.current = d.savedMemorySetId;
+            if (isOnboarding && typeof d.savedMemorySetId === 'string')
+              onboardingMemoryIdRef.current = d.savedMemorySetId;
             setTitle(d.title);
             setGoalType(d.goalType);
             setItems(d.items);
@@ -340,6 +379,28 @@ export default function NumberPegComposerScreen() {
       setLoaded(true);
     });
   }, [draftKey, fromShared, initialItems, loaded, isOnboarding]);
+  useEffect(() => {
+    if (!loaded || !predefinedLesson || !predefinedLessonId || !items.length) return;
+    setScenes((current) =>
+      current.map((scene, index) => {
+        const lessonItem = findPredefinedMemoryLessonItem(
+          predefinedLesson,
+          scene.answer,
+          index,
+          language === 'zh' ? 'zh' : 'en'
+        );
+        const association = lessonItem
+          ? (language === 'zh' ? lessonItem.associationZh : lessonItem.associationEn).trim()
+          : '';
+        return {
+          ...scene,
+          sceneText: association,
+          source: 'curated',
+          recipe: { ...scene.recipe, caption: association, associationSource: 'customized' },
+        };
+      })
+    );
+  }, [items.length, language, loaded, predefinedLesson, predefinedLessonId]);
   useEffect(() => {
     if (loaded && items.length)
       void AsyncStorage.setItem(
@@ -378,7 +439,15 @@ export default function NumberPegComposerScreen() {
         setMessage(t('addThingMessage'));
         return;
       }
-      const generatedScenes = initialScenes(items, unlocked, anchors, t);
+      const generatedScenes = initialScenes(
+        items,
+        unlocked,
+        anchors,
+        t,
+        predefinedLesson,
+        language,
+        Boolean(predefinedLessonId)
+      );
       const next = items.map((value, i) =>
         scenes[i]?.answer === value ? scenes[i] : generatedScenes[i]
       );
@@ -469,7 +538,9 @@ export default function NumberPegComposerScreen() {
             disabled={isGenerating}
             onPress={buildScenes}
             style={[styles.next, isGenerating && styles.disabled]}>
-            <Text style={styles.buttonText}>{language === 'zh' ? '进入联想编辑 · 免费模板' : 'Start with free associations'}</Text>
+            <Text style={styles.buttonText}>
+              {language === 'zh' ? '进入联想编辑 · 免费模板' : 'Start with free associations'}
+            </Text>
             <ArrowRight size={17} color={theme.onSun} />
           </AnimatedPressable>
         </ScrollView>
@@ -514,7 +585,9 @@ export default function NumberPegComposerScreen() {
         await linkOnboardingMemory.mutateAsync(onboardingMemoryIdRef.current);
         await AsyncStorage.removeItem(draftKey);
         router.replace(
-          guidedStarter ? guidedStarterSessionHref(onboardingMemoryIdRef.current) : `/number-peg/${onboardingMemoryIdRef.current}?returnTo=practice&mode=recall` as Href
+          guidedStarter
+            ? guidedStarterSessionHref(onboardingMemoryIdRef.current)
+            : (`/number-peg/${onboardingMemoryIdRef.current}?returnTo=practice&mode=recall` as Href)
         );
         return;
       }
@@ -531,7 +604,9 @@ export default function NumberPegComposerScreen() {
           memoryFolderId,
           description: firstParam(params.description),
           emoji: firstParam(params.emoji),
-          expectedVersion: editingMemorySetId ? Number(firstParam(params.expectedVersion)) : undefined,
+          expectedVersion: editingMemorySetId
+            ? Number(firstParam(params.expectedVersion))
+            : undefined,
           title: `${(title.trim() || suggestMemoryTitle(goalType, items)).slice(0, 200 - suffix.length)}${suffix}`,
           goalType,
           techniqueKey: 'number-peg',
@@ -555,20 +630,36 @@ export default function NumberPegComposerScreen() {
             })),
           },
         };
-        created.push(editingMemorySetId
-          ? await updateMemorySet.mutateAsync({ memorySetId: editingMemorySetId, request: req })
-          : await createMemorySet.mutateAsync(req));
+        created.push(
+          editingMemorySetId
+            ? await updateMemorySet.mutateAsync({ memorySetId: editingMemorySetId, request: req })
+            : await createMemorySet.mutateAsync(req)
+        );
       }
       if (created[0]) {
         if (isOnboarding) {
           onboardingMemoryIdRef.current = created[0].id;
-          await AsyncStorage.setItem(draftKey, JSON.stringify({ schemaVersion: 1, kind: 'number-peg-studio',
-            step, title, goalType, items, scenes, index, savedMemorySetId: created[0].id } satisfies StudioDraft));
+          await AsyncStorage.setItem(
+            draftKey,
+            JSON.stringify({
+              schemaVersion: 1,
+              kind: 'number-peg-studio',
+              step,
+              title,
+              goalType,
+              items,
+              scenes,
+              index,
+              savedMemorySetId: created[0].id,
+            } satisfies StudioDraft)
+          );
           await linkOnboardingMemory.mutateAsync(created[0].id);
         }
         await AsyncStorage.removeItem(draftKey);
         router.replace(
-          guidedStarter ? guidedStarterSessionHref(created[0].id) : `/number-peg/${created[0].id}?returnTo=${fromShared ? 'practice' : 'number-peg'}${isOnboarding ? '&mode=recall' : ''}` as Href
+          guidedStarter
+            ? guidedStarterSessionHref(created[0].id)
+            : (`/number-peg/${created[0].id}?returnTo=${fromShared ? 'practice' : 'number-peg'}${isOnboarding ? '&mode=recall' : ''}` as Href)
         );
       }
     } catch {
@@ -599,7 +690,12 @@ export default function NumberPegComposerScreen() {
         ref={studioScroll}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="none"
-        refreshControl={<RefreshControl refreshing={aiCredits.isRefetching} onRefresh={() => void aiCredits.refetch()} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={aiCredits.isRefetching}
+            onRefresh={() => void aiCredits.refetch()}
+          />
+        }
         contentContainerStyle={styles.content}>
         <ScrollView
           ref={progressScrollRef}
@@ -635,31 +731,41 @@ export default function NumberPegComposerScreen() {
             </Text>
           </View>
         ) : null}
-        <AnimatedPressable onPress={replayBuilderTour} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: theme.link }}>{tourT('guideEntry')}</Text></AnimatedPressable>
+        <AnimatedPressable
+          onPress={replayBuilderTour}
+          style={{ minHeight: 44, justifyContent: 'center' }}>
+          <Text style={{ color: theme.link }}>{tourT('guideEntry')}</Text>
+        </AnimatedPressable>
         <View style={styles.stageCard}>
-          <SpotlightTarget id="builderScene" onReveal={() => studioScroll.current?.scrollTo({ y: 0, animated: false })}>
-          <View style={styles.stageTopRow}>
-            <View style={styles.anchorPill}>
-              <Text style={styles.anchorPillEmoji}>{currentAnchor.image}</Text>
-              <Text style={styles.anchorPillText}>
-                {t('pegLabel')} {pegNumber} · {currentAnchor.keyword}
-              </Text>
+          <SpotlightTarget
+            id="builderScene"
+            onReveal={() => studioScroll.current?.scrollTo({ y: 0, animated: false })}>
+            <View style={styles.stageTopRow}>
+              <View style={styles.anchorPill}>
+                <Text style={styles.anchorPillEmoji}>{currentAnchor.image}</Text>
+                <Text style={styles.anchorPillText}>
+                  {t('pegLabel')} {pegNumber} · {currentAnchor.keyword}
+                </Text>
+              </View>
             </View>
-          </View>
           </SpotlightTarget>
           <View style={styles.captionPanel}>
             <Text style={styles.heading}>{copy.story}</Text>
             <Text style={styles.targetWord}>{current.answer}</Text>
             <Text style={styles.sectionHint}>
               {isGenerating
-                ? language === 'zh' ? '当前联想 · 暂时保留' : 'Current story · kept while generating'
+                ? language === 'zh'
+                  ? '当前联想 · 暂时保留'
+                  : 'Current story · kept while generating'
                 : current.source === 'ai'
                   ? copy.ai
-                  : current.source === 'manual'
-                    ? copy.manual
-                    : current.source === 'mixed'
-                      ? copy.mixed
-                      : copy.template}
+                  : current.source === 'curated'
+                    ? copy.curated
+                    : current.source === 'manual'
+                      ? copy.manual
+                      : current.source === 'mixed'
+                        ? copy.mixed
+                        : copy.template}
             </Text>
             {editStory ? (
               <TextInput
@@ -691,25 +797,63 @@ export default function NumberPegComposerScreen() {
             ) : (
               <Text style={styles.caption}>{current.sceneText}</Text>
             )}
-            <NumberPegImageEditor key={`${index}:${current.answer}`}
-              input={{ pegNumber: currentAnchor.pegNumber, pegKeyword: currentAnchor.keyword, word: current.answer, story: current.sceneText }}
-              imagePath={current.sceneAssetUrl} imageStory={current.imageStory} jobId={current.imageJobId}
+            <NumberPegImageEditor
+              key={`${index}:${current.answer}`}
+              input={{
+                pegNumber: currentAnchor.pegNumber,
+                pegKeyword: currentAnchor.keyword,
+                word: current.answer,
+                story: current.sceneText,
+              }}
+              imagePath={current.sceneAssetUrl}
+              imageStory={current.imageStory}
+              jobId={current.imageJobId}
               disabled={isGenerating || isSaving}
-              onJob={(id) => setScenes((all) => all.map((scene, i) => i === index ? { ...scene, imageJobId: id } : scene))}
-              onAdopt={(path, story) => setScenes((all) => all.map((scene, i) => i === index ? { ...scene, sceneAssetUrl: path, imageStory: story } : scene))}
-              onRemove={() => setScenes((all) => all.map((scene, i) => i === index ? { ...scene, sceneAssetUrl: undefined, imageStory: undefined, imageJobId: undefined } : scene))}
+              onJob={(id) =>
+                setScenes((all) =>
+                  all.map((scene, i) => (i === index ? { ...scene, imageJobId: id } : scene))
+                )
+              }
+              onAdopt={(path, story) =>
+                setScenes((all) =>
+                  all.map((scene, i) =>
+                    i === index ? { ...scene, sceneAssetUrl: path, imageStory: story } : scene
+                  )
+                )
+              }
+              onRemove={() =>
+                setScenes((all) =>
+                  all.map((scene, i) =>
+                    i === index
+                      ? {
+                          ...scene,
+                          sceneAssetUrl: undefined,
+                          imageStory: undefined,
+                          imageJobId: undefined,
+                        }
+                      : scene
+                  )
+                )
+              }
             />
             {isGenerating && (
-              <View style={styles.generatingPanel} accessibilityLiveRegion="polite" accessibilityState={{ busy: true }}>
+              <View
+                style={styles.generatingPanel}
+                accessibilityLiveRegion="polite"
+                accessibilityState={{ busy: true }}>
                 <View style={styles.generatingHeading}>
                   <ActivityIndicator size="small" color={theme.berryDeep} />
                   <Text style={styles.generatingTitle}>{copy.generating}</Text>
                 </View>
-                <Text style={styles.generatingHint}>{language === 'zh'
-                  ? '新联想准备好后才会替换，当前故事会保留。'
-                  : 'Your current story stays here until the new one is ready.'}</Text>
+                <Text style={styles.generatingHint}>
+                  {language === 'zh'
+                    ? '新联想准备好后才会替换，当前故事会保留。'
+                    : 'Your current story stays here until the new one is ready.'}
+                </Text>
                 <AnimatedPressable onPress={cancelGeneration} style={styles.stopWaiting}>
-                  <Text style={styles.replayText}>{language === 'zh' ? '停止等待' : 'Stop waiting'}</Text>
+                  <Text style={styles.replayText}>
+                    {language === 'zh' ? '停止等待' : 'Stop waiting'}
+                  </Text>
                 </AnimatedPressable>
               </View>
             )}
@@ -759,7 +903,9 @@ export default function NumberPegComposerScreen() {
                         styles.improveStoryAction,
                         (isGenerating || isSaving || !current.sceneText.trim()) && styles.disabled,
                       ]}>
-                      <Text accessible={false} style={styles.storyActionIcon}>✨</Text>
+                      <Text accessible={false} style={styles.storyActionIcon}>
+                        ✨
+                      </Text>
                       <Text style={styles.storyActionText}>{copy.improveStory}</Text>
                     </AnimatedPressable>
                   </>
@@ -811,9 +957,18 @@ export default function NumberPegComposerScreen() {
         <AnimatedPressable
           disabled={isGenerating || isSaving}
           style={styles.batchGenerateButton}
-          onPress={() => void generate(scenes, scenes.map((_, i) => i))}>
-          <Text style={styles.batchGenerateText}>{language === 'zh' ? '为全部词语生成联想' : 'Generate stories for all words'}</Text>
-          <Text style={styles.batchGenerateHint}>{language === 'zh' ? '批量更新整组故事' : 'Update the full set at once'}</Text>
+          onPress={() =>
+            void generate(
+              scenes,
+              scenes.map((_, i) => i)
+            )
+          }>
+          <Text style={styles.batchGenerateText}>
+            {language === 'zh' ? '为全部词语生成联想' : 'Generate stories for all words'}
+          </Text>
+          <Text style={styles.batchGenerateHint}>
+            {language === 'zh' ? '批量更新整组故事' : 'Update the full set at once'}
+          </Text>
         </AnimatedPressable>
         <View style={styles.actions}>
           <AnimatedPressable
@@ -830,27 +985,30 @@ export default function NumberPegComposerScreen() {
             </Text>
           </AnimatedPressable>
           <View style={styles.equalSlot}>
-          <SpotlightTarget id="builderNext" onReveal={() => studioScroll.current?.scrollToEnd({ animated: false })} onActivate={advance}>
-          <AnimatedPressable
-            disabled={isSaving || isGenerating || Boolean(storyPreview)}
-            onPress={advance}
-            accessibilityState={{ disabled: isSaving || isGenerating || Boolean(storyPreview) }}
-            style={[
-              styles.next,
-              (isSaving || isGenerating || Boolean(storyPreview)) && styles.disabled,
-            ]}>
-            <Text style={[styles.buttonText, styles.navigationButtonText]}>
-              {isSaving
-                ? t('saving')
-                : index === items.length - 1
-                  ? isOnboarding && !guidedStarter
-                    ? t('startRecall')
-                    : t('saveMemory')
-                  : copy.accept}
-            </Text>
-            <ArrowRight size={17} color={theme.onSun} />
-          </AnimatedPressable>
-          </SpotlightTarget>
+            <SpotlightTarget
+              id="builderNext"
+              onReveal={() => studioScroll.current?.scrollToEnd({ animated: false })}
+              onActivate={advance}>
+              <AnimatedPressable
+                disabled={isSaving || isGenerating || Boolean(storyPreview)}
+                onPress={advance}
+                accessibilityState={{ disabled: isSaving || isGenerating || Boolean(storyPreview) }}
+                style={[
+                  styles.next,
+                  (isSaving || isGenerating || Boolean(storyPreview)) && styles.disabled,
+                ]}>
+                <Text style={[styles.buttonText, styles.navigationButtonText]}>
+                  {isSaving
+                    ? t('saving')
+                    : index === items.length - 1
+                      ? isOnboarding && !guidedStarter
+                        ? t('startRecall')
+                        : t('saveMemory')
+                      : copy.accept}
+                </Text>
+                <ArrowRight size={17} color={theme.onSun} />
+              </AnimatedPressable>
+            </SpotlightTarget>
           </View>
         </View>
       </ScrollView>
@@ -862,15 +1020,26 @@ function initialScenes(
   items: string[],
   unlocked: number,
   anchors: SceneAnchor[],
-  t: (key: any) => string
+  t: (key: any) => string,
+  predefinedLesson?: PredefinedMemoryLesson,
+  language: 'en' | 'zh' = 'en',
+  isPredefinedLesson = false
 ) {
   return buildInitialSceneCandidates(items, anchors, unlocked, (key) => t(key as any)).map(
     (candidate, index) => {
       const answer = items[index];
+      const lessonItem = findPredefinedMemoryLessonItem(predefinedLesson, answer, index, language);
+      const association = lessonItem
+        ? (language === 'zh' ? lessonItem.associationZh : lessonItem.associationEn).trim()
+        : '';
+      const sceneText = association || (isPredefinedLesson ? '' : candidate.sceneText);
       return {
         answer,
-        sceneText: candidate.sceneText,
-        recipe: candidate.recipe,
+        sceneText,
+        source: association ? 'curated' : isPredefinedLesson ? 'curated' : undefined,
+        recipe: association
+          ? { ...candidate.recipe, caption: association, associationSource: 'customized' as const }
+          : candidate.recipe,
       };
     }
   );
@@ -1109,9 +1278,29 @@ const useStyles = createThemedStyles((theme) =>
       paddingHorizontal: 10,
     },
     replayText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-    batchGenerateButton: { minHeight: 52, marginTop: 12, marginBottom: 2, borderRadius: 14, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
-    batchGenerateText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-    batchGenerateHint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 2 },
+    batchGenerateButton: {
+      minHeight: 52,
+      marginTop: 12,
+      marginBottom: 2,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderColor: theme.violetLine,
+      backgroundColor: theme.violetTint,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 14,
+    },
+    batchGenerateText: {
+      color: theme.violetDeep,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 12,
+    },
+    batchGenerateHint: {
+      color: theme.inkSoft,
+      fontFamily: typography.bodySemibold,
+      fontSize: 10,
+      marginTop: 2,
+    },
     buttonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 13 },
     heading: {
       color: theme.ink,
@@ -1132,10 +1321,27 @@ const useStyles = createThemedStyles((theme) =>
       marginTop: 10,
     },
     storyTools: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-    generatingPanel: { marginTop: 18, padding: 16, borderRadius: 16, backgroundColor: theme.paper, gap: 10 },
-    generatingHeading: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
+    generatingPanel: {
+      marginTop: 18,
+      padding: 16,
+      borderRadius: 16,
+      backgroundColor: theme.paper,
+      gap: 10,
+    },
+    generatingHeading: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 10,
+    },
     generatingTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
-    generatingHint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20, textAlign: 'center' },
+    generatingHint: {
+      color: theme.inkSoft,
+      fontFamily: typography.bodySemibold,
+      fontSize: 13,
+      lineHeight: 20,
+      textAlign: 'center',
+    },
     stopWaiting: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
     storyActionGroup: { marginTop: 18, gap: 10 },
     storyActionRow: { flexDirection: 'row', gap: 10 },

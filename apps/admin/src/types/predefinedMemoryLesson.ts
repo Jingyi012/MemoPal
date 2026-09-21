@@ -6,6 +6,8 @@ export interface PredefinedMemoryLessonItemDto {
   position: number;
   contentEn: string;
   contentZh: string;
+  associationEn: string;
+  associationZh: string;
   createdAt: string;
   createdBy?: string | null;
   updatedAt: string;
@@ -24,6 +26,7 @@ export interface PredefinedMemoryLessonDto {
   category: PredefinedMemoryLessonCategoryDto;
   techniqueKey: LessonTechnique;
   goalType: LessonGoalType;
+  palaceSceneId?: string | null;
   sortOrder: number;
   isPublished: boolean;
   isStarterLesson: boolean;
@@ -40,6 +43,8 @@ export interface PredefinedMemoryLessonItemInput {
   position: number;
   contentEn: string;
   contentZh: string;
+  associationEn: string;
+  associationZh: string;
 }
 
 export interface PredefinedMemoryLessonUpsertRequest {
@@ -54,6 +59,7 @@ export interface PredefinedMemoryLessonUpsertRequest {
   categoryId: string;
   techniqueKey: LessonTechnique;
   goalType: LessonGoalType;
+  palaceSceneId?: string | null;
   sortOrder: number;
   isPublished: boolean;
   isStarterLesson: boolean;

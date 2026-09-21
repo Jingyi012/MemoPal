@@ -3,6 +3,7 @@ using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.PredefinedMemoryLessons.DTOs;
+using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.PredefinedMemoryLessons.Commands;
@@ -24,6 +25,7 @@ public sealed class CreatePredefinedMemoryLessonCommandHandler(IAppDbContext db)
         var category = await db.PredefinedMemoryLessonCategories.FirstOrDefaultAsync(
             x => x.Id == request.Request.CategoryId && !x.IsDeleted,
             cancellationToken) ?? throw new ValidationAppException("The selected lesson category does not exist.");
+        await PredefinedMemoryLessonValidation.ValidatePalaceSceneAsync(db, request.Request, cancellationToken);
         if (request.Request.IsPublished && !category.IsActive)
             throw new ValidationAppException("Activate the selected category before publishing this lesson.");
         var key = request.Request.Key.Trim();
@@ -72,6 +74,7 @@ public sealed class UpdatePredefinedMemoryLessonCommandHandler(IAppDbContext db)
         var category = await db.PredefinedMemoryLessonCategories.FirstOrDefaultAsync(
             x => x.Id == request.Request.CategoryId && !x.IsDeleted,
             cancellationToken) ?? throw new ValidationAppException("The selected lesson category does not exist.");
+        await PredefinedMemoryLessonValidation.ValidatePalaceSceneAsync(db, request.Request, cancellationToken);
         if (request.Request.IsPublished && !category.IsActive)
             throw new ValidationAppException("Activate the selected category before publishing this lesson.");
         var key = request.Request.Key.Trim();
@@ -84,6 +87,26 @@ public sealed class UpdatePredefinedMemoryLessonCommandHandler(IAppDbContext db)
         lesson.Category = category;
         await ContentLibraryPersistence.SaveChangesAsync(db, cancellationToken);
         return ApiResponse<PredefinedMemoryLessonDto>.Ok(PredefinedMemoryLessonMapper.ToDto(lesson));
+    }
+}
+
+internal static class PredefinedMemoryLessonValidation
+{
+    public static async Task ValidatePalaceSceneAsync(
+        IAppDbContext db,
+        PredefinedMemoryLessonUpsertRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.TechniqueKey != MemoryTechniqueKeys.Palace)
+            return;
+
+        var exists = await db.PalaceScenes.AnyAsync(
+            x => x.Id == request.PalaceSceneId &&
+                !x.IsDeleted &&
+                x.Status == PalaceSceneStatuses.Published,
+            cancellationToken);
+        if (!exists)
+            throw new ValidationAppException("Choose a published Palace scene for this lesson.");
     }
 }
 

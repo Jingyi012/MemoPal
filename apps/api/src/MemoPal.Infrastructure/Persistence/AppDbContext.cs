@@ -463,6 +463,7 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.Emoji).HasMaxLength(32);
             b.Property(x => x.TechniqueKey).HasMaxLength(32);
             b.Property(x => x.GoalType).HasMaxLength(32);
+            b.Property(x => x.PalaceSceneId).HasMaxLength(64);
             b.HasIndex(x => x.Key).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
             b.HasIndex(x => new { x.IsPublished, x.SortOrder, x.IsDeleted });
             b.HasIndex(x => new { x.IsStarterLesson, x.IsPublished, x.SortOrder, x.IsDeleted });
@@ -495,6 +496,8 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasKey(x => x.Id);
             b.Property(x => x.ContentEn).HasMaxLength(500);
             b.Property(x => x.ContentZh).HasMaxLength(500);
+            b.Property(x => x.AssociationEn).HasMaxLength(1000);
+            b.Property(x => x.AssociationZh).HasMaxLength(1000);
             b.HasIndex(x => new { x.LessonId, x.Position })
                 .IsUnique()
                 .HasFilter("\"IsDeleted\" = FALSE");

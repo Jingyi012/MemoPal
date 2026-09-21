@@ -8,6 +8,8 @@ export interface PredefinedMemoryLessonItem extends Auditable {
   position: number;
   contentEn: string;
   contentZh: string;
+  associationEn: string;
+  associationZh: string;
 }
 
 export interface PredefinedMemoryLesson extends Auditable {
@@ -22,6 +24,7 @@ export interface PredefinedMemoryLesson extends Auditable {
   category: PredefinedMemoryLessonCategory;
   techniqueKey: LessonTechnique;
   goalType: LessonGoalType;
+  palaceSceneId?: string | null;
   sortOrder: number;
   isPublished: boolean;
   isStarterLesson: boolean;

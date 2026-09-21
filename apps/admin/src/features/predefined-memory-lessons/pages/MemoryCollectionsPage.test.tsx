@@ -12,7 +12,7 @@ vi.mock('../../../api/adminMemoryCollectionsApi', () => ({ adminMemoryCollection
 vi.mock('../../../api/adminPredefinedMemoryLessonsApi', () => ({ adminPredefinedMemoryLessonsApi: { list: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() }, adminPredefinedMemoryLessonCategoriesApi: { list: vi.fn() } }));
 const category: PredefinedMemoryLessonCategoryDto = { id: 'category', key: 'languages', nameEn: 'Languages', nameZh: '语言', descriptionEn: '', descriptionZh: '', emoji: '🌏', sortOrder: 1, isActive: true, version: 1, createdAt: '', updatedAt: '' };
 const lesson: PredefinedMemoryLessonDto = { id: 'lesson', key: 'spring-words', titleEn: 'Spring words', titleZh: '春天词汇', descriptionEn: '', descriptionZh: '', emoji: '🌱', categoryId: category.id, category, techniqueKey: 'number-peg', goalType: 'spelling', sortOrder: 1, isPublished: false, isStarterLesson: false, version: 3,
-  items: [{ id: 'item', position: 1, contentEn: 'Spring', contentZh: '春', createdAt: '', updatedAt: '' }], createdAt: '', updatedAt: '' };
+  items: [{ id: 'item', position: 1, contentEn: 'Spring', contentZh: '春', associationEn: 'A spring bounces on a drum.', associationZh: '春天在鼓上弹跳。', createdAt: '', updatedAt: '' }], createdAt: '', updatedAt: '' };
 const collection: MemoryCollectionDto = { id: 'collection', titleEn: 'Language basics', titleZh: '基础语言', descriptionEn: '', descriptionZh: '', emoji: '📚', categoryId: category.id, isPublished: false, sortOrder: 1, version: 4, lessons: [] };
 function mount(path = '/admin/content/memory-collections') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });

@@ -18,9 +18,12 @@ export function ensurePalaceAssociations(
   items: string[],
   loci: PalaceLocus[],
   associations: string[],
+  authoredAssociations?: string[],
 ) {
   return items.map((item, index) => {
     const locus = loci[index];
-    return associations[index] ?? createPalaceAssociation(item, locus?.name ?? `locus ${index + 1}`);
+    if (authoredAssociations) return authoredAssociations[index]?.trim() ?? '';
+    return associations[index]
+      || createPalaceAssociation(item, locus?.name ?? `locus ${index + 1}`);
   });
 }

@@ -57,13 +57,17 @@ public sealed class PredefinedMemoryLessonTests
                 Id = created.Data.Items[0].Id,
                 Position = 1,
                 ContentEn = "rhythm",
-                ContentZh = "rhythm"
+                ContentZh = "rhythm",
+                AssociationEn = "A rhythm drum rolls through the first peg.",
+                AssociationZh = "节奏鼓在第一个数字桩上滚过。"
             },
             new PredefinedMemoryLessonItemInput
             {
                 Position = 2,
                 ContentEn = "necessary",
-                ContentZh = "necessary"
+                ContentZh = "necessary",
+                AssociationEn = "Necessary letters march in a bright parade.",
+                AssociationZh = "必要的字母排成一队明亮地走过。"
             }
         ];
         var updated = await new UpdatePredefinedMemoryLessonCommandHandler(db).Handle(
@@ -93,6 +97,21 @@ public sealed class PredefinedMemoryLessonTests
             new GetPublishedPredefinedMemoryLessonsQuery(), default);
 
         Assert.Equal(["first-lesson", "later-lesson"], result.Data!.Select(x => x.Key));
+    }
+
+    [Fact]
+    public async Task Published_Lesson_Requires_Bilingual_Authored_Associations()
+    {
+        await using var db = CreateDbContext("admin-lesson-editor");
+        var category = await AddCategory(db);
+        var request = BuildRequest("missing-association", category.Id, isPublished: true);
+        request.Items[0].AssociationZh = "";
+
+        var error = await Assert.ThrowsAsync<ValidationAppException>(() =>
+            new CreatePredefinedMemoryLessonCommandHandler(db).Handle(
+                new CreatePredefinedMemoryLessonCommand(request), default));
+
+        Assert.Contains("Chinese association", error.Message);
     }
 
     [Fact]
@@ -136,7 +155,14 @@ public sealed class PredefinedMemoryLessonTests
         request.Items =
         [
             request.Items[0],
-            new PredefinedMemoryLessonItemInput { Position = 2, ContentEn = "apple", ContentZh = "苹果" }
+            new PredefinedMemoryLessonItemInput
+            {
+                Position = 2,
+                ContentEn = "apple",
+                ContentZh = "苹果",
+                AssociationEn = "An apple bounces onto the second peg.",
+                AssociationZh = "苹果跳到第二个数字桩上。"
+            }
         ];
         var created = await new CreatePredefinedMemoryLessonCommandHandler(db).Handle(
             new CreatePredefinedMemoryLessonCommand(request), default);
@@ -162,7 +188,9 @@ public sealed class PredefinedMemoryLessonTests
             {
                 Position = 1,
                 ContentEn = "rhythm",
-                ContentZh = "rhythm"
+                ContentZh = "rhythm",
+                AssociationEn = "A rhythm drum rolls into the first peg.",
+                AssociationZh = "节奏鼓滚进第一个数字桩。"
             }
         ]
     };

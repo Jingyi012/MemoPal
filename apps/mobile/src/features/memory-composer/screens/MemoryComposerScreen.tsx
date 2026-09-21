@@ -51,6 +51,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
     memorySetId?: string | string[];
     expectedVersion?: string | string[];
     description?: string | string[];
+    predefinedLessonId?: string | string[];
   }>();
   const { t } = useTranslation('memoryComposer');
   const initialItems = useMemo(() => parseComposerItems(params.items), [params.items]);
@@ -194,7 +195,8 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
   const openTechnique = (technique: TechniqueChoice, routeTitle = title.trim()) => {
     const memorySetId = firstParam(params.memorySetId);
     router.push(buildTechniqueRoute(technique, routeTitle, goalType, itemValues, sceneId, origin, firstParam(params.memoryFolderId),
-      memorySetId ? { memorySetId, expectedVersion: firstParam(params.expectedVersion) ?? '', description: firstParam(params.description) } : undefined) as Href);
+      memorySetId ? { memorySetId, expectedVersion: firstParam(params.expectedVersion) ?? '', description: firstParam(params.description) } : undefined,
+      firstParam(params.predefinedLessonId)) as Href);
   };
 
   const handleBack = () => {

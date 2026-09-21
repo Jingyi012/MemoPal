@@ -13,6 +13,7 @@ import { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useMemoryCollections, useDownloadMemoryCollection } from '@/features/predefined-memory-lessons/hooks/useMemoryCollections';
 import Toast from 'react-native-toast-message';
+import { predefinedLessonRoute } from '@/features/predefined-memory-lessons/utils/predefinedLessonRoute';
 
 export default function PredefinedLessonCategoryScreen() {
   const { styles, theme } = useStyles();
@@ -161,9 +162,7 @@ function localizeLesson(lesson: PredefinedMemoryLesson, language: 'en' | 'zh') {
 }
 
 function openLesson(router: ReturnType<typeof useRouter>, lesson: PredefinedMemoryLesson, language: 'en' | 'zh') {
-  const localized = localizeLesson(lesson, language);
-  const path = lesson.techniqueKey === 'palace' ? '/palaces/create-memory' : '/number-peg/create';
-  router.push(`${path}?title=${encodeURIComponent(localized.title)}&emoji=${encodeURIComponent(lesson.emoji)}&goalType=${lesson.goalType}&items=${encodeURIComponent(JSON.stringify(localized.items))}` as Href);
+  router.push(predefinedLessonRoute(lesson, language) as Href);
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({

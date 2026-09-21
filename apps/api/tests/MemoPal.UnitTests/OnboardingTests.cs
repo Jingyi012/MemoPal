@@ -48,14 +48,18 @@ public sealed class OnboardingTests
             LessonId = lesson.Id,
             Position = 1,
             ContentEn = "apple",
-            ContentZh = "苹果"
+            ContentZh = "苹果",
+            AssociationEn = "An apple bounces onto the first peg.",
+            AssociationZh = "苹果跳到第一个数字桩上。"
         });
         lesson.Items.Add(new PredefinedMemoryLessonItem
         {
             LessonId = lesson.Id,
             Position = 2,
             ContentEn = "water",
-            ContentZh = "水"
+            ContentZh = "水",
+            AssociationEn = "Water splashes over the second peg.",
+            AssociationZh = "水花溅过第二个数字桩。"
         });
         db.Users.Add(user);
         db.PredefinedMemoryLessons.Add(lesson);

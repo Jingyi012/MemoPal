@@ -33,8 +33,16 @@ public sealed class MemoryCollectionEndpointsTests(CustomWebApplicationFactory f
             {
                 Key = Guid.NewGuid().ToString("N"), TitleEn = $"Lesson {position}", TitleZh = $"课程 {position}",
                 Category = category, CategoryId = category.Id, IsPublished = true, TechniqueKey = technique,
+                PalaceSceneId = technique == MemoryTechniqueKeys.Palace ? "predefined-test-scene" : null,
                 Emoji = position == 1 ? "🌱" : "🌿",
-                Items = [new() { Position = 1, ContentEn = "Spring", ContentZh = "春天" }]
+                Items = [new()
+                {
+                    Position = 1,
+                    ContentEn = "Spring",
+                    ContentZh = "春天",
+                    AssociationEn = "Spring flowers burst across the first stop.",
+                    AssociationZh = "春天的花朵在第一个记忆点绽放。"
+                }]
             };
             collection.Lessons.Add(new() { CollectionId = collection.Id, Lesson = lesson, LessonId = lesson.Id, Position = position });
         }

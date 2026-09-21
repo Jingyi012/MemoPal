@@ -1,9 +1,10 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Col, Flex, Form, Input, InputNumber, Modal, Row, Select, Space, Switch, Table, Typography } from 'antd';
 import { useState } from 'react';
 import type { MemoryCollectionDto } from '../../../api/adminMemoryCollectionsApi';
 import { adminPredefinedMemoryLessonsApi } from '../../../api/adminPredefinedMemoryLessonsApi';
+import { adminPalaceScenesApi } from '../../../api/adminPalaceScenesApi';
 import { extractApiErrorMessage } from '../../../lib/errorMessage';
 import type { PredefinedMemoryLessonCategoryDto, PredefinedMemoryLessonDto, PredefinedMemoryLessonItemInput, PredefinedMemoryLessonUpsertRequest } from '../../../types/predefinedMemoryLesson';
 import { invalidateContentLibrary } from '../hooks/useContentLibrary';
@@ -11,7 +12,8 @@ import { invalidateContentLibrary } from '../hooks/useContentLibrary';
 const blankDraft = (): PredefinedMemoryLessonUpsertRequest => ({
   key: '', titleEn: '', titleZh: '', descriptionEn: '', descriptionZh: '', emoji: '🧠',
   categoryId: '', techniqueKey: 'number-peg', goalType: 'ordered-list', sortOrder: 100,
-  isPublished: false, isStarterLesson: false, items: [{ position: 1, contentEn: '', contentZh: '' }],
+  palaceSceneId: null, isPublished: false, isStarterLesson: false,
+  items: [{ position: 1, contentEn: '', contentZh: '', associationEn: '', associationZh: '' }],
 });
 
 export function LessonEditor({ editing, categories, collection, onClose }: {
@@ -22,13 +24,14 @@ export function LessonEditor({ editing, categories, collection, onClose }: {
 }) {
   const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
+  const palaceScenesQuery = useQuery({ queryKey: ['admin-palace-scenes'], queryFn: adminPalaceScenesApi.list });
   const [initial] = useState<PredefinedMemoryLessonUpsertRequest>(() => editing ? {
     key: editing.key, titleEn: editing.titleEn, titleZh: editing.titleZh,
     descriptionEn: editing.descriptionEn, descriptionZh: editing.descriptionZh,
     emoji: editing.emoji, categoryId: editing.categoryId, techniqueKey: editing.techniqueKey,
-    goalType: editing.goalType, sortOrder: editing.sortOrder, isPublished: editing.isPublished,
+    goalType: editing.goalType, palaceSceneId: editing.palaceSceneId ?? null, sortOrder: editing.sortOrder, isPublished: editing.isPublished,
     isStarterLesson: editing.isStarterLesson, expectedVersion: editing.version,
-    items: editing.items.map(({ id, position, contentEn, contentZh }) => ({ id, position, contentEn, contentZh })),
+    items: editing.items.map(({ id, position, contentEn, contentZh, associationEn, associationZh }) => ({ id, position, contentEn, contentZh, associationEn, associationZh })),
   } : { ...blankDraft(), categoryId: collection?.categoryId ?? categories.find(c => c.isActive)?.id ?? '',
     isPublished: collection?.isPublished ?? false,
     collectionId: collection?.id, expectedCollectionVersion: collection?.version });
@@ -59,7 +62,7 @@ export function LessonEditor({ editing, categories, collection, onClose }: {
   }));
   const addItem = () => setDraft((current) => ({
     ...current,
-    items: [...current.items, { position: current.items.length + 1, contentEn: '', contentZh: '' }],
+    items: [...current.items, { position: current.items.length + 1, contentEn: '', contentZh: '', associationEn: '', associationZh: '' }],
   }));
   const removeItem = (index: number) => setDraft((current) => ({
     ...current,
@@ -68,8 +71,10 @@ export function LessonEditor({ editing, categories, collection, onClose }: {
   }));
   const canSave = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(draft.key) && draft.key.length >= 2 && draft.key.length <= 100 && draft.titleEn.trim() && draft.titleZh.trim()
     && draft.emoji.trim() && draft.categoryId && draft.items.length > 0
+    && (draft.techniqueKey !== 'palace' || draft.palaceSceneId)
     && (!draft.isStarterLesson || (draft.items.length >= 2 && draft.items.length <= 5))
-    && draft.items.every((item) => item.contentEn.trim() && item.contentZh.trim());
+    && draft.items.every((item) => item.contentEn.trim() && item.contentZh.trim()
+      && (!draft.isPublished || (item.associationEn.trim() && item.associationZh.trim())));
   const saveLesson = () => {
     if (saveMutation.isPending) return;
     const isPublishing = draft.isPublished && !editing?.isPublished;
@@ -116,7 +121,8 @@ export function LessonEditor({ editing, categories, collection, onClose }: {
             <Col xs={24} md={12}><Form.Item label='Chinese description' htmlFor='lesson-descriptionZh'><Input.TextArea maxLength={500} showCount rows={2} id='lesson-descriptionZh' value={draft.descriptionZh} onChange={(event) => setDraft({ ...draft, descriptionZh: event.target.value })} /></Form.Item></Col>
           </Row>
           <Row gutter={14}>
-            <Col xs={24} md={6}><Form.Item label='Technique' htmlFor='lesson-techniqueKey'><Select id='lesson-techniqueKey' value={draft.techniqueKey} onChange={(techniqueKey) => setDraft({ ...draft, techniqueKey, isStarterLesson: techniqueKey === 'number-peg' ? draft.isStarterLesson : false })} options={[{ value: 'number-peg', label: 'Number Peg' }, { value: 'palace', label: 'Memory Palace' }]} /></Form.Item></Col>
+            <Col xs={24} md={6}><Form.Item label='Technique' htmlFor='lesson-techniqueKey'><Select id='lesson-techniqueKey' value={draft.techniqueKey} onChange={(techniqueKey) => setDraft({ ...draft, techniqueKey, palaceSceneId: techniqueKey === 'palace' ? draft.palaceSceneId : null, isStarterLesson: techniqueKey === 'number-peg' ? draft.isStarterLesson : false })} options={[{ value: 'number-peg', label: 'Number Peg' }, { value: 'palace', label: 'Memory Palace' }]} /></Form.Item></Col>
+            {draft.techniqueKey === 'palace' && <Col xs={24} md={8}><Form.Item label='Authored Palace scene' htmlFor='lesson-palaceSceneId' required extra='Published lessons use this scene and map items to loci by position.'><Select id='lesson-palaceSceneId' loading={palaceScenesQuery.isLoading} value={draft.palaceSceneId || undefined} placeholder='Choose published scene' onChange={(palaceSceneId) => setDraft({ ...draft, palaceSceneId })} options={(palaceScenesQuery.data ?? []).filter((scene) => scene.status === 'published').map((scene) => ({ value: scene.id, label: `${scene.name} · ${scene.loci.length} loci` }))} /></Form.Item></Col>}
             <Col xs={24} md={6}><Form.Item label='Learning goal' htmlFor='lesson-goalType'><Select id='lesson-goalType' value={draft.goalType} onChange={(goalType) => setDraft({ ...draft, goalType })} options={['spelling', 'ordered-list', 'facts', 'names', 'custom'].map((value) => ({ value, label: value }))} /></Form.Item></Col>
             <Col xs={12} md={6}><Form.Item label='Onboarding starter' htmlFor='lesson-isStarterLesson' extra='Starter lessons use 2–5 items.'><Switch disabled={draft.techniqueKey !== 'number-peg'} checked={draft.isStarterLesson} onChange={(isStarterLesson) => setDraft({ ...draft, isStarterLesson })} checkedChildren='Starter' unCheckedChildren='Regular' /></Form.Item></Col>
             <Col xs={12} md={6}><Form.Item label='Published' htmlFor='lesson-isPublished'><Switch checked={draft.isPublished} onChange={(isPublished) => setDraft({ ...draft, isPublished })} checkedChildren='Visible' unCheckedChildren='Draft' /></Form.Item></Col>
@@ -124,7 +130,7 @@ export function LessonEditor({ editing, categories, collection, onClose }: {
         </Form>
 
         <Flex justify='space-between' align='center' style={{ marginBottom: 10 }}>
-          <div><Typography.Title level={5} style={{ margin: 0 }}>Lesson items</Typography.Title><Typography.Text type='secondary'>Mobile uses English or Chinese content according to the app language.</Typography.Text></div>
+          <div><Typography.Title level={5} style={{ margin: 0 }}>Lesson items and authored associations</Typography.Title><Typography.Text type='secondary'>Published lessons must have a reviewed English and Chinese association for every item. Mobile will not generate a template for these lessons.</Typography.Text></div>
           <Button disabled={saveMutation.isPending || draft.items.length >= 100} icon={<PlusOutlined />} onClick={addItem}>Add item</Button>
         </Flex>
         <Table
@@ -135,12 +141,14 @@ export function LessonEditor({ editing, categories, collection, onClose }: {
             { title: '#', width: 110, render: (_, item, index) => <Space>{item.position}<Button size='small' aria-label={`Move item ${index + 1} up`} disabled={saveMutation.isPending || index === 0} onClick={() => moveItem(index, -1)}>↑</Button><Button size='small' aria-label={`Move item ${index + 1} down`} disabled={saveMutation.isPending || index === draft.items.length - 1} onClick={() => moveItem(index, 1)}>↓</Button></Space> },
             { title: 'English content', render: (_, item, index) => <Input disabled={saveMutation.isPending} aria-label={`Item ${index + 1} English content`} maxLength={500} value={item.contentEn} onChange={(event) => updateItem(index, { contentEn: event.target.value })} /> },
             { title: 'Chinese content', render: (_, item, index) => <Input disabled={saveMutation.isPending} aria-label={`Item ${index + 1} Chinese content`} maxLength={500} value={item.contentZh} onChange={(event) => updateItem(index, { contentZh: event.target.value })} /> },
+            { title: 'English association', render: (_, item, index) => <Input.TextArea disabled={saveMutation.isPending} aria-label={`Item ${index + 1} English association`} maxLength={1000} autoSize={{ minRows: 2, maxRows: 4 }} value={item.associationEn} onChange={(event) => updateItem(index, { associationEn: event.target.value })} placeholder='Write the reviewed memory scene.' /> },
+            { title: 'Chinese association', render: (_, item, index) => <Input.TextArea disabled={saveMutation.isPending} aria-label={`Item ${index + 1} Chinese association`} maxLength={1000} autoSize={{ minRows: 2, maxRows: 4 }} value={item.associationZh} onChange={(event) => updateItem(index, { associationZh: event.target.value })} placeholder='填写审核后的中文联想。' /> },
             { title: '', width: 54, render: (_, _item, index) => <Button danger type='text' aria-label={`Remove item ${index + 1}`} icon={<DeleteOutlined />} disabled={saveMutation.isPending || draft.items.length === 1} onClick={() => removeItem(index)} /> },
           ]}
-          scroll={{ x: 720 }}
+          scroll={{ x: 1250 }}
           size='small'
         />
-        {!canSave && <Typography.Paragraph type='secondary' style={{ marginTop: 12 }}>Complete both titles, a valid key, category, emoji, and both languages for every item. Starter lessons need 2–5 items.</Typography.Paragraph>}
+        {!canSave && <Typography.Paragraph type='secondary' style={{ marginTop: 12 }}>Complete both titles, a valid key, category, emoji, both content languages, and reviewed associations for every published item. Palace lessons also need a published Palace scene. Starter lessons need 2–5 items.</Typography.Paragraph>}
         <Space style={{ marginTop: 12 }}><Typography.Text type='secondary'>Version {editing?.version ?? 1} · changes are fully audited</Typography.Text></Space>
       </Modal>
   );

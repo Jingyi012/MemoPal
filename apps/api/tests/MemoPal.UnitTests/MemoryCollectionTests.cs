@@ -149,7 +149,14 @@ public sealed class MemoryCollectionTests
             {
                 Key = $"dictation-{i}", TitleEn = $"Dictation {i}", TitleZh = $"听写 {i}",
                 Category = category, CategoryId = category.Id, IsPublished = true,
-                Items = [new PredefinedMemoryLessonItem { Position = 1, ContentEn = "Spring", ContentZh = "春天" }]
+                Items = [new PredefinedMemoryLessonItem
+                {
+                    Position = 1,
+                    ContentEn = "Spring",
+                    ContentZh = "春天",
+                    AssociationEn = "Spring flowers burst across the first peg.",
+                    AssociationZh = "春天的花朵在第一个数字桩上绽放。"
+                }]
             };
             collection.Lessons.Add(new() { Lesson = lesson, LessonId = lesson.Id, CollectionId = collection.Id, Position = i });
         }

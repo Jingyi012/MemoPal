@@ -65,6 +65,10 @@ internal static partial class PredefinedMemoryLessonAggregate
             throw new ValidationAppException("Lesson technique is invalid.");
         if (!MemoryGoalTypes.All.Contains(request.GoalType))
             throw new ValidationAppException("Lesson goal type is invalid.");
+        if (request.TechniqueKey == MemoryTechniqueKeys.Palace && string.IsNullOrWhiteSpace(request.PalaceSceneId))
+            throw new ValidationAppException("A Memory Palace lesson needs a Palace scene.");
+        if (request.TechniqueKey == MemoryTechniqueKeys.NumberPeg && !string.IsNullOrWhiteSpace(request.PalaceSceneId))
+            throw new ValidationAppException("Number Peg lessons cannot use a Palace scene.");
         if (request.SortOrder is < 0 or > 10000)
             throw new ValidationAppException("Sort order must be between 0 and 10000.");
         if (request.Items.Count is < 1 or > 100)
@@ -77,6 +81,11 @@ internal static partial class PredefinedMemoryLessonAggregate
                 throw new ValidationAppException("Lesson item positions must be unique positive numbers.");
             ValidateRequired(item.ContentEn, 500, $"English content for item {item.Position}");
             ValidateRequired(item.ContentZh, 500, $"Chinese content for item {item.Position}");
+            if (request.IsPublished)
+            {
+                ValidateRequired(item.AssociationEn, 1000, $"English association for item {item.Position}");
+                ValidateRequired(item.AssociationZh, 1000, $"Chinese association for item {item.Position}");
+            }
         }
 
         if (request.TechniqueKey == MemoryTechniqueKeys.NumberPeg && request.Items.Count > 100)
@@ -98,6 +107,9 @@ internal static partial class PredefinedMemoryLessonAggregate
         lesson.CategoryId = request.CategoryId.Trim();
         lesson.TechniqueKey = request.TechniqueKey;
         lesson.GoalType = request.GoalType;
+        lesson.PalaceSceneId = request.TechniqueKey == MemoryTechniqueKeys.Palace
+            ? request.PalaceSceneId?.Trim()
+            : null;
         lesson.SortOrder = request.SortOrder;
         lesson.IsPublished = request.IsPublished;
         lesson.IsStarterLesson = request.IsStarterLesson;
@@ -115,6 +127,8 @@ internal static partial class PredefinedMemoryLessonAggregate
         item.Position = input.Position;
         item.ContentEn = input.ContentEn.Trim();
         item.ContentZh = input.ContentZh.Trim();
+        item.AssociationEn = input.AssociationEn.Trim();
+        item.AssociationZh = input.AssociationZh.Trim();
     }
 
     private static void ValidateRequired(string value, int maxLength, string label)

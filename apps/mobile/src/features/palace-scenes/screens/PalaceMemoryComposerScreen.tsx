@@ -36,6 +36,8 @@ import type { ComposerOrigin } from '@/features/memory-composer/utils/techniqueR
 import { ComposerProgress } from '@/features/memory-composer/components/ComposerProgress';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
+import { usePredefinedMemoryLesson } from '@/features/predefined-memory-lessons/hooks/usePredefinedMemoryLessons';
+import { findPredefinedMemoryLessonItem } from '@/features/predefined-memory-lessons/utils/predefinedMemoryLessonLocalization';
 
 type ComposerStep = 'setup' | 'place';
 const MAX_PALACE_ITEMS = 100;
@@ -56,11 +58,16 @@ export default function PalaceMemoryComposerScreen() {
     memorySetId?: string | string[];
     expectedVersion?: string | string[];
     description?: string | string[];
+    predefinedLessonId?: string | string[];
   }>();
   const scenesQuery = usePalaceScenes();
   const { user, isLoading: isUserLoading } = useCurrentUser();
   const { createMemorySet, updateMemorySet } = useMemorySetMutations();
   const editingMemorySetId = firstParam(params.memorySetId);
+  const predefinedLessonId = firstParam(params.predefinedLessonId);
+  const predefinedLessonQuery = usePredefinedMemoryLesson(predefinedLessonId);
+  const predefinedLesson = predefinedLessonQuery.data;
+  const isPredefinedLesson = Boolean(predefinedLessonId);
   const generatePalaceAssociations = useGeneratePalaceAssociations();
   const prefilledItems = useMemo(() => parseComposerItems(params.items), [params.items]);
   const fromSharedComposer = prefilledItems.length > 0;
@@ -175,6 +182,13 @@ export default function PalaceMemoryComposerScreen() {
   // placement, keep the route focused on the first locus for each item and
   // hide unused markers/cards instead of presenting empty locations.
   const placementLoci = useMemo(() => loci.slice(0, items.length), [items.length, loci]);
+  const authoredAssociations = useMemo(
+    () => items.map((item, index) => {
+      const lessonItem = findPredefinedMemoryLessonItem(predefinedLesson, item, index, language === 'zh' ? 'zh' : 'en');
+      return lessonItem ? (language === 'zh' ? lessonItem.associationZh : lessonItem.associationEn).trim() : '';
+    }),
+    [items, language, predefinedLesson],
+  );
   const largestAvailableCapacity = getLargestPalaceCapacity(availableScenes);
   const noFittingScene = !sceneAvailabilityLoading && items.length > largestAvailableCapacity;
   const capacityMessage = noFittingScene
@@ -203,10 +217,21 @@ export default function PalaceMemoryComposerScreen() {
     .replace('{needed}', String(getPalaceCapacityShortfall(items.length, getPalaceCapacity(scene))));
 
   useEffect(() => {
+    if (predefinedLesson?.palaceSceneId && selectedSceneId !== predefinedLesson.palaceSceneId) {
+      setSelectedSceneId(predefinedLesson.palaceSceneId);
+    }
+  }, [predefinedLesson, selectedSceneId]);
+
+  useEffect(() => {
     if (!loci.length || !items.length) return;
-    setAssociations((current) => ensurePalaceAssociations(items, loci, current));
+    setAssociations((current) => ensurePalaceAssociations(
+      items,
+      loci,
+      current,
+      isPredefinedLesson ? authoredAssociations : undefined,
+    ));
     setActiveLocusIndex((current) => Math.min(current, items.length - 1));
-  }, [items, loci]);
+  }, [authoredAssociations, isPredefinedLesson, items, loci]);
 
   useEffect(() => {
     // A request may finish after the user changes the list or scene. Ignore
@@ -357,10 +382,12 @@ export default function PalaceMemoryComposerScreen() {
     }
     setSelectedSceneId(scene.id);
     const sceneLoci = getPalaceLoci(scene);
-    setAssociations(items.map((item, index) => {
-      const locus = sceneLoci[index];
-      return createPalaceAssociation(item, locus ? getPalaceLocusName(locus, language) : `locus ${index + 1}`);
-    }));
+    setAssociations(isPredefinedLesson
+      ? ensurePalaceAssociations(items, sceneLoci, [], authoredAssociations)
+      : items.map((item, index) => {
+        const locus = sceneLoci[index];
+        return createPalaceAssociation(item, locus ? getPalaceLocusName(locus, language) : `locus ${index + 1}`);
+      }));
     setGenerationMessage(null);
     setActiveLocusIndex(0);
     setMessage(null);
@@ -370,6 +397,11 @@ export default function PalaceMemoryComposerScreen() {
     if (!items.length) return setMessage(t('addThingToRemember'));
     if (!selectedScene) return setMessage(noFittingScene ? capacityMessage : t('chooseSceneForPalace'));
     if (!loci.length) return setMessage(t('sceneOnlyHas') + ' 0 ' + t('loci'));
+    if (isPredefinedLesson && associations.some((association) => !association.trim())) {
+      return setMessage(language === 'zh'
+        ? '这堂预设课程还缺少人工联想，暂时无法保存。'
+        : 'This predefined lesson is missing an authored association.');
+    }
     if (!sceneFitsPalaceItems(selectedScene, items.length)) {
       return setMessage(
         t('noSceneFitsBody')
@@ -551,8 +583,8 @@ export default function PalaceMemoryComposerScreen() {
                     return (
                       <AnimatedPressable
                         key={scene.id}
-                        accessibilityState={{ disabled: !fits }}
-                        disabled={!fits}
+                        accessibilityState={{ disabled: !fits || (isPredefinedLesson && scene.id !== predefinedLesson?.palaceSceneId) }}
+                        disabled={!fits || (isPredefinedLesson && scene.id !== predefinedLesson?.palaceSceneId)}
                         onPress={() => selectScene(scene)}
                         style={[styles.sceneOption, styles.sceneOptionGrid, active && styles.sceneOptionActive, !fits && styles.sceneOptionLimited]}>
                         <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneThumb} />
@@ -572,8 +604,8 @@ export default function PalaceMemoryComposerScreen() {
                     return (
                       <AnimatedPressable
                         key={scene.id}
-                        accessibilityState={{ disabled: !fits }}
-                        disabled={!fits}
+                        accessibilityState={{ disabled: !fits || (isPredefinedLesson && scene.id !== predefinedLesson?.palaceSceneId) }}
+                        disabled={!fits || (isPredefinedLesson && scene.id !== predefinedLesson?.palaceSceneId)}
                         onPress={() => selectScene(scene)}
                         style={[styles.sceneOption, active && styles.sceneOptionActive, !fits && styles.sceneOptionLimited]}>
                         <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneThumb} />

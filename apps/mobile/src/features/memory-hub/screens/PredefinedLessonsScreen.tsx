@@ -15,6 +15,7 @@ import { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useMemoryCollections } from '@/features/predefined-memory-lessons/hooks/useMemoryCollections';
 import type { MemoryCollection } from '@/features/predefined-memory-lessons/api/memoryCollections.api';
+import { predefinedLessonRoute } from '@/features/predefined-memory-lessons/utils/predefinedLessonRoute';
 
 type LessonCollection = MemoryCollection & {
   itemCount: number;
@@ -115,12 +116,7 @@ export default function PredefinedLessonsScreen({ embedded = false }: { embedded
                       metadata={`${lesson.items.length} ${t('items')}`}
                       artwork={<Text style={styles.emoji}>{lesson.emoji}</Text>}
                       accessibilityLabel={`${title}, ${lesson.techniqueKey === 'palace' ? t('palace') : t('numberPeg')}`}
-                      onPress={() => {
-                        const path = lesson.techniqueKey === 'palace' ? '/palaces/create-memory' : '/number-peg/create';
-                        router.push({ pathname: path, params: { title, emoji: lesson.emoji, goalType: lesson.goalType,
-                          items: JSON.stringify(lesson.items.slice().sort((a, b) => a.position - b.position)
-                            .map((item) => language === 'zh' ? item.contentZh : item.contentEn)) } } as Href);
-                      }} />;
+                      onPress={() => router.push(predefinedLessonRoute(lesson, language) as Href)} />;
                   }
                   const { collection } = entry;
                   const name = language === 'zh' ? collection.titleZh : collection.titleEn;

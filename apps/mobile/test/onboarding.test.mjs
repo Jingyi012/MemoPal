@@ -3,6 +3,23 @@ import test from 'node:test';
 import { spotlightCardPlacement, tourStorageKey } from '../src/features/onboarding/utils/spotlight.ts';
 import { getStarterLessons, localizeStarterLesson, starterMemoryParams } from '../src/features/onboarding/utils/starterMemory.ts';
 import { guidedStarterSessionHref, practiceCreateHref } from '../src/features/onboarding/utils/onboardingRoutes.ts';
+import { predefinedLessonRoute } from '../src/features/predefined-memory-lessons/utils/predefinedLessonRoute.ts';
+
+test('predefined entry preserves lesson identity and authored Palace scene through navigation', () => {
+  const lesson = { id: 'authored-lesson', titleEn: 'Planets', titleZh: '行星', emoji: '🪐',
+    goalType: 'ordered-list', techniqueKey: 'palace', palaceSceneId: 'home-office',
+    items: [{ position: 2, contentEn: 'Venus', contentZh: '金星' },
+      { position: 1, contentEn: 'Mercury', contentZh: '水星' }] };
+  const palace = predefinedLessonRoute(lesson, 'zh');
+  assert.equal(palace.pathname, '/palaces/create-memory');
+  assert.equal(palace.params.predefinedLessonId, lesson.id);
+  assert.equal(palace.params.sceneId, 'home-office');
+  assert.deepEqual(JSON.parse(palace.params.items), ['水星', '金星']);
+  const peg = predefinedLessonRoute({ ...lesson, techniqueKey: 'number-peg' }, 'en');
+  assert.equal(peg.pathname, '/number-peg/create');
+  assert.equal(peg.params.predefinedLessonId, lesson.id);
+  assert.equal(peg.params.sceneId, undefined);
+});
 
 test('page completion is isolated by account and page', () => {
   assert.notEqual(tourStorageKey('alice', 'practicePage'), tourStorageKey('bob', 'practicePage'));

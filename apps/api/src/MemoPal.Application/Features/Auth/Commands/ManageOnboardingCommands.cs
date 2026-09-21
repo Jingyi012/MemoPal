@@ -40,7 +40,9 @@ public sealed class StartOnboardingCommandHandler(IAppDbContext db)
                     && x.IsStarterLesson
                     && x.TechniqueKey == MemoryTechniqueKeys.NumberPeg
                     && !x.Category.IsDeleted
-                    && x.Category.IsActive,
+                    && x.Category.IsActive
+                    && x.Items.Where(item => !item.IsDeleted)
+                        .All(item => item.AssociationEn != "" && item.AssociationZh != ""),
                 cancellationToken)
             ?? throw new ValidationAppException("Choose an available starter lesson.");
         if (lesson.Items.Count is < 2 or > 5)

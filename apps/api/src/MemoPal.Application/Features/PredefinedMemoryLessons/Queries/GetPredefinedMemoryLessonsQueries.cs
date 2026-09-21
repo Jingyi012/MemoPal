@@ -2,6 +2,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.PredefinedMemoryLessons.DTOs;
+using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.PredefinedMemoryLessons.Queries;
@@ -21,7 +22,7 @@ public sealed class GetPublishedPredefinedMemoryLessonsQueryHandler(IAppDbContex
         var lessons = await db.PredefinedMemoryLessons.AsNoTracking()
             .Include(x => x.Items.Where(item => !item.IsDeleted))
             .Include(x => x.Category)
-            .Where(x => !x.IsDeleted && x.IsPublished && !x.Category.IsDeleted && x.Category.IsActive)
+            .Where(AvailableLessonPredicate())
             .OrderBy(x => x.Category.SortOrder)
             .ThenBy(x => x.SortOrder)
             .ThenBy(x => x.TitleEn)
@@ -29,7 +30,14 @@ public sealed class GetPublishedPredefinedMemoryLessonsQueryHandler(IAppDbContex
         return ApiResponse<IReadOnlyList<PredefinedMemoryLessonDto>>.Ok(
             lessons.Select(PredefinedMemoryLessonMapper.ToDto).ToList());
     }
+
+    private static System.Linq.Expressions.Expression<Func<PredefinedMemoryLesson, bool>> AvailableLessonPredicate() =>
+        x => !x.IsDeleted && x.IsPublished && !x.Category.IsDeleted && x.Category.IsActive
+            && (x.TechniqueKey != MemoryTechniqueKeys.Palace || x.PalaceSceneId != null)
+            && x.Items.Where(item => !item.IsDeleted)
+                .All(item => item.AssociationEn != "" && item.AssociationZh != "");
 }
+
 public sealed class GetPagedPublishedPredefinedMemoryLessonsQueryHandler(IAppDbContext db)
     : IRequestHandler<GetPagedPublishedPredefinedMemoryLessonsQuery, PaginatedResponse<PredefinedMemoryLessonDto>>
 {
@@ -41,11 +49,17 @@ public sealed class GetPagedPublishedPredefinedMemoryLessonsQueryHandler(IAppDbC
         var query = db.PredefinedMemoryLessons.AsNoTracking()
             .Include(x => x.Items.Where(item => !item.IsDeleted))
             .Include(x => x.Category)
-            .Where(x => !x.IsDeleted && x.IsPublished && !x.Category.IsDeleted && x.Category.IsActive)
+            .Where(AvailableLessonPredicate())
             .OrderBy(x => x.Category.SortOrder).ThenBy(x => x.SortOrder).ThenBy(x => x.TitleEn);
         var totalCount = await query.CountAsync(cancellationToken);
         var lessons = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
         return PaginatedResponse<PredefinedMemoryLessonDto>.Ok(
             lessons.Select(PredefinedMemoryLessonMapper.ToDto).ToList(), pageNumber, pageSize, totalCount);
     }
+
+    private static System.Linq.Expressions.Expression<Func<PredefinedMemoryLesson, bool>> AvailableLessonPredicate() =>
+        x => !x.IsDeleted && x.IsPublished && !x.Category.IsDeleted && x.Category.IsActive
+            && (x.TechniqueKey != MemoryTechniqueKeys.Palace || x.PalaceSceneId != null)
+            && x.Items.Where(item => !item.IsDeleted)
+                .All(item => item.AssociationEn != "" && item.AssociationZh != "");
 }

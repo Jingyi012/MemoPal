@@ -4,7 +4,7 @@ import { MEMORY_FOLDER_KEYS } from '@/features/library/queryKeys';
 import { MEMORY_SET_KEYS } from '@/features/memory-sets';
 
 export function useMemoryCollections() {
-  return useQuery({ queryKey: ['memory-collections'], queryFn: memoryCollectionsApi.list, staleTime: 120000 });
+  return useQuery({ queryKey: ['memory-collections', 'v2-authored-associations'], queryFn: memoryCollectionsApi.list, staleTime: 120000 });
 }
 
 export function useDownloadMemoryCollection() {
