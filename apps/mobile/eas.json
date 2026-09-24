@@ -29,6 +29,14 @@
       "android": {
         "buildType": "apk"
       }
+    },
+    "ios-unsigned": {
+      "environment": "preview",
+      "withoutCredentials": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": false
+      }
     }
   },
   "submit": {
