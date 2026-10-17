@@ -1,6 +1,6 @@
 import { ArrowDownOutlined, ArrowUpOutlined, DeleteOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Flex, Form, Input, Segmented, Select, Space, Switch, Tag, Typography } from 'antd';
+import { Alert, App, Button, Flex, Form, Input, InputNumber, Segmented, Select, Space, Switch, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { adminPalaceScenesApi } from '../../../api/adminPalaceScenesApi';
 import { ImageUploadField } from '../../../components/media/ImageUploadField';
@@ -16,9 +16,9 @@ export function PalaceSceneEditor({ scene, onClose }: { scene?: PalaceSceneDto; 
   const client = useQueryClient();
   const { resolveMediaPath } = useAdminMediaApi();
   const [initial] = useState<PalaceSceneUpsertRequest>(() => scene ? {
-    name: scene.name, description: scene.description, imageUrl: scene.imageUrl, status: scene.status, isPremium: scene.isPremium, expectedVersion: scene.version,
+    name: scene.name, description: scene.description, imageUrl: scene.imageUrl, status: scene.status, isPremium: scene.isPremium, unlockLevel: scene.unlockLevel, expectedVersion: scene.version,
     loci: scene.loci.map(({ id, position, name, description, nameEn, nameZh, descriptionEn, descriptionZh, xPercent, yPercent, radiusPercent }) => ({ id, position, name, description: description ?? undefined, nameEn: nameEn ?? undefined, nameZh: nameZh ?? undefined, descriptionEn: descriptionEn ?? undefined, descriptionZh: descriptionZh ?? undefined, xPercent, yPercent, radiusPercent })),
-  } : { name: '', description: '', imageUrl: '', status: 'draft', isPremium: false, loci: [] });
+  } : { name: '', description: '', imageUrl: '', status: 'draft', isPremium: false, unlockLevel: 1, loci: [] });
   const [draft, setDraft] = useState(initial);
   const [selected, setSelected] = useState(0);
   const [panel, setPanel] = useState('settings');
@@ -28,7 +28,7 @@ export function PalaceSceneEditor({ scene, onClose }: { scene?: PalaceSceneDto; 
     onSuccess: async () => { await client.invalidateQueries({ queryKey: ['admin-palace-scenes'] }); message.success('Palace scene saved.'); onClose(); },
     onError: error => message.error(extractApiErrorMessage(error, 'Could not save scene. Your changes are still here.')) });
   const busy = save.isPending || uploading;
-  const valid = Boolean(draft.name.trim() && draft.imageUrl.trim() && draft.loci.every(l => l.name.trim()) && (draft.status !== 'published' || draft.loci.length));
+  const valid = Boolean(draft.name.trim() && draft.imageUrl.trim() && draft.unlockLevel >= 1 && draft.loci.every(l => l.name.trim()) && (draft.status !== 'published' || draft.loci.length));
   const close = () => {
     if (busy) return;
     if (JSON.stringify(initial) === JSON.stringify(draft)) { onClose(); return; }
@@ -73,6 +73,7 @@ export function PalaceSceneEditor({ scene, onClose }: { scene?: PalaceSceneDto; 
             onUploadError={error => message.error(extractApiErrorMessage(error, 'Image upload failed. Please try again.'))} onChange={imageUrl => setDraft(current => ({ ...current, imageUrl }))} /></Form.Item>
           <Form.Item label='Publication status' htmlFor='scene-status'><Select id='scene-status' value={draft.status} onChange={status => setDraft({ ...draft, status })} options={[{ value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }, { value: 'archived', label: 'Archived' }]} /></Form.Item>
           <Form.Item label='Premium access' extra='Require Premium to use this scene.'><Switch aria-label='Premium access' checked={draft.isPremium} onChange={isPremium => setDraft({ ...draft, isPremium })} /></Form.Item>
+          <Form.Item label='Unlock level' extra='Players can use this scene when they reach this level.' required><InputNumber aria-label='Unlock level' min={1} precision={0} value={draft.unlockLevel} onChange={unlockLevel => setDraft({ ...draft, unlockLevel: unlockLevel ?? 1 })} style={{ width: '100%' }} /></Form.Item>
         </Form></section>
         </> : <LocusInspector locus={draft.loci[selected]} disabled={busy} onChange={value => updatePoint(selected, value)} />}
       </aside>

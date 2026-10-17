@@ -22,6 +22,8 @@ internal static class PalaceSceneAggregate
             throw new ValidationAppException("A Palace scene image is required.");
         if (!AllowedStatuses.Contains(request.Status))
             throw new ValidationAppException("The Palace scene status is invalid.");
+        if (request.UnlockLevel < 1)
+            throw new ValidationAppException("A Palace scene unlock level must be at least 1.");
         if (request.Status == PalaceSceneStatuses.Published && request.Loci.Count == 0)
             throw new ValidationAppException("Add at least one locus before publishing a Palace scene.");
 
@@ -129,6 +131,7 @@ internal static class PalaceSceneAggregate
         scene.ImageUrl = MediaPathNormalizer.Normalize(request.ImageUrl);
         scene.Status = request.Status;
         scene.IsPremium = request.IsPremium;
+        scene.UnlockLevel = request.UnlockLevel;
         scene.IsTemplate = isTemplate;
     }
 

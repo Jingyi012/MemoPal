@@ -7,6 +7,7 @@ import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
+import { isPalaceSceneUnlocked } from '@/features/palace-scenes/utils/palaceCapacity';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight } from 'lucide-react-native';
@@ -21,7 +22,8 @@ export default function PalaceMapScreen() {
   const { user } = useCurrentUser();
   const scenes = usePalaceScenes();
   const isPremium = Boolean(user?.isPremium);
-  const availableScenes = (scenes.data ?? []).filter((scene) => !scene.isPremium || isPremium);
+  const currentLevel = Math.max(1, user?.level ?? 1);
+  const availableScenes = (scenes.data ?? []).filter((scene) => isPalaceSceneUnlocked(scene, currentLevel, isPremium));
 
   return (
     <View style={styles.page}>
@@ -62,16 +64,21 @@ export default function PalaceMapScreen() {
         ) : scenes.data?.length ? (
           <View style={styles.grid}>
             {scenes.data.map((scene) => {
-              const locked = scene.isPremium && !isPremium;
+              const locked = !isPalaceSceneUnlocked(scene, currentLevel, isPremium);
+              const lockReason = scene.isPremium && !isPremium
+                ? t('premium')
+                : t('unlockAtLevel').replace('{level}', String(scene.unlockLevel ?? 1));
               return (
                 <AnimatedPressable
                   key={scene.id}
                   accessibilityLabel={(locked ? t('unlockScene') : t('useScene')).replace('{name}', scene.name)}
-                  onPress={() => router.push((locked ? '/premium' : `/palaces/create-memory?sceneId=${encodeURIComponent(scene.id)}`) as Href)}
+                  onPress={() => {
+                    if (!locked) router.push(`/palaces/create-memory?sceneId=${encodeURIComponent(scene.id)}` as Href);
+                  }}
                   style={[styles.sceneCard, locked && styles.sceneCardLocked]}>
                   <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneImage} />
                   <View style={styles.sceneShade} />
-                  {locked ? <View style={styles.lockBadge}><Text style={styles.lockEmoji}>🔒</Text><Text style={styles.lockText}>{t('premium')}</Text></View> : null}
+                  {locked ? <View style={styles.lockBadge}><Text style={styles.lockEmoji}>🔒</Text><Text style={styles.lockText}>{lockReason}</Text></View> : null}
                   <View style={styles.sceneCopy}>
                     <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
                     <Text style={styles.sceneMeta}>{t('lociCount').replace('{count}', String(scene.loci.length))}</Text>

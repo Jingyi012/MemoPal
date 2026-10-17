@@ -26,7 +26,8 @@ public sealed class GetPalaceScenesQueryHandler
             .Include(x => x.Loci.Where(locus => !locus.IsDeleted))
             .Where(x => !x.IsDeleted &&
                 ((x.IsTemplate && x.Status == PalaceSceneStatuses.Published) || x.UserId == request.UserId))
-            .OrderBy(x => x.IsPremium)
+            .OrderBy(x => x.UnlockLevel)
+            .ThenBy(x => x.IsPremium)
             .ThenBy(x => x.Name)
             .ToListAsync(cancellationToken);
 

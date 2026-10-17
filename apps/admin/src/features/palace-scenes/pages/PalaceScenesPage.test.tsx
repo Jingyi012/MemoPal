@@ -8,7 +8,7 @@ import type { PalaceSceneDto } from '../../../types/palaceScene';
 import PalaceScenesPage from './PalaceScenesPage';
 
 vi.mock('../../../api/adminPalaceScenesApi', () => ({ adminPalaceScenesApi: { list: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() } }));
-const scene: PalaceSceneDto = { id: 'scene', name: 'Quiet library', description: 'A familiar space', imageUrl: '/test-scene.png', status: 'draft', isPremium: false, isTemplate: true, version: 4, createdAt: '', updatedAt: '',
+const scene: PalaceSceneDto = { id: 'scene', name: 'Quiet library', description: 'A familiar space', imageUrl: '/test-scene.png', status: 'draft', isPremium: false, isTemplate: true, unlockLevel: 2, version: 4, createdAt: '', updatedAt: '',
   loci: [1, 2].map(i => ({ id: `point-${i}`, position: i, name: `Point ${i}`, nameZh: `点${i}`, descriptionEn: `Description ${i}`, descriptionZh: `描述${i}`, xPercent: i * 25, yPercent: 50, radiusPercent: 7, createdAt: '', updatedAt: '' })) };
 function mount(path = '/admin/content/palace-scenes') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

@@ -11,6 +11,8 @@ import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
+import { isPalaceSceneUnlocked } from '@/features/palace-scenes/utils/palaceCapacity';
+import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { Href, useRouter } from 'expo-router';
 import { ChevronRight, Pencil } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -27,6 +29,9 @@ export default function PalaceHomeScreen() {
   const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const memorySets = useMemorySets('palace');
   const scenes = usePalaceScenes();
+  const { user } = useCurrentUser();
+  const currentLevel = Math.max(1, user?.level ?? 1);
+  const isPremium = Boolean(user?.isPremium);
   const isRefreshing = memorySets.isRefetching || scenes.isRefetching;
 
   const refresh = () => Promise.allSettled([memorySets.refetch(), scenes.refetch()]);
@@ -105,35 +110,37 @@ export default function PalaceHomeScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.sceneRail}>
-            {scenes.data.slice(0, 4).map((scene) => (
-              <View key={scene.id} style={styles.sceneCardWrap}>
-                <AnimatedPressable
-                  onPress={() =>
-                    router.push({ pathname: '/palaces/create-memory', params: { sceneId: scene.id } })
-                  }
-                  style={styles.sceneCard}>
-                  <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneImage} />
-                  <View style={styles.sceneShade} />
-                  <View style={styles.sceneCopy}>
-                    <Text numberOfLines={1} style={styles.sceneName}>
-                      {scene.name}
-                    </Text>
-                    <Text style={styles.sceneMeta}>{scene.loci.length} {t('memorableLoci')}</Text>
-                  </View>
-                </AnimatedPressable>
-                {!scene.isTemplate ? (
+            {scenes.data.slice(0, 4).map((scene) => {
+              const locked = !isPalaceSceneUnlocked(scene, currentLevel, isPremium);
+              return (
+                <View key={scene.id} style={styles.sceneCardWrap}>
                   <AnimatedPressable
-                    accessibilityLabel={t('editScene').replace('{name}', scene.name)}
-                    onPress={(event) => {
-                      event.stopPropagation();
-                      router.push(`/palaces/create-custom?sceneId=${encodeURIComponent(scene.id)}` as Href);
+                    onPress={() => {
+                      if (!locked) router.push({ pathname: '/palaces/create-memory', params: { sceneId: scene.id } });
                     }}
-                    style={styles.sceneEditButton}>
-                    <Pencil size={15} color={theme.ink} />
+                    style={[styles.sceneCard, locked && styles.sceneCardLocked]}>
+                    <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneImage} />
+                    <View style={styles.sceneShade} />
+                    {locked ? <View style={styles.lockBadge}><Text style={styles.lockEmoji}>🔒</Text><Text style={styles.lockText}>{t('unlockAtLevel').replace('{level}', String(scene.unlockLevel ?? 1))}</Text></View> : null}
+                    <View style={styles.sceneCopy}>
+                      <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
+                      <Text style={styles.sceneMeta}>{locked ? t('unlockAtLevel').replace('{level}', String(scene.unlockLevel ?? 1)) : `${scene.loci.length} ${t('memorableLoci')}`}</Text>
+                    </View>
                   </AnimatedPressable>
-                ) : null}
-              </View>
-            ))}
+                  {!scene.isTemplate ? (
+                    <AnimatedPressable
+                      accessibilityLabel={t('editScene').replace('{name}', scene.name)}
+                      onPress={(event) => {
+                        event.stopPropagation();
+                        router.push(`/palaces/create-custom?sceneId=${encodeURIComponent(scene.id)}` as Href);
+                      }}
+                      style={styles.sceneEditButton}>
+                      <Pencil size={15} color={theme.ink} />
+                    </AnimatedPressable>
+                  ) : null}
+                </View>
+              );
+            })}
           </ScrollView>
         ) : (
           <ModuleNoticeCard
@@ -212,12 +219,16 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     borderWidth: 2,
     borderColor: theme.line,
   },
+  sceneCardLocked: { opacity: 0.78 },
   sceneImage: { ...StyleSheet.absoluteFillObject },
   sceneShade: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(43,42,61,0.25)',
   },
   sceneCopy: { position: 'absolute', left: 7, right: 7, bottom: 6 },
+  lockBadge: { position: 'absolute', top: 6, left: 6, flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 999, backgroundColor: 'rgba(43,42,61,.86)', paddingHorizontal: 6, paddingVertical: 4 },
+  lockEmoji: { fontSize: 9 },
+  lockText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 8 },
   sceneEditButton: { position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 8, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
   sceneName: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 10, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   sceneMeta: { color: 'rgba(255,255,255,0.85)', fontFamily: typography.bodyBold, fontSize: 8.5, marginTop: 1 },

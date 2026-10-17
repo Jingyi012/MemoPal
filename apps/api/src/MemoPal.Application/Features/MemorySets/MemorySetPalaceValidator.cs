@@ -1,5 +1,6 @@
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.MemorySets.DTOs;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -25,10 +26,18 @@ internal static class MemorySetPalaceValidator
             return;
         }
 
+        var user = await db.Users.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == userId && !x.IsDeleted, cancellationToken);
+        var currentLevel = user is null
+            ? 0
+            : await db.ResolveLevelByXpAsync(Math.Max(0, user.TotalXp), cancellationToken);
+        var isPremium = user?.IsPremium == true;
         var canUseScene = await db.PalaceScenes.AnyAsync(x =>
             x.Id == sceneId &&
             !x.IsDeleted &&
-            ((x.IsTemplate && x.Status == PalaceSceneStatuses.Published) || x.UserId == userId),
+            (x.UserId == userId ||
+                (x.IsTemplate && x.Status == PalaceSceneStatuses.Published &&
+                 x.UnlockLevel <= currentLevel && (isPremium || !x.IsPremium))),
             cancellationToken);
 
         if (!canUseScene)

@@ -3,6 +3,7 @@ export interface NumberPegDefinition {
   name: string;
   icon: string;
   description: string;
+  unlockLevel: number;
 }
 
 export interface NumberPegDefinitionsConfig {
@@ -116,7 +117,7 @@ export const NUMBER_PEG_DEFINITIONS_SCHEMA = {
   type: "object",
   title: "Number Peg Definitions",
   description:
-    "Edit the name, icon, and description shown for each of the 100 Number Peg anchors.",
+    "Edit the name, icon, description, and unlock level shown for each of the 100 Number Peg anchors.",
   properties: {
     pegs: {
       type: "array",
@@ -138,8 +139,14 @@ export const NUMBER_PEG_DEFINITIONS_SCHEMA = {
           name: { type: "string", title: "Name", minLength: 1 },
           icon: { type: "string", title: "Icon", minLength: 1 },
           description: { type: "string", title: "Description", minLength: 1 },
+          unlockLevel: {
+            type: "integer",
+            title: "Unlock level",
+            minimum: 1,
+            maximum: 100,
+          },
         },
-        required: ["number", "name", "icon", "description"],
+        required: ["number", "name", "icon", "description", "unlockLevel"],
         additionalProperties: false,
       },
     },
@@ -154,5 +161,6 @@ export const NUMBER_PEG_DEFINITIONS_DEFAULT: NumberPegDefinitionsConfig = {
     name,
     icon,
     description: `A memorable ${name.toLowerCase()} anchor for number ${index + 1}.`,
+    unlockLevel: Math.ceil((index + 1) / 10),
   })),
 };

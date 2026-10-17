@@ -74,7 +74,9 @@ import {
   buildAllNumberPegItems,
   buildNumberPegItems,
   buildPegScene,
+  applyNumberPegDefinitions,
   getUnlockedPegCount,
+  getPegUnlockLevel,
 } from '../src/features/number-peg/utils/numberPegMap.ts';
 import {
   choosePalaceScene,
@@ -106,6 +108,7 @@ const makeScene = (id, locusCount) => ({
   status: 'published',
   isTemplate: true,
   isPremium: false,
+  unlockLevel: 1,
   version: 1,
   loci: Array.from({ length: locusCount }, (_, index) => ({
     id: `${id}-${index + 1}`,
@@ -365,6 +368,25 @@ test('expands the peg library to 100 anchors with level-based unlocks', () => {
   assert.equal(getUnlockedPegCount(99), 100);
 });
 
+test('uses admin unlock levels while preserving number order', () => {
+  const definitions = buildAllNumberPegItems().map((peg) => ({
+    number: peg.number,
+    name: peg.keyword,
+    icon: peg.image,
+    description: peg.description,
+    unlockLevel: Math.ceil(peg.number / 10),
+  }));
+  for (const definition of definitions) {
+    if (definition.number >= 11 && definition.number <= 40) definition.unlockLevel = 4;
+  }
+  applyNumberPegDefinitions({ pegs: definitions });
+
+  assert.equal(getPegUnlockLevel(11), 4);
+  assert.equal(getPegUnlockLevel(12), 4);
+  assert.equal(getUnlockedPegCount(3), 10);
+  assert.equal(getUnlockedPegCount(4), 40);
+});
+
 test('chooses the smallest Palace that fits and explains overflow clearly', () => {
   const compact = makeScene('compact', 6);
   const roomy = makeScene('roomy', 12);
@@ -378,6 +400,9 @@ test('chooses the smallest Palace that fits and explains overflow clearly', () =
   assert.equal(sceneFitsPalaceItems(compact, 7), false);
   assert.equal(getPalaceCapacityShortfall(15, 12), 3);
   assert.deepEqual(getAvailablePalaceScenes([compact, { ...roomy, isPremium: true }], false).map((scene) => scene.id), ['compact']);
+  const levelTwoRoom = { ...roomy, id: 'level-two-room', unlockLevel: 2 };
+  assert.deepEqual(getAvailablePalaceScenes([compact, levelTwoRoom], false, 1).map((scene) => scene.id), ['compact']);
+  assert.deepEqual(getAvailablePalaceScenes([compact, levelTwoRoom], false, 2).map((scene) => scene.id), ['compact', 'level-two-room']);
   assert.equal(getPalaceLoci(roomy).length, 12);
   assert.equal(
     getPalaceCapacityMessage(15, 12),

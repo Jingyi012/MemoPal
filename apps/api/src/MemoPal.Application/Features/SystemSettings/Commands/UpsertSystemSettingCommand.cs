@@ -280,6 +280,7 @@ public sealed class UpsertSystemSettingCommandHandler
                     name = item["name"]?.GetValue<string>()?.Trim(),
                     icon = (item["icon"] ?? item["image"])?.GetValue<string>()?.Trim(),
                     description = item["description"]?.GetValue<string>()?.Trim(),
+                    unlockLevel = ToInt(item["unlockLevel"]),
                 })
                 .Where(item => item.number is >= 1 and <= 100 &&
                                !string.IsNullOrWhiteSpace(item.name) &&
@@ -290,6 +291,21 @@ public sealed class UpsertSystemSettingCommandHandler
                 .OrderBy(item => item.number)
                 .ToList();
 
+            var unlockLevels = new Dictionary<int, int>();
+            var minimumUnlockLevel = 1;
+            foreach (var item in normalized)
+            {
+                var requestedLevel = Math.Clamp(
+                    item.unlockLevel > 0 ? item.unlockLevel : (item.number + 9) / 10,
+                    1,
+                    100);
+                var effectiveLevel = item.number == 1
+                    ? 1
+                    : Math.Max(minimumUnlockLevel, requestedLevel);
+                unlockLevels[item.number] = effectiveLevel;
+                minimumUnlockLevel = effectiveLevel;
+            }
+
             return JsonSerializer.Serialize(new
             {
                 pegs = normalized.Select(item => new
@@ -298,6 +314,7 @@ public sealed class UpsertSystemSettingCommandHandler
                     name = item.name,
                     icon = item.icon,
                     description = item.description,
+                    unlockLevel = unlockLevels[item.number],
                 }),
             });
         }

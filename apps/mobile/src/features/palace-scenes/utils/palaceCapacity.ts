@@ -8,8 +8,13 @@ export function getPalaceCapacity(scene: PalaceScene | undefined) {
   return scene?.loci.length ?? 0;
 }
 
-export function getAvailablePalaceScenes(scenes: PalaceScene[], isPremium: boolean) {
-  return scenes.filter((scene) => !scene.isPremium || isPremium);
+export function isPalaceSceneUnlocked(scene: PalaceScene, level: number, isPremium: boolean) {
+  if (!scene.isTemplate) return true;
+  return (scene.unlockLevel ?? 1) <= Math.max(1, Math.floor(level)) && (!scene.isPremium || isPremium);
+}
+
+export function getAvailablePalaceScenes(scenes: PalaceScene[], isPremium: boolean, level = 1) {
+  return scenes.filter((scene) => isPalaceSceneUnlocked(scene, level, isPremium));
 }
 
 export function getPalaceCapacityShortfall(itemCount: number, capacity: number) {

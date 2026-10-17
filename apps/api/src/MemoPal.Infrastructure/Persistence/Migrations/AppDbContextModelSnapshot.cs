@@ -917,6 +917,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<int>("UnlockLevel")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -935,6 +938,8 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "IsDeleted");
 
                     b.HasIndex("Status", "IsTemplate", "IsDeleted");
+
+                    b.HasIndex("UnlockLevel", "Status", "IsTemplate", "IsDeleted");
 
                     b.ToTable("PalaceScenes");
                 });

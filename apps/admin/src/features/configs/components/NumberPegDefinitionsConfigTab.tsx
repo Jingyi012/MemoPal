@@ -19,7 +19,7 @@ export default function NumberPegDefinitionsConfigTab() {
       <Alert
         type="info"
         message="Number Peg Definitions"
-        description="Edit the name, icon, and description used by the 1–100 Number Peg anchors in the mobile app."
+        description="Edit the name, icon, description, and unlock level used by the 1–100 Number Peg anchors in the mobile app. Anchors unlock in number order."
         showIcon
         style={{ marginBottom: 16 }}
       />

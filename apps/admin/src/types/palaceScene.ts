@@ -24,6 +24,7 @@ export interface PalaceSceneDto {
   status: 'draft' | 'published' | 'archived';
   isTemplate: boolean;
   isPremium: boolean;
+  unlockLevel: number;
   version: number;
   loci: PalaceLocusDto[];
   createdAt: string;
@@ -52,6 +53,7 @@ export interface PalaceSceneUpsertRequest {
   imageUrl: string;
   status: 'draft' | 'published' | 'archived';
   isPremium: boolean;
+  unlockLevel: number;
   expectedVersion?: number;
   loci: PalaceLocusInput[];
 }

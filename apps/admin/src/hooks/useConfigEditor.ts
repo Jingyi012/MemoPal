@@ -73,6 +73,36 @@ function normalizeConfigShape(
     };
   }
 
+  if (configKey === "number-peg.definitions") {
+    if (!parsedValue || typeof parsedValue !== "object" || Array.isArray(parsedValue)) {
+      return defaultValue;
+    }
+
+    const source = parsedValue as Record<string, unknown>;
+    const defaultPegs = Array.isArray(defaultValue.pegs)
+      ? defaultValue.pegs.filter(
+          (item): item is Record<string, unknown> =>
+            !!item && typeof item === "object" && !Array.isArray(item),
+        )
+      : [];
+    const pegs = Array.isArray(source.pegs)
+      ? source.pegs.map((item) => {
+          if (!item || typeof item !== "object" || Array.isArray(item)) {
+            return item;
+          }
+
+          const itemRecord = item as Record<string, unknown>;
+          const matchingDefault = defaultPegs.find(
+            (defaultItem) => defaultItem.number === itemRecord.number,
+          );
+
+          return matchingDefault ? { ...matchingDefault, ...itemRecord } : itemRecord;
+        })
+      : defaultValue.pegs;
+
+    return { ...defaultValue, ...source, pegs };
+  }
+
   if (configKey === "ai.credits" || configKey === "premium.subscription") {
     if (parsedValue && typeof parsedValue === "object" && !Array.isArray(parsedValue)) {
       return { ...defaultValue, ...(parsedValue as Record<string, unknown>) };

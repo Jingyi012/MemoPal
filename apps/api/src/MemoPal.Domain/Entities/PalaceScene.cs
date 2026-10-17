@@ -15,6 +15,7 @@ public sealed class PalaceScene : AuditableBaseEntity
     public string Status { get; set; } = PalaceSceneStatuses.Draft;
     public bool IsTemplate { get; set; }
     public bool IsPremium { get; set; }
+    public int UnlockLevel { get; set; } = 1;
     public int Version { get; set; } = 1;
 
     public ICollection<PalaceLocus> Loci { get; set; } = new List<PalaceLocus>();

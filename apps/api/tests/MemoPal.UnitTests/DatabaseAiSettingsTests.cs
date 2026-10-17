@@ -23,6 +23,24 @@ public sealed class DatabaseAiSettingsTests
     }
 
     [Fact]
+    public async Task NumberPegDefinitionsNormalizeUnlockLevelsInNumberOrder()
+    {
+        using var db = AiCreditTests.CreateDb();
+        var value = """{"pegs":[{"number":1,"name":"Candle","icon":"🕯️","description":"First","unlockLevel":8},{"number":2,"name":"Swan","icon":"🦢","description":"Second","unlockLevel":2},{"number":3,"name":"Heart","icon":"❤️","description":"Third","unlockLevel":1},{"number":11,"name":"Cane","icon":"🦯","description":"Eleventh"}]}""";
+
+        var result = await new UpsertSystemSettingCommandHandler(db).Handle(new(new UpsertSystemSettingRequest
+            { Key = SystemSettingKeys.NumberPegDefinitions, Value = value }), default);
+
+        Assert.True(result.Success);
+        using var document = System.Text.Json.JsonDocument.Parse(db.SystemSettings.Single().Value);
+        var pegs = document.RootElement.GetProperty("pegs");
+        Assert.Equal(1, pegs[0].GetProperty("unlockLevel").GetInt32());
+        Assert.Equal(2, pegs[1].GetProperty("unlockLevel").GetInt32());
+        Assert.Equal(2, pegs[2].GetProperty("unlockLevel").GetInt32());
+        Assert.Equal(2, pegs[3].GetProperty("unlockLevel").GetInt32());
+    }
+
+    [Fact]
     public async Task UnconfiguredTextUsesTemplateWithoutAnImplicitModel()
     {
         using var db = AiCreditTests.CreateDb();

@@ -215,6 +215,7 @@ public sealed class AdminBootstrapper
             Status = PalaceSceneStatuses.Published,
             IsTemplate = true,
             IsPremium = false,
+            UnlockLevel = 1,
             Version = 1,
             CreatedAt = now,
             UpdatedAt = now,
@@ -883,6 +884,7 @@ public sealed class AdminBootstrapper
                     Status = PalaceSceneStatuses.Published,
                     IsTemplate = true,
                     IsPremium = false,
+                    UnlockLevel = definition.UnlockLevel,
                     Version = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
@@ -908,7 +910,8 @@ public sealed class AdminBootstrapper
                 var now = DateTime.UtcNow;
                 var changed = existing.Name != definition.Name ||
                     existing.Description != definition.Description ||
-                    existing.ImageUrl != $"/assets/palace-scenes/{definition.ImageFile}";
+                    existing.ImageUrl != $"/assets/palace-scenes/{definition.ImageFile}" ||
+                    existing.UnlockLevel != definition.UnlockLevel;
 
                 existing.Name = definition.Name;
                 existing.Description = definition.Description;
@@ -916,6 +919,7 @@ public sealed class AdminBootstrapper
                 existing.Status = PalaceSceneStatuses.Published;
                 existing.IsTemplate = true;
                 existing.IsPremium = false;
+                existing.UnlockLevel = definition.UnlockLevel;
                 existing.IsDeleted = false;
 
                 var activeLoci = existing.Loci.Where(x => !x.IsDeleted).OrderBy(x => x.Position).ToList();
@@ -1011,59 +1015,59 @@ public sealed class AdminBootstrapper
     private static string CreateLocusDescriptionZh(string nameZh) => $"{nameZh}是一个清晰的记忆停靠点。";
 
     private sealed record PredefinedLocusSeed(string Name, string NameZh, decimal XPercent, decimal YPercent);
-    private sealed record PredefinedPalaceSeed(string Id, string Name, string Description, string ImageFile, PredefinedLocusSeed[] Loci);
+    private sealed record PredefinedPalaceSeed(string Id, string Name, string Description, string ImageFile, int UnlockLevel, PredefinedLocusSeed[] Loci);
 
     private static PredefinedPalaceSeed[] GetPredefinedPalaceScenes() =>
     [
-        new("palace-street-and-curb", "Home Office", "A calm home office route for schoolwork, planning, and focused ideas.", "01-home-office.png",
+        new("palace-street-and-curb", "Home Office", "A calm home office route for schoolwork, planning, and focused ideas.", "01-home-office.png", 2,
         [
             new("Standing desk", "升降桌", 16m, 62m), new("Desk chair", "办公椅", 29m, 68m), new("Monitor", "显示器", 42m, 45m),
             new("Desk plant", "桌面盆栽", 54m, 58m), new("Bookshelf", "书架", 68m, 31m), new("Pinboard", "软木留言板", 82m, 27m),
             new("Desk drawer", "书桌抽屉", 74m, 70m), new("Floor lamp", "落地灯", 90m, 52m), new("Window", "窗户", 55m, 19m), new("Filing cabinet", "文件柜", 36m, 79m)
         ]),
-        new("palace-foyer-entryway", "Foyer / Entryway", "A welcoming entry route with everyday objects to anchor a list.", "02-foyer-entryway.png",
+        new("palace-foyer-entryway", "Foyer / Entryway", "A welcoming entry route with everyday objects to anchor a list.", "02-foyer-entryway.png", 3,
         [
             new("Entry bench", "玄关长凳", 16m, 67m), new("Shoe cabinet", "鞋柜", 30m, 48m), new("Umbrella stand", "雨伞架", 44m, 64m),
             new("Key bowl", "钥匙碗", 56m, 58m), new("Wall mirror", "墙镜", 67m, 30m), new("Light switch", "电灯开关", 78m, 38m),
             new("Hallway runner", "走廊地毯", 72m, 76m), new("Living room doorway", "客厅门口", 87m, 54m), new("Side table", "边桌", 61m, 73m), new("Living threshold", "客厅门槛", 47m, 30m)
         ]),
-        new("palace-living-room-core", "Living Room Core", "A cozy living room route built around large, easy-to-see landmarks.", "03-living-room-core.png",
+        new("palace-living-room-core", "Living Room Core", "A cozy living room route built around large, easy-to-see landmarks.", "03-living-room-core.png", 4,
         [
             new("Sofa armrest", "沙发扶手", 15m, 58m), new("Sofa cushion", "沙发坐垫", 28m, 57m), new("Coffee table", "茶几", 43m, 70m),
             new("TV console", "电视柜", 57m, 48m), new("Remote control", "遥控器", 64m, 62m), new("Bookshelf", "书架", 76m, 32m),
             new("Curtain", "窗帘", 88m, 26m), new("Sliding door", "推拉门", 91m, 63m), new("Indoor plant", "室内盆栽", 78m, 72m), new("Dining doorway", "餐厅门口", 50m, 25m)
         ]),
-        new("palace-dining-area", "Dining Area", "A bright dining route where each stop is tied to a table object.", "04-dining-area.png",
+        new("palace-dining-area", "Dining Area", "A bright dining route where each stop is tied to a table object.", "04-dining-area.png", 5,
         [
             new("Dining chair", "餐椅", 15m, 64m), new("Table edge", "桌边", 29m, 53m), new("Placemat", "餐垫", 43m, 62m),
             new("Plate", "盘子", 56m, 56m), new("Cutlery", "餐具", 69m, 61m), new("Water glass", "水杯", 78m, 47m),
             new("Pendant light", "吊灯", 57m, 20m), new("Sideboard", "餐边柜", 86m, 57m), new("Kitchen doorway", "厨房门口", 89m, 30m), new("Kitchen counter", "厨房台面", 37m, 31m)
         ]),
-        new("palace-kitchen-work-triangle", "Kitchen Work Triangle", "A practical kitchen route for recipes, routines, and shopping lists.", "05-kitchen-work-triangle.png",
+        new("palace-kitchen-work-triangle", "Kitchen Work Triangle", "A practical kitchen route for recipes, routines, and shopping lists.", "05-kitchen-work-triangle.png", 6,
         [
             new("Cutting board", "砧板", 15m, 60m), new("Knife block", "刀架", 28m, 46m), new("Spice rack", "调味架", 43m, 31m),
             new("Stove knob", "炉灶旋钮", 56m, 58m), new("Frying pan", "平底锅", 69m, 54m), new("Range hood", "抽油烟机", 63m, 23m),
             new("Sink faucet", "水槽水龙头", 82m, 49m), new("Sink drain", "水槽排水口", 86m, 66m), new("Fridge handle", "冰箱把手", 92m, 34m), new("Fridge interior", "冰箱内部", 88m, 76m)
         ]),
-        new("palace-pantry-and-storage", "Pantry & Storage", "A compact storage route that makes household lists easy to replay.", "06-pantry-and-storage.png",
+        new("palace-pantry-and-storage", "Pantry & Storage", "A compact storage route that makes household lists easy to replay.", "06-pantry-and-storage.png", 7,
         [
             new("Pantry shelf 1", "储藏架一层", 14m, 29m), new("Cereal container", "麦片盒", 29m, 42m), new("Snack basket", "零食篮", 43m, 57m),
             new("Upper shelf", "上层架", 58m, 24m), new("Step stool", "踏脚凳", 68m, 70m), new("Storage box", "收纳箱", 77m, 54m),
             new("Cleaning supplies", "清洁用品", 88m, 37m), new("Utility door", "杂物间门", 91m, 69m), new("Laundry threshold", "洗衣房门槛", 54m, 80m), new("Washing machine", "洗衣机", 33m, 75m)
         ]),
-        new("palace-laundry-utility-room", "Laundry / Utility Room", "A playful utility route with strong shapes and tactile landmarks.", "07-laundry-utility-room.png",
+        new("palace-laundry-utility-room", "Laundry / Utility Room", "A playful utility route with strong shapes and tactile landmarks.", "07-laundry-utility-room.png", 8,
         [
             new("Washer top", "洗衣机顶部", 14m, 59m), new("Control panel", "控制面板", 28m, 42m), new("Detergent bottle", "洗衣液瓶", 42m, 63m),
             new("Drying rack", "晾衣架", 57m, 29m), new("Iron board", "熨衣板", 70m, 59m), new("Mop bucket", "拖把桶", 82m, 69m),
             new("Floor drain", "地漏", 88m, 82m), new("Back door handle", "后门把手", 92m, 34m), new("Door crack", "门缝", 67m, 22m), new("Patio first step", "露台第一阶", 43m, 81m)
         ]),
-        new("palace-patio-outdoor-transition", "Bedroom", "A restful bedroom route with familiar objects that are easy to replay.", "08-bedroom.png",
+        new("palace-patio-outdoor-transition", "Bedroom", "A restful bedroom route with familiar objects that are easy to replay.", "08-bedroom.png", 9,
         [
             new("Bed headboard", "床头板", 16m, 38m), new("Bedside table", "床头柜", 28m, 66m), new("Reading lamp", "阅读灯", 39m, 50m),
             new("Folded blanket", "折叠毯", 52m, 68m), new("Dresser", "梳妆柜", 68m, 63m), new("Wardrobe", "衣柜", 84m, 32m),
             new("Framed print", "装框画", 87m, 19m), new("Mirror", "镜子", 72m, 22m), new("Window", "窗户", 53m, 20m), new("Woven basket", "编织篮", 31m, 80m)
         ]),
-        new("palace-garden-and-backyard-center", "Creative Workshop", "A bright creative studio route for projects, hobbies, and playful ideas.", "09-creative-workshop.png",
+        new("palace-garden-and-backyard-center", "Creative Workshop", "A bright creative studio route for projects, hobbies, and playful ideas.", "09-creative-workshop.png", 10,
         [
             new("Workbench", "工作台", 16m, 67m), new("Easel", "画架", 30m, 42m), new("Paint jars", "颜料罐", 43m, 71m),
             new("Pegboard tools", "洞洞板工具", 57m, 29m), new("Stool", "凳子", 69m, 73m), new("Rolled canvas", "卷起的画布", 81m, 55m),

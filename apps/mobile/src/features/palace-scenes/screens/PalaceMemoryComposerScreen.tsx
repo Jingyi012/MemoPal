@@ -84,8 +84,8 @@ export default function PalaceMemoryComposerScreen() {
   const origin: ComposerOrigin = parseComposerOrigin(params.origin);
   const memoryFolderId = firstParam(params.memoryFolderId) || undefined;
   const availableScenes = useMemo(
-    () => getAvailablePalaceScenes(scenesQuery.data ?? [], Boolean(user?.isPremium)),
-    [scenesQuery.data, user?.isPremium],
+    () => getAvailablePalaceScenes(scenesQuery.data ?? [], Boolean(user?.isPremium), user?.level ?? 1),
+    [scenesQuery.data, user?.isPremium, user?.level],
   );
   const sceneAvailabilityLoading = scenesQuery.isLoading || isUserLoading;
   const [message, setMessage] = useState<string | null>(null);

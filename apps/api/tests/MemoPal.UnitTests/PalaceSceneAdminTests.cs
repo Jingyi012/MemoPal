@@ -1,7 +1,10 @@
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Features.MemorySets.Commands;
+using MemoPal.Application.Features.MemorySets.DTOs;
 using MemoPal.Application.Features.PalaceScenes.Commands;
 using MemoPal.Application.Features.PalaceScenes.DTOs;
+using MemoPal.Application.Features.PalaceScenes.Queries;
 using MemoPal.Domain.Entities;
 using MemoPal.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +24,7 @@ public sealed class PalaceSceneAdminTests
                 Description = "A warm library",
                 ImageUrl = "/uploads/library.webp",
                 Status = PalaceSceneStatuses.Published,
+                UnlockLevel = 4,
                 Loci =
                 [
                     new PalaceLocusInput
@@ -40,6 +44,7 @@ public sealed class PalaceSceneAdminTests
             default);
 
         Assert.Equal(1, create.Data!.Version);
+        Assert.Equal(4, create.Data.UnlockLevel);
         Assert.Equal("admin-1", create.Data.CreatedBy);
         Assert.All(create.Data.Loci, locus => Assert.Equal("admin-1", locus.CreatedBy));
         Assert.Equal("Door", create.Data.Loci[0].NameEn);
@@ -52,6 +57,7 @@ public sealed class PalaceSceneAdminTests
             Description = "Updated",
             ImageUrl = "/uploads/library.webp",
             Status = PalaceSceneStatuses.Published,
+            UnlockLevel = 4,
             ExpectedVersion = 1,
             Loci = create.Data.Loci.Select(locus => new PalaceLocusInput
             {
@@ -127,6 +133,103 @@ public sealed class PalaceSceneAdminTests
             new DeleteCustomPalaceSceneCommand(userId, created.Data.Id), default);
         Assert.True(deleted.Data);
         Assert.True((await db.PalaceScenes.IgnoreQueryFilters().SingleAsync(x => x.Id == created.Data.Id)).IsDeleted);
+    }
+
+    [Fact]
+    public async Task PalaceMemorySet_Should_Reject_A_Scene_Before_UnlockLevel()
+    {
+        const string userId = "palace-level-user";
+        await using var db = CreateDbContext(userId);
+        db.Users.Add(new User
+        {
+            Id = userId,
+            DisplayName = "Level learner",
+            Email = "level-learner@example.com",
+            TotalXp = 0,
+            Level = 1
+        });
+        var scene = new PalaceScene
+        {
+            Name = "Locked study",
+            ImageUrl = "/uploads/palaces/locked-study.webp",
+            Status = PalaceSceneStatuses.Published,
+            IsTemplate = true,
+            UnlockLevel = 2,
+            Loci = [new PalaceLocus { Position = 1, Name = "Door", XPercent = 20, YPercent = 50 }]
+        };
+        db.PalaceScenes.Add(scene);
+        await db.SaveChangesAsync();
+
+        var request = new MemorySetUpsertRequest
+        {
+            Title = "Locked route",
+            GoalType = MemoryGoalTypes.Facts,
+            TechniqueKey = MemoryTechniqueKeys.Palace,
+            Status = MemorySetStatuses.Ready,
+            Items = [new MemoryItemInput { Position = 1, Prompt = "Fact", Answer = "Answer" }],
+            TechniquePlan = new TechniquePlanInput
+            {
+                PalaceSceneId = scene.Id,
+                PalaceBindings = [new PalaceBindingInput
+                {
+                    ItemPosition = 1,
+                    LocusId = scene.Loci.Single().Id,
+                    AssociationText = "A bright door"
+                }]
+            }
+        };
+
+        var exception = await Assert.ThrowsAsync<ValidationAppException>(() =>
+            new CreateMemorySetCommandHandler(db).Handle(new CreateMemorySetCommand(userId, request), default));
+
+        Assert.Contains("unavailable", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(db.MemorySets);
+    }
+
+    [Fact]
+    public async Task GetPalaceScenes_Should_Order_By_UnlockLevel()
+    {
+        const string userId = "palace-sort-user";
+        await using var db = CreateDbContext(userId);
+        db.Users.Add(new User
+        {
+            Id = userId,
+            DisplayName = "Sort user",
+            Email = "sort@example.com"
+        });
+        db.PalaceScenes.AddRange(
+            new PalaceScene
+            {
+                Name = "Level three",
+                ImageUrl = "/level-three.webp",
+                Status = PalaceSceneStatuses.Published,
+                IsTemplate = true,
+                UnlockLevel = 3
+            },
+            new PalaceScene
+            {
+                Name = "Level one",
+                ImageUrl = "/level-one.webp",
+                Status = PalaceSceneStatuses.Published,
+                IsTemplate = true,
+                UnlockLevel = 1
+            },
+            new PalaceScene
+            {
+                Name = "Level two",
+                ImageUrl = "/level-two.webp",
+                Status = PalaceSceneStatuses.Published,
+                IsTemplate = true,
+                UnlockLevel = 2
+            });
+        await db.SaveChangesAsync();
+
+        var result = await new GetPalaceScenesQueryHandler(db).Handle(
+            new GetPalaceScenesQuery(userId), default);
+
+        Assert.Equal(
+            ["Level one", "Level two", "Level three"],
+            result.Data!.Select(scene => scene.Name).ToArray());
     }
 
     [Fact]

@@ -25,6 +25,7 @@ public sealed record PalaceSceneDto(
     string Status,
     bool IsTemplate,
     bool IsPremium,
+    int UnlockLevel,
     int Version,
     IReadOnlyList<PalaceLocusDto> Loci,
     DateTime CreatedAt,
@@ -39,6 +40,7 @@ public sealed class PalaceSceneUpsertRequest
     public string ImageUrl { get; set; } = string.Empty;
     public string Status { get; set; } = "draft";
     public bool IsPremium { get; set; }
+    public int UnlockLevel { get; set; } = 1;
     public int? ExpectedVersion { get; set; }
     public IReadOnlyList<PalaceLocusInput> Loci { get; set; } = [];
 }

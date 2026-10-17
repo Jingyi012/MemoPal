@@ -36,6 +36,7 @@ export const LOCAL_PREVIEW_SCENES: PalaceScene[] = [
     status: 'published',
     isTemplate: true,
     isPremium: false,
+    unlockLevel: 1,
     version: 1,
     loci: buildLoci([
       'Framed landscape',

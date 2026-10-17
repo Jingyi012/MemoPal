@@ -2,6 +2,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.PalaceScenes.DTOs;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -22,13 +23,20 @@ public sealed class GetPalaceSceneQueryHandler
         GetPalaceSceneQuery request,
         CancellationToken cancellationToken)
     {
+        var user = await _db.Users.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == request.UserId && !x.IsDeleted, cancellationToken)
+            ?? throw new NotFoundAppException("User account is unavailable.");
+        var currentLevel = await _db.ResolveLevelByXpAsync(Math.Max(0, user.TotalXp), cancellationToken);
+
         var scene = await _db.PalaceScenes
             .AsNoTracking()
             .Include(x => x.Loci.Where(locus => !locus.IsDeleted))
             .FirstOrDefaultAsync(x =>
                 x.Id == request.PalaceSceneId &&
                 !x.IsDeleted &&
-                ((x.IsTemplate && x.Status == PalaceSceneStatuses.Published) || x.UserId == request.UserId),
+                (x.UserId == request.UserId ||
+                    (x.IsTemplate && x.Status == PalaceSceneStatuses.Published &&
+                     x.UnlockLevel <= currentLevel && (!x.IsPremium || user.IsPremium))),
                 cancellationToken)
             ?? throw new NotFoundAppException("Palace scene not found.");
 

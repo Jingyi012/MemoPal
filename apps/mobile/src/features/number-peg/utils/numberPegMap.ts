@@ -4,9 +4,22 @@ const PEG_NUMBERS = Array.from({ length: 100 }, (_, index) => index + 1) as PegN
 export const MAX_NUMBER_PEGS = 100;
 const BUILT_IN_CATALOGUE_VERSION = 'builtin-number-shape-v1';
 let activeCatalogueVersion = BUILT_IN_CATALOGUE_VERSION;
+const numberPegUnlockLevels: Record<number, number> = Object.fromEntries(
+  PEG_NUMBERS.map((number) => [number, Math.ceil(number / 10)])
+) as Record<number, number>;
 
 export function getUnlockedPegCount(level: number): number {
-  return Math.min(MAX_NUMBER_PEGS, Math.max(1, Math.floor(level)) * 10);
+  const currentLevel = Math.max(1, Math.floor(level));
+  let count = 0;
+  for (const number of PEG_NUMBERS) {
+    if (getPegUnlockLevel(number) > currentLevel) break;
+    count += 1;
+  }
+  return count;
+}
+
+export function getPegUnlockLevel(number: PegNumber): number {
+  return numberPegUnlockLevels[number] ?? Math.ceil(number / 10);
 }
 
 const starterPegMap: Record<number, Omit<NumberPegItem, 'id' | 'number'>> = {
@@ -64,15 +77,50 @@ export function applyNumberPegDefinitions(value: unknown, catalogueVersion?: str
 
   activeCatalogueVersion = catalogueVersion?.trim() || BUILT_IN_CATALOGUE_VERSION;
 
-  for (const item of source) {
-    if (!item || typeof item !== 'object') continue;
-    const entry = item as Record<string, unknown>;
-    const number = Number(entry.number);
-    const keyword = String(entry.name ?? entry.keyword ?? '').trim();
-    const image = String(entry.icon ?? entry.image ?? '').trim();
-    const description = String(entry.description ?? '').trim();
-    if (!Number.isInteger(number) || number < 1 || number > MAX_NUMBER_PEGS || !keyword || !image || !description) continue;
-    numberPegMap[number] = { keyword, image, description };
+  const definitions = source
+    .flatMap((item) => {
+      if (!item || typeof item !== 'object') return [];
+      const entry = item as Record<string, unknown>;
+      const number = Number(entry.number);
+      const keyword = String(entry.name ?? entry.keyword ?? '').trim();
+      const image = String(entry.icon ?? entry.image ?? '').trim();
+      const description = String(entry.description ?? '').trim();
+      if (
+        !Number.isInteger(number) ||
+        number < 1 ||
+        number > MAX_NUMBER_PEGS ||
+        !keyword ||
+        !image ||
+        !description
+      ) {
+        return [];
+      }
+
+      const requestedLevel = Number(entry.unlockLevel);
+      return [{
+        number,
+        keyword,
+        image,
+        description,
+        requestedLevel: Number.isFinite(requestedLevel)
+          ? Math.max(1, Math.min(MAX_NUMBER_PEGS, Math.floor(requestedLevel)))
+          : Math.ceil(number / 10),
+      }];
+    })
+    .sort((left, right) => left.number - right.number);
+
+  let minimumUnlockLevel = 1;
+  for (const definition of definitions) {
+    numberPegMap[definition.number] = {
+      keyword: definition.keyword,
+      image: definition.image,
+      description: definition.description,
+    };
+    const unlockLevel = definition.number === 1
+      ? 1
+      : Math.max(minimumUnlockLevel, definition.requestedLevel);
+    numberPegUnlockLevels[definition.number] = unlockLevel;
+    minimumUnlockLevel = unlockLevel;
   }
 }
 

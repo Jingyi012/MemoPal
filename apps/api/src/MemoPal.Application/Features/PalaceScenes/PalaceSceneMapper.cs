@@ -13,6 +13,7 @@ internal static class PalaceSceneMapper
         scene.Status,
         scene.IsTemplate,
         scene.IsPremium,
+        scene.UnlockLevel,
         scene.Version,
         scene.Loci
             .Where(x => !x.IsDeleted)

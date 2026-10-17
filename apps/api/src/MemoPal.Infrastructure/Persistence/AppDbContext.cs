@@ -396,6 +396,7 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.Description).HasMaxLength(1000);
             b.Property(x => x.ImageUrl).HasMaxLength(2048);
             b.Property(x => x.Status).HasMaxLength(32);
+            b.HasIndex(x => new { x.UnlockLevel, x.Status, x.IsTemplate, x.IsDeleted });
             b.HasIndex(x => new { x.Status, x.IsTemplate, x.IsDeleted });
             b.HasIndex(x => new { x.UserId, x.IsDeleted });
             b.HasOne<User>()
