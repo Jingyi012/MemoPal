@@ -14,7 +14,7 @@ import { useNumberPegOverview } from '@/features/number-peg/hooks/useNumberPegOv
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, ChevronRight } from 'lucide-react-native';
+import { ArrowRight, ChevronRight } from '@/core/icons';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';

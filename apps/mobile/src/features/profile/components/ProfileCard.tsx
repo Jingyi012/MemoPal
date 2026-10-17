@@ -2,7 +2,7 @@ import { AppImage } from '@/components/AppImage';
 import { User } from '@/features/profile/types/users';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pencil } from 'lucide-react-native';
+import { Pencil } from '@/core/icons';
 import React from 'react';
 import { Text, View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';

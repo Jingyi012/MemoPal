@@ -5,7 +5,7 @@ import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { ArrowLeft, ArrowLeftRight, ArrowRight, MapPin, RefreshCw, Sparkles } from 'lucide-react-native';
+import { ArrowLeft, ArrowLeftRight, ArrowRight, MapPin, RefreshCw, Sparkles } from '@/core/icons';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useLayoutEffect } from 'react';

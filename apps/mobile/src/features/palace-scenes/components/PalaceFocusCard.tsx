@@ -3,7 +3,7 @@ import { AppImage } from '@/components/AppImage';
 import type { PalaceLocus, PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
-import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, RotateCcw } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';

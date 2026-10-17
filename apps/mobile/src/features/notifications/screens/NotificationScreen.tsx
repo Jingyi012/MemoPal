@@ -18,7 +18,7 @@ import {
   TrendingUp,
   Users,
   Zap,
-} from 'lucide-react-native';
+} from '@/core/icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';

@@ -14,7 +14,7 @@ import { usePracticeStats } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { typography } from '@/theme/typography';
 import { memopalThemes } from '@/theme/memopalTheme';
-import { ArrowRight, Building2, Check, Hash, History } from 'lucide-react-native';
+import { ArrowRight, Building2, Check, Hash, History } from '@/core/icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';

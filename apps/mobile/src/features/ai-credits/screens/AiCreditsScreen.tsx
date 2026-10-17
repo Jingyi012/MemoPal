@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Coins, History, Plus, Sparkles, WalletCards } from 'lucide-react-native';
+import { Coins, History, Plus, Sparkles, WalletCards } from '@/core/icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useTranslation } from '@/core/i18n/useTranslation';

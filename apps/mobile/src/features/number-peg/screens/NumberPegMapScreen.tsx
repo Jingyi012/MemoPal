@@ -4,7 +4,7 @@ import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { buildAllNumberPegItems, getUnlockedPegCount, MAX_NUMBER_PEGS } from '@/features/number-peg/utils/numberPegMap';
 import { useRouter } from 'expo-router';
-import { ArrowRight } from 'lucide-react-native';
+import { ArrowRight } from '@/core/icons';
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';

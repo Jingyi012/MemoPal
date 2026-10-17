@@ -15,7 +15,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { ArrowRight, ChevronRight, LogOut, Pencil } from 'lucide-react-native';
+import { ArrowRight, ChevronRight, LogOut, Pencil } from '@/core/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
@@ -349,10 +349,10 @@ export default function ProfileScreen() {
           />
         </SettingsSection>
 
-        <SettingsSection title={t('preferences')} accentColor={theme.berryDeep}>
+        <SettingsSection title={t('preferences')} accentColor={theme.violetDeep}>
           <ProfileSettingsRow
-            icon={<Ionicons name="notifications" size={21} color={theme.berryDeep} />}
-            iconBackgroundColor={theme.berryTint}
+            icon={<Ionicons name="notifications" size={21} color={theme.violetDeep} />}
+            iconBackgroundColor={theme.violetTint}
             title={t('reviewReminders')}
             value={reviewRemindersEnabled ? t('on') : t('off')}
             right={<Switch value={reviewRemindersEnabled} onValueChange={saveReviewReminders} />}

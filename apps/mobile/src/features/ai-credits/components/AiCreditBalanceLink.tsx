@@ -1,4 +1,4 @@
-import { ChevronRight, Coins, Image as ImageIcon, Sparkles } from 'lucide-react-native';
+import { ChevronRight, Coins, Image as ImageIcon, Sparkles } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import AnimatedPressable from '@/components/AnimatedPressable';

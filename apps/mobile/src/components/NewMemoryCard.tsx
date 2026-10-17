@@ -1,7 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { ChevronRight, Plus, Sparkles } from 'lucide-react-native';
+import { ChevronRight, Plus, Sparkles } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 type NewMemoryCardProps = {

@@ -9,7 +9,7 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ArrowRight, Check, Coins, LockKeyhole, RefreshCw, Sparkles } from 'lucide-react-native';
+import { ArrowRight, Check, Coins, LockKeyhole, RefreshCw, Sparkles } from '@/core/icons';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,

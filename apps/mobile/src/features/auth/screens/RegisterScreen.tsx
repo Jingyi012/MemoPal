@@ -180,7 +180,7 @@ export default function Register() {
               onPress={handleRegister}
               disabled={!canSubmit || isSubmitting}
               className={`mb-3 w-full items-center justify-center rounded-2xl px-6 py-4 ${!canSubmit || isSubmitting ? 'bg-line' : 'bg-primary'}`}>
-              <Text className={`font-medium ${!canSubmit || isSubmitting ? 'text-ink-soft' : 'text-[#2B2A3D]'}`}>
+              <Text className={`font-medium ${!canSubmit || isSubmitting ? 'text-ink-soft' : 'text-white'}`}>
                 {isSubmitting ? t('creatingAccount') : t('signUp')}
               </Text>
             </AnimatedPressable>

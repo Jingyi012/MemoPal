@@ -2,7 +2,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { typography } from '@/theme/typography';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Check, Sparkles, Trophy } from 'lucide-react-native';
+import { Check, Sparkles, Trophy } from '@/core/icons';
 import React, { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 

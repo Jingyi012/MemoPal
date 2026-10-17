@@ -8,7 +8,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
 import { memopalThemes, type MemoPalTheme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 type MemorySetCardProps = {

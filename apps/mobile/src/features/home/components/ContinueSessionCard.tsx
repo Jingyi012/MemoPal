@@ -1,6 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { MemorySet } from '@/features/memory-sets/types/memorySet.types';
-import { ArrowRight } from 'lucide-react-native';
+import { ArrowRight } from '@/core/icons';
 import React from 'react';
 import { Text, View } from 'react-native';
 

@@ -12,7 +12,7 @@ import type { CommunityMemorySetFilters, CommunityMemorySetSummary } from '@/fea
 import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, Check, Search, SlidersHorizontal, X } from 'lucide-react-native';
+import { ArrowRight, Check, Search, SlidersHorizontal, X } from '@/core/icons';
 import { forwardRef, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useColorScheme } from 'nativewind';

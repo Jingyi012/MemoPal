@@ -15,7 +15,7 @@ import { PremiumSubscriptionConfig } from '@/features/subscription/types/premium
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Check, Coins, Crown, Sparkles, X } from 'lucide-react-native';
+import { Check, Coins, Crown, Sparkles, X } from '@/core/icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

@@ -1,4 +1,4 @@
-import { Globe2, Link2, LockKeyhole } from 'lucide-react-native';
+import { Globe2, Link2, LockKeyhole } from '@/core/icons';
 import { useColorScheme } from 'nativewind';
 import { StyleSheet, Text, View } from 'react-native';
 import type { MemorySetVisibility } from '@/features/memory-sets';

@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight } from '@/core/icons';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';

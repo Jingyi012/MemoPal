@@ -6,7 +6,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, Check, LockKeyhole, Mail, Pencil } from 'lucide-react-native';
+import { Camera, Check, LockKeyhole, Mail, Pencil } from '@/core/icons';
 import React, { forwardRef, useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import Toast from 'react-native-toast-message';

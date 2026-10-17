@@ -2,7 +2,7 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { groupMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
 import { typography } from '@/theme/typography';
-import { ArrowRight } from 'lucide-react-native';
+import { ArrowRight } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { isReviewOverdue } from '@/features/practice-attempts/utils/reviewDate';

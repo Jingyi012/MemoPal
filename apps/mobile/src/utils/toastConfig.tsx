@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/colors';
-import { AlertCircle, CheckCircle2, Info, type LucideIcon } from 'lucide-react-native';
+import { AlertCircle, CheckCircle2, Info, type LucideIcon } from '@/core/icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { typography } from '@/theme/typography';

@@ -18,7 +18,7 @@ import { firstParam } from '@/features/memory-composer/utils/composerParams';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { Check, Plus, Trash2 } from 'lucide-react-native';
+import { Check, Plus, Trash2 } from '@/core/icons';
 import { useEffect, useRef, useState } from 'react';
 import {
   findNodeHandle,

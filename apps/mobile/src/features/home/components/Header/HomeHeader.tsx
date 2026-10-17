@@ -1,4 +1,4 @@
-import { CircleHelp } from 'lucide-react-native';
+import { CircleHelp } from '@/core/icons';
 import { useSpotlightTour } from '@/features/onboarding/components/SpotlightTourProvider';
 import { User } from '@/features/profile/types/users';
 import AnimatedPressable from '@/components/AnimatedPressable';

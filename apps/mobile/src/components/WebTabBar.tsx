@@ -15,7 +15,7 @@ export function WebTabBar({ state, descriptors, navigation }: BottomTabBarProps)
         const options = descriptor.options;
         const focused = state.index === index;
         const color = focused
-          ? options.tabBarActiveTintColor ?? theme.berryDeep
+          ? options.tabBarActiveTintColor ?? theme.violetDeep
           : options.tabBarInactiveTintColor ?? theme.inkSoft;
         const label = typeof options.tabBarLabel === 'string'
           ? options.tabBarLabel

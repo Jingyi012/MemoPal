@@ -3,7 +3,7 @@ import { CommonHeader } from '@/components/CommonHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
-import { Camera, Check, Images, Plus, RefreshCcw, ScanText } from 'lucide-react-native';
+import { Camera, Check, Images, Plus, RefreshCcw, ScanText } from '@/core/icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';

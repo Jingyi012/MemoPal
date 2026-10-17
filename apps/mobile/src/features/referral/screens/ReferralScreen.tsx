@@ -11,7 +11,7 @@ import type { Notification } from '@/features/notifications/types/notification';
 import type { ReferralSummary } from '@/features/referral/types/referral';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import { Check, Copy, MessageCircle, Share2 } from 'lucide-react-native';
+import { Check, Copy, MessageCircle, Share2 } from '@/core/icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Linking,
@@ -216,7 +216,7 @@ const ReferralScreen: React.FC = () => {
           <TouchableOpacity
             className="rounded-xl bg-primary px-4 py-3"
             onPress={() => void loadSummary()}>
-            <Text className="font-semibold text-[#2B2A3D]">{t('retry')}</Text>
+            <Text className="font-semibold text-white">{t('retry')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -376,7 +376,7 @@ const ReferralScreen: React.FC = () => {
             <TouchableOpacity
               className="mt-6 rounded-xl bg-primary px-4 py-3"
               onPress={() => void closeRewardPopup()}>
-              <Text className="text-center font-semibold text-[#2B2A3D]">{t('gotIt')}</Text>
+              <Text className="text-center font-semibold text-white">{t('gotIt')}</Text>
             </TouchableOpacity>
           </BaseCard>
         </View>

@@ -2,7 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
-import { Check, ChevronRight } from 'lucide-react-native';
+import { Check, ChevronRight } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 export type PalaceOrderedItem = {

@@ -3,7 +3,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemoryFolder } from '../types/memoryFolder.types';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { ChevronRight, Sparkles } from 'lucide-react-native';
+import { ChevronRight, Sparkles } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 export function MemoryFolderCard({ folder, onOpen, onLongPress, variant = 'list', tone = 0 }: { folder: MemoryFolder; onOpen: () => void; onLongPress: () => void; variant?: 'card' | 'list'; tone?: number }) {

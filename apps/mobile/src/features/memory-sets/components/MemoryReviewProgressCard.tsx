@@ -4,7 +4,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemoryItemReviewProgress, MemoryReviewProgress } from '@/features/practice-attempts';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ChevronDown, ChevronUp } from '@/core/icons';
 import { useState } from 'react';
 import { getReviewTiming } from '@/features/practice-attempts/utils/reviewSession';
 import { StyleSheet, Text, View } from 'react-native';

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Home } from 'lucide-react-native';
+import { Home } from '@/core/icons';
 import React from 'react';
 import { HeaderIconButton } from './ui/HeaderIconButton';
 

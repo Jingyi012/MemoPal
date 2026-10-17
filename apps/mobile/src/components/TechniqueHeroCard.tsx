@@ -1,7 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
-import { ArrowRight } from 'lucide-react-native';
+import { ArrowRight } from '@/core/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';

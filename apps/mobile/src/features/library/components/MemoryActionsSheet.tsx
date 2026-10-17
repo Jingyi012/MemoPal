@@ -5,7 +5,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemorySet } from '@/features/memory-sets';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Archive, ArchiveRestore, Copy, Layers, Globe2, LockKeyhole, Trash2 } from 'lucide-react-native';
+import { Archive, ArchiveRestore, Copy, Layers, Globe2, LockKeyhole, Trash2 } from '@/core/icons';
 import { forwardRef, type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

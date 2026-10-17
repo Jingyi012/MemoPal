@@ -3,7 +3,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemoryItem, PalaceBinding } from '@/features/memory-sets';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { Check, Lightbulb, LockKeyhole, MapPin } from 'lucide-react-native';
+import { Check, Lightbulb, LockKeyhole, MapPin } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 type Props = {

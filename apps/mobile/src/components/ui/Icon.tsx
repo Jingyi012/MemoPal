@@ -1,4 +1,4 @@
-import { LucideIcon } from 'lucide-react-native';
+import { LucideIcon } from '@/core/icons';
 
 export function TabIcon({
   icon: Icon,

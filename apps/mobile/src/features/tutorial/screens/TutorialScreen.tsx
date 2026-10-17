@@ -3,7 +3,7 @@ import { StepNavigationFooter } from '@/components/StepNavigationFooter';
 import { GradientColors } from '@/core/types/colors';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft } from '@/core/icons';
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Animated, {

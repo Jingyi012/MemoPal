@@ -1,5 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from '@/core/icons';
 import { ReactNode, useState } from 'react';
 import { Switch, Text, View } from 'react-native';
 

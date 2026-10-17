@@ -4,10 +4,10 @@ import { memopalThemes, type MemoPalTheme } from '@/theme/memopalTheme';
 export type ThemeMode = keyof typeof memopalThemes;
 
 const toNativewindPalette = (theme: MemoPalTheme) => ({
-  primary: theme.sun,
-  primaryHover: theme.sunDeep,
-  primaryActive: theme.berryDeep,
-  primaryLight: theme.sunTint,
+  primary: theme.violetDeep,
+  primaryHover: theme.violetDeep,
+  primaryActive: theme.violetDeep,
+  primaryLight: theme.violetTint,
   secondary: theme.violetDeep,
   bg: theme.canvas,
   surface: theme.paper,
@@ -19,6 +19,7 @@ const toNativewindPalette = (theme: MemoPalTheme) => ({
   tint: theme.sky,
   sun: theme.sun,
   berry: theme.berry,
+  berryDeep: theme.berryDeep,
   violet: theme.violet,
   grass: theme.grass,
   sky: theme.sky,

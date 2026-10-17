@@ -3,7 +3,7 @@ import type { MemorySet } from '@/features/memory-sets';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { Check, Layers, Inbox } from 'lucide-react-native';
+import { Check, Layers, Inbox } from '@/core/icons';
 import type { ReactNode } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { MemoryFolder } from '../types/memoryFolder.types';

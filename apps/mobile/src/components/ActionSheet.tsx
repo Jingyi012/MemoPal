@@ -81,7 +81,7 @@ export const ActionSheet = forwardRef<BottomSheetModal, ActionSheetProps>(({
             onPress={() => void handleAction()}
             disabled={isActing}
             className={`${
-              variant === 'destructive' ? 'bg-primary-active' : 'bg-secondary'
+              variant === 'destructive' ? 'bg-berry-deep' : 'bg-secondary'
             } h-14 items-center justify-center rounded-2xl ${isActing ? 'opacity-70' : ''}`}>
             {isActing ? <ActivityIndicator color="white" /> : <Text className="text-lg font-bold text-white">{actionLabel}</Text>}
           </AnimatedPressable>

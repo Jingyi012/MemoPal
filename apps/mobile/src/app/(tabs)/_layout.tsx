@@ -33,7 +33,7 @@ export default function TabsLayout() {
     <Tabs
       tabBar={Platform.OS === 'web' ? (props) => <WebTabBar {...props} /> : undefined}
       screenOptions={{
-        tabBarActiveTintColor: theme.berryDeep,
+        tabBarActiveTintColor: theme.violetDeep,
         tabBarInactiveTintColor: theme.inkSoft,
         headerShown: false,
         tabBarLabelStyle: { fontFamily: typography.bodyExtraBold, fontSize: 11 },
@@ -55,35 +55,35 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: t('home'),
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon icon="home" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="practice"
         options={{
           title: t('practice'),
-          tabBarIcon: ({ focused }) => <SpotlightTarget id="practice" onActivate={() => router.navigate('/(tabs)/practice')}><TabIcon emoji="🧩" focused={focused} /></SpotlightTarget>,
+          tabBarIcon: ({ focused }) => <SpotlightTarget id="practice" onActivate={() => router.navigate('/(tabs)/practice')}><TabIcon icon="grid" focused={focused} /></SpotlightTarget>,
         }}
       />
       <Tabs.Screen
         name="library"
         options={{
           title: t('library'),
-          tabBarIcon: ({ focused }) => <SpotlightTarget id="library" onActivate={() => router.navigate('/(tabs)/library')}><TabIcon emoji="📚" focused={focused} /></SpotlightTarget>,
+          tabBarIcon: ({ focused }) => <SpotlightTarget id="library" onActivate={() => router.navigate('/(tabs)/library')}><TabIcon icon="library" focused={focused} /></SpotlightTarget>,
         }}
       />
       <Tabs.Screen
         name="achievements"
         options={{
           title: t('progress'),
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📈" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon icon="trending-up" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: t('profile'),
-          tabBarIcon: ({ focused }) => <SpotlightTarget id="profile" onActivate={() => router.navigate('/(tabs)/profile')}><TabIcon emoji="👤" focused={focused} /></SpotlightTarget>,
+          tabBarIcon: ({ focused }) => <SpotlightTarget id="profile" onActivate={() => router.navigate('/(tabs)/profile')}><TabIcon icon="person" focused={focused} /></SpotlightTarget>,
         }}
       />
     </Tabs>

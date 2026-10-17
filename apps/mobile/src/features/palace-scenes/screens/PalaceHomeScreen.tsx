@@ -14,7 +14,7 @@ import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes'
 import { isPalaceSceneUnlocked } from '@/features/palace-scenes/utils/palaceCapacity';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { Href, useRouter } from 'expo-router';
-import { ChevronRight, Pencil } from 'lucide-react-native';
+import { ChevronRight, Pencil } from '@/core/icons';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';

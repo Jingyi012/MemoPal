@@ -1,4 +1,4 @@
-import { ChevronLeft, LucideIcon } from 'lucide-react-native';
+import { ChevronLeft, LucideIcon } from '@/core/icons';
 import React, { ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -77,7 +77,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
 
           {/* Title + description */}
           <View style={styles.titleBlock}>
-            {eyebrow && <Text style={[styles.eyebrow, compact && styles.compactEyebrow, { color: activeTheme.berryDeep, backgroundColor: activeTheme.berryTint, borderColor: activeTheme.berryLine }]}>{eyebrow}</Text>}
+            {eyebrow && <Text style={[styles.eyebrow, compact && styles.compactEyebrow, { color: activeTheme.violetDeep, backgroundColor: activeTheme.violetTint, borderColor: activeTheme.violetLine }]}>{eyebrow}</Text>}
             <Text style={[styles.title, compact && styles.compactTitle, { color: activeTheme.ink }]} numberOfLines={compact ? 1 : 2}>{title}</Text>
             {description && <Text style={[styles.description, compact && styles.compactDescription, { color: activeTheme.inkSoft }]} numberOfLines={compact ? 1 : 2}>{description}</Text>}
           </View>
@@ -143,10 +143,10 @@ const styles = {
   },
   eyebrow: {
     alignSelf: 'flex-start' as const,
-    color: theme.berryDeep,
-    backgroundColor: theme.berryTint,
+    color: theme.violetDeep,
+    backgroundColor: theme.violetTint,
     borderWidth: 1.3,
-    borderColor: theme.berryLine,
+    borderColor: theme.violetLine,
     borderRadius: 999,
     paddingHorizontal: 9,
     paddingVertical: 3,

@@ -1,5 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { RefreshCcw } from 'lucide-react-native';
+import { RefreshCcw } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { typography } from '@/theme/typography';
 

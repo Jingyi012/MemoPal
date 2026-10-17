@@ -8,7 +8,7 @@ import { usePredefinedMemoryLessons, type PredefinedMemoryLesson } from '@/featu
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { RefreshCcw, Search, Sparkles } from 'lucide-react-native';
+import { RefreshCcw, Search, Sparkles } from '@/core/icons';
 import { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useMemoryCollections, useDownloadMemoryCollection } from '@/features/predefined-memory-lessons/hooks/useMemoryCollections';

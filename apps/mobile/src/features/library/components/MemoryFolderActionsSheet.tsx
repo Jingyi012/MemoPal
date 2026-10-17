@@ -5,7 +5,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemoryFolder } from '../types/memoryFolder.types';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Pencil, Trash2 } from 'lucide-react-native';
+import { Pencil, Trash2 } from '@/core/icons';
 import { forwardRef, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

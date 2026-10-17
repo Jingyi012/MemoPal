@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react-native';
+import type { LucideIcon } from '@/core/icons';
 import type { ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';

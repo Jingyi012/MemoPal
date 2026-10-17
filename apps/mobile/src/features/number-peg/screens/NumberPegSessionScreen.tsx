@@ -1,5 +1,5 @@
 import { usePageTour, useSpotlightTour } from '@/features/onboarding/components/SpotlightTourProvider';
-import { CircleHelp } from 'lucide-react-native';
+import { CircleHelp } from '@/core/icons';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';

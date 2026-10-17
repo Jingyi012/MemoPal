@@ -5,7 +5,7 @@ import type { NumberPegItem } from '../types/numberPeg.types';
 import { getNumberPegStoryHint, maskNumberPegAnswer } from '../utils/numberPegHints';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { Check, Eye, Lightbulb, LockKeyhole } from 'lucide-react-native';
+import { Check, Eye, Lightbulb, LockKeyhole } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 type Props = {

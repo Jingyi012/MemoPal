@@ -4,7 +4,7 @@ import type { MemoryGoalType } from '@/features/memory-sets';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, ClipboardList, Plus, ScanText } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, ClipboardList, Plus, ScanText } from '@/core/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { firstParam, parseBulkItems, parseComposerGoal, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';

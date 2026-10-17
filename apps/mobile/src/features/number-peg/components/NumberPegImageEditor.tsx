@@ -13,7 +13,7 @@ import { AiGeneratedImage } from '@/features/ai-credits/components/AiGeneratedIm
 import { getNumberPegErrorMessage } from '../utils/numberPegErrors';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { ImagePlus } from 'lucide-react-native';
+import { ImagePlus } from '@/core/icons';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { imageJobState } from '../utils/imageJobState';
 

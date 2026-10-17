@@ -4,7 +4,7 @@ import type { MemoryItem, PegBinding } from '@/features/memory-sets';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
 import { typography } from '@/theme/typography';
-import { ArrowLeft, ArrowRight } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { useMemo } from 'react';
 import { useTranslation } from '@/core/i18n/useTranslation';

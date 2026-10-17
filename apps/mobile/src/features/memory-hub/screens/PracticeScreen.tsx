@@ -20,7 +20,7 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, BookOpen, CircleHelp, RefreshCcw } from 'lucide-react-native';
+import { ArrowRight, BookOpen, CircleHelp, RefreshCcw } from '@/core/icons';
 import { useMemo, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';

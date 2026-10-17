@@ -2,7 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import * as Haptics from 'expo-haptics';
-import { GripVertical, Trash2 } from 'lucide-react-native';
+import { GripVertical, Trash2 } from '@/core/icons';
 import { createContext, useContext, useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   StyleSheet,

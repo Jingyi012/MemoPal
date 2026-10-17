@@ -3,7 +3,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { LevelUpModal } from '@/components/LevelUpModal';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { Home, RefreshCcw } from 'lucide-react-native';
+import { Home, RefreshCcw } from '@/core/icons';
 import React from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';

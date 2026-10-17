@@ -1,4 +1,4 @@
-import { Wifi, WifiOff } from 'lucide-react-native';
+import { Wifi, WifiOff } from '@/core/icons';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 

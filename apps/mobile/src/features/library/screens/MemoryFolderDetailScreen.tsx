@@ -8,7 +8,7 @@ import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegE
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { Pencil, Plus, RefreshCcw } from 'lucide-react-native';
+import { Pencil, Plus, RefreshCcw } from '@/core/icons';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';

@@ -22,7 +22,7 @@ import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Href, useRouter } from 'expo-router';
-import { CircleHelp, Globe2, Layers, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from 'lucide-react-native';
+import { CircleHelp, Globe2, Layers, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from '@/core/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';

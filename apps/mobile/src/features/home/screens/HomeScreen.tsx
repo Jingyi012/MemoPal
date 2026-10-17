@@ -16,7 +16,7 @@ import { typography } from '@/theme/typography';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { Href, useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight, Check, Circle, Plus } from 'lucide-react-native';
+import { ArrowRight, Check, Circle, Plus } from '@/core/icons';
 import React, { useEffect } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HomeHeader } from '../components/Header/HomeHeader';

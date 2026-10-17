@@ -29,7 +29,7 @@ import {
   getAssociationText,
 } from '@/features/palace-scenes/utils/palaceAuthoring';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, Check, ChevronRight, ChevronUp, Plus, RefreshCcw, Search, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, ChevronUp, Plus, RefreshCcw, Search, Trash2 } from '@/core/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { firstParam, parseComposerGoal, parseComposerItems, parseComposerOrigin, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import type { ComposerOrigin } from '@/features/memory-composer/utils/techniqueRecommendation';

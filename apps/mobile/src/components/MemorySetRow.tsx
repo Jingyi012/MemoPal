@@ -1,7 +1,7 @@
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { typography } from '@/theme/typography';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 type MemorySetRowProps = {

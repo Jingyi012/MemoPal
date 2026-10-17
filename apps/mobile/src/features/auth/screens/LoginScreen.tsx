@@ -137,10 +137,10 @@ export const LoginScreen: React.FC = () => {
               style={
                 !canSubmit || isSubmitting
                   ? undefined
-                  : { boxShadow: '0px 4px 0px rgba(214, 160, 27, 0.28)' }
+                  : { boxShadow: '0px 4px 0px rgba(105, 80, 204, 0.28)' }
               }>
               <Text
-                className={`font-medium ${!canSubmit || isSubmitting ? 'text-ink-soft' : 'text-[#2B2A3D]'}`}>
+                className={`font-medium ${!canSubmit || isSubmitting ? 'text-ink-soft' : 'text-white'}`}>
                 {isSubmitting ? t('signingIn') : t('signIn')}
               </Text>
             </AnimatedPressable>

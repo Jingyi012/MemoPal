@@ -10,7 +10,7 @@ import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes'
 import { isPalaceSceneUnlocked } from '@/features/palace-scenes/utils/palaceCapacity';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight } from 'lucide-react-native';
+import { ArrowRight } from '@/core/icons';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';

@@ -1,7 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { Check, X } from 'lucide-react-native';
+import { Check, X } from '@/core/icons';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 

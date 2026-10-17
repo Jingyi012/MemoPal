@@ -1,7 +1,7 @@
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { PremiumSubscriptionConfig } from '@/features/subscription/types/premiumSubscriptionConfig';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { X } from 'lucide-react-native';
+import { X } from '@/core/icons';
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -45,7 +45,7 @@ const TermsAndConditionSheet = forwardRef<Ref, TermsAndConditionSheetProps>(({ t
         <TouchableOpacity
           onPress={handleDismissTerms}
           className="mt-4 rounded-xl bg-primary py-4">
-          <Text className="text-center font-bold text-[#2B2A3D]">{terms.closeButtonLabel}</Text>
+          <Text className="text-center font-bold text-white">{terms.closeButtonLabel}</Text>
         </TouchableOpacity>
       </View>
     </CustomBottomSheetModal>

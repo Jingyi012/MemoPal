@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Maximize2, X } from 'lucide-react-native';
+import { Maximize2, X } from '@/core/icons';
 import { useState } from 'react';
 import {
   Modal,

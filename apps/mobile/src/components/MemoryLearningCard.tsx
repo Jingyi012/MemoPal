@@ -2,7 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { MemoryVisibilityBadge } from '@/components/MemoryVisibilityBadge';
 import type { MemorySetVisibility } from '@/features/memory-sets';
 import { useColorScheme } from 'nativewind';
-import { CalendarClock, ChevronRight } from 'lucide-react-native';
+import { CalendarClock, ChevronRight } from '@/core/icons';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { memopalThemes, type MemoPalTheme } from '@/theme/memopalTheme';

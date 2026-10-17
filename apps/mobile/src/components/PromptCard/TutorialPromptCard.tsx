@@ -1,7 +1,7 @@
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from '@/core/icons';
 import React from 'react';
 import { Text, View } from 'react-native';
 import AnimatedPressable from '../AnimatedPressable';

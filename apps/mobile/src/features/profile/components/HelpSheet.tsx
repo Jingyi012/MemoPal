@@ -7,7 +7,7 @@ import { useHelpFaqConfig } from '@/features/support/hooks/useHelpFaqConfig';
 import { HelpFaqItem } from '@/features/support/types/helpFaqConfig';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Router } from 'expo-router';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from '@/core/icons';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';

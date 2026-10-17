@@ -2,7 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { useColorScheme } from 'nativewind';
 import { memopalThemes, type MemoPalTheme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
-import { RefreshCcw } from 'lucide-react-native';
+import { RefreshCcw } from '@/core/icons';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 

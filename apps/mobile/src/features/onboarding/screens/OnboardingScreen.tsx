@@ -8,7 +8,7 @@ import { usePredefinedMemoryLessons, type PredefinedMemoryLesson } from '@/featu
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowRight, Check, Clock3, Sparkles } from 'lucide-react-native';
+import { ArrowRight, Check, Clock3, Sparkles } from '@/core/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

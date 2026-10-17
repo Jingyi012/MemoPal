@@ -15,7 +15,7 @@ import { MemoryItemProgress, MemoryReviewProgressCard } from '../components/Memo
 import { MemoryReviewTaskCard } from '../components/MemoryReviewTaskCard';
 import { useCallback, type ReactNode } from 'react';
 import { Href, useRouter, useFocusEffect } from 'expo-router';
-import { AlertCircle, ArrowRight, Check, Circle, X } from 'lucide-react-native';
+import { AlertCircle, ArrowRight, Check, Circle, X } from '@/core/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';

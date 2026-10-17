@@ -6,7 +6,7 @@ import { buildAllNumberPegItems, getUnlockedPegCount } from '@/features/number-p
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, Check, RefreshCcw, X } from 'lucide-react-native';
+import { ArrowRight, Check, RefreshCcw, X } from '@/core/icons';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';

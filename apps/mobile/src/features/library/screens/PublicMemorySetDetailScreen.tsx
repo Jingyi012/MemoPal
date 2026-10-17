@@ -11,7 +11,7 @@ import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { AppImage } from '@/components/AppImage';
 import { Href, useRouter } from 'expo-router';
-import { Copy, Flag, RefreshCcw } from 'lucide-react-native';
+import { Copy, Flag, RefreshCcw } from '@/core/icons';
 import { useState } from 'react';
 import Toast from 'react-native-toast-message';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';

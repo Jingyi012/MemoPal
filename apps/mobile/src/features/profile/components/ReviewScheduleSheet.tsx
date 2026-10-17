@@ -5,7 +5,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Clock3 } from 'lucide-react-native';
+import { Clock3 } from '@/core/icons';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   NativeScrollEvent,
