@@ -21,6 +21,7 @@ interface Actions {
 interface HeaderProps {
   title: string;
   description?: ReactNode;
+  /** @deprecated Kept temporarily for call-site compatibility; page headers no longer render eyebrow labels. */
   eyebrow?: string;
   actions?: Actions[];
   additionalContent?: ReactNode;
@@ -42,7 +43,6 @@ interface HeaderProps {
 export const CommonHeader: React.FC<HeaderProps> = ({
   title,
   description = '',
-  eyebrow,
   actions = [],
   additionalContent,
   leftComponent,
@@ -60,8 +60,20 @@ export const CommonHeader: React.FC<HeaderProps> = ({
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
 
   return (
-    <View style={[styles.header, { backgroundColor: backgroundMode === 'transparent' ? 'transparent' : activeTheme.canvas, borderBottomColor: activeTheme.line }]}>
-      <View style={[styles.headerInner, compact && styles.compactHeaderInner, { paddingTop: insets.top + (compact ? 4 : 8) }]}>
+    <View
+      style={[
+        styles.header,
+        {
+          backgroundColor: backgroundMode === 'transparent' ? 'transparent' : activeTheme.canvas,
+          borderBottomColor: activeTheme.line,
+        },
+      ]}>
+      <View
+        style={[
+          styles.headerInner,
+          compact && styles.compactHeaderInner,
+          { paddingTop: insets.top + (compact ? 4 : 8) },
+        ]}>
         <View style={[styles.row, compact && styles.compactRow]}>
           {/* Back button slot */}
           {!hideBackButton ? (
@@ -80,9 +92,22 @@ export const CommonHeader: React.FC<HeaderProps> = ({
 
           {/* Title + description */}
           <View style={styles.titleBlock}>
-            {eyebrow && <Text style={[styles.eyebrow, compact && styles.compactEyebrow, { color: activeTheme.violetDeep, backgroundColor: activeTheme.violetTint, borderColor: activeTheme.violetLine }]}>{eyebrow}</Text>}
-            <Text style={[styles.title, compact && styles.compactTitle, { color: activeTheme.ink }]} numberOfLines={compact ? 1 : 2}>{title}</Text>
-            {description && <Text style={[styles.description, compact && styles.compactDescription, { color: activeTheme.inkSoft }]} numberOfLines={compact ? 1 : 2}>{description}</Text>}
+            <Text
+              style={[styles.title, compact && styles.compactTitle, { color: activeTheme.ink }]}
+              numberOfLines={compact ? 1 : 2}>
+              {title}
+            </Text>
+            {description && (
+              <Text
+                style={[
+                  styles.description,
+                  compact && styles.compactDescription,
+                  { color: activeTheme.inkSoft },
+                ]}
+                numberOfLines={compact ? 1 : 2}>
+                {description}
+              </Text>
+            )}
           </View>
 
           {/* Actions */}
@@ -143,27 +168,6 @@ const styles = {
   },
   titleBlock: {
     flex: 1,
-  },
-  eyebrow: {
-    alignSelf: 'flex-start' as const,
-    color: theme.violetDeep,
-    backgroundColor: theme.violetTint,
-    borderWidth: 1.3,
-    borderColor: theme.violetLine,
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-    fontSize: 10,
-    fontFamily: typography.display,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase' as const,
-    marginBottom: 4,
-  },
-  compactEyebrow: {
-    fontSize: 8,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    marginBottom: 2,
   },
   title: {
     color: theme.ink,

@@ -15,7 +15,7 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, BookOpen, Check, Plus, RefreshCcw } from '@/core/icons';
+import { ArrowRight, BookOpen, Plus, RefreshCcw } from '@/core/icons';
 import { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
@@ -60,7 +60,6 @@ export default function PracticeScreen() {
   const memorySets = useMemorySets();
   const dueReviews = useDueMemoryReviews();
   const [selectedIntent, setSelectedIntent] = useState<IntentKey | null>(null);
-  const [selectedTechnique, setSelectedTechnique] = useState<TechniqueKey | null>(null);
 
   const continueSet = useMemo(
     () => [...(memorySets.data ?? [])]
@@ -87,11 +86,9 @@ export default function PracticeScreen() {
 
   const chooseIntent = (intent: IntentKey) => {
     setSelectedIntent(intent);
-    setSelectedTechnique(INTENT_TECHNIQUE[intent]);
   };
-  const startTechnique = () => {
-    if (!selectedTechnique) return;
-    const module = modules.find((candidate) => candidate.key === selectedTechnique);
+  const startTechnique = (technique: TechniqueKey) => {
+    const module = modules.find((candidate) => candidate.key === technique);
     if (module) router.push(module.route as Href);
   };
 
@@ -196,20 +193,18 @@ export default function PracticeScreen() {
             {modules.map((module) => {
               const isPeg = module.key === 'number-peg';
               const key: TechniqueKey = isPeg ? 'number-peg' : 'palace';
-              const selected = selectedTechnique === key;
               const recommended = recommendedTechnique === key && availableTechniques.has(key);
               return (
                 <View key={module.key} style={styles.techniqueCardWrap}>
                   {recommended ? <View style={styles.recommendedBadge}><Text style={styles.recommendedText}>✦ {t('recommended')}</Text></View> : null}
                   <AnimatedPressable
                     accessibilityRole="button"
-                    accessibilityState={{ selected }}
+                    accessibilityHint={t('tapToStartTechnique')}
                     accessibilityLabel={isPeg ? t('numberPeg') : t('palace')}
-                    onPress={() => setSelectedTechnique(key)}
+                    onPress={() => startTechnique(key)}
                     style={[
                       styles.techniqueCard,
                       { backgroundColor: isPeg ? activeTheme.berryTint : activeTheme.violetTint },
-                      selected && (isPeg ? styles.techniqueCardPegSelected : styles.techniqueCardPalaceSelected),
                     ]}>
                     <View style={styles.techniqueHeading}>
                       <View style={[styles.techniqueIcon, { backgroundColor: isPeg ? activeTheme.paper : activeTheme.paper }]}>
@@ -219,7 +214,7 @@ export default function PracticeScreen() {
                         <Text style={[styles.techniqueName, { color: activeTheme.ink }]}>{isPeg ? t('numberPeg') : t('palace')}</Text>
                         <Text style={[styles.techniqueDescription, { color: activeTheme.inkSoft }]}>{isPeg ? t('numberPegDescription') : t('palaceDescription')}</Text>
                       </View>
-                      {selected ? <View style={styles.selectedMark}><Check size={14} color={theme.onAccent} /></View> : null}
+                      <ArrowRight size={19} color={isPeg ? activeTheme.berryDeep : activeTheme.violetDeep} />
                     </View>
                     <View style={styles.techniqueTags}>
                       {(isPeg ? ['pegTagAnchor', 'pegTagList'] as const : ['palaceTagRoute', 'palaceTagLong'] as const)
@@ -230,15 +225,6 @@ export default function PracticeScreen() {
               );
             })}
           </View>
-        ) : null}
-
-        {selectedTechnique && availableTechniques.has(selectedTechnique) ? (
-          <AnimatedPressable accessibilityRole="button" onPress={startTechnique} style={styles.startButton}>
-            <Text style={styles.startButtonText}>
-              {t('startWithTechnique', { technique: selectedTechnique === 'palace' ? t('palace') : t('numberPeg') })}
-            </Text>
-            <ArrowRight size={18} color={theme.onSun} />
-          </AnimatedPressable>
         ) : null}
 
         <SpotlightTarget id="practiceCreate" onReveal={revealTop} onActivate={() => openMemoryFlow(true)}>
@@ -329,22 +315,17 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   techniqueList: { gap: 13 },
   techniqueCardWrap: { position: 'relative' },
   techniqueCard: { borderColor: 'transparent', borderRadius: 21, borderWidth: 1.5, gap: 12, minHeight: 134, padding: 15 },
-  techniqueCardPegSelected: { borderColor: theme.berryDeep, transform: [{ translateY: -2 }] },
-  techniqueCardPalaceSelected: { borderColor: theme.violetDeep, transform: [{ translateY: -2 }] },
   techniqueHeading: { alignItems: 'center', flexDirection: 'row', gap: 12 },
   techniqueIcon: { alignItems: 'center', borderRadius: 17, height: 52, justifyContent: 'center', width: 52 },
   techniqueEmoji: { fontSize: 29, lineHeight: 34 },
   techniqueTitleBlock: { flex: 1, gap: 4, minWidth: 0 },
   techniqueName: { fontFamily: typography.displayExtraBold, fontSize: 16 },
   techniqueDescription: { fontFamily: typography.bodySemibold, fontSize: 11.5, lineHeight: 17 },
-  selectedMark: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 12, height: 24, justifyContent: 'center', width: 24 },
   techniqueTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingLeft: 64 },
   techniqueTag: { backgroundColor: theme.paper, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
   techniqueTagText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   recommendedBadge: { alignSelf: 'flex-end', backgroundColor: theme.sun, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, position: 'absolute', right: 13, top: -9, zIndex: 1 },
   recommendedText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  startButton: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 14, flexDirection: 'row', justifyContent: 'center', gap: 9, minHeight: 48, paddingHorizontal: 16 },
-  startButtonText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 14 },
   createMemoryCard: { alignItems: 'center', borderColor: theme.violetLine, borderRadius: 19, borderStyle: 'dashed', borderWidth: 1.5, flexDirection: 'row', gap: 12, minHeight: 76, paddingHorizontal: 13, paddingVertical: 11 },
   createMemoryIcon: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 15, height: 44, justifyContent: 'center', width: 44 },
   createMemoryCopy: { flex: 1, gap: 3, minWidth: 0 },

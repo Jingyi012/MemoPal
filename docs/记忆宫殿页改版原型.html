@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>记忆宫殿页改版</title>
+<style>
+:root{--bg:#F6F3FF;--card:#fff;--ink:#241B4B;--sub:#5E5784;--line:#E6E0F7;--p:#6A4CD8;--pl:#EEE8FF;--gold:#FFC93C;--teal:#18A9B8;--tl:#DDF4F6;--grey:#E9E6F2;--shadow:0 6px 20px rgba(80,50,180,.12);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--tl:#16363D;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--tl:#16363D;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:"Nunito","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;padding:16px 20px 130px}
+header{display:flex;align-items:center;gap:12px}
+.back{width:40px;height:40px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--p);font-size:18px;font-weight:800;cursor:pointer}
+header h1{flex:1;font-size:24px;font-weight:800}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-weight:800;font-size:14px}
+h3{font-size:17px;font-weight:800}
+.sh{display:flex;justify-content:space-between;align-items:center;margin:26px 0 12px}
+.sh small{font-size:12px;color:var(--sub);font-weight:700}
+button:focus-visible{outline:3px solid var(--p);outline-offset:2px}
+.feat{margin-top:18px;border-radius:24px;padding:16px;color:#fff;background:linear-gradient(135deg,#2B1B6B,#5B3BC4);box-shadow:var(--shadow);display:flex;gap:14px;align-items:center}
+.thumb{width:76px;height:76px;border-radius:18px;display:grid;place-items:center;font-size:34px;flex:none}
+.feat .tx{flex:1;min-width:0}.feat small{font-size:12px;opacity:.8;font-weight:700}
+.feat b{display:block;font-size:18px;margin:2px 0 8px}
+.feat .bar{height:6px;border-radius:99px;background:rgba(255,255,255,.25);overflow:hidden}.feat .bar i{display:block;height:100%;background:var(--gold)}
+.go{border:0;border-radius:14px;padding:12px 14px;background:var(--gold);color:#3A2800;font:800 14px inherit;font-family:inherit;cursor:pointer;box-shadow:0 3px 0 #D9A41A;flex:none}
+.go:active{transform:translateY(2px);box-shadow:0 1px 0 #D9A41A}
+.list .row{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:18px;padding:12px;box-shadow:var(--shadow);margin-bottom:10px}
+.list .thumb{width:52px;height:52px;font-size:24px;border-radius:14px}
+.rt{flex:1;min-width:0}.rt b{display:block;font-size:15px}.rt small{font-size:12px;color:var(--sub);font-weight:700}
+.rt .bar{height:5px;border-radius:99px;background:var(--grey);margin-top:6px;overflow:hidden}.rt .bar i{display:block;height:100%;background:var(--teal)}
+.walk{border:0;border-radius:12px;padding:8px 12px;background:var(--pl);color:var(--p);font:800 13px inherit;font-family:inherit;cursor:pointer}
+.new{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.nb{text-align:left;border:2px dashed var(--p);background:transparent;border-radius:20px;padding:16px;font-family:inherit;color:inherit;cursor:pointer;position:relative}
+.nb .e{font-size:30px}.nb b{display:block;font-size:15px;margin-top:8px}.nb small{font-size:12px;color:var(--sub);font-weight:700;line-height:1.4;display:block;margin-top:2px}
+.best{position:absolute;top:-10px;right:10px;background:var(--gold);color:#3A2800;font-size:11px;font-weight:800;padding:3px 8px;border-radius:99px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:7px 14px;font:700 13px inherit;font-family:inherit;cursor:pointer}
+.tab.act{background:var(--p);border-color:var(--p);color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sc{position:relative;height:130px;border-radius:20px;border:3px solid transparent;overflow:hidden;cursor:pointer;color:#fff;text-align:left;font-family:inherit;padding:0;box-shadow:var(--shadow)}
+.sc .bg{position:absolute;inset:0;display:grid;place-items:center;font-size:48px;padding-bottom:26px}
+.sc .ov{position:absolute;left:0;right:0;bottom:0;padding:26px 12px 10px;background:linear-gradient(transparent,rgba(20,10,50,.82))}
+.sc b{display:block;font-size:14px}.sc small{font-size:12px;font-weight:700;opacity:.9}
+.sc.sel{border-color:var(--gold)}
+.sc .ck{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#3A2800;font-weight:800;font-size:14px;display:none;place-items:center}
+.sc.sel .ck{display:grid}
+.bar2{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,var(--bg) 40%);pointer-events:none}
+.bar2 button{pointer-events:auto;width:100%;max-width:390px;border:0;border-radius:16px;padding:15px;background:var(--p);color:#fff;font:800 16px inherit;font-family:inherit;cursor:pointer;box-shadow:0 5px 0 #4B33A8,var(--shadow);transform:translateY(0);transition:transform .2s}
+.bar2 button.hide{transform:translateY(140%)}
+.bar2 button:active{transform:translateY(3px)}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <button class="back" aria-label="返回">‹</button>
+    <h1>记忆宫殿</h1>
+    <div class="chip">🪙 999k</div>
+  </header>
+
+  <section class="feat">
+    <div class="thumb" style="background:linear-gradient(135deg,#7A5CE8,#B49BFF)">🏠</div>
+    <div class="tx"><small>继续上次的旅程</small><b>示例宫殿</b><div class="bar"><i style="width:0%"></i></div></div>
+    <button class="go">走一遍</button>
+  </section>
+
+  <div class="sh"><h3>我的宫殿</h3><small>共 2 座</small></div>
+  <div class="list">
+    <div class="row"><div class="thumb" style="background:linear-gradient(135deg,#7A5CE8,#B49BFF)">🏠</div>
+      <div class="rt"><b>示例宫殿</b><small>6 个位置 · 已回忆 0/6</small><div class="bar"><i style="width:0%"></i></div></div><button class="walk">走一遍</button></div>
+    <div class="row"><div class="thumb" style="background:linear-gradient(135deg,#18A9B8,#7FE0D0)">🍳</div>
+      <div class="rt"><b>厨房之旅</b><small>5 个位置 · 已回忆 3/5</small><div class="bar"><i style="width:60%"></i></div></div><button class="walk">走一遍</button></div>
+  </div>
+
+  <div class="sh"><h3>新建宫殿</h3></div>
+  <div class="new">
+    <button class="nb"><span class="best">最有效</span><div class="e">📷</div><b>用我自己的地方</b><small>上传熟悉的照片，点出要记的位置</small></button>
+    <button class="nb" id="scn"><div class="e">🗺️</div><b>从场景库选一个</b><small>没有照片？用现成的房间</small></button>
+  </div>
+
+  <div class="sh" id="lib"><h3>场景库</h3><small>点一个，预览并创建</small></div>
+  <div class="tabs" id="tabs">
+    <button class="tab act" data-t="all">全部</button><button class="tab" data-t="home">家里</button><button class="tab" data-t="work">工作</button><button class="tab" data-t="out">户外</button>
+  </div>
+  <section class="grid" id="grid"></section>
+</main>
+
+<div class="bar2"><button id="make" class="hide">用这个场景创建</button></div>
+
+<script>
+var S=[
+ {n:"洗衣间",c:10,t:"home",e:"🧺",g:"#6AA7E0,#A9D4F5"},
+ {n:"储藏室",c:10,t:"home",e:"🥫",g:"#C58B5A,#E9C7A0"},
+ {n:"明亮客厅",c:3,t:"home",e:"🛋️",g:"#8FB58A,#CDE6C5"},
+ {n:"办公室",c:6,t:"work",e:"💼",g:"#7A7FD6,#B9BDF5"},
+ {n:"咖啡馆",c:7,t:"work",e:"☕",g:"#B8745A,#E8B9A0"},
+ {n:"公园小径",c:8,t:"out",e:"🌳",g:"#4FB07A,#A8E3BE"}
+];
+var sel=null,tab="all";
+function draw(){
+  var h="";
+  S.forEach(function(s,i){
+    if(tab!=="all"&&s.t!==tab)return;
+    var g=s.g.split(",");
+    h+='<button class="sc'+(sel===i?" sel":"")+'" data-i="'+i+'"><div class="bg" style="background:linear-gradient(135deg,'+g[0]+','+g[1]+')">'+s.e+'</div><span class="ck">✓</span><div class="ov"><b>'+s.n+'</b><small>'+s.c+' 个记忆位置</small></div></button>';
+  });
+  document.getElementById("grid").innerHTML=h;
+  var m=document.getElementById("make");
+  if(sel===null){m.classList.add("hide")}else{m.classList.remove("hide");m.textContent="用「"+S[sel].n+"」创建宫殿"}
+}
+draw();
+document.getElementById("grid").addEventListener("click",function(e){
+  var b=e.target.closest(".sc");if(!b)return;
+  var i=+b.dataset.i;sel=(sel===i)?null:i;draw();
+});
+document.getElementById("tabs").addEventListener("click",function(e){
+  var t=e.target.closest(".tab");if(!t)return;
+  document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("act")});
+  t.classList.add("act");tab=t.dataset.t;draw();
+});
+document.getElementById("scn").addEventListener("click",function(){
+  document.getElementById("lib").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"});
+});
+</script>
+</body>
+</html>
