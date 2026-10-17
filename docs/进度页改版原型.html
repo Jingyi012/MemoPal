@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>进度页改版</title>
+<style>
+:root{--bg:#F6F3FF;--card:#fff;--ink:#241B4B;--sub:#5E5784;--line:#E6E0F7;--p:#6A4CD8;--p2:#4B33A8;--pl:#EEE8FF;--gold:#F5B731;--fire:#FF7A2F;--teal:#18A9B8;--tl:#DDF4F6;--grey:#E9E6F2;--shadow:0 6px 20px rgba(80,50,180,.12);--hero1:#2B1B6B;--hero2:#4A2FA8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--tl:#16363D;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--tl:#16363D;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:"Nunito","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;padding:20px 20px 96px}
+header{display:flex;justify-content:space-between;align-items:center}
+h1{font-size:26px;font-weight:800}
+.chips{display:flex;gap:8px}
+.chip{display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:800;font-size:14px}
+.chip.fire{color:var(--fire)}
+h2{font-size:18px;font-weight:800;margin:28px 0 12px}
+.hero{position:relative;margin-top:44px;background:linear-gradient(135deg,var(--hero1),var(--hero2));border-radius:24px;padding:20px;color:#fff;box-shadow:var(--shadow);overflow:hidden}
+.owl{position:absolute;right:16px;top:-30px;font-size:64px;line-height:1}
+.hero-wrap{position:relative}
+.hero-wrap .owl{top:-38px;right:18px;z-index:2}
+.lv{font-size:13px;opacity:.8}
+.lvn{font-size:24px;font-weight:800;margin:2px 0 14px}
+.bar{height:10px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--gold);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.hint{font-size:13px;margin-top:8px;opacity:.9}
+.week{background:var(--card);border-radius:20px;padding:16px;margin-top:16px;box-shadow:var(--shadow)}
+.wk-top{display:flex;justify-content:space-between;align-items:baseline}
+.wk-top b{font-size:16px}.wk-top span{color:var(--sub);font-size:13px;font-weight:700}
+.days{display:flex;justify-content:space-between;margin-top:14px}
+.d{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--sub);font-weight:700}
+.dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:15px;border:2px dashed var(--line)}
+.dot.on{background:var(--p);border:2px solid var(--p);color:#fff}
+.dot.today{border:2px solid var(--p);border-style:solid;background:var(--pl);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(106,76,216,.15)}}
+@media (prefers-reduced-motion:reduce){.dot.today{animation:none}.bar i{transition:none}}
+.cta{margin-top:16px;border-radius:20px;padding:18px;background:linear-gradient(135deg,#FF8A3D,#FF5E7A);color:#fff;box-shadow:0 8px 20px rgba(255,100,80,.3)}
+.cta small{opacity:.9;font-size:13px;font-weight:700}
+.cta h3{font-size:19px;font-weight:800;margin:4px 0 12px}
+.cta .bar{background:rgba(255,255,255,.3);height:8px}.cta .bar i{background:#fff}
+.cta button{margin-top:14px;width:100%;border:0;border-radius:14px;padding:14px;font:800 16px inherit;font-family:inherit;color:#D64A2A;background:#fff;cursor:pointer}
+.cta button:active{transform:scale(.98)}
+.cta button:focus-visible,.tab:focus-visible,.route:focus-visible{outline:3px solid var(--p);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--card);border-radius:18px;padding:14px 10px;text-align:center;box-shadow:var(--shadow)}
+.stat .ic{font-size:20px}.stat b{display:block;font-size:24px;font-weight:800;margin-top:2px}
+.stat span{font-size:12px;color:var(--sub);font-weight:700}
+.routes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.route{background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--shadow);border:0;text-align:left;font-family:inherit;color:inherit;cursor:pointer}
+.ring{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;margin-bottom:10px}
+.ring::before{content:"";position:absolute}
+.ring span{width:50px;height:50px;border-radius:50%;background:var(--card);display:grid;place-items:center}
+.route b{display:block;font-size:15px}.route small{font-size:12px;color:var(--sub);font-weight:700}
+.done{display:inline-block;margin-top:6px;font-size:12px;font-weight:800;color:#0E7F8B;background:var(--tl);padding:3px 8px;border-radius:99px}
+.mh{display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px}
+.mh h2{margin:0}.badge{background:#DFF5E6;color:#1B7A3E;font-weight:800;font-size:12px;padding:5px 10px;border-radius:99px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:8px 16px;font:700 14px inherit;font-family:inherit;cursor:pointer}
+.tab.act{background:var(--p);color:#fff;border-color:var(--p)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ms{background:var(--card);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
+.ms .em{font-size:30px}.ms b{display:block;font-size:15px;margin:6px 0 2px}
+.ms small{font-size:12px;color:var(--sub);font-weight:700}
+.ms .bar{height:6px;background:var(--grey);margin-top:8px}.ms .bar i{background:var(--p)}
+.ms.lock .em{filter:grayscale(1);opacity:.5}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--card);border-top:1px solid var(--line)}
+nav div{display:flex;width:100%;max-width:430px;justify-content:space-around;padding:8px 0}
+nav span{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:700;color:var(--sub);gap:2px;padding:4px 10px;border-radius:14px}
+nav span.on{background:var(--pl);color:var(--p)}
+nav em{font-style:normal;font-size:20px}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <h1>你的成长</h1>
+    <div class="chips"><div class="chip fire">🔥 2</div><div class="chip">🪙 999k</div></div>
+  </header>
+
+  <div class="hero-wrap">
+    <div class="owl">🦉</div>
+    <section class="hero">
+      <div class="lv">等级 3</div>
+      <div class="lvn">记忆学徒</div>
+      <div class="bar"><i style="width:5%"></i></div>
+      <div class="hint">5 / 100 XP · 再获得 95 XP 升到等级 4 ✨</div>
+    </section>
+  </div>
+
+  <section class="week">
+    <div class="wk-top"><b>本周足迹</b><span id="wkc">本周 3/7 天</span></div>
+    <div class="days" id="days"></div>
+  </section>
+
+  <section class="cta">
+    <small>下一个小胜利</small>
+    <h3>再练 1 天，点亮三日火花 🔥</h3>
+    <div class="bar"><i style="width:67%"></i></div>
+    <button id="go">开始今天的练习</button>
+  </section>
+
+  <h2>学习数据</h2>
+  <section class="stats">
+    <div class="stat"><div class="ic">🎯</div><b>67%</b><span>首次回忆率</span></div>
+    <div class="stat"><div class="ic">✅</div><b>26</b><span>已完成练习</span></div>
+    <div class="stat"><div class="ic">📖</div><b>35</b><span>已学词语</span></div>
+  </section>
+
+  <h2>学习路线</h2>
+  <section class="routes">
+    <button class="route">
+      <div class="ring" style="background:conic-gradient(var(--p) 30%,var(--grey) 0)"><span>30%</span></div>
+      <b>数字桩</b><small>已掌握 30 / 100</small>
+    </button>
+    <button class="route">
+      <div class="ring" style="background:conic-gradient(var(--teal) 100%,var(--grey) 0)"><span>🏛️</span></div>
+      <b>记忆宫殿</b><small>11 / 11</small><br><span class="done">✓ 已通关</span>
+    </button>
+  </section>
+
+  <div class="mh"><h2>里程碑</h2><span class="badge">3 已达成</span></div>
+  <div class="tabs" id="tabs">
+    <button class="tab act" data-f="prog">进行中</button>
+    <button class="tab" data-f="got">已获得</button>
+    <button class="tab" data-f="all">全部</button>
+  </div>
+  <section class="grid" id="ms"></section>
+</main>
+
+<nav><div>
+  <span><em>🏠</em>首页</span><span><em>🧩</em>练习</span><span><em>📚</em>记忆库</span>
+  <span class="on"><em>📈</em>进度</span><span><em>👤</em>我的</span>
+</div></nav>
+
+<script>
+var names=["一","二","三","四","五","六","日"],on=[1,1,0,1,0,0,0],today=4;
+var dEl=document.getElementById("days");
+names.forEach(function(n,i){
+  var c=on[i]?"on":(i===today?"today":""),inner=on[i]?"🐾":"";
+  dEl.insertAdjacentHTML("beforeend",'<div class="d"><div class="dot '+c+'">'+inner+'</div>'+n+'</div>');
+});
+var data=[
+ {e:"🔥",n:"三日火花",s:"还差 1 次",p:67,g:0},
+ {e:"🏆",n:"记忆探索者",s:"还差 2 次",p:40,g:0},
+ {e:"🏛️",n:"宫殿建筑师",s:"已获得",p:100,g:1},
+ {e:"🌱",n:"第一次练习",s:"已获得",p:100,g:1},
+ {e:"⭐",n:"首次满分",s:"已获得",p:100,g:1},
+ {e:"📚",n:"词语收藏家",s:"还差 15 个",p:70,g:0}
+];
+function render(f){
+  var h="";
+  data.forEach(function(m){
+    if(f==="prog"&&m.g||f==="got"&&!m.g)return;
+    h+='<div class="ms '+(m.g?"":"lock")+'"><div class="em">'+m.e+'</div><b>'+m.n+'</b><small>'+m.s+'</small>'+(m.g?"":'<div class="bar"><i style="width:'+m.p+'%"></i></div>')+'</div>';
+  });
+  document.getElementById("ms").innerHTML=h;
+}
+render("prog");
+document.getElementById("tabs").addEventListener("click",function(e){
+  var t=e.target.closest(".tab");if(!t)return;
+  document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("act")});
+  t.classList.add("act");render(t.dataset.f);
+});
+document.getElementById("go").addEventListener("click",function(){
+  var d=document.querySelectorAll(".dot")[today];
+  d.className="dot on";d.textContent="🐾";
+  document.getElementById("wkc").textContent="本周 4/7 天";
+  this.textContent="今天已点亮 ✓";this.disabled=true;
+});
+</script>
+</body>
+</html>

@@ -27,8 +27,8 @@ export function NightEmphasisCard({ children, style }: NightEmphasisCardProps) {
           </RadialGradient>
         </Defs>
         <Circle cx={110} cy={110} r={110} fill="url(#nightEmphasisGlow)" />
-        <Circle cx={155} cy={100} r={56} fill="none" stroke={theme.violet} strokeOpacity={0.28} strokeWidth={1} />
-        <Circle cx={155} cy={100} r={78} fill="none" stroke={theme.violet} strokeOpacity={0.16} strokeWidth={1} />
+        <Circle cx={132} cy={105} r={56} fill="none" stroke={theme.violet} strokeOpacity={0.28} strokeWidth={1} />
+        <Circle cx={132} cy={105} r={78} fill="none" stroke={theme.violet} strokeOpacity={0.16} strokeWidth={1} />
         <Circle cx={105} cy={75} r={5} fill={theme.berry} />
         <Circle cx={187} cy={146} r={3} fill={theme.sun} />
         <Path d="M150 39 L153 47 L161 50 L153 53 L150 61 L147 53 L139 50 L147 47 Z" fill={theme.sun} />
@@ -50,9 +50,9 @@ const styles = StyleSheet.create({
   },
   glowLayer: {
     position: 'absolute',
-    width: 220,
-    height: 220,
-    top: -30,
-    right: -65,
+    width: 124,
+    height: 124,
+    top: 4,
+    right: 4,
   },
 });

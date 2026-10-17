@@ -109,10 +109,10 @@ function buildPracticeStats(attempts: PracticeAttempt[]): PracticeStats {
   const weeklyActivity = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(today);
     date.setDate(today.getDate() - (6 - index));
-    const dateKey = date.toISOString().slice(0, 10);
+    const dateKey = localDateKey(date);
     return {
       date: dateKey,
-      sessions: attempts.filter((attempt) => new Date(attempt.completedAt).toISOString().slice(0, 10) === dateKey).length,
+      sessions: attempts.filter((attempt) => localDateKey(new Date(attempt.completedAt)) === dateKey).length,
     };
   });
   return {
@@ -121,6 +121,10 @@ function buildPracticeStats(attempts: PracticeAttempt[]): PracticeStats {
     firstAttemptRecallPercent: total ? Math.round((recalledFirstTry / total) * 100) : 0,
     weeklyActivity,
   };
+}
+
+function localDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 export function usePracticeAttemptHistory(memorySetId: string) {

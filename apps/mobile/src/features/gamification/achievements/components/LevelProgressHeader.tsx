@@ -2,7 +2,7 @@ import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import { LevelXpProgressBar, getLevelProgressMetrics } from '@/components/LevelXpProgressBar';
 import { typography } from '@/theme/typography';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { MemoryAvatar } from '@/components/MemoryAvatar';
 import type { AvatarDefinition } from '@/features/avatars/types/avatar';
@@ -20,11 +20,12 @@ interface Props {
   streak: number;
   avatar?: AvatarDefinition;
   appearance?: EquippedAppearance;
+  cardStyle?: StyleProp<ViewStyle>;
 }
 
-export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar, appearance }) => {
+export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar, appearance, cardStyle }) => {
   const { language, t } = useTranslation('achievements');
-  const { levelWindowXp, isMaxLevel } = getLevelProgressMetrics(level.xpInCurrentLevel, level.xpToNextLevel);
+  const { isMaxLevel } = getLevelProgressMetrics(level.xpInCurrentLevel, level.xpToNextLevel);
   const localizedTitles: Record<string, string> = {
     'Memory Apprentice': t('memoryApprentice'),
     Novice: t('levelNovice'),
@@ -43,13 +44,13 @@ export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar, ap
     : level.title;
 
   return (
-    <NightEmphasisCard style={styles.card}>
+    <NightEmphasisCard style={[styles.card, cardStyle]}>
       <View style={styles.topRow}>
         <View style={styles.avatarRing}>
           <MemoryAvatar
             avatar={avatar}
             level={level.currentLevel}
-            size={52}
+            size={60}
             showLevelBadge={false}
             appearance={appearance}
           />
@@ -59,7 +60,10 @@ export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar, ap
           <Text style={styles.levelSubtitle}>
             {isMaxLevel
               ? `${t('total')} ${level.totalXp} XP`
-              : `${level.xpInCurrentLevel} / ${levelWindowXp} XP ${t('toLevel')} ${level.currentLevel + 1}`}
+              : t('xpToNextLevel', {
+                  xp: Math.max(0, level.xpToNextLevel),
+                  level: level.currentLevel + 1,
+                })}
           </Text>
         </View>
         <View style={styles.streakPill}><Text style={styles.streakText}>🔥 {streak}</Text></View>
@@ -83,7 +87,7 @@ export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar, ap
 const styles = {
   card: { marginBottom: 18 },
   topRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12, zIndex: 1 as const },
-  avatarRing: { width: 52, height: 52, borderRadius: 26, borderWidth: 3, borderColor: 'rgba(255,255,255,0.25)', overflow: 'visible' as const },
+  avatarRing: { width: 60, height: 60, borderRadius: 30, borderWidth: 3, borderColor: 'rgba(255,255,255,0.25)', overflow: 'visible' as const },
   levelCopy: { flex: 1 },
   levelTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 14.5 },
   levelSubtitle: { color: '#C9C5E0', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 1 },
