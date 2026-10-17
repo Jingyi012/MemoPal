@@ -4,19 +4,18 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { ActionSheet } from '@/components/ActionSheet';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
-import { NightEmphasisCard } from '@/components/NightEmphasisCard';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useUserState } from '@/contexts/UserStateContext';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
-import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { ChevronRight, LogOut, Pencil } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { ArrowRight, ChevronRight, LogOut, Pencil } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
@@ -31,7 +30,6 @@ import ThemeSheet from '../components/ThemeSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { DEFAULT_LEVEL_TITLES, getLevelTitleForLevel } from '@/features/gamification/shared/utils/levelTitles';
-import { useColorScheme } from 'nativewind';
 
 export default function ProfileScreen() {
   const { styles, theme } = useStyles();
@@ -44,8 +42,6 @@ export default function ProfileScreen() {
   const { t: onboardingT } = useTranslation('onboarding');
   const { t: languageT } = useTranslation('language');
   const { logout } = useAuth();
-  const { colorScheme } = useColorScheme();
-  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const updateProfileMutation = useUpdateProfile();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
   const { levelInfo } = useLevelByXp(totalXp, user?.level);
@@ -75,6 +71,11 @@ export default function ProfileScreen() {
   const levelTitle = language === 'zh'
     ? levelInfo?.currentLevelConfig?.titleZh ?? levelInfo?.currentLevelConfig?.title ?? fallbackLevelTitle.titleZh
     : levelInfo?.currentLevelConfig?.title ?? fallbackLevelTitle.titleEn;
+  const currentStreak = Math.max(0, user?.stats?.currentStreak ?? 0);
+  const totalXpForDisplay = Math.max(0, totalXp);
+  const xpInCurrentLevel = Math.max(0, levelInfo?.xpInCurrentLevel ?? totalXpForDisplay % 100);
+  const xpToNextLevel = Math.max(1, levelInfo?.xpToNextLevel ?? 100);
+  const levelProgress = Math.min(1, xpInCurrentLevel / xpToNextLevel);
   const selectedTheme = userState.preferences.theme ?? 'light';
   const themeLabel = selectedTheme === 'dark'
     ? t('dark')
@@ -222,14 +223,18 @@ export default function ProfileScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
-        eyebrow={t('title')}
         title={t('title')}
         description={t('profileDescription')}
         hideBackButton
         showAiCredits={false}
+        actions={[{
+          icon: Pencil,
+          accessibilityLabel: t('editProfile'),
+          onPress: () => editProfileRef.current?.present(),
+        }]}
       />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <View style={[styles.profileHead, { backgroundColor: activeTheme.violetTint, borderColor: activeTheme.violetLine }]}>
+        <View style={styles.profileIdentity}>
           <View style={styles.avatar}>
             {user?.avatarUrl ? (
               <AppImage source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
@@ -243,53 +248,119 @@ export default function ProfileScreen() {
               </LinearGradient>
             )}
           </View>
-          <Text style={[styles.profileName, { color: activeTheme.ink }]}>{displayName}</Text>
-          <Text style={[styles.profileSubtitle, { color: activeTheme.inkSoft }]}>
-            Level {level} · {levelTitle}
-          </Text>
-          <AnimatedPressable
-            onPress={() => editProfileRef.current?.present()}
-            style={[styles.editButton, { backgroundColor: activeTheme.paper, borderColor: activeTheme.line }]}>
-            <Pencil size={14} color={activeTheme.ink} />
-            <Text style={[styles.editButtonText, { color: activeTheme.ink }]}>{t('editProfile')}</Text>
-          </AnimatedPressable>
+          <View style={styles.identityCopy}>
+            <View style={styles.nameRow}>
+              <Text numberOfLines={1} style={styles.profileName}>{displayName}</Text>
+              {isPremium ? (
+                <View style={styles.premiumBadge}>
+                  <Ionicons name="ribbon" size={13} color={theme.sunDeep} />
+                  <Text style={styles.premiumBadgeText}>PRO</Text>
+                </View>
+              ) : null}
+            </View>
+            <Text numberOfLines={1} style={styles.profileEmail}>{user?.email ?? 'Guest account'}</Text>
+            <View style={styles.levelPill}>
+              <Ionicons name="sparkles" size={14} color={theme.violetDeep} />
+              <Text numberOfLines={1} style={styles.levelPillText}>{t('level')} {level} · {levelTitle}</Text>
+            </View>
+          </View>
         </View>
 
-        <NightEmphasisCard style={styles.planCard}>
-          <Text style={styles.planBadge}>{isPremium ? t('premiumPlan') : t('freePlan')}</Text>
-          <Text style={styles.planTitle}>
-            {isPremium ? t('strongMemoryHabit') : t('unlockFaster')}
-          </Text>
-          <Text style={styles.planSubtitle}>
-            {isPremium ? t('keepStreak') : t('premiumBenefits')}
-          </Text>
-          <AnimatedPressable onPress={() => router.push('/premium')} style={styles.upgradeButton}>
-            <Text style={styles.upgradeButtonText}>
-              {isPremium ? t('managePlan') : t('upgradePro')}
-            </Text>
-          </AnimatedPressable>
-        </NightEmphasisCard>
+        <AnimatedPressable
+          accessibilityLabel={t('yourProgress')}
+          onPress={() => router.push('/achievements')}
+          style={styles.progressCard}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeadingCopy}>
+              <Text style={styles.cardEyebrow}>{t('yourProgress')}</Text>
+              <Text style={styles.cardDescription}>{t('levelXpStreak')}</Text>
+            </View>
+            <View style={styles.cardArrow}>
+              <ArrowRight size={17} color={theme.violetDeep} strokeWidth={2.5} />
+            </View>
+          </View>
+          <View style={styles.statsRow}>
+            <ProfileStat
+              icon={<Ionicons name="flame" size={20} color={theme.berryDeep} />}
+              iconBackgroundColor={theme.berryTint}
+              value={`${currentStreak}`}
+              label={t('streak')}
+              style={styles.streakStat}
+            />
+            <ProfileStat
+              icon={<Ionicons name="book" size={20} color={theme.grass} />}
+              iconBackgroundColor={theme.mintTint}
+              value={`${user?.stats?.lessonsCompleted ?? 0}`}
+              label={t('lessons')}
+              style={styles.lessonsStat}
+            />
+            <ProfileStat
+              icon={<Ionicons name="sparkles" size={20} color={theme.sunDeep} />}
+              iconBackgroundColor={theme.sunTint}
+              value={`${totalXpForDisplay}`}
+              label={t('xp')}
+              style={styles.xpStat}
+            />
+          </View>
+          <View style={styles.levelProgressHeader}>
+            <Text style={styles.levelProgressLabel}>{levelTitle}</Text>
+            <Text style={styles.levelProgressValue}>{xpInCurrentLevel} / {xpToNextLevel} {t('xp')}</Text>
+          </View>
+          <View
+            accessibilityRole="progressbar"
+            accessibilityValue={{ min: 0, max: 100, now: Math.round(levelProgress * 100) }}
+            style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${Math.round(levelProgress * 100)}%` }]} />
+          </View>
+        </AnimatedPressable>
 
-        <Text style={[styles.sectionLabel, { color: activeTheme.ink }]}>{t('settings')}</Text>
-        <View style={styles.settingsList}>
+        <AnimatedPressable onPress={() => router.push('/premium')} style={styles.planRow}>
+          <View style={[styles.planIcon, isPremium ? styles.planIconPremium : styles.planIconFree]}>
+            <Ionicons name="ribbon" size={22} color={isPremium ? theme.sunDeep : theme.violetDeep} />
+          </View>
+          <View style={styles.planCopy}>
+            <View style={styles.planTitleRow}>
+              <Text style={styles.planTitle}>{isPremium ? t('premiumPlan') : t('freePlan')}</Text>
+              <View style={styles.planStatus}>
+                <Text style={styles.planStatusText}>{isPremium ? t('managePlan') : t('upgradePro')}</Text>
+              </View>
+            </View>
+            <Text numberOfLines={1} style={styles.planSubtitle}>
+              {isPremium ? t('keepStreak') : t('premiumBenefits')}
+            </Text>
+          </View>
+          <ChevronRight size={19} color={theme.inkMuted} strokeWidth={2.4} />
+        </AnimatedPressable>
+
+        <SettingsSection title={t('learning')} accentColor={theme.violetDeep}>
           <ProfileSettingsRow
-            icon={<Text style={styles.settingsEmoji}>🧠</Text>}
+            icon={<Ionicons name="school" size={21} color={theme.violetDeep} />}
+            iconBackgroundColor={theme.violetTint}
             title={onboardingT('starterPickerTitle')}
             onPress={() => router.push('/onboarding?replay=true')}
+            last={false}
           />
           <ProfileSettingsRow
-            icon={<Text style={styles.settingsEmoji}>🧭</Text>}
+            icon={<Ionicons name="compass" size={21} color={theme.sky} />}
+            iconBackgroundColor={theme.skyTint}
             title={onboardingT('guideEntry')}
             onPress={() => startTour()}
+            last
           />
+        </SettingsSection>
+
+        <SettingsSection title={t('preferences')} accentColor={theme.berryDeep}>
           <ProfileSettingsRow
-            icon={<Text style={styles.settingsEmoji}>🔔</Text>}
+            icon={<Ionicons name="notifications" size={21} color={theme.berryDeep} />}
+            iconBackgroundColor={theme.berryTint}
             title={t('reviewReminders')}
             value={reviewRemindersEnabled ? t('on') : t('off')}
             right={<Switch value={reviewRemindersEnabled} onValueChange={saveReviewReminders} />}
+            last={false}
           />
           <ProfileSettingsRow
-            icon={<Text style={styles.settingsEmoji}>📚</Text>}
+            icon={<Ionicons name="time" size={21} color={theme.sunDeep} />}
+            iconBackgroundColor={theme.sunTint}
             title={t('dailyLearning')}
             value={reviewTime}
             right={
@@ -299,36 +370,50 @@ export default function ProfileScreen() {
               </View>
             }
             onPress={() => reviewScheduleRef.current?.present()}
+            last={false}
           />
           <ProfileSettingsRow
-            icon={<Text style={styles.settingsEmoji}>🔊</Text>}
+            icon={<Ionicons name="volume-high" size={21} color={theme.grass} />}
+            iconBackgroundColor={theme.mintTint}
             title={t('soundHaptics')}
             value={soundEnabled ? t('on') : t('off')}
             right={<Switch value={soundEnabled} onValueChange={saveSoundPreference} />}
+            last={false}
           />
           <ProfileSettingsRow
-            icon={<Text style={styles.settingsEmoji}>🌐</Text>}
+            icon={<Ionicons name="globe" size={21} color={theme.link} />}
+            iconBackgroundColor={theme.skyTint}
             title={t('language')}
             value={languageLabel}
             onPress={() => languageRef.current?.present()}
+            last={false}
           />
           <ProfileSettingsRow
-            icon={<Text style={styles.settingsEmoji}>🌙</Text>}
+            icon={<Ionicons name="moon" size={21} color={theme.violetDeep} />}
+            iconBackgroundColor={theme.violetTint}
             title={t('theme')}
             value={themeLabel}
             onPress={() => themeRef.current?.present()}
+            last
           />
+        </SettingsSection>
+
+        <SettingsSection title={t('support')} accentColor={theme.sky}>
           <ProfileSettingsRow
-            icon={<Text style={styles.settingsEmoji}>❓</Text>}
+            icon={<Ionicons name="help-circle" size={21} color={theme.sky} />}
+            iconBackgroundColor={theme.skyTint}
             title={t('helpSupport')}
             onPress={() => helpRef.current?.present()}
+            last={false}
           />
           <ProfileSettingsRow
-            icon={<Text style={styles.settingsEmoji}>ℹ️</Text>}
+            icon={<Ionicons name="information-circle" size={21} color={theme.inkSoft} />}
+            iconBackgroundColor={theme.peachTint}
             title={t('about')}
             onPress={() => privacyRef.current?.present()}
+            last
           />
-        </View>
+        </SettingsSection>
 
         <AnimatedPressable onPress={() => logoutRef.current?.present()} style={styles.signOutButton}>
           <LogOut size={18} color={theme.berryDeep} />
@@ -391,21 +476,25 @@ export default function ProfileScreen() {
 
 function ProfileSettingsRow({
   icon,
+  iconBackgroundColor,
   title,
   value,
   right,
   onPress,
+  last = false,
 }: {
   icon: ReactNode;
+  iconBackgroundColor?: string;
   title: string;
   value?: string;
   right?: ReactNode;
   onPress?: () => void;
+  last?: boolean;
 }) {
   const { styles, theme } = useStyles();
   const content = (
-    <View style={styles.settingsRow}>
-      <View style={styles.settingsIcon}>{icon}</View>
+    <View style={[styles.settingsRow, !last && styles.settingsRowDivider]}>
+      <View style={[styles.settingsIcon, iconBackgroundColor ? { backgroundColor: iconBackgroundColor } : null]}>{icon}</View>
       <Text style={styles.settingsTitle}>{title}</Text>
       {right ?? (value ? <Text style={styles.settingsValue}>{value}</Text> : null)}
       {onPress && !right ? <ChevronRight size={18} color={theme.inkMuted} strokeWidth={2.5} /> : null}
@@ -414,92 +503,166 @@ function ProfileSettingsRow({
   return onPress ? <AnimatedPressable onPress={onPress}>{content}</AnimatedPressable> : content;
 }
 
+function SettingsSection({ title, accentColor, children }: { title: string; accentColor: string; children: ReactNode }) {
+  const { styles } = useStyles();
+  return (
+    <View style={styles.settingsSection}>
+      <View style={styles.sectionLabelRow}>
+        <View style={[styles.sectionDot, { backgroundColor: accentColor }]} />
+        <Text style={styles.sectionLabel}>{title}</Text>
+      </View>
+      <View style={styles.settingsGroup}>{children}</View>
+    </View>
+  );
+}
+
+function ProfileStat({
+  icon,
+  iconBackgroundColor,
+  value,
+  label,
+  style,
+}: {
+  icon: ReactNode;
+  iconBackgroundColor?: string;
+  value: string;
+  label: string;
+  style?: object;
+}) {
+  const { styles } = useStyles();
+  return (
+    <View style={[styles.statItem, style]}>
+      <View style={[styles.statIcon, iconBackgroundColor ? { backgroundColor: iconBackgroundColor } : null]}>{icon}</View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text numberOfLines={1} style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 20, paddingBottom: 48 },
-  profileHead: { alignItems: 'center', padding: 24, marginBottom: 22, borderRadius: 28, borderWidth: 2 },
+  profileIdentity: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 18 },
   avatar: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0px 8px 18px rgba(255,111,145,0.28)',
+    borderWidth: 3,
+    borderColor: theme.paper,
+    boxShadow: '0px 6px 16px rgba(105,80,204,0.18)',
   },
   avatarGradient: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
-  avatarImage: { width: '100%', height: '100%', borderRadius: 39 },
+  avatarImage: { width: '100%', height: '100%', borderRadius: 38 },
   avatarEmoji: { fontSize: 34 },
+  identityCopy: { flex: 1, minWidth: 0 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 0 },
   profileName: {
     color: theme.ink,
     fontFamily: typography.displayExtraBold,
-    fontSize: 19,
-    marginTop: 10,
+    fontSize: 21,
+    flexShrink: 1,
   },
-  profileSubtitle: {
+  profileEmail: {
     color: theme.inkSoft,
     fontFamily: typography.bodyBold,
     fontSize: 12,
     marginTop: 2,
   },
-  editButton: {
-    minHeight: 44,
+  premiumBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: theme.paper,
-    borderWidth: 2,
-    borderColor: theme.line,
-    borderRadius: 13,
-    paddingHorizontal: 18,
-    marginTop: 10,
-  },
-  editButtonText: { color: theme.ink, fontFamily: typography.display, fontSize: 13.5 },
-  planCard: { marginBottom: 8 },
-  planBadge: {
-    alignSelf: 'flex-start',
-    color: 'white',
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    fontFamily: typography.displayExtraBold,
-    fontSize: 10.5,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    gap: 3,
+    backgroundColor: theme.sunTint,
+    borderColor: theme.sunLine,
+    borderWidth: 1,
     borderRadius: 999,
-    marginBottom: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
   },
-  planTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 15 },
-  planSubtitle: {
-    color: '#C9C5E0',
-    fontFamily: typography.bodyBold,
-    fontSize: 11.5,
-    lineHeight: 16,
-    marginTop: 5,
-  },
-  upgradeButton: {
-    minHeight: 48,
+  premiumBadgeText: { color: theme.sunDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.4 },
+  levelPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.sun,
-    borderRadius: 15,
-    marginTop: 12,
-    boxShadow: `0px 5px 0px ${theme.sunDeep}`,
+    gap: 5,
+    backgroundColor: theme.violetTint,
+    borderColor: theme.violetLine,
+    borderWidth: 1,
+    borderRadius: 999,
+    marginTop: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    maxWidth: '100%',
   },
-  upgradeButtonText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 14 },
+  levelPillText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10.5, flexShrink: 1 },
+  progressCard: {
+    backgroundColor: theme.paper,
+    borderColor: theme.violetLine,
+    borderWidth: 1.5,
+    borderRadius: 22,
+    padding: 16,
+    marginBottom: 12,
+    boxShadow: '0px 5px 0px rgba(105,80,204,0.06)',
+  },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cardHeadingCopy: { flex: 1, minWidth: 0 },
+  cardEyebrow: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 },
+  cardDescription: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 1 },
+  cardArrow: { width: 34, height: 34, borderRadius: 12, backgroundColor: theme.violetTint, alignItems: 'center', justifyContent: 'center' },
+  statsRow: { flexDirection: 'row', alignItems: 'stretch', marginTop: 16 },
+  statItem: { flex: 1, alignItems: 'center', minWidth: 0, paddingHorizontal: 4 },
+  streakStat: { borderRightWidth: 1, borderRightColor: theme.line },
+  lessonsStat: { borderRightWidth: 1, borderRightColor: theme.line },
+  xpStat: {},
+  statIcon: { width: 34, height: 34, borderRadius: 12, backgroundColor: theme.peachTint, alignItems: 'center', justifyContent: 'center', marginBottom: 7 },
+  statValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 },
+  statLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginTop: 1, maxWidth: '100%' },
+  levelProgressHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 16 },
+  levelProgressLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, flex: 1 },
+  levelProgressValue: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
+  progressTrack: { height: 8, backgroundColor: theme.line, borderRadius: 999, overflow: 'hidden', marginTop: 8 },
+  progressFill: { height: '100%', backgroundColor: theme.violetDeep, borderRadius: 999 },
+  planRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    backgroundColor: theme.paper,
+    borderColor: theme.line,
+    borderWidth: 1.5,
+    borderRadius: 18,
+    padding: 13,
+    marginBottom: 9,
+  },
+  planIcon: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  planIconPremium: { backgroundColor: theme.sunTint },
+  planIconFree: { backgroundColor: theme.violetTint },
+  planCopy: { flex: 1, minWidth: 0 },
+  planTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  planTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 13.5 },
+  planStatus: { backgroundColor: theme.violetTint, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 3 },
+  planStatusText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
+  planSubtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 3 },
+  settingsSection: { marginTop: 8 },
+  sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginLeft: 3, marginBottom: 8, minHeight: 16 },
+  sectionDot: { width: 7, height: 7, borderRadius: 4 },
   sectionLabel: {
     color: theme.inkSoft,
     fontFamily: typography.displayExtraBold,
-    fontSize: 13,
+    fontSize: 11,
+    lineHeight: 16,
     letterSpacing: 0.4,
     textTransform: 'uppercase',
-    marginTop: 22,
-    marginBottom: 10,
   },
-  settingsList: {
+  settingsGroup: {
     backgroundColor: theme.paper,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: theme.line,
-    borderRadius: 16,
+    borderRadius: 18,
     overflow: 'hidden',
+    marginBottom: 8,
   },
   settingsRow: {
     minHeight: 60,
@@ -507,12 +670,13 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     alignItems: 'center',
     gap: 11,
     paddingHorizontal: 14,
+  },
+  settingsRowDivider: {
     borderBottomWidth: 1,
     borderBottomColor: theme.line,
   },
   settingsIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: theme.violetTint, alignItems: 'center', justifyContent: 'center' },
-  settingsEmoji: { fontSize: 19, lineHeight: 24 },
-  settingsTitle: { flex: 1, color: theme.ink, fontFamily: typography.display, fontSize: 13 },
+  settingsTitle: { flex: 1, color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   settingsValue: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
   reminderControl: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   signOutButton: {
