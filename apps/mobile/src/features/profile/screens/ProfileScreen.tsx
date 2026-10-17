@@ -16,7 +16,7 @@ import { typography } from '@/theme/typography';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { ArrowRight, ChevronRight, LogOut, Pencil } from '@/core/icons';
+import { ArrowRight, Camera, ChevronRight, LogOut, Pencil } from '@/core/icons';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -283,6 +283,9 @@ export default function ProfileScreen() {
                   showLevelBadge={false}
                 />
               )}
+            </View>
+            <View pointerEvents="none" style={styles.avatarCameraBadge}>
+              <Camera size={12} color={theme.paper} />
             </View>
           </AnimatedPressable>
           <View style={styles.identityCopy}>
@@ -631,6 +634,19 @@ const useStyles = createThemedStyles((theme) =>
     content: { padding: 20, paddingBottom: 48 },
     profileIdentity: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 18 },
     avatarDisplay: { width: 82, height: 82, alignItems: 'center', justifyContent: 'center' },
+    avatarCameraBadge: {
+      position: 'absolute',
+      right: 0,
+      bottom: 0,
+      width: 27,
+      height: 27,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 14,
+      borderWidth: 2,
+      borderColor: theme.paper,
+      backgroundColor: theme.violetDeep,
+    },
     avatar: {
       width: 76,
       height: 76,
