@@ -31,7 +31,10 @@ import { LanguageSheet } from '../components/LanguageSheet';
 import ThemeSheet from '../components/ThemeSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
-import { DEFAULT_LEVEL_TITLES, getLevelTitleForLevel } from '@/features/gamification/shared/utils/levelTitles';
+import {
+  DEFAULT_LEVEL_TITLES,
+  getLevelTitleForLevel,
+} from '@/features/gamification/shared/utils/levelTitles';
 
 export default function ProfileScreen() {
   const { styles, theme } = useStyles();
@@ -72,32 +75,38 @@ export default function ProfileScreen() {
         : languageT('english');
   const level = Math.max(1, levelInfo?.currentLevel ?? user?.level ?? 1);
   const fallbackLevelTitle = getLevelTitleForLevel(level, DEFAULT_LEVEL_TITLES);
-  const levelTitle = language === 'zh'
-    ? levelInfo?.currentLevelConfig?.titleZh ?? levelInfo?.currentLevelConfig?.title ?? fallbackLevelTitle.titleZh
-    : levelInfo?.currentLevelConfig?.title ?? fallbackLevelTitle.titleEn;
+  const levelTitle =
+    language === 'zh'
+      ? (levelInfo?.currentLevelConfig?.titleZh ??
+        levelInfo?.currentLevelConfig?.title ??
+        fallbackLevelTitle.titleZh)
+      : (levelInfo?.currentLevelConfig?.title ?? fallbackLevelTitle.titleEn);
   const currentStreak = Math.max(0, user?.stats?.currentStreak ?? 0);
   const totalXpForDisplay = Math.max(0, totalXp);
   const xpInCurrentLevel = Math.max(0, levelInfo?.xpInCurrentLevel ?? totalXpForDisplay % 100);
   const xpToNextLevel = Math.max(1, levelInfo?.xpToNextLevel ?? 100);
   const levelProgress = Math.min(1, xpInCurrentLevel / xpToNextLevel);
   const selectedTheme = userState.preferences.theme ?? 'light';
-  const themeLabel = selectedTheme === 'dark'
-    ? t('dark')
-    : selectedTheme === 'auto'
-      ? t('systemTheme')
-      : t('light');
+  const themeLabel =
+    selectedTheme === 'dark' ? t('dark') : selectedTheme === 'auto' ? t('systemTheme') : t('light');
   const equippedAvatar = getEquippedAvatar(avatars, user?.selectedAvatarId, level);
-  const selectedCompanion = getEquippedAvatar(avatars, companion.data?.avatarId ?? user?.selectedAvatarId, level);
+  const selectedCompanion = getEquippedAvatar(
+    avatars,
+    companion.data?.avatarId ?? user?.selectedAvatarId,
+    level
+  );
   const equippedAppearance = getEquippedAppearance(
     appearanceItems,
     user?.selectedAvatarFrameId,
     user?.selectedAvatarDecorationId,
     user?.selectedAvatarOutfitId,
-    level,
+    level
   );
-  const avatarSource = (user?.avatarSource === 'photo' || (!user?.avatarSource && Boolean(user?.avatarUrl))) && user?.avatarUrl
-    ? 'photo'
-    : 'companion';
+  const avatarSource =
+    (user?.avatarSource === 'photo' || (!user?.avatarSource && Boolean(user?.avatarUrl))) &&
+    user?.avatarUrl
+      ? 'photo'
+      : 'companion';
 
   useEffect(() => {
     setReviewRemindersEnabled(userState.notifications.reviewReminders);
@@ -142,7 +151,10 @@ export default function ProfileScreen() {
         });
         return;
       }
-      await PushNotificationService.scheduleDailyLearning(reviewTime, userState.preferences.language);
+      await PushNotificationService.scheduleDailyLearning(
+        reviewTime,
+        userState.preferences.language
+      );
       await persistDailyLearningPreference(true);
     } catch (error) {
       setDailyLearningEnabled(previousValue);
@@ -243,28 +255,59 @@ export default function ProfileScreen() {
         description={t('profileDescription')}
         hideBackButton
         showAiCredits={false}
-        actions={[{
-          icon: Pencil,
-          accessibilityLabel: t('editProfile'),
-          onPress: () => editProfileRef.current?.present(),
-        }]}
+        actions={[
+          {
+            icon: Pencil,
+            accessibilityLabel: t('editProfile'),
+            onPress: () => editProfileRef.current?.present(),
+          },
+        ]}
       />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.profileIdentity}>
-          <AnimatedPressable accessibilityRole="button" accessibilityLabel={language === 'zh' ? '更换个人照片或头像框' : 'Change profile photo or avatar frame'} onPress={() => router.push('/companion-closet')} style={styles.avatarDisplay}>
+          <AnimatedPressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              language === 'zh' ? '更换个人照片或头像框' : 'Change profile photo or avatar frame'
+            }
+            onPress={() => router.push('/companion-closet')}
+            style={styles.avatarDisplay}>
             <View style={styles.avatar}>
               {avatarSource === 'photo' ? (
-                <MemoryAvatar avatar={equippedAvatar} appearance={equippedAppearance} imageUrl={user?.avatarUrl} level={level} size={76} showLevelBadge={false} />
+                <MemoryAvatar
+                  avatar={equippedAvatar}
+                  appearance={equippedAppearance}
+                  imageUrl={user?.avatarUrl}
+                  level={level}
+                  size={76}
+                  showLevelBadge={false}
+                />
               ) : selectedCompanion?.assetKey === 'memory-owl' ? (
-                <CompanionCharacterArtwork look={companion.data?.look} items={appearanceItems} avatarId={companion.data?.avatarId} size={76} accessibilityLabel={language === 'zh' ? '已保存造型的伙伴' : 'Companion in saved outfit'} />
+                <CompanionCharacterArtwork
+                  look={companion.data?.look}
+                  items={appearanceItems}
+                  avatarId={companion.data?.avatarId}
+                  size={76}
+                  accessibilityLabel={
+                    language === 'zh' ? '已保存造型的伙伴' : 'Companion in saved outfit'
+                  }
+                />
               ) : (
-                <MemoryAvatar avatar={selectedCompanion ?? equippedAvatar} appearance={equippedAppearance} level={level} size={76} showLevelBadge={false} />
+                <MemoryAvatar
+                  avatar={selectedCompanion ?? equippedAvatar}
+                  appearance={equippedAppearance}
+                  level={level}
+                  size={76}
+                  showLevelBadge={false}
+                />
               )}
             </View>
           </AnimatedPressable>
           <View style={styles.identityCopy}>
             <View style={styles.nameRow}>
-              <Text numberOfLines={1} style={styles.profileName}>{displayName}</Text>
+              <Text numberOfLines={1} style={styles.profileName}>
+                {displayName}
+              </Text>
               {isPremium ? (
                 <View style={styles.premiumBadge}>
                   <Ionicons name="ribbon" size={13} color={theme.sunDeep} />
@@ -272,10 +315,14 @@ export default function ProfileScreen() {
                 </View>
               ) : null}
             </View>
-            <Text numberOfLines={1} style={styles.profileEmail}>{user?.email ?? 'Guest account'}</Text>
+            <Text numberOfLines={1} style={styles.profileEmail}>
+              {user?.email ?? 'Guest account'}
+            </Text>
             <View style={styles.levelPill}>
               <Ionicons name="sparkles" size={14} color={theme.violetDeep} />
-              <Text numberOfLines={1} style={styles.levelPillText}>{t('level')} {level} · {levelTitle}</Text>
+              <Text numberOfLines={1} style={styles.levelPillText}>
+                {t('level')} {level} · {levelTitle}
+              </Text>
             </View>
           </View>
         </View>
@@ -318,7 +365,9 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.levelProgressHeader}>
             <Text style={styles.levelProgressLabel}>{levelTitle}</Text>
-            <Text style={styles.levelProgressValue}>{xpInCurrentLevel} / {xpToNextLevel} {t('xp')}</Text>
+            <Text style={styles.levelProgressValue}>
+              {xpInCurrentLevel} / {xpToNextLevel} {t('xp')}
+            </Text>
           </View>
           <View
             accessibilityRole="progressbar"
@@ -328,27 +377,21 @@ export default function ProfileScreen() {
           </View>
         </AnimatedPressable>
 
-        <SettingsSection title={language === 'zh' ? '伙伴' : 'Companion'} accentColor={theme.violetDeep}>
-          <ProfileSettingsRow
-            icon={selectedCompanion?.assetKey === 'memory-owl'
-              ? <CompanionCharacterArtwork look={companion.data?.look} items={appearanceItems} avatarId={companion.data?.avatarId} size={32} accessibilityLabel={language === 'zh' ? '伙伴' : 'Companion'} />
-              : <Ionicons name="paw" size={21} color={theme.violetDeep} />}
-            iconBackgroundColor={theme.violetTint}
-            title={language === 'zh' ? '伙伴空间' : 'Companion space'}
-            onPress={() => router.push('/companion')}
-            last
-          />
-        </SettingsSection>
-
         <AnimatedPressable onPress={() => router.push('/premium')} style={styles.planRow}>
           <View style={[styles.planIcon, isPremium ? styles.planIconPremium : styles.planIconFree]}>
-            <Ionicons name="ribbon" size={22} color={isPremium ? theme.sunDeep : theme.violetDeep} />
+            <Ionicons
+              name="ribbon"
+              size={22}
+              color={isPremium ? theme.sunDeep : theme.violetDeep}
+            />
           </View>
           <View style={styles.planCopy}>
             <View style={styles.planTitleRow}>
               <Text style={styles.planTitle}>{isPremium ? t('premiumPlan') : t('freePlan')}</Text>
               <View style={styles.planStatus}>
-                <Text style={styles.planStatusText}>{isPremium ? t('managePlan') : t('upgradePro')}</Text>
+                <Text style={styles.planStatusText}>
+                  {isPremium ? t('managePlan') : t('upgradePro')}
+                </Text>
               </View>
             </View>
             <Text numberOfLines={1} style={styles.planSubtitle}>
@@ -357,6 +400,30 @@ export default function ProfileScreen() {
           </View>
           <ChevronRight size={19} color={theme.inkMuted} strokeWidth={2.4} />
         </AnimatedPressable>
+
+        <SettingsSection
+          title={language === 'zh' ? '伙伴' : 'Companion'}
+          accentColor={theme.violetDeep}>
+          <ProfileSettingsRow
+            icon={
+              selectedCompanion?.assetKey === 'memory-owl' ? (
+                <CompanionCharacterArtwork
+                  look={companion.data?.look}
+                  items={appearanceItems}
+                  avatarId={companion.data?.avatarId}
+                  size={32}
+                  accessibilityLabel={language === 'zh' ? '伙伴' : 'Companion'}
+                />
+              ) : (
+                <Ionicons name="paw" size={21} color={theme.violetDeep} />
+              )
+            }
+            iconBackgroundColor={theme.violetTint}
+            title={language === 'zh' ? '伙伴空间' : 'Companion space'}
+            onPress={() => router.push('/companion')}
+            last
+          />
+        </SettingsSection>
 
         <SettingsSection title={t('learning')} accentColor={theme.violetDeep}>
           <ProfileSettingsRow
@@ -441,7 +508,9 @@ export default function ProfileScreen() {
           />
         </SettingsSection>
 
-        <AnimatedPressable onPress={() => logoutRef.current?.present()} style={styles.signOutButton}>
+        <AnimatedPressable
+          onPress={() => logoutRef.current?.present()}
+          style={styles.signOutButton}>
           <LogOut size={18} color={theme.berryDeep} />
           <Text style={styles.signOutText}>{t('signOut')}</Text>
         </AnimatedPressable>
@@ -517,16 +586,32 @@ function ProfileSettingsRow({
   const { styles, theme } = useStyles();
   const content = (
     <View style={[styles.settingsRow, !last && styles.settingsRowDivider]}>
-      <View style={[styles.settingsIcon, iconBackgroundColor ? { backgroundColor: iconBackgroundColor } : null]}>{icon}</View>
+      <View
+        style={[
+          styles.settingsIcon,
+          iconBackgroundColor ? { backgroundColor: iconBackgroundColor } : null,
+        ]}>
+        {icon}
+      </View>
       <Text style={styles.settingsTitle}>{title}</Text>
       {right ?? (value ? <Text style={styles.settingsValue}>{value}</Text> : null)}
-      {onPress && !right ? <ChevronRight size={18} color={theme.inkMuted} strokeWidth={2.5} /> : null}
+      {onPress && !right ? (
+        <ChevronRight size={18} color={theme.inkMuted} strokeWidth={2.5} />
+      ) : null}
     </View>
   );
   return onPress ? <AnimatedPressable onPress={onPress}>{content}</AnimatedPressable> : content;
 }
 
-function SettingsSection({ title, accentColor, children }: { title: string; accentColor: string; children: ReactNode }) {
+function SettingsSection({
+  title,
+  accentColor,
+  children,
+}: {
+  title: string;
+  accentColor: string;
+  children: ReactNode;
+}) {
   const { styles } = useStyles();
   return (
     <View style={styles.settingsSection}>
@@ -555,163 +640,265 @@ function ProfileStat({
   const { styles } = useStyles();
   return (
     <View style={[styles.statItem, style]}>
-      <View style={[styles.statIcon, iconBackgroundColor ? { backgroundColor: iconBackgroundColor } : null]}>{icon}</View>
+      <View
+        style={[
+          styles.statIcon,
+          iconBackgroundColor ? { backgroundColor: iconBackgroundColor } : null,
+        ]}>
+        {icon}
+      </View>
       <Text style={styles.statValue}>{value}</Text>
-      <Text numberOfLines={1} style={styles.statLabel}>{label}</Text>
+      <Text numberOfLines={1} style={styles.statLabel}>
+        {label}
+      </Text>
     </View>
   );
 }
 
-const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 20, paddingBottom: 48 },
-  profileIdentity: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 18 },
-  avatarDisplay: { width: 82, height: 82, alignItems: 'center', justifyContent: 'center' },
-  avatar: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    overflow: 'visible',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: theme.paper,
-    boxShadow: '0px 6px 16px rgba(105,80,204,0.18)',
-  },
-  identityCopy: { flex: 1, minWidth: 0 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 0 },
-  profileName: {
-    color: theme.ink,
-    fontFamily: typography.displayExtraBold,
-    fontSize: 21,
-    flexShrink: 1,
-  },
-  profileEmail: {
-    color: theme.inkSoft,
-    fontFamily: typography.bodyBold,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  premiumBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: theme.sunTint,
-    borderColor: theme.sunLine,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-  },
-  premiumBadgeText: { color: theme.sunDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.4 },
-  levelPill: {
-    alignSelf: 'flex-start',
-    flexShrink: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: theme.violetTint,
-    borderColor: theme.violetLine,
-    borderWidth: 1,
-    borderRadius: 999,
-    marginTop: 0,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    maxWidth: '100%',
-  },
-  levelPillText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10.5, flexShrink: 1 },
-  progressCard: {
-    backgroundColor: theme.paper,
-    borderColor: theme.violetLine,
-    borderWidth: 1.5,
-    borderRadius: 22,
-    padding: 16,
-    marginBottom: 12,
-    boxShadow: '0px 5px 0px rgba(105,80,204,0.06)',
-  },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  cardHeadingCopy: { flex: 1, minWidth: 0 },
-  cardEyebrow: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 },
-  cardDescription: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 1 },
-  cardArrow: { width: 34, height: 34, borderRadius: 12, backgroundColor: theme.violetTint, alignItems: 'center', justifyContent: 'center' },
-  statsRow: { flexDirection: 'row', alignItems: 'stretch', marginTop: 16 },
-  statItem: { flex: 1, alignItems: 'center', minWidth: 0, paddingHorizontal: 4 },
-  streakStat: { borderRightWidth: 1, borderRightColor: theme.line },
-  lessonsStat: { borderRightWidth: 1, borderRightColor: theme.line },
-  xpStat: {},
-  statIcon: { width: 34, height: 34, borderRadius: 12, backgroundColor: theme.peachTint, alignItems: 'center', justifyContent: 'center', marginBottom: 7 },
-  statValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 },
-  statLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginTop: 1, maxWidth: '100%' },
-  levelProgressHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 16 },
-  levelProgressLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, flex: 1 },
-  levelProgressValue: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
-  progressTrack: { height: 8, backgroundColor: theme.line, borderRadius: 999, overflow: 'hidden', marginTop: 8 },
-  progressFill: { height: '100%', backgroundColor: theme.violetDeep, borderRadius: 999 },
-  planRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    backgroundColor: theme.paper,
-    borderColor: theme.line,
-    borderWidth: 1.5,
-    borderRadius: 18,
-    padding: 13,
-    marginBottom: 9,
-  },
-  planIcon: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  planIconPremium: { backgroundColor: theme.sunTint },
-  planIconFree: { backgroundColor: theme.violetTint },
-  planCopy: { flex: 1, minWidth: 0 },
-  planTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  planTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 13.5 },
-  planStatus: { backgroundColor: theme.violetTint, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 3 },
-  planStatusText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
-  planSubtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 3 },
-  settingsSection: { marginTop: 8 },
-  sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginLeft: 3, marginBottom: 8, minHeight: 16 },
-  sectionDot: { width: 7, height: 7, borderRadius: 4 },
-  sectionLabel: {
-    color: theme.inkSoft,
-    fontFamily: typography.displayExtraBold,
-    fontSize: 11,
-    lineHeight: 16,
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  settingsGroup: {
-    backgroundColor: theme.paper,
-    borderWidth: 1.5,
-    borderColor: theme.line,
-    borderRadius: 18,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  settingsRow: {
-    minHeight: 60,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    paddingHorizontal: 14,
-  },
-  settingsRowDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.line,
-  },
-  settingsIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: theme.violetTint, alignItems: 'center', justifyContent: 'center' },
-  settingsTitle: { flex: 1, color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  settingsValue: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
-  reminderControl: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  signOutButton: {
-    minHeight: 46,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 2,
-    borderColor: theme.berryLine,
-    borderRadius: 13,
-    backgroundColor: theme.berryTint,
-    marginTop: 18,
-  },
-  signOutText: { color: theme.berryDeep, fontFamily: typography.display, fontSize: 13.5 },
-}));
+const useStyles = createThemedStyles((theme) =>
+  StyleSheet.create({
+    page: { flex: 1, backgroundColor: 'transparent' },
+    content: { padding: 20, paddingBottom: 48 },
+    profileIdentity: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 18 },
+    avatarDisplay: { width: 82, height: 82, alignItems: 'center', justifyContent: 'center' },
+    avatar: {
+      width: 76,
+      height: 76,
+      borderRadius: 38,
+      overflow: 'visible',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 3,
+      borderColor: theme.paper,
+      boxShadow: '0px 6px 16px rgba(105,80,204,0.18)',
+    },
+    identityCopy: { flex: 1, minWidth: 0 },
+    nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 0 },
+    profileName: {
+      color: theme.ink,
+      fontFamily: typography.displayExtraBold,
+      fontSize: 21,
+      flexShrink: 1,
+    },
+    profileEmail: {
+      color: theme.inkSoft,
+      fontFamily: typography.bodyBold,
+      fontSize: 12,
+      marginTop: 2,
+    },
+    premiumBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      backgroundColor: theme.sunTint,
+      borderColor: theme.sunLine,
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+    },
+    premiumBadgeText: {
+      color: theme.sunDeep,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 9,
+      letterSpacing: 0.4,
+    },
+    levelPill: {
+      alignSelf: 'flex-start',
+      flexShrink: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: theme.violetTint,
+      borderColor: theme.violetLine,
+      borderWidth: 1,
+      borderRadius: 999,
+      marginTop: 0,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      maxWidth: '100%',
+    },
+    levelPillText: {
+      color: theme.violetDeep,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 10.5,
+      flexShrink: 1,
+    },
+    progressCard: {
+      backgroundColor: theme.paper,
+      borderColor: theme.violetLine,
+      borderWidth: 1.5,
+      borderRadius: 22,
+      padding: 16,
+      marginBottom: 12,
+      boxShadow: '0px 5px 0px rgba(105,80,204,0.06)',
+    },
+    cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    cardHeadingCopy: { flex: 1, minWidth: 0 },
+    cardEyebrow: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 },
+    cardDescription: {
+      color: theme.inkSoft,
+      fontFamily: typography.bodyBold,
+      fontSize: 11,
+      marginTop: 1,
+    },
+    cardArrow: {
+      width: 34,
+      height: 34,
+      borderRadius: 12,
+      backgroundColor: theme.violetTint,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    statsRow: { flexDirection: 'row', alignItems: 'stretch', marginTop: 16 },
+    statItem: { flex: 1, alignItems: 'center', minWidth: 0, paddingHorizontal: 4 },
+    streakStat: { borderRightWidth: 1, borderRightColor: theme.line },
+    lessonsStat: { borderRightWidth: 1, borderRightColor: theme.line },
+    xpStat: {},
+    statIcon: {
+      width: 34,
+      height: 34,
+      borderRadius: 12,
+      backgroundColor: theme.peachTint,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 7,
+    },
+    statValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 },
+    statLabel: {
+      color: theme.inkSoft,
+      fontFamily: typography.bodyBold,
+      fontSize: 10,
+      marginTop: 1,
+      maxWidth: '100%',
+    },
+    levelProgressHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10,
+      marginTop: 16,
+    },
+    levelProgressLabel: {
+      color: theme.ink,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 11,
+      flex: 1,
+    },
+    levelProgressValue: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
+    progressTrack: {
+      height: 8,
+      backgroundColor: theme.line,
+      borderRadius: 999,
+      overflow: 'hidden',
+      marginTop: 8,
+    },
+    progressFill: { height: '100%', backgroundColor: theme.violetDeep, borderRadius: 999 },
+    planRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 11,
+      backgroundColor: theme.paper,
+      borderColor: theme.line,
+      borderWidth: 1.5,
+      borderRadius: 18,
+      padding: 13,
+      marginBottom: 9,
+    },
+    planIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    planIconPremium: { backgroundColor: theme.sunTint },
+    planIconFree: { backgroundColor: theme.violetTint },
+    planCopy: { flex: 1, minWidth: 0 },
+    planTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    planTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 13.5 },
+    planStatus: {
+      backgroundColor: theme.violetTint,
+      borderRadius: 999,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+    },
+    planStatusText: {
+      color: theme.violetDeep,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 9.5,
+    },
+    planSubtitle: {
+      color: theme.inkSoft,
+      fontFamily: typography.bodyBold,
+      fontSize: 10.5,
+      marginTop: 3,
+    },
+    settingsSection: { marginTop: 8 },
+    sectionLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+      marginLeft: 3,
+      marginBottom: 8,
+      minHeight: 16,
+    },
+    sectionDot: { width: 7, height: 7, borderRadius: 4 },
+    sectionLabel: {
+      color: theme.inkSoft,
+      fontFamily: typography.displayExtraBold,
+      fontSize: 11,
+      lineHeight: 16,
+      letterSpacing: 0.4,
+      textTransform: 'uppercase',
+    },
+    settingsGroup: {
+      backgroundColor: theme.paper,
+      borderWidth: 1.5,
+      borderColor: theme.line,
+      borderRadius: 18,
+      overflow: 'hidden',
+      marginBottom: 8,
+    },
+    settingsRow: {
+      minHeight: 60,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 11,
+      paddingHorizontal: 14,
+    },
+    settingsRowDivider: {
+      borderBottomWidth: 1,
+      borderBottomColor: theme.line,
+    },
+    settingsIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      backgroundColor: theme.violetTint,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    settingsTitle: {
+      flex: 1,
+      color: theme.ink,
+      fontFamily: typography.bodyExtraBold,
+      fontSize: 13,
+    },
+    settingsValue: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
+    reminderControl: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    signOutButton: {
+      minHeight: 46,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      borderWidth: 2,
+      borderColor: theme.berryLine,
+      borderRadius: 13,
+      backgroundColor: theme.berryTint,
+      marginTop: 18,
+    },
+    signOutText: { color: theme.berryDeep, fontFamily: typography.display, fontSize: 13.5 },
+  })
+);

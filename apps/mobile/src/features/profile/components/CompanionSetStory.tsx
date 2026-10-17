@@ -8,17 +8,9 @@ import { typography } from '@/theme/typography';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-const SET_STORIES: Record<string, { titleEn: string; titleZh: string; lineEn: string; lineZh: string }> = {
-  'celestial-scholar': {
-    titleEn: 'Celestial Scholar', titleZh: '星穹学者',
-    lineEn: 'A quiet constellation, ready for curious questions.',
-    lineZh: '把星光收进书页，陪每个好奇的问题出发。',
-  },
-  'garden-wanderer': {
-    titleEn: 'Garden Wanderer', titleZh: '花园漫游者',
-    lineEn: 'Every little path becomes an adventure together.',
-    lineZh: '沿着花园小径，把每一步都走成小小冒险。',
-  },
+const SET_STORIES: Record<string, { title: 'wardrobeCelestialScholar' | 'wardrobeGardenWanderer'; line: 'wardrobeCelestialScholarStory' | 'wardrobeGardenWandererStory' }> = {
+  'celestial-scholar': { title: 'wardrobeCelestialScholar', line: 'wardrobeCelestialScholarStory' },
+  'garden-wanderer': { title: 'wardrobeGardenWanderer', line: 'wardrobeGardenWandererStory' },
 };
 
 const EQUIPPED_SLOTS: { slot: keyof CompanionLook; type: AppearanceDefinition['itemType'] }[] = [
@@ -29,9 +21,8 @@ const EQUIPPED_SLOTS: { slot: keyof CompanionLook; type: AppearanceDefinition['i
 ];
 
 export function CompanionSetStory({ look, items, avatarId }: { look?: CompanionLook | null; items: readonly AppearanceDefinition[]; avatarId?: string | null }) {
-  const { language } = useTranslation('profile');
+  const { t } = useTranslation('companion');
   const { styles, theme } = useStyles();
-  const chinese = language === 'zh';
   if (!look) return null;
   const setCounts = new Map<string, number>();
   for (const { slot, type } of EQUIPPED_SLOTS) {
@@ -43,12 +34,12 @@ export function CompanionSetStory({ look, items, avatarId }: { look?: CompanionL
   if (!storyKey) return null;
   const story = SET_STORIES[storyKey];
   return (
-    <View style={styles.card} accessibilityRole="text" accessibilityLabel={`${chinese ? story.titleZh : story.titleEn}. ${chinese ? story.lineZh : story.lineEn}`}>
+    <View style={styles.card} accessibilityRole="text" accessibilityLabel={`${t(story.title)}. ${t(story.line)}`}>
       <View style={styles.icon}><Sparkles size={17} color={theme.violetDeep} /></View>
       <View style={styles.copy}>
-        <Text style={styles.eyebrow}>{chinese ? '套装故事' : 'SET STORY'}</Text>
-        <Text style={styles.title}>{chinese ? story.titleZh : story.titleEn}</Text>
-        <Text style={styles.line}>{chinese ? story.lineZh : story.lineEn}</Text>
+        <Text style={styles.eyebrow}>{t('wardrobeSetStory')}</Text>
+        <Text style={styles.title}>{t(story.title)}</Text>
+        <Text style={styles.line}>{t(story.line)}</Text>
       </View>
     </View>
   );

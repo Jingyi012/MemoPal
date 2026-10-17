@@ -33,9 +33,8 @@ type Props = {
 
 export function CompanionPresetsRail({ avatarId, draft, savedLook, isDirty, items, level, canSave, onPreview, onEquipped }: Props) {
   const { styles, theme } = useStyles();
-  const { language } = useTranslation('profile');
+  const { t } = useTranslation('companion');
   const reduceMotion = useReducedMotion();
-  const chinese = language === 'zh';
   const presets = useCompanionPresets();
   const createPreset = useCreateCompanionPreset();
   const equipPreset = useEquipCompanionPreset();
@@ -69,9 +68,11 @@ export function CompanionPresetsRail({ avatarId, draft, savedLook, isDirty, item
     const locked = lockedCount(preset.look);
     if (withdrawn || locked) {
       onPreview(preset.look);
-      setPreviewNotice(chinese
-        ? `仅供预览：${withdrawn ? `${withdrawn} 件物品已不可用` : ''}${withdrawn && locked ? ' · ' : ''}${locked ? `${locked} 件物品尚未解锁` : ''}。请先清除它们再保存。`
-        : `Preview only: ${withdrawn ? `${withdrawn} unavailable` : ''}${withdrawn && locked ? ' · ' : ''}${locked ? `${locked} locked` : ''}. Clear those pieces before saving.`);
+      setPreviewNotice(withdrawn && locked
+        ? t('wardrobePreviewNoticeBoth', { unavailable: t('wardrobeUnavailableCount', { count: withdrawn }), locked: t('wardrobeLockedCount', { count: locked }) })
+        : withdrawn
+          ? t('wardrobePreviewNoticeUnavailable', { unavailable: t('wardrobeUnavailableCount', { count: withdrawn }) })
+          : t('wardrobePreviewNoticeLocked', { locked: t('wardrobeLockedCount', { count: locked }) }));
       return;
     }
     try {
@@ -88,21 +89,21 @@ export function CompanionPresetsRail({ avatarId, draft, savedLook, isDirty, item
     const withdrawn = unavailableCount(preset.look);
     const locked = lockedCount(preset.look);
     Alert.alert(
-      chinese ? '替换正在试穿的造型？' : 'Replace your current preview?',
-      chinese ? '当前未保存的搭配会被替换。' : 'Your unsaved outfit preview will be replaced.',
+      t('wardrobeReplacePreviewTitle'),
+      t('wardrobeReplacePreviewBody'),
       [
-        { text: chinese ? '继续搭配' : 'Keep editing', style: 'cancel' },
-        { text: withdrawn || locked ? (chinese ? '仅预览' : 'Preview only') : (chinese ? '穿上这套' : 'Equip this look'), onPress: () => { void applyPreset(preset); } },
+        { text: t('wardrobeKeepEditing'), style: 'cancel' },
+        { text: withdrawn || locked ? t('wardrobePreviewOnly') : t('wardrobeEquipLook'), onPress: () => { void applyPreset(preset); } },
       ],
     );
   };
 
   const requestDelete = (preset: CompanionPreset) => Alert.alert(
-    chinese ? `删除“${preset.name}”？` : `Delete “${preset.name}”?`,
-    chinese ? '删除后无法恢复这套保存造型。' : 'This saved outfit can’t be recovered after deletion.',
+    t('wardrobeDeleteTitle', { name: preset.name }),
+    t('wardrobeDeleteBody'),
     [
-      { text: chinese ? '取消' : 'Cancel', style: 'cancel' },
-      { text: chinese ? '删除' : 'Delete', style: 'destructive', onPress: () => {
+      { text: t('wardrobeCancel'), style: 'cancel' },
+      { text: t('wardrobeDelete'), style: 'destructive', onPress: () => {
         setFailedDeletePreset(preset);
         deletePreset.mutate(preset.id, { onSuccess: () => setFailedDeletePreset(null) });
       } },
@@ -122,19 +123,19 @@ export function CompanionPresetsRail({ avatarId, draft, savedLook, isDirty, item
     <View style={styles.section}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={styles.title}>{chinese ? '我的套装' : 'My outfits'}</Text>
+          <Text style={styles.title}>{t('wardrobeSavedOutfits')}</Text>
           <Text style={styles.count}>{presets.data ? presetItems.length : '—'}/{PRESET_LIMIT}</Text>
         </View>
-        {isDirty ? <AnimatedPressable accessibilityRole="button" accessibilityLabel={chinese ? '收藏当前试穿搭配为套装' : 'Save the current preview as an outfit'} accessibilityState={{ disabled: !canCreate }} disabled={!canCreate} onPress={() => { createPreset.reset(); setNameModalVisible(true); }} style={[styles.addButton, !canCreate && styles.disabled]}>
-          <Plus size={17} color={theme.onAccent} /><Text style={styles.addText}>{chinese ? '收藏搭配' : 'Save outfit'}</Text>
+        {isDirty ? <AnimatedPressable accessibilityRole="button" accessibilityLabel={t('wardrobeFavoriteLookAccessibility')} accessibilityState={{ disabled: !canCreate }} disabled={!canCreate} onPress={() => { createPreset.reset(); setNameModalVisible(true); }} style={[styles.addButton, !canCreate && styles.disabled]}>
+          <Plus size={17} color={theme.onAccent} /><Text style={styles.addText}>{t('wardrobeFavoriteLook')}</Text>
         </AnimatedPressable> : null}
       </View>
-      {isDirty && presetItems.length >= PRESET_LIMIT ? <Text style={styles.limitText}>{chinese ? '已达到每位伙伴 5 套造型上限。' : 'You’ve reached the 5-outfit limit for this companion.'}</Text> : null}
-      {!canSave ? <Text style={styles.limitText}>{chinese ? '请先清除未解锁或已下架的物品，再保存造型。' : 'Clear locked or withdrawn pieces before saving this look.'}</Text> : null}
+      {isDirty && presetItems.length >= PRESET_LIMIT ? <Text style={styles.limitText}>{t('wardrobePresetLimit')}</Text> : null}
+      {!canSave ? <Text style={styles.limitText}>{t('wardrobeClearUnavailable')}</Text> : null}
 
-      {presets.isLoading ? <View style={styles.loading}><ActivityIndicator color={theme.violetDeep} /><Text style={styles.helper}>{chinese ? '正在取回保存造型…' : 'Loading saved outfits…'}</Text></View>
-        : presets.isError ? <View style={styles.stateCard}><Text style={styles.helper}>{chinese ? '保存造型暂时无法加载。' : 'Saved outfits couldn’t load.'}</Text><AnimatedPressable accessibilityRole="button" onPress={() => { void presets.refetch(); }} style={styles.retry}><Text style={styles.retryText}>{chinese ? '重试' : 'Retry'}</Text></AnimatedPressable></View>
-          : presetItems.length === 0 ? <View style={styles.emptyHint} accessibilityRole="text"><View style={styles.emptyHintIcon}><Plus size={14} color={theme.violetDeep} /></View><Text style={styles.emptyHintText}>{chinese ? '试穿满意后，收藏成常用造型。' : 'Love your preview? Save it as a favorite look.'}</Text></View>
+      {presets.isLoading ? <View style={styles.loading}><ActivityIndicator color={theme.violetDeep} /><Text style={styles.helper}>{t('wardrobeLoadingOutfits')}</Text></View>
+        : presets.isError ? <View style={styles.stateCard}><Text style={styles.helper}>{t('wardrobeLoadOutfitsFailed')}</Text><AnimatedPressable accessibilityRole="button" onPress={() => { void presets.refetch(); }} style={styles.retry}><Text style={styles.retryText}>{t('wardrobeRetry')}</Text></AnimatedPressable></View>
+          : presetItems.length === 0 ? <View style={styles.emptyHint} accessibilityRole="text"><View style={styles.emptyHintIcon}><Plus size={14} color={theme.violetDeep} /></View><Text style={styles.emptyHintText}>{t('wardrobeSaveFavoriteHint')}</Text></View>
             : <ScrollView horizontal contentContainerStyle={styles.rail} showsHorizontalScrollIndicator={false}>
               {presetItems.map((preset) => {
                 const unavailable = unavailableCount(preset.look);
@@ -142,42 +143,42 @@ export function CompanionPresetsRail({ avatarId, draft, savedLook, isDirty, item
                 const isSelected = selectedPreset?.id === preset.id;
                 const isEquipped = LOOK_SLOTS.every(({ slot }) => preset.look[slot] === savedLook[slot]);
                 return <View key={preset.id} style={[styles.presetCard, isSelected && styles.presetCardSelected]}>
-                  <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${preset.name}${unavailable || locked ? chinese ? '，含不可用或未解锁物品，仅供预览' : ', contains unavailable or locked items; preview only' : chinese ? '，点击穿上' : ', tap to equip'}`} accessibilityHint={chinese ? '有未保存修改时会先询问' : 'You’ll be asked before replacing unsaved changes'} accessibilityState={{ disabled: equipPreset.isPending }} disabled={equipPreset.isPending} onPress={() => requestPreset(preset)} style={styles.presetMain}>
-                  <View style={styles.previewWrap}><CompanionCharacterArtwork look={preset.look} items={items} avatarId={avatarId} size={88} accessibilityLabel={chinese ? `${preset.name}预览` : `${preset.name} preview`} />{unavailable || locked ? <View style={styles.lockBadge}><LockKeyhole size={13} color={theme.onAccent} /></View> : isEquipped ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}</View>
+                  <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${preset.name}${unavailable || locked ? t('wardrobeUnavailablePresetAccessibility') : t('wardrobeEquipPresetAccessibility')}`} accessibilityHint={t('wardrobeUnsavedPresetHint')} accessibilityState={{ disabled: equipPreset.isPending }} disabled={equipPreset.isPending} onPress={() => requestPreset(preset)} style={styles.presetMain}>
+                  <View style={styles.previewWrap}><CompanionCharacterArtwork look={preset.look} items={items} avatarId={avatarId} size={88} accessibilityLabel={t('wardrobePresetPreview', { name: preset.name })} />{unavailable || locked ? <View style={styles.lockBadge}><LockKeyhole size={13} color={theme.onAccent} /></View> : isEquipped ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}</View>
                     <Text numberOfLines={1} style={styles.presetName}>{preset.name}</Text>
-                    <Text numberOfLines={1} style={[styles.presetStatus, Boolean(unavailable || locked) && styles.presetStatusWarning]}>{unavailable ? (chinese ? `${unavailable} 件不可用` : `${unavailable} unavailable`) : locked ? (chinese ? `${locked} 件未解锁` : `${locked} locked`) : isEquipped ? (chinese ? '当前造型' : 'Equipped') : isSelected ? (chinese ? '正在预览' : 'Previewing') : (chinese ? '点击穿上' : 'Tap to equip')}</Text>
+                    <Text numberOfLines={1} style={[styles.presetStatus, Boolean(unavailable || locked) && styles.presetStatusWarning]}>{unavailable ? t('wardrobeUnavailableCount', { count: unavailable }) : locked ? t('wardrobeLockedCount', { count: locked }) : isEquipped ? t('wardrobeEquipped') : isSelected ? t('wardrobePreviewing') : t('wardrobeTapToEquip')}</Text>
                   </AnimatedPressable>
-                  <AnimatedPressable accessibilityRole="button" accessibilityLabel={chinese ? `删除造型 ${preset.name}` : `Delete outfit ${preset.name}`} accessibilityState={{ disabled: deletePreset.isPending }} disabled={deletePreset.isPending} onPress={() => requestDelete(preset)} style={styles.deleteButton}><Trash2 size={15} color={theme.berryDeep} /></AnimatedPressable>
+                  <AnimatedPressable accessibilityRole="button" accessibilityLabel={t('wardrobeDeleteOutfitAccessibility', { name: preset.name })} accessibilityState={{ disabled: deletePreset.isPending }} disabled={deletePreset.isPending} onPress={() => requestDelete(preset)} style={styles.deleteButton}><Trash2 size={15} color={theme.berryDeep} /></AnimatedPressable>
                 </View>;
               })}
             </ScrollView>}
 
       {previewNotice ? <Text style={styles.previewNotice} accessibilityRole="text">{previewNotice}</Text> : null}
-      {equipPreset.isError && selectedPreset ? <View style={styles.actionError}><Text style={styles.errorText}>{chinese ? '没有穿上这套造型，当前搭配已保留。' : 'Could not equip this outfit. Your current preview is still here.'}</Text><AnimatedPressable onPress={() => { void applyPreset(selectedPreset); }} style={styles.retry}><Text style={styles.retryText}>{chinese ? '重试穿上' : 'Retry equip'}</Text></AnimatedPressable></View> : null}
-      {deletePreset.isError && failedDeletePreset ? <View style={styles.actionError}><Text style={styles.errorText}>{chinese ? '删除没有成功。' : 'Could not delete this outfit.'}</Text><AnimatedPressable onPress={() => requestDelete(failedDeletePreset)} style={styles.retry}><Text style={styles.retryText}>{chinese ? '重试删除' : 'Retry delete'}</Text></AnimatedPressable></View> : null}
+      {equipPreset.isError && selectedPreset ? <View style={styles.actionError}><Text style={styles.errorText}>{t('wardrobeEquipFailed')}</Text><AnimatedPressable onPress={() => { void applyPreset(selectedPreset); }} style={styles.retry}><Text style={styles.retryText}>{t('wardrobeRetryEquip')}</Text></AnimatedPressable></View> : null}
+      {deletePreset.isError && failedDeletePreset ? <View style={styles.actionError}><Text style={styles.errorText}>{t('wardrobeDeleteFailed')}</Text><AnimatedPressable onPress={() => requestDelete(failedDeletePreset)} style={styles.retry}><Text style={styles.retryText}>{t('wardrobeRetryDelete')}</Text></AnimatedPressable></View> : null}
 
       <Modal visible={nameModalVisible} transparent animationType={reduceMotion ? 'none' : 'fade'} onRequestClose={() => setNameModalVisible(false)}>
         <View style={styles.modalScrim}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>{chinese ? '给这套搭配起个名字' : 'Name this outfit'}</Text>
-            <Text style={styles.modalHint}>{chinese ? '最多 30 个字符；保存的是当前试穿预览。' : 'Up to 30 characters. This saves your current preview.'}</Text>
+            <Text style={styles.modalTitle}>{t('wardrobeNameOutfitTitle')}</Text>
+            <Text style={styles.modalHint}>{t('wardrobeNameOutfitHint')}</Text>
             <TextInput
-              accessibilityLabel={chinese ? '造型名称' : 'Outfit name'}
-              accessibilityHint={chinese ? '输入 1 到 30 个字符' : 'Enter 1 to 30 characters'}
+              accessibilityLabel={t('wardrobeOutfitName')}
+              accessibilityHint={t('wardrobeNameInputHint')}
               value={name}
               onChangeText={setName}
               maxLength={30}
               autoFocus
               returnKeyType="done"
               onSubmitEditing={() => { void submitPreset(); }}
-              placeholder={chinese ? '例如：星光自习' : 'e.g. Starlight study'}
+              placeholder={t('wardrobeOutfitNamePlaceholder')}
               style={styles.nameInput}
             />
             <Text style={styles.characterCount}>{trimmedName.length}/30</Text>
-            {createPreset.isError ? <View><Text style={styles.errorText}>{chinese ? '保存造型失败，请重试。' : 'Could not save this outfit. Try again.'}</Text><AnimatedPressable onPress={() => { void submitPreset(); }} disabled={!trimmedName} style={[styles.retry, !trimmedName && styles.disabled]}><Text style={styles.retryText}>{chinese ? '重试保存' : 'Retry save'}</Text></AnimatedPressable></View> : null}
+            {createPreset.isError ? <View><Text style={styles.errorText}>{t('wardrobeSaveOutfitFailed')}</Text><AnimatedPressable onPress={() => { void submitPreset(); }} disabled={!trimmedName} style={[styles.retry, !trimmedName && styles.disabled]}><Text style={styles.retryText}>{t('wardrobeRetrySaveOutfit')}</Text></AnimatedPressable></View> : null}
             <View style={styles.modalActions}>
-              <AnimatedPressable accessibilityRole="button" onPress={() => { setNameModalVisible(false); setName(''); createPreset.reset(); }} style={styles.cancelButton}><Text style={styles.cancelText}>{chinese ? '取消' : 'Cancel'}</Text></AnimatedPressable>
-              <AnimatedPressable accessibilityRole="button" accessibilityState={{ disabled: !trimmedName || createPreset.isPending }} disabled={!trimmedName || createPreset.isPending} onPress={() => { void submitPreset(); }} style={[styles.confirmButton, (!trimmedName || createPreset.isPending) && styles.disabled]}>{createPreset.isPending ? <ActivityIndicator color={theme.onAccent} /> : <Check size={17} color={theme.onAccent} />}<Text style={styles.confirmText}>{chinese ? '保存' : 'Save'}</Text></AnimatedPressable>
+              <AnimatedPressable accessibilityRole="button" onPress={() => { setNameModalVisible(false); setName(''); createPreset.reset(); }} style={styles.cancelButton}><Text style={styles.cancelText}>{t('wardrobeCancel')}</Text></AnimatedPressable>
+              <AnimatedPressable accessibilityRole="button" accessibilityState={{ disabled: !trimmedName || createPreset.isPending }} disabled={!trimmedName || createPreset.isPending} onPress={() => { void submitPreset(); }} style={[styles.confirmButton, (!trimmedName || createPreset.isPending) && styles.disabled]}>{createPreset.isPending ? <ActivityIndicator color={theme.onAccent} /> : <Check size={17} color={theme.onAccent} />}<Text style={styles.confirmText}>{t('wardrobeSave')}</Text></AnimatedPressable>
             </View>
           </View>
         </View>

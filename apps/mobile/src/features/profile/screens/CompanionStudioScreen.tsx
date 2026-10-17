@@ -25,25 +25,25 @@ import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View, useWindow
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 
-const CATEGORIES: { type: AppearanceItemType; en: string; zh: string; slot: keyof CompanionLook }[] = [
-  { type: 'headwear', en: 'Headwear', zh: '头饰', slot: 'headwearId' },
-  { type: 'bodywear', en: 'Bodywear', zh: '服装', slot: 'bodywearId' },
-  { type: 'backwear', en: 'Backwear', zh: '背饰', slot: 'backwearId' },
-  { type: 'handItem', en: 'Handheld', zh: '手持', slot: 'handItemId' },
+const CATEGORIES: { type: AppearanceItemType; key: 'wardrobeHeadwear' | 'wardrobeBodywear' | 'wardrobeBackwear' | 'wardrobeHandItem'; slot: keyof CompanionLook }[] = [
+  { type: 'headwear', key: 'wardrobeHeadwear', slot: 'headwearId' },
+  { type: 'bodywear', key: 'wardrobeBodywear', slot: 'bodywearId' },
+  { type: 'backwear', key: 'wardrobeBackwear', slot: 'backwearId' },
+  { type: 'handItem', key: 'wardrobeHandItem', slot: 'handItemId' },
 ];
-const OUTFITS_CATEGORY = { type: 'outfits' as const, en: 'Outfits', zh: '套装' };
+const OUTFITS_CATEGORY = { type: 'outfits' as const, key: 'wardrobeOutfits' as const };
 type WardrobeCategory = typeof OUTFITS_CATEGORY | (typeof CATEGORIES)[number];
 
 export function CompanionStudioRouteScreen() {
   const companion = useCompanion();
   const { isLoading: avatarsLoading } = useAvatars();
-  const { language } = useTranslation('profile');
+  const { t } = useTranslation('companion');
   if (companion.isLoading || avatarsLoading) return <LoadingView />;
   if (companion.isError) return (
     <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-      <Text style={{ textAlign: 'center', marginBottom: 16 }}>{language === 'zh' ? '暂时无法加载伙伴造型。' : 'Could not load your companion look.'}</Text>
+      <Text style={{ textAlign: 'center', marginBottom: 16 }}>{t('wardrobeLoadingError')}</Text>
       <AnimatedPressable accessibilityRole="button" onPress={() => { void companion.refetch(); }} style={{ padding: 14 }}>
-        <Text>{language === 'zh' ? '重试' : 'Retry'}</Text>
+        <Text>{t('wardrobeRetry')}</Text>
       </AnimatedPressable>
     </SafeAreaView>
   );
@@ -55,7 +55,7 @@ function CompanionStudioScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { language } = useTranslation('profile');
+  const { language, t } = useTranslation('companion');
   const chinese = language === 'zh';
   const { user } = useCurrentUser();
   const companion = useCompanion();
@@ -67,7 +67,7 @@ function CompanionStudioScreen() {
   const level = Math.max(1, levelInfo?.currentLevel ?? user?.level ?? 1);
   const selectedAvatar = avatars.find((item) => item.id === companion.data?.avatarId);
   const isFullBodyCompanion = selectedAvatar?.assetKey === 'memory-owl';
-  const companionTitle = selectedAvatar ? (chinese ? selectedAvatar.titleZh : selectedAvatar.titleEn) : (chinese ? '伙伴' : 'Companion');
+  const companionTitle = selectedAvatar ? (chinese ? selectedAvatar.titleZh : selectedAvatar.titleEn) : t('companionName');
   const stageSize = Math.min(232, Math.max(176, width - 176));
   const savedLook = companion.data?.look;
   const [draft, setDraft] = useState<CompanionLook | null>(null);
@@ -187,32 +187,32 @@ function CompanionStudioScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <CommonHeader title={chinese ? '伙伴衣橱' : 'Companion Wardrobe'} backAction={() => router.back()} showAiCredits={false} />
+      <CommonHeader title={t('companionClosetTitle')} backAction={() => router.back()} showAiCredits={false} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <View style={styles.heroGlow} />
-          <View style={styles.heroCopy}><View style={styles.studioBadge}><Sparkles size={13} color={theme.onAccent} /><Text style={styles.badgeText}>{chinese ? '伙伴造型间' : 'COMPANION STUDIO'}</Text></View><Text style={styles.heroTitle}>{chinese ? '给今天的伙伴换个造型' : 'A little outfit for today'}</Text><Text style={styles.heroSub}>{chinese ? `${companionTitle} · 等级 ${level}` : `${companionTitle} · Level ${level}`}</Text></View>
-          <View style={styles.stage} accessibilityLabel={chinese ? `${companionTitle}造型预览` : `${companionTitle} outfit preview`}>
+          <View style={styles.heroCopy}><View style={styles.studioBadge}><Sparkles size={13} color={theme.onAccent} /><Text style={styles.badgeText}>{t('wardrobeStudioEyebrow')}</Text></View><Text style={styles.heroTitle}>{t('wardrobeStudioTitle')}</Text><Text style={styles.heroSub}>{t('companionLevel', { name: companionTitle, level })}</Text></View>
+          <View style={styles.stage} accessibilityLabel={t('wardrobePreviewAccessibility', { name: companionTitle })}>
             <View style={styles.stageDisc} />
             <Animated.View style={figureStyle}>
               {isFullBodyCompanion
-                ? <CompanionCharacterArtwork look={draft} items={items} avatarId={companion.data?.avatarId} size={stageSize} accessibilityLabel={chinese ? `${companionTitle}全身造型预览` : `${companionTitle} full-body outfit preview`} />
+                ? <CompanionCharacterArtwork look={draft} items={items} avatarId={companion.data?.avatarId} size={stageSize} accessibilityLabel={t('wardrobeFullBodyPreviewAccessibility', { name: companionTitle })} />
                 : <MemoryAvatar avatar={selectedAvatar} size={206} level={level} showLevelBadge={false} />}
             </Animated.View>
             <View style={styles.stageSparkleOne}><Sparkles color={theme.sun} size={17} /></View><View style={styles.stageSparkleTwo}><Sparkles color={theme.onAccent} size={12} /></View>
           </View>
-          <View style={styles.previewCaption}><View style={styles.liveDot} /><Text style={styles.captionText}>{chinese ? '实时试穿预览' : 'LIVE LOOK PREVIEW'}</Text></View>
-          {hasUnavailableSavedLayer ? <View style={styles.previewNotice} accessibilityRole="text"><LockKeyhole size={13} color={theme.onAccent} /><Text style={styles.previewNoticeText}>{chinese ? '已保存造型含有尚未通过预览校验的物品，暂不叠加显示。' : 'A saved piece has no approved preview layer yet, so it is hidden from this stage.'}</Text></View> : null}
+          <View style={styles.previewCaption}><View style={styles.liveDot} /><Text style={styles.captionText}>{t('wardrobeLivePreview')}</Text></View>
+          {hasUnavailableSavedLayer ? <View style={styles.previewNotice} accessibilityRole="text"><LockKeyhole size={13} color={theme.onAccent} /><Text style={styles.previewNoticeText}>{t('wardrobeUnavailableSavedLook')}</Text></View> : null}
           <View style={styles.heroActions}>
-            <AnimatedPressable accessibilityLabel={chinese ? '随机搭配已解锁物品' : 'Randomize with unlocked items'} onPress={randomize} style={styles.randomButton}><Sparkles size={16} color={theme.onAccent} /><Text style={styles.heroActionText}>{chinese ? '随机搭配' : 'Surprise me'}</Text></AnimatedPressable>
-            <AnimatedPressable accessibilityLabel={chinese ? '恢复已保存造型' : 'Revert to saved look'} onPress={() => { if (savedLook) setDraft(savedLook); setFocusedItemId(null); }} disabled={!isDirty} style={[styles.revertButton, !isDirty && styles.disabled]}><RefreshCcw size={15} color={theme.onAccent} /><Text style={styles.heroActionText}>{chinese ? '恢复' : 'Revert'}</Text></AnimatedPressable>
+            <AnimatedPressable accessibilityLabel={t('wardrobeRandomize')} onPress={randomize} style={styles.randomButton}><Sparkles size={16} color={theme.onAccent} /><Text style={styles.heroActionText}>{t('wardrobeRandomize')}</Text></AnimatedPressable>
+            <AnimatedPressable accessibilityLabel={t('wardrobeRevert')} onPress={() => { if (savedLook) setDraft(savedLook); setFocusedItemId(null); }} disabled={!isDirty} style={[styles.revertButton, !isDirty && styles.disabled]}><RefreshCcw size={15} color={theme.onAccent} /><Text style={styles.heroActionText}>{t('wardrobeRevert')}</Text></AnimatedPressable>
           </View>
         </View>
 
         <ScrollView horizontal accessibilityRole="tablist" contentContainerStyle={styles.categoryRail} showsHorizontalScrollIndicator={false}>
           {visibleCategories.map((item) => (
             <AnimatedPressable key={item.type} accessibilityRole="tab" accessibilityState={{ selected: category.type === item.type }} onPress={() => { setCategory(item); setFocusedItemId(null); }} style={[styles.categoryTab, category.type === item.type && styles.categoryTabActive]}>
-              <Text style={[styles.categoryTabText, category.type === item.type && styles.categoryTabTextActive]}>{chinese ? item.zh : item.en}</Text>
+              <Text style={[styles.categoryTabText, category.type === item.type && styles.categoryTabTextActive]}>{t(item.key)}</Text>
             </AnimatedPressable>
           ))}
         </ScrollView>
@@ -227,42 +227,42 @@ function CompanionStudioScreen() {
           canSave={!hasUnavailableDraft}
           onPreview={setDraft}
           onEquipped={setDraft}
-        /> : <View style={styles.noItems}><Text style={styles.noItemsTitle}>{chinese ? '伙伴造型暂不可用' : 'Outfits unavailable'}</Text></View>) : <>
-        {visibleCategories.length < CATEGORIES.length + 1 ? <View style={styles.comingSoon}><Sparkles size={14} color={theme.violetDeep} /><Text style={styles.comingSoonText}>{chinese ? '更多造型正在准备中，先来搭配已上架的配饰吧。' : 'More looks are on the way. Mix and match the pieces in the catalog for now.'}</Text></View> : null}
+        /> : <View style={styles.noItems}><Text style={styles.noItemsTitle}>{t('wardrobeUnavailable')}</Text></View>) : <>
+        {visibleCategories.length < CATEGORIES.length + 1 ? <View style={styles.comingSoon}><Sparkles size={14} color={theme.violetDeep} /><Text style={styles.comingSoonText}>{t('wardrobeMoreComing')}</Text></View> : null}
 
-        <View style={styles.catalogHead}><Text style={styles.sectionTitle}>{chinese ? category.zh : category.en}</Text><Text style={styles.catalogCount}>{compatibleItems.length + 1} {chinese ? '种选择' : 'options'}</Text></View>
+        <View style={styles.catalogHead}><Text style={styles.sectionTitle}>{t(category.key)}</Text><Text style={styles.catalogCount}>{compatibleItems.length + 1} {t('wardrobeOptions')}</Text></View>
         <ScrollView horizontal contentContainerStyle={styles.itemRail} showsHorizontalScrollIndicator={false}>
-          <AnimatedPressable accessibilityRole="button" accessibilityLabel={chinese ? '清除此槽位' : 'Clear this slot'} accessibilityState={{ selected: currentItemId === null }} onPress={() => { if (draft) setDraft({ ...draft, [category.slot]: null }); setFocusedItemId(null); }} style={[styles.itemCard, currentItemId === null && styles.itemCardSelected]}>
-            <View style={styles.clearPreview}><X size={25} color={theme.inkMuted} /></View><Text style={styles.itemName}>{chinese ? '不佩戴' : 'Nothing'}</Text><Text style={styles.itemMeta}>{currentItemId === null ? (chinese ? '已选择' : 'Selected') : (chinese ? '清空槽位' : 'Clear slot')}</Text>{currentItemId === null ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}
+          <AnimatedPressable accessibilityRole="button" accessibilityLabel={t('wardrobeClearSlot')} accessibilityState={{ selected: currentItemId === null }} onPress={() => { if (draft) setDraft({ ...draft, [category.slot]: null }); setFocusedItemId(null); }} style={[styles.itemCard, currentItemId === null && styles.itemCardSelected]}>
+            <View style={styles.clearPreview}><X size={25} color={theme.inkMuted} /></View><Text style={styles.itemName}>{t('wardrobeNothing')}</Text><Text style={styles.itemMeta}>{currentItemId === null ? t('wardrobeSelected') : t('wardrobeClearSlotHint')}</Text>{currentItemId === null ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}
           </AnimatedPressable>
           {compatibleItems.map((item) => {
             const locked = item.requiredLevel > level || !isApprovedCompanionLayer(item, companion.data?.avatarId);
             const lockReason = item.requiredLevel > level
-              ? (chinese ? `等级 ${item.requiredLevel} 解锁` : `Level ${item.requiredLevel}`)
-              : !isApprovedCompanionLayer(item, companion.data?.avatarId) ? (chinese ? '预览素材待校验' : 'Preview pending') : null;
+              ? t('wardrobeUnlockLevel', { level: item.requiredLevel })
+              : !isApprovedCompanionLayer(item, companion.data?.avatarId) ? t('wardrobePreviewPending') : null;
             const selected = item.id === currentItemId;
             return <AnimatedPressable key={item.id} accessibilityRole="button" accessibilityLabel={`${nameFor(item, language)}${locked ? `, ${lockReason}` : ''}`} accessibilityState={{ selected, disabled: locked }} onPress={() => toggleItem(item)} style={[styles.itemCard, selected && styles.itemCardSelected, locked && styles.itemCardLocked]}>
-              <View style={styles.itemPreview}><LayerPreview item={item} avatarId={companion.data?.avatarId} size={83} /><View style={styles.itemGlow} /></View><Text numberOfLines={1} style={styles.itemName}>{nameFor(item, language)}</Text><Text style={[styles.itemMeta, !locked && styles.itemMetaReady]}>{locked ? lockReason : selected ? (chinese ? '已穿戴' : 'Wearing') : (chinese ? '已解锁' : 'Unlocked')}</Text>{locked ? <View style={styles.lockBadge}><LockKeyhole size={13} color={theme.inkSoft} /></View> : selected ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}
+              <View style={styles.itemPreview}><LayerPreview item={item} avatarId={companion.data?.avatarId} size={83} /><View style={styles.itemGlow} /></View><Text numberOfLines={1} style={styles.itemName}>{nameFor(item, language)}</Text><Text style={[styles.itemMeta, !locked && styles.itemMetaReady]}>{locked ? lockReason : selected ? t('wardrobeWearing') : t('wardrobeUnlocked')}</Text>{locked ? <View style={styles.lockBadge}><LockKeyhole size={13} color={theme.inkSoft} /></View> : selected ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}
             </AnimatedPressable>;
           })}
-          {!compatibleItems.length ? <View style={styles.noItems}><Text style={styles.noItemsTitle}>{chinese ? '新造型正在准备中' : 'More looks are on the way'}</Text><Text style={styles.noItemsText}>{chinese ? '这个分类暂时还没有物品。' : 'There are no items in this slot yet.'}</Text></View> : null}
+          {!compatibleItems.length ? <View style={styles.noItems}><Text style={styles.noItemsTitle}>{t('wardrobeMoreItemsComing')}</Text><Text style={styles.noItemsText}>{t('wardrobeNoItemsInSlot')}</Text></View> : null}
         </ScrollView>
 
         <View style={styles.detailCard}>
-          {focusedItem ? <><View style={styles.detailTitleRow}><View style={styles.detailIcon}><LayerPreview item={focusedItem} avatarId={companion.data?.avatarId} /></View><View style={styles.detailCopy}><Text style={styles.detailTitle}>{nameFor(focusedItem, language)}</Text><Text style={styles.detailSet}>{focusedItem.setKey ? `${chinese ? '套装' : 'Set'} · ${focusedItem.setKey}` : (chinese ? '伙伴专属配饰' : 'Made for your companion')}</Text></View><View style={[styles.stagePill, focusedItem.requiredLevel <= level && isApprovedCompanionLayer(focusedItem, companion.data?.avatarId) ? styles.stagePillReady : styles.stagePillLocked]}><Text style={styles.stagePillText}>{focusedItem.requiredLevel > level ? (chinese ? `等级 ${focusedItem.requiredLevel}` : `LV ${focusedItem.requiredLevel}`) : !isApprovedCompanionLayer(focusedItem, companion.data?.avatarId) ? (chinese ? '预览待校验' : 'PREVIEW PENDING') : (chinese ? '已解锁' : 'UNLOCKED')}</Text></View></View><Text style={styles.detailDescription}>{chinese ? focusedItem.descriptionZh : focusedItem.descriptionEn}</Text>{!isApprovedCompanionLayer(focusedItem, companion.data?.avatarId) ? <Text style={styles.unavailableText}>{chinese ? '这件物品暂时没有通过校验的全身图层，因此不能试穿或随机搭配。' : 'There is no approved full-body layer for this piece yet, so it cannot be equipped or randomized.'}</Text> : null}</> : <><Text style={styles.detailTitle}>{chinese ? '挑一件试试看' : 'Pick a piece to try on'}</Text><Text style={styles.detailDescription}>{isFullBodyCompanion ? (chinese ? '物品会直接叠在伙伴身上，试穿不影响已保存造型。' : 'Try pieces directly on your companion. Your saved look stays untouched until you save.') : (chinese ? '这个伙伴的专属穿戴素材正在准备中；已保存的造型和伙伴头像仍会保留。' : 'Wearable art for this companion is on the way. Your selected companion stays here while new pieces are prepared.')}</Text></>}
+          {focusedItem ? <><View style={styles.detailTitleRow}><View style={styles.detailIcon}><LayerPreview item={focusedItem} avatarId={companion.data?.avatarId} /></View><View style={styles.detailCopy}><Text style={styles.detailTitle}>{nameFor(focusedItem, language)}</Text><Text style={styles.detailSet}>{focusedItem.setKey ? t('wardrobePartOfSet') : t('wardrobeCompanionAccessory')}</Text></View><View style={[styles.stagePill, focusedItem.requiredLevel <= level && isApprovedCompanionLayer(focusedItem, companion.data?.avatarId) ? styles.stagePillReady : styles.stagePillLocked]}><Text style={styles.stagePillText}>{focusedItem.requiredLevel > level ? t('wardrobeLevelShort', { level: focusedItem.requiredLevel }) : !isApprovedCompanionLayer(focusedItem, companion.data?.avatarId) ? t('wardrobePreviewPending') : t('wardrobeUnlocked')}</Text></View></View><Text style={styles.detailDescription}>{language === 'zh' ? focusedItem.descriptionZh : focusedItem.descriptionEn}</Text>{!isApprovedCompanionLayer(focusedItem, companion.data?.avatarId) ? <Text style={styles.unavailableText}>{t('wardrobeUnavailableLayer')}</Text> : null}</> : <><Text style={styles.detailTitle}>{t('wardrobePickPiece')}</Text><Text style={styles.detailDescription}>{isFullBodyCompanion ? t('wardrobeTryOnDescription') : t('wardrobeWearablesComing')}</Text></>}
         </View>
         <CompanionSetStory look={draft} items={items} avatarId={companion.data?.avatarId} />
         </>}
 
-        {saveLook.isError ? <View accessibilityRole="alert" style={styles.errorCard}><Text style={styles.errorText}>{chinese ? '保存没有成功，试穿造型仍为你保留。' : 'Couldn’t save this look. Your preview is still here.'}</Text><AnimatedPressable onPress={() => { void save(); }} style={styles.retryButton}><Text style={styles.retryText}>{chinese ? '重试保存' : 'Retry save'}</Text></AnimatedPressable></View> : null}
+        {saveLook.isError ? <View accessibilityRole="alert" style={styles.errorCard}><Text style={styles.errorText}>{t('wardrobeSaveFailed')}</Text><AnimatedPressable onPress={() => { void save(); }} style={styles.retryButton}><Text style={styles.retryText}>{t('wardrobeRetrySave')}</Text></AnimatedPressable></View> : null}
       </ScrollView>
       <ConfirmModal
         visible={discardModalVisible}
         icon={<RefreshCcw size={27} color={theme.berryDeep} />}
-        title={chinese ? '放弃未保存的造型？' : 'Discard your changes?'}
-        description={chinese ? '这次试穿还没有保存。' : 'Your outfit preview has not been saved.'}
-        confirmText={chinese ? '放弃' : 'Discard'}
-        cancelText={chinese ? '继续搭配' : 'Keep editing'}
+        title={t('wardrobeDiscardTitle')}
+        description={t('wardrobeDiscardBody')}
+        confirmText={t('wardrobeDiscard')}
+        cancelText={t('wardrobeKeepEditing')}
         destructive
         onCancel={() => { pendingNavigationAction.current = null; setDiscardModalVisible(false); }}
         onConfirm={() => {
@@ -272,7 +272,7 @@ function CompanionStudioScreen() {
           if (action) navigation.dispatch(action);
         }}
       />
-      {isDirty || saveLook.isPending ? <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}><AnimatedPressable accessibilityRole="button" accessibilityState={{ disabled: hasUnavailableDraft || saveLook.isPending }} disabled={hasUnavailableDraft || saveLook.isPending} onPress={() => { void save(); }} style={[styles.saveButton, (hasUnavailableDraft || saveLook.isPending) && styles.disabled]}>{saveLook.isPending ? <ActivityIndicator color={theme.onAccent} /> : <Check size={19} color={theme.onAccent} />}<Text style={styles.saveText}>{saveLook.isPending ? (chinese ? '正在穿上…' : 'Applying…') : (chinese ? '穿上这套' : 'Wear this look')}</Text></AnimatedPressable></View> : null}
+      {isDirty || saveLook.isPending ? <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}><AnimatedPressable accessibilityRole="button" accessibilityState={{ disabled: hasUnavailableDraft || saveLook.isPending }} disabled={hasUnavailableDraft || saveLook.isPending} onPress={() => { void save(); }} style={[styles.saveButton, (hasUnavailableDraft || saveLook.isPending) && styles.disabled]}>{saveLook.isPending ? <ActivityIndicator color={theme.onAccent} /> : <Check size={19} color={theme.onAccent} />}<Text style={styles.saveText}>{saveLook.isPending ? t('wardrobeApplying') : t('wardrobeWearLook')}</Text></AnimatedPressable></View> : null}
     </SafeAreaView>
   );
 }
