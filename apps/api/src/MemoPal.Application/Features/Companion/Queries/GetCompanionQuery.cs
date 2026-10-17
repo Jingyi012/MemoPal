@@ -24,6 +24,7 @@ public sealed class GetCompanionQueryHandler(IAppDbContext db) : IRequestHandler
         var points = 0;
         IReadOnlyList<CompanionMemoryDto> memories = [];
         var look = new CompanionLookDto(null, null, null, null);
+        string? avatarKey = null;
         if (!string.IsNullOrWhiteSpace(avatarId))
         {
             points = await db.CompanionBonds.AsNoTracking().Where(x => x.UserId == request.UserId && x.AvatarId == avatarId && !x.IsDeleted)
@@ -43,7 +44,7 @@ public sealed class GetCompanionQueryHandler(IAppDbContext db) : IRequestHandler
                 .FirstOrDefaultAsync(ct) ?? look;
             // An admin can withdraw an item after it has been equipped. Keep the
             // saved choice, but do not render withdrawn or incompatible layers.
-            var avatarKey = await db.AvatarDefinitions.AsNoTracking().Where(x => x.Id == avatarId)
+            avatarKey = await db.AvatarDefinitions.AsNoTracking().Where(x => x.Id == avatarId)
                 .Select(x => x.Key).FirstAsync(ct);
             var equippedIds = new[] { look.HeadwearId, look.BodywearId, look.BackwearId, look.HandItemId }
                 .Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x!).ToArray();
@@ -65,7 +66,12 @@ public sealed class GetCompanionQueryHandler(IAppDbContext db) : IRequestHandler
         var configuredStages = await CompanionBondStageSettings.GetAsync(db, ct);
         var (stage, progress, toNext) = Stage(points, configuredStages);
         var stages = configuredStages.Select(x => new CompanionBondStageDto(x.Key, x.Points, x.TitleEn, x.TitleZh)).ToList();
-        return ApiResponse<CompanionDto>.Ok(new(avatarId, points, stage, progress, toNext, count, memories, look, stages));
+        var dialogueConfig = await CompanionDialogueSettings.GetAsync(db, ct);
+        var dialogueLines = dialogueConfig.Lines
+            .Where(x => x.Enabled && (x.CompanionKey is null || string.Equals(x.CompanionKey, avatarKey, StringComparison.OrdinalIgnoreCase)))
+            .Select(x => new CompanionDialogueLineDto(x.Id, x.CompanionKey, x.Trigger, x.StageKey, x.TextEn, x.TextZh, x.Reaction, x.Weight))
+            .ToList();
+        return ApiResponse<CompanionDto>.Ok(new(avatarId, points, stage, progress, toNext, count, memories, look, stages, dialogueLines));
     }
 
     internal static async Task<string?> ResolveAvatarId(IAppDbContext db, string? selectedAvatarId, int level, CancellationToken ct)

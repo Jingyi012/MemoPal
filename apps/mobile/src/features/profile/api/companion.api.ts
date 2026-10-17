@@ -17,6 +17,17 @@ export type CompanionLook = {
 };
 
 export type CompanionBondStage = { key: string; points: number; titleEn: string; titleZh: string };
+export type CompanionDialogueTrigger = 'tap' | 'star' | 'greeting' | 'practice' | 'outfit' | 'bond' | 'return';
+export type CompanionDialogueLine = {
+  id: string;
+  companionKey: string | null;
+  trigger: CompanionDialogueTrigger;
+  stageKey: string | null;
+  textEn: string;
+  textZh: string;
+  reaction: 'bounce' | 'tilt' | 'sparkle' | 'catch_star';
+  weight: number;
+};
 
 export type CompanionStatus = {
   avatarId: string | null;
@@ -28,6 +39,7 @@ export type CompanionStatus = {
   memories: CompanionMemory[];
   look: CompanionLook;
   bondStages: CompanionBondStage[];
+  dialogueLines: CompanionDialogueLine[];
 };
 
 export type SaveCompanionLookInput = CompanionLook & { avatarId: string };

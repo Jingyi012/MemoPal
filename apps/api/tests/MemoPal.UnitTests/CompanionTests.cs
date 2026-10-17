@@ -2,6 +2,8 @@ using MemoPal.Application.Features.Companion.Commands;
 using MemoPal.Application.Features.Companion.Queries;
 using MemoPal.Application.Features.Auth.Commands;
 using MemoPal.Application.Common.Settings;
+using MemoPal.Application.Features.SystemSettings.Commands;
+using MemoPal.Application.Features.SystemSettings.DTOs;
 using System.Text.Json;
 using MemoPal.Domain.Entities;
 using MemoPal.Infrastructure.Persistence;
@@ -129,6 +131,72 @@ public sealed class CompanionTests
         Assert.Equal("close", result.BondStage);
         Assert.Equal(50, result.BondProgress);
         Assert.Equal("Family", result.BondStages[2].TitleEn);
+    }
+
+    [Fact]
+    public async Task Companion_Read_Returns_Enabled_Global_And_Current_Companion_Dialogues_Only()
+    {
+        await using var db = CreateDb();
+        db.Users.Add(new User { Id = "owner", Email = "owner@example.com", CompanionAvatarId = "owl" });
+        db.AvatarDefinitions.Add(new AvatarDefinition { Id = "owl", Key = "memory-owl" });
+        db.SystemSettings.Add(new SystemSetting
+        {
+            Id = "dialogues", Key = SystemSettingKeys.CompanionDialogues,
+            Value = JsonSerializer.Serialize(new CompanionDialogueConfig(
+                [],
+                [
+                    new("tap-generic", null, "tap", null, "Hello", "你好", "bounce", true, 1),
+                    new("tap-owl", "memory-owl", "tap", null, "Hoot", "咕咕", "tilt", true, 3),
+                    new("tap-fox", "memory-fox", "tap", null, "Yip", "嗷", "bounce", true, 1),
+                    new("tap-disabled", null, "tap", null, "Hidden", "隐藏", "bounce", false, 1)
+                ]), new JsonSerializerOptions(JsonSerializerDefaults.Web))
+        });
+        await db.SaveChangesAsync();
+
+        var result = (await new GetCompanionQueryHandler(db).Handle(new("owner"), default)).Data!;
+
+        Assert.Equal(new[] { "tap-generic", "tap-owl" }, result.DialogueLines.Select(x => x.Id).Order().ToArray());
+        Assert.Equal("memory-owl", result.DialogueLines.Single(x => x.Id == "tap-owl").CompanionKey);
+    }
+
+    [Fact]
+    public async Task Companion_Dialogue_Config_Rejects_Duplicates_And_Overlong_Lines()
+    {
+        var duplicate = new CompanionDialogueConfig([], [
+            new("same", null, "tap", null, "Hello", "你好", "bounce", true, 1),
+            new("same", null, "tap", null, "Hi", "嗨", "tilt", true, 1)
+        ]);
+        var tooLong = new CompanionDialogueConfig([], [
+            new("line", null, "tap", null, new string('x', 97), "你好", "bounce", true, 1)
+        ]);
+
+        Assert.False(CompanionDialogueSettings.IsValid(duplicate));
+        Assert.False(CompanionDialogueSettings.IsValid(tooLong));
+        Assert.True(CompanionDialogueSettings.IsValid(CompanionDialogueSettings.Defaults));
+    }
+
+    [Fact]
+    public async Task Admin_Can_Save_Valid_Companion_Dialogues_But_Invalid_Config_Is_Rejected()
+    {
+        await using var db = CreateDb();
+        var handler = new UpsertSystemSettingCommandHandler(db);
+        var valid = await handler.Handle(new(new UpsertSystemSettingRequest
+        {
+            Key = SystemSettingKeys.CompanionDialogues,
+            Value = JsonSerializer.Serialize(CompanionDialogueSettings.Defaults, new JsonSerializerOptions(JsonSerializerDefaults.Web))
+        }), default);
+
+        Assert.True(valid.Success);
+        Assert.Equal(SystemSettingKeys.CompanionDialogues, Assert.Single(db.SystemSettings).Key);
+
+        var invalid = await handler.Handle(new(new UpsertSystemSettingRequest
+        {
+            Key = SystemSettingKeys.CompanionDialogues,
+            Value = "{\"characters\":[],\"lines\":[]}"
+        }), default);
+
+        Assert.False(invalid.Success);
+        Assert.Single(db.SystemSettings);
     }
 
     [Fact]

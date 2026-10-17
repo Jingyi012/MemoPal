@@ -88,6 +88,7 @@ export const translations = {
     companion: {
       companionName: 'Companion',
       chooseCompanion: 'Switch companion', chooseCompanionDescription: 'Choose who joins you in this space.', companionSwitchFailed: 'Could not switch companions. Try again.',
+      tapMemoryStar: 'Catch the memory star', tapMemoryStarHint: 'Tap it to catch it and see your companion react.', memoryStarCaught: 'A little memory, caught!',
       companionClosetTitle: 'Companion closet', companionClosetDescription: 'Dress up your learning companion and make the look yours.',
       wardrobeLoadingError: 'Could not load your companion look.', wardrobeRetry: 'Retry', wardrobeCancel: 'Cancel', wardrobeDelete: 'Delete', wardrobeNameInputHint: 'Enter 1 to 30 characters',
       wardrobeStudioEyebrow: 'COMPANION STUDIO', wardrobeStudioTitle: 'A little outfit for today', companionLevel: '{name} · Level {level}',
@@ -1552,6 +1553,7 @@ export const translations = {
     companion: {
       companionName: '伙伴',
       chooseCompanion: '切换伙伴', chooseCompanionDescription: '选择今天陪你一起学习的伙伴。', companionSwitchFailed: '切换失败，请重试。',
+      tapMemoryStar: '接住记忆星', tapMemoryStarHint: '点一下接住它，看看伙伴的特别回应。', memoryStarCaught: '接住了一颗小回忆！',
       companionClosetTitle: '伙伴衣橱', companionClosetDescription: '为你的学习伙伴换装，打造专属外观。',
       wardrobeLoadingError: '暂时无法加载伙伴造型。', wardrobeRetry: '重试', wardrobeCancel: '取消', wardrobeDelete: '删除', wardrobeNameInputHint: '输入 1 到 30 个字符',
       wardrobeStudioEyebrow: '伙伴造型间', wardrobeStudioTitle: '给今天的伙伴换个造型', companionLevel: '{name} · 等级 {level}',

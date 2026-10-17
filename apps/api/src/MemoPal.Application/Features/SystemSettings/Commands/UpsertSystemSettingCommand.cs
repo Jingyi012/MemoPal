@@ -65,6 +65,21 @@ public sealed class UpsertSystemSettingCommandHandler
                 return ApiResponse<SystemSettingDto>.Fail("Bond stages must be valid JSON.");
             }
         }
+        else if (string.Equals(key, SystemSettingKeys.CompanionDialogues, StringComparison.Ordinal))
+        {
+            try
+            {
+                var dialogues = JsonSerializer.Deserialize<CompanionDialogueConfig>(normalizedValue,
+                    new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                if (!CompanionDialogueSettings.IsValid(dialogues))
+                    return ApiResponse<SystemSettingDto>.Fail("Companion dialogues need unique IDs, valid triggers and reactions, and complete short English and Chinese lines.");
+                normalizedValue = JsonSerializer.Serialize(dialogues, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            }
+            catch (JsonException)
+            {
+                return ApiResponse<SystemSettingDto>.Fail("Companion dialogues must be valid JSON.");
+            }
+        }
 
         var entity = await _db.SystemSettings.FirstOrDefaultAsync(x => x.Key == key, cancellationToken);
 

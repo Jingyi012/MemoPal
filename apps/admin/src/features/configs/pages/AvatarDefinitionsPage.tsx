@@ -8,6 +8,7 @@ import { useAdminAvatarsApi } from '../hooks/useAdminAvatarsApi';
 import { useAdminMediaApi } from '../../../hooks/useAdminMediaApi';
 import type { AvatarDefinitionDto } from '../../../types/avatar';
 import { CompanionBondStagesCard } from '../components/CompanionBondStagesCard';
+import { CompanionDialogueCard } from '../components/CompanionDialogueCard';
 import { validateCompanionArtwork } from '../utils/validateCompanionArtwork';
 
 export default function AvatarDefinitionsPage() {
@@ -22,6 +23,7 @@ export default function AvatarDefinitionsPage() {
         </Space>
       </Card>
       <CompanionBondStagesCard />
+      <CompanionDialogueCard />
       <DefinitionCrudTab<AvatarDefinitionDto>
         title="Companion"
         list={api.list}

@@ -36,6 +36,7 @@ public sealed class AdminBootstrapper
         await EnsureStarterAvatarsAsync(cancellationToken);
         await EnsureStarterAppearanceItemsAsync(cancellationToken);
         await EnsureCompanionBondStagesAsync(cancellationToken);
+        await EnsureCompanionDialoguesAsync(cancellationToken);
         if (_options.SeedStarterContent)
         {
             await EnsurePredefinedMemoryLessonsAsync(cancellationToken);
@@ -63,6 +64,23 @@ public sealed class AdminBootstrapper
             Key = SystemSettingKeys.CompanionBondStages,
             Value = JsonSerializer.Serialize(CompanionBondStageDefaults.All, new JsonSerializerOptions(JsonSerializerDefaults.Web)),
             Description = "Companion bond progression milestones, localized labels, and point thresholds.",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            CreatedBy = "system",
+            UpdatedBy = "system"
+        });
+    }
+
+    private async Task EnsureCompanionDialoguesAsync(CancellationToken cancellationToken)
+    {
+        var exists = await _db.SystemSettings.AnyAsync(x => !x.IsDeleted && x.Key == SystemSettingKeys.CompanionDialogues, cancellationToken);
+        if (exists) return;
+        _db.SystemSettings.Add(new SystemSetting
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Key = SystemSettingKeys.CompanionDialogues,
+            Value = JsonSerializer.Serialize(CompanionDialogueSettings.Defaults, new JsonSerializerOptions(JsonSerializerDefaults.Web)),
+            Description = "Localized companion interaction dialogue, personality notes, triggers, and reactions.",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             CreatedBy = "system",

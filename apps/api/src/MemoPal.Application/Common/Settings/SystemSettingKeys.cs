@@ -12,6 +12,7 @@ public static class SystemSettingKeys
     public const string AuthLoginMethods = "auth.login_methods";
     public const string NumberPegDefinitions = "number-peg.definitions";
     public const string CompanionBondStages = "companion.bond_stages";
+    public const string CompanionDialogues = "companion.dialogues";
 }
 
 public sealed record CompanionBondStageConfig(string Key, int Points, string TitleEn, string TitleZh, string MessageEn, string MessageZh);

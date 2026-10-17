@@ -58,6 +58,7 @@ public sealed class CompanionEndpointsTests(CustomWebApplicationFactory factory)
             foreach (var user in users)
             {
                 user.SelectedAvatarId = avatarId;
+                user.CompanionAvatarId = avatarId;
                 user.AvatarSource = AvatarSources.Photo;
             }
             await db.SaveChangesAsync();
@@ -100,6 +101,7 @@ public sealed class CompanionEndpointsTests(CustomWebApplicationFactory factory)
                 Appearance("wrong-slot", "owl-scarf", "bodywear", "memory-owl", 1));
             var user = await db.Users.SingleAsync(x => x.Id == account.UserId);
             user.SelectedAvatarId = avatarId;
+            user.CompanionAvatarId = avatarId;
             user.AvatarSource = AvatarSources.Photo;
             user.AvatarUrl = "/uploads/profile-photo.png";
             user.SelectedAvatarFrameId = "legacy-frame-id";
@@ -160,7 +162,9 @@ public sealed class CompanionEndpointsTests(CustomWebApplicationFactory factory)
         using (var otherScope = factory.Services.CreateScope())
         {
             var otherDb = otherScope.ServiceProvider.GetRequiredService<AppDbContext>();
-            (await otherDb.Users.SingleAsync(x => x.Id == other.UserId)).SelectedAvatarId = avatarId;
+            var otherUser = await otherDb.Users.SingleAsync(x => x.Id == other.UserId);
+            otherUser.SelectedAvatarId = avatarId;
+            otherUser.CompanionAvatarId = avatarId;
             await otherDb.SaveChangesAsync();
         }
         using var otherClient = factory.CreateClient();
@@ -188,7 +192,11 @@ public sealed class CompanionEndpointsTests(CustomWebApplicationFactory factory)
             db.AvatarDefinitions.Add(new AvatarDefinition { Id = avatarId, Key = avatarId, IsActive = true, RequiredLevel = 1 });
             db.AppearanceDefinitions.Add(Appearance("preset-head", "preset-head", "headwear", avatarId, 1));
             foreach (var userId in new[] { owner.UserId, other.UserId })
-                (await db.Users.SingleAsync(x => x.Id == userId)).SelectedAvatarId = avatarId;
+            {
+                var user = await db.Users.SingleAsync(x => x.Id == userId);
+                user.SelectedAvatarId = avatarId;
+                user.CompanionAvatarId = avatarId;
+            }
             await db.SaveChangesAsync();
         }
         using var client = factory.CreateClient();

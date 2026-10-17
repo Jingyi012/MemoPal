@@ -8,6 +8,7 @@ import CompanionHelpSheet from '../components/CompanionHelpSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useCompanion, useGreetCompanion, useSelectCompanion } from '@/features/profile/hooks/useCompanion';
+import type { CompanionDialogueLine, CompanionDialogueTrigger } from '@/features/profile/api/companion.api';
 import { getEquippedAvatar, useAvatars } from '@/features/avatars/hooks/useAvatars';
 import { useAppearance } from '@/features/appearance/hooks/useAppearance';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
@@ -17,7 +18,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CircleHelp, Sparkles } from '@/core/icons';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,6 +29,7 @@ export default function CompanionHubScreen() {
   const { styles, theme } = useStyles();
   const router = useRouter();
   const { language } = useTranslation('profile');
+  const { t: companionT } = useTranslation('companion');
   const chinese = language === 'zh';
   const { user } = useCurrentUser();
   const { avatars, isLoading: avatarsLoading } = useAvatars();
@@ -46,16 +48,41 @@ export default function CompanionHubScreen() {
   const reduceMotion = useReducedMotion();
   const reactionMotion = useSharedValue(0);
   const idleMotion = useSharedValue(0);
+  const starMotion = useSharedValue(0);
+  const [dialogueLine, setDialogueLine] = useState<CompanionDialogueLine | null>(null);
+  const [memoryStarVisible, setMemoryStarVisible] = useState(false);
+  const [memoryStarCaught, setMemoryStarCaught] = useState(false);
+  const [memoryStarOnLeft, setMemoryStarOnLeft] = useState(true);
+  const dialogueTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const starTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const caughtStarTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastStarAt = useRef(0);
+  const lastLineByTrigger = useRef<Partial<Record<CompanionDialogueTrigger, string>>>({});
+  const activeDialogue = useRef<{ priority: number; expiresAt: number; lineId: string } | null>(null);
+  const companionSnapshot = useRef<{ avatarId: string | null; bondStage: string; look: string } | null>(null);
+  const lastBlurAt = useRef<number | null>(null);
+  const [reactionKind, setReactionKind] = useState<CompanionDialogueLine['reaction']>('bounce');
   const idleStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -3 * idleMotion.value }, { rotate: `${idleMotion.value}deg` }],
   }));
-  const characterStyle = useAnimatedStyle(() => ({
+  const memoryStarMotionStyle = useAnimatedStyle(() => ({
+    opacity: 0.94 + Math.sin(starMotion.value * Math.PI * 2) * 0.06,
     transform: [
-      { translateY: -8 * reactionMotion.value },
-      { rotate: `${-3 * reactionMotion.value}deg` },
-      { scale: 1 + 0.035 * reactionMotion.value },
+      { translateY: Math.sin(starMotion.value * Math.PI * 2) * 9 },
+      { translateX: Math.sin(starMotion.value * Math.PI) * 7 },
+      { rotate: `${Math.sin(starMotion.value * Math.PI * 2) * 12}deg` },
+      { scale: 0.92 + (Math.sin(starMotion.value * Math.PI * 2) + 1) * 0.08 },
     ],
   }));
+  const characterStyle = useAnimatedStyle(() => {
+    const tilt = reactionKind === 'tilt';
+    const catchStar = reactionKind === 'catch_star';
+    return { transform: [
+      { translateY: -(catchStar ? 13 : 8) * reactionMotion.value },
+      { rotate: `${(tilt ? 8 : -3) * reactionMotion.value}deg` },
+      { scale: 1 + (catchStar ? 0.06 : 0.035) * reactionMotion.value },
+    ] };
+  });
   const level = useLevelByXp(Math.max(0, user?.totalXp ?? 0), user?.level).levelInfo?.currentLevel ?? user?.level ?? 1;
   const avatar = getEquippedAvatar(avatars, companion.data?.avatarId, level);
   const bondStages = companion.data?.bondStages ?? [];
@@ -68,11 +95,63 @@ export default function CompanionHubScreen() {
   const latestPractice = useMemo(() => companion.data?.memories
     .filter((memory) => /practice|review/i.test(memory.type) && (chinese ? memory.summaryZh : memory.summaryEn).trim())
     .sort((left, right) => Date.parse(right.occurredAt) - Date.parse(left.occurredAt))[0], [companion.data?.memories, chinese]);
+  const showDialogue = useCallback((trigger: CompanionDialogueTrigger) => {
+    const priority: Record<CompanionDialogueTrigger, number> = { tap: 1, star: 3, return: 4, greeting: 5, outfit: 6, practice: 7, bond: 8 };
+    if (activeDialogue.current && activeDialogue.current.expiresAt > Date.now() && priority[trigger] < activeDialogue.current.priority) return null;
+    const all = companion.data?.dialogueLines ?? [];
+    const eligible = all.filter((line) => line.trigger === trigger && (!line.stageKey || line.stageKey === companion.data?.bondStage));
+    const companionLines = eligible.filter((line) => line.companionKey === avatar?.key);
+    const pool = companionLines.length ? companionLines : eligible.filter((line) => line.companionKey === null);
+    if (pool.length === 0) return null;
+    const available = pool.filter((line) => line.id !== lastLineByTrigger.current[trigger]);
+    const options = available.length > 0 ? available : pool;
+    const totalWeight = options.reduce((total, line) => total + Math.max(1, line.weight), 0);
+    let selection = Math.random() * totalWeight;
+    const line = options.find((candidate) => (selection -= Math.max(1, candidate.weight)) < 0) ?? options[0];
+    lastLineByTrigger.current[trigger] = line.id;
+    if (dialogueTimer.current) clearTimeout(dialogueTimer.current);
+    const expiresAt = Date.now() + 4200;
+    activeDialogue.current = { priority: priority[trigger], expiresAt, lineId: line.id };
+    setDialogueLine(line);
+    dialogueTimer.current = setTimeout(() => {
+      if (activeDialogue.current?.lineId !== line.id) return;
+      activeDialogue.current = null;
+      setDialogueLine(null);
+    }, 4200);
+    return line;
+  }, [avatar?.key, companion.data]);
+  const react = useCallback((trigger: CompanionDialogueTrigger) => {
+    const line = showDialogue(trigger);
+    if (line) setReactionKind(line.reaction);
+    if (!reduceMotion) reactionMotion.value = withSequence(withTiming(1, { duration: 140 }), withTiming(0, { duration: 320 }));
+  }, [reactionMotion, reduceMotion, showDialogue]);
   const reactToUser = () => {
     const now = Date.now();
     if (now - lastTapAt.current < 1200) return;
     lastTapAt.current = now;
-    if (!reduceMotion) reactionMotion.value = withSequence(withTiming(1, { duration: 140 }), withTiming(0, { duration: 300 }));
+    react('tap');
+    if (!memoryStarVisible && now - lastStarAt.current > 9000 && Math.random() < 0.32) {
+      lastStarAt.current = now;
+      setMemoryStarOnLeft(Math.random() > 0.5);
+      setMemoryStarCaught(false);
+      starMotion.value = 0;
+      setMemoryStarVisible(true);
+      if (!reduceMotion) starMotion.value = withRepeat(withTiming(1, { duration: 1500 }), -1, false);
+      if (starTimer.current) clearTimeout(starTimer.current);
+      starTimer.current = setTimeout(() => {
+        cancelAnimation(starMotion);
+        setMemoryStarVisible(false);
+      }, 3200);
+    }
+  };
+  const catchMemoryStar = () => {
+    setMemoryStarVisible(false);
+    cancelAnimation(starMotion);
+    setMemoryStarCaught(true);
+    if (caughtStarTimer.current) clearTimeout(caughtStarTimer.current);
+    caughtStarTimer.current = setTimeout(() => setMemoryStarCaught(false), 850);
+    if (starTimer.current) clearTimeout(starTimer.current);
+    react('star');
   };
   const todayUtc = new Date().toISOString().slice(0, 10);
   const greetedToday = Boolean(companion.data?.memories.some((memory) =>
@@ -99,8 +178,38 @@ export default function CompanionHubScreen() {
     }
     if (!latestPractice || latestPractice.id === lastPracticeMemoryId.current) return;
     lastPracticeMemoryId.current = latestPractice.id;
-    if (!reduceMotion) reactionMotion.value = withSequence(withTiming(1, { duration: 150 }), withTiming(0, { duration: 320 }));
-  }, [companion.data, isFocused, latestPractice, reduceMotion, reactionMotion]);
+    react('practice');
+  }, [companion.data, isFocused, latestPractice, react]);
+  useEffect(() => {
+    if (!isFocused || !companion.data) return;
+    const lookSignature = JSON.stringify(companion.data.look);
+    const previous = companionSnapshot.current;
+    if (!previous) {
+      companionSnapshot.current = { avatarId: companion.data.avatarId, bondStage: companion.data.bondStage, look: lookSignature };
+      return;
+    }
+    if (previous.avatarId !== companion.data.avatarId) {
+      companionSnapshot.current = { avatarId: companion.data.avatarId, bondStage: companion.data.bondStage, look: lookSignature };
+      return;
+    }
+    if (previous.bondStage !== companion.data.bondStage) react('bond');
+    else if (previous.look !== lookSignature) react('outfit');
+    companionSnapshot.current = { avatarId: companion.data.avatarId, bondStage: companion.data.bondStage, look: lookSignature };
+  }, [companion.data, isFocused, react]);
+  useEffect(() => {
+    if (!isFocused) {
+      lastBlurAt.current = Date.now();
+      return;
+    }
+    if (lastBlurAt.current !== null && Date.now() - lastBlurAt.current >= 4 * 60 * 60 * 1000) react('return');
+    lastBlurAt.current = null;
+  }, [isFocused, react]);
+  useEffect(() => () => {
+    if (dialogueTimer.current) clearTimeout(dialogueTimer.current);
+    if (starTimer.current) clearTimeout(starTimer.current);
+    if (caughtStarTimer.current) clearTimeout(caughtStarTimer.current);
+    cancelAnimation(starMotion);
+  }, [starMotion]);
   useEffect(() => {
     if (isFocused) scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [isFocused]);
@@ -171,6 +280,33 @@ export default function CompanionHubScreen() {
                       <Ionicons name="shirt-outline" size={20} color={theme.violetDeep} />
                     </AnimatedPressable>
                   </View>
+                  {memoryStarVisible ? (
+                    <Animated.View style={[styles.memoryStarPosition, memoryStarOnLeft ? styles.memoryStarLeft : styles.memoryStarRight, memoryStarMotionStyle]}>
+                      <AnimatedPressable
+                        accessibilityRole="button"
+                        accessibilityLabel={companionT('tapMemoryStar')}
+                        accessibilityHint={companionT('tapMemoryStarHint')}
+                        onPress={catchMemoryStar}
+                        style={styles.memoryStarButton}>
+                        <Ionicons name="star" size={23} color={theme.sunDeep} />
+                        <View pointerEvents="none" style={styles.memoryStarShine}><Sparkles size={12} color={theme.paper} /></View>
+                      </AnimatedPressable>
+                      <View pointerEvents="none" style={styles.memoryStarHint}><Text style={styles.memoryStarHintText}>{companionT('tapMemoryStar')}</Text></View>
+                    </Animated.View>
+                  ) : null}
+                  {memoryStarCaught ? (
+                    <View pointerEvents="none" accessibilityLiveRegion="polite" style={styles.starCaughtFeedback}>
+                      <Sparkles size={16} color={theme.sunDeep} />
+                      <Text style={styles.starCaughtText}>{companionT('memoryStarCaught')}</Text>
+                    </View>
+                  ) : null}
+                  {dialogueLine ? (
+                    <View pointerEvents="none" accessibilityLiveRegion="polite" style={styles.dialogueBubble}>
+                      <View style={styles.dialogueSparkle}><Sparkles size={14} color={theme.violetDeep} /></View>
+                      <Text numberOfLines={2} style={styles.dialogueText}>{chinese ? dialogueLine.textZh : dialogueLine.textEn}</Text>
+                      <View style={styles.dialogueTail} />
+                    </View>
+                  ) : null}
                 </View>
                 {!greetedToday ? (
                   <AnimatedPressable
@@ -179,7 +315,7 @@ export default function CompanionHubScreen() {
                     accessibilityState={{ disabled: greet.isPending }}
                     disabled={greet.isPending}
                     onPress={() => greet.mutate(undefined, { onSuccess: () => {
-                      if (!reduceMotion) reactionMotion.value = withSequence(withTiming(1, { duration: 140 }), withTiming(0, { duration: 300 }));
+                      react('greeting');
                     } })}
                     style={styles.greetingBubble}
                   >
@@ -228,6 +364,7 @@ function ActionButton({ label, onPress }: { label: string; onPress: () => void }
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: theme.violetTint }, pageGradient: { flex: 1 }, backButton: { width: 48, height: 48, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.68)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.78)' }, scrollArea: { flex: 1 }, content: { flexGrow: 1, padding: 0 }, companionScene: { flex: 1, minHeight: 560, justifyContent: 'flex-start', paddingHorizontal: 18, paddingTop: 4 }, sceneDecor: { ...StyleSheet.absoluteFillObject, zIndex: 0 }, sceneSun: { position: 'absolute', top: 150, left: 28, width: 190, height: 190, borderRadius: 100, backgroundColor: theme.paper, opacity: 0.34 }, sceneSparkle: { position: 'absolute', opacity: 0.72 }, sceneSparkleOne: { top: 235, left: 26 }, sceneSparkleTwo: { top: 315, right: 80 }, sceneHillBack: { position: 'absolute', left: -55, right: -60, bottom: -135, height: 250, borderRadius: 180, backgroundColor: theme.paper, opacity: 0.23 }, sceneHillFront: { position: 'absolute', left: 100, right: -110, bottom: -180, height: 260, borderRadius: 180, backgroundColor: theme.mintTint, opacity: 0.55 },
   avatarStage: { flex: 1, justifyContent: 'center', alignItems: 'center', overflow: 'visible', zIndex: 1 }, characterTapTarget: { minWidth: 220, minHeight: 220, alignItems: 'center', justifyContent: 'center' }, halo: { position: 'absolute', width: 300, height: 300, borderRadius: 150, backgroundColor: theme.violetTint, opacity: 0.58 }, companionFigure: { alignItems: 'center', justifyContent: 'center' }, floatingActions: { position: 'absolute', top: 14, right: -8, gap: 11, zIndex: 2 }, floatingAction: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.88)', borderWidth: 1, borderColor: theme.violetLine, boxShadow: '0px 3px 10px rgba(43,42,61,0.10)' },
+  memoryStarPosition: { position: 'absolute', top: '47%', zIndex: 7, elevation: 7, alignItems: 'center' }, memoryStarLeft: { left: '1%' }, memoryStarRight: { right: '1%' }, memoryStarButton: { width: 50, height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 25, borderWidth: 2, borderColor: theme.sunLine, backgroundColor: theme.sunTint, boxShadow: '0px 4px 12px rgba(43,42,61,0.18)' }, memoryStarShine: { position: 'absolute', top: 5, right: 4 }, memoryStarHint: { marginTop: 3, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.92)' }, memoryStarHintText: { color: theme.sunDeep, fontFamily: typography.bodyExtraBold, fontSize: 9 }, starCaughtFeedback: { position: 'absolute', top: '45%', alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 6, zIndex: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.96)', borderWidth: 1, borderColor: theme.sunLine }, starCaughtText: { color: theme.sunDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 }, dialogueBubble: { position: 'absolute', top: '14%', left: '14%', right: 65, zIndex: 6, minHeight: 46, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 18, borderBottomLeftRadius: 7, borderWidth: 1, borderColor: theme.violetLine, backgroundColor: 'rgba(255,255,255,0.97)', boxShadow: '0px 5px 16px rgba(43,42,61,0.15)' }, dialogueSparkle: { width: 25, height: 25, alignItems: 'center', justifyContent: 'center', borderRadius: 9, backgroundColor: theme.violetTint }, dialogueText: { flex: 1, color: theme.ink, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 17 }, dialogueTail: { position: 'absolute', left: 14, bottom: -5, width: 10, height: 10, transform: [{ rotate: '45deg' }], borderRightWidth: 1, borderBottomWidth: 1, borderColor: theme.violetLine, backgroundColor: theme.paper },
   reactionBubble: { minHeight: 34, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingHorizontal: 12, paddingVertical: 6, marginTop: -4, borderRadius: 14, backgroundColor: theme.violetTint }, reaction: { flexShrink: 1, textAlign: 'center', color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: 12 }, greetingButton: { minHeight: 66, minWidth: 250, maxWidth: 310, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 11, marginTop: 12, marginBottom: 8, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 21, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.paper, boxShadow: '0px 5px 14px rgba(43,42,61,0.10)' }, greetingButtonDone: { borderColor: theme.mintLine, backgroundColor: theme.mintTint }, greetingWave: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 15, backgroundColor: theme.sunTint }, greetingWaveDone: { backgroundColor: theme.paper }, greetingCopy: { flex: 1 }, greetingTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 }, greetingSubtitle: { color: theme.inkMuted, fontFamily: typography.body, fontSize: 9, marginTop: 3 }, greetingPoints: { minWidth: 35, height: 30, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7, borderRadius: 15, backgroundColor: theme.sunTint }, greetingPointsDone: { backgroundColor: theme.paper }, greetingPointsText: { color: theme.sunDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 }, greetingPointsTextDone: { color: theme.grass }, bondPanel: { minHeight: 260, justifyContent: 'center', gap: 13, marginHorizontal: -18, marginTop: 'auto', paddingHorizontal: 22, paddingTop: 22, paddingBottom: 28, backgroundColor: theme.paper, borderTopLeftRadius: 28, borderTopRightRadius: 28, boxShadow: '0px -7px 22px rgba(43,42,61,0.08)' }, bondHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, bondTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 }, bondSparkle: { width: 42, height: 42, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.violetTint }, stage: { color: theme.ink, fontFamily: typography.display, fontSize: 20 }, bondCaption: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.5, marginTop: 1 }, pointsBadge: { minWidth: 54, height: 36, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 10, borderRadius: 18, backgroundColor: theme.violetTint }, pointsText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 }, bondJourney: { height: 72, justifyContent: 'flex-start', position: 'relative', marginTop: 0, paddingTop: 8, paddingBottom: 5, paddingHorizontal: 7, borderRadius: 19, backgroundColor: theme.violetTint }, journeyRail: { position: 'absolute', top: 19, left: '12.5%', right: '12.5%', height: 4, borderRadius: 2, backgroundColor: theme.violetLine }, journeyProgress: { position: 'absolute', top: 19, left: '12.5%', height: 4, maxWidth: '75%', borderRadius: 2, backgroundColor: theme.violetDeep }, milestones: { flexDirection: 'row', justifyContent: 'space-between' }, milestone: { width: '25%', alignItems: 'center', gap: 5 }, milestoneDot: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.violetLine }, milestoneDotReached: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep }, milestoneLabel: { color: theme.inkMuted, fontFamily: typography.body, fontSize: 9 }, milestoneLabelCurrent: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold }, bondFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, nextStageBadge: { minHeight: 34, flex: 1, justifyContent: 'center', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, backgroundColor: theme.sand }, nextStageText: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 10 }, bondRewards: { flexDirection: 'row', gap: 6 }, rewardChip: { minWidth: 42, height: 34, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 8, borderRadius: 12, backgroundColor: theme.violetTint }, bondReward: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   greetingBubble: { width: 52, height: 52, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 12, borderRadius: 21, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.paper, boxShadow: '0px 4px 12px rgba(43,42,61,0.10)' }, greetingBubbleTail: { position: 'absolute', right: 7, bottom: -4, width: 10, height: 10, transform: [{ rotate: '45deg' }], borderRightWidth: 1.5, borderBottomWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.paper }, compactBondPanel: { minHeight: 176, justifyContent: 'center', gap: 15, marginHorizontal: -18, marginTop: 'auto', paddingHorizontal: 22, paddingTop: 22, paddingBottom: 28, backgroundColor: theme.paper, borderTopLeftRadius: 28, borderTopRightRadius: 28, boxShadow: '0px -7px 22px rgba(43,42,61,0.08)' }, progressCard: { gap: 10 }, progressHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, progressTarget: { flexShrink: 1, color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: 11 }, progressRemaining: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 }, progressTrack: { height: 10, borderRadius: 6, overflow: 'hidden', backgroundColor: theme.violetTint }, progressFill: { height: '100%', borderRadius: 6 },
   todayCard: { flexDirection: 'row', alignItems: 'center', gap: 13, padding: 15, borderRadius: 22, backgroundColor: theme.sand, borderWidth: 1, borderColor: theme.peachLine }, todayIcon: { width: 42, height: 42, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.mintTint }, todayCopy: { flex: 1 }, todayTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 16, marginTop: 4 }, todaySub: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 11, marginTop: 3 },
