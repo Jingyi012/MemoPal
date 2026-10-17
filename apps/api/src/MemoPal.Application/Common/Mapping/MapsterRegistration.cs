@@ -27,7 +27,11 @@ public sealed class MapsterRegistration : IRegister
             .Map(dest => dest.Id, src => src.User.Id)
             .Map(dest => dest.DisplayName, src => src.User.DisplayName)
             .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.User.AvatarUrl))
+            .Map(dest => dest.AvatarSource, src => src.User.AvatarSource)
             .Map(dest => dest.SelectedAvatarId, src => src.User.SelectedAvatarId)
+            .Map(dest => dest.SelectedAvatarFrameId, src => src.User.SelectedAvatarFrameId)
+            .Map(dest => dest.SelectedAvatarDecorationId, src => src.User.SelectedAvatarDecorationId)
+            .Map(dest => dest.SelectedAvatarOutfitId, src => src.User.SelectedAvatarOutfitId)
             .Map(dest => dest.Email, src => src.User.Email)
             .Map(dest => dest.TotalXp, src => src.User.TotalXp)
             .Map(dest => dest.Level, src => src.User.Level)
@@ -49,6 +53,8 @@ public sealed class MapsterRegistration : IRegister
         config.NewConfig<UserWithStatDto, UserWithStatDto>()
             .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.AvatarUrl));
         config.NewConfig<AuthResponseDto, AuthResponseDto>();
+        config.NewConfig<AppearanceDefinition, MemoPal.Application.Features.Appearance.DTOs.AppearanceDefinitionDto>()
+            .Map(dest => dest.ImageUrl, src => ToAbsoluteMediaUrlOrNull(src.ImageUrl));
 
         config.NewConfig<(MilestoneDefinition Milestone, UserMilestone? UserMilestone), MilestoneDto>()
             .Map(dest => dest.Id, src => src.Milestone.Id)

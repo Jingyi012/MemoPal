@@ -37,6 +37,7 @@ export const adminMenuItems: AdminMenuItem[] = [
       { path: adminPaths.configLevels, name: "Level Configs" },
       { path: adminPaths.configMilestones, name: "Milestone Definitions" },
       { path: adminPaths.configAvatars, name: "Avatar Gallery" },
+      { path: adminPaths.configAppearance, name: "Appearance Studio" },
     ],
   },
   {

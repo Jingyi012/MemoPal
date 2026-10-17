@@ -2,20 +2,18 @@ import { useSpotlightTour } from '@/features/onboarding/components/SpotlightTour
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ActionSheet } from '@/components/ActionSheet';
-import { AppImage } from '@/components/AppImage';
 import { MemoryAvatar } from '@/components/MemoryAvatar';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useUserState } from '@/contexts/UserStateContext';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
-import { useSelectAvatar } from '@/features/profile/hooks/useSelectAvatar';
 import { getEquippedAvatar, useAvatars } from '@/features/avatars/hooks/useAvatars';
+import { getEquippedAppearance, useAppearance } from '@/features/appearance/hooks/useAppearance';
 import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
 import { typography } from '@/theme/typography';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ArrowRight, ChevronRight, LogOut, Pencil } from '@/core/icons';
@@ -29,7 +27,6 @@ import { ReviewScheduleSheet } from '../components/ReviewScheduleSheet';
 import type { AppLanguage, AppTheme } from '@/features/onboarding/types/userState';
 import { LanguageSheet } from '../components/LanguageSheet';
 import ThemeSheet from '../components/ThemeSheet';
-import { AvatarPickerModal } from '../components/AvatarPickerModal';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { DEFAULT_LEVEL_TITLES, getLevelTitleForLevel } from '@/features/gamification/shared/utils/levelTitles';
@@ -38,16 +35,15 @@ export default function ProfileScreen() {
   const { styles, theme } = useStyles();
   const router = useRouter();
   const { start: startTour } = useSpotlightTour();
-  const queryClient = useQueryClient();
   const { user } = useCurrentUser();
   const { avatars } = useAvatars();
+  const { items: appearanceItems } = useAppearance();
   const { userState, updateState, updatePreferences } = useUserState();
   const { language, t } = useTranslation('profile');
   const { t: onboardingT } = useTranslation('onboarding');
   const { t: languageT } = useTranslation('language');
   const { logout } = useAuth();
   const updateProfileMutation = useUpdateProfile();
-  const selectAvatarMutation = useSelectAvatar();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
   const { levelInfo } = useLevelByXp(totalXp, user?.level);
   const [reviewRemindersEnabled, setReviewRemindersEnabled] = useState(
@@ -65,7 +61,6 @@ export default function ProfileScreen() {
   const languageRef = useRef<any>(null);
   const themeRef = useRef<BottomSheetModal>(null);
   const logoutRef = useRef<BottomSheetModal>(null);
-  const [avatarPickerVisible, setAvatarPickerVisible] = useState(false);
   const languageLabel =
     userState.preferences.language === 'system'
       ? `${languageT('followSystem')} · ${languageT('english')}/${languageT('chinese')}`
@@ -89,6 +84,16 @@ export default function ProfileScreen() {
       ? t('systemTheme')
       : t('light');
   const equippedAvatar = getEquippedAvatar(avatars, user?.selectedAvatarId, level);
+  const equippedAppearance = getEquippedAppearance(
+    appearanceItems,
+    user?.selectedAvatarFrameId,
+    user?.selectedAvatarDecorationId,
+    user?.selectedAvatarOutfitId,
+    level,
+  );
+  const avatarSource = (user?.avatarSource === 'photo' || (!user?.avatarSource && Boolean(user?.avatarUrl))) && user?.avatarUrl
+    ? 'photo'
+    : 'companion';
 
   useEffect(() => {
     setReviewRemindersEnabled(userState.notifications.reviewReminders);
@@ -244,19 +249,17 @@ export default function ProfileScreen() {
         <View style={styles.profileIdentity}>
           <AnimatedPressable
             accessibilityLabel={t('changeAvatar')}
-            onPress={() => setAvatarPickerVisible(true)}
+            onPress={() => router.push('/companion-closet')}
             style={styles.avatarButton}>
             <View style={styles.avatar}>
-            {user?.selectedAvatarId || !user?.avatarUrl ? (
               <MemoryAvatar
                 avatar={equippedAvatar}
+                appearance={equippedAppearance}
+                imageUrl={avatarSource === 'photo' ? user?.avatarUrl : undefined}
                 level={level}
                 size={76}
                 showLevelBadge={false}
               />
-            ) : (
-              <AppImage source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
-            )}
             </View>
             <View style={styles.avatarEditBadge}><Pencil color={theme.onAccent} size={12} strokeWidth={2.8} /></View>
           </AnimatedPressable>
@@ -458,41 +461,13 @@ export default function ProfileScreen() {
         ref={editProfileRef}
         initialName={user?.displayName}
         initialEmail={user?.email}
-        initialAvatarUrl={user?.avatarUrl}
         onSave={async (payload) => {
           if (!user) return;
           await updateProfileMutation.mutateAsync({
             id: user.id,
             displayName: payload.displayName,
             email: payload.email,
-            avatarUrl: payload.avatarUrl,
           });
-          if (payload.avatarUrl) {
-            await selectAvatarMutation.mutateAsync(null);
-          }
-          await queryClient.invalidateQueries();
-        }}
-      />
-      <AvatarPickerModal
-        visible={avatarPickerVisible}
-        avatars={avatars}
-        currentLevel={level}
-        selectedAvatarId={user?.selectedAvatarId ?? (user?.avatarUrl ? null : equippedAvatar?.id)}
-        language={language}
-        title={t('chooseAvatar')}
-        description={t('avatarPickerBody')}
-        lockedLabel={(requiredLevel) => t('avatarLocked').replace('{level}', String(requiredLevel))}
-        selectedLabel={t('avatarSelected')}
-        closeLabel={t('close')}
-        onClose={() => setAvatarPickerVisible(false)}
-        onSelect={async (avatar) => {
-          try {
-            await selectAvatarMutation.mutateAsync(avatar.id);
-            setAvatarPickerVisible(false);
-            Toast.show({ type: 'success', text1: t('avatarUpdated') });
-          } catch (error) {
-            Toast.show({ type: 'error', text1: t('avatarUpdateFailed'), text2: error instanceof Error ? error.message : undefined });
-          }
         }}
       />
       <HelpSheet ref={helpRef} router={router} />
@@ -592,7 +567,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     borderColor: theme.paper,
     boxShadow: '0px 6px 16px rgba(105,80,204,0.18)',
   },
-  avatarImage: { width: '100%', height: '100%', borderRadius: 38 },
   avatarEditBadge: { position: 'absolute', right: -2, bottom: -1, width: 24, height: 24, borderRadius: 12, backgroundColor: theme.violetDeep, borderWidth: 2, borderColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
   identityCopy: { flex: 1, minWidth: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 0 },

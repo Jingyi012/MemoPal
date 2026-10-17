@@ -3,6 +3,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { getEquippedAvatar, useAvatars } from '@/features/avatars/hooks/useAvatars';
+import { getEquippedAppearance, useAppearance } from '@/features/appearance/hooks/useAppearance';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { LevelProgressHeader } from '@/features/gamification/achievements/components/LevelProgressHeader';
 import { WeeklyActivityCard } from '@/features/gamification/shared/components/WeeklyActivityCard';
@@ -54,6 +55,7 @@ export default function AchievementsScreen() {
   const totalXp = Math.max(0, user?.totalXp ?? 0);
   const { levelInfo, isLoading: levelLoading, refetch: refetchLevel } = useLevelByXp(totalXp, user?.level);
   const { avatars, refetch: refetchAvatars } = useAvatars();
+  const { items: appearanceItems, refetch: refetchAppearance } = useAppearance();
   const { data: practiceStats, refetch: refetchPracticeStats } = usePracticeStats();
   const palaceScenes = usePalaceScenes();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -97,6 +99,13 @@ export default function AchievementsScreen() {
   }, [milestoneFilter, milestoneProgress]);
 
   const currentAvatar = getEquippedAvatar(avatars, user?.selectedAvatarId, displayLevel.currentLevel);
+  const currentAppearance = getEquippedAppearance(
+    appearanceItems,
+    user?.selectedAvatarFrameId,
+    user?.selectedAvatarDecorationId,
+    user?.selectedAvatarOutfitId,
+    displayLevel.currentLevel,
+  );
   const nextMilestone = milestoneProgress.find((milestone) => !milestone.achievedAt) ?? milestoneProgress[0];
 
   const unlockedPegs = getUnlockedPegCount(displayLevel.currentLevel);
@@ -115,11 +124,12 @@ export default function AchievementsScreen() {
         refetchPracticeStats(),
         palaceScenes.refetch(),
         refetchAvatars(),
+        refetchAppearance(),
       ]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [palaceScenes, refetchAvatars, refetchLevel, refetchMilestones, refetchPracticeStats, refetchUser]);
+  }, [palaceScenes, refetchAppearance, refetchAvatars, refetchLevel, refetchMilestones, refetchPracticeStats, refetchUser]);
 
   if (userLoading || milestonesLoading || levelLoading) {
     return <LoadingView description={t('loading')} />;
@@ -145,6 +155,7 @@ export default function AchievementsScreen() {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}>
         <LevelProgressHeader
           avatar={currentAvatar}
+          appearance={currentAppearance}
           level={displayLevel}
           streak={user?.stats?.currentStreak ?? 0}
         />

@@ -4,6 +4,7 @@ using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Auth.DTOs;
+using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Auth.Commands;
@@ -32,6 +33,7 @@ public sealed class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileC
         if (!string.IsNullOrWhiteSpace(request.AvatarUrl))
         {
             user.AvatarUrl = request.AvatarUrl.Trim();
+            user.AvatarSource = AvatarSources.Photo;
         }
 
         if (!string.IsNullOrWhiteSpace(request.Email))

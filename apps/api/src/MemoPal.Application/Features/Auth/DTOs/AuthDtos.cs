@@ -14,11 +14,17 @@ public sealed record LoginMethodsDto(
     bool Google,
     bool Facebook);
 
+public sealed record AvatarUploadDto(string AvatarUrl);
+
 public sealed record UserWithStatDto(
     string Id,
     string DisplayName,
     string? AvatarUrl,
+    string AvatarSource,
     string? SelectedAvatarId,
+    string? SelectedAvatarFrameId,
+    string? SelectedAvatarDecorationId,
+    string? SelectedAvatarOutfitId,
     string Email,
     int TotalXp,
     int Level,

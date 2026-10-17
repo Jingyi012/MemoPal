@@ -219,6 +219,22 @@ export const authApi = {
     }
   },
 
+  async saveAvatarAppearance(data: {
+    source: 'companion' | 'photo';
+    avatarId?: string | null;
+    avatarUrl?: string | null;
+    frameId?: string | null;
+    decorationId?: string | null;
+    outfitId?: string | null;
+  }): Promise<User> {
+    try {
+      const response = await api.patch<GeneralResponse<User>>('/auth/appearance', data);
+      return getApiDataOrThrow<User>(response.data, 'Failed to save appearance.');
+    } catch (error) {
+      throw createApiClientError(error, 'Failed to save appearance.');
+    }
+  },
+
   async startOnboarding(categoryId: string, lessonId: string): Promise<User> {
     try {
       const response = await api.post<GeneralResponse<User>>('/auth/onboarding/start', {
@@ -262,7 +278,7 @@ export const authApi = {
     }
   },
 
-  async uploadAvatar(fileUri: string, fileName = 'avatar.jpg'): Promise<User> {
+  async uploadAvatar(fileUri: string, fileName = 'avatar.jpg'): Promise<string> {
     try {
       const normalizedName = fileName || fileUri.split('/').pop() || 'avatar.jpg';
       const ext = normalizedName.split('.').pop()?.toLowerCase();
@@ -281,11 +297,12 @@ export const authApi = {
         type: mimeType,
       } as any);
 
-      const response = await api.post<GeneralResponse<User>>('/auth/avatar-upload', formData, {
+      const response = await api.post<GeneralResponse<{ avatarUrl: string }>>('/auth/avatar-upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      return getApiDataOrThrow<User>(response.data, 'Failed to upload avatar.');
+      const uploaded = getApiDataOrThrow<{ avatarUrl: string }>(response.data, 'Failed to upload avatar.');
+      return uploaded.avatarUrl;
     } catch (error) {
       throw createApiClientError(error, 'Failed to upload avatar.');
     }

@@ -17,6 +17,7 @@ import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practi
 import type { DueMemoryReview } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useAvatars, getEquippedAvatar } from '@/features/avatars/hooks/useAvatars';
+import { getEquippedAppearance, useAppearance } from '@/features/appearance/hooks/useAppearance';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
@@ -60,6 +61,7 @@ export default function PracticeScreen() {
   const totalXp = Math.max(0, user?.totalXp ?? 0);
   const { levelInfo } = useLevelByXp(totalXp, user?.level);
   const { avatars } = useAvatars();
+  const { items: appearanceItems } = useAppearance();
   const practiceLevel = {
     currentLevel: Math.max(1, levelInfo?.currentLevel ?? user?.level ?? 1),
     xpInCurrentLevel: Math.max(0, levelInfo?.xpInCurrentLevel ?? totalXp),
@@ -92,6 +94,13 @@ export default function PracticeScreen() {
           <Text style={[styles.sectionLabel, styles.flushHeading, { color: activeTheme.ink }]}>{t('yourProgress')}</Text>
           <LevelProgressHeader
             avatar={getEquippedAvatar(avatars, user?.selectedAvatarId, practiceLevel.currentLevel)}
+            appearance={getEquippedAppearance(
+              appearanceItems,
+              user?.selectedAvatarFrameId,
+              user?.selectedAvatarDecorationId,
+              user?.selectedAvatarOutfitId,
+              practiceLevel.currentLevel,
+            )}
             level={practiceLevel}
             streak={user?.stats?.currentStreak ?? 0}
           />

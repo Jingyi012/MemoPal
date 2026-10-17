@@ -6,6 +6,7 @@ import { Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { MemoryAvatar } from '@/components/MemoryAvatar';
 import type { AvatarDefinition } from '@/features/avatars/types/avatar';
+import type { EquippedAppearance } from '@/features/appearance/types/appearance';
 
 interface Props {
   level: {
@@ -18,9 +19,10 @@ interface Props {
   };
   streak: number;
   avatar?: AvatarDefinition;
+  appearance?: EquippedAppearance;
 }
 
-export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar }) => {
+export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar, appearance }) => {
   const { language, t } = useTranslation('achievements');
   const { levelWindowXp, isMaxLevel } = getLevelProgressMetrics(level.xpInCurrentLevel, level.xpToNextLevel);
   const localizedTitles: Record<string, string> = {
@@ -49,6 +51,7 @@ export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar }) 
             level={level.currentLevel}
             size={52}
             showLevelBadge={false}
+            appearance={appearance}
           />
         </View>
         <View style={styles.levelCopy}>

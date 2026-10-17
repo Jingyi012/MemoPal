@@ -25,8 +25,7 @@ export async function updateProfile(payload: {
   // Local device URI must be uploaded first so backend stores a usable URL/path.
   if (isLocalAvatarUri(payload.avatarUrl)) {
     const fileName = payload.avatarUrl.split('/').pop() || 'avatar.jpg';
-    const uploadedProfile = await authApi.uploadAvatar(payload.avatarUrl, fileName);
-    resolvedAvatarUrl = uploadedProfile.avatarUrl ?? resolvedAvatarUrl;
+    resolvedAvatarUrl = await authApi.uploadAvatar(payload.avatarUrl, fileName);
   }
 
   const remote = await authApi.updateProfile({

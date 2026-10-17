@@ -21,6 +21,7 @@ export const adminPaths = {
   configLevels: '/admin/configs/levels',
   configMilestones: '/admin/configs/milestones',
   configAvatars: '/admin/configs/avatars',
+  configAppearance: '/admin/configs/appearance',
 
   referralsRoot: '/admin/referrals',
   referralConfig: '/admin/referrals/config',

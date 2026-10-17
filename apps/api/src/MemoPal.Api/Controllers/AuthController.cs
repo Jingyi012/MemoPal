@@ -4,6 +4,7 @@ using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Auth.Commands;
 using MemoPal.Application.Features.Auth.DTOs;
 using MemoPal.Application.Features.Auth.Queries;
+using MemoPal.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -122,6 +123,23 @@ public sealed class AuthController : ApiControllerBase
     }
 
     [Authorize]
+    [HttpPatch("appearance")]
+    public async Task<IActionResult> SaveAppearance([FromBody] SaveAppearanceRequest request, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new SaveAvatarAppearanceCommand(
+                GetUserIdOrThrow(),
+                request.Source,
+                request.AvatarId,
+                request.AvatarUrl,
+                request.FrameId,
+                request.DecorationId,
+                request.OutfitId),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [Authorize]
     [HttpPost("onboarding/start")]
     public async Task<IActionResult> StartOnboarding(
         [FromBody] StartOnboardingRequest request,
@@ -190,10 +208,7 @@ public sealed class AuthController : ApiControllerBase
             userId,
             cancellationToken);
 
-        var data = await Sender.Send(
-            new UpdateProfileCommand(userId, null, avatarUrl, null),
-            cancellationToken);
-        return Ok(data);
+        return Ok(ApiResponse<AvatarUploadDto>.Ok(new AvatarUploadDto(avatarUrl)));
     }
 
     public sealed class RegisterRequest
@@ -218,6 +233,16 @@ public sealed class AuthController : ApiControllerBase
         public string? RefreshToken { get; set; }
         public string? DeviceId { get; set; }
         public string? DeviceName { get; set; }
+    }
+
+    public sealed class SaveAppearanceRequest
+    {
+        public string Source { get; set; } = AvatarSources.Companion;
+        public string? AvatarId { get; set; }
+        public string? AvatarUrl { get; set; }
+        public string? FrameId { get; set; }
+        public string? DecorationId { get; set; }
+        public string? OutfitId { get; set; }
     }
 
     public sealed class LogoutRequest

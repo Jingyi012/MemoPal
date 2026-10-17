@@ -4,6 +4,7 @@ using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Auth.DTOs;
+using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Auth.Commands;
@@ -31,10 +32,12 @@ public sealed class SelectAvatarCommandHandler : IRequestHandler<SelectAvatarCom
             if (avatar.RequiredLevel > user.Level)
                 throw new ValidationAppException($"Reach level {avatar.RequiredLevel} to unlock this avatar.");
             user.SelectedAvatarId = avatar.Id;
+            user.AvatarSource = AvatarSources.Companion;
         }
         else
         {
             user.SelectedAvatarId = null;
+            user.AvatarSource = AvatarSources.Companion;
         }
 
         user.UpdatedAt = DateTime.UtcNow;

@@ -9,7 +9,11 @@ public sealed class User : AuditableBaseEntity
     public string PasswordHash { get; set; } = string.Empty;
     public string Role { get; set; } = UserRoles.User;
     public string? AvatarUrl { get; set; }
+    public string AvatarSource { get; set; } = AvatarSources.Companion;
     public string? SelectedAvatarId { get; set; }
+    public string? SelectedAvatarFrameId { get; set; }
+    public string? SelectedAvatarDecorationId { get; set; }
+    public string? SelectedAvatarOutfitId { get; set; }
     public int TotalXp { get; set; }
     public int Level { get; set; } = 1;
     public bool IsPremium { get; set; }
@@ -26,6 +30,12 @@ public sealed class User : AuditableBaseEntity
     public UserStats? Stats { get; set; }
     public ICollection<UserAuthIdentity> AuthIdentities { get; set; } = [];
     public ICollection<RefreshTokenSession> RefreshTokenSessions { get; set; } = [];
+}
+
+public static class AvatarSources
+{
+    public const string Companion = "companion";
+    public const string Photo = "photo";
 }
 
 public static class OnboardingStatuses

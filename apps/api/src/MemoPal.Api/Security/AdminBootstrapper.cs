@@ -34,6 +34,7 @@ public sealed class AdminBootstrapper
         await EnsureGamificationSettingsAsync(cancellationToken);
         await EnsureStarterMilestonesAsync(cancellationToken);
         await EnsureStarterAvatarsAsync(cancellationToken);
+        await EnsureStarterAppearanceItemsAsync(cancellationToken);
         if (_options.SeedStarterContent)
         {
             await EnsurePredefinedMemoryLessonsAsync(cancellationToken);
@@ -198,6 +199,46 @@ public sealed class AdminBootstrapper
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Key = key,
+                AssetKey = assetKey,
+                TitleEn = titleEn,
+                TitleZh = titleZh,
+                DescriptionEn = descriptionEn,
+                DescriptionZh = descriptionZh,
+                RequiredLevel = requiredLevel,
+                SortOrder = sortOrder,
+                IsActive = true,
+                CreatedAt = now,
+                UpdatedAt = now,
+                CreatedBy = "system",
+                UpdatedBy = "system",
+            });
+        }
+    }
+
+    private async Task EnsureStarterAppearanceItemsAsync(CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var defaults = new[]
+        {
+            ("constellation-frame", AppearanceItemTypes.Frame, "constellation-frame", "Starlight frame", "星轨头像框", "A luminous frame for a focused learner.", "给专注学习者的星光头像框。", 1, 10),
+            ("aurora-bloom-frame", AppearanceItemTypes.Frame, "aurora-bloom-frame", "Aurora bloom", "极光花环", "A blooming aurora frame for bright new memories.", "为闪亮新记忆绽放的极光花环。", 2, 20),
+            ("library-gold-frame", AppearanceItemTypes.Frame, "library-gold-frame", "Library gold", "藏书金框", "A gilded library frame for treasured knowledge.", "为珍贵知识打造的鎏金藏书框。", 4, 30),
+            ("garden-mint-frame", AppearanceItemTypes.Frame, "garden-mint-frame", "Garden mint", "薄荷花园", "A fresh garden frame for calm, steady practice.", "陪伴稳定练习的清新薄荷花园。", 6, 40),
+            ("starlight-candy-frame", AppearanceItemTypes.Frame, "starlight-candy-frame", "Starlight candy", "星光糖果", "A playful candy frame for joyful learning streaks.", "为快乐学习连胜准备的甜蜜星光框。", 8, 50),
+            ("scholar-cap", AppearanceItemTypes.Decoration, "scholar-cap", "Scholar cap", "学者帽装饰", "A tiny graduation cap for every bright idea.", "为每个闪亮想法准备的小小学者帽。", 3, 20),
+            ("astral-cape", AppearanceItemTypes.Outfit, "astral-cape", "Astral cape", "星空披风", "A magical cape for ambitious memory quests.", "陪你挑战更大记忆旅程的魔法披风。", 5, 30),
+        };
+
+        foreach (var (key, itemType, assetKey, titleEn, titleZh, descriptionEn, descriptionZh, requiredLevel, sortOrder) in defaults)
+        {
+            if (await _db.AppearanceDefinitions.AnyAsync(x => x.Key == key, cancellationToken))
+                continue;
+
+            _db.AppearanceDefinitions.Add(new AppearanceDefinition
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Key = key,
+                ItemType = itemType,
                 AssetKey = assetKey,
                 TitleEn = titleEn,
                 TitleZh = titleZh,

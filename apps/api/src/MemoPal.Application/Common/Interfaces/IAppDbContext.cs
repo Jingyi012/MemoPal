@@ -10,6 +10,7 @@ public interface IAppDbContext
     DbSet<AiCreditEntry> AiCreditEntries { get; }
     DbSet<User> Users { get; }
     DbSet<AvatarDefinition> AvatarDefinitions { get; }
+    DbSet<AppearanceDefinition> AppearanceDefinitions { get; }
     DbSet<UserAuthIdentity> UserAuthIdentities { get; }
     DbSet<RefreshTokenSession> RefreshTokenSessions { get; }
     DbSet<UserStats> UserStats { get; }
