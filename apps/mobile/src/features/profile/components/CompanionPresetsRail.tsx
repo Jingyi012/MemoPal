@@ -122,14 +122,14 @@ export function CompanionPresetsRail({ avatarId, draft, savedLook, isDirty, item
     <View style={styles.section}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={styles.title}>{chinese ? '保存造型' : 'Saved outfits'}</Text>
+          <Text style={styles.title}>{chinese ? '我的套装' : 'My outfits'}</Text>
           <Text style={styles.count}>{presets.data ? presetItems.length : '—'}/{PRESET_LIMIT}</Text>
         </View>
-        <AnimatedPressable accessibilityRole="button" accessibilityLabel={chinese ? '将当前搭配保存为命名造型' : 'Save current look as a named outfit'} accessibilityState={{ disabled: !canCreate }} disabled={!canCreate} onPress={() => { createPreset.reset(); setNameModalVisible(true); }} style={[styles.addButton, !canCreate && styles.disabled]}>
-          <Plus size={17} color={theme.onAccent} /><Text style={styles.addText}>{chinese ? '保存为造型' : 'Save look'}</Text>
-        </AnimatedPressable>
+        {isDirty ? <AnimatedPressable accessibilityRole="button" accessibilityLabel={chinese ? '收藏当前试穿搭配为套装' : 'Save the current preview as an outfit'} accessibilityState={{ disabled: !canCreate }} disabled={!canCreate} onPress={() => { createPreset.reset(); setNameModalVisible(true); }} style={[styles.addButton, !canCreate && styles.disabled]}>
+          <Plus size={17} color={theme.onAccent} /><Text style={styles.addText}>{chinese ? '收藏搭配' : 'Save outfit'}</Text>
+        </AnimatedPressable> : null}
       </View>
-      {presetItems.length >= PRESET_LIMIT ? <Text style={styles.limitText}>{chinese ? '已达到每位伙伴 5 套造型上限。' : 'You’ve reached the 5-outfit limit for this companion.'}</Text> : null}
+      {isDirty && presetItems.length >= PRESET_LIMIT ? <Text style={styles.limitText}>{chinese ? '已达到每位伙伴 5 套造型上限。' : 'You’ve reached the 5-outfit limit for this companion.'}</Text> : null}
       {!canSave ? <Text style={styles.limitText}>{chinese ? '请先清除未解锁或已下架的物品，再保存造型。' : 'Clear locked or withdrawn pieces before saving this look.'}</Text> : null}
 
       {presets.isLoading ? <View style={styles.loading}><ActivityIndicator color={theme.violetDeep} /><Text style={styles.helper}>{chinese ? '正在取回保存造型…' : 'Loading saved outfits…'}</Text></View>

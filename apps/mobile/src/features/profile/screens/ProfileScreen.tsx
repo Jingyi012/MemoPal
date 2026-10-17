@@ -251,7 +251,7 @@ export default function ProfileScreen() {
       />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.profileIdentity}>
-          <View style={styles.avatarDisplay} accessible accessibilityLabel={language === 'zh' ? '个人头像' : 'Profile picture'}>
+          <AnimatedPressable accessibilityRole="button" accessibilityLabel={language === 'zh' ? '更换个人照片或头像框' : 'Change profile photo or avatar frame'} onPress={() => router.push('/companion-closet')} style={styles.avatarDisplay}>
             <View style={styles.avatar}>
               {avatarSource === 'photo' ? (
                 <MemoryAvatar avatar={equippedAvatar} appearance={equippedAppearance} imageUrl={user?.avatarUrl} level={level} size={76} showLevelBadge={false} />
@@ -261,7 +261,7 @@ export default function ProfileScreen() {
                 <MemoryAvatar avatar={selectedCompanion ?? equippedAvatar} appearance={equippedAppearance} level={level} size={76} showLevelBadge={false} />
               )}
             </View>
-          </View>
+          </AnimatedPressable>
           <View style={styles.identityCopy}>
             <View style={styles.nameRow}>
               <Text numberOfLines={1} style={styles.profileName}>{displayName}</Text>
