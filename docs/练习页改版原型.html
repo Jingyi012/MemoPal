@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>练习页改版</title>
+<style>
+:root{--bg:#F6F3FF;--card:#fff;--ink:#241B4B;--sub:#5E5784;--line:#E6E0F7;--p:#6A4CD8;--pl:#EEE8FF;--gold:#FFC93C;--pink:#D6336C;--pinkl:#FFE8EF;--teal:#18A9B8;--grey:#E9E6F2;--shadow:0 6px 20px rgba(80,50,180,.12);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--pinkl:#4A2040;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--pinkl:#4A2040;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:"Nunito","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;padding:20px 20px 96px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+h1{font-size:26px;font-weight:800;line-height:1.25}
+.sub{font-size:14px;color:var(--sub);font-weight:700;margin-top:4px}
+.chip{flex:none;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-weight:800;font-size:14px}
+h3{font-size:17px;font-weight:800}
+.sh{display:flex;justify-content:space-between;align-items:center;margin:26px 0 12px}
+.link{border:0;background:none;color:var(--p);font:800 13px inherit;font-family:inherit;cursor:pointer;padding:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.c{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:9px 14px;font:800 14px inherit;font-family:inherit;cursor:pointer}
+.c.act{background:var(--p);border-color:var(--p);color:#fff}
+button:focus-visible{outline:3px solid var(--p);outline-offset:2px}
+.rev{margin-top:20px;display:flex;align-items:center;gap:12px;border-radius:20px;padding:14px 16px;color:#fff;background:linear-gradient(135deg,#4A2FA8,#7A5CE8);box-shadow:var(--shadow)}
+.rev .n{font-size:30px;font-weight:800;line-height:1}
+.rev .t{flex:1}.rev b{display:block;font-size:15px}.rev small{font-size:12px;opacity:.85;font-weight:700}
+.rev button{border:0;border-radius:14px;padding:10px 14px;background:var(--gold);color:#3A2800;font:800 14px inherit;font-family:inherit;cursor:pointer;box-shadow:0 3px 0 #D9A41A}
+.rev button:active{transform:translateY(2px);box-shadow:0 1px 0 #D9A41A}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:0;border-radius:18px;padding:14px;box-shadow:var(--shadow);font-family:inherit;color:inherit;cursor:pointer}
+.ic{width:44px;height:44px;border-radius:14px;background:var(--pinkl);display:grid;place-items:center;font-size:22px;flex:none}
+.rt{flex:1;min-width:0}.rt b{display:block;font-size:15px}.rt small{font-size:12px;color:var(--sub);font-weight:700}
+.bar{height:6px;border-radius:99px;background:var(--grey);margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--p)}
+.play{width:36px;height:36px;border-radius:50%;background:var(--p);color:#fff;display:grid;place-items:center;font-size:14px;flex:none}
+.methods{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.m{position:relative;text-align:left;border:2px solid transparent;border-radius:22px;padding:16px;font-family:inherit;color:inherit;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s}
+.m.pal{background:var(--pl)}.m.peg{background:var(--pinkl)}
+.m.sel{border-color:var(--p);transform:translateY(-3px)}
+.m .em{font-size:40px;line-height:1}.m b{display:block;font-size:17px;margin-top:10px}
+.m p{font-size:12px;color:var(--sub);font-weight:700;margin-top:4px;line-height:1.5;min-height:36px}
+.tags{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:800;padding:3px 8px;border-radius:99px;background:var(--card);color:var(--sub)}
+.rec{position:absolute;top:-10px;right:10px;background:var(--gold);color:#3A2800;font-size:11px;font-weight:800;padding:3px 8px;border-radius:99px;display:none}
+.m.isrec .rec{display:block}
+.start{margin-top:14px;width:100%;border:0;border-radius:16px;padding:15px;background:var(--p);color:#fff;font:800 16px inherit;font-family:inherit;cursor:pointer;box-shadow:0 5px 0 #4B33A8}
+.start:active{transform:translateY(3px);box-shadow:0 2px 0 #4B33A8}
+.start:disabled{background:var(--grey);color:var(--sub);box-shadow:none;cursor:default}
+.add{margin-top:14px;display:flex;align-items:center;gap:12px;width:100%;border:2px dashed var(--p);background:transparent;border-radius:18px;padding:14px;font-family:inherit;color:inherit;cursor:pointer;text-align:left}
+.add .plus{width:44px;height:44px;border-radius:14px;background:var(--gold);color:#3A2800;display:grid;place-items:center;font-size:24px;font-weight:800;flex:none}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--card);border-top:1px solid var(--line)}
+nav div{display:flex;width:100%;max-width:430px;justify-content:space-around;padding:8px 0}
+nav span{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:700;color:var(--sub);gap:2px;padding:4px 10px;border-radius:14px}
+nav span.on{background:var(--pl);color:var(--p)}nav em{font-style:normal;font-size:20px}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div><h1>今天想记住什么？</h1><p class="sub">选一个，我来推荐最合适的方法</p></div>
+    <div class="chip">🪙 999k</div>
+  </header>
+
+  <div class="chips" id="chips"></div>
+
+  <section class="rev">
+    <div class="n">29</div>
+    <div class="t"><b>项记忆待复习</b><small>先复习，再学新内容</small></div>
+    <button>复习</button>
+  </section>
+
+  <div class="sh"><h3>继续学习</h3></div>
+  <button class="row">
+    <div class="ic">🕯️</div>
+    <div class="rt"><b>拼写探险</b><small>数字挂钩 · 0 / 5 项</small><div class="bar"><i></i></div></div>
+    <div class="play">▶</div>
+  </button>
+
+  <div class="sh"><h3>选择记忆方式</h3><button class="link">课程库 ›</button></div>
+  <div class="methods">
+    <button class="m pal" data-k="pal"><span class="rec">✨ 推荐</span>
+      <div class="em">🏰</div><b>记忆宫殿</b>
+      <p>把内容放进熟悉的房间，沿路线回忆</p>
+      <div class="tags"><span class="tag">路线</span><span class="tag">长内容</span></div></button>
+    <button class="m peg" data-k="peg"><span class="rec">✨ 推荐</span>
+      <div class="em">🕯️</div><b>数字挂钩</b>
+      <p>用形状联想 1–100，给每个词一个挂钩</p>
+      <div class="tags"><span class="tag">锚点</span><span class="tag">有序清单</span></div></button>
+  </div>
+  <button class="start" id="start" disabled>先选一种方式</button>
+
+  <button class="add">
+    <div class="plus">＋</div>
+    <div class="rt"><b>新增记忆</b><small>加入内容，AI 会推荐合适的技巧</small></div>
+  </button>
+</main>
+<nav><div>
+  <span><em>🏠</em>首页</span><span class="on"><em>🧩</em>练习</span><span><em>📚</em>记忆库</span><span><em>📈</em>进度</span><span><em>👤</em>我的</span>
+</div></nav>
+<script>
+var what=[["📖","单词","pal"],["🔢","数字","peg"],["📝","清单","peg"],["🎤","演讲稿","pal"],["🗺️","路线地点","pal"]];
+var names={pal:"记忆宫殿",peg:"数字挂钩"},sel=null;
+var cEl=document.getElementById("chips"),st=document.getElementById("start");
+what.forEach(function(w,i){
+  cEl.insertAdjacentHTML("beforeend",'<button class="c" data-i="'+i+'">'+w[0]+" "+w[1]+"</button>");
+});
+function pick(k){
+  sel=k;
+  document.querySelectorAll(".m").forEach(function(m){m.classList.toggle("sel",m.dataset.k===k)});
+  st.disabled=false;st.textContent="用「"+names[k]+"」开始";
+}
+cEl.addEventListener("click",function(e){
+  var b=e.target.closest(".c");if(!b)return;
+  document.querySelectorAll(".c").forEach(function(x){x.classList.remove("act")});
+  b.classList.add("act");
+  var k=what[b.dataset.i][2];
+  document.querySelectorAll(".m").forEach(function(m){m.classList.toggle("isrec",m.dataset.k===k)});
+  pick(k);
+});
+document.querySelectorAll(".m").forEach(function(m){m.addEventListener("click",function(){pick(m.dataset.k)})});
+</script>
+</body>
+</html>

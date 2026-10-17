@@ -1,40 +1,44 @@
 import { useAuth } from '@/contexts/AuthProvider';
-import { SpotlightTarget, usePageTour } from '@/features/onboarding/components/SpotlightTourProvider';
+import { SpotlightTarget } from '@/features/onboarding/components/SpotlightTourProvider';
 import { practiceCreateHref } from '@/features/onboarding/utils/onboardingRoutes';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
-import { MemorySetCard } from '@/components/MemorySetCard';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
-import { NewMemoryCard } from '@/components/NewMemoryCard';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useEnabledMemoryModules } from '@/core/memory';
-import { LevelProgressHeader } from '@/features/gamification/achievements/components/LevelProgressHeader';
-import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { useMemorySets } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets';
-import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practice-attempts';
-import type { DueMemoryReview } from '@/features/practice-attempts';
-import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
-import { useAvatars, getEquippedAvatar } from '@/features/avatars/hooks/useAvatars';
-import { getEquippedAppearance, useAppearance } from '@/features/appearance/hooks/useAppearance';
+import { groupMemoryReviews, useDueMemoryReviews, useMemoryReviewProgress } from '@/features/practice-attempts';
+import type { DueMemoryReview, MemoryReviewProgress } from '@/features/practice-attempts';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, BookOpen, CircleHelp, RefreshCcw } from '@/core/icons';
-import { useMemo, useRef } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ArrowRight, BookOpen, Check, Plus, RefreshCcw } from '@/core/icons';
+import { useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+type TechniqueKey = 'palace' | 'number-peg';
+type IntentKey = 'words' | 'numbers' | 'list' | 'speech' | 'places';
+const INTENT_LABEL: Record<IntentKey, 'intentWords' | 'intentNumbers' | 'intentList' | 'intentSpeech' | 'intentPlaces'> = {
+  words: 'intentWords', numbers: 'intentNumbers', list: 'intentList', speech: 'intentSpeech', places: 'intentPlaces',
+};
+
+const INTENT_TECHNIQUE: Record<IntentKey, TechniqueKey> = {
+  words: 'palace',
+  numbers: 'number-peg',
+  list: 'number-peg',
+  speech: 'palace',
+  places: 'palace',
+};
 
 export default function PracticeScreen() {
   const { styles, theme } = useStyles();
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const scroll = useRef<ScrollView>(null);
   const { user: authUser } = useAuth();
-  const { t: tourT } = useTranslation('onboarding');
   const openMemoryFlow = (requestedGuide: boolean) => {
     if (!requestedGuide) {
       router.push('/create-memory' as Href);
@@ -47,7 +51,6 @@ export default function PracticeScreen() {
     ) as Href);
   };
   const createMemory = () => openMemoryFlow(false);
-  const replayTour = usePageTour('practicePage', authUser?.onboardingStatus === 'not-started');
   const revealTop = () => scroll.current?.scrollTo({ y: 0, animated: false });
   const { t } = useTranslation('practice');
   const { colorScheme } = useColorScheme();
@@ -56,148 +59,243 @@ export default function PracticeScreen() {
   const modules = useEnabledMemoryModules();
   const memorySets = useMemorySets();
   const dueReviews = useDueMemoryReviews();
-  const upcomingReviews = useUpcomingMemoryReviews(30);
-  const { user } = useCurrentUser();
-  const totalXp = Math.max(0, user?.totalXp ?? 0);
-  const { levelInfo } = useLevelByXp(totalXp, user?.level);
-  const { avatars } = useAvatars();
-  const { items: appearanceItems } = useAppearance();
-  const practiceLevel = {
-    currentLevel: Math.max(1, levelInfo?.currentLevel ?? user?.level ?? 1),
-    xpInCurrentLevel: Math.max(0, levelInfo?.xpInCurrentLevel ?? totalXp),
-    xpToNextLevel: Math.max(0, levelInfo?.xpToNextLevel ?? 0),
-    totalXp,
-    title: levelInfo?.currentLevelConfig?.title ?? 'Memory Explorer',
-    titleZh: levelInfo?.currentLevelConfig?.titleZh,
-  };
-  const recentSet = useMemo(
-    () => (memorySets.data ?? []).find((memorySet) => memorySet.status !== 'archived'),
+  const [selectedIntent, setSelectedIntent] = useState<IntentKey | null>(null);
+  const [selectedTechnique, setSelectedTechnique] = useState<TechniqueKey | null>(null);
+
+  const continueSet = useMemo(
+    () => [...(memorySets.data ?? [])]
+      .filter((memorySet) => memorySet.status !== 'archived')
+      .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))[0],
     [memorySets.data]
   );
-  const reviewByMemorySetId = useMemo(() => {
-    const nextReviewBySet = new Map<string, DueMemoryReview>();
-    [...(dueReviews.data ?? []), ...(upcomingReviews.data ?? [])].forEach((review) => {
-      const current = nextReviewBySet.get(review.memorySetId);
-      if (!current || Date.parse(review.dueAt) < Date.parse(current.dueAt)) {
-        nextReviewBySet.set(review.memorySetId, review);
-      }
+  const continueProgress = useMemoryReviewProgress(continueSet?.id ?? '');
+  const dueGroups = useMemo(() => groupMemoryReviews(dueReviews.data ?? []), [dueReviews.data]);
+  // Count the underlying memory items (not grouped review cards), matching HomeScreen.
+  const dueItemCount = (dueReviews.data ?? []).length;
+  const openDueReview = (review: DueMemoryReview) => {
+    router.push({
+      pathname: '/memory-review/[memorySetId]',
+      params: { memorySetId: review.memorySetId, scope: 'due' },
     });
-    return nextReviewBySet;
-  }, [dueReviews.data, upcomingReviews.data]);
+  };
+
+  const dueReview = dueGroups[0]?.review;
+  const continueSetHasDueReviews = Boolean(continueSet && dueGroups.some((group) => group.review.memorySetId === continueSet.id));
+  const recommendedTechnique = selectedIntent ? INTENT_TECHNIQUE[selectedIntent] : null;
+  const availableTechniques = new Set(modules.map((module) => module.key));
+  const isPreparingFirstAction = !isOffline && (!dueReviews.isFetched || !memorySets.isFetched);
+
+  const chooseIntent = (intent: IntentKey) => {
+    setSelectedIntent(intent);
+    setSelectedTechnique(INTENT_TECHNIQUE[intent]);
+  };
+  const startTechnique = () => {
+    if (!selectedTechnique) return;
+    const module = modules.find((candidate) => candidate.key === selectedTechnique);
+    if (module) router.push(module.route as Href);
+  };
 
   return (
     <View style={styles.page}>
-      <CommonHeader eyebrow={t('eyebrow')} title={t('title')} description={t('description')} actions={[{ icon: CircleHelp, onPress: replayTour, accessibilityLabel: tourT('guideEntry') }]} hideBackButton />
+      <CommonHeader
+        title={t('title')}
+        description={t('headerSubtitle')}
+        hideBackButton
+        showAiCredits
+      />
 
       <ScrollView ref={scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.progressSection}>
-          <Text style={[styles.sectionLabel, styles.flushHeading, { color: activeTheme.ink }]}>{t('yourProgress')}</Text>
-          <LevelProgressHeader
-            avatar={getEquippedAvatar(avatars, user?.selectedAvatarId, practiceLevel.currentLevel)}
-            appearance={getEquippedAppearance(
-              appearanceItems,
-              user?.selectedAvatarFrameId,
-              user?.selectedAvatarDecorationId,
-              user?.selectedAvatarOutfitId,
-              practiceLevel.currentLevel,
-            )}
-            level={practiceLevel}
-            streak={user?.stats?.currentStreak ?? 0}
+        {canShowRequestErrors && dueReviews.isError ? (
+          <ModuleNoticeCard
+            icon={<RefreshCcw size={21} color={theme.inkSoft} />}
+            title={t('dueReviewUnavailable')}
+            body={t('dueReviewUnavailableBody')}
+            actionLabel={t('tryAgain')}
+            onAction={() => dueReviews.refetch()}
           />
-        </View>
+        ) : null}
 
-        <SpotlightTarget id="practiceCreate" onReveal={revealTop} onActivate={() => openMemoryFlow(true)}>
-        <NewMemoryCard
-          title={t('newMemory')}
-          body={t('newMemoryBody')}
-          onPress={createMemory}
-        />
-        </SpotlightTarget>
-
-        <Text style={[styles.sectionLabel, styles.techniqueHeading, { color: activeTheme.ink }]}>
-          {t('jumpTechnique')}
-        </Text>
-        <View style={styles.techniqueRow}>
-          {modules.map((module) => {
-            const isPeg = module.key === 'number-peg';
-            return (
-              <View key={module.key} style={styles.techniqueCardWrap}>
+        <View style={styles.intentBlock}>
+          <Text style={[styles.intentPrompt, { color: activeTheme.inkSoft }]}>{t('intentPrompt')}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.intentScroller}>
+            {(['words', 'numbers', 'list', 'speech', 'places'] as IntentKey[]).map((intent) => {
+              const active = selectedIntent === intent;
+              return (
                 <AnimatedPressable
+                  key={intent}
                   accessibilityRole="button"
-                  accessibilityLabel={isPeg ? t('numberPeg') : t('palace')}
-                  onPress={() => router.push(module.route as Href)}
-                  style={[
-                    styles.techniqueCard,
-                    {
-                      backgroundColor: isPeg ? activeTheme.berryTint : activeTheme.violetTint,
-                      borderColor: isPeg ? activeTheme.berryLine : activeTheme.violetLine,
-                    },
-                  ]}>
-                  <View style={[styles.techniqueGlow, { backgroundColor: isPeg ? activeTheme.berryLine : activeTheme.violetLine }]} />
-                  <View style={[styles.techniqueOrbit, { borderColor: isPeg ? activeTheme.berryLine : activeTheme.violetLine }]} />
-                  <View style={[styles.techniqueIconPlate, { backgroundColor: activeTheme.paper }]}>
-                    <Text style={styles.techniqueEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
-                  </View>
-                  <View style={styles.techniqueTextBlock}>
-                    <Text style={[styles.techniqueKicker, { color: isPeg ? activeTheme.berryDeep : activeTheme.violetDeep }]}>
-                      {isPeg ? t('numberPegKicker') : t('palaceKicker')}
-                    </Text>
-                    <Text numberOfLines={1} style={[styles.techniqueName, { color: activeTheme.ink }]}>
-                      {isPeg ? t('numberPeg') : t('palace')}
-                    </Text>
-                  </View>
-                  <View style={[styles.techniqueAction, { backgroundColor: isPeg ? activeTheme.berryDeep : activeTheme.violetDeep }]}>
-                    <Text style={[styles.techniqueLink, { color: activeTheme.onAccent }]}>{t('tapToStart')}</Text>
-                    <ArrowRight size={14} color={activeTheme.onAccent} />
-                  </View>
+                  accessibilityState={{ selected: active }}
+                  onPress={() => chooseIntent(intent)}
+                  style={[styles.intentChip, active && styles.intentChipActive]}>
+                  <Text style={[styles.intentChipText, { color: active ? theme.onAccent : theme.ink }]}>{t(INTENT_LABEL[intent])}</Text>
                 </AnimatedPressable>
-              </View>
-            );
-          })}
+              );
+            })}
+          </ScrollView>
         </View>
 
-
-        {(!isOffline && memorySets.isLoading) || (canShowRequestErrors && memorySets.isError) || recentSet ? (
-          <View style={styles.recentSection}>
-            <View style={styles.sectionHeadingRow}>
-              <Text style={[styles.sectionLabel, styles.flushHeading, { color: activeTheme.ink }]}>{t('recentPractice')}</Text>
-              <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/(tabs)/library' as Href)} style={styles.seeAllButton}>
-                <Text style={styles.seeAll}>{t('seeAll')} →</Text>
-              </AnimatedPressable>
-            </View>
-            {!isOffline && memorySets.isLoading ? (
-              <View style={styles.emptyCard}><Text style={styles.emptyBody}>{t('recentPractice')}</Text></View>
-            ) : canShowRequestErrors && memorySets.isError ? (
-              <ModuleNoticeCard
-                icon={<RefreshCcw size={22} color={theme.inkSoft} />}
-                title={t('recentPractice')}
-                body={t('description')}
-                actionLabel={t('tryAgain')}
-                onAction={() => memorySets.refetch()}
-              />
-            ) : recentSet ? (
-              <MemorySetCard
-                memorySet={recentSet}
-                reviewAt={reviewByMemorySetId.get(recentSet.id)?.dueAt}
-                actionLabel={t('practiceNow')}
-                onOpen={() => openMemorySet(router, recentSet)}
-                variant="list"
-              />
-            ) : null}
+        {continueSet && !continueSetHasDueReviews ? (
+          <ContinueLearningCard
+            label={t('continueLearning')}
+            memorySet={continueSet}
+            progress={continueProgress.data}
+            actionLabel={t('practiceNow')}
+            onPress={() => openMemorySet(router, continueSet)}
+          />
+        ) : isPreparingFirstAction ? (
+          <View style={styles.preparingCard}>
+            <ActivityIndicator size="small" color={activeTheme.violetDeep} />
+            <Text style={[styles.preparingText, { color: activeTheme.inkSoft }]}>{t('preparingNextStep')}</Text>
           </View>
         ) : null}
 
+        {dueReview ? (
+          <AnimatedPressable
+            accessibilityRole="button"
+            accessibilityLabel={`${t('dueReviewCount', { count: dueItemCount })}. ${t('startReview')}`}
+            onPress={() => openDueReview(dueReview)}
+            style={styles.reviewBanner}>
+            <View style={styles.reviewCount}><Text style={styles.reviewCountText}>{dueItemCount}</Text></View>
+            <View style={styles.reviewCopy}>
+              <Text style={styles.reviewTitle}>{t('dueReviewShort')}</Text>
+              <Text numberOfLines={1} style={styles.reviewBody}>{t('dueReviewBody')}</Text>
+            </View>
+            <View style={styles.reviewAction}>
+              <Text style={styles.reviewActionText}>{t('startReview')}</Text>
+              <ArrowRight size={15} color={theme.violetDeep} />
+            </View>
+          </AnimatedPressable>
+        ) : null}
+
+        {canShowRequestErrors && memorySets.isError && !continueSet ? (
+          <ModuleNoticeCard
+            icon={<RefreshCcw size={21} color={theme.inkSoft} />}
+            title={t('continueUnavailable')}
+            body={t('continueUnavailableBody')}
+            actionLabel={t('tryAgain')}
+            onAction={() => memorySets.refetch()}
+          />
+        ) : null}
+
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{t('chooseTechnique')}</Text>
+          <AnimatedPressable
+            accessibilityRole="button"
+            accessibilityLabel={t('allLessons')}
+            accessibilityHint={t('allLessonsBody')}
+            onPress={() => router.push('/lessons' as Href)}
+            style={styles.courseLink}>
+            <BookOpen size={15} color={activeTheme.violetDeep} />
+            <Text style={[styles.courseLinkText, { color: activeTheme.violetDeep }]}>{t('allLessons')}</Text>
+            <ArrowRight size={14} color={activeTheme.violetDeep} />
+          </AnimatedPressable>
+        </View>
+
+        {modules.length ? (
+          <View style={styles.techniqueList}>
+            {modules.map((module) => {
+              const isPeg = module.key === 'number-peg';
+              const key: TechniqueKey = isPeg ? 'number-peg' : 'palace';
+              const selected = selectedTechnique === key;
+              const recommended = recommendedTechnique === key && availableTechniques.has(key);
+              return (
+                <View key={module.key} style={styles.techniqueCardWrap}>
+                  {recommended ? <View style={styles.recommendedBadge}><Text style={styles.recommendedText}>✦ {t('recommended')}</Text></View> : null}
+                  <AnimatedPressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={isPeg ? t('numberPeg') : t('palace')}
+                    onPress={() => setSelectedTechnique(key)}
+                    style={[
+                      styles.techniqueCard,
+                      { backgroundColor: isPeg ? activeTheme.berryTint : activeTheme.violetTint },
+                      selected && (isPeg ? styles.techniqueCardPegSelected : styles.techniqueCardPalaceSelected),
+                    ]}>
+                    <View style={styles.techniqueHeading}>
+                      <View style={[styles.techniqueIcon, { backgroundColor: isPeg ? activeTheme.paper : activeTheme.paper }]}>
+                        <Text style={styles.techniqueEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
+                      </View>
+                      <View style={styles.techniqueTitleBlock}>
+                        <Text style={[styles.techniqueName, { color: activeTheme.ink }]}>{isPeg ? t('numberPeg') : t('palace')}</Text>
+                        <Text style={[styles.techniqueDescription, { color: activeTheme.inkSoft }]}>{isPeg ? t('numberPegDescription') : t('palaceDescription')}</Text>
+                      </View>
+                      {selected ? <View style={styles.selectedMark}><Check size={14} color={theme.onAccent} /></View> : null}
+                    </View>
+                    <View style={styles.techniqueTags}>
+                      {(isPeg ? ['pegTagAnchor', 'pegTagList'] as const : ['palaceTagRoute', 'palaceTagLong'] as const)
+                        .map((tag) => <View key={tag} style={styles.techniqueTag}><Text style={styles.techniqueTagText}>{t(tag)}</Text></View>)}
+                    </View>
+                  </AnimatedPressable>
+                </View>
+              );
+            })}
+          </View>
+        ) : null}
+
+        {selectedTechnique && availableTechniques.has(selectedTechnique) ? (
+          <AnimatedPressable accessibilityRole="button" onPress={startTechnique} style={styles.startButton}>
+            <Text style={styles.startButtonText}>
+              {t('startWithTechnique', { technique: selectedTechnique === 'palace' ? t('palace') : t('numberPeg') })}
+            </Text>
+            <ArrowRight size={18} color={theme.onSun} />
+          </AnimatedPressable>
+        ) : null}
+
+        <SpotlightTarget id="practiceCreate" onReveal={revealTop} onActivate={() => openMemoryFlow(true)}>
+          <AnimatedPressable accessibilityRole="button" onPress={createMemory} style={styles.createMemoryCard}>
+            <View style={styles.createMemoryIcon}><Plus size={21} color={theme.onSun} /></View>
+            <View style={styles.createMemoryCopy}>
+              <Text style={styles.createMemoryTitle}>{t('newMemory')}</Text>
+              <Text style={styles.createMemoryBody}>{t('newMemoryBody')}</Text>
+            </View>
+            <ArrowRight size={17} color={theme.violetDeep} />
+          </AnimatedPressable>
+        </SpotlightTarget>
       </ScrollView>
-      <AnimatedPressable
-        accessibilityRole="button"
-        accessibilityLabel={t('allLessons')}
-        accessibilityHint={t('allLessonsBody')}
-        onPress={() => router.push('/lessons' as Href)}
-        style={[styles.lessonFab, { bottom: Math.max(16, insets.bottom + 10), backgroundColor: activeTheme.violetDeep }]}>
-        <BookOpen size={23} color={activeTheme.onAccent} />
-        <View style={[styles.lessonFabDot, { backgroundColor: activeTheme.sun }]} />
-      </AnimatedPressable>
     </View>
+  );
+}
+
+function ContinueLearningCard({
+  label,
+  memorySet,
+  progress,
+  actionLabel,
+  onPress,
+}: {
+  label: string;
+  memorySet: MemorySet;
+  progress?: MemoryReviewProgress | null;
+  actionLabel: string;
+  onPress: () => void;
+}) {
+  const { styles, theme } = useStyles();
+  const { t } = useTranslation('practice');
+  const isPalace = memorySet.techniqueKey === 'palace';
+  const learnedCount = progress?.longTermItemCount ?? 0;
+  const totalCount = progress?.items.length ?? memorySet.items.length;
+  const progressRatio = totalCount > 0 ? Math.min(1, learnedCount / totalCount) : 0;
+
+  return (
+    <AnimatedPressable accessibilityRole="button" onPress={onPress} style={styles.continueCard}>
+      <View style={[styles.continueIcon, isPalace ? styles.continuePalace : styles.continuePeg]}>
+        <Text style={styles.continueEmoji}>{memorySet.emoji ?? (isPalace ? '🏰' : '🕯️')}</Text>
+      </View>
+      <View style={styles.continueCopy}>
+        <Text style={styles.continueLabel}>{label}</Text>
+        <Text numberOfLines={1} style={styles.continueTitle}>{memorySet.title}</Text>
+        <Text numberOfLines={1} style={styles.continueMeta}>
+          {t('learnedProgress', { learned: learnedCount, total: totalCount })} · {isPalace ? t('techniquePalace') : t('techniquePeg')}
+        </Text>
+        <View style={styles.progressTrack} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: totalCount, now: learnedCount }}>
+          <View style={[styles.progressFill, { width: `${progressRatio * 100}%` }]} />
+        </View>
+      </View>
+      <View style={styles.continueAction}>
+        <Text style={styles.continueActionText}>{actionLabel}</Text>
+        <ArrowRight size={14} color={theme.violetDeep} />
+      </View>
+    </AnimatedPressable>
   );
 }
 
@@ -207,29 +305,62 @@ function openMemorySet(router: ReturnType<typeof useRouter>, memorySet: MemorySe
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 112 },
-  sectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, textTransform: 'uppercase' },
-  techniqueHeading: { marginTop: 18, marginBottom: 10 },
-  techniqueRow: { flexDirection: 'row', gap: 10, width: '100%' },
-  techniqueCardWrap: { flex: 1, minWidth: 0 },
-  techniqueCard: { borderRadius: 24, borderWidth: 1.5, minHeight: 176, overflow: 'hidden', paddingHorizontal: 15, paddingVertical: 15, width: '100%', justifyContent: 'space-between' },
-  techniqueGlow: { borderRadius: 80, height: 150, opacity: 0.3, position: 'absolute', right: -62, top: -61, width: 150 },
-  techniqueOrbit: { borderRadius: 65, borderWidth: 1.5, height: 130, opacity: 0.7, position: 'absolute', right: -48, top: -50, width: 130 },
-  techniqueIconPlate: { alignItems: 'center', borderRadius: 18, height: 58, justifyContent: 'center', width: 58, shadowColor: theme.ink, shadowOpacity: 0.08, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
-  techniqueEmoji: { fontSize: 32, lineHeight: 38 },
-  techniqueTextBlock: { gap: 3, marginTop: 10 },
-  techniqueKicker: { fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 1 },
-  techniqueName: { fontFamily: typography.displayExtraBold, fontSize: 15 },
-  techniqueAction: { alignItems: 'center', borderRadius: 999, flexDirection: 'row', gap: 4, justifyContent: 'center', minHeight: 36, paddingHorizontal: 10 },
-  techniqueLink: { fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  recentSection: { marginTop: 24 },
-  sectionHeadingRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  flushHeading: { marginBottom: 10 },
-  seeAllButton: { justifyContent: 'center', minHeight: 44, paddingHorizontal: 6 },
-  seeAll: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 11.5 },
-  progressSection: { marginBottom: 2 },
-  lessonFab: { alignItems: 'center', borderRadius: 30, bottom: 16, elevation: 5, height: 58, justifyContent: 'center', position: 'absolute', right: 20, shadowColor: theme.ink, shadowOpacity: 0.22, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 58 },
-  lessonFabDot: { borderColor: theme.paper, borderRadius: 5, borderWidth: 2, height: 10, position: 'absolute', right: 9, top: 8, width: 10 },
-  emptyCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 2, padding: 20 },
-  emptyBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  content: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 32, gap: 16 },
+  intentBlock: { gap: 8 },
+  intentPrompt: { fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  intentScroller: { gap: 8, paddingVertical: 2, paddingRight: 4 },
+  intentChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 999, borderWidth: 1.5, justifyContent: 'center', minHeight: 40, paddingHorizontal: 14 },
+  intentChipActive: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
+  intentChipText: { fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  preparingCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 52, paddingHorizontal: 14 },
+  preparingText: { fontFamily: typography.bodyBold, fontSize: 11.5 },
+  reviewBanner: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 18, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 72, paddingHorizontal: 12, paddingVertical: 10 },
+  reviewCount: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 14, height: 46, justifyContent: 'center', minWidth: 46, paddingHorizontal: 6 },
+  reviewCountText: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 21 },
+  reviewCopy: { flex: 1, gap: 3, minWidth: 0 },
+  reviewTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  reviewBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5 },
+  reviewAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 5, minHeight: 44, paddingHorizontal: 11 },
+  reviewActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
+  sectionHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 1, minHeight: 44 },
+  sectionTitle: { fontFamily: typography.displayExtraBold, fontSize: 17 },
+  courseLink: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 6, minHeight: 44, paddingHorizontal: 11 },
+  courseLinkText: { fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  techniqueList: { gap: 13 },
+  techniqueCardWrap: { position: 'relative' },
+  techniqueCard: { borderColor: 'transparent', borderRadius: 21, borderWidth: 1.5, gap: 12, minHeight: 134, padding: 15 },
+  techniqueCardPegSelected: { borderColor: theme.berryDeep, transform: [{ translateY: -2 }] },
+  techniqueCardPalaceSelected: { borderColor: theme.violetDeep, transform: [{ translateY: -2 }] },
+  techniqueHeading: { alignItems: 'center', flexDirection: 'row', gap: 12 },
+  techniqueIcon: { alignItems: 'center', borderRadius: 17, height: 52, justifyContent: 'center', width: 52 },
+  techniqueEmoji: { fontSize: 29, lineHeight: 34 },
+  techniqueTitleBlock: { flex: 1, gap: 4, minWidth: 0 },
+  techniqueName: { fontFamily: typography.displayExtraBold, fontSize: 16 },
+  techniqueDescription: { fontFamily: typography.bodySemibold, fontSize: 11.5, lineHeight: 17 },
+  selectedMark: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 12, height: 24, justifyContent: 'center', width: 24 },
+  techniqueTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingLeft: 64 },
+  techniqueTag: { backgroundColor: theme.paper, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
+  techniqueTagText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  recommendedBadge: { alignSelf: 'flex-end', backgroundColor: theme.sun, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, position: 'absolute', right: 13, top: -9, zIndex: 1 },
+  recommendedText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  startButton: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 14, flexDirection: 'row', justifyContent: 'center', gap: 9, minHeight: 48, paddingHorizontal: 16 },
+  startButtonText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 14 },
+  createMemoryCard: { alignItems: 'center', borderColor: theme.violetLine, borderRadius: 19, borderStyle: 'dashed', borderWidth: 1.5, flexDirection: 'row', gap: 12, minHeight: 76, paddingHorizontal: 13, paddingVertical: 11 },
+  createMemoryIcon: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 15, height: 44, justifyContent: 'center', width: 44 },
+  createMemoryCopy: { flex: 1, gap: 3, minWidth: 0 },
+  createMemoryTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 13 },
+  createMemoryBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, lineHeight: 15 },
+  continueCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 82, paddingHorizontal: 10, paddingVertical: 9 },
+  continueIcon: { alignItems: 'center', borderRadius: 13, height: 42, justifyContent: 'center', width: 42 },
+  continuePeg: { backgroundColor: theme.berryTint },
+  continuePalace: { backgroundColor: theme.violetTint },
+  continueEmoji: { fontSize: 21 },
+  continueCopy: { flex: 1, gap: 2, minWidth: 0 },
+  continueLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9 },
+  continueTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 12 },
+  continueMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9 },
+  progressTrack: { backgroundColor: theme.violetTint, borderRadius: 99, height: 5, marginTop: 2, overflow: 'hidden', width: '100%' },
+  progressFill: { backgroundColor: theme.violetDeep, borderRadius: 99, height: '100%' },
+  continueAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 4, minHeight: 44, paddingHorizontal: 9 },
+  continueActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
 }));
