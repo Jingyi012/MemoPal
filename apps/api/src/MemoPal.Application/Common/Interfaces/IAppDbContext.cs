@@ -1,5 +1,6 @@
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MemoPal.Application.Common.Interfaces;
 
@@ -9,6 +10,13 @@ public interface IAppDbContext
     DbSet<AiGeneration> AiGenerations { get; }
     DbSet<AiCreditEntry> AiCreditEntries { get; }
     DbSet<User> Users { get; }
+    DbSet<CompanionBond> CompanionBonds { get; }
+    DbSet<CompanionMemory> CompanionMemories { get; }
+    DbSet<CompanionLook> CompanionLooks { get; }
+    DbSet<CompanionLookPreset> CompanionLookPresets { get; }
+    IExecutionStrategy CreateExecutionStrategy();
+    Task<IAppTransaction?> BeginTransactionIfSupportedAsync(CancellationToken cancellationToken = default);
+    void ClearTracking();
     DbSet<AvatarDefinition> AvatarDefinitions { get; }
     DbSet<AppearanceDefinition> AppearanceDefinitions { get; }
     DbSet<UserAuthIdentity> UserAuthIdentities { get; }
@@ -41,4 +49,10 @@ public interface IAppDbContext
     DbSet<PredefinedMemoryLessonCategory> PredefinedMemoryLessonCategories { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+}
+
+public interface IAppTransaction : IAsyncDisposable
+{
+    Task CommitAsync(CancellationToken cancellationToken = default);
+    Task RollbackAsync(CancellationToken cancellationToken = default);
 }

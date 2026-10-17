@@ -1,9 +1,11 @@
-export type AppearanceItemType = 'frame' | 'decoration' | 'outfit';
+export type AppearanceItemType = 'frame' | 'decoration' | 'outfit' | 'headwear' | 'bodywear' | 'backwear' | 'handItem';
 
 export interface AppearanceDefinition {
   id: string;
   key: string;
   itemType: AppearanceItemType;
+  companionAvatarKey?: string | null;
+  setKey?: string | null;
   assetKey: string;
   imageUrl?: string | null;
   titleEn: string;

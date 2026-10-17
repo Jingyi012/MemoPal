@@ -7,6 +7,8 @@ import { CommonHeader } from '@/components/CommonHeader';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useUserState } from '@/contexts/UserStateContext';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
+import { useCompanion } from '@/features/profile/hooks/useCompanion';
+import { CompanionCharacterArtwork } from '../components/CompanionCharacterArtwork';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { getEquippedAvatar, useAvatars } from '@/features/avatars/hooks/useAvatars';
 import { getEquippedAppearance, useAppearance } from '@/features/appearance/hooks/useAppearance';
@@ -36,6 +38,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { start: startTour } = useSpotlightTour();
   const { user } = useCurrentUser();
+  const companion = useCompanion();
   const { avatars } = useAvatars();
   const { items: appearanceItems } = useAppearance();
   const { userState, updateState, updatePreferences } = useUserState();
@@ -84,6 +87,7 @@ export default function ProfileScreen() {
       ? t('systemTheme')
       : t('light');
   const equippedAvatar = getEquippedAvatar(avatars, user?.selectedAvatarId, level);
+  const selectedCompanion = getEquippedAvatar(avatars, companion.data?.avatarId ?? user?.selectedAvatarId, level);
   const equippedAppearance = getEquippedAppearance(
     appearanceItems,
     user?.selectedAvatarFrameId,
@@ -247,22 +251,17 @@ export default function ProfileScreen() {
       />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.profileIdentity}>
-          <AnimatedPressable
-            accessibilityLabel={t('changeAvatar')}
-            onPress={() => router.push('/companion-closet')}
-            style={styles.avatarButton}>
+          <View style={styles.avatarDisplay} accessible accessibilityLabel={language === 'zh' ? '个人头像' : 'Profile picture'}>
             <View style={styles.avatar}>
-              <MemoryAvatar
-                avatar={equippedAvatar}
-                appearance={equippedAppearance}
-                imageUrl={avatarSource === 'photo' ? user?.avatarUrl : undefined}
-                level={level}
-                size={76}
-                showLevelBadge={false}
-              />
+              {avatarSource === 'photo' ? (
+                <MemoryAvatar avatar={equippedAvatar} appearance={equippedAppearance} imageUrl={user?.avatarUrl} level={level} size={76} showLevelBadge={false} />
+              ) : selectedCompanion?.assetKey === 'memory-owl' ? (
+                <CompanionCharacterArtwork look={companion.data?.look} items={appearanceItems} avatarId={companion.data?.avatarId} size={76} accessibilityLabel={language === 'zh' ? '已保存造型的伙伴' : 'Companion in saved outfit'} />
+              ) : (
+                <MemoryAvatar avatar={selectedCompanion ?? equippedAvatar} appearance={equippedAppearance} level={level} size={76} showLevelBadge={false} />
+              )}
             </View>
-            <View style={styles.avatarEditBadge}><Pencil color={theme.onAccent} size={12} strokeWidth={2.8} /></View>
-          </AnimatedPressable>
+          </View>
           <View style={styles.identityCopy}>
             <View style={styles.nameRow}>
               <Text numberOfLines={1} style={styles.profileName}>{displayName}</Text>
@@ -328,6 +327,18 @@ export default function ProfileScreen() {
             <View style={[styles.progressFill, { width: `${Math.round(levelProgress * 100)}%` }]} />
           </View>
         </AnimatedPressable>
+
+        <SettingsSection title={language === 'zh' ? '伙伴' : 'Companion'} accentColor={theme.violetDeep}>
+          <ProfileSettingsRow
+            icon={selectedCompanion?.assetKey === 'memory-owl'
+              ? <CompanionCharacterArtwork look={companion.data?.look} items={appearanceItems} avatarId={companion.data?.avatarId} size={32} accessibilityLabel={language === 'zh' ? '伙伴' : 'Companion'} />
+              : <Ionicons name="paw" size={21} color={theme.violetDeep} />}
+            iconBackgroundColor={theme.violetTint}
+            title={language === 'zh' ? '伙伴空间' : 'Companion space'}
+            onPress={() => router.push('/companion')}
+            last
+          />
+        </SettingsSection>
 
         <AnimatedPressable onPress={() => router.push('/premium')} style={styles.planRow}>
           <View style={[styles.planIcon, isPremium ? styles.planIconPremium : styles.planIconFree]}>
@@ -555,7 +566,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 20, paddingBottom: 48 },
   profileIdentity: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 18 },
-  avatarButton: { width: 82, height: 82, position: 'relative' },
+  avatarDisplay: { width: 82, height: 82, alignItems: 'center', justifyContent: 'center' },
   avatar: {
     width: 76,
     height: 76,
@@ -567,7 +578,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     borderColor: theme.paper,
     boxShadow: '0px 6px 16px rgba(105,80,204,0.18)',
   },
-  avatarEditBadge: { position: 'absolute', right: -2, bottom: -1, width: 24, height: 24, borderRadius: 12, backgroundColor: theme.violetDeep, borderWidth: 2, borderColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
   identityCopy: { flex: 1, minWidth: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 0 },
   profileName: {
@@ -596,6 +606,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   premiumBadgeText: { color: theme.sunDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.4 },
   levelPill: {
     alignSelf: 'flex-start',
+    flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
@@ -603,7 +614,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     borderColor: theme.violetLine,
     borderWidth: 1,
     borderRadius: 999,
-    marginTop: 8,
+    marginTop: 0,
     paddingHorizontal: 8,
     paddingVertical: 4,
     maxWidth: '100%',

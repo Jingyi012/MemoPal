@@ -30,10 +30,20 @@ public sealed class CreateAppearanceDefinitionCommandHandler(IAppDbContext db)
         }
 
         var itemType = request.ItemType.Trim().ToLowerInvariant();
+        if (itemType == "handitem") itemType = AppearanceItemTypes.HandItem;
         if (!AppearanceItemTypes.All.Contains(itemType))
-            throw new ValidationAppException("itemType must be frame, decoration, or outfit.");
+            throw new ValidationAppException("itemType must be frame, decoration, outfit, headwear, bodywear, backwear, or handItem.");
         if (request.RequiredLevel < 1)
             throw new ValidationAppException("requiredLevel must be at least 1.");
+        var companionAvatarKey = string.IsNullOrWhiteSpace(request.CompanionAvatarKey) ? null : request.CompanionAvatarKey.Trim().ToLowerInvariant();
+        var setKey = string.IsNullOrWhiteSpace(request.SetKey) ? null : request.SetKey.Trim().ToLowerInvariant();
+        if (itemType is AppearanceItemTypes.Headwear or AppearanceItemTypes.Bodywear or AppearanceItemTypes.Backwear or AppearanceItemTypes.HandItem)
+        {
+            if (companionAvatarKey is null || !await db.AvatarDefinitions.AnyAsync(x => x.Key == companionAvatarKey && x.IsActive && !x.IsDeleted, cancellationToken))
+                throw new ValidationAppException("Wearable items require an active companionAvatarKey.");
+        }
+        if (setKey?.Length > 64 || companionAvatarKey?.Length > 64)
+            throw new ValidationAppException("companionAvatarKey and setKey must be at most 64 characters.");
 
         var key = request.Key.Trim().ToLowerInvariant();
         var entity = string.IsNullOrWhiteSpace(request.Id)
@@ -59,6 +69,8 @@ public sealed class CreateAppearanceDefinitionCommandHandler(IAppDbContext db)
 
         entity.Key = key;
         entity.ItemType = itemType;
+        entity.CompanionAvatarKey = companionAvatarKey;
+        entity.SetKey = setKey;
         entity.AssetKey = request.AssetKey.Trim();
         entity.ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim();
         entity.TitleEn = request.TitleEn.Trim();

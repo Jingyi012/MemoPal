@@ -10,6 +10,8 @@ public sealed class AppearanceDefinition : AuditableBaseEntity
 {
     public string Key { get; set; } = string.Empty;
     public string ItemType { get; set; } = AppearanceItemTypes.Frame;
+    public string? CompanionAvatarKey { get; set; }
+    public string? SetKey { get; set; }
     public string AssetKey { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
     public string TitleEn { get; set; } = string.Empty;
@@ -26,11 +28,19 @@ public static class AppearanceItemTypes
     public const string Frame = "frame";
     public const string Decoration = "decoration";
     public const string Outfit = "outfit";
+    public const string Headwear = "headwear";
+    public const string Bodywear = "bodywear";
+    public const string Backwear = "backwear";
+    public const string HandItem = "handItem";
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
     {
         Frame,
         Decoration,
         Outfit,
+        Headwear,
+        Bodywear,
+        Backwear,
+        HandItem,
     };
 }

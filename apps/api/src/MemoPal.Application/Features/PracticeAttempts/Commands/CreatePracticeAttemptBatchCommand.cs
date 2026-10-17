@@ -174,6 +174,7 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
         // request; relying on client-side counters made the Home banner stay at
         // zero after a successful session.
         await UpdateUserProgressAsync(userId, responseIds, now, cancellationToken);
+        await AwardCompanionBondAsync(userId, attempt, now, cancellationToken);
         var xpAward = await AwardPracticeXpAsync(
             userId,
             attempt,
@@ -184,6 +185,68 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
 
         await _db.SaveChangesAsync(cancellationToken);
         return ToDto(attempt, nextReviewAt, xpAward);
+    }
+
+    private async Task AwardCompanionBondAsync(string userId, PracticeAttempt attempt, DateTime now, CancellationToken ct)
+    {
+        var user = await _db.Users.Where(x => x.Id == userId && !x.IsDeleted)
+            .Select(x => new { x.SelectedAvatarId, x.Level }).FirstOrDefaultAsync(ct);
+        var avatarId = await MemoPal.Application.Features.Companion.Queries.GetCompanionQueryHandler
+            .ResolveAvatarId(_db, user?.SelectedAvatarId, user?.Level ?? 1, ct);
+        if (string.IsNullOrWhiteSpace(avatarId)) return;
+        var bond = await _db.CompanionBonds.FirstOrDefaultAsync(
+            x => x.UserId == userId && x.AvatarId == avatarId && !x.IsDeleted, ct);
+        if (bond is null)
+        {
+            bond = new CompanionBond { Id = Guid.NewGuid().ToString("D"), UserId = userId, AvatarId = avatarId };
+            await _db.CompanionBonds.AddAsync(bond, ct);
+        }
+        var priorBondPoints = bond.BondPoints;
+        var sharedPracticeCount = await _db.CompanionMemories.AsNoTracking().CountAsync(
+            x => x.UserId == userId && x.AvatarId == avatarId && x.Type == CompanionMemoryTypes.Practice && !x.IsDeleted, ct);
+        bond.BondPoints += 5;
+        var day = now.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
+        await _db.CompanionMemories.AddAsync(new CompanionMemory
+        {
+            Id = Guid.NewGuid().ToString("D"), UserId = userId, AvatarId = avatarId, Type = CompanionMemoryTypes.Practice,
+            OccurredAt = now, SourceId = $"practice:{day}:{attempt.Id}",
+            SummaryEn = "You practiced together today.",
+            SummaryZh = "你们今天一起练习了。"
+        }, ct);
+
+        if (sharedPracticeCount == 0)
+            await AddCompanionMilestoneAsync(userId, avatarId, "first-practice", CompanionMemoryTypes.FirstPracticeMilestone,
+                now, "Your first practice together.", "你们一起完成了第一次练习。", ct);
+        if (sharedPracticeCount == 9)
+            await AddCompanionMilestoneAsync(userId, avatarId, "practice-10", CompanionMemoryTypes.TenthPracticeMilestone,
+                now, "You completed 10 practices together.", "你们一起完成了10次练习。", ct);
+
+        foreach (var stageMilestone in new[]
+                 {
+                     (Threshold: 25, Key: "familiar", En: "Your bond became familiar.", Zh: "你们变得更加熟悉了。"),
+                     (Threshold: 100, Key: "in-sync", En: "You found a steady rhythm together.", Zh: "你们一起培养出了默契。"),
+                     (Threshold: 300, Key: "best-friends", En: "You became best friends.", Zh: "你们成为了最好的伙伴。")
+                 })
+        {
+            if (priorBondPoints < stageMilestone.Threshold && bond.BondPoints >= stageMilestone.Threshold)
+                await AddCompanionMilestoneAsync(userId, avatarId, $"bond-stage:{stageMilestone.Key}",
+                    CompanionMemoryTypes.BondStageMilestone, now, stageMilestone.En, stageMilestone.Zh, ct);
+        }
+    }
+
+    private async Task AddCompanionMilestoneAsync(
+        string userId, string avatarId, string milestoneKey, string type, DateTime now,
+        string summaryEn, string summaryZh, CancellationToken ct)
+    {
+        var sourceId = $"milestone:{milestoneKey}";
+        var exists = await _db.CompanionMemories.AsNoTracking().AnyAsync(
+            x => x.UserId == userId && x.AvatarId == avatarId && x.SourceId == sourceId && !x.IsDeleted, ct);
+        if (exists) return;
+        await _db.CompanionMemories.AddAsync(new CompanionMemory
+        {
+            Id = Guid.NewGuid().ToString("D"), UserId = userId, AvatarId = avatarId,
+            Type = type, OccurredAt = now, SourceId = sourceId, SummaryEn = summaryEn, SummaryZh = summaryZh
+        }, ct);
     }
 
     private async Task<PracticeXpAward> AwardPracticeXpAsync(

@@ -15,9 +15,10 @@ interface ImageUploadFieldProps {
   disabled?: boolean;
   onUploadingChange?: (uploading: boolean) => void;
   onUploadError?: (error: unknown) => void;
+  validateFile?: (file: File) => Promise<void>;
 }
 
-export function ImageUploadField({ value, onChange, category, disabled, onUploadingChange, onUploadError }: ImageUploadFieldProps) {
+export function ImageUploadField({ value, onChange, category, disabled, onUploadingChange, onUploadError, validateFile }: ImageUploadFieldProps) {
   const { uploadImage, resolveMediaPath } = useAdminMediaApi();
   const [uploading, setUploading] = useState(false);
 
@@ -30,6 +31,7 @@ export function ImageUploadField({ value, onChange, category, disabled, onUpload
         setUploading(true);
         onUploadingChange?.(true);
         const originalFile = options.file as File;
+        await validateFile?.(originalFile);
         const optimizedFile = await compressImageForUpload(originalFile);
         const uploadedPath = await uploadImage(optimizedFile, category);
         onChange?.(uploadedPath);

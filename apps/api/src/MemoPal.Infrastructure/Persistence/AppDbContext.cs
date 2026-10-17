@@ -2,6 +2,7 @@ using MemoPal.Application.Common.Interfaces;
 using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MemoPal.Infrastructure.Persistence;
 
@@ -19,6 +20,20 @@ public class AppDbContext : DbContext, IAppDbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<CompanionBond> CompanionBonds => Set<CompanionBond>();
+    public DbSet<CompanionMemory> CompanionMemories => Set<CompanionMemory>();
+    public DbSet<CompanionLook> CompanionLooks => Set<CompanionLook>();
+    public DbSet<CompanionLookPreset> CompanionLookPresets => Set<CompanionLookPreset>();
+
+    public IExecutionStrategy CreateExecutionStrategy() => Database.CreateExecutionStrategy();
+
+    public async Task<IAppTransaction?> BeginTransactionIfSupportedAsync(CancellationToken cancellationToken = default)
+    {
+        if (!Database.IsRelational()) return null;
+        return new EfAppTransaction(await Database.BeginTransactionAsync(cancellationToken));
+    }
+
+    public void ClearTracking() => ChangeTracker.Clear();
     public DbSet<AvatarDefinition> AvatarDefinitions => Set<AvatarDefinition>();
     public DbSet<AppearanceDefinition> AppearanceDefinitions => Set<AppearanceDefinition>();
     public DbSet<UserAuthIdentity> UserAuthIdentities => Set<UserAuthIdentity>();
@@ -105,6 +120,52 @@ public class AppDbContext : DbContext, IAppDbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<CompanionBond>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.AvatarId).HasMaxLength(64);
+            b.HasIndex(x => new { x.UserId, x.AvatarId }).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
+        });
+        modelBuilder.Entity<CompanionMemory>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.AvatarId).HasMaxLength(64);
+            b.Property(x => x.Type).HasMaxLength(32);
+            b.Property(x => x.SummaryEn).HasMaxLength(200);
+            b.Property(x => x.SummaryZh).HasMaxLength(200);
+            b.Property(x => x.SourceId).HasMaxLength(100);
+            b.HasIndex(x => new { x.UserId, x.AvatarId, x.OccurredAt });
+            b.HasIndex(x => new { x.UserId, x.AvatarId, x.SourceId }).IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE AND \"SourceId\" IS NOT NULL");
+        });
+        modelBuilder.Entity<CompanionLook>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.AvatarId).HasMaxLength(64);
+            b.Property(x => x.HeadwearId).HasMaxLength(64);
+            b.Property(x => x.BodywearId).HasMaxLength(64);
+            b.Property(x => x.BackwearId).HasMaxLength(64);
+            b.Property(x => x.HandItemId).HasMaxLength(64);
+            b.HasIndex(x => new { x.UserId, x.AvatarId }).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
+        });
+        modelBuilder.Entity<CompanionLookPreset>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.AvatarId).HasMaxLength(64);
+            b.Property(x => x.Name).HasMaxLength(30).IsRequired();
+            b.Property(x => x.HeadwearId).HasMaxLength(64);
+            b.Property(x => x.BodywearId).HasMaxLength(64);
+            b.Property(x => x.BackwearId).HasMaxLength(64);
+            b.Property(x => x.HandItemId).HasMaxLength(64);
+            b.HasIndex(x => new { x.UserId, x.AvatarId, x.Name }).IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.UserId, x.AvatarId }).HasFilter("\"IsDeleted\" = FALSE");
+        });
+
         modelBuilder.Entity<AvatarDefinition>(b =>
         {
             b.HasKey(x => x.Id);
@@ -125,6 +186,8 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasIndex(x => x.Key).IsUnique();
             b.Property(x => x.Key).HasMaxLength(64).IsRequired();
             b.Property(x => x.ItemType).HasMaxLength(24).IsRequired();
+            b.Property(x => x.CompanionAvatarKey).HasMaxLength(64);
+            b.Property(x => x.SetKey).HasMaxLength(64);
             b.Property(x => x.AssetKey).HasMaxLength(128).IsRequired();
             b.Property(x => x.ImageUrl).HasMaxLength(500);
             b.Property(x => x.TitleEn).HasMaxLength(120).IsRequired();
@@ -623,4 +686,11 @@ public class AppDbContext : DbContext, IAppDbContext
             }
         }
     }
+}
+
+internal sealed class EfAppTransaction(IDbContextTransaction transaction) : IAppTransaction
+{
+    public Task CommitAsync(CancellationToken cancellationToken = default) => transaction.CommitAsync(cancellationToken);
+    public Task RollbackAsync(CancellationToken cancellationToken = default) => transaction.RollbackAsync(cancellationToken);
+    public ValueTask DisposeAsync() => transaction.DisposeAsync();
 }

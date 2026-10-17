@@ -253,6 +253,27 @@ public sealed class AdminBootstrapper
                 UpdatedBy = "system",
             });
         }
+
+        var owlWearables = new[]
+        {
+            ("celestial-headband", "memory-owl/celestial-headband.png", AppearanceItemTypes.Headwear, "Celestial Headband", "星辰头带", "A starry headband for the Memory Owl.", "为记忆猫头鹰准备的星辰头带。", 1, "celestial-scholar", 10),
+            ("celestial-scarf", "memory-owl/celestial-scarf.png", AppearanceItemTypes.Bodywear, "Celestial Scarf", "星辰围巾", "A soft celestial scarf for the Memory Owl.", "为记忆猫头鹰准备的柔软星辰围巾。", 1, "celestial-scholar", 20),
+            ("garden-headband", "memory-owl/garden-headband.png", AppearanceItemTypes.Headwear, "Garden Headband", "花园头带", "A leafy headband for wandering through new memories.", "戴上绿叶与小花，去发现新的记忆。", 4, "garden-wanderer", 30),
+            ("garden-scarf", "memory-owl/garden-scarf.png", AppearanceItemTypes.Bodywear, "Garden Scarf", "花园围巾", "A soft sage scarf embroidered with little leaves.", "绣着小叶子的鼠尾草色围巾。", 5, "garden-wanderer", 40),
+        };
+        foreach (var (key, assetKey, itemType, titleEn, titleZh, descriptionEn, descriptionZh, requiredLevel, setKey, sortOrder) in owlWearables)
+        {
+            if (await _db.AppearanceDefinitions.AnyAsync(x => x.Key == key, cancellationToken))
+                continue;
+            _db.AppearanceDefinitions.Add(new AppearanceDefinition
+            {
+                Id = Guid.NewGuid().ToString("N"), Key = key, ItemType = itemType,
+                CompanionAvatarKey = "memory-owl", SetKey = setKey, AssetKey = assetKey,
+                TitleEn = titleEn, TitleZh = titleZh, DescriptionEn = descriptionEn, DescriptionZh = descriptionZh,
+                RequiredLevel = requiredLevel, SortOrder = sortOrder, IsActive = true,
+                CreatedAt = now, UpdatedAt = now, CreatedBy = "system", UpdatedBy = "system"
+            });
+        }
     }
 
     private async Task EnsureStarterPalaceSceneAsync(CancellationToken cancellationToken)

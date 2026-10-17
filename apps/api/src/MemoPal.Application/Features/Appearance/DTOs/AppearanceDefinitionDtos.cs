@@ -4,6 +4,8 @@ public sealed record AppearanceDefinitionDto(
     string Id,
     string Key,
     string ItemType,
+    string? CompanionAvatarKey,
+    string? SetKey,
     string AssetKey,
     string? ImageUrl,
     string TitleEn,
@@ -24,6 +26,8 @@ public sealed class AppearanceDefinitionUpsertRequest
     public string? Id { get; set; }
     public string? Key { get; set; }
     public string? ItemType { get; set; }
+    public string? CompanionAvatarKey { get; set; }
+    public string? SetKey { get; set; }
     public string? AssetKey { get; set; }
     public string? ImageUrl { get; set; }
     public string? TitleEn { get; set; }

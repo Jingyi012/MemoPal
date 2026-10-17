@@ -1,4 +1,4 @@
-export type AppearanceItemType = 'frame' | 'decoration' | 'outfit';
+export type AppearanceItemType = 'frame' | 'decoration' | 'outfit' | 'headwear' | 'bodywear' | 'backwear' | 'handItem';
 
 export interface AppearanceDefinitionDto {
   id: string;
@@ -6,6 +6,8 @@ export interface AppearanceDefinitionDto {
   itemType: AppearanceItemType;
   assetKey: string;
   imageUrl?: string | null;
+  companionAvatarKey?: string | null;
+  setKey?: string | null;
   titleEn: string;
   titleZh: string;
   descriptionEn: string;

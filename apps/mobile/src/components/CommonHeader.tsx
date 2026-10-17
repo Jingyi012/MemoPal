@@ -35,6 +35,8 @@ interface HeaderProps {
   showAiCredits?: boolean;
   /** Use a shorter header for focused practice sessions. */
   compact?: boolean;
+  /** Let the parent screen's background show through the header. */
+  backgroundMode?: 'solid' | 'transparent';
 }
 
 export const CommonHeader: React.FC<HeaderProps> = ({
@@ -50,6 +52,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
   showHomeButton = false,
   showAiCredits = true,
   compact = false,
+  backgroundMode = 'solid',
 }) => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -57,7 +60,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
 
   return (
-    <View style={[styles.header, { backgroundColor: activeTheme.canvas, borderBottomColor: activeTheme.line }]}>
+    <View style={[styles.header, { backgroundColor: backgroundMode === 'transparent' ? 'transparent' : activeTheme.canvas, borderBottomColor: activeTheme.line }]}>
       <View style={[styles.headerInner, compact && styles.compactHeaderInner, { paddingTop: insets.top + (compact ? 4 : 8) }]}>
         <View style={[styles.row, compact && styles.compactRow]}>
           {/* Back button slot */}

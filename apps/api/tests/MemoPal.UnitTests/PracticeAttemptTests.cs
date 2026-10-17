@@ -17,6 +17,8 @@ public sealed class PracticeAttemptTests
         const string userId = "practice-user";
         await using var db = CreateDbContext(userId);
         SeedMemorySet(db, userId, "set-1", "item-1", "item-2");
+        db.Users.Local.Single(x => x.Id == userId).SelectedAvatarId = "fox";
+        db.AvatarDefinitions.Add(new AvatarDefinition { Id = "fox", Key = "fox" });
         await db.SaveChangesAsync();
         var handler = new CreatePracticeAttemptBatchCommandHandler(db);
         var request = new PracticeAttemptBatchRequest
@@ -55,6 +57,9 @@ public sealed class PracticeAttemptTests
         Assert.Equal(1, await db.PracticeAttempts.CountAsync());
         Assert.Equal(2, await db.PracticeResponses.CountAsync());
         Assert.Equal(1, await db.XpEvents.CountAsync());
+        Assert.Equal(5, (await db.CompanionBonds.SingleAsync()).BondPoints);
+        Assert.Equal(1, await db.CompanionMemories.CountAsync(x => x.Type == CompanionMemoryTypes.Practice));
+        Assert.Equal(1, await db.CompanionMemories.CountAsync(x => x.Type == CompanionMemoryTypes.FirstPracticeMilestone));
         Assert.Equal(20, (await db.Users.SingleAsync()).TotalXp);
         var userStats = await db.UserStats.SingleAsync(x => x.UserId == userId);
         Assert.Equal(1, userStats.CurrentStreak);
@@ -70,6 +75,62 @@ public sealed class PracticeAttemptTests
         Assert.Equal(0, schedules[1].IntervalDays);
         Assert.False(schedules[1].LastResultCorrect);
         Assert.All(schedules, schedule => Assert.Equal(userId, schedule.CreatedBy));
+    }
+
+    [Fact]
+    public async Task Practice_Milestones_Are_One_Time_And_Feed_Shows_Only_One_Recent_Practice()
+    {
+        const string userId = "milestone-user";
+        await using var db = CreateDbContext(userId);
+        SeedMemorySet(db, userId, "milestone-set", "milestone-item");
+        db.Users.Local.Single(x => x.Id == userId).SelectedAvatarId = "milestone-fox";
+        db.AvatarDefinitions.Add(new AvatarDefinition { Id = "milestone-fox", Key = "memory-fox" });
+        await db.SaveChangesAsync();
+        var request = new PracticeAttemptBatchRequest
+        {
+            Attempts = Enumerable.Range(1, 20).Select(index => new PracticeAttemptInput
+            {
+                ClientAttemptId = $"milestone-attempt-{index}", MemorySetId = "milestone-set",
+                Mode = PracticeModes.Recall, DurationMs = 1000,
+                Responses = [new PracticeResponseInput { MemoryItemId = "milestone-item", IsCorrect = true, AttemptCount = 1, ResponseMs = 500 }]
+            }).ToList()
+        };
+        var handler = new CreatePracticeAttemptBatchCommandHandler(db);
+
+        await handler.Handle(new CreatePracticeAttemptBatchCommand(userId, request), default);
+        await handler.Handle(new CreatePracticeAttemptBatchCommand(userId, request), default);
+
+        Assert.Equal(100, (await db.CompanionBonds.SingleAsync()).BondPoints);
+        Assert.Equal(20, await db.CompanionMemories.CountAsync(x => x.Type == CompanionMemoryTypes.Practice));
+        Assert.Equal(1, await db.CompanionMemories.CountAsync(x => x.Type == CompanionMemoryTypes.FirstPracticeMilestone));
+        Assert.Equal(1, await db.CompanionMemories.CountAsync(x => x.Type == CompanionMemoryTypes.TenthPracticeMilestone));
+        Assert.Equal(2, await db.CompanionMemories.CountAsync(x => x.Type == CompanionMemoryTypes.BondStageMilestone));
+        var feed = (await new MemoPal.Application.Features.Companion.Queries.GetCompanionQueryHandler(db)
+            .Handle(new MemoPal.Application.Features.Companion.Queries.GetCompanionQuery(userId), default)).Data!.Memories;
+        Assert.Equal(5, feed.Count);
+        Assert.Equal(1, feed.Count(x => x.Type == CompanionMemoryTypes.Practice));
+    }
+
+    [Fact]
+    public async Task Practice_Crossing_Best_Friends_Threshold_Creates_One_Authored_Milestone()
+    {
+        const string userId = "best-friends-user";
+        await using var db = CreateDbContext(userId);
+        SeedMemorySet(db, userId, "best-friends-set", "best-friends-item");
+        db.Users.Local.Single(x => x.Id == userId).SelectedAvatarId = "best-friends-fox";
+        db.AvatarDefinitions.Add(new AvatarDefinition { Id = "best-friends-fox", Key = "memory-fox" });
+        db.CompanionBonds.Add(new CompanionBond { Id = "best-friends-bond", UserId = userId, AvatarId = "best-friends-fox", BondPoints = 295 });
+        await db.SaveChangesAsync();
+
+        var handler = new CreatePracticeAttemptBatchCommandHandler(db);
+        var request = BuildRecallRequest("best-friends-attempt", "best-friends-set", "best-friends-item");
+        await handler.Handle(new CreatePracticeAttemptBatchCommand(userId, request), default);
+        await handler.Handle(new CreatePracticeAttemptBatchCommand(userId, request), default);
+
+        var milestone = await db.CompanionMemories.SingleAsync(x => x.Type == CompanionMemoryTypes.BondStageMilestone);
+        Assert.Equal("You became best friends.", milestone.SummaryEn);
+        Assert.Equal("你们成为了最好的伙伴。", milestone.SummaryZh);
+        Assert.Equal("milestone:bond-stage:best-friends", milestone.SourceId);
     }
 
     [Fact]
