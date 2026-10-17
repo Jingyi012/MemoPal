@@ -39,6 +39,9 @@ export function MemoryAvatar({ avatar, size = 72, level, showLevelBadge = false,
               <AppImage
                 contentFit="contain"
                 imageUrl={imageUrl ?? avatar?.imageUrl ?? undefined}
+                placeholder={null}
+                cachePolicy="memory-disk"
+                transition={160}
                 style={[styles.image, { borderRadius: baseImageSize / 2 }]}
               />
             </View>
@@ -60,7 +63,7 @@ export function MemoryAvatar({ avatar, size = 72, level, showLevelBadge = false,
 
 function AppearanceLayer({ item, style }: { item: AppearanceDefinition; style: StyleProp<ImageStyle> }) {
   if (!item.imageUrl) return null;
-  return <AppImage contentFit="contain" imageUrl={item.imageUrl} style={style} />;
+  return <AppImage contentFit="contain" imageUrl={item.imageUrl} placeholder={null} cachePolicy="memory-disk" transition={160} style={style} />;
 }
 
 export function AppearanceItemPreview({ item, size = 88 }: { item: AppearanceDefinition; size?: number }) {
@@ -70,6 +73,9 @@ export function AppearanceItemPreview({ item, size = 88 }: { item: AppearanceDef
       <AppImage
         contentFit="contain"
         imageUrl={item.imageUrl ?? undefined}
+        placeholder={null}
+        cachePolicy="memory-disk"
+        transition={160}
         style={{ width: '100%', height: '100%', backgroundColor: 'transparent' }}
       />
     </View>

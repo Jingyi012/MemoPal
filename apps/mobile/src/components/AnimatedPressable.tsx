@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import React, { useEffect } from 'react';
-import { Pressable, PressableProps, StyleProp, ViewStyle } from 'react-native';
+import { Pressable, PressableProps, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { cssInterop } from 'nativewind';
 import Animated, {
   useAnimatedStyle,
@@ -13,7 +13,6 @@ import Animated, {
 const PressableBase = cssInterop(Pressable, {
   className: 'style',
 });
-const AnimatedPressableBase = Animated.createAnimatedComponent(PressableBase);
 
 interface AnimatedPressableProps extends PressableProps {
   children: React.ReactNode;
@@ -53,32 +52,42 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
     ],
   }));
   const classNameProps = className ? { className } : {};
+  const wrapperLayout = { ...(StyleSheet.flatten(containerStyle) ?? {}) };
+  const pressableLayout = StyleSheet.flatten(style) ?? {};
+  for (const key of [
+    'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight',
+    'flex', 'flexGrow', 'flexShrink', 'flexBasis', 'alignSelf', 'position',
+    'top', 'right', 'bottom', 'left',
+  ] as const) {
+    if (wrapperLayout[key] == null && pressableLayout[key] != null) {
+      Object.assign(wrapperLayout, { [key]: pressableLayout[key] });
+    }
+  }
   const firePress = (event: Parameters<NonNullable<PressableProps['onPress']>>[0]) => {
     onPress?.(event);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   return (
-    <AnimatedPressableBase
-      {...rest}
-      {...classNameProps}
-      accessibilityRole={accessibilityRole}
-      // Keep layout and visual styles on the actual press target. A wrapper
-      // View can otherwise shrink-wrap content and ignore width/flex styles
-      // intended for the button itself.
-      style={[containerStyle, style, animatedStyle]}
-      onPressIn={(e) => {
-        if (!reduceMotion) scale.value = withSpring(0.96, { stiffness: 300 });
-        if (pressOnIn) firePress(e);
-      }}
-      onPressOut={() => {
-        if (!reduceMotion) scale.value = withSpring(1);
-      }}
-      onPress={(e) => {
-        if (!pressOnIn) firePress(e);
-      }}>
-      {children}
-    </AnimatedPressableBase>
+    <Animated.View style={[wrapperLayout, animatedStyle]}>
+      <PressableBase
+        {...rest}
+        {...classNameProps}
+        accessibilityRole={accessibilityRole}
+        style={style}
+        onPressIn={(e) => {
+          if (!reduceMotion) scale.value = withSpring(0.96, { stiffness: 300 });
+          if (pressOnIn) firePress(e);
+        }}
+        onPressOut={() => {
+          if (!reduceMotion) scale.value = withSpring(1);
+        }}
+        onPress={(e) => {
+          if (!pressOnIn) firePress(e);
+        }}>
+        {children}
+      </PressableBase>
+    </Animated.View>
   );
 };
 

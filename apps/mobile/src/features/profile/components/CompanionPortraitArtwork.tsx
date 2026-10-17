@@ -13,6 +13,9 @@ export function CompanionPortraitArtwork({ imageUrl, size, accessibilityLabel }:
       <AppImage
         imageUrl={imageUrl}
         contentFit="contain"
+        placeholder={null}
+        cachePolicy="memory-disk"
+        transition={160}
         accessible={false}
         style={[styles.image, { width: size, height: size }]}
       />

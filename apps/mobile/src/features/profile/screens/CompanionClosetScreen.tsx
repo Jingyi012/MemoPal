@@ -39,7 +39,6 @@ export default function CompanionClosetScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { language, t } = useTranslation('profile');
-  const { t: companionT } = useTranslation('companion');
   const { user, isLoading: userLoading } = useCurrentUser();
   const { avatars, isLoading: avatarsLoading } = useAvatars();
   const { items: appearanceItems, isLoading: appearanceLoading } = useAppearance();
@@ -156,7 +155,7 @@ export default function CompanionClosetScreen() {
   return (
     <View style={styles.page}>
       <CommonHeader
-        title={companionT('companionClosetTitle')}
+        title={t('customizeAppearance')}
         backAction={() => router.back()}
         showAiCredits={false}
       />

@@ -49,7 +49,7 @@ export function CompanionCharacterArtwork({ look, items, companionKey, character
 
   return (
     <View accessible accessibilityLabel={accessibilityLabel} style={{ width: size, height: size }}>
-      {characterImageUrl ? <AppImage imageUrl={characterImageUrl} style={[styles.layer, styles.transparent, { width: size, height: size }]} contentFit="contain" accessible={false} /> : null}
+      {characterImageUrl ? <AppImage imageUrl={characterImageUrl} style={[styles.layer, styles.transparent, { width: size, height: size }]} contentFit="contain" placeholder={null} cachePolicy="memory-disk" transition={160} accessible={false} /> : null}
       {layers.map(({ item }) => <AppImage
         key={item.id}
         imageUrl={item.imageUrl ?? undefined}
@@ -63,6 +63,9 @@ export function CompanionCharacterArtwork({ look, items, companionKey, character
           ],
         }]}
         contentFit="contain"
+        placeholder={null}
+        cachePolicy="memory-disk"
+        transition={160}
         accessible={false}
       />)}
     </View>

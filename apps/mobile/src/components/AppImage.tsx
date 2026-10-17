@@ -87,8 +87,9 @@ export const AppImage = ({
       contentFit={contentFit}
       transition={transition}
       cachePolicy={cachePolicy}
-      // If no custom blurhash is provided, use the standard one
-      placeholder={placeholder || { blurhash: DEFAULT_BLURHASH }}
+      // Passing null explicitly lets artwork with transparent backgrounds
+      // reveal its designed parent surface instead of flashing a gray blur.
+      placeholder={placeholder === undefined ? { blurhash: DEFAULT_BLURHASH } : placeholder}
     />
   );
 };
