@@ -62,6 +62,7 @@ export const Copy = createIcon('copy');
 export const Crown = createIcon('ribbon');
 export const Eye = createIcon('eye');
 export const Flag = createIcon('flag');
+export const Flame = createIcon('flame');
 export const Globe2 = createIcon('globe');
 export const GripVertical = createIcon('menu');
 export const Hash = createIcon('keypad');

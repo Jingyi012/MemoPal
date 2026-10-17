@@ -45,8 +45,9 @@ export function AiCreditCoinButton() {
       onPress={() => router.push('/ai-credits')}
       style={styles.coinButton}>
       <View style={styles.coinIcon}>
-        <Coins size={14} color={theme.sunDeep} strokeWidth={2.5} />
+        <Sparkles size={14} color={theme.violetDeep} strokeWidth={2.5} />
       </View>
+      <Text style={styles.coinType}>AI</Text>
       <Text style={styles.coinBalance}>{displayBalance}</Text>
     </AnimatedPressable>
   );
@@ -60,8 +61,9 @@ function formatCompactCredits(value: number) {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  coinButton: { minWidth: 60, height: 44, paddingHorizontal: 8, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: theme.violetTint, borderWidth: 1.5, borderColor: theme.violetLine },
-  coinIcon: { width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.sunTint },
+  coinButton: { minWidth: 78, height: 44, paddingHorizontal: 8, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: theme.violetTint, borderWidth: 1.5, borderColor: theme.violetLine },
+  coinIcon: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
+  coinType: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 10 },
   coinBalance: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 76, padding: 14, borderRadius: 20, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint },
   compactCard: { minHeight: 58, paddingVertical: 10 },

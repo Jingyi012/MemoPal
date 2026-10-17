@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>首页改版</title>
+<style>
+:root{--bg:#F6F3FF;--card:#fff;--ink:#241B4B;--sub:#5E5784;--line:#E6E0F7;--p:#6A4CD8;--pl:#EEE8FF;--gold:#FFC93C;--fire:#FF7A2F;--red:#D6336C;--redl:#FFE8EF;--grey:#E9E6F2;--tip:#E3F6EA;--tipi:#1B6B3E;--shadow:0 6px 20px rgba(80,50,180,.12);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--redl:#4A2040;--grey:#2D2750;--tip:#16372B;--tipi:#8FE0B0;--shadow:0 6px 20px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--redl:#4A2040;--grey:#2D2750;--tip:#16372B;--tipi:#8FE0B0;--shadow:0 6px 20px rgba(0,0,0,.35)}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:"Nunito","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;padding:18px 20px 96px}
+header{display:flex;align-items:center;gap:12px}
+.av{position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(var(--gold) 5%,var(--grey) 0);display:grid;place-items:center;flex:none}
+.av span{width:48px;height:48px;border-radius:50%;background:var(--pl);display:grid;place-items:center;font-size:28px}
+.av b{position:absolute;right:-4px;bottom:-4px;background:var(--p);color:#fff;font-size:11px;border-radius:99px;padding:2px 6px;border:2px solid var(--bg)}
+.hi{flex:1;min-width:0}.hi h1{font-size:20px;font-weight:800}.hi p{font-size:13px;color:var(--sub);font-weight:700;margin-top:2px}
+.chips{display:flex;flex-direction:column;gap:6px}
+.chip{display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px 10px;font-weight:800;font-size:13px}
+.chip.f{color:var(--fire)}
+.hero{margin-top:20px;border-radius:26px;padding:20px;color:#fff;background:linear-gradient(140deg,#2B1B6B,#5B3BC4);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(255,201,60,.35),transparent 70%)}
+.hrow{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
+.ring{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;flex:none;background:conic-gradient(var(--gold) 0%,rgba(255,255,255,.2) 0)}
+.ring div{width:68px;height:68px;border-radius:50%;background:#33217F;display:grid;place-items:center;text-align:center;line-height:1}
+.ring b{font-size:26px;font-weight:800}.ring small{font-size:11px;opacity:.8}
+.hrow h2{font-size:21px;font-weight:800}.hrow p{font-size:13px;opacity:.85;margin-top:4px}
+.go{position:relative;z-index:1;margin-top:16px;width:100%;border:0;border-radius:16px;padding:15px;background:var(--gold);color:#3A2800;font:800 17px inherit;font-family:inherit;cursor:pointer;box-shadow:0 5px 0 #D9A41A}
+.go:active{transform:translateY(3px);box-shadow:0 2px 0 #D9A41A}
+.go:focus-visible,.link:focus-visible,.row:focus-visible,.tipb:focus-visible{outline:3px solid var(--p);outline-offset:2px}
+h3{font-size:17px;font-weight:800}
+.sh{display:flex;justify-content:space-between;align-items:center;margin:26px 0 10px}
+.link{border:0;background:none;color:var(--p);font:800 13px inherit;font-family:inherit;cursor:pointer;padding:4px}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:0;border-radius:18px;padding:14px;box-shadow:var(--shadow);font-family:inherit;color:inherit;cursor:pointer;margin-bottom:10px}
+.ic{width:44px;height:44px;border-radius:14px;background:var(--redl);display:grid;place-items:center;font-size:22px;flex:none}
+.ic.b{background:var(--pl)}
+.rt{flex:1;min-width:0}.rt b{display:block;font-size:15px}.rt small{font-size:12px;color:var(--sub);font-weight:700}
+.late{color:var(--red)!important}
+.bar{height:6px;border-radius:99px;background:var(--grey);margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--p)}
+.play{width:36px;height:36px;border-radius:50%;background:var(--p);color:#fff;display:grid;place-items:center;font-size:14px;flex:none}
+.more{display:none}.more.show{display:flex}
+.week{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--shadow)}
+.days{display:flex;justify-content:space-between;margin-top:12px}
+.d{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;color:var(--sub);font-weight:700}
+.dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:2px dashed var(--line);font-size:15px}
+.dot.on{background:var(--p);border:2px solid var(--p);color:#fff}
+.dot.t{border:2px solid var(--p);background:var(--pl);animation:pu 2s ease-in-out infinite}
+@keyframes pu{50%{box-shadow:0 0 0 6px rgba(106,76,216,.15)}}
+@media (prefers-reduced-motion:reduce){.dot.t{animation:none}}
+.wk p{font-size:13px;color:var(--sub);font-weight:700;margin-top:12px}
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--tip);border-radius:22px;padding:16px;margin-top:20px}
+.tip .o{font-size:34px;line-height:1}
+.tip small{font-size:12px;color:var(--tipi);font-weight:800}
+.tip b{display:block;font-size:16px;margin:2px 0}.tip p{font-size:13px;color:var(--sub);font-weight:700;line-height:1.5}
+.tipb{margin-top:8px;border:0;background:rgba(255,255,255,.55);color:var(--tipi);border-radius:99px;padding:6px 12px;font:800 12px inherit;font-family:inherit;cursor:pointer}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--card);border-top:1px solid var(--line)}
+nav div{display:flex;width:100%;max-width:430px;justify-content:space-around;padding:8px 0}
+nav span{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:700;color:var(--sub);gap:2px;padding:4px 10px;border-radius:14px}
+nav span.on{background:var(--pl);color:var(--p)}nav em{font-style:normal;font-size:20px}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div class="av"><span>🦉</span><b>Lv3</b></div>
+    <div class="hi"><h1>下午好，Admin 👋</h1><p id="sub">7 个词等你回忆</p></div>
+    <div class="chips"><div class="chip f">🔥 2</div><div class="chip">🪙 999k</div></div>
+  </header>
+
+  <section class="hero">
+    <div class="hrow">
+      <div class="ring" id="ring"><div><span><b id="left">7</b><br><small>项待复习</small></span></div></div>
+      <div><h2 id="ht">今日复习</h2><p id="hp">快速回忆，让记忆保持牢固</p></div>
+    </div>
+    <button class="go" id="go">开始复习 · +10 XP</button>
+  </section>
+
+  <div class="sh"><h3>继续练习</h3></div>
+  <button class="row">
+    <div class="ic b">🕯️</div>
+    <div class="rt"><b>拼写探险</b><small>0 / 5 项已回忆</small><div class="bar"><i></i></div></div>
+    <div class="play">▶</div>
+  </button>
+
+  <div class="sh"><h3>待复习</h3><button class="link" id="tog">查看全部 7 项</button></div>
+  <button class="row"><div class="ic">🕯️</div><div class="rt"><b>拼写探险</b><small class="late">已逾期 · 5 项待复习</small></div><span>›</span></button>
+  <button class="row"><div class="ic">🕯️</div><div class="rt"><b>示例词表</b><small class="late">已逾期 · 4 项待复习</small></div><span>›</span></button>
+  <button class="row more"><div class="ic">🌱</div><div class="rt"><b>数字桩 11–20</b><small>今天到期 · 2 项待复习</small></div><span>›</span></button>
+
+  <div class="sh"><h3>本周足迹</h3></div>
+  <section class="week wk">
+    <div class="days" id="days"></div>
+    <p>连续 2 天，再练 1 天点亮三日火花 🔥</p>
+  </section>
+
+  <section class="tip">
+    <div class="o">🦉</div>
+    <div>
+      <small>记忆小贴士</small>
+      <b id="tt">让画面夸张一点</b>
+      <p id="tp">奇怪又巨大的图像，比普通图像更容易记住。</p>
+      <button class="tipb" id="tn">换一条</button>
+    </div>
+  </section>
+</main>
+<nav><div>
+  <span class="on"><em>🏠</em>首页</span><span><em>🧩</em>练习</span><span><em>📚</em>记忆库</span><span><em>📈</em>进度</span><span><em>👤</em>我的</span>
+</div></nav>
+<script>
+var total=7,left=7,xp=5;
+var names=["日","一","二","三","四","五","六"],on=[0,1,1,0,0,0,0],today=3;
+var dEl=document.getElementById("days");
+names.forEach(function(n,i){
+  var c=on[i]?"on":(i===today?"t":"");
+  dEl.insertAdjacentHTML("beforeend",'<div class="d"><div class="dot '+c+'">'+(on[i]?"🐾":"")+'</div>'+n+'</div>');
+});
+function upd(){
+  var done=total-left,pct=done/total*100;
+  document.getElementById("ring").style.background="conic-gradient(var(--gold) "+pct+"%,rgba(255,255,255,.2) 0)";
+  document.getElementById("left").textContent=left;
+  document.getElementById("sub").textContent=left?left+" 个词等你回忆":"今天的复习全部完成";
+  var b=document.getElementById("go");
+  if(!left){b.textContent="今天全部完成 🎉";b.disabled=true;b.style.opacity=.8;
+    document.getElementById("ht").textContent="太棒了！";document.getElementById("hp").textContent="明天见，记忆会更牢固";
+    var d=document.querySelectorAll(".dot")[today];d.className="dot on";d.textContent="🐾";}
+  else b.textContent=(done?"继续复习":"开始复习")+" · +10 XP";
+}
+document.getElementById("go").addEventListener("click",function(){if(left>0){left--;upd();}});
+var tog=document.getElementById("tog");
+tog.addEventListener("click",function(){
+  var m=document.querySelector(".more");m.classList.toggle("show");
+  tog.textContent=m.classList.contains("show")?"收起":"查看全部 7 项";
+});
+var tips=[["让画面夸张一点","奇怪又巨大的图像，比普通图像更容易记住。"],["加入动作和声音","会动、会响的画面，大脑记得更牢。"],["用熟悉的地点","把词放进你熟悉的房间，回忆时沿路走一遍。"],["隔一天再复习","在快要忘记的时候回忆，效果最好。"]],ti=0;
+document.getElementById("tn").addEventListener("click",function(){
+  ti=(ti+1)%tips.length;
+  document.getElementById("tt").textContent=tips[ti][0];
+  document.getElementById("tp").textContent=tips[ti][1];
+});
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { LevelProgressHeader } from '@/features/gamification/achievements/components/LevelProgressHeader';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { useMilestones } from '@/features/gamification/shared/hooks/useMilestones';
+import { WeekFootprintCard } from '@/features/gamification/shared';
 import type { Milestone } from '@/features/gamification/shared/types/milestone';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
@@ -53,6 +54,7 @@ export default function AchievementsScreen() {
   const { styles } = useStyles();
   const router = useRouter();
   const { t } = useTranslation('achievements');
+  const { language, t: homeT } = useTranslation('home');
   const { user, isLoading: userLoading, refetch: refetchUser } = useCurrentUser();
   const { milestones, isLoading: milestonesLoading, refetch: refetchMilestones } = useMilestones();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
@@ -139,7 +141,12 @@ export default function AchievementsScreen() {
   const selectedActivity =
     weeklyActivity.find((day) => day.date === selectedActivityDate) ??
     [...weeklyActivity].reverse().find((day) => day.sessions > 0);
-  const weeklySessions = weeklyActivity.reduce((sum, day) => sum + day.sessions, 0);
+  const weekFooterText = selectedActivity
+    ? `${new Date(`${selectedActivity.date.slice(0, 10)}T12:00:00`).toLocaleDateString(
+        language === 'zh' ? 'zh-CN' : 'en-US',
+        { month: 'short', day: 'numeric' }
+      )} · ${selectedActivity.sessions} ${homeT('practiceSessions')}`
+    : t('weekEmpty');
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -203,17 +210,38 @@ export default function AchievementsScreen() {
         />
 
         <WeekFootprintCard
+          title={t('weekTrail')}
           activity={weeklyActivity}
-          totalSessions={weeklySessions}
-          selected={selectedActivity}
+          footerText={weekFooterText}
           selectedDate={selectedActivityDate ?? selectedActivity?.date}
           onSelectDate={setSelectedActivityDate}
-          recallRate={
-            practiceStats?.sessionsCompleted ? `${practiceStats.firstAttemptRecallPercent}%` : '—'
-          }
-          sessionsCompleted={practiceStats?.sessionsCompleted ?? 0}
-          wordsLearned={practiceStats?.wordsLearned ?? 0}
         />
+
+        <View style={styles.learningOverview}>
+          <Text style={styles.sectionLabel}>{t('learningOverview')}</Text>
+          <View style={styles.learningStats}>
+            <SnapshotMetric
+              value={practiceStats?.sessionsCompleted ? `${practiceStats.sessionsCompleted}` : '0'}
+              label={t('sessionsDone')}
+              icon={Check}
+              color="#D5648B"
+            />
+            <SnapshotMetric
+              value={practiceStats?.wordsLearned ? `${practiceStats.wordsLearned}` : '0'}
+              label={t('wordsLearned')}
+              icon={BookOpen}
+              color="#4E9D8D"
+            />
+            <SnapshotMetric
+              value={practiceStats?.sessionsCompleted
+                ? `${practiceStats.firstAttemptRecallPercent}%`
+                : '—'}
+              label={t('firstTryRecall')}
+              icon={Sparkles}
+              color="#7558D8"
+            />
+          </View>
+        </View>
 
         {nextMilestone ? (
           <NextWinCard milestone={nextMilestone} onPress={() => router.push('/(tabs)/practice')} />
@@ -547,109 +575,6 @@ function ProgressRing({ percent, color, isComplete }: { percent: number; color: 
   );
 }
 
-function WeekFootprintCard({
-  activity,
-  totalSessions,
-  selected,
-  selectedDate,
-  onSelectDate,
-  recallRate,
-  sessionsCompleted,
-  wordsLearned,
-}: {
-  activity: { date: string; sessions: number }[];
-  totalSessions: number;
-  selected?: { date: string; sessions: number };
-  selectedDate?: string;
-  onSelectDate: (date: string) => void;
-  recallRate: string;
-  sessionsCompleted: number;
-  wordsLearned: number;
-}) {
-  const { styles } = useStyles();
-  const { language, t } = useTranslation('achievements');
-  const { t: homeT } = useTranslation('home');
-  const weekdayLabels = [
-    homeT('weekdayMon'),
-    homeT('weekdayTue'),
-    homeT('weekdayWed'),
-    homeT('weekdayThu'),
-    homeT('weekdayFri'),
-    homeT('weekdaySat'),
-    homeT('weekdaySun'),
-  ];
-  const selectedDateLabel = selected?.date
-    ? new Date(`${selected.date.slice(0, 10)}T12:00:00`).toLocaleDateString(
-        language === 'zh' ? 'zh-CN' : 'en-US',
-        { month: 'short', day: 'numeric' }
-      )
-    : '';
-  const now = new Date();
-  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-  return (
-    <View style={styles.weekCard}>
-      <View style={styles.weekHeader}>
-        <Text style={styles.weekTitle}>{t('weekTrail')}</Text>
-        <View style={styles.weekTotalPill}>
-          <Text style={styles.weekTotalValue}>{activity.filter((day) => day.sessions > 0).length}/7</Text>
-          <Text style={styles.weekTotalUnit}>{t('weekDaysUnit')}</Text>
-        </View>
-      </View>
-      <View style={styles.weekDays}>
-        {activity.map((day) => {
-              const weekdayIndex = new Date(`${day.date.slice(0, 10)}T12:00:00`).getDay();
-              const dayLabel = weekdayLabels[(weekdayIndex + 6) % 7];
-              const active = selectedDate === day.date;
-              const today = day.date.slice(0, 10) === todayKey;
-              return (
-                <AnimatedPressable
-                  key={day.date}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${dayLabel}: ${day.sessions} ${homeT('practiceSessions')}`}
-                  accessibilityState={{ selected: active }}
-                  onPress={() => onSelectDate(day.date)}
-                  style={[styles.weekDay, active && styles.weekDayActive]}>
-                  <View
-                    style={[
-                      styles.weekOrb,
-                      day.sessions > 0 && styles.weekOrbDone,
-                      active && styles.weekOrbActive,
-                      today && styles.weekOrbToday,
-                    ]}>
-                    <Text
-                      style={[styles.weekOrbValue, day.sessions > 0 && styles.weekOrbValueDone]}>
-                      {day.sessions > 0 ? '🐾' : '·'}
-                    </Text>
-                  </View>
-                  <Text style={[styles.weekDayName, (active || today) && styles.weekDayNameActive]}>
-                    {dayLabel}
-                  </Text>
-                </AnimatedPressable>
-              );
-        })}
-      </View>
-      {totalSessions > 0 ? (
-        <View style={styles.weekFooter}>
-            <Text style={styles.weekFooterText}>
-              {selected?.sessions
-                ? `${selectedDateLabel} · ${selected.sessions} ${homeT('practiceSessions')}`
-                : t('weekEmpty')}
-            </Text>
-        </View>
-      ) : (
-        <Text style={styles.weekEmpty}>{t('weekEmpty')}</Text>
-      )}
-      <View style={styles.weekStatsDivider} />
-      <View style={styles.weekStats}>
-        <SnapshotMetric value={recallRate} label={t('firstTryRecall')} icon={Sparkles} color="#7558D8" />
-        <SnapshotMetric value={`${sessionsCompleted}`} label={t('sessionsDone')} icon={Check} color="#D5648B" />
-        <SnapshotMetric value={`${wordsLearned}`} label={t('wordsLearned')} icon={BookOpen} color="#4E9D8D" />
-      </View>
-    </View>
-  );
-}
-
 function getMilestoneCopy(milestone: Milestone, t: AchievementTranslate) {
   switch (milestone.key) {
     case 'first_recall':
@@ -685,7 +610,9 @@ const useStyles = createThemedStyles((theme) =>
     page: { flex: 1 },
     content: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 40, gap: 16 },
     levelHeaderSpacing: { marginBottom: 0 },
-    snapshotMetric: { flex: 1, minWidth: 0, minHeight: 74, alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: 15, backgroundColor: theme.canvas },
+    learningOverview: { gap: 9 },
+    learningStats: { flexDirection: 'row', alignItems: 'stretch', gap: 9 },
+    snapshotMetric: { flex: 1, minWidth: 0, minHeight: 88, paddingVertical: 9, alignItems: 'center', justifyContent: 'center', gap: 3, borderRadius: 15, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.line },
     snapshotIcon: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center', borderRadius: 8, marginBottom: 2 },
     snapshotMetricValue: {
       color: theme.ink,
@@ -693,81 +620,6 @@ const useStyles = createThemedStyles((theme) =>
       fontSize: 16,
     },
     snapshotMetricLabel: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: 8, textAlign: 'center' },
-    weekCard: {
-      paddingHorizontal: 15,
-      paddingVertical: 12,
-      borderRadius: 21,
-      borderWidth: 1,
-      borderColor: theme.line,
-      backgroundColor: theme.paper,
-    },
-    weekHeader: {
-      minHeight: 32,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    weekTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15 },
-    weekTotalPill: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
-      gap: 4,
-      borderRadius: 999,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      backgroundColor: theme.violetTint,
-    },
-    weekTotalValue: {
-      color: theme.violetDeep,
-      fontFamily: typography.displayExtraBold,
-      fontSize: 13,
-    },
-    weekTotalUnit: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9 },
-    weekEmpty: {
-      color: theme.inkSoft,
-      fontFamily: typography.bodySemibold,
-      fontSize: 11,
-      marginTop: 6,
-      marginBottom: 3,
-    },
-    weekDays: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-    weekDay: {
-      flex: 1,
-      minWidth: 0,
-      minHeight: 62,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 13,
-      gap: 4,
-    },
-    weekDayActive: { backgroundColor: theme.violetTint },
-    weekDayName: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9 },
-    weekDayNameActive: { color: theme.violetDeep },
-    weekOrb: {
-      width: 31,
-      height: 31,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 99,
-      borderWidth: 1.5,
-      borderColor: theme.line,
-      backgroundColor: theme.canvas,
-    },
-    weekOrbDone: { borderColor: theme.violet, backgroundColor: theme.violet },
-    weekOrbActive: { borderColor: theme.sun, borderWidth: 2 },
-    weekOrbToday: { borderColor: theme.violetDeep, borderWidth: 2 },
-    weekOrbValue: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-    weekOrbValueDone: { color: theme.onAccent },
-    weekFooter: {
-      minHeight: 23,
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 5,
-      paddingHorizontal: 2,
-    },
-    weekFooterText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
-    weekStatsDivider: { height: 1, backgroundColor: theme.line, marginTop: 9, marginBottom: 10 },
-    weekStats: { flexDirection: 'row', alignItems: 'center', minHeight: 48 },
     nextWinCard: {
       padding: 13,
       borderRadius: 20,
