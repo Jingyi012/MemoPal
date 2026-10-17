@@ -41,6 +41,22 @@ public sealed class DatabaseAiSettingsTests
     }
 
     [Fact]
+    public async Task LevelConfigPreservesCustomAvatarRewards()
+    {
+        using var db = AiCreditTests.CreateDb();
+        var value = """{"xpPerLevel":120,"levelTitles":[{"level":1,"titleEn":"Starter","titleZh":"新手"}],"avatarRewards":[{"id":"comet","requiredLevel":4,"titleEn":"Comet Keeper","titleZh":"彗星守护者","descriptionEn":"Keep going.","descriptionZh":"继续前进。","icon":"rocket","emoji":"🚀","gradientStart":"#112233","gradientEnd":"#AABBCC"}]}""";
+
+        var result = await new UpsertSystemSettingCommandHandler(db).Handle(new(new UpsertSystemSettingRequest
+            { Key = SystemSettingKeys.LevelConfigs, Value = value }), default);
+
+        Assert.True(result.Success);
+        using var document = System.Text.Json.JsonDocument.Parse(db.SystemSettings.Single().Value);
+        var avatar = Assert.Single(document.RootElement.GetProperty("avatarRewards").EnumerateArray());
+        Assert.Equal("comet", avatar.GetProperty("id").GetString());
+        Assert.Equal("#112233", avatar.GetProperty("gradientStart").GetString());
+    }
+
+    [Fact]
     public async Task UnconfiguredTextUsesTemplateWithoutAnImplicitModel()
     {
         using var db = AiCreditTests.CreateDb();

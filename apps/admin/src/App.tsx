@@ -9,6 +9,7 @@ const DashboardPage = lazy(() => import('./features/dashboard/pages/DashboardPag
 const FeatureLimitsPage = lazy(() => import('./pages/FeatureLimitsPage'));
 const LevelConfigsPage = lazy(() => import('./pages/LevelConfigsPage'));
 const MilestoneDefinitionsPage = lazy(() => import('./pages/MilestoneDefinitionsPage'));
+const AvatarDefinitionsPage = lazy(() => import('./pages/AvatarDefinitionsPage'));
 const ReferralConfigPage = lazy(() => import('./pages/ReferralConfigPage'));
 const ReferralUsersPage = lazy(() => import('./pages/ReferralUsersPage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
@@ -60,6 +61,7 @@ export default function App() {
               <Route path="xp" element={<XpConfigsPage />} />
               <Route path="levels" element={<LevelConfigsPage />} />
               <Route path="milestones" element={<MilestoneDefinitionsPage />} />
+              <Route path="avatars" element={<AvatarDefinitionsPage />} />
             </Route>
             <Route path="referrals">
               <Route index element={<Navigate to="config" replace />} />

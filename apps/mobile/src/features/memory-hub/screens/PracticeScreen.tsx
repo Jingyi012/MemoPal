@@ -16,6 +16,7 @@ import type { MemorySet } from '@/features/memory-sets';
 import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practice-attempts';
 import type { DueMemoryReview } from '@/features/practice-attempts';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
+import { useAvatars, getEquippedAvatar } from '@/features/avatars/hooks/useAvatars';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
@@ -58,6 +59,7 @@ export default function PracticeScreen() {
   const { user } = useCurrentUser();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
   const { levelInfo } = useLevelByXp(totalXp, user?.level);
+  const { avatars } = useAvatars();
   const practiceLevel = {
     currentLevel: Math.max(1, levelInfo?.currentLevel ?? user?.level ?? 1),
     xpInCurrentLevel: Math.max(0, levelInfo?.xpInCurrentLevel ?? totalXp),
@@ -88,7 +90,11 @@ export default function PracticeScreen() {
       <ScrollView ref={scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.progressSection}>
           <Text style={[styles.sectionLabel, styles.flushHeading, { color: activeTheme.ink }]}>{t('yourProgress')}</Text>
-          <LevelProgressHeader level={practiceLevel} streak={user?.stats?.currentStreak ?? 0} />
+          <LevelProgressHeader
+            avatar={getEquippedAvatar(avatars, user?.selectedAvatarId, practiceLevel.currentLevel)}
+            level={practiceLevel}
+            streak={user?.stats?.currentStreak ?? 0}
+          />
         </View>
 
         <SpotlightTarget id="practiceCreate" onReveal={revealTop} onActivate={() => openMemoryFlow(true)}>

@@ -116,7 +116,7 @@ function normalizeConfigShape(
       const value = Number(source.xpPerLevel);
       const levelTitles = Array.isArray(source.levelTitles) ? source.levelTitles : defaultValue.levelTitles;
       return Number.isFinite(value) && value > 0
-        ? { xpPerLevel: value, levelTitles }
+        ? { ...defaultValue, xpPerLevel: value, levelTitles }
         : defaultValue;
     }
     return defaultValue;

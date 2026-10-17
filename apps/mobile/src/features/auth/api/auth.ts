@@ -210,6 +210,15 @@ export const authApi = {
     }
   },
 
+  async selectAvatar(avatarId: string | null): Promise<User> {
+    try {
+      const response = await api.patch<GeneralResponse<User>>('/auth/avatar-selection', { avatarId });
+      return getApiDataOrThrow<User>(response.data, 'Failed to select avatar.');
+    } catch (error) {
+      throw createApiClientError(error, 'Failed to select avatar.');
+    }
+  },
+
   async startOnboarding(categoryId: string, lessonId: string): Promise<User> {
     try {
       const response = await api.post<GeneralResponse<User>>('/auth/onboarding/start', {

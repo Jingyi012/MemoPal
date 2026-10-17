@@ -3,11 +3,14 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ActionSheet } from '@/components/ActionSheet';
 import { AppImage } from '@/components/AppImage';
+import { MemoryAvatar } from '@/components/MemoryAvatar';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useUserState } from '@/contexts/UserStateContext';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
+import { useSelectAvatar } from '@/features/profile/hooks/useSelectAvatar';
+import { getEquippedAvatar, useAvatars } from '@/features/avatars/hooks/useAvatars';
 import { PushNotificationService } from '@/features/notifications/services/pushNotificationService';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
 import { typography } from '@/theme/typography';
@@ -16,7 +19,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ArrowRight, ChevronRight, LogOut, Pencil } from '@/core/icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -27,6 +29,7 @@ import { ReviewScheduleSheet } from '../components/ReviewScheduleSheet';
 import type { AppLanguage, AppTheme } from '@/features/onboarding/types/userState';
 import { LanguageSheet } from '../components/LanguageSheet';
 import ThemeSheet from '../components/ThemeSheet';
+import { AvatarPickerModal } from '../components/AvatarPickerModal';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { DEFAULT_LEVEL_TITLES, getLevelTitleForLevel } from '@/features/gamification/shared/utils/levelTitles';
@@ -37,12 +40,14 @@ export default function ProfileScreen() {
   const { start: startTour } = useSpotlightTour();
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
+  const { avatars } = useAvatars();
   const { userState, updateState, updatePreferences } = useUserState();
   const { language, t } = useTranslation('profile');
   const { t: onboardingT } = useTranslation('onboarding');
   const { t: languageT } = useTranslation('language');
   const { logout } = useAuth();
   const updateProfileMutation = useUpdateProfile();
+  const selectAvatarMutation = useSelectAvatar();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
   const { levelInfo } = useLevelByXp(totalXp, user?.level);
   const [reviewRemindersEnabled, setReviewRemindersEnabled] = useState(
@@ -60,6 +65,7 @@ export default function ProfileScreen() {
   const languageRef = useRef<any>(null);
   const themeRef = useRef<BottomSheetModal>(null);
   const logoutRef = useRef<BottomSheetModal>(null);
+  const [avatarPickerVisible, setAvatarPickerVisible] = useState(false);
   const languageLabel =
     userState.preferences.language === 'system'
       ? `${languageT('followSystem')} · ${languageT('english')}/${languageT('chinese')}`
@@ -82,6 +88,7 @@ export default function ProfileScreen() {
     : selectedTheme === 'auto'
       ? t('systemTheme')
       : t('light');
+  const equippedAvatar = getEquippedAvatar(avatars, user?.selectedAvatarId, level);
 
   useEffect(() => {
     setReviewRemindersEnabled(userState.notifications.reviewReminders);
@@ -235,19 +242,24 @@ export default function ProfileScreen() {
       />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.profileIdentity}>
-          <View style={styles.avatar}>
-            {user?.avatarUrl ? (
-              <AppImage source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
+          <AnimatedPressable
+            accessibilityLabel={t('changeAvatar')}
+            onPress={() => setAvatarPickerVisible(true)}
+            style={styles.avatarButton}>
+            <View style={styles.avatar}>
+            {user?.selectedAvatarId || !user?.avatarUrl ? (
+              <MemoryAvatar
+                avatar={equippedAvatar}
+                level={level}
+                size={76}
+                showLevelBadge={false}
+              />
             ) : (
-              <LinearGradient
-                colors={['#FFC93C', '#FF6F91']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.avatarGradient}>
-                <Text style={styles.avatarEmoji}>🧑‍🎓</Text>
-              </LinearGradient>
+              <AppImage source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
             )}
-          </View>
+            </View>
+            <View style={styles.avatarEditBadge}><Pencil color={theme.onAccent} size={12} strokeWidth={2.8} /></View>
+          </AnimatedPressable>
           <View style={styles.identityCopy}>
             <View style={styles.nameRow}>
               <Text numberOfLines={1} style={styles.profileName}>{displayName}</Text>
@@ -455,7 +467,32 @@ export default function ProfileScreen() {
             email: payload.email,
             avatarUrl: payload.avatarUrl,
           });
+          if (payload.avatarUrl) {
+            await selectAvatarMutation.mutateAsync(null);
+          }
           await queryClient.invalidateQueries();
+        }}
+      />
+      <AvatarPickerModal
+        visible={avatarPickerVisible}
+        avatars={avatars}
+        currentLevel={level}
+        selectedAvatarId={user?.selectedAvatarId ?? (user?.avatarUrl ? null : equippedAvatar?.id)}
+        language={language}
+        title={t('chooseAvatar')}
+        description={t('avatarPickerBody')}
+        lockedLabel={(requiredLevel) => t('avatarLocked').replace('{level}', String(requiredLevel))}
+        selectedLabel={t('avatarSelected')}
+        closeLabel={t('close')}
+        onClose={() => setAvatarPickerVisible(false)}
+        onSelect={async (avatar) => {
+          try {
+            await selectAvatarMutation.mutateAsync(avatar.id);
+            setAvatarPickerVisible(false);
+            Toast.show({ type: 'success', text1: t('avatarUpdated') });
+          } catch (error) {
+            Toast.show({ type: 'error', text1: t('avatarUpdateFailed'), text2: error instanceof Error ? error.message : undefined });
+          }
         }}
       />
       <HelpSheet ref={helpRef} router={router} />
@@ -543,20 +580,20 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 20, paddingBottom: 48 },
   profileIdentity: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 18 },
+  avatarButton: { width: 82, height: 82, position: 'relative' },
   avatar: {
     width: 76,
     height: 76,
     borderRadius: 38,
-    overflow: 'hidden',
+    overflow: 'visible',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
     borderColor: theme.paper,
     boxShadow: '0px 6px 16px rgba(105,80,204,0.18)',
   },
-  avatarGradient: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   avatarImage: { width: '100%', height: '100%', borderRadius: 38 },
-  avatarEmoji: { fontSize: 34 },
+  avatarEditBadge: { position: 'absolute', right: -2, bottom: -1, width: 24, height: 24, borderRadius: 12, backgroundColor: theme.violetDeep, borderWidth: 2, borderColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
   identityCopy: { flex: 1, minWidth: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 0 },
   profileName: {

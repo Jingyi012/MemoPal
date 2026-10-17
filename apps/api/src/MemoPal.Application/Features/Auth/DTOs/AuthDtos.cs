@@ -18,6 +18,7 @@ public sealed record UserWithStatDto(
     string Id,
     string DisplayName,
     string? AvatarUrl,
+    string? SelectedAvatarId,
     string Email,
     int TotalXp,
     int Level,

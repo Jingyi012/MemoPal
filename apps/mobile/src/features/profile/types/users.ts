@@ -2,6 +2,7 @@ export interface User {
   id: string;
   displayName: string;
   avatarUrl?: string | null;
+  selectedAvatarId?: string | null;
   email: string;
   totalXp: number;
   level: number;

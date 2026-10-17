@@ -19,6 +19,7 @@ public class AppDbContext : DbContext, IAppDbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<AvatarDefinition> AvatarDefinitions => Set<AvatarDefinition>();
     public DbSet<UserAuthIdentity> UserAuthIdentities => Set<UserAuthIdentity>();
     public DbSet<RefreshTokenSession> RefreshTokenSessions => Set<RefreshTokenSession>();
     public DbSet<UserStats> UserStats => Set<UserStats>();
@@ -76,6 +77,7 @@ public class AppDbContext : DbContext, IAppDbContext
             b.HasIndex(x => x.Email).IsUnique();
             b.Property(x => x.Email).HasMaxLength(320);
             b.Property(x => x.DisplayName).HasMaxLength(200);
+            b.Property(x => x.SelectedAvatarId).HasMaxLength(64);
             b.Property(x => x.Role).HasMaxLength(32).HasDefaultValue(UserRoles.User);
             b.Property(x => x.ReferredByUserId).HasMaxLength(64);
             b.Property(x => x.OnboardingStatus).HasMaxLength(32).HasDefaultValue(OnboardingStatuses.NotStarted);
@@ -96,6 +98,20 @@ public class AppDbContext : DbContext, IAppDbContext
                 .WithOne(x => x.User)
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AvatarDefinition>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => x.Key).IsUnique();
+            b.Property(x => x.Key).HasMaxLength(64).IsRequired();
+            b.Property(x => x.AssetKey).HasMaxLength(128).IsRequired();
+            b.Property(x => x.ImageUrl).HasMaxLength(500);
+            b.Property(x => x.TitleEn).HasMaxLength(120).IsRequired();
+            b.Property(x => x.TitleZh).HasMaxLength(120).IsRequired();
+            b.Property(x => x.DescriptionEn).HasMaxLength(500);
+            b.Property(x => x.DescriptionZh).HasMaxLength(500);
+            b.HasIndex(x => new { x.IsDeleted, x.IsActive, x.SortOrder });
         });
 
         modelBuilder.Entity<UserAuthIdentity>(b =>

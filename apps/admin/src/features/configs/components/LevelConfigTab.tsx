@@ -32,7 +32,7 @@ export function LevelConfigTab() {
       <Alert
         type="info"
         message="Level Progress"
-        description="Set the XP target and the title for each level range. A title applies from its starting level until the next row. Changing XP recalculates all user levels."
+        description="Set XP targets and level titles. Avatar companions are managed separately in Avatar Gallery, where each one can have its own artwork and unlock level."
         showIcon
         style={{ marginBottom: 16 }}
       />

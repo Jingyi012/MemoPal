@@ -9,6 +9,7 @@ public sealed class User : AuditableBaseEntity
     public string PasswordHash { get; set; } = string.Empty;
     public string Role { get; set; } = UserRoles.User;
     public string? AvatarUrl { get; set; }
+    public string? SelectedAvatarId { get; set; }
     public int TotalXp { get; set; }
     public int Level { get; set; } = 1;
     public bool IsPremium { get; set; }

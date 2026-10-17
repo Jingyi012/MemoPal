@@ -112,6 +112,16 @@ public sealed class AuthController : ApiControllerBase
     }
 
     [Authorize]
+    [HttpPatch("avatar-selection")]
+    public async Task<IActionResult> SelectAvatar([FromBody] SelectAvatarRequest request, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(
+            new SelectAvatarCommand(GetUserIdOrThrow(), request.AvatarId),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [Authorize]
     [HttpPost("onboarding/start")]
     public async Task<IActionResult> StartOnboarding(
         [FromBody] StartOnboardingRequest request,
@@ -222,6 +232,11 @@ public sealed class AuthController : ApiControllerBase
         public string? DisplayName { get; set; }
         public string? AvatarUrl { get; set; }
         public string? Email { get; set; }
+    }
+
+    public sealed class SelectAvatarRequest
+    {
+        public string? AvatarId { get; set; }
     }
 
     public sealed class StartOnboardingRequest

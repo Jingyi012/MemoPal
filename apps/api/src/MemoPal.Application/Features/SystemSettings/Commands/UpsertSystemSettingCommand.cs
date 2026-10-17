@@ -135,7 +135,60 @@ public sealed class UpsertSystemSettingCommandHandler
                 }
             }
 
-            return JsonSerializer.Serialize(new { xpPerLevel, levelTitles });
+            var avatarRewards = new List<LevelAvatarRewardConfig>();
+            if (root?["avatarRewards"] is JsonArray avatarSource)
+            {
+                var normalizedAvatarRewards = avatarSource
+                    .OfType<JsonObject>()
+                    .Select(item => new LevelAvatarRewardConfig(
+                        Id: ToText(item["id"], 40),
+                        RequiredLevel: ToInt(item["requiredLevel"]),
+                        TitleEn: ToText(item["titleEn"]),
+                        TitleZh: ToText(item["titleZh"]),
+                        DescriptionEn: ToText(item["descriptionEn"], 160),
+                        DescriptionZh: ToText(item["descriptionZh"], 160),
+                        Icon: ToText(item["icon"], 40),
+                        Emoji: ToText(item["emoji"], 8),
+                        GradientStart: ToText(item["gradientStart"], 7),
+                        GradientEnd: ToText(item["gradientEnd"], 7)))
+                    .Where(item => item.RequiredLevel >= 1 &&
+                                   !string.IsNullOrWhiteSpace(item.Id) &&
+                                   !string.IsNullOrWhiteSpace(item.TitleEn) &&
+                                   !string.IsNullOrWhiteSpace(item.TitleZh) &&
+                                   !string.IsNullOrWhiteSpace(item.Icon) &&
+                                   !string.IsNullOrWhiteSpace(item.Emoji) &&
+                                   IsHexColor(item.GradientStart) &&
+                                   IsHexColor(item.GradientEnd))
+                    .GroupBy(item => item.Id, StringComparer.OrdinalIgnoreCase)
+                    .Select(group => group.First())
+                    .OrderBy(item => item.RequiredLevel);
+
+                avatarRewards.AddRange(normalizedAvatarRewards);
+            }
+
+            if (avatarRewards.Count == 0)
+            {
+                avatarRewards = LevelProgressConfigDefaults.AvatarRewards.ToList();
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                xpPerLevel,
+                levelTitles,
+                avatarRewards = avatarRewards.Select(item => new
+                {
+                    id = item.Id,
+                    requiredLevel = item.RequiredLevel,
+                    titleEn = item.TitleEn,
+                    titleZh = item.TitleZh,
+                    descriptionEn = item.DescriptionEn,
+                    descriptionZh = item.DescriptionZh,
+                    icon = item.Icon,
+                    emoji = item.Emoji,
+                    gradientStart = item.GradientStart,
+                    gradientEnd = item.GradientEnd,
+                }),
+            });
         }
         catch
         {
@@ -230,18 +283,23 @@ public sealed class UpsertSystemSettingCommandHandler
         return fallback;
     }
 
-    private static string ToText(JsonNode? node)
+    private static string ToText(JsonNode? node, int maxLength = 80)
     {
         if (node is JsonValue valueNode && valueNode.TryGetValue<string>(out var textValue))
         {
             var trimmed = textValue?.Trim() ?? string.Empty;
-            return trimmed[..Math.Min(80, trimmed.Length)];
+            return trimmed[..Math.Min(maxLength, trimmed.Length)];
         }
 
         return string.Empty;
     }
 
     private static int ClampReward(int value) => Math.Clamp(value, 0, 10_000);
+
+    private static bool IsHexColor(string value) =>
+        value.Length == 7 &&
+        value[0] == '#' &&
+        value.Skip(1).All(character => char.IsAsciiHexDigit(character));
 
     private static string NormalizeNumberPegDefinitionsValue(string rawValue)
     {

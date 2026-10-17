@@ -27,6 +27,7 @@ public sealed class MapsterRegistration : IRegister
             .Map(dest => dest.Id, src => src.User.Id)
             .Map(dest => dest.DisplayName, src => src.User.DisplayName)
             .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.User.AvatarUrl))
+            .Map(dest => dest.SelectedAvatarId, src => src.User.SelectedAvatarId)
             .Map(dest => dest.Email, src => src.User.Email)
             .Map(dest => dest.TotalXp, src => src.User.TotalXp)
             .Map(dest => dest.Level, src => src.User.Level)

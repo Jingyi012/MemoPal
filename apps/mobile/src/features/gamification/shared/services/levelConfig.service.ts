@@ -28,8 +28,12 @@ function parseLevelTitles(value: unknown): LevelTitleConfig[] {
   return unique.length ? unique : DEFAULT_LEVEL_TITLES;
 }
 
+function emptyConfig(): LevelProgressConfig {
+  return { xpPerLevel: DEFAULT_XP_PER_LEVEL, levelTitles: DEFAULT_LEVEL_TITLES };
+}
+
 function parseConfig(value?: string | null): LevelProgressConfig {
-  if (!value) return { xpPerLevel: DEFAULT_XP_PER_LEVEL, levelTitles: DEFAULT_LEVEL_TITLES };
+  if (!value) return emptyConfig();
 
   try {
     let parsed: unknown = JSON.parse(value);
@@ -45,7 +49,7 @@ function parseConfig(value?: string | null): LevelProgressConfig {
       levelTitles: parseLevelTitles(source.levelTitles),
     };
   } catch {
-    return { xpPerLevel: DEFAULT_XP_PER_LEVEL, levelTitles: DEFAULT_LEVEL_TITLES };
+    return emptyConfig();
   }
 }
 

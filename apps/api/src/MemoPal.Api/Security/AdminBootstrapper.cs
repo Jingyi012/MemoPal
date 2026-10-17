@@ -5,6 +5,7 @@ using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace MemoPal.Api.Security;
 
@@ -32,6 +33,7 @@ public sealed class AdminBootstrapper
     {
         await EnsureGamificationSettingsAsync(cancellationToken);
         await EnsureStarterMilestonesAsync(cancellationToken);
+        await EnsureStarterAvatarsAsync(cancellationToken);
         if (_options.SeedStarterContent)
         {
             await EnsurePredefinedMemoryLessonsAsync(cancellationToken);
@@ -51,11 +53,11 @@ public sealed class AdminBootstrapper
 
     private async Task EnsureGamificationSettingsAsync(CancellationToken cancellationToken)
     {
-        var existingKeys = await _db.SystemSettings
+        var existingSettings = await _db.SystemSettings
             .Where(x => !x.IsDeleted &&
                         (x.Key == SystemSettingKeys.XpConfigs || x.Key == SystemSettingKeys.LevelConfigs))
-            .Select(x => x.Key)
             .ToListAsync(cancellationToken);
+        var existingKeys = existingSettings.Select(x => x.Key).ToList();
         var now = DateTime.UtcNow;
 
         if (!existingKeys.Contains(SystemSettingKeys.XpConfigs, StringComparer.Ordinal))
@@ -82,17 +84,61 @@ public sealed class AdminBootstrapper
 
         if (!existingKeys.Contains(SystemSettingKeys.LevelConfigs, StringComparer.Ordinal))
         {
+            var avatarRewards = LevelProgressConfigDefaults.AvatarRewards;
             _db.SystemSettings.Add(new SystemSetting
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Key = SystemSettingKeys.LevelConfigs,
-                Value = JsonSerializer.Serialize(new { xpPerLevel = LevelProgressConfig.Default.XpPerLevel }),
-                Description = "XP required for every player level.",
+                Value = JsonSerializer.Serialize(new
+                {
+                    xpPerLevel = LevelProgressConfig.Default.XpPerLevel,
+                    avatarRewards,
+                }),
+                Description = "XP targets, level titles and avatar rewards for player progression.",
                 CreatedAt = now,
                 UpdatedAt = now,
                 CreatedBy = "system",
                 UpdatedBy = "system"
             });
+        }
+        else
+        {
+            var levelSetting = existingSettings.First(x => x.Key == SystemSettingKeys.LevelConfigs);
+            EnsureLevelAvatarRewards(levelSetting, now);
+        }
+    }
+
+    private static void EnsureLevelAvatarRewards(SystemSetting setting, DateTime now)
+    {
+        try
+        {
+            var root = JsonNode.Parse(setting.Value) as JsonObject;
+            if (root is null || root["avatarRewards"] is JsonArray)
+            {
+                return;
+            }
+
+            root["avatarRewards"] = JsonSerializer.SerializeToNode(
+                LevelProgressConfigDefaults.AvatarRewards.Select(reward => new
+                {
+                    id = reward.Id,
+                    requiredLevel = reward.RequiredLevel,
+                    titleEn = reward.TitleEn,
+                    titleZh = reward.TitleZh,
+                    descriptionEn = reward.DescriptionEn,
+                    descriptionZh = reward.DescriptionZh,
+                    icon = reward.Icon,
+                    emoji = reward.Emoji,
+                    gradientStart = reward.GradientStart,
+                    gradientEnd = reward.GradientEnd,
+                }));
+            setting.Value = root.ToJsonString();
+            setting.UpdatedAt = now;
+            setting.UpdatedBy = "system";
+        }
+        catch (JsonException)
+        {
+            // The admin editor can repair malformed legacy settings.
         }
     }
 
@@ -127,6 +173,43 @@ public sealed class AdminBootstrapper
                 UpdatedAt = now,
                 CreatedBy = "system",
                 UpdatedBy = "system"
+            });
+        }
+    }
+
+    private async Task EnsureStarterAvatarsAsync(CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var defaults = new[]
+        {
+            ("memory-fox", "memory-fox", "Memory Fox", "记忆狐", "A curious companion for your first memory palace.", "陪你走进第一个记忆宫殿的好奇伙伴。", 1, 10),
+            ("memory-owl", "memory-owl", "Memory Owl", "记忆猫头鹰", "A quiet scholar who turns review into a ritual.", "把复习变成仪式的安静学者。", 3, 20),
+            ("memory-otter", "memory-otter", "Memory Otter", "记忆水獭", "A playful builder for making memories stick.", "让记忆变得牢固又有趣的快乐建造者。", 5, 30),
+            ("memory-bear", "memory-bear", "Memory Bear", "记忆熊", "A steady architect for ambitious memory journeys.", "陪你完成更大记忆旅程的可靠建筑师。", 8, 40),
+            ("memory-hummingbird", "memory-hummingbird", "Memory Hummingbird", "记忆蜂鸟", "A rare guide for fast, focused recall.", "为快速而专注的回忆而来的稀有向导。", 12, 50),
+        };
+
+        foreach (var (key, assetKey, titleEn, titleZh, descriptionEn, descriptionZh, requiredLevel, sortOrder) in defaults)
+        {
+            if (await _db.AvatarDefinitions.AnyAsync(x => x.Key == key, cancellationToken))
+                continue;
+
+            _db.AvatarDefinitions.Add(new AvatarDefinition
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Key = key,
+                AssetKey = assetKey,
+                TitleEn = titleEn,
+                TitleZh = titleZh,
+                DescriptionEn = descriptionEn,
+                DescriptionZh = descriptionZh,
+                RequiredLevel = requiredLevel,
+                SortOrder = sortOrder,
+                IsActive = true,
+                CreatedAt = now,
+                UpdatedAt = now,
+                CreatedBy = "system",
+                UpdatedBy = "system",
             });
         }
     }
