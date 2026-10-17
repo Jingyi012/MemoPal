@@ -1,5 +1,5 @@
 import { ProForm, ProFormDependency, ProFormDigit, ProFormSelect, ProFormSwitch, ProFormText, ProFormTextArea } from '@ant-design/pro-components';
-import { Alert, Card, Col, Form, Image, Row, Slider, Space, Typography } from 'antd';
+import { Alert, Card, Col, Form, Row, Slider, Space, Typography } from 'antd';
 import type { PointerEvent } from 'react';
 import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -83,8 +83,10 @@ export function AppearanceDefinitionForm() {
               const drag = dragRef.current;
               if (!drag || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
               form.setFieldsValue({
-                offsetXPercent: clamp(drag.x + ((event.clientX - drag.pointerX) / drag.size) * 100, -40, 40),
-                offsetYPercent: clamp(drag.y + ((event.clientY - drag.pointerY) / drag.size) * 100, -40, 40),
+                // The API contract stores offsets as integer percentages. Keep
+                // drag updates on that same precision so JSON binding succeeds.
+                offsetXPercent: Math.round(clamp(drag.x + ((event.clientX - drag.pointerX) / drag.size) * 100, -40, 40)),
+                offsetYPercent: Math.round(clamp(drag.y + ((event.clientY - drag.pointerY) / drag.size) * 100, -40, 40)),
               });
             };
             return (
@@ -96,8 +98,8 @@ export function AppearanceDefinitionForm() {
                   style={{ position: 'relative', width: 'min(100%, 360px)', aspectRatio: '1', margin: '0 auto 16px', overflow: 'hidden', borderRadius: 24, border: '1px solid #ded6ff', background: 'radial-gradient(circle at 50% 36%, #fff 0, #f2efff 60%, #e7f4ff 100%)', touchAction: 'none', cursor: 'grab', boxShadow: '0 12px 32px rgba(73, 53, 143, .12)' }}
                 >
                   <div aria-hidden style={{ position: 'absolute', inset: '9%', border: '1px dashed rgba(105, 77, 199, .24)', borderRadius: '50%' }} />
-                  <Image src={avatarUrl} alt={`${avatar?.titleEn} companion`} preview={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
-                  <Image src={itemUrl} alt="Selected wearable, drag to position" preview={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none', transform: `translate(${x}%, ${y}%) scale(${scale / 100})`, transformOrigin: 'center' }} />
+                  <img src={avatarUrl} alt={`${avatar?.titleEn} companion`} draggable={false} style={{ position: 'absolute', inset: 0, display: 'block', width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
+                  <img src={itemUrl} alt="Selected wearable, drag to position" draggable={false} style={{ position: 'absolute', inset: 0, display: 'block', width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none', transform: `translate(${x}%, ${y}%) scale(${scale / 100})`, transformOrigin: 'center' }} />
                   <div aria-hidden style={{ position: 'absolute', left: 14, bottom: 14, padding: '5px 10px', borderRadius: 20, color: '#5d47b5', background: 'rgba(255,255,255,.9)', fontSize: 11, fontWeight: 600, pointerEvents: 'none' }}>✦ Live fitting preview</div>
                 </div> : <Alert type="info" showIcon message={!companionAvatarKey ? 'Choose a companion to open the fitting room.' : !avatarUrl ? 'Upload full-body companion artwork in Companion Gallery first.' : 'Upload the wearable PNG to try it on.'} />}
                 <Space direction="vertical" size={0} style={{ width: '100%' }}>
