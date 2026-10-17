@@ -1099,7 +1099,7 @@ export const translations = {
       willAppearInToday: 'will appear in Today',
       backToHome: 'Back to Home',
       typeYourAnswer: 'Type your answer',
-      typeYourAnswerPlaceholder: 'TYPE YOUR ANSWER',
+      typeYourAnswerPlaceholder: 'Type your answer',
       next: 'Next peg',
       checkAnswer: 'Check answer',
       tryAgain: 'Try another round',

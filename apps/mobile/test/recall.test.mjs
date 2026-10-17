@@ -57,6 +57,7 @@ test('later retries cannot reduce previously used hints or inflate actual attemp
 });
 import {
   getSpellingHint,
+  isRecallAnswerCorrect,
   normalizeRecallAnswer,
   upsertRecallResponse,
 } from '../src/features/practice-attempts/utils/recall.ts';
@@ -128,6 +129,16 @@ test('normalizes recall answers for case and whitespace differences', () => {
   assert.equal(normalizeRecallAnswer('  Solar   System '), 'SOLAR SYSTEM');
   assert.equal(normalizeRecallAnswer('iPhone'), normalizeRecallAnswer('iphone'));
   assert.equal(normalizeRecallAnswer('Mixed Case'), normalizeRecallAnswer('MIXED CASE'));
+});
+
+test('accepts safe recall variations without accepting short-word guesses', () => {
+  assert.equal(isRecallAnswerCorrect('New York', 'new-york'), true);
+  assert.equal(isRecallAnswerCorrect('café', 'CAFE'), true);
+  assert.equal(isRecallAnswerCorrect('separate', 'seperate'), true);
+  assert.equal(isRecallAnswerCorrect('apple', 'appl'), true);
+  assert.equal(isRecallAnswerCorrect('cat', 'car'), false);
+  assert.equal(isRecallAnswerCorrect('apple', 'orange'), false);
+  assert.equal(isRecallAnswerCorrect('C++', 'C'), false);
 });
 
 test('gives a useful first-letter spelling hint', () => {

@@ -25,7 +25,7 @@ import { PushNotificationService } from '@/features/notifications/services/pushN
 import {
   useCreatePracticeAttempt,
   usePracticeAttemptHistory,
-  normalizeRecallAnswer,
+  isRecallAnswerCorrect,
   upsertRecallResponse,
   restoreRecallQueue,
   reinforceRecallQueue,
@@ -528,7 +528,7 @@ export default function NumberPegSessionScreen({
 
     if ((!answer.trim() && !forgot) || checkingAnswerRef.current) return;
     checkingAnswerRef.current = true;
-    const isCorrect = !forgot && normalizeRecallAnswer(answer) === normalizeRecallAnswer(currentItem.answer);
+    const isCorrect = !forgot && isRecallAnswerCorrect(currentItem.answer, answer);
     setResponses((current) =>
       upsertRecallResponse(
         current,

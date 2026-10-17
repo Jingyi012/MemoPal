@@ -45,7 +45,7 @@ export function RecallAnswerCard({
   progressLabel,
   cue,
   answerAccessibilityLabel = 'Type your answer',
-  answerPlaceholder = 'TYPE YOUR ANSWER',
+  answerPlaceholder = 'Type your answer',
   onAnswerFocus,
   actionAreaRef,
   inputAreaRef,
@@ -79,7 +79,7 @@ export function RecallAnswerCard({
         caretHidden={feedback !== null}
         onFocus={onAnswerFocus}
         accessibilityLabel={answerAccessibilityLabel}
-        autoCapitalize="characters"
+        autoCapitalize="none"
         autoCorrect={false}
         placeholder={answerPlaceholder}
         placeholderTextColor={theme.inkSoft}

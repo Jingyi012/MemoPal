@@ -19,7 +19,7 @@ import {
   writePalaceSession,
 } from '@/features/palace-scenes/services/palaceSessionRecovery';
 import {
-  normalizeRecallAnswer,
+  isRecallAnswerCorrect,
   upsertRecallResponse,
   restoreRecallQueue,
   reinforceRecallQueue,
@@ -388,7 +388,7 @@ export default function PalaceMemorySessionScreen({
 
     if ((!answer.trim() && !forgot) || checkingAnswerRef.current) return;
     checkingAnswerRef.current = true;
-    const isCorrect = !forgot && normalizeRecallAnswer(answer) === normalizeRecallAnswer(active.item.answer);
+    const isCorrect = !forgot && isRecallAnswerCorrect(active.item.answer, answer);
     setResponses((current) =>
       upsertRecallResponse(
         current,
