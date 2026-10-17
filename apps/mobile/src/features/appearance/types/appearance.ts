@@ -4,7 +4,7 @@ export interface AppearanceDefinition {
   id: string;
   key: string;
   itemType: AppearanceItemType;
-  companionAvatarKey?: string | null;
+  companionAvatarKeys?: string[] | null;
   offsetXPercent?: number;
   offsetYPercent?: number;
   scalePercent?: number;

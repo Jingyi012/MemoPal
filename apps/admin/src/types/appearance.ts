@@ -6,7 +6,7 @@ export interface AppearanceDefinitionDto {
   itemType: AppearanceItemType;
   assetKey: string;
   imageUrl?: string | null;
-  companionAvatarKey?: string | null;
+  companionAvatarKeys?: string[] | null;
   offsetXPercent: number;
   offsetYPercent: number;
   scalePercent: number;

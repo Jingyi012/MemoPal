@@ -30,7 +30,10 @@ export function getApprovedCompanionLayerSource(item: AppearanceDefinition, comp
 }
 
 export function isCompanionCompatible(item: AppearanceDefinition, companionKey?: string | null) {
-  return Boolean(companionKey && item.companionAvatarKey === companionKey);
+  const compatibleKeys = Array.isArray(item.companionAvatarKeys)
+    ? item.companionAvatarKeys
+    : typeof item.companionAvatarKeys === 'string' ? [item.companionAvatarKeys] : [];
+  return Boolean(companionKey && compatibleKeys.includes(companionKey));
 }
 
 export function CompanionCharacterArtwork({ look, items, companionKey, characterImageUrl, size, accessibilityLabel }: Props) {

@@ -30,7 +30,7 @@ export function AppearanceDefinitionForm() {
         <ProFormDependency name={['itemType']}>
           {({ itemType }) => wearableTypes.includes(itemType as AppearanceItemType) ? (
             <>
-              <ProFormSelect name="companionAvatarKey" label="Compatible companion" rules={[{ required: true, message: 'Choose the companion this wearable is aligned for.' }]} options={avatarOptions} showSearch fieldProps={{ optionFilterProp: 'label', loading: avatarsQuery.isLoading }} />
+              <ProFormSelect name="companionAvatarKeys" label="Compatible companions" rules={[{ required: true, type: 'array', min: 1, message: 'Choose at least one compatible companion.' }]} options={avatarOptions} showSearch fieldProps={{ mode: 'multiple', optionFilterProp: 'label', loading: avatarsQuery.isLoading }} />
               <ProFormText name="setKey" label="Outfit set key (optional)" extra="Use the same key for pieces that belong to one set." />
               <ProFormDependency name={['setKey']}>
                 {({ setKey }) => setKey ? <>
@@ -62,12 +62,13 @@ export function AppearanceDefinitionForm() {
       </Col>
 
       <Col xs={24} lg={14}>
-        <ProFormDependency name={['itemType', 'companionAvatarKey', 'imageUrl', 'offsetXPercent', 'offsetYPercent', 'scalePercent', 'layerOrder']}>
-          {({ itemType, companionAvatarKey, imageUrl, offsetXPercent, offsetYPercent, scalePercent, layerOrder }) => {
+        <ProFormDependency name={['itemType', 'companionAvatarKeys', 'imageUrl', 'offsetXPercent', 'offsetYPercent', 'scalePercent', 'layerOrder']}>
+          {({ itemType, companionAvatarKeys, imageUrl, offsetXPercent, offsetYPercent, scalePercent, layerOrder }) => {
             if (!wearableTypes.includes(itemType as AppearanceItemType)) {
               return <Card title="Fitting room" style={{ position: 'sticky', top: 16 }}><Typography.Text type="secondary">Full-body try-on is available for companion wardrobe items.</Typography.Text></Card>;
             }
-            const avatar = avatars.find((candidate) => candidate.key === companionAvatarKey);
+            const selectedAvatarKeys = Array.isArray(companionAvatarKeys) ? companionAvatarKeys : companionAvatarKeys ? [companionAvatarKeys] : [];
+            const avatar = avatars.find((candidate) => selectedAvatarKeys.includes(candidate.key));
             const avatarUrl = avatar?.companionCharacterImageUrl ? resolveMediaPath(avatar.companionCharacterImageUrl) : undefined;
             const itemUrl = typeof imageUrl === 'string' && imageUrl ? resolveMediaPath(imageUrl) : undefined;
             const x = typeof offsetXPercent === 'number' ? offsetXPercent : 0;
@@ -101,7 +102,7 @@ export function AppearanceDefinitionForm() {
                   <img src={avatarUrl} alt={`${avatar?.titleEn} companion`} draggable={false} style={{ position: 'absolute', inset: 0, display: 'block', width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
                   <img src={itemUrl} alt="Selected wearable, drag to position" draggable={false} style={{ position: 'absolute', inset: 0, display: 'block', width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none', transform: `translate(${x}%, ${y}%) scale(${scale / 100})`, transformOrigin: 'center' }} />
                   <div aria-hidden style={{ position: 'absolute', left: 14, bottom: 14, padding: '5px 10px', borderRadius: 20, color: '#5d47b5', background: 'rgba(255,255,255,.9)', fontSize: 11, fontWeight: 600, pointerEvents: 'none' }}>✦ Live fitting preview</div>
-                </div> : <Alert type="info" showIcon message={!companionAvatarKey ? 'Choose a companion to open the fitting room.' : !avatarUrl ? 'Upload full-body companion artwork in Companion Gallery first.' : 'Upload the wearable PNG to try it on.'} />}
+                </div> : <Alert type="info" showIcon message={!selectedAvatarKeys.length ? 'Choose a companion to open the fitting room.' : !avatarUrl ? 'Upload full-body companion artwork in Companion Gallery first.' : 'Upload the wearable PNG to try it on.'} />}
                 <Space direction="vertical" size={0} style={{ width: '100%' }}>
                   <Typography.Text>Horizontal offset · {x}%</Typography.Text><Slider min={-40} max={40} value={x} onChange={(value) => form.setFieldValue('offsetXPercent', value)} disabled={!avatarUrl || !itemUrl} />
                   <Typography.Text>Vertical offset · {y}%</Typography.Text><Slider min={-40} max={40} value={y} onChange={(value) => form.setFieldValue('offsetYPercent', value)} disabled={!avatarUrl || !itemUrl} />

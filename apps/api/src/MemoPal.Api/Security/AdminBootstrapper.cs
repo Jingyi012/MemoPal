@@ -330,7 +330,7 @@ public sealed class AdminBootstrapper
             _db.AppearanceDefinitions.Add(new AppearanceDefinition
             {
                 Id = Guid.NewGuid().ToString("N"), Key = key, ItemType = itemType,
-                CompanionAvatarKey = "memory-owl", SetKey = setKey, AssetKey = assetKey,
+                CompanionAvatarKeys = ["memory-owl"], SetKey = setKey, AssetKey = assetKey,
                 ImageUrl = $"/assets/companions/appearance/{key}.png",
                 SetTitleEn = setCopy.TitleEn, SetTitleZh = setCopy.TitleZh,
                 SetStoryEn = setCopy.StoryEn, SetStoryZh = setCopy.StoryZh,

@@ -92,8 +92,11 @@ public sealed class CompanionEndpointsTests(CustomWebApplicationFactory factory)
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             db.AvatarDefinitions.Add(new AvatarDefinition { Id = avatarId, Key = "memory-owl", IsActive = true, RequiredLevel = 1 });
+            db.AvatarDefinitions.Add(new AvatarDefinition { Id = "companion-look-fox", Key = "memory-fox", IsActive = true, RequiredLevel = 1 });
+            var sharedHead = Appearance("head", "celestial-headband", "headwear", "memory-owl", 1, setKey: "celestial-scholar");
+            sharedHead.CompanionAvatarKeys.Add("memory-fox");
             db.AppearanceDefinitions.AddRange(
-                Appearance("head", "celestial-headband", "headwear", "memory-owl", 1, setKey: "celestial-scholar"),
+                sharedHead,
                 Appearance("body", "celestial-scarf", "bodywear", "memory-owl", 1),
                 Appearance("locked", "locked-scarf", "bodywear", "memory-owl", 2),
                 Appearance("wrong-companion", "fox-hat", "headwear", "memory-fox", 1),
@@ -155,8 +158,27 @@ public sealed class CompanionEndpointsTests(CustomWebApplicationFactory factory)
         var appearanceItems = (await client.GetFromJsonAsync<JsonElement>("/appearance-items"))
             .GetProperty("data").EnumerateArray().ToList();
         var itemDto = appearanceItems.Single(x => x.GetProperty("id").GetString() == "head");
-        Assert.Equal("memory-owl", itemDto.GetProperty("companionAvatarKey").GetString());
+        Assert.Contains("memory-owl", itemDto.GetProperty("companionAvatarKeys").EnumerateArray().Select(x => x.GetString()));
+        Assert.Contains("memory-fox", itemDto.GetProperty("companionAvatarKeys").EnumerateArray().Select(x => x.GetString()));
         Assert.Equal("celestial-scholar", itemDto.GetProperty("setKey").GetString());
+
+        var foxAccount = await CreateUser("look-fox-owner");
+        using (var foxScope = factory.Services.CreateScope())
+        {
+            var foxDb = foxScope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var foxUser = await foxDb.Users.SingleAsync(x => x.Id == foxAccount.UserId);
+            foxUser.SelectedAvatarId = "companion-look-fox";
+            foxUser.CompanionAvatarId = "companion-look-fox";
+            await foxDb.SaveChangesAsync();
+        }
+        using var foxClient = factory.CreateClient();
+        foxClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", foxAccount.Token);
+        var sharedItemLook = await foxClient.PutAsJsonAsync("/companion/look", new
+        {
+            avatarId = "companion-look-fox", headwearId = "head", bodywearId = (string?)null,
+            backwearId = (string?)null, handItemId = (string?)null
+        });
+        Assert.Equal(HttpStatusCode.OK, sharedItemLook.StatusCode);
 
         var other = await CreateUser("look-other");
         using (var otherScope = factory.Services.CreateScope())
@@ -268,7 +290,7 @@ public sealed class CompanionEndpointsTests(CustomWebApplicationFactory factory)
 
     private static AppearanceDefinition Appearance(string id, string key, string type, string avatarKey, int level, bool active = true, string? setKey = null) => new()
     {
-        Id = id, Key = key, ItemType = type, AssetKey = key, CompanionAvatarKey = avatarKey, SetKey = setKey,
+        Id = id, Key = key, ItemType = type, AssetKey = key, CompanionAvatarKeys = [avatarKey], SetKey = setKey,
         TitleEn = key, TitleZh = key, RequiredLevel = level, IsActive = active
     };
 }

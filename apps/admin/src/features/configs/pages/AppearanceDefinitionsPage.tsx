@@ -31,7 +31,7 @@ export default function AppearanceDefinitionsPage() {
           { title: 'Preview', dataIndex: 'imageUrl', width: 100, render: (_, row) => row.imageUrl ? <Image src={resolveMediaPath(row.imageUrl)} width={52} height={52} preview={false} style={{ objectFit: 'contain' }} /> : <span>{row.assetKey}</span> },
           { title: 'Key', dataIndex: 'key' },
           { title: 'Type', dataIndex: 'itemType' },
-          { title: 'Companion', dataIndex: 'companionAvatarKey', ellipsis: true },
+          { title: 'Companions', dataIndex: 'companionAvatarKeys', ellipsis: true, render: (_, row) => row.companionAvatarKeys?.join(', ') || '—' },
           { title: 'Set', dataIndex: 'setKey', ellipsis: true },
           { title: 'Set story', dataIndex: 'setTitleEn', ellipsis: true },
           { title: 'English name', dataIndex: 'titleEn' },

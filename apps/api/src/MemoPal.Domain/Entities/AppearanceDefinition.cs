@@ -10,7 +10,7 @@ public sealed class AppearanceDefinition : AuditableBaseEntity
 {
     public string Key { get; set; } = string.Empty;
     public string ItemType { get; set; } = AppearanceItemTypes.Frame;
-    public string? CompanionAvatarKey { get; set; }
+    public List<string> CompanionAvatarKeys { get; set; } = [];
     public int OffsetXPercent { get; set; }
     public int OffsetYPercent { get; set; }
     public int ScalePercent { get; set; } = 100;

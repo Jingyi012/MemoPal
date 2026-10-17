@@ -4,7 +4,7 @@ public sealed record AppearanceDefinitionDto(
     string Id,
     string Key,
     string ItemType,
-    string? CompanionAvatarKey,
+    string[] CompanionAvatarKeys,
     int OffsetXPercent,
     int OffsetYPercent,
     int ScalePercent,
@@ -34,7 +34,7 @@ public sealed class AppearanceDefinitionUpsertRequest
     public string? Id { get; set; }
     public string? Key { get; set; }
     public string? ItemType { get; set; }
-    public string? CompanionAvatarKey { get; set; }
+    public string[]? CompanionAvatarKeys { get; set; }
     public int OffsetXPercent { get; set; }
     public int OffsetYPercent { get; set; }
     public int ScalePercent { get; set; } = 100;

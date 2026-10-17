@@ -52,9 +52,9 @@ public sealed class GetCompanionQueryHandler(IAppDbContext db) : IRequestHandler
             {
                 var userLevel = user?.Level ?? 1;
                 var available = await db.AppearanceDefinitions.AsNoTracking()
-                    .Where(x => equippedIds.Contains(x.Id) && x.IsActive && !x.IsDeleted &&
-                                x.CompanionAvatarKey == avatarKey && x.RequiredLevel <= userLevel)
-                    .Select(x => new { x.Id, x.ItemType }).ToListAsync(ct);
+                    .Where(x => equippedIds.Contains(x.Id) && x.IsActive && !x.IsDeleted && x.RequiredLevel <= userLevel)
+                    .Select(x => new { x.Id, x.ItemType, x.CompanionAvatarKeys }).ToListAsync(ct);
+                available = available.Where(x => x.CompanionAvatarKeys.Contains(avatarKey!, StringComparer.Ordinal)).ToList();
                 string? Keep(string? id, string slot) => available.Any(x => x.Id == id && x.ItemType == slot) ? id : null;
                 look = new CompanionLookDto(
                     Keep(look.HeadwearId, AppearanceItemTypes.Headwear),

@@ -41,15 +41,21 @@ public sealed class CreateAppearanceDefinitionCommandHandler(IAppDbContext db)
             throw new ValidationAppException("Wearable scale must be between 50 and 180 percent.");
         if (request.LayerOrder is < 0 or > 100)
             throw new ValidationAppException("Wearable layer order must be between 0 and 100.");
-        var companionAvatarKey = string.IsNullOrWhiteSpace(request.CompanionAvatarKey) ? null : request.CompanionAvatarKey.Trim().ToLowerInvariant();
+        var companionAvatarKeys = (request.CompanionAvatarKeys ?? [])
+            .Where(key => !string.IsNullOrWhiteSpace(key))
+            .Select(key => key.Trim().ToLowerInvariant()).Distinct(StringComparer.Ordinal).ToArray();
         var setKey = string.IsNullOrWhiteSpace(request.SetKey) ? null : request.SetKey.Trim().ToLowerInvariant();
         if (itemType is AppearanceItemTypes.Headwear or AppearanceItemTypes.Bodywear or AppearanceItemTypes.Backwear or AppearanceItemTypes.HandItem)
         {
-            if (companionAvatarKey is null || !await db.AvatarDefinitions.AnyAsync(x => x.Key == companionAvatarKey && x.IsActive && !x.IsDeleted, cancellationToken))
-                throw new ValidationAppException("Wearable items require an active companionAvatarKey.");
+            if (companionAvatarKeys.Length == 0)
+                throw new ValidationAppException("Wearable items require at least one compatible companion.");
+            var activeKeys = await db.AvatarDefinitions.Where(x => companionAvatarKeys.Contains(x.Key) && x.IsActive && !x.IsDeleted)
+                .Select(x => x.Key).ToListAsync(cancellationToken);
+            if (activeKeys.Count != companionAvatarKeys.Length)
+                throw new ValidationAppException("Every compatible companion must be active.");
         }
-        if (setKey?.Length > 64 || companionAvatarKey?.Length > 64)
-            throw new ValidationAppException("companionAvatarKey and setKey must be at most 64 characters.");
+        if (setKey?.Length > 64 || companionAvatarKeys.Any(key => key.Length > 64))
+            throw new ValidationAppException("Compatible companion keys and setKey must be at most 64 characters.");
         if (setKey is not null && (string.IsNullOrWhiteSpace(request.SetTitleEn) || string.IsNullOrWhiteSpace(request.SetTitleZh) ||
                                    string.IsNullOrWhiteSpace(request.SetStoryEn) || string.IsNullOrWhiteSpace(request.SetStoryZh)))
             throw new ValidationAppException("Outfit sets require a title and story in English and Chinese.");
@@ -78,7 +84,7 @@ public sealed class CreateAppearanceDefinitionCommandHandler(IAppDbContext db)
 
         entity.Key = key;
         entity.ItemType = itemType;
-        entity.CompanionAvatarKey = companionAvatarKey;
+        entity.CompanionAvatarKeys = companionAvatarKeys.ToList();
         entity.OffsetXPercent = request.OffsetXPercent;
         entity.OffsetYPercent = request.OffsetYPercent;
         entity.ScalePercent = request.ScalePercent;

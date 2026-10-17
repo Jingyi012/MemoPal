@@ -67,7 +67,7 @@ public sealed class SaveCompanionLookCommandHandler(IAppDbContext db)
             throw new ValidationAppException($"Appearance item does not fit the {slot} slot.");
         if (item.RequiredLevel > userLevel)
             throw new ValidationAppException($"Reach level {item.RequiredLevel} to unlock this appearance item.");
-        if (!string.Equals(item.CompanionAvatarKey, avatarKey, StringComparison.Ordinal))
+        if (!item.CompanionAvatarKeys.Contains(avatarKey, StringComparer.Ordinal))
             throw new ValidationAppException("Appearance item is not compatible with this companion.");
     }
 
