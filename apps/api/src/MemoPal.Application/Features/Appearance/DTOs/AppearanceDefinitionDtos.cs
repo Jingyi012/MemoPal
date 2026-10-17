@@ -5,6 +5,10 @@ public sealed record AppearanceDefinitionDto(
     string Key,
     string ItemType,
     string? CompanionAvatarKey,
+    int OffsetXPercent,
+    int OffsetYPercent,
+    int ScalePercent,
+    int LayerOrder,
     string? SetKey,
     string? SetTitleEn,
     string? SetTitleZh,
@@ -31,6 +35,10 @@ public sealed class AppearanceDefinitionUpsertRequest
     public string? Key { get; set; }
     public string? ItemType { get; set; }
     public string? CompanionAvatarKey { get; set; }
+    public int OffsetXPercent { get; set; }
+    public int OffsetYPercent { get; set; }
+    public int ScalePercent { get; set; } = 100;
+    public int LayerOrder { get; set; }
     public string? SetKey { get; set; }
     public string? SetTitleEn { get; set; }
     public string? SetTitleZh { get; set; }

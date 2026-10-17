@@ -1,5 +1,5 @@
 import { ProForm, ProFormDigit, ProFormSwitch, ProFormText, ProFormTextArea } from '@ant-design/pro-components';
-import { Card, Image, Space, Tag, Typography } from 'antd';
+import { Image, Tabs, Tag } from 'antd';
 import { DefinitionCrudTab } from '../components/DefinitionCrudTab';
 import { ImageUploadField } from '../../../components/media/ImageUploadField';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
@@ -14,28 +14,16 @@ import { validateCompanionArtwork } from '../utils/validateCompanionArtwork';
 export default function AvatarDefinitionsPage() {
   const api = useAdminAvatarsApi();
   const { resolveMediaPath } = useAdminMediaApi();
-  return (
-    <PortalPageContainer title="Companion gallery" description="Manage the companions players can meet, their artwork, descriptions, and level unlocks." eyebrow="COMPANION EXPERIENCE" navigation={<PortalSectionNav section="configs" />}>
-      <Card bordered={false} style={{ marginBottom: 16, borderRadius: 16 }}>
-        <Space align="start" size={16}>
-          <span style={{ fontSize: 28 }} aria-hidden>✦</span>
-          <div><Typography.Title level={5} style={{ margin: 0 }}>One catalog powers the companion experience</Typography.Title><Typography.Paragraph type="secondary" style={{ margin: '4px 0 0' }}>Add a companion here, set its unlock level and artwork, then assign compatible wardrobe items in Appearance Studio. Profile photos remain separate from the active in-game companion.</Typography.Paragraph><Space size={8}><Tag color="purple">Gallery</Tag><Tag color="blue">Level unlocks</Tag><Tag color="gold">Artwork</Tag></Space></div>
-        </Space>
-      </Card>
-      <CompanionBondStagesCard />
-      <CompanionDialogueCard />
-      <DefinitionCrudTab<AvatarDefinitionDto>
+  const catalog = <DefinitionCrudTab<AvatarDefinitionDto>
         title="Companion"
         list={api.list}
         create={api.create}
         update={api.update}
         remove={api.remove}
         columns={[
-          { title: 'Portrait', dataIndex: 'imageUrl', width: 84, render: (_, row) => row.imageUrl ? <Image src={resolveMediaPath(row.imageUrl)} width={52} height={52} preview={false} style={{ objectFit: 'contain' }} /> : '—' },
-          { title: 'Character art', dataIndex: 'companionCharacterImageUrl', width: 110, render: (_, row) => row.companionCharacterImageUrl ? <Image src={resolveMediaPath(row.companionCharacterImageUrl)} width={64} height={64} preview={false} style={{ objectFit: 'contain' }} /> : 'Not dress-up ready' },
-          { title: 'Internal key', dataIndex: 'key', copyable: true },
-          { title: 'Name (EN)', dataIndex: 'titleEn' },
-          { title: 'Name (ZH)', dataIndex: 'titleZh' },
+          { title: 'Companion', dataIndex: 'imageUrl', width: 230, render: (_, row) => <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{row.imageUrl ? <Image src={resolveMediaPath(row.imageUrl)} width={48} height={48} preview={false} style={{ objectFit: 'contain' }} /> : null}<div><strong>{row.titleEn}</strong><div style={{ color: '#888', fontSize: 12 }}>{row.titleZh}</div></div></div> },
+          { title: 'Key', dataIndex: 'key', copyable: true, width: 170 },
+          { title: 'Full-body art', dataIndex: 'companionCharacterImageUrl', width: 125, render: (_, row) => row.companionCharacterImageUrl ? <Image src={resolveMediaPath(row.companionCharacterImageUrl)} width={42} height={42} preview={false} style={{ objectFit: 'contain' }} /> : <Tag>Missing</Tag> },
           { title: 'Unlock', dataIndex: 'requiredLevel', render: (_, row) => <Tag color={row.requiredLevel <= 1 ? 'green' : 'gold'}>Lv. {row.requiredLevel}</Tag> },
           { title: 'Status', dataIndex: 'isActive', valueType: 'switch', render: (_, row) => <Tag color={row.isActive ? 'green' : 'default'}>{row.isActive ? 'Live' : 'Hidden'}</Tag> },
         ]}
@@ -57,7 +45,14 @@ export default function AvatarDefinitionsPage() {
             </ProForm.Item>
           </>
         }
-      />
+      />;
+  return (
+    <PortalPageContainer title="Companion gallery" description="Manage companion artwork, unlock levels, relationship progression, and in-game dialogue." eyebrow="COMPANION EXPERIENCE" navigation={<PortalSectionNav section="configs" />}>
+      <Tabs defaultActiveKey="companions" items={[
+        { key: 'companions', label: 'Companions', children: catalog },
+        { key: 'progression', label: 'Relationship progression', children: <CompanionBondStagesCard /> },
+        { key: 'dialogue', label: 'Interactions & dialogue', children: <CompanionDialogueCard /> },
+      ]} />
     </PortalPageContainer>
   );
 }

@@ -5,6 +5,10 @@ export interface AppearanceDefinition {
   key: string;
   itemType: AppearanceItemType;
   companionAvatarKey?: string | null;
+  offsetXPercent?: number;
+  offsetYPercent?: number;
+  scalePercent?: number;
+  layerOrder?: number;
   setKey?: string | null;
   setTitleEn?: string | null;
   setTitleZh?: string | null;

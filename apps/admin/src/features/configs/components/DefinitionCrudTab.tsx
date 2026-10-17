@@ -14,6 +14,7 @@ type Props<T extends { id: string }> = {
   remove: (id: string) => Promise<void>;
   columns: ProColumns<T>[];
   form: ReactNode;
+  modalWidth?: number;
 };
 
 export function DefinitionCrudTab<T extends { id: string }>(props: Props<T>) {
@@ -109,6 +110,7 @@ export function DefinitionCrudTab<T extends { id: string }>(props: Props<T>) {
       />
 
       <ModalForm
+        width={props.modalWidth ?? 720}
         title={`Create ${props.title}`}
         open={createOpen}
         onOpenChange={setCreateOpen}
@@ -123,6 +125,7 @@ export function DefinitionCrudTab<T extends { id: string }>(props: Props<T>) {
       </ModalForm>
 
       <ModalForm
+        width={props.modalWidth ?? 720}
         key={editing?.id ?? "edit-form"}
         title={`Edit ${props.title}`}
         open={!!editing}

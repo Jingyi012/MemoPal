@@ -1,7 +1,7 @@
 import { DeleteOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Card, Col, Form, Input, InputNumber, Row, Select, Space, Switch, Tag, Typography } from 'antd';
-import { useEffect } from 'react';
+import { Alert, App, Button, Card, Col, Collapse, Form, Input, InputNumber, Pagination, Row, Select, Space, Switch, Tag, Typography } from 'antd';
+import { useEffect, useState } from 'react';
 import { adminSystemSettingsApi } from '../../../api/adminSystemSettingsApi';
 
 const SETTING_KEY = 'companion.dialogues';
@@ -86,6 +86,10 @@ function normalizeConfig(values: DialogueConfig): DialogueConfig {
 
 export function CompanionDialogueCard() {
   const [form] = Form.useForm<DialogueConfig>();
+  const [lineSearch, setLineSearch] = useState('');
+  const [triggerFilter, setTriggerFilter] = useState<Trigger | ''>('');
+  const [linePage, setLinePage] = useState(1);
+  const lines = Form.useWatch('lines', form) ?? [];
   const queryClient = useQueryClient();
   const { message } = App.useApp();
   const setting = useQuery({
@@ -158,8 +162,13 @@ export function CompanionDialogueCard() {
             )}
           </Form.List>
 
-          <Typography.Title level={5} style={{ marginTop: 28 }}>Dialogue lines</Typography.Title>
-          <Typography.Paragraph type="secondary">Keep lines brief enough for a two-line speech bubble: up to 96 English characters or 48 Chinese characters. Weight 1–100 controls how often a line is chosen among matches. Disabling a line keeps it saved but removes it from rotation.</Typography.Paragraph>
+          <Typography.Title level={5} style={{ marginTop: 28 }}>Dialogue lines <Tag>{lines.length}</Tag></Typography.Title>
+          <Typography.Paragraph type="secondary">Search or filter by moment, then expand only the line you want to edit. Weight 1–100 controls how often a line is chosen among matches.</Typography.Paragraph>
+          <Space wrap style={{ width: '100%', marginBottom: 12 }}>
+            <Input.Search allowClear value={lineSearch} onChange={(event) => { setLineSearch(event.target.value); setLinePage(1); }} placeholder="Search ID, companion or dialogue" style={{ width: 300 }} />
+            <Select allowClear value={triggerFilter || undefined} onChange={(value) => { setTriggerFilter(value ?? ''); setLinePage(1); }} placeholder="All moments" style={{ width: 220 }} options={[...TRIGGERS]} />
+            <Typography.Text type="secondary">{lines.length} saved · {lines.filter((line: DialogueLine) => line.enabled).length} active</Typography.Text>
+          </Space>
           <Form.List name="lines" rules={[{
             validator: async (_, lines: DialogueLine[] = []) => {
               if (lines.length === 0) throw new Error('Add at least one dialogue line.');
@@ -169,10 +178,37 @@ export function CompanionDialogueCard() {
               if (lines.some((line) => line?.stageKey !== null && line?.stageKey !== undefined && !line.stageKey.trim())) throw new Error('Clear an unused stage key instead of entering spaces.');
             },
           }]}>
-            {(fields, { add, remove }, { errors }) => (
+            {(fields, { add, remove }, { errors }) => {
+              const query = lineSearch.trim().toLowerCase();
+              const filtered = fields.filter((field) => {
+                const line = lines[field.name] as DialogueLine | undefined;
+                if (!line) return !query && !triggerFilter;
+                if (triggerFilter && line.trigger !== triggerFilter) return false;
+                if (!query) return true;
+                return [line.id, line.companionKey, line.textEn, line.textZh, line.stageKey].some((value) => value?.toLowerCase().includes(query));
+              });
+              const pageSize = 10;
+              const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+              const safePage = Math.min(linePage, pageCount);
+              const visibleFields = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+              return (
               <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                {fields.map((field, index) => (
-                  <Card key={field.key} size="small" title={`Line ${index + 1}`} extra={<Button danger size="small" icon={<DeleteOutlined />} onClick={() => remove(field.name)}>Remove</Button>}>
+                {visibleFields.length ? <Collapse size="small" accordion items={visibleFields.map((field) => {
+                  const line = lines[field.name] as DialogueLine | undefined;
+                  const moment = TRIGGERS.find((item) => item.value === line?.trigger)?.label ?? 'Choose a moment';
+                  const label = <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <Tag color="purple" style={{ marginInlineEnd: 0, flexShrink: 0 }}>{moment.split(' · ')[0]}</Tag>
+                    <div style={{ minWidth: 0, flex: 1, lineHeight: 1.35 }}>
+                      <Typography.Text ellipsis style={{ display: 'block', maxWidth: 620 }}>{line?.textZh?.trim() || line?.textEn?.trim() || line?.id || 'New dialogue line'}</Typography.Text>
+                      {line?.textZh && line?.textEn ? <Typography.Text type="secondary" ellipsis style={{ display: 'block', maxWidth: 620, fontSize: 11 }}>{line.textEn}</Typography.Text> : null}
+                    </div>
+                    <Tag color={line?.enabled ? 'green' : 'default'} style={{ marginInlineEnd: 0, flexShrink: 0 }}>{line?.enabled ? 'On' : 'Off'}</Tag>
+                  </div>;
+                  return {
+                    key: String(field.key),
+                    label,
+                    extra: <Button danger type="text" size="small" icon={<DeleteOutlined />} onClick={(event) => { event.stopPropagation(); remove(field.name); }} />,
+                    children: <div style={{ padding: '12px 4px 4px' }}>
                     <Row gutter={16}>
                       <Col xs={24} sm={12} lg={6}><Form.Item {...field} name={[field.name, 'id']} label="Stable ID" rules={[...requiredText('Dialogue ID', 80), { pattern: /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/, message: 'Use letters, numbers, dots, underscores or hyphens.' }]}><Input maxLength={80} placeholder="owl.tap.01" /></Form.Item></Col>
                       <Col xs={24} sm={12} lg={6}><Form.Item {...field} name={[field.name, 'companionKey']} label="Companion key" extra="Optional catalog key; blank means every companion." rules={[{ max: 80 }]}><Input maxLength={80} placeholder="All companions" /></Form.Item></Col>
@@ -186,34 +222,25 @@ export function CompanionDialogueCard() {
                     </Row>
                     <Form.Item noStyle shouldUpdate>
                       {() => {
-                        const line = form.getFieldValue(['lines', field.name]) as DialogueLine | undefined;
-                        return (
-                          <div style={{ borderRadius: 12, padding: '12px 16px', background: '#f7f4ff' }}>
-                            <Space wrap size={6}><Typography.Text strong>Speech preview</Typography.Text><Tag>{TRIGGERS.find((item) => item.value === line?.trigger)?.label ?? 'Choose a moment'}</Tag><Tag color="purple">{REACTIONS.find((item) => item.value === line?.reaction)?.label ?? 'Choose a reaction'}</Tag></Space>
-                            <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                              <div style={{ flex: '1 1 260px', maxWidth: 340 }}>
-                                <Typography.Text type="secondary">EN</Typography.Text>
-                                <div style={{ marginTop: 4, padding: '9px 12px', borderRadius: 14, background: '#fff', minHeight: 58 }}>
-                                  <span style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2, overflow: 'hidden', overflowWrap: 'anywhere', lineHeight: '20px' }}>{line?.textEn?.trim() || 'Your English line appears here.'}</span>
-                                </div>
-                              </div>
-                              <div style={{ flex: '1 1 260px', maxWidth: 340 }}>
-                                <Typography.Text type="secondary">中文</Typography.Text>
-                                <div style={{ marginTop: 4, padding: '9px 12px', borderRadius: 14, background: '#fff', minHeight: 58 }}>
-                                  <span style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2, overflow: 'hidden', overflowWrap: 'anywhere', lineHeight: '20px' }}>{line?.textZh?.trim() || '中文台词预览'}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
+                        const currentLine = form.getFieldValue(['lines', field.name]) as DialogueLine | undefined;
+                        return <div style={{ borderRadius: 12, padding: '12px 16px', background: '#f7f4ff' }}>
+                          <Space wrap size={6}><Typography.Text strong>Speech preview</Typography.Text><Tag>{TRIGGERS.find((item) => item.value === currentLine?.trigger)?.label ?? 'Choose a moment'}</Tag><Tag color="purple">{REACTIONS.find((item) => item.value === currentLine?.reaction)?.label ?? 'Choose a reaction'}</Tag></Space>
+                          <Row gutter={12} style={{ marginTop: 8 }}>
+                            <Col xs={24} md={12}><Typography.Text type="secondary">EN</Typography.Text><div style={{ marginTop: 4, padding: '9px 12px', borderRadius: 14, background: '#fff', minHeight: 58 }}><span style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2, overflow: 'hidden', overflowWrap: 'anywhere', lineHeight: '20px' }}>{currentLine?.textEn?.trim() || 'Your English line appears here.'}</span></div></Col>
+                            <Col xs={24} md={12}><Typography.Text type="secondary">中文</Typography.Text><div style={{ marginTop: 4, padding: '9px 12px', borderRadius: 14, background: '#fff', minHeight: 58 }}><span style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2, overflow: 'hidden', overflowWrap: 'anywhere', lineHeight: '20px' }}>{currentLine?.textZh?.trim() || '中文台词预览'}</span></div></Col>
+                          </Row>
+                        </div>;
                       }}
                     </Form.Item>
-                  </Card>
-                ))}
+                  </div>,
+                  };
+                })} /> : <Alert type="info" showIcon message={fields.length ? 'No dialogue lines match these filters.' : 'No dialogue lines yet. Add one to begin.'} />}
+                <Pagination size="small" current={safePage} pageSize={pageSize} total={filtered.length} showSizeChanger={false} showTotal={(total, range) => `${range[0]}–${range[1]} of ${total}`} onChange={(page) => setLinePage(page)} style={{ display: filtered.length > pageSize ? 'flex' : 'none', justifyContent: 'flex-end' }} />
                 <Form.ErrorList errors={errors} />
-                <Button icon={<PlusOutlined />} disabled={fields.length >= 500} onClick={() => add({ id: '', companionKey: null, trigger: 'tap', stageKey: null, textEn: '', textZh: '', reaction: 'bounce', enabled: true, weight: 1 })}>Add dialogue line</Button>
+                <Button icon={<PlusOutlined />} disabled={fields.length >= 500} onClick={() => { add({ id: '', companionKey: null, trigger: 'tap', stageKey: null, textEn: '', textZh: '', reaction: 'bounce', enabled: true, weight: 1 }); setTriggerFilter(''); setLineSearch(''); setLinePage(Math.ceil((fields.length + 1) / pageSize)); }}>Add dialogue line</Button>
               </Space>
-            )}
+            );
+            }}
           </Form.List>
           {save.isError ? <Alert type="error" showIcon style={{ marginTop: 18 }} message="Could not save companion dialogue" description={save.error instanceof Error ? `${save.error.message} Your edits are still here.` : 'Your edits are still here. Check the connection and try saving again.'} /> : null}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>

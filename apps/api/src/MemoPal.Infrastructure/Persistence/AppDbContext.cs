@@ -189,6 +189,10 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.Key).HasMaxLength(64).IsRequired();
             b.Property(x => x.ItemType).HasMaxLength(24).IsRequired();
             b.Property(x => x.CompanionAvatarKey).HasMaxLength(64);
+            b.Property(x => x.OffsetXPercent).HasDefaultValue(0);
+            b.Property(x => x.OffsetYPercent).HasDefaultValue(0);
+            b.Property(x => x.ScalePercent).HasDefaultValue(100);
+            b.Property(x => x.LayerOrder).HasDefaultValue(0);
             b.Property(x => x.SetKey).HasMaxLength(64);
             b.Property(x => x.SetTitleEn).HasMaxLength(120);
             b.Property(x => x.SetTitleZh).HasMaxLength(120);

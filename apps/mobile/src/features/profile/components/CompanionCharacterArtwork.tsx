@@ -34,17 +34,34 @@ export function isCompanionCompatible(item: AppearanceDefinition, companionKey?:
 }
 
 export function CompanionCharacterArtwork({ look, items, companionKey, characterImageUrl, size, accessibilityLabel }: Props) {
-  const layers = SLOT_ORDER.flatMap(({ slot }) => {
+  const layers = SLOT_ORDER.flatMap(({ slot }, slotIndex) => {
     const itemId = look?.[slot];
     if (!itemId) return [];
     const item = items.find((candidate) => candidate.id === itemId);
-    return item && isApprovedCompanionLayer(item, companionKey) ? [{ item }] : [];
+    return item && isApprovedCompanionLayer(item, companionKey) ? [{ item, slotIndex }] : [];
+  }).sort((left, right) => {
+    const order = (item: AppearanceDefinition, slotIndex: number) => item.layerOrder && item.layerOrder > 0 ? item.layerOrder : (slotIndex + 1) * 10;
+    return order(left.item, left.slotIndex) - order(right.item, right.slotIndex);
   });
 
   return (
     <View accessible accessibilityLabel={accessibilityLabel} style={{ width: size, height: size }}>
       {characterImageUrl ? <AppImage imageUrl={characterImageUrl} style={[styles.layer, styles.transparent, { width: size, height: size }]} contentFit="contain" accessible={false} /> : null}
-      {layers.map(({ item }) => <AppImage key={item.id} imageUrl={item.imageUrl ?? undefined} style={[styles.layer, styles.transparent, { width: size, height: size }]} contentFit="contain" accessible={false} />)}
+      {layers.map(({ item }) => <AppImage
+        key={item.id}
+        imageUrl={item.imageUrl ?? undefined}
+        style={[styles.layer, styles.transparent, {
+          width: size,
+          height: size,
+          transform: [
+            { translateX: size * (item.offsetXPercent ?? 0) / 100 },
+            { translateY: size * (item.offsetYPercent ?? 0) / 100 },
+            { scale: (item.scalePercent ?? 100) / 100 },
+          ],
+        }]}
+        contentFit="contain"
+        accessible={false}
+      />)}
     </View>
   );
 }

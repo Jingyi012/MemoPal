@@ -7,6 +7,10 @@ export interface AppearanceDefinitionDto {
   assetKey: string;
   imageUrl?: string | null;
   companionAvatarKey?: string | null;
+  offsetXPercent: number;
+  offsetYPercent: number;
+  scalePercent: number;
+  layerOrder: number;
   setKey?: string | null;
   setTitleEn?: string | null;
   setTitleZh?: string | null;

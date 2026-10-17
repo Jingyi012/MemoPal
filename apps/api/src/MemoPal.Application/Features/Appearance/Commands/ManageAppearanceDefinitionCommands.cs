@@ -35,6 +35,12 @@ public sealed class CreateAppearanceDefinitionCommandHandler(IAppDbContext db)
             throw new ValidationAppException("itemType must be frame, decoration, outfit, headwear, bodywear, backwear, or handItem.");
         if (request.RequiredLevel < 1)
             throw new ValidationAppException("requiredLevel must be at least 1.");
+        if (request.OffsetXPercent is < -40 or > 40 || request.OffsetYPercent is < -40 or > 40)
+            throw new ValidationAppException("Wearable offsets must be between -40 and 40 percent.");
+        if (request.ScalePercent is < 50 or > 180)
+            throw new ValidationAppException("Wearable scale must be between 50 and 180 percent.");
+        if (request.LayerOrder is < 0 or > 100)
+            throw new ValidationAppException("Wearable layer order must be between 0 and 100.");
         var companionAvatarKey = string.IsNullOrWhiteSpace(request.CompanionAvatarKey) ? null : request.CompanionAvatarKey.Trim().ToLowerInvariant();
         var setKey = string.IsNullOrWhiteSpace(request.SetKey) ? null : request.SetKey.Trim().ToLowerInvariant();
         if (itemType is AppearanceItemTypes.Headwear or AppearanceItemTypes.Bodywear or AppearanceItemTypes.Backwear or AppearanceItemTypes.HandItem)
@@ -73,6 +79,10 @@ public sealed class CreateAppearanceDefinitionCommandHandler(IAppDbContext db)
         entity.Key = key;
         entity.ItemType = itemType;
         entity.CompanionAvatarKey = companionAvatarKey;
+        entity.OffsetXPercent = request.OffsetXPercent;
+        entity.OffsetYPercent = request.OffsetYPercent;
+        entity.ScalePercent = request.ScalePercent;
+        entity.LayerOrder = request.LayerOrder;
         entity.SetKey = setKey;
         entity.SetTitleEn = string.IsNullOrWhiteSpace(request.SetTitleEn) ? null : request.SetTitleEn.Trim();
         entity.SetTitleZh = string.IsNullOrWhiteSpace(request.SetTitleZh) ? null : request.SetTitleZh.Trim();

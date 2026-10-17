@@ -14,6 +14,7 @@ export default function AppearanceDefinitionsPage() {
     <PortalPageContainer title="Appearance Studio" description="Configure profile frames and companion wardrobe items, including companion compatibility and outfit sets." eyebrow="Gamification" navigation={<PortalSectionNav section="configs" />}>
       <DefinitionCrudTab<AppearanceDefinitionDto>
         title="Appearance item"
+        modalWidth={1120}
         list={api.list}
         create={(payload) => api.create({ ...payload, assetKey: payload.assetKey?.trim() || payload.key.trim() })}
         update={(id, payload) => api.update(id, { ...payload, assetKey: payload.assetKey?.trim() || payload.key.trim() })}
