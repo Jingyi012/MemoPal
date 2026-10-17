@@ -1,7 +1,7 @@
 import type { RecognitionResult } from 'expo-mlkit-ocr';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-export { extractMemoryItems, MAX_OCR_ITEMS, type OcrItem } from './ocrParsing';
+export { extractMemoryItems, MAX_OCR_ITEMS, parseOcrReviewText, type OcrItem } from './ocrParsing';
 
 export class OcrError extends Error {
   constructor(

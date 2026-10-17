@@ -13,6 +13,7 @@ import { buildTechniqueRoute, recommendTechnique, type ComposerOrigin, type Tech
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { DraggableMemoryItemRow, MemoryItemReorderProvider } from '@/features/memory-composer/components/DraggableMemoryItemRow';
 import { reorderItems } from '@/features/memory-composer/utils/reorderItems';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ComposerStep = 'content' | 'technique';
 type ComposerItem = { id: string; value: string };
@@ -39,6 +40,7 @@ type MemoryComposerProps = {
 
 export default function MemoryComposerScreen({ initialTechnique, initialSceneId }: MemoryComposerProps = {}) {
   const { styles, theme } = useStyles();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{
     title?: string | string[];
@@ -231,42 +233,40 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
         showsVerticalScrollIndicator={false}
         onScroll={(event) => { scrollOffsetRef.current = event.nativeEvent.contentOffset.y; }}
         scrollEventThrottle={16}
-        contentContainerStyle={[styles.content, keyboardInset > 0 && { paddingBottom: keyboardInset + 24 }]}>
+        style={styles.scrollView}
+        contentContainerStyle={[styles.content, keyboardInset > 0 && { paddingBottom: 24 }]}>
         <View style={styles.progressRow}>
-          <View style={[styles.progressDot, step === 'content' && styles.progressDotActive]} />
+          <View style={styles.progressStep}>
+            <View style={[styles.progressDot, step === 'content' && styles.progressDotActive]}>
+              <Text style={[styles.progressNumber, step === 'content' && styles.progressNumberActive]}>1</Text>
+            </View>
+            <Text style={[styles.progressLabel, step === 'content' && styles.progressLabelActive]}>{t('contentStepLabel')}</Text>
+          </View>
           <View style={[styles.progressLine, step === 'technique' && styles.progressLineActive]} />
-          <View style={[styles.progressDot, step === 'technique' && styles.progressDotActive]} />
+          <View style={styles.progressStep}>
+            <View style={[styles.progressDot, step === 'technique' && styles.progressDotActive]}>
+              <Text style={[styles.progressNumber, step === 'technique' && styles.progressNumberActive]}>2</Text>
+            </View>
+            <Text style={[styles.progressLabel, step === 'technique' && styles.progressLabelActive]}>{t('techniqueStepLabel')}</Text>
+          </View>
         </View>
 
         {step === 'content' ? (
           <>
-            <View style={styles.inputCard}>
-              <View style={styles.cardIcon}><Text style={styles.cardIconEmoji}>🧠</Text></View>
-              <Text style={styles.cardTitle}>{t('startUseful')}</Text>
-              <Text style={styles.cardBody}>{t('startUsefulBody')}</Text>
-
-              <Text style={styles.label}>{t('memoryName')} <Text style={styles.optionalLabel}>{t('optional')}</Text></Text>
-              <TextInput
-                ref={titleInputRef}
-                value={title}
-                onChangeText={(value) => { setTitle(value); setMessage(null); }}
-                onFocus={() => handleInputFocus(titleInputRef.current)}
-                maxLength={200}
-                placeholder={t('memoryPlaceholder')}
-                placeholderTextColor={theme.inkSoft}
-                selectionColor={theme.violetDeep}
-                cursorColor={theme.violetDeep}
-                style={styles.input}
-              />
-
-              <Text style={styles.label}>{t('whatFor')}</Text>
+            <View style={styles.section}>
+              <View style={styles.sectionHeadingRow}>
+                <View>
+                  <Text style={styles.sectionTitle}>{t('whatFor')}</Text>
+                  <Text style={styles.sectionSubtitle}>{t('goalSelectionHint')}</Text>
+                </View>
+              </View>
               <View style={styles.goalGrid}>
                 {goals.map((goal) => {
                   const selected = goal.key === goalType;
                   return (
                     <AnimatedPressable
                       key={goal.key}
-                      onPress={() => setGoalType(goal.key)}
+                      onPress={() => { setGoalType(goal.key); setMessage(null); }}
                       style={[styles.goalChip, selected && styles.goalChipSelected]}>
                       <Text style={styles.goalEmoji}>{goal.emoji}</Text>
                       <Text style={[styles.goalLabel, selected && styles.goalLabelSelected]}>{t(goal.translationKey)}</Text>
@@ -274,58 +274,18 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                   );
                 })}
               </View>
+            </View>
 
-              <Text style={styles.label}>{t('addItems')}</Text>
-              <View style={styles.importActions}>
-                <AnimatedPressable
-                  accessibilityLabel={bulkMode ? t('hidePasteMany') : t('pasteManyAccessibility')}
-                  onPress={() => { setBulkMode((current) => !current); setMessage(null); }}
-                  containerStyle={styles.importActionContainer}
-                  style={[styles.importAction, bulkMode && styles.importActionSelected]}>
-                  <View style={[styles.importActionIcon, styles.pasteIcon]}>
-                    <ClipboardList size={17} color={theme.berryDeep} strokeWidth={2.3} />
-                  </View>
-                  <Text style={styles.importActionText}>{bulkMode ? t('addOne') : t('pasteMany')}</Text>
-                </AnimatedPressable>
-                <AnimatedPressable
-                  accessibilityLabel={t('scanFromPhotoAccessibility')}
-                  onPress={() => {
-                    const draftId = saveOcrDraft(itemValues, {
-                      title: title.trim() || undefined,
-                      goalType,
-                    });
-                    router.push(`/scan-memory?sourceDraftId=${encodeURIComponent(draftId)}` as Href);
-                  }}
-                  containerStyle={styles.importActionContainer}
-                  style={styles.importAction}>
-                  <View style={[styles.importActionIcon, styles.scanIcon]}>
-                    <ScanText size={17} color={theme.violetDeep} strokeWidth={2.3} />
-                  </View>
-                  <Text style={styles.importActionText}>{t('scanFromPhoto')}</Text>
-                </AnimatedPressable>
-              </View>
-              {bulkMode ? (
-                <View style={styles.bulkCard}>
-                  <Text style={styles.bulkTitle}>{t('onePerLine')}</Text>
-                  <TextInput
-                    ref={bulkInputRef}
-                    value={bulkInput}
-                    onChangeText={setBulkInput}
-                    onFocus={() => handleInputFocus(bulkInputRef.current)}
-                    multiline
-                    maxLength={6000}
-                    placeholder={'rhythm\nseparate\ncalendar'}
-                    placeholderTextColor={theme.inkSoft}
-                    selectionColor={theme.violetDeep}
-                    cursorColor={theme.violetDeep}
-                    style={[styles.input, styles.bulkInput]}
-                  />
-                  <AnimatedPressable onPress={addBulkItems} style={styles.bulkButton}>
-                    <Text style={styles.bulkButtonText}>{t('addLines')}</Text>
-                    <ArrowRight size={16} color={theme.onSun} />
-                  </AnimatedPressable>
+            <View style={styles.section}>
+              <View style={styles.sectionHeadingRow}>
+                <View>
+                  <Text style={styles.sectionTitle}>{t('addItems')}</Text>
+                  <Text style={styles.sectionSubtitle}>{t('addContentHint')}</Text>
                 </View>
-              ) : null}
+                <View style={styles.countPill}>
+                  <Text style={styles.countText}>{t('itemCount').replace('{count}', String(items.length))}</Text>
+                </View>
+              </View>
               <View style={styles.addRow}>
                 <TextInput
                   ref={newItemInputRef}
@@ -345,45 +305,93 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                   <Plus size={21} color="white" />
                 </AnimatedPressable>
               </View>
-
-              <MemoryItemReorderProvider>
-              <View style={styles.chipRow}>
-                {items.map((item, index) => (
-                  <DraggableMemoryItemRow
-                    key={item.id}
-                    item={{ value: item.value, needsReview: false }}
-                    index={index}
-                    itemCount={items.length}
-                    placeholder={t('itemPlaceholder')}
-                    removeLabel={t('removeAccessibility')}
-                    reorderLabel={t('scanReorderItem')}
-                    reorderHint={t('scanReorderHint')}
-                    onChange={(value) =>
-                      setItems((current) =>
-                        current.map((currentItem, itemIndex) =>
-                          itemIndex === index ? { ...currentItem, value } : currentItem
-                        )
-                      )
-                    }
-                    onRemove={() =>
-                      setItems((current) =>
-                        current.filter((_, itemIndex) => itemIndex !== index)
-                      )
-                    }
-                    onMove={moveItem}
-                    onDragStateChange={setIsReordering}
-                  />
-                ))}
+              <View style={styles.importActions}>
+                <AnimatedPressable
+                  accessibilityLabel={bulkMode ? t('hidePasteMany') : t('pasteManyAccessibility')}
+                  onPress={() => { setBulkMode((current) => !current); setMessage(null); }}
+                  style={[styles.importAction, bulkMode && styles.importActionSelected]}>
+                  <ClipboardList size={16} color={theme.violetDeep} strokeWidth={2.2} />
+                  <Text style={styles.importActionText}>{bulkMode ? t('addOne') : t('pasteMany')}</Text>
+                </AnimatedPressable>
+                <AnimatedPressable
+                  accessibilityLabel={t('scanFromPhotoAccessibility')}
+                  onPress={() => {
+                    const draftId = saveOcrDraft(itemValues, {
+                      title: title.trim() || undefined,
+                      goalType,
+                    });
+                    router.push(`/scan-memory?sourceDraftId=${encodeURIComponent(draftId)}` as Href);
+                  }}
+                  style={styles.importAction}>
+                  <ScanText size={16} color={theme.violetDeep} strokeWidth={2.2} />
+                  <Text style={styles.importActionText}>{t('scanFromPhoto')}</Text>
+                </AnimatedPressable>
               </View>
-              <Text style={styles.hint}>{t('techniqueDescription')}</Text>
+              {bulkMode ? (
+                <View style={styles.bulkCard}>
+                  <Text style={styles.bulkTitle}>{t('onePerLine')}</Text>
+                  <TextInput
+                    ref={bulkInputRef}
+                    value={bulkInput}
+                    onChangeText={setBulkInput}
+                    onFocus={() => handleInputFocus(bulkInputRef.current)}
+                    multiline
+                    maxLength={6000}
+                    placeholder={t('bulkPlaceholder')}
+                    placeholderTextColor={theme.inkSoft}
+                    selectionColor={theme.violetDeep}
+                    cursorColor={theme.violetDeep}
+                    style={[styles.input, styles.bulkInput]}
+                  />
+                  <AnimatedPressable onPress={addBulkItems} style={styles.bulkButton}>
+                    <Text style={styles.bulkButtonText}>{t('addLines')}</Text>
+                    <ArrowRight size={16} color={theme.onSun} />
+                  </AnimatedPressable>
+                </View>
+              ) : null}
+              <MemoryItemReorderProvider>
+                <View style={styles.chipRow}>
+                  {items.length ? items.map((item, index) => (
+                    <DraggableMemoryItemRow
+                      key={item.id}
+                      item={{ value: item.value, needsReview: false }}
+                      index={index}
+                      itemCount={items.length}
+                      placeholder={t('itemPlaceholder')}
+                      removeLabel={t('removeAccessibility')}
+                      reorderLabel={t('scanReorderItem')}
+                      reorderHint={t('scanReorderHint')}
+                      onChange={(value) => setItems((current) => current.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, value } : currentItem))}
+                      onRemove={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                      onMove={moveItem}
+                      onDragStateChange={setIsReordering}
+                    />
+                  )) : (
+                    <View style={styles.emptyItems}>
+                      <Text style={styles.emptyItemsText}>{t('emptyItemsHint')}</Text>
+                    </View>
+                  )}
+                </View>
               </MemoryItemReorderProvider>
             </View>
 
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('memoryName')} <Text style={styles.optionalLabel}>{t('optional')}</Text></Text>
+              <TextInput
+                ref={titleInputRef}
+                value={title}
+                onChangeText={(value) => { setTitle(value); setMessage(null); }}
+                onFocus={() => handleInputFocus(titleInputRef.current)}
+                maxLength={200}
+                placeholder={t('memoryPlaceholder')}
+                placeholderTextColor={theme.inkSoft}
+                selectionColor={theme.violetDeep}
+                cursorColor={theme.violetDeep}
+                style={styles.input}
+              />
+            </View>
+
             {message && <MessageCard message={message} />}
-            <AnimatedPressable onPress={continueToTechniques} style={styles.primaryButton}>
-              <Text style={styles.primaryButtonText}>{t('continue')}</Text>
-              <ArrowRight size={18} color={theme.onSun} />
-            </AnimatedPressable>
           </>
         ) : (
           <>
@@ -413,6 +421,19 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
           </>
         )}
       </ScrollView>
+      {step === 'content' && keyboardInset === 0 ? (
+        <View style={[styles.bottomDock, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+          <AnimatedPressable
+            disabled={!items.length || isReordering}
+            onPress={continueToTechniques}
+            style={[styles.primaryButton, (!items.length || isReordering) && styles.primaryButtonDisabled]}>
+            <Text style={[styles.primaryButtonText, (!items.length || isReordering) && styles.primaryButtonTextDisabled]}>
+              {items.length ? t('continueWithItems').replace('{count}', String(items.length)) : t('addFirstItem')}
+            </Text>
+            <ArrowRight size={18} color={!items.length || isReordering ? theme.inkSoft : theme.onSun} />
+          </AnimatedPressable>
+        </View>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
@@ -462,26 +483,37 @@ function MessageCard({ message }: { message: string }) {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 16, paddingBottom: 42 },
-  progressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 15 },
-  progressDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: theme.line },
-  progressDotActive: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.2 }] },
-  progressLine: { width: 70, height: 2, backgroundColor: theme.line, marginHorizontal: 7 },
-  progressLineActive: { backgroundColor: theme.sunDeep },
-  inputCard: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 20, padding: 16, boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.08)' },
+  scrollView: { flex: 1 },
+  content: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 124, gap: 18 },
+  progressRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 1 },
+  progressStep: { alignItems: 'center', gap: 5 },
+  progressDot: { width: 26, height: 26, borderRadius: 13, backgroundColor: theme.line, alignItems: 'center', justifyContent: 'center' },
+  progressDotActive: { backgroundColor: theme.violetDeep },
+  progressNumber: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  progressNumberActive: { color: theme.paper },
+  progressLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
+  progressLabelActive: { color: theme.violetDeep },
+  progressLine: { flex: 1, height: 2, backgroundColor: theme.line, marginHorizontal: 12, marginBottom: 16 },
+  progressLineActive: { backgroundColor: theme.violetDeep },
+  section: { gap: 10 },
+  sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16, lineHeight: 21 },
+  sectionSubtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 15, marginTop: 2 },
+  countPill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: theme.violetTint },
+  countText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   cardIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.berryTint },
   cardIconEmoji: { fontSize: 21 },
   cardTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 10 },
   cardBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 },
-  importActions: { flexDirection: 'row', alignItems: 'stretch', gap: 10, marginTop: -2, marginBottom: 10 },
+  importActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   importActionContainer: { flex: 1, minWidth: 0 },
-  importAction: { width: '100%', minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 15, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 10, boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.06)' },
+  importAction: { flex: 1, minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 8 },
   importActionSelected: { borderColor: theme.berry, backgroundColor: theme.berryTint },
   importActionIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   pasteIcon: { backgroundColor: theme.berryTint },
   scanIcon: { backgroundColor: theme.violetTint },
-  importActionText: { flex: 1, color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11.5, lineHeight: 15 },
+  importActionText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, lineHeight: 15, flexShrink: 1, textAlign: 'center' },
   bulkCard: { borderRadius: 15, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 10, marginBottom: 10 },
   bulkTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginBottom: 7 },
   bulkInput: { minHeight: 105, paddingTop: 12, textAlignVertical: 'top', backgroundColor: theme.paper },
@@ -489,20 +521,25 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   bulkButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
   input: { minHeight: 49, borderRadius: 12, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 12, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
-  goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  goalChip: { minWidth: '47%', flexGrow: 1, minHeight: 44, borderRadius: 12, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  goalChipSelected: { borderColor: theme.sunDeep, backgroundColor: theme.sunTint },
-  goalEmoji: { fontSize: 17 },
-  goalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
+  goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  goalChip: { flexBasis: '48%', flexGrow: 1, minHeight: 58, borderRadius: 15, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 9 },
+  goalChipSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint },
+  goalEmoji: { fontSize: 22 },
+  goalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12.5 },
   goalLabelSelected: { color: theme.ink },
   addRow: { flexDirection: 'row', gap: 8 },
   addInput: { flex: 1 },
   addButtonContainer: { width: 52, minHeight: 52 },
-  addButton: { width: '100%', minHeight: 52, borderRadius: 14, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.night, alignItems: 'center', justifyContent: 'center' },
-  chipRow: { gap: 7, marginTop: 12 },
+  addButton: { width: '100%', minHeight: 52, borderRadius: 15, borderWidth: 1.5, borderColor: theme.violetDeep, backgroundColor: theme.violetDeep, alignItems: 'center', justifyContent: 'center' },
+  chipRow: { gap: 8 },
+  emptyItems: { minHeight: 76, alignItems: 'center', justifyContent: 'center', borderRadius: 15, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.line, backgroundColor: theme.paper },
+  emptyItemsText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, textAlign: 'center', paddingHorizontal: 16 },
   hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: 12 },
-  primaryButton: { minHeight: 53, marginTop: 16, borderRadius: 15, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
+  bottomDock: { paddingHorizontal: 16, paddingTop: 12, backgroundColor: theme.canvas, borderTopWidth: 1, borderTopColor: theme.line },
+  primaryButton: { minHeight: 53, borderRadius: 15, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: `0px 4px 0px ${theme.sunDeep}` },
+  primaryButtonDisabled: { backgroundColor: theme.line, boxShadow: 'none' },
   primaryButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 15 },
+  primaryButtonTextDisabled: { color: theme.inkSoft },
   messageCard: { marginTop: 13, borderRadius: 13, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 11 },
   messageText: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
   recommendationBanner: { flexDirection: 'row', gap: 11, borderRadius: 18, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 14, marginBottom: 16 },

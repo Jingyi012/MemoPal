@@ -15,12 +15,14 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import {
   extractMemoryItems,
   MAX_OCR_ITEMS,
   OcrError,
+  parseOcrReviewText,
   recognizeMemoryPhoto,
   type OcrItem,
 } from '../utils/ocr';
@@ -47,6 +49,8 @@ export default function ScanMemoryScreen() {
   const [phase, setPhase] = useState<ScanPhase>('choose');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [items, setItems] = useState<EditableOcrItem[]>([]);
+  const [quickEditText, setQuickEditText] = useState('');
+  const [reviewMode, setReviewMode] = useState<'quick' | 'items'>('quick');
   const [message, setMessage] = useState<string | null>(null);
   const [sourceDraft, setSourceDraft] = useState<OcrDraft | null>(null);
   const [isReordering, setIsReordering] = useState(false);
@@ -62,6 +66,8 @@ export default function ScanMemoryScreen() {
       const recognition = await recognizeMemoryPhoto(uri);
       const recognizedItems = extractMemoryItems(recognition);
       setItems(recognizedItems.map(makeEditableItem));
+      setQuickEditText(recognizedItems.map((item) => item.value).join('\n'));
+      setReviewMode('quick');
       setPhase('review');
       if (!recognizedItems.length) setMessage(t('scanNoText'));
     } catch (error) {
@@ -141,7 +147,9 @@ export default function ScanMemoryScreen() {
   };
 
   const useItems = () => {
-    const cleanedItems = items.map((item) => item.value.trim()).filter(Boolean);
+    const cleanedItems = reviewMode === 'quick'
+      ? parseOcrReviewText(quickEditText)
+      : items.map((item) => item.value.trim()).filter(Boolean);
     if (!cleanedItems.length) {
       setMessage(t('scanNoItems'));
       return;
@@ -222,12 +230,28 @@ export default function ScanMemoryScreen() {
           <ReviewState
             imageUri={imageUri}
             items={items}
+            quickEditText={quickEditText}
+            reviewMode={reviewMode}
             message={message}
             onChange={updateItem}
             onRemove={removeItem}
             onMove={moveItem}
             onDragStateChange={setIsReordering}
             onAdd={addItem}
+            onQuickEditChange={setQuickEditText}
+            onReviewModeChange={(mode) => {
+              if (mode === 'items') {
+                setItems(parseOcrReviewText(quickEditText).map((value, index) => {
+                  const previous = items[index];
+                  return previous
+                    ? { ...previous, value, needsReview: previous.value === value && previous.needsReview }
+                    : makeEditableItem({ value, needsReview: false });
+                }));
+              } else {
+                setQuickEditText(items.map((item) => item.value).join('\n'));
+              }
+              setReviewMode(mode);
+            }}
             onUse={useItems}
             onRetake={() => void choosePhoto('camera')}
             t={t}
@@ -319,28 +343,40 @@ function ProcessingState({ imageUri, t }: { imageUri: string | null; t: Translat
 function ReviewState({
   imageUri,
   items,
+  quickEditText,
+  reviewMode,
   message,
   onChange,
   onRemove,
   onMove,
   onDragStateChange,
   onAdd,
+  onQuickEditChange,
+  onReviewModeChange,
   onUse,
   onRetake,
   t,
 }: {
   imageUri: string | null;
   items: EditableOcrItem[];
+  quickEditText: string;
+  reviewMode: 'quick' | 'items';
   message: string | null;
   onChange: (index: number, value: string) => void;
   onRemove: (index: number) => void;
   onMove: (from: number, to: number) => void;
   onDragStateChange: (dragging: boolean) => void;
   onAdd: () => void;
+  onQuickEditChange: (value: string) => void;
+  onReviewModeChange: (mode: 'quick' | 'items') => void;
   onUse: () => void;
   onRetake: () => void;
   t: Translation;
 }) {
+  const visibleItemCount = reviewMode === 'quick'
+    ? parseOcrReviewText(quickEditText).length
+    : items.length;
+
   return (
     <>
       {imageUri ? (
@@ -356,43 +392,81 @@ function ReviewState({
         </View>
         <View style={styles.reviewCopy}>
           <Text style={styles.reviewTitle}>{t('scanReviewHeading')}</Text>
-          <Text style={styles.reviewBody}>{t('scanReviewHint')}</Text>
+          <Text style={styles.reviewBody}>{reviewMode === 'quick' ? t('scanQuickEditHint') : t('scanReviewHint')}</Text>
         </View>
         <View style={styles.countBadge}>
           <Text style={styles.countBadgeText}>
-            {items.length}/{MAX_OCR_ITEMS}
+            {t('scanReviewCount').replace('{count}', String(visibleItemCount)).replace('{max}', String(MAX_OCR_ITEMS))}
           </Text>
         </View>
       </View>
 
       {message ? <MessageCard message={message} /> : null}
 
-      <MemoryItemReorderProvider>
-      <View style={styles.itemList}>
-        {items.map((item, index) => (
-          <DraggableMemoryItemRow
-            key={item.id}
-            item={item}
-            index={index}
-            itemCount={items.length}
-            placeholder={t('scanItemPlaceholder')}
-            removeLabel={t('removeAccessibility')}
-            reorderLabel={t('scanReorderItem')}
-            reorderHint={t('scanReorderHint')}
-            onChange={(value) => onChange(index, value)}
-            onRemove={() => onRemove(index)}
-            onMove={onMove}
-            onDragStateChange={onDragStateChange}
-          />
-        ))}
-        {!items.length ? <Text style={styles.emptyItems}>{t('scanNoText')}</Text> : null}
+      <View style={styles.reviewModeSwitch} accessibilityRole="tablist">
+        <AnimatedPressable
+          accessibilityRole="tab"
+          accessibilityState={{ selected: reviewMode === 'quick' }}
+          onPress={() => onReviewModeChange('quick')}
+          style={[styles.reviewModeButton, reviewMode === 'quick' && styles.reviewModeButtonSelected]}>
+          <Text style={[styles.reviewModeText, reviewMode === 'quick' && styles.reviewModeTextSelected]}>{t('scanQuickEdit')}</Text>
+        </AnimatedPressable>
+        <AnimatedPressable
+          accessibilityRole="tab"
+          accessibilityState={{ selected: reviewMode === 'items' }}
+          onPress={() => onReviewModeChange('items')}
+          style={[styles.reviewModeButton, reviewMode === 'items' && styles.reviewModeButtonSelected]}>
+          <Text style={[styles.reviewModeText, reviewMode === 'items' && styles.reviewModeTextSelected]}>{t('scanItemEdit')}</Text>
+        </AnimatedPressable>
       </View>
-      </MemoryItemReorderProvider>
 
-      <AnimatedPressable onPress={onAdd} style={styles.addItemButton}>
-        <Plus size={17} color={theme.berryDeep} />
-        <Text style={styles.addItemText}>{t('scanAddItem')}</Text>
-      </AnimatedPressable>
+      {reviewMode === 'quick' ? (
+        <View style={styles.quickEditCard}>
+          <Text style={styles.quickEditCaption}>{t('scanQuickEditCaption')}</Text>
+          <TextInput
+            accessibilityLabel={t('scanQuickEdit')}
+            value={quickEditText}
+            onChangeText={onQuickEditChange}
+            multiline
+            maxLength={MAX_OCR_ITEMS * 501}
+            placeholder={t('scanQuickEditPlaceholder')}
+            placeholderTextColor={theme.inkSoft}
+            selectionColor={theme.violetDeep}
+            cursorColor={theme.violetDeep}
+            textAlignVertical="top"
+            style={styles.quickEditInput}
+          />
+          <Text style={styles.quickEditCount}>{visibleItemCount}/{MAX_OCR_ITEMS}</Text>
+        </View>
+      ) : (
+        <>
+          <MemoryItemReorderProvider>
+            <View style={styles.itemList}>
+              {items.map((item, index) => (
+                <DraggableMemoryItemRow
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  itemCount={items.length}
+                  placeholder={t('scanItemPlaceholder')}
+                  removeLabel={t('removeAccessibility')}
+                  reorderLabel={t('scanReorderItem')}
+                  reorderHint={t('scanReorderHint')}
+                  onChange={(value) => onChange(index, value)}
+                  onRemove={() => onRemove(index)}
+                  onMove={onMove}
+                  onDragStateChange={onDragStateChange}
+                />
+              ))}
+              {!items.length ? <Text style={styles.emptyItems}>{t('scanNoText')}</Text> : null}
+            </View>
+          </MemoryItemReorderProvider>
+          <AnimatedPressable onPress={onAdd} style={styles.addItemButton}>
+            <Plus size={17} color={theme.berryDeep} />
+            <Text style={styles.addItemText}>{t('scanAddItem')}</Text>
+          </AnimatedPressable>
+        </>
+      )}
       <AnimatedPressable onPress={onUse} style={styles.primaryButton}>
         <Check size={19} color={theme.ink} strokeWidth={2.8} />
         <Text style={styles.primaryButtonText}>{t('scanUseItems')}</Text>
@@ -602,6 +676,15 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   countBadgeText: { color: '#25865C', fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  reviewModeSwitch: { flexDirection: 'row', gap: 6, borderRadius: 14, backgroundColor: theme.violetTint, padding: 4, marginTop: 13 },
+  reviewModeButton: { minHeight: 40, flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 11, paddingHorizontal: 8 },
+  reviewModeButtonSelected: { backgroundColor: theme.paper, boxShadow: '0px 2px 5px rgba(43, 42, 61, 0.1)' },
+  reviewModeText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
+  reviewModeTextSelected: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold },
+  quickEditCard: { borderRadius: 17, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 12, marginTop: 10 },
+  quickEditCaption: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, marginBottom: 6 },
+  quickEditInput: { minHeight: 210, maxHeight: 360, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 15, lineHeight: 24, padding: 10, borderRadius: 12, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.canvas },
+  quickEditCount: { alignSelf: 'flex-end', color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginTop: 6 },
   itemList: { gap: 8, marginTop: 13 },
   emptyItems: {
     color: theme.inkSoft,

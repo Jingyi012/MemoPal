@@ -7,6 +7,14 @@ export type OcrItem = {
   needsReview: boolean;
 };
 
+export function parseOcrReviewText(value: string, limit = MAX_OCR_ITEMS): string[] {
+  return value
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
 /**
  * Converts OCR lines into memory items. We keep one visual line as one item so
  * phrases such as "water bottle" and "Kuala Lumpur" are not split blindly.

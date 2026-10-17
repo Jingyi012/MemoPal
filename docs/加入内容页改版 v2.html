@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>加入内容页 v2</title>
+<style>
+:root{--bg:#F6F3FF;--card:#fff;--ink:#241B4B;--sub:#5E5784;--line:#E6E0F7;--p:#6A4CD8;--pl:#EEE8FF;--gold:#FFC93C;--grey:#E9E6F2;--shadow:0 6px 20px rgba(80,50,180,.12);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:"Nunito","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;padding:16px 20px 130px}
+header{display:flex;align-items:center;gap:12px}
+.back{width:40px;height:40px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--p);font-size:18px;font-weight:800;cursor:pointer;flex:none}
+.t{flex:1;min-width:0}.t h1{font-size:24px;font-weight:800}.t p{font-size:12px;color:var(--sub);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-weight:800;font-size:14px;flex:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--p);outline-offset:2px}
+.steps{display:flex;align-items:center;margin:20px 0 4px}
+.s{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:800;color:var(--sub);flex:none}
+.s i{width:26px;height:26px;border-radius:50%;background:var(--grey);display:grid;place-items:center;font-style:normal;font-size:13px}
+.s.on{color:var(--p)}.s.on i{background:var(--p);color:#fff}
+.ln{flex:1;height:3px;background:var(--grey);margin:0 6px 16px;border-radius:9px}
+h3{font-size:16px;font-weight:800;margin:24px 0 10px;display:flex;justify-content:space-between;align-items:baseline}
+h3 small{font-size:12px;color:var(--sub);font-weight:700}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ty{position:relative;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 4px;font-family:inherit;color:inherit;cursor:pointer;text-align:center}
+.ty .e{font-size:24px;display:block}.ty b{font-size:13px}
+.ty.sel{border-color:var(--p);background:var(--pl)}
+.ty.hid{display:none}
+.more{grid-column:1/-1;border:0;background:none;color:var(--p);font:800 13px inherit;font-family:inherit;cursor:pointer;padding:6px}
+.info{margin-top:10px;background:var(--pl);border-radius:14px;padding:10px 12px;font-size:13px;font-weight:700;color:var(--sub);line-height:1.5}
+.info b{color:var(--p)}
+.add{display:flex;gap:8px}
+.fields{flex:1;display:flex;gap:8px;min-width:0}
+.add input{flex:1;min-width:0;width:100%;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:16px;padding:14px;font:700 15px inherit;font-family:inherit}
+.add input::placeholder{color:var(--sub);opacity:.7}
+.plus{width:52px;border:0;border-radius:16px;background:var(--p);color:#fff;font-size:26px;font-weight:800;cursor:pointer;box-shadow:0 4px 0 #4B33A8}
+.plus:active{transform:translateY(2px);box-shadow:0 2px 0 #4B33A8}
+.alt{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:8px 14px;font:800 13px inherit;font-family:inherit;cursor:pointer}
+.pill.demo{border-style:dashed;color:var(--p)}
+.paste{display:none;margin-top:10px}.paste.show{display:block}
+.paste textarea{width:100%;height:96px;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:16px;padding:12px;font:700 14px inherit;font-family:inherit;resize:none}
+.paste button{margin-top:8px;border:0;border-radius:12px;padding:10px 16px;background:var(--p);color:#fff;font:800 14px inherit;font-family:inherit;cursor:pointer}
+.row{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:16px;padding:10px 10px 10px 12px;box-shadow:var(--shadow);margin-top:10px;animation:pop .25s}
+@keyframes pop{from{transform:scale(.96);opacity:0}}
+@media (prefers-reduced-motion:reduce){.row{animation:none}}
+.bd{width:46px;height:46px;border-radius:14px;background:var(--pl);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;flex:none}
+.bd span{font-size:22px}.bd small{font-size:11px;font-weight:800;color:var(--p);margin-top:2px}
+.bd.n span{font-size:18px;font-weight:800;color:var(--p)}
+.rt{flex:1;min-width:0}.rt b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rt small{font-size:12px;color:var(--sub);font-weight:700}
+.ctl{display:flex;flex-direction:column;gap:2px}
+.ctl button,.del{border:0;background:var(--grey);color:var(--sub);width:28px;height:22px;border-radius:8px;font-size:11px;cursor:pointer}
+.del{height:32px;width:32px;border-radius:10px;font-size:14px}
+.empty{margin-top:10px;text-align:center;color:var(--sub);font-weight:700;font-size:13px;border:2px dashed var(--line);border-radius:16px;padding:18px}
+.name{width:100%;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:16px;padding:12px 14px;font:700 14px inherit;font-family:inherit}
+.bar2{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,var(--bg) 40%);pointer-events:none}
+.go{pointer-events:auto;width:100%;max-width:390px;border:0;border-radius:16px;padding:15px;background:var(--gold);color:#3A2800;font:800 17px inherit;font-family:inherit;cursor:pointer;box-shadow:0 5px 0 #D9A41A}
+.go:active{transform:translateY(3px);box-shadow:0 2px 0 #D9A41A}
+.go:disabled{background:var(--grey);color:var(--sub);box-shadow:none;cursor:default}
+.toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translate(-50%,-80px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:800;font-size:13px;transition:transform .25s}
+.toast.show{transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <button class="back" aria-label="返回">‹</button>
+    <div class="t"><h1>加入内容</h1><p>一个词、一个事实、一个日期都可以</p></div>
+    <div class="chip">🪙 999k</div>
+  </header>
+  <div class="steps">
+    <div class="s on"><i>1</i>加入内容</div><div class="ln"></div>
+    <div class="s"><i>2</i>联想故事</div><div class="ln"></div>
+    <div class="s"><i>3</i>回忆</div>
+  </div>
+
+  <h3>你想记什么？</h3>
+  <div class="types" id="types"></div>
+  <div class="info" id="info"></div>
+
+  <h3>加入内容 <small id="cnt"></small></h3>
+  <div class="add">
+    <div class="fields" id="fields"></div>
+    <button class="plus" id="plus" aria-label="加入">+</button>
+  </div>
+  <div class="alt">
+    <button class="pill" id="pb">📋 粘贴多个</button>
+    <button class="pill" id="sb">📷 扫描照片</button>
+    <button class="pill demo" id="demo">✨ 加入示例</button>
+  </div>
+  <div class="paste" id="paste"><textarea id="ta" aria-label="粘贴多个"></textarea><button id="pa">加入这些</button></div>
+  <div id="items"></div>
+
+  <h3>名称 <small>可选，不填会自动命名</small></h3>
+  <input class="name" id="nm" aria-label="记忆名称">
+</main>
+<div class="bar2"><button class="go" id="go" disabled>先加入至少 1 项</button></div>
+<div class="toast" id="toast"></div>
+
+<script>
+var T=[
+ {e:"✏️",n:"拼写",d:"单词、测验",m:"数字挂钩",f:["例如：passport"],nm:"星期一拼写测试",demo:[["passport"],["umbrella"],["library"]]},
+ {e:"🌍",n:"外语词汇",d:"单词 + 意思",m:"记忆宫殿",f:["单词","意思"],nm:"西班牙语第一课",demo:[["biblioteca","图书馆"],["paraguas","雨伞"],["pasaporte","护照"]]},
+ {e:"🛒",n:"清单",d:"购物、待办",m:"数字挂钩",f:["例如：牛奶"],nm:"周末购物清单",demo:[["牛奶"],["鸡蛋"],["面包"]]},
+ {e:"💡",n:"事实",d:"知识点、数据",m:"记忆宫殿",f:["例如：光速约 30 万公里/秒"],nm:"我的知识点",demo:[["光速约 30 万公里/秒"],["水在 100℃ 沸腾"]]},
+ {e:"📅",n:"日期",d:"事件 + 日期",m:"数字挂钩",f:["事件","日期"],nm:"重要日子",demo:[["妈妈生日","3 月 8 日"],["项目上线","11 月 20 日"]]},
+ {e:"👤",n:"人名",d:"姓名 + 特征",m:"记忆宫殿",f:["姓名","特征（如：戴眼镜）"],nm:"新认识的人",demo:[["小林","戴眼镜、爱喝咖啡"],["Amy","红色外套"]]},
+ {e:"🔢",n:"号码",d:"电话、密码",m:"数字挂钩",f:["例如：138 0000 0000"],nm:"重要号码",demo:[["138 0000 0000"]]},
+ {e:"🪜",n:"步骤",d:"流程、操作顺序",m:"数字挂钩",f:["例如：先打开电源"],nm:"操作步骤",demo:[["先打开电源"],["再按启动键"],["最后确认指示灯"]]},
+ {e:"🎤",n:"演讲稿",d:"要点、台词",m:"记忆宫殿",f:["例如：开场讲个小故事"],nm:"周五演讲",demo:[["开场讲个小故事"],["三个核心观点"],["号召行动"]]},
+ {e:"✨",n:"其他",d:"任何短内容",m:"数字挂钩",f:["例如：停车在 B2 层"],nm:"我的记忆",demo:[["停车在 B2 层"]]}
+];
+var A=["🕯️","🦢","❤️","⛵","🪝"],AN=["蜡烛","天鹅","爱心","帆船","钩子"];
+var cur=0,items=[],showAll=false,$=function(i){return document.getElementById(i)};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1600)}
+function drawTypes(){
+  var h=T.map(function(t,i){return '<button class="ty'+(i===cur?" sel":"")+(i>=6&&!showAll&&i!==cur?" hid":"")+'" data-i="'+i+'"><span class="e">'+t.e+'</span><b>'+t.n+'</b></button>'}).join("");
+  h+='<button class="more" id="more">'+(showAll?"收起 ▴":"更多类型 ▾")+'</button>';
+  $("types").innerHTML=h;
+  var t=T[cur];
+  $("info").innerHTML="适合："+t.d+" · 推荐方式：<b>"+t.m+"</b>";
+  $("fields").innerHTML=t.f.map(function(p,i){return '<input data-f="'+i+'" placeholder="'+p+'" aria-label="'+p+'">'}).join("");
+  $("ta").placeholder=t.f.length>1?"一行一项，用 = 或逗号分开\n例如：biblioteca = 图书馆":"一行一项，直接粘贴即可";
+  $("nm").placeholder=t.nm;
+}
+function drawItems(){
+  var h=items.length?items.map(function(it,i){
+    var b=i<A.length?'<div class="bd"><span>'+A[i]+'</span><small>'+(i+1)+'</small></div>':'<div class="bd n"><span>'+(i+1)+'</span></div>';
+    return '<div class="row">'+b+'<div class="rt"><b>'+esc(it[0])+'</b>'+(it[1]?'<small>'+esc(it[1])+'</small>':(i<A.length&&T[cur].m==="数字挂钩"?'<small>挂在「'+AN[i]+'」上</small>':''))+'</div><div class="ctl"><button data-u="'+i+'" aria-label="上移">▲</button><button data-d="'+i+'" aria-label="下移">▼</button></div><button class="del" data-x="'+i+'" aria-label="删除">🗑</button></div>';
+  }).join(""):'<div class="empty">还没有内容，输入一个或点「加入示例」</div>';
+  $("items").innerHTML=h;
+  $("cnt").textContent=items.length?"已加入 "+items.length+" 项":"";
+  var g=$("go");g.disabled=!items.length;g.textContent=items.length?"继续 · 已加入 "+items.length+" 项 →":"先加入至少 1 项";
+}
+function add(a){a=a.map(function(s){return (s||"").trim()});if(a[0]&&!items.some(function(x){return x[0]===a[0]&&x[1]===a[1]}))items.push(a)}
+function submit(){var v=[].map.call($("fields").children,function(i){return i.value});add(v);[].forEach.call($("fields").children,function(i){i.value=""});drawItems();$("fields").children[0].focus()}
+$("types").addEventListener("click",function(e){
+  if(e.target.closest("#more")){showAll=!showAll;drawTypes();return}
+  var b=e.target.closest(".ty");if(!b)return;cur=+b.dataset.i;drawTypes();drawItems();
+});
+$("plus").addEventListener("click",submit);
+$("fields").addEventListener("keydown",function(e){if(e.key==="Enter")submit()});
+$("items").addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b)return;var d=b.dataset,i;
+  if(d.x!==undefined)items.splice(+d.x,1);
+  else if(d.u!==undefined){i=+d.u;if(i>0){var t=items[i];items[i]=items[i-1];items[i-1]=t}}
+  else if(d.d!==undefined){i=+d.d;if(i<items.length-1){var t2=items[i];items[i]=items[i+1];items[i+1]=t2}}
+  drawItems();
+});
+$("pb").addEventListener("click",function(){$("paste").classList.toggle("show")});
+$("pa").addEventListener("click",function(){
+  var two=T[cur].f.length>1;
+  $("ta").value.split(/\n+/).forEach(function(l){add(two?l.split(/\s*[=＝:：,，\t]\s*/).slice(0,2):[l])});
+  $("ta").value="";$("paste").classList.remove("show");drawItems();
+});
+$("sb").addEventListener("click",function(){toast("这里会打开相机或相册")});
+$("demo").addEventListener("click",function(){T[cur].demo.forEach(add);drawItems()});
+$("go").addEventListener("click",function(){toast("进入下一步：联想故事")});
+drawTypes();drawItems();
+</script>
+</body>
+</html>

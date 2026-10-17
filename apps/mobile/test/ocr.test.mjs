@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { extractMemoryItems, MAX_OCR_ITEMS } = await import('../src/features/memory-composer/utils/ocrParsing.ts');
+const { extractMemoryItems, MAX_OCR_ITEMS, parseOcrReviewText } = await import('../src/features/memory-composer/utils/ocrParsing.ts');
 const { saveOcrDraft, consumeOcrDraft } = await import('../src/features/memory-composer/utils/ocrDraftStore.ts');
 const { reorderItems } = await import('../src/features/memory-composer/utils/reorderItems.ts');
 
@@ -40,6 +40,11 @@ test('caps imported lists at the composer limit', () => {
 
   assert.equal(extractMemoryItems(result).length, MAX_OCR_ITEMS);
   assert.equal(extractMemoryItems(result).at(-1)?.value, `word ${MAX_OCR_ITEMS}`);
+});
+
+test('quick review keeps one non-empty memory item per edited line and respects the item cap', () => {
+  assert.deepEqual(parseOcrReviewText('  milk  \n\n eggs\r\nbread '), ['milk', 'eggs', 'bread']);
+  assert.equal(parseOcrReviewText(Array.from({ length: MAX_OCR_ITEMS + 2 }, (_, index) => `item ${index}`).join('\n')).length, MAX_OCR_ITEMS);
 });
 
 test('hands scan results back once without putting text in route parameters', () => {

@@ -71,16 +71,16 @@ export function ScanPhotoPreview({
 const styles = StyleSheet.create({
   thumbnailSlot: {
     width: '100%',
-    height: 92,
+    height: 148,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   thumbnailButton: {
-    width: 88,
-    height: 88,
+    width: '100%',
+    height: 140,
     flexShrink: 0,
-    borderRadius: 13,
+    borderRadius: 16,
     borderWidth: 1.5,
     borderColor: theme.line,
     backgroundColor: theme.sand,
