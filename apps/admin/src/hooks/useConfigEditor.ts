@@ -25,6 +25,54 @@ function normalizeConfigShape(
   parsedValue: unknown,
   defaultValue: Record<string, unknown>,
 ): Record<string, unknown> {
+  if (configKey === "support.help_faq") {
+    if (!parsedValue || typeof parsedValue !== "object" || Array.isArray(parsedValue)) {
+      return defaultValue;
+    }
+
+    const source = parsedValue as Record<string, unknown>;
+    const defaultFaqItems = Array.isArray(defaultValue.faqItems)
+      ? defaultValue.faqItems.filter(
+          (item): item is Record<string, unknown> =>
+            !!item && typeof item === "object" && !Array.isArray(item),
+        )
+      : [];
+    const faqItems = Array.isArray(source.faqItems)
+      ? source.faqItems.map((item) => {
+          if (!item || typeof item !== "object" || Array.isArray(item)) {
+            return item;
+          }
+
+          const itemRecord = item as Record<string, unknown>;
+          const matchingDefault = defaultFaqItems.find(
+            (defaultItem) => defaultItem.question === itemRecord.question,
+          );
+
+          return matchingDefault ? { ...matchingDefault, ...itemRecord } : itemRecord;
+        })
+      : defaultValue.faqItems;
+
+    const defaultSupport =
+      defaultValue.support &&
+      typeof defaultValue.support === "object" &&
+      !Array.isArray(defaultValue.support)
+        ? (defaultValue.support as Record<string, unknown>)
+        : {};
+    const sourceSupport =
+      source.support &&
+      typeof source.support === "object" &&
+      !Array.isArray(source.support)
+        ? (source.support as Record<string, unknown>)
+        : {};
+
+    return {
+      ...defaultValue,
+      ...source,
+      faqItems,
+      support: { ...defaultSupport, ...sourceSupport },
+    };
+  }
+
   if (configKey === "ai.credits" || configKey === "premium.subscription") {
     if (parsedValue && typeof parsedValue === "object" && !Array.isArray(parsedValue)) {
       return { ...defaultValue, ...(parsedValue as Record<string, unknown>) };

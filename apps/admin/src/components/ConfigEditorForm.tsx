@@ -69,6 +69,14 @@ const ArrayFieldTemplate = (props: any) => {
       return data.title.trim();
     }
 
+    const chineseQuestion =
+      typeof data.questionZh === "string" ? data.questionZh.trim() : "";
+    const englishQuestion =
+      typeof data.question === "string" ? data.question.trim() : "";
+    if (chineseQuestion || englishQuestion) {
+      return [chineseQuestion, englishQuestion].filter(Boolean).join(" · ");
+    }
+
     return `${fallbackTitle} ${index + 1}`;
   };
 

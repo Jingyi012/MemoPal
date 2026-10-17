@@ -15,7 +15,7 @@ export default function Support() {
   const router = useRouter();
   const { t } = useTranslation('support');
   const { config } = useHelpFaqConfig();
-  const [subject, setSubject] = useState('MemoPal Support Request');
+  const [subject, setSubject] = useState(() => t('defaultSubject'));
   const [message, setMessage] = useState('');
   const supportEmail = config.support.email;
   const supportEnabled = config.support.showEmailSupport;

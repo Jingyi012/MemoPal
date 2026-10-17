@@ -6,6 +6,7 @@ import { useConfigEditor } from "../../../hooks/useConfigEditor";
 import {
   HELP_FAQ_CONFIG_DEFAULT,
   HELP_FAQ_CONFIG_SCHEMA,
+  HELP_FAQ_CONFIG_UI_SCHEMA,
 } from "../../../schemas/systemSettings";
 
 export const HelpFaqConfigTab: React.FC = () => {
@@ -33,7 +34,7 @@ export const HelpFaqConfigTab: React.FC = () => {
       <Alert
         type="info"
         message="Help & FAQ"
-        description="Configure FAQ entries and whether email support should be shown in mobile settings."
+        description="Configure English and Simplified Chinese FAQ content and whether email support should be shown in mobile settings."
         showIcon
         style={{ marginBottom: 16 }}
       />
@@ -46,6 +47,7 @@ export const HelpFaqConfigTab: React.FC = () => {
             children: (
               <ConfigEditorForm
                 schema={HELP_FAQ_CONFIG_SCHEMA}
+                uiSchema={HELP_FAQ_CONFIG_UI_SCHEMA}
                 formData={config}
                 onSubmit={handleSubmit}
                 title="Help & FAQ Configuration"

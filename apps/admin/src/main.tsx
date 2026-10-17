@@ -21,7 +21,7 @@ createRoot(document.getElementById("root")!).render(
           colorText: '#193c38', colorTextSecondary: '#687d75',
           colorBorder: '#dce5e0', colorBorderSecondary: '#e5eae9',
           colorBgLayout: '#f4f7f5', borderRadius: 8, borderRadiusLG: 12,
-          fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, sans-serif',
+          fontFamily: 'Inter, "Noto Sans SC", "Microsoft YaHei", "PingFang SC", system-ui, -apple-system, "Segoe UI", sans-serif',
         },
         components: {
           Table: { headerBg: '#f8faf9', headerColor: '#586b65', rowHoverBg: '#f3f8f5', cellPaddingBlock: 16 },
