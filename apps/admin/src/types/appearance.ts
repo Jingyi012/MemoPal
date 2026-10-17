@@ -8,6 +8,10 @@ export interface AppearanceDefinitionDto {
   imageUrl?: string | null;
   companionAvatarKey?: string | null;
   setKey?: string | null;
+  setTitleEn?: string | null;
+  setTitleZh?: string | null;
+  setStoryEn?: string | null;
+  setStoryZh?: string | null;
   titleEn: string;
   titleZh: string;
   descriptionEn: string;

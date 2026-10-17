@@ -21,10 +21,11 @@ public sealed class CreateAvatarDefinitionCommandHandler : IRequestHandler<Creat
     public async Task<ApiResponse<AvatarDefinitionDto>> Handle(CreateAvatarDefinitionCommand command, CancellationToken cancellationToken)
     {
         var request = command.Request;
-        if (string.IsNullOrWhiteSpace(request.Key) || string.IsNullOrWhiteSpace(request.AssetKey) ||
-            string.IsNullOrWhiteSpace(request.TitleEn) || string.IsNullOrWhiteSpace(request.TitleZh))
+        if (string.IsNullOrWhiteSpace(request.Key) ||
+            string.IsNullOrWhiteSpace(request.TitleEn) || string.IsNullOrWhiteSpace(request.TitleZh) ||
+            string.IsNullOrWhiteSpace(request.ImageUrl))
         {
-            throw new ValidationAppException("key, assetKey, titleEn, and titleZh are required.");
+            throw new ValidationAppException("key, portrait image, titleEn, and titleZh are required.");
         }
 
         if (request.RequiredLevel < 1)
@@ -53,8 +54,9 @@ public sealed class CreateAvatarDefinitionCommandHandler : IRequestHandler<Creat
         }
 
         entity.Key = key;
-        entity.AssetKey = request.AssetKey.Trim();
+        entity.AssetKey = string.IsNullOrWhiteSpace(request.AssetKey) ? key : request.AssetKey.Trim();
         entity.ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim();
+        entity.CompanionCharacterImageUrl = string.IsNullOrWhiteSpace(request.CompanionCharacterImageUrl) ? null : request.CompanionCharacterImageUrl.Trim();
         entity.TitleEn = request.TitleEn.Trim();
         entity.TitleZh = request.TitleZh.Trim();
         entity.DescriptionEn = request.DescriptionEn?.Trim() ?? string.Empty;

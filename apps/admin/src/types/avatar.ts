@@ -1,8 +1,9 @@
 export interface AvatarDefinitionDto {
   id: string;
   key: string;
-  assetKey: string;
+  assetKey?: string;
   imageUrl?: string | null;
+  companionCharacterImageUrl?: string | null;
   titleEn: string;
   titleZh: string;
   descriptionEn: string;

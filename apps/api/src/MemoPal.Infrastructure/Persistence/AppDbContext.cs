@@ -95,6 +95,7 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.DisplayName).HasMaxLength(200);
             b.Property(x => x.AvatarSource).HasMaxLength(16).HasDefaultValue(AvatarSources.Companion);
             b.Property(x => x.SelectedAvatarId).HasMaxLength(64);
+            b.Property(x => x.CompanionAvatarId).HasMaxLength(64);
             b.Property(x => x.SelectedAvatarFrameId).HasMaxLength(64);
             b.Property(x => x.SelectedAvatarDecorationId).HasMaxLength(64);
             b.Property(x => x.SelectedAvatarOutfitId).HasMaxLength(64);
@@ -173,6 +174,7 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.Key).HasMaxLength(64).IsRequired();
             b.Property(x => x.AssetKey).HasMaxLength(128).IsRequired();
             b.Property(x => x.ImageUrl).HasMaxLength(500);
+            b.Property(x => x.CompanionCharacterImageUrl).HasMaxLength(500);
             b.Property(x => x.TitleEn).HasMaxLength(120).IsRequired();
             b.Property(x => x.TitleZh).HasMaxLength(120).IsRequired();
             b.Property(x => x.DescriptionEn).HasMaxLength(500);
@@ -188,6 +190,10 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.ItemType).HasMaxLength(24).IsRequired();
             b.Property(x => x.CompanionAvatarKey).HasMaxLength(64);
             b.Property(x => x.SetKey).HasMaxLength(64);
+            b.Property(x => x.SetTitleEn).HasMaxLength(120);
+            b.Property(x => x.SetTitleZh).HasMaxLength(120);
+            b.Property(x => x.SetStoryEn).HasMaxLength(240);
+            b.Property(x => x.SetStoryZh).HasMaxLength(240);
             b.Property(x => x.AssetKey).HasMaxLength(128).IsRequired();
             b.Property(x => x.ImageUrl).HasMaxLength(500);
             b.Property(x => x.TitleEn).HasMaxLength(120).IsRequired();

@@ -193,12 +193,21 @@ var fileStorage = builder.Configuration.GetSection(FileStorageOptions.SectionNam
 var fileRoot = Path.GetFullPath(fileStorage.RootPath);
 Directory.CreateDirectory(fileRoot);
 var palaceAssetRoot = Path.Combine(app.Environment.ContentRootPath, "Assets", "PalaceScenes");
+var companionAssetRoot = Path.Combine(app.Environment.ContentRootPath, "Assets", "Companions");
 if (Directory.Exists(palaceAssetRoot))
 {
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(palaceAssetRoot),
         RequestPath = "/assets/palace-scenes"
+    });
+}
+if (Directory.Exists(companionAssetRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(companionAssetRoot),
+        RequestPath = "/assets/companions"
     });
 }
 app.UseStaticFiles(new StaticFileOptions

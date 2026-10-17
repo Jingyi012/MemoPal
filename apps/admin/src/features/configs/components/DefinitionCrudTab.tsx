@@ -35,7 +35,7 @@ export function DefinitionCrudTab<T extends { id: string }>(props: Props<T>) {
     <>
       <ProTable<T>
         scroll={{ x: 800 }}
-        headerTitle="Achievement definitions"
+        headerTitle={`${props.title} catalog`}
         rowKey="id"
         actionRef={actionRef}
         columns={[
@@ -59,7 +59,7 @@ export function DefinitionCrudTab<T extends { id: string }>(props: Props<T>) {
             render: (_, row: any) => [
               <Button
                 key="e"
-                aria-label="Edit milestone"
+                aria-label={`Edit ${props.title}`}
                 size="small"
                 icon={<EditOutlined />}
                 onClick={() => setEditing(row)}
@@ -69,7 +69,7 @@ export function DefinitionCrudTab<T extends { id: string }>(props: Props<T>) {
                 title="Delete?"
                 onConfirm={() => deleteMutation.mutate(row.id)}
               >
-                <Button aria-label="Delete milestone" danger size="small" icon={<DeleteOutlined />} />
+                <Button aria-label={`Delete ${props.title}`} danger size="small" icon={<DeleteOutlined />} />
               </Popconfirm>,
             ],
           },

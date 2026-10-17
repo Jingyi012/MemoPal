@@ -28,6 +28,20 @@ export function useGreetCompanion() {
   });
 }
 
+export function useSelectCompanion() {
+  const client = useQueryClient();
+  const { user } = useCurrentUser();
+  return useMutation({
+    mutationFn: companionApi.select,
+    onSuccess: (status) => {
+      client.setQueryData([...COMPANION_KEYS.all, user?.id], status);
+      client.invalidateQueries({ queryKey: [...COMPANION_PRESET_KEYS.all, user?.id] });
+    },
+    retry: false,
+    networkMode: 'online',
+  });
+}
+
 export function useSaveCompanionLook() {
   const client = useQueryClient();
   const { user } = useCurrentUser();

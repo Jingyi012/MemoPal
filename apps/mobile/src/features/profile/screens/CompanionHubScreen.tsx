@@ -2,10 +2,12 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { MemoryAvatar } from '@/components/MemoryAvatar';
 import { CompanionCharacterArtwork } from '../components/CompanionCharacterArtwork';
+import { CompanionPortraitArtwork } from '../components/CompanionPortraitArtwork';
+import { CompanionSwitcher } from '../components/CompanionSwitcher';
 import CompanionHelpSheet from '../components/CompanionHelpSheet';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
-import { useCompanion, useGreetCompanion } from '@/features/profile/hooks/useCompanion';
+import { useCompanion, useGreetCompanion, useSelectCompanion } from '@/features/profile/hooks/useCompanion';
 import { getEquippedAvatar, useAvatars } from '@/features/avatars/hooks/useAvatars';
 import { useAppearance } from '@/features/appearance/hooks/useAppearance';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
@@ -22,14 +24,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useIsFocused } from '@react-navigation/native';
 
-const STAGE_LABELS: Record<string, [string, string]> = {
-  new: ['Just met', '初识'],
-  familiar: ['Getting familiar', '熟悉'],
-  in_sync: ['In sync', '默契'],
-  best_friends: ['Best friends', '挚友'],
-};
-const BOND_STAGES = ['new', 'familiar', 'in_sync', 'best_friends'] as const;
-
 export default function CompanionHubScreen() {
   const { styles, theme } = useStyles();
   const router = useRouter();
@@ -40,6 +34,7 @@ export default function CompanionHubScreen() {
   const { items: appearanceItems } = useAppearance();
   const companion = useCompanion();
   const greet = useGreetCompanion();
+  const selectCompanion = useSelectCompanion();
   const isFocused = useIsFocused();
   const scrollRef = useRef<ScrollView>(null);
   const helpSheetRef = useRef<BottomSheetModal>(null);
@@ -62,9 +57,11 @@ export default function CompanionHubScreen() {
     ],
   }));
   const level = useLevelByXp(Math.max(0, user?.totalXp ?? 0), user?.level).levelInfo?.currentLevel ?? user?.level ?? 1;
-  const avatar = getEquippedAvatar(avatars, companion.data?.avatarId ?? user?.selectedAvatarId, level);
-  const bondStageIndex = Math.max(0, BOND_STAGES.indexOf((companion.data?.bondStage ?? 'new') as typeof BOND_STAGES[number]));
-  const nextBondStage = BOND_STAGES[Math.min(BOND_STAGES.length - 1, bondStageIndex + 1)];
+  const avatar = getEquippedAvatar(avatars, companion.data?.avatarId, level);
+  const bondStages = companion.data?.bondStages ?? [];
+  const bondStageIndex = Math.max(0, bondStages.findIndex((stage) => stage.key === companion.data?.bondStage));
+  const currentBondStage = bondStages[bondStageIndex];
+  const nextBondStage = bondStages[Math.min(bondStages.length - 1, bondStageIndex + 1)];
 
   const retry = () => { void companion.refetch(); };
   const openPractice = () => router.push('/practice');
@@ -149,12 +146,23 @@ export default function CompanionHubScreen() {
                   <AnimatedPressable accessibilityRole="button" accessibilityLabel={chinese ? '轻触伙伴互动' : 'Tap your companion for a little reaction'} accessibilityHint={chinese ? '伙伴会轻轻回应你' : 'Your companion gives a little wiggle hello'} onPress={reactToUser} style={styles.characterTapTarget}>
                     <Animated.View style={[styles.companionFigure, idleStyle]}>
                       <Animated.View style={characterStyle}>
-                        {avatar?.assetKey === 'memory-owl'
-                          ? <CompanionCharacterArtwork look={companion.data.look} items={appearanceItems} avatarId={companion.data.avatarId} size={artworkSize} accessibilityLabel={chinese ? '伙伴，已穿戴保存的造型' : 'Companion wearing the saved outfit'} />
-                          : <MemoryAvatar avatar={avatar} size={Math.min(240, artworkSize)} level={level} showLevelBadge={false} />}
+                        {avatar?.companionCharacterImageUrl
+                          ? <CompanionCharacterArtwork look={companion.data.look} items={appearanceItems} companionKey={avatar.key} characterImageUrl={avatar.companionCharacterImageUrl} size={artworkSize} accessibilityLabel={chinese ? '伙伴，已穿戴保存的造型' : 'Companion wearing the saved outfit'} />
+                          : avatar?.imageUrl
+                            ? <CompanionPortraitArtwork imageUrl={avatar.imageUrl} size={Math.min(artworkSize, 300)} accessibilityLabel={chinese ? `${avatar.titleZh}伙伴` : `${avatar.titleEn} companion`} />
+                            : <MemoryAvatar avatar={avatar} size={Math.min(240, artworkSize)} level={level} showLevelBadge={false} />}
                       </Animated.View>
                     </Animated.View>
                   </AnimatedPressable>
+                  <CompanionSwitcher
+                    avatar={avatar}
+                    avatars={avatars}
+                    level={level}
+                    selectedAvatarId={companion.data.avatarId}
+                    isPending={selectCompanion.isPending}
+                    hasError={selectCompanion.isError}
+                    onSelect={(avatarId) => selectCompanion.mutateAsync(avatarId)}
+                  />
                   <View style={styles.floatingActions}>
                     <AnimatedPressable accessibilityRole="button" accessibilityLabel={chinese ? '陪伙伴复习' : 'Review with your companion'} onPress={openPractice} style={styles.floatingAction}>
                       <Ionicons name="book" size={20} color={theme.violetDeep} />
@@ -183,14 +191,14 @@ export default function CompanionHubScreen() {
                 <View style={styles.compactBondPanel}>
                   <View style={styles.bondHeader}>
                     <View style={styles.bondTitleRow}>
-                      <View><Text style={styles.bondCaption}>{chinese ? '羁绊等级' : 'BOND LEVEL'}</Text><Text style={styles.stage}>{stageLabel(companion.data.bondStage, chinese)}</Text></View>
+                      <View><Text style={styles.bondCaption}>{chinese ? '羁绊等级' : 'BOND LEVEL'}</Text><Text style={styles.stage}>{currentBondStage ? (chinese ? currentBondStage.titleZh : currentBondStage.titleEn) : companion.data.bondStage}</Text></View>
                     </View>
                     <View style={styles.pointsBadge}><Sparkles size={12} color={theme.violetDeep} /><Text style={styles.pointsText}>{companion.data.bondPoints}</Text></View>
                   </View>
                   <View style={styles.progressCard}>
                     <View style={styles.progressHeader}>
                       <Text style={styles.progressTarget}>{companion.data.bondToNextStage > 0
-                        ? (chinese ? `下一阶段  ${stageLabel(nextBondStage, true)}` : `NEXT  ${stageLabel(nextBondStage, false)}`)
+                        ? (chinese ? `下一阶段  ${nextBondStage ? nextBondStage.titleZh : ''}` : `NEXT  ${nextBondStage ? nextBondStage.titleEn : ''}`)
                         : (chinese ? '最高羁绊' : 'MAX BOND')}</Text>
                       <Text style={styles.progressRemaining}>{companion.data.bondToNextStage > 0
                         ? (chinese ? `还差 ${companion.data.bondToNextStage} 点` : `${companion.data.bondToNextStage} pts left`)
@@ -215,11 +223,6 @@ export default function CompanionHubScreen() {
 function ActionButton({ label, onPress }: { label: string; onPress: () => void }) {
   const { styles } = useStyles();
   return <AnimatedPressable accessibilityRole="button" onPress={onPress} style={styles.retryButton}><Text style={styles.retryText}>{label}</Text></AnimatedPressable>;
-}
-
-function stageLabel(stage: string, chinese: boolean) {
-  const labels = STAGE_LABELS[stage.toLowerCase()];
-  return labels ? labels[chinese ? 1 : 0] : stage;
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({

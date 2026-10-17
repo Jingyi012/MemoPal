@@ -295,6 +295,22 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<string>("SetTitleEn")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("SetTitleZh")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("SetStoryEn")
+                        .HasMaxLength(240)
+                        .HasColumnType("character varying(240)");
+
+                    b.Property<string>("SetStoryZh")
+                        .HasMaxLength(240)
+                        .HasColumnType("character varying(240)");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
@@ -357,6 +373,10 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("CompanionCharacterImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -2351,6 +2371,10 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)");
 
                     b.Property<string>("SelectedAvatarId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("CompanionAvatarId")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 

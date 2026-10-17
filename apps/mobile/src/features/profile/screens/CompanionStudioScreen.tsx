@@ -1,6 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { MemoryAvatar } from '@/components/MemoryAvatar';
+import { CompanionPortraitArtwork } from '../components/CompanionPortraitArtwork';
 import LoadingView from '@/components/LoadingView';
 import { CommonHeader } from '@/components/CommonHeader';
 import { getApprovedCompanionLayerSource, isApprovedCompanionLayer, isCompanionCompatible, CompanionCharacterArtwork } from '../components/CompanionCharacterArtwork';
@@ -66,7 +67,8 @@ function CompanionStudioScreen() {
   const levelInfo = useLevelByXp(user?.totalXp ?? 0, user?.level).levelInfo;
   const level = Math.max(1, levelInfo?.currentLevel ?? user?.level ?? 1);
   const selectedAvatar = avatars.find((item) => item.id === companion.data?.avatarId);
-  const isFullBodyCompanion = selectedAvatar?.assetKey === 'memory-owl';
+  const isFullBodyCompanion = Boolean(selectedAvatar?.companionCharacterImageUrl);
+  const companionKey = selectedAvatar?.key;
   const companionTitle = selectedAvatar ? (chinese ? selectedAvatar.titleZh : selectedAvatar.titleEn) : t('companionName');
   const stageSize = Math.min(232, Math.max(176, width - 176));
   const savedLook = companion.data?.look;
@@ -109,8 +111,8 @@ function CompanionStudioScreen() {
 
   const visibleCategories = useMemo(() => [OUTFITS_CATEGORY, ...CATEGORIES.filter((candidate) =>
     items.some((item) => item.isActive && item.itemType === candidate.type &&
-      isCompanionCompatible(item, companion.data?.avatarId)) || Boolean(draft?.[candidate.slot])
-  )], [items, companion.data?.avatarId, draft]);
+      isCompanionCompatible(item, companionKey)) || Boolean(draft?.[candidate.slot])
+  )], [items, companionKey, draft]);
 
   useEffect(() => {
     if (visibleCategories.length && !visibleCategories.some((candidate) => candidate.type === category.type)) {
@@ -121,8 +123,8 @@ function CompanionStudioScreen() {
 
   const compatibleItems = useMemo(() => items.filter((item) =>
     category.type !== 'outfits' && item.isActive && item.itemType === category.type &&
-    isCompanionCompatible(item, companion.data?.avatarId)
-  ), [items, category.type, companion.data?.avatarId]);
+    isCompanionCompatible(item, companionKey)
+  ), [items, category.type, companionKey]);
   const currentItemId = category.type === 'outfits' ? null : draft?.[category.slot] ?? null;
   const focusedItem = compatibleItems.find((item) => item.id === focusedItemId) ?? compatibleItems.find((item) => item.id === currentItemId);
   const isDirty = Boolean(draft && savedLook && CATEGORIES.some(({ slot }) => draft[slot] !== savedLook[slot]));
@@ -130,14 +132,14 @@ function CompanionStudioScreen() {
     const itemId = look[slot];
     if (!itemId) return false;
     const item = items.find((candidate) => candidate.id === itemId);
-    return !item || !item.isActive || item.itemType !== type || !isApprovedCompanionLayer(item, companion.data?.avatarId) || item.requiredLevel > level;
+    return !item || !item.isActive || item.itemType !== type || !isApprovedCompanionLayer(item, companionKey) || item.requiredLevel > level;
   }));
   const hasUnavailableSavedLayer = hasUnavailableLayer(savedLook);
   const hasUnavailableDraft = hasUnavailableLayer(draft);
 
   const toggleItem = (item: AppearanceDefinition) => {
     if (category.type === 'outfits') return;
-    if (item.requiredLevel > level || !isApprovedCompanionLayer(item, companion.data?.avatarId)) {
+    if (item.requiredLevel > level || !isApprovedCompanionLayer(item, companionKey)) {
       setFocusedItemId(item.id);
       return;
     }
@@ -152,7 +154,7 @@ function CompanionStudioScreen() {
     const slotsWithOptions = CATEGORIES.map(({ type, slot }) => ({
       slot,
       options: [null, ...items.filter((item) => item.isActive && item.itemType === type && item.requiredLevel <= level &&
-        isApprovedCompanionLayer(item, companion.data?.avatarId)).map((item) => item.id)],
+        isApprovedCompanionLayer(item, companionKey)).map((item) => item.id)],
     }));
     const sample = () => {
       const next = { ...draft };
@@ -196,8 +198,10 @@ function CompanionStudioScreen() {
             <View style={styles.stageDisc} />
             <Animated.View style={figureStyle}>
               {isFullBodyCompanion
-                ? <CompanionCharacterArtwork look={draft} items={items} avatarId={companion.data?.avatarId} size={stageSize} accessibilityLabel={t('wardrobeFullBodyPreviewAccessibility', { name: companionTitle })} />
-                : <MemoryAvatar avatar={selectedAvatar} size={206} level={level} showLevelBadge={false} />}
+                ? <CompanionCharacterArtwork look={draft} items={items} companionKey={companionKey} characterImageUrl={selectedAvatar?.companionCharacterImageUrl} size={stageSize} accessibilityLabel={t('wardrobeFullBodyPreviewAccessibility', { name: companionTitle })} />
+                : selectedAvatar?.imageUrl
+                  ? <CompanionPortraitArtwork imageUrl={selectedAvatar.imageUrl} size={206} accessibilityLabel={t('wardrobePreviewAccessibility', { name: companionTitle })} />
+                  : <MemoryAvatar avatar={selectedAvatar} size={206} level={level} showLevelBadge={false} />}
             </Animated.View>
             <View style={styles.stageSparkleOne}><Sparkles color={theme.sun} size={17} /></View><View style={styles.stageSparkleTwo}><Sparkles color={theme.onAccent} size={12} /></View>
           </View>
@@ -219,6 +223,8 @@ function CompanionStudioScreen() {
 
         {category.type === 'outfits' ? (isFullBodyCompanion && companion.data?.avatarId ? <CompanionPresetsRail
           avatarId={companion.data.avatarId}
+          companionKey={companionKey ?? ''}
+          characterImageUrl={selectedAvatar?.companionCharacterImageUrl}
           draft={draft}
           savedLook={savedLook ?? draft}
           isDirty={isDirty}
@@ -236,22 +242,22 @@ function CompanionStudioScreen() {
             <View style={styles.clearPreview}><X size={25} color={theme.inkMuted} /></View><Text style={styles.itemName}>{t('wardrobeNothing')}</Text><Text style={styles.itemMeta}>{currentItemId === null ? t('wardrobeSelected') : t('wardrobeClearSlotHint')}</Text>{currentItemId === null ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}
           </AnimatedPressable>
           {compatibleItems.map((item) => {
-            const locked = item.requiredLevel > level || !isApprovedCompanionLayer(item, companion.data?.avatarId);
+            const locked = item.requiredLevel > level || !isApprovedCompanionLayer(item, companionKey);
             const lockReason = item.requiredLevel > level
               ? t('wardrobeUnlockLevel', { level: item.requiredLevel })
-              : !isApprovedCompanionLayer(item, companion.data?.avatarId) ? t('wardrobePreviewPending') : null;
+              : !isApprovedCompanionLayer(item, companionKey) ? t('wardrobePreviewPending') : null;
             const selected = item.id === currentItemId;
             return <AnimatedPressable key={item.id} accessibilityRole="button" accessibilityLabel={`${nameFor(item, language)}${locked ? `, ${lockReason}` : ''}`} accessibilityState={{ selected, disabled: locked }} onPress={() => toggleItem(item)} style={[styles.itemCard, selected && styles.itemCardSelected, locked && styles.itemCardLocked]}>
-              <View style={styles.itemPreview}><LayerPreview item={item} avatarId={companion.data?.avatarId} size={83} /><View style={styles.itemGlow} /></View><Text numberOfLines={1} style={styles.itemName}>{nameFor(item, language)}</Text><Text style={[styles.itemMeta, !locked && styles.itemMetaReady]}>{locked ? lockReason : selected ? t('wardrobeWearing') : t('wardrobeUnlocked')}</Text>{locked ? <View style={styles.lockBadge}><LockKeyhole size={13} color={theme.inkSoft} /></View> : selected ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}
+              <View style={styles.itemPreview}><LayerPreview item={item} companionKey={companionKey} size={83} /><View style={styles.itemGlow} /></View><Text numberOfLines={1} style={styles.itemName}>{nameFor(item, language)}</Text><Text style={[styles.itemMeta, !locked && styles.itemMetaReady]}>{locked ? lockReason : selected ? t('wardrobeWearing') : t('wardrobeUnlocked')}</Text>{locked ? <View style={styles.lockBadge}><LockKeyhole size={13} color={theme.inkSoft} /></View> : selected ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}
             </AnimatedPressable>;
           })}
           {!compatibleItems.length ? <View style={styles.noItems}><Text style={styles.noItemsTitle}>{t('wardrobeMoreItemsComing')}</Text><Text style={styles.noItemsText}>{t('wardrobeNoItemsInSlot')}</Text></View> : null}
         </ScrollView>
 
         <View style={styles.detailCard}>
-          {focusedItem ? <><View style={styles.detailTitleRow}><View style={styles.detailIcon}><LayerPreview item={focusedItem} avatarId={companion.data?.avatarId} /></View><View style={styles.detailCopy}><Text style={styles.detailTitle}>{nameFor(focusedItem, language)}</Text><Text style={styles.detailSet}>{focusedItem.setKey ? t('wardrobePartOfSet') : t('wardrobeCompanionAccessory')}</Text></View><View style={[styles.stagePill, focusedItem.requiredLevel <= level && isApprovedCompanionLayer(focusedItem, companion.data?.avatarId) ? styles.stagePillReady : styles.stagePillLocked]}><Text style={styles.stagePillText}>{focusedItem.requiredLevel > level ? t('wardrobeLevelShort', { level: focusedItem.requiredLevel }) : !isApprovedCompanionLayer(focusedItem, companion.data?.avatarId) ? t('wardrobePreviewPending') : t('wardrobeUnlocked')}</Text></View></View><Text style={styles.detailDescription}>{language === 'zh' ? focusedItem.descriptionZh : focusedItem.descriptionEn}</Text>{!isApprovedCompanionLayer(focusedItem, companion.data?.avatarId) ? <Text style={styles.unavailableText}>{t('wardrobeUnavailableLayer')}</Text> : null}</> : <><Text style={styles.detailTitle}>{t('wardrobePickPiece')}</Text><Text style={styles.detailDescription}>{isFullBodyCompanion ? t('wardrobeTryOnDescription') : t('wardrobeWearablesComing')}</Text></>}
+          {focusedItem ? <><View style={styles.detailTitleRow}><View style={styles.detailIcon}><LayerPreview item={focusedItem} companionKey={companionKey} /></View><View style={styles.detailCopy}><Text style={styles.detailTitle}>{nameFor(focusedItem, language)}</Text><Text style={styles.detailSet}>{focusedItem.setKey ? t('wardrobePartOfSet') : t('wardrobeCompanionAccessory')}</Text></View><View style={[styles.stagePill, focusedItem.requiredLevel <= level && isApprovedCompanionLayer(focusedItem, companionKey) ? styles.stagePillReady : styles.stagePillLocked]}><Text style={styles.stagePillText}>{focusedItem.requiredLevel > level ? t('wardrobeLevelShort', { level: focusedItem.requiredLevel }) : !isApprovedCompanionLayer(focusedItem, companionKey) ? t('wardrobePreviewPending') : t('wardrobeUnlocked')}</Text></View></View><Text style={styles.detailDescription}>{language === 'zh' ? focusedItem.descriptionZh : focusedItem.descriptionEn}</Text>{!isApprovedCompanionLayer(focusedItem, companionKey) ? <Text style={styles.unavailableText}>{t('wardrobeUnavailableLayer')}</Text> : null}</> : <><Text style={styles.detailTitle}>{t('wardrobePickPiece')}</Text><Text style={styles.detailDescription}>{isFullBodyCompanion ? t('wardrobeTryOnDescription') : t('wardrobeWearablesComing')}</Text></>}
         </View>
-        <CompanionSetStory look={draft} items={items} avatarId={companion.data?.avatarId} />
+        <CompanionSetStory look={draft} items={items} companionKey={companionKey} />
         </>}
 
         {saveLook.isError ? <View accessibilityRole="alert" style={styles.errorCard}><Text style={styles.errorText}>{t('wardrobeSaveFailed')}</Text><AnimatedPressable onPress={() => { void save(); }} style={styles.retryButton}><Text style={styles.retryText}>{t('wardrobeRetrySave')}</Text></AnimatedPressable></View> : null}
@@ -277,8 +283,8 @@ function CompanionStudioScreen() {
   );
 }
 
-function LayerPreview({ item, avatarId, size = 54 }: { item: AppearanceDefinition; avatarId?: string | null; size?: number }) {
-  const asset = getApprovedCompanionLayerSource(item, avatarId);
+function LayerPreview({ item, companionKey, size = 54 }: { item: AppearanceDefinition; companionKey?: string | null; size?: number }) {
+  const asset = getApprovedCompanionLayerSource(item, companionKey);
   if (typeof asset === 'string') return <Image source={{ uri: resolveMediaUrl(asset) }} style={[stylesForUnavailable.layer, stylesForUnavailable.transparent, { width: size, height: size }]} resizeMode="contain" accessible={false} />;
   return asset ? <Image source={asset} style={[stylesForUnavailable.layer, stylesForUnavailable.transparent, { width: size, height: size }]} resizeMode="contain" accessible={false} /> : <View style={stylesForUnavailable.previewPlaceholder}><LockKeyhole size={22} color="#77758A" /></View>;
 }

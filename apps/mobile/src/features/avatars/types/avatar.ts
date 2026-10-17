@@ -3,6 +3,7 @@ export interface AvatarDefinition {
   key: string;
   assetKey: string;
   imageUrl?: string | null;
+  companionCharacterImageUrl?: string | null;
   titleEn: string;
   titleZh: string;
   descriptionEn: string;

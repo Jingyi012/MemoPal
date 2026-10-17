@@ -13,6 +13,33 @@ namespace MemoPal.IntegrationTests;
 public sealed class CompanionEndpointsTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
 {
     [Fact]
+    public async Task Starter_Companion_Presets_Are_Served_As_Api_Hosted_Png_Assets()
+    {
+        var paths = new[]
+        {
+            "avatars/memory-bear.png", "avatars/memory-fox.png", "avatars/memory-hummingbird.png",
+            "avatars/memory-otter.png", "avatars/memory-owl.png",
+            "characters/memory-bear.png", "characters/memory-fox.png", "characters/memory-hummingbird.png",
+            "characters/memory-otter.png", "characters/memory-owl.png",
+            "appearance/astral-cape.png", "appearance/aurora-bloom-frame.png", "appearance/celestial-headband.png",
+            "appearance/celestial-scarf.png", "appearance/constellation-frame.png", "appearance/garden-headband.png",
+            "appearance/garden-mint-frame.png", "appearance/garden-scarf.png", "appearance/library-gold-frame.png",
+            "appearance/scholar-cap.png", "appearance/starlight-candy-frame.png"
+        };
+        using var client = factory.CreateClient();
+
+        foreach (var path in paths)
+        {
+            using var response = await client.GetAsync($"/assets/companions/{path}");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            Assert.True(bytes.Length > 8);
+            Assert.Equal(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }, bytes[..8]);
+        }
+    }
+
+    [Fact]
     public async Task Companion_Endpoints_Require_Auth_And_Greeting_Is_Idempotent_And_User_Scoped()
     {
         using var anonymous = factory.CreateClient();

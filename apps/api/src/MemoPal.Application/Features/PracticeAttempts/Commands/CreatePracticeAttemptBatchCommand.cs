@@ -190,9 +190,9 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
     private async Task AwardCompanionBondAsync(string userId, PracticeAttempt attempt, DateTime now, CancellationToken ct)
     {
         var user = await _db.Users.Where(x => x.Id == userId && !x.IsDeleted)
-            .Select(x => new { x.SelectedAvatarId, x.Level }).FirstOrDefaultAsync(ct);
+            .Select(x => new { x.CompanionAvatarId, x.Level }).FirstOrDefaultAsync(ct);
         var avatarId = await MemoPal.Application.Features.Companion.Queries.GetCompanionQueryHandler
-            .ResolveAvatarId(_db, user?.SelectedAvatarId, user?.Level ?? 1, ct);
+            .ResolveAvatarId(_db, user?.CompanionAvatarId, user?.Level ?? 1, ct);
         if (string.IsNullOrWhiteSpace(avatarId)) return;
         var bond = await _db.CompanionBonds.FirstOrDefaultAsync(
             x => x.UserId == userId && x.AvatarId == avatarId && !x.IsDeleted, ct);
@@ -221,16 +221,12 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
             await AddCompanionMilestoneAsync(userId, avatarId, "practice-10", CompanionMemoryTypes.TenthPracticeMilestone,
                 now, "You completed 10 practices together.", "你们一起完成了10次练习。", ct);
 
-        foreach (var stageMilestone in new[]
-                 {
-                     (Threshold: 25, Key: "familiar", En: "Your bond became familiar.", Zh: "你们变得更加熟悉了。"),
-                     (Threshold: 100, Key: "in-sync", En: "You found a steady rhythm together.", Zh: "你们一起培养出了默契。"),
-                     (Threshold: 300, Key: "best-friends", En: "You became best friends.", Zh: "你们成为了最好的伙伴。")
-                 })
+        var bondStages = await CompanionBondStageSettings.GetAsync(_db, ct);
+        foreach (var stageMilestone in bondStages.Skip(1))
         {
-            if (priorBondPoints < stageMilestone.Threshold && bond.BondPoints >= stageMilestone.Threshold)
-                await AddCompanionMilestoneAsync(userId, avatarId, $"bond-stage:{stageMilestone.Key}",
-                    CompanionMemoryTypes.BondStageMilestone, now, stageMilestone.En, stageMilestone.Zh, ct);
+            if (priorBondPoints < stageMilestone.Points && bond.BondPoints >= stageMilestone.Points)
+                await AddCompanionMilestoneAsync(userId, avatarId, $"bond-stage:{stageMilestone.Key.Replace('_', '-')}",
+                    CompanionMemoryTypes.BondStageMilestone, now, stageMilestone.MessageEn, stageMilestone.MessageZh, ct);
         }
     }
 

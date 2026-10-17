@@ -2,7 +2,7 @@ import { apiClient } from '../lib/apiClient';
 import { resolveMediaUrl } from '../lib/mediaUrl';
 import type { ApiResponse } from '../types/api';
 
-export type ImageCategory = 'palace' | 'location' | 'avatar' | 'appearance' | 'general';
+export type ImageCategory = 'palace' | 'location' | 'avatar' | 'appearance' | 'appearance-wearable' | 'companion-character' | 'general';
 
 export const adminMediaApi = {
   async uploadImage(file: File, category: ImageCategory): Promise<string> {

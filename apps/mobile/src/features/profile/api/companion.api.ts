@@ -16,6 +16,8 @@ export type CompanionLook = {
   handItemId: string | null;
 };
 
+export type CompanionBondStage = { key: string; points: number; titleEn: string; titleZh: string };
+
 export type CompanionStatus = {
   avatarId: string | null;
   bondPoints: number;
@@ -25,6 +27,7 @@ export type CompanionStatus = {
   todayPracticeCount: number;
   memories: CompanionMemory[];
   look: CompanionLook;
+  bondStages: CompanionBondStage[];
 };
 
 export type SaveCompanionLookInput = CompanionLook & { avatarId: string };
@@ -51,6 +54,11 @@ export const companionApi = {
   },
   async greet(): Promise<CompanionStatus> {
     const response = await api.post<GeneralResponse<CompanionStatus>>('/companion/greet');
+    if (!response.data.success) throw new Error(response.data.message);
+    return response.data.data;
+  },
+  async select(avatarId: string): Promise<CompanionStatus> {
+    const response = await api.put<GeneralResponse<CompanionStatus>>('/companion/selection', { avatarId });
     if (!response.data.success) throw new Error(response.data.message);
     return response.data.data;
   },

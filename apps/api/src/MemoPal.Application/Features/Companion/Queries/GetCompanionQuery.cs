@@ -2,6 +2,7 @@ using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Companion.DTOs;
+using MemoPal.Application.Common.Settings;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,8 +15,8 @@ public sealed class GetCompanionQueryHandler(IAppDbContext db) : IRequestHandler
     public async Task<ApiResponse<CompanionDto>> Handle(GetCompanionQuery request, CancellationToken ct)
     {
         var user = await db.Users.AsNoTracking().Where(x => x.Id == request.UserId && !x.IsDeleted)
-            .Select(x => new { x.SelectedAvatarId, x.Level }).FirstOrDefaultAsync(ct);
-        var avatarId = await ResolveAvatarId(db, user?.SelectedAvatarId, user?.Level ?? 1, ct);
+            .Select(x => new { x.CompanionAvatarId, x.Level }).FirstOrDefaultAsync(ct);
+        var avatarId = await ResolveAvatarId(db, user?.CompanionAvatarId, user?.Level ?? 1, ct);
         var today = DateTime.UtcNow.Date;
         var count = string.IsNullOrWhiteSpace(avatarId) ? 0 : await db.CompanionMemories.AsNoTracking().CountAsync(
             x => x.UserId == request.UserId && x.AvatarId == avatarId && x.Type == CompanionMemoryTypes.Practice &&
@@ -61,8 +62,10 @@ public sealed class GetCompanionQueryHandler(IAppDbContext db) : IRequestHandler
                     Keep(look.HandItemId, AppearanceItemTypes.HandItem));
             }
         }
-        var (stage, progress, toNext) = Stage(points);
-        return ApiResponse<CompanionDto>.Ok(new(avatarId, points, stage, progress, toNext, count, memories, look));
+        var configuredStages = await CompanionBondStageSettings.GetAsync(db, ct);
+        var (stage, progress, toNext) = Stage(points, configuredStages);
+        var stages = configuredStages.Select(x => new CompanionBondStageDto(x.Key, x.Points, x.TitleEn, x.TitleZh)).ToList();
+        return ApiResponse<CompanionDto>.Ok(new(avatarId, points, stage, progress, toNext, count, memories, look, stages));
     }
 
     internal static async Task<string?> ResolveAvatarId(IAppDbContext db, string? selectedAvatarId, int level, CancellationToken ct)
@@ -75,12 +78,19 @@ public sealed class GetCompanionQueryHandler(IAppDbContext db) : IRequestHandler
             .Select(x => x.Id).FirstOrDefaultAsync(ct);
     }
 
-    internal static (string Stage, int Progress, int ToNext) Stage(int points)
+    internal static (string Stage, int Progress, int ToNext) Stage(int points, IReadOnlyList<CompanionBondStageConfig>? configured = null)
     {
-        var floor = points >= 300 ? 300 : points >= 100 ? 100 : points >= 25 ? 25 : 0;
-        var ceiling = floor switch { 0 => 25, 25 => 100, 100 => 300, _ => 300 };
-        var stage = floor switch { 0 => "new", 25 => "familiar", 100 => "in_sync", _ => "best_friends" };
-        var progress = floor == 300 ? 100 : (int)Math.Clamp((points - floor) * 100d / (ceiling - floor), 0, 100);
-        return (stage, progress, Math.Max(0, ceiling - points));
+        var stages = configured is { Count: >= 2 } ? configured : CompanionBondStageDefaults.All;
+        var index = 0;
+        for (var i = 1; i < stages.Count; i++)
+        {
+            if (points < stages[i].Points) break;
+            index = i;
+        }
+        var floor = stages[index].Points;
+        if (index == stages.Count - 1) return (stages[index].Key, 100, 0);
+        var ceiling = stages[index + 1].Points;
+        var progress = (int)Math.Clamp((points - floor) * 100d / Math.Max(1, ceiling - floor), 0, 100);
+        return (stages[index].Key, progress, Math.Max(0, ceiling - points));
     }
 }

@@ -5,7 +5,7 @@ import { adminAvatarsApi } from '../../../api/adminAvatarsApi';
 import { ImageUploadField } from '../../../components/media/ImageUploadField';
 import { useAdminMediaApi } from '../../../hooks/useAdminMediaApi';
 import type { AppearanceItemType } from '../../../types/appearance';
-import { validateWearableArtwork } from '../utils/validateWearableArtwork';
+import { validateCompanionArtwork } from '../utils/validateCompanionArtwork';
 
 const wearableTypes: AppearanceItemType[] = ['headwear', 'bodywear', 'backwear', 'handItem'];
 
@@ -47,19 +47,17 @@ export function AppearanceDefinitionForm() {
               fieldProps={{ optionFilterProp: 'label', loading: avatarsQuery.isLoading }}
               extra="The wearable artwork must use this companion's canvas and coordinate layout."
             />
-            <ProFormText name="setKey" label="Set key (optional)" extra="Use the same key for items that belong to one outfit set." />
+            <ProFormText name="setKey" label="Set key (optional)" extra="Share the same key and set copy across pieces in one outfit set." />
+            <ProFormDependency name={['setKey']}>
+              {({ setKey }) => setKey ? <>
+                <ProFormText name="setTitleEn" label="Set name (EN)" rules={[{ required: true }]} />
+                <ProFormText name="setTitleZh" label="Set name (ZH)" rules={[{ required: true }]} />
+                <ProFormTextArea name="setStoryEn" label="Set story (EN)" rules={[{ required: true }]} fieldProps={{ maxLength: 240, showCount: true }} />
+                <ProFormTextArea name="setStoryZh" label="Set story (ZH)" rules={[{ required: true }]} fieldProps={{ maxLength: 240, showCount: true }} />
+              </> : null}
+            </ProFormDependency>
           </>
         ) : null}
-      </ProFormDependency>
-      <ProFormDependency name={['imageUrl']}>
-        {({ imageUrl }) => (
-          <ProFormText
-            name="assetKey"
-            label="Bundled asset key"
-            rules={imageUrl ? [] : [{ required: true, message: 'Enter an asset key or upload artwork.' }]}
-            extra={imageUrl ? 'Optional when uploaded artwork is available.' : 'Required when no uploaded artwork is available.'}
-          />
-        )}
       </ProFormDependency>
       <ProFormText name="titleEn" label="English name" rules={[{ required: true }]} />
       <ProFormText name="titleZh" label="Chinese name" rules={[{ required: true }]} />
@@ -72,10 +70,11 @@ export function AppearanceDefinitionForm() {
         {({ itemType }) => {
           const isWearable = wearableTypes.includes(itemType as AppearanceItemType);
           return (
-            <ProForm.Item name="imageUrl" label={isWearable ? 'Wearable artwork (PNG)' : 'Artwork'}>
+            <ProForm.Item name="imageUrl" label={isWearable ? 'Wearable artwork (PNG)' : 'Artwork (server-hosted)'} rules={[{ required: true, message: 'Upload the artwork used by the app.' }]}>
               <ImageUploadField
-                category="appearance"
-                validateFile={isWearable ? validateWearableArtwork : undefined}
+                category={isWearable ? 'appearance-wearable' : 'appearance'}
+                validateFile={isWearable ? validateCompanionArtwork : undefined}
+                compress={!isWearable}
               />
             </ProForm.Item>
           );
@@ -85,20 +84,20 @@ export function AppearanceDefinitionForm() {
         {({ itemType, companionAvatarKey, imageUrl }) => {
           if (!wearableTypes.includes(itemType as AppearanceItemType)) return null;
           const avatar = avatars.find((candidate) => candidate.key === companionAvatarKey);
-          const avatarUrl = avatar?.imageUrl ? resolveMediaPath(avatar.imageUrl) : undefined;
+          const avatarUrl = avatar?.companionCharacterImageUrl ? resolveMediaPath(avatar.companionCharacterImageUrl) : undefined;
           const itemUrl = typeof imageUrl === 'string' && imageUrl ? resolveMediaPath(imageUrl) : undefined;
 
           return (
             <Space direction="vertical" size={8} style={{ width: '100%', marginBottom: 16 }}>
               <Typography.Text strong>Approximate wearable thumbnail</Typography.Text>
               <Typography.Text type="secondary">
-                Approximate thumbnail only. This uses the companion's profile portrait, not its full-body base, so it cannot verify wearable fit or placement.
+                Preview the layer against the server-hosted full-body companion art using the shared canvas.
               </Typography.Text>
-              <Alert type="info" showIcon message="Upload validation checks PNG format, the approved 1254 × 1254 canvas, and transparent pixels. Final alignment still needs review against the approved full-body companion base." />
+              <Alert type="info" showIcon message="Upload validation checks PNG format, the approved 1254 × 1254 canvas, and transparent pixels." />
               {avatarsQuery.isError ? <Alert type="error" showIcon message="Companion definitions could not be loaded. Retry after checking the admin API connection." /> : null}
               {avatarUrl && itemUrl ? (
                 <div style={{ position: 'relative', width: 240, height: 240, overflow: 'hidden', background: '#f5f5f5', borderRadius: 8 }}>
-                  <Image src={avatarUrl} alt={`${avatar?.titleEn} base companion`} preview={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
+                  <Image src={avatarUrl} alt={`${avatar?.titleEn} full-body companion`} preview={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
                   <Image src={itemUrl} alt="Wearable overlay preview" preview={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
                 </div>
               ) : (
@@ -108,7 +107,7 @@ export function AppearanceDefinitionForm() {
                   message={!companionAvatarKey ? 'Choose a compatible companion to preview alignment.' : avatarsQuery.isError ? 'Companion options are unavailable until the avatar list loads.' : !avatar ? 'The selected companion is not among the first 100 avatar definitions.' : !itemUrl ? 'Upload artwork to preview the wearable layer.' : 'Preview unavailable.'}
                 />
               )}
-              {avatar && !avatar.imageUrl ? <Alert type="warning" showIcon message="This companion has no uploaded base image, so a composited preview is unavailable." /> : null}
+              {avatar && !avatar.companionCharacterImageUrl ? <Alert type="warning" showIcon message="Upload full-body character artwork on the Companion Gallery page to enable outfit previews and dressing." /> : null}
             </Space>
           );
         }}

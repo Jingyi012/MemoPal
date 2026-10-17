@@ -41,6 +41,17 @@ public sealed class AdminMediaController : ApiControllerBase
         if (string.IsNullOrWhiteSpace(sanitizedCategory))
             sanitizedCategory = "content";
 
+        if (sanitizedCategory is "appearance-wearable" or "companion-character")
+        {
+            if (ext != ".png")
+                return BadRequest(ApiResponse<string>.Fail("Wearable artwork must be a PNG file."));
+
+            await using var validationStream = file.OpenReadStream();
+            var validationError = await CompanionWearablePngValidator.ValidateAsync(validationStream, cancellationToken);
+            if (validationError is not null)
+                return BadRequest(ApiResponse<string>.Fail(validationError));
+        }
+
         await using var stream = file.OpenReadStream();
         var path = await _fileStorageService.SaveImageAsync(
             stream,

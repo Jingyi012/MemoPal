@@ -21,6 +21,8 @@ const LOOK_SLOTS: { slot: keyof CompanionLook; type: AppearanceDefinition['itemT
 
 type Props = {
   avatarId: string;
+  companionKey: string;
+  characterImageUrl?: string | null;
   draft: CompanionLook;
   savedLook: CompanionLook;
   isDirty: boolean;
@@ -31,7 +33,7 @@ type Props = {
   onEquipped: (look: CompanionLook) => void;
 };
 
-export function CompanionPresetsRail({ avatarId, draft, savedLook, isDirty, items, level, canSave, onPreview, onEquipped }: Props) {
+export function CompanionPresetsRail({ avatarId, companionKey, characterImageUrl, draft, savedLook, isDirty, items, level, canSave, onPreview, onEquipped }: Props) {
   const { styles, theme } = useStyles();
   const { t } = useTranslation('companion');
   const reduceMotion = useReducedMotion();
@@ -52,7 +54,7 @@ export function CompanionPresetsRail({ avatarId, draft, savedLook, isDirty, item
     const id = look[slot];
     if (!id) return count;
     const item = items.find((candidate) => candidate.id === id);
-    return !item || !item.isActive || item.itemType !== type || !isCompanionCompatible(item, avatarId) || !isApprovedCompanionLayer(item, avatarId) ? count + 1 : count;
+    return !item || !item.isActive || item.itemType !== type || !isCompanionCompatible(item, companionKey) || !isApprovedCompanionLayer(item, companionKey) ? count + 1 : count;
   }, 0);
   const lockedCount = (look: CompanionLook) => LOOK_SLOTS.reduce((count, { slot }) => {
     const id = look[slot];
@@ -144,7 +146,7 @@ export function CompanionPresetsRail({ avatarId, draft, savedLook, isDirty, item
                 const isEquipped = LOOK_SLOTS.every(({ slot }) => preset.look[slot] === savedLook[slot]);
                 return <View key={preset.id} style={[styles.presetCard, isSelected && styles.presetCardSelected]}>
                   <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${preset.name}${unavailable || locked ? t('wardrobeUnavailablePresetAccessibility') : t('wardrobeEquipPresetAccessibility')}`} accessibilityHint={t('wardrobeUnsavedPresetHint')} accessibilityState={{ disabled: equipPreset.isPending }} disabled={equipPreset.isPending} onPress={() => requestPreset(preset)} style={styles.presetMain}>
-                  <View style={styles.previewWrap}><CompanionCharacterArtwork look={preset.look} items={items} avatarId={avatarId} size={88} accessibilityLabel={t('wardrobePresetPreview', { name: preset.name })} />{unavailable || locked ? <View style={styles.lockBadge}><LockKeyhole size={13} color={theme.onAccent} /></View> : isEquipped ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}</View>
+                  <View style={styles.previewWrap}><CompanionCharacterArtwork look={preset.look} items={items} companionKey={companionKey} characterImageUrl={characterImageUrl} size={88} accessibilityLabel={t('wardrobePresetPreview', { name: preset.name })} />{unavailable || locked ? <View style={styles.lockBadge}><LockKeyhole size={13} color={theme.onAccent} /></View> : isEquipped ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}</View>
                     <Text numberOfLines={1} style={styles.presetName}>{preset.name}</Text>
                     <Text numberOfLines={1} style={[styles.presetStatus, Boolean(unavailable || locked) && styles.presetStatusWarning]}>{unavailable ? t('wardrobeUnavailableCount', { count: unavailable }) : locked ? t('wardrobeLockedCount', { count: locked }) : isEquipped ? t('wardrobeEquipped') : isSelected ? t('wardrobePreviewing') : t('wardrobeTapToEquip')}</Text>
                   </AnimatedPressable>

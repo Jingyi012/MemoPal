@@ -11,6 +11,7 @@ public sealed class AvatarDefinition : AuditableBaseEntity
     public string Key { get; set; } = string.Empty;
     public string AssetKey { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
+    public string? CompanionCharacterImageUrl { get; set; }
     public string TitleEn { get; set; } = string.Empty;
     public string TitleZh { get; set; } = string.Empty;
     public string DescriptionEn { get; set; } = string.Empty;

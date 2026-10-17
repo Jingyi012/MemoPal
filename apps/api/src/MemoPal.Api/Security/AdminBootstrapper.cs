@@ -35,6 +35,7 @@ public sealed class AdminBootstrapper
         await EnsureStarterMilestonesAsync(cancellationToken);
         await EnsureStarterAvatarsAsync(cancellationToken);
         await EnsureStarterAppearanceItemsAsync(cancellationToken);
+        await EnsureCompanionBondStagesAsync(cancellationToken);
         if (_options.SeedStarterContent)
         {
             await EnsurePredefinedMemoryLessonsAsync(cancellationToken);
@@ -50,6 +51,23 @@ public sealed class AdminBootstrapper
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task EnsureCompanionBondStagesAsync(CancellationToken cancellationToken)
+    {
+        var exists = await _db.SystemSettings.AnyAsync(x => !x.IsDeleted && x.Key == SystemSettingKeys.CompanionBondStages, cancellationToken);
+        if (exists) return;
+        _db.SystemSettings.Add(new SystemSetting
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Key = SystemSettingKeys.CompanionBondStages,
+            Value = JsonSerializer.Serialize(CompanionBondStageDefaults.All, new JsonSerializerOptions(JsonSerializerDefaults.Web)),
+            Description = "Companion bond progression milestones, localized labels, and point thresholds.",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            CreatedBy = "system",
+            UpdatedBy = "system"
+        });
     }
 
     private async Task EnsureGamificationSettingsAsync(CancellationToken cancellationToken)
@@ -192,14 +210,21 @@ public sealed class AdminBootstrapper
 
         foreach (var (key, assetKey, titleEn, titleZh, descriptionEn, descriptionZh, requiredLevel, sortOrder) in defaults)
         {
-            if (await _db.AvatarDefinitions.AnyAsync(x => x.Key == key, cancellationToken))
+            var existing = await _db.AvatarDefinitions.FirstOrDefaultAsync(x => x.Key == key, cancellationToken);
+            if (existing is not null)
+            {
+                existing.ImageUrl ??= $"/assets/companions/avatars/{key}.png";
+                existing.CompanionCharacterImageUrl ??= $"/assets/companions/characters/{key}.png";
                 continue;
+            }
 
             _db.AvatarDefinitions.Add(new AvatarDefinition
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Key = key,
                 AssetKey = assetKey,
+                ImageUrl = $"/assets/companions/avatars/{key}.png",
+                CompanionCharacterImageUrl = $"/assets/companions/characters/{key}.png",
                 TitleEn = titleEn,
                 TitleZh = titleZh,
                 DescriptionEn = descriptionEn,
@@ -231,8 +256,12 @@ public sealed class AdminBootstrapper
 
         foreach (var (key, itemType, assetKey, titleEn, titleZh, descriptionEn, descriptionZh, requiredLevel, sortOrder) in defaults)
         {
-            if (await _db.AppearanceDefinitions.AnyAsync(x => x.Key == key, cancellationToken))
+            var existing = await _db.AppearanceDefinitions.FirstOrDefaultAsync(x => x.Key == key, cancellationToken);
+            if (existing is not null)
+            {
+                existing.ImageUrl ??= $"/assets/companions/appearance/{assetKey}.png";
                 continue;
+            }
 
             _db.AppearanceDefinitions.Add(new AppearanceDefinition
             {
@@ -240,6 +269,7 @@ public sealed class AdminBootstrapper
                 Key = key,
                 ItemType = itemType,
                 AssetKey = assetKey,
+                ImageUrl = $"/assets/companions/appearance/{assetKey}.png",
                 TitleEn = titleEn,
                 TitleZh = titleZh,
                 DescriptionEn = descriptionEn,
@@ -263,12 +293,29 @@ public sealed class AdminBootstrapper
         };
         foreach (var (key, assetKey, itemType, titleEn, titleZh, descriptionEn, descriptionZh, requiredLevel, setKey, sortOrder) in owlWearables)
         {
-            if (await _db.AppearanceDefinitions.AnyAsync(x => x.Key == key, cancellationToken))
+            var setCopy = setKey switch
+            {
+                "celestial-scholar" => (TitleEn: "Celestial Scholar", TitleZh: "星辰学者", StoryEn: "A little starlight makes every study session feel like an adventure.", StoryZh: "一点星光，让每次学习都像一场小小冒险。"),
+                "garden-wanderer" => (TitleEn: "Garden Wanderer", TitleZh: "花园漫游者", StoryEn: "A gentle garden stroll turns new memories into familiar paths.", StoryZh: "在花园里轻轻漫步，让新记忆成为熟悉的小路。"),
+                _ => (TitleEn: string.Empty, TitleZh: string.Empty, StoryEn: string.Empty, StoryZh: string.Empty)
+            };
+            var existing = await _db.AppearanceDefinitions.FirstOrDefaultAsync(x => x.Key == key, cancellationToken);
+            if (existing is not null)
+            {
+                existing.ImageUrl ??= $"/assets/companions/appearance/{key}.png";
+                existing.SetTitleEn ??= setCopy.TitleEn;
+                existing.SetTitleZh ??= setCopy.TitleZh;
+                existing.SetStoryEn ??= setCopy.StoryEn;
+                existing.SetStoryZh ??= setCopy.StoryZh;
                 continue;
+            }
             _db.AppearanceDefinitions.Add(new AppearanceDefinition
             {
                 Id = Guid.NewGuid().ToString("N"), Key = key, ItemType = itemType,
                 CompanionAvatarKey = "memory-owl", SetKey = setKey, AssetKey = assetKey,
+                ImageUrl = $"/assets/companions/appearance/{key}.png",
+                SetTitleEn = setCopy.TitleEn, SetTitleZh = setCopy.TitleZh,
+                SetStoryEn = setCopy.StoryEn, SetStoryZh = setCopy.StoryZh,
                 TitleEn = titleEn, TitleZh = titleZh, DescriptionEn = descriptionEn, DescriptionZh = descriptionZh,
                 RequiredLevel = requiredLevel, SortOrder = sortOrder, IsActive = true,
                 CreatedAt = now, UpdatedAt = now, CreatedBy = "system", UpdatedBy = "system"

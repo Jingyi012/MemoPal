@@ -54,7 +54,10 @@ public sealed class MapsterRegistration : IRegister
             .Map(dest => dest.AvatarUrl, src => ToAbsoluteMediaUrlOrNull(src.AvatarUrl));
         config.NewConfig<AuthResponseDto, AuthResponseDto>();
         config.NewConfig<AppearanceDefinition, MemoPal.Application.Features.Appearance.DTOs.AppearanceDefinitionDto>()
-            .Map(dest => dest.ImageUrl, src => ToAbsoluteMediaUrlOrNull(src.ImageUrl));
+            .Map(dest => dest.ImageUrl, src => ToAbsoluteAssetOrMediaUrl(src.ImageUrl));
+        config.NewConfig<AvatarDefinition, MemoPal.Application.Features.Avatars.DTOs.AvatarDefinitionDto>()
+            .Map(dest => dest.ImageUrl, src => ToAbsoluteAssetOrMediaUrl(src.ImageUrl))
+            .Map(dest => dest.CompanionCharacterImageUrl, src => ToAbsoluteAssetOrMediaUrl(src.CompanionCharacterImageUrl));
 
         config.NewConfig<(MilestoneDefinition Milestone, UserMilestone? UserMilestone), MilestoneDto>()
             .Map(dest => dest.Id, src => src.Milestone.Id)
@@ -111,6 +114,16 @@ public sealed class MapsterRegistration : IRegister
     private static string? ToAbsoluteMediaUrlOrNull(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : ToAbsoluteMediaUrl(value);
+    }
+
+    private static string? ToAbsoluteAssetOrMediaUrl(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var trimmed = value.Trim();
+        if (Uri.TryCreate(trimmed, UriKind.Absolute, out _)) return trimmed;
+        if (trimmed.StartsWith("/assets/", StringComparison.OrdinalIgnoreCase))
+            return trimmed;
+        return ToAbsoluteMediaUrl(trimmed);
     }
 
     private static string NormalizeBaseUrl(string? value)

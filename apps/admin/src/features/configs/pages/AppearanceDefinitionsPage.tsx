@@ -24,6 +24,7 @@ export default function AppearanceDefinitionsPage() {
           { title: 'Type', dataIndex: 'itemType' },
           { title: 'Companion', dataIndex: 'companionAvatarKey', ellipsis: true },
           { title: 'Set', dataIndex: 'setKey', ellipsis: true },
+          { title: 'Set story', dataIndex: 'setTitleEn', ellipsis: true },
           { title: 'English name', dataIndex: 'titleEn' },
           { title: 'Chinese name', dataIndex: 'titleZh' },
           { title: 'Unlock level', dataIndex: 'requiredLevel' },

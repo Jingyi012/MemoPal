@@ -8,24 +8,6 @@ import React from 'react';
 import { ImageStyle, StyleProp, StyleSheet, Text, View } from 'react-native';
 import { memopalThemes } from '@/theme/memopalTheme';
 
-const LOCAL_AVATAR_ASSETS: Record<string, number> = {
-  'memory-fox': require('../../assets/avatars/memory-fox.png'),
-  'memory-owl': require('../../assets/avatars/memory-owl.png'),
-  'memory-otter': require('../../assets/avatars/memory-otter.png'),
-  'memory-bear': require('../../assets/avatars/memory-bear.png'),
-  'memory-hummingbird': require('../../assets/avatars/memory-hummingbird.png'),
-};
-
-const LOCAL_APPEARANCE_ASSETS: Record<string, number> = {
-  'constellation-frame': require('../../assets/appearance/constellation-frame.png'),
-  'aurora-bloom-frame': require('../../assets/appearance/aurora-bloom-frame.png'),
-  'library-gold-frame': require('../../assets/appearance/library-gold-frame.png'),
-  'garden-mint-frame': require('../../assets/appearance/garden-mint-frame.png'),
-  'starlight-candy-frame': require('../../assets/appearance/starlight-candy-frame.png'),
-  'scholar-cap': require('../../assets/appearance/scholar-cap.png'),
-  'astral-cape': require('../../assets/appearance/astral-cape.png'),
-};
-
 interface Props {
   avatar?: AvatarDefinition | null;
   size?: number;
@@ -39,7 +21,6 @@ interface Props {
 export function MemoryAvatar({ avatar, size = 72, level, showLevelBadge = false, locked = false, appearance, imageUrl }: Props) {
   const { colorScheme } = useColorScheme();
   const theme = memopalThemes[colorScheme ?? 'light'];
-  const asset = avatar ? LOCAL_AVATAR_ASSETS[avatar.assetKey] : LOCAL_AVATAR_ASSETS['memory-fox'];
   const borderColor = avatar && avatar.requiredLevel >= 10 ? theme.sun : avatar && avatar.requiredLevel >= 5 ? theme.violet : theme.sky;
   const badgeSize = Math.max(20, Math.round(size * 0.28));
   const hasCustomFrame = Boolean(appearance?.frame);
@@ -53,12 +34,11 @@ export function MemoryAvatar({ avatar, size = 72, level, showLevelBadge = false,
     <View accessible accessibilityLabel={avatar?.titleEn ?? 'Memory companion'} style={{ width: size, height: size }}>
       <View style={[styles.aura, { borderRadius: size / 2, borderColor: `${borderColor}${hasCustomFrame ? '22' : '55'}`, borderWidth: hasCustomFrame ? 1 : 2, padding: auraPadding }]}>
         <View style={[styles.frame, { borderRadius: size / 2, borderColor, borderWidth: hasCustomFrame ? 0 : 2, backgroundColor: theme.paper }]}>
-          {imageUrl || avatar?.imageUrl || asset ? (
+          {imageUrl || avatar?.imageUrl ? (
             <View style={[styles.avatarImageSlot, { width: baseImageSize, height: baseImageSize, borderRadius: baseImageSize / 2 }]}>
               <AppImage
                 contentFit="contain"
                 imageUrl={imageUrl ?? avatar?.imageUrl ?? undefined}
-                source={imageUrl || avatar?.imageUrl ? undefined : asset}
                 style={[styles.image, { borderRadius: baseImageSize / 2 }]}
               />
             </View>
@@ -79,28 +59,21 @@ export function MemoryAvatar({ avatar, size = 72, level, showLevelBadge = false,
 }
 
 function AppearanceLayer({ item, style }: { item: AppearanceDefinition; style: StyleProp<ImageStyle> }) {
-  const asset = LOCAL_APPEARANCE_ASSETS[item.assetKey];
-  if (!asset && !item.imageUrl) return null;
-  return <AppImage contentFit="contain" imageUrl={item.imageUrl ?? undefined} source={item.imageUrl ? undefined : asset} style={style} />;
+  if (!item.imageUrl) return null;
+  return <AppImage contentFit="contain" imageUrl={item.imageUrl} style={style} />;
 }
 
 export function AppearanceItemPreview({ item, size = 88 }: { item: AppearanceDefinition; size?: number }) {
-  const asset = LOCAL_APPEARANCE_ASSETS[item.assetKey];
-  if (!asset && !item.imageUrl) return null;
+  if (!item.imageUrl) return null;
   return (
     <View style={{ width: size, height: size }}>
       <AppImage
         contentFit="contain"
         imageUrl={item.imageUrl ?? undefined}
-        source={item.imageUrl ? undefined : asset}
         style={{ width: '100%', height: '100%', backgroundColor: 'transparent' }}
       />
     </View>
   );
-}
-
-export function getLocalAvatarAsset(assetKey: string) {
-  return LOCAL_AVATAR_ASSETS[assetKey];
 }
 
 const styles = StyleSheet.create({

@@ -50,6 +50,21 @@ public sealed class UpsertSystemSettingCommandHandler
         {
             normalizedValue = NormalizeNumberPegDefinitionsValue(normalizedValue);
         }
+        else if (string.Equals(key, SystemSettingKeys.CompanionBondStages, StringComparison.Ordinal))
+        {
+            try
+            {
+                var stages = JsonSerializer.Deserialize<List<CompanionBondStageConfig>>(normalizedValue,
+                    new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                if (!CompanionBondStageSettings.IsValid(stages))
+                    return ApiResponse<SystemSettingDto>.Fail("Bond stages must start at 0 and have unique keys and strictly increasing points.");
+                normalizedValue = JsonSerializer.Serialize(stages, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            }
+            catch (JsonException)
+            {
+                return ApiResponse<SystemSettingDto>.Fail("Bond stages must be valid JSON.");
+            }
+        }
 
         var entity = await _db.SystemSettings.FirstOrDefaultAsync(x => x.Key == key, cancellationToken);
 

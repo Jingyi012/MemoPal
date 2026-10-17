@@ -12,6 +12,10 @@ public sealed class AppearanceDefinition : AuditableBaseEntity
     public string ItemType { get; set; } = AppearanceItemTypes.Frame;
     public string? CompanionAvatarKey { get; set; }
     public string? SetKey { get; set; }
+    public string? SetTitleEn { get; set; }
+    public string? SetTitleZh { get; set; }
+    public string? SetStoryEn { get; set; }
+    public string? SetStoryZh { get; set; }
     public string AssetKey { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
     public string TitleEn { get; set; } = string.Empty;

@@ -25,7 +25,7 @@ public sealed class CreateCompanionLookPresetCommandHandler(IAppDbContext db)
             throw new ValidationAppException("Preset name must be between 1 and 30 characters.");
         var user = await db.Users.FirstOrDefaultAsync(x => x.Id == command.UserId && !x.IsDeleted, ct)
             ?? throw new NotFoundAppException("User not found.");
-        var avatarId = await GetCompanionQueryHandler.ResolveAvatarId(db, user.SelectedAvatarId, user.Level, ct);
+        var avatarId = await GetCompanionQueryHandler.ResolveAvatarId(db, user.CompanionAvatarId, user.Level, ct);
         if (string.IsNullOrWhiteSpace(avatarId) || command.Request.AvatarId != avatarId)
             throw new ValidationAppException("The requested companion is not the selected unlocked companion.");
         var avatarKey = await db.AvatarDefinitions.AsNoTracking().Where(x => x.Id == avatarId)
@@ -64,7 +64,7 @@ public sealed class EquipCompanionLookPresetCommandHandler(IAppDbContext db)
     {
         var user = await db.Users.FirstOrDefaultAsync(x => x.Id == command.UserId && !x.IsDeleted, ct)
             ?? throw new NotFoundAppException("User not found.");
-        var avatarId = await GetCompanionQueryHandler.ResolveAvatarId(db, user.SelectedAvatarId, user.Level, ct);
+        var avatarId = await GetCompanionQueryHandler.ResolveAvatarId(db, user.CompanionAvatarId, user.Level, ct);
         var preset = await db.CompanionLookPresets.FirstOrDefaultAsync(x => x.Id == command.PresetId &&
             x.UserId == user.Id && x.AvatarId == avatarId && !x.IsDeleted, ct)
             ?? throw new NotFoundAppException("Companion preset not found.");

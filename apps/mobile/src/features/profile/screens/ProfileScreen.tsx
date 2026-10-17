@@ -7,8 +7,6 @@ import { CommonHeader } from '@/components/CommonHeader';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useUserState } from '@/contexts/UserStateContext';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
-import { useCompanion } from '@/features/profile/hooks/useCompanion';
-import { CompanionCharacterArtwork } from '../components/CompanionCharacterArtwork';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { getEquippedAvatar, useAvatars } from '@/features/avatars/hooks/useAvatars';
 import { getEquippedAppearance, useAppearance } from '@/features/appearance/hooks/useAppearance';
@@ -41,7 +39,6 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { start: startTour } = useSpotlightTour();
   const { user } = useCurrentUser();
-  const companion = useCompanion();
   const { avatars } = useAvatars();
   const { items: appearanceItems } = useAppearance();
   const { userState, updateState, updatePreferences } = useUserState();
@@ -90,11 +87,6 @@ export default function ProfileScreen() {
   const themeLabel =
     selectedTheme === 'dark' ? t('dark') : selectedTheme === 'auto' ? t('systemTheme') : t('light');
   const equippedAvatar = getEquippedAvatar(avatars, user?.selectedAvatarId, level);
-  const selectedCompanion = getEquippedAvatar(
-    avatars,
-    companion.data?.avatarId ?? user?.selectedAvatarId,
-    level
-  );
   const equippedAppearance = getEquippedAppearance(
     appearanceItems,
     user?.selectedAvatarFrameId,
@@ -282,19 +274,9 @@ export default function ProfileScreen() {
                   size={76}
                   showLevelBadge={false}
                 />
-              ) : selectedCompanion?.assetKey === 'memory-owl' ? (
-                <CompanionCharacterArtwork
-                  look={companion.data?.look}
-                  items={appearanceItems}
-                  avatarId={companion.data?.avatarId}
-                  size={76}
-                  accessibilityLabel={
-                    language === 'zh' ? '已保存造型的伙伴' : 'Companion in saved outfit'
-                  }
-                />
               ) : (
                 <MemoryAvatar
-                  avatar={selectedCompanion ?? equippedAvatar}
+                  avatar={equippedAvatar}
                   appearance={equippedAppearance}
                   level={level}
                   size={76}
@@ -406,17 +388,7 @@ export default function ProfileScreen() {
           accentColor={theme.violetDeep}>
           <ProfileSettingsRow
             icon={
-              selectedCompanion?.assetKey === 'memory-owl' ? (
-                <CompanionCharacterArtwork
-                  look={companion.data?.look}
-                  items={appearanceItems}
-                  avatarId={companion.data?.avatarId}
-                  size={32}
-                  accessibilityLabel={language === 'zh' ? '伙伴' : 'Companion'}
-                />
-              ) : (
-                <Ionicons name="paw" size={21} color={theme.violetDeep} />
-              )
+              <Ionicons name="paw" size={21} color={theme.violetDeep} />
             }
             iconBackgroundColor={theme.violetTint}
             title={language === 'zh' ? '伙伴空间' : 'Companion space'}

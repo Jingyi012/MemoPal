@@ -6,6 +6,10 @@ public sealed record AppearanceDefinitionDto(
     string ItemType,
     string? CompanionAvatarKey,
     string? SetKey,
+    string? SetTitleEn,
+    string? SetTitleZh,
+    string? SetStoryEn,
+    string? SetStoryZh,
     string AssetKey,
     string? ImageUrl,
     string TitleEn,
@@ -28,6 +32,10 @@ public sealed class AppearanceDefinitionUpsertRequest
     public string? ItemType { get; set; }
     public string? CompanionAvatarKey { get; set; }
     public string? SetKey { get; set; }
+    public string? SetTitleEn { get; set; }
+    public string? SetTitleZh { get; set; }
+    public string? SetStoryEn { get; set; }
+    public string? SetStoryZh { get; set; }
     public string? AssetKey { get; set; }
     public string? ImageUrl { get; set; }
     public string? TitleEn { get; set; }

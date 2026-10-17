@@ -15,8 +15,8 @@ public sealed class GreetCompanionCommandHandler(IAppDbContext db) : IRequestHan
     public async Task<ApiResponse<CompanionDto>> Handle(GreetCompanionCommand request, CancellationToken ct)
     {
         var user = await db.Users.AsNoTracking().Where(x => x.Id == request.UserId && !x.IsDeleted)
-            .Select(x => new { x.SelectedAvatarId, x.Level }).FirstOrDefaultAsync(ct);
-        var avatarId = await GetCompanionQueryHandler.ResolveAvatarId(db, user?.SelectedAvatarId, user?.Level ?? 1, ct);
+            .Select(x => new { x.CompanionAvatarId, x.Level }).FirstOrDefaultAsync(ct);
+        var avatarId = await GetCompanionQueryHandler.ResolveAvatarId(db, user?.CompanionAvatarId, user?.Level ?? 1, ct);
         if (!string.IsNullOrWhiteSpace(avatarId))
         {
             var now = DateTime.UtcNow;

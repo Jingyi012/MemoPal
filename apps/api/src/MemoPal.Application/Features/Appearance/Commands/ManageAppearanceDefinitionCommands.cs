@@ -22,11 +22,11 @@ public sealed class CreateAppearanceDefinitionCommandHandler(IAppDbContext db)
         var request = command.Request;
         if (string.IsNullOrWhiteSpace(request.Key) ||
             string.IsNullOrWhiteSpace(request.ItemType) ||
-            string.IsNullOrWhiteSpace(request.AssetKey) ||
+            string.IsNullOrWhiteSpace(request.ImageUrl) ||
             string.IsNullOrWhiteSpace(request.TitleEn) ||
             string.IsNullOrWhiteSpace(request.TitleZh))
         {
-            throw new ValidationAppException("key, itemType, assetKey, titleEn, and titleZh are required.");
+            throw new ValidationAppException("key, itemType, artwork, titleEn, and titleZh are required.");
         }
 
         var itemType = request.ItemType.Trim().ToLowerInvariant();
@@ -44,6 +44,9 @@ public sealed class CreateAppearanceDefinitionCommandHandler(IAppDbContext db)
         }
         if (setKey?.Length > 64 || companionAvatarKey?.Length > 64)
             throw new ValidationAppException("companionAvatarKey and setKey must be at most 64 characters.");
+        if (setKey is not null && (string.IsNullOrWhiteSpace(request.SetTitleEn) || string.IsNullOrWhiteSpace(request.SetTitleZh) ||
+                                   string.IsNullOrWhiteSpace(request.SetStoryEn) || string.IsNullOrWhiteSpace(request.SetStoryZh)))
+            throw new ValidationAppException("Outfit sets require a title and story in English and Chinese.");
 
         var key = request.Key.Trim().ToLowerInvariant();
         var entity = string.IsNullOrWhiteSpace(request.Id)
@@ -71,7 +74,11 @@ public sealed class CreateAppearanceDefinitionCommandHandler(IAppDbContext db)
         entity.ItemType = itemType;
         entity.CompanionAvatarKey = companionAvatarKey;
         entity.SetKey = setKey;
-        entity.AssetKey = request.AssetKey.Trim();
+        entity.SetTitleEn = string.IsNullOrWhiteSpace(request.SetTitleEn) ? null : request.SetTitleEn.Trim();
+        entity.SetTitleZh = string.IsNullOrWhiteSpace(request.SetTitleZh) ? null : request.SetTitleZh.Trim();
+        entity.SetStoryEn = string.IsNullOrWhiteSpace(request.SetStoryEn) ? null : request.SetStoryEn.Trim();
+        entity.SetStoryZh = string.IsNullOrWhiteSpace(request.SetStoryZh) ? null : request.SetStoryZh.Trim();
+        entity.AssetKey = string.IsNullOrWhiteSpace(request.AssetKey) ? key : request.AssetKey.Trim();
         entity.ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim();
         entity.TitleEn = request.TitleEn.Trim();
         entity.TitleZh = request.TitleZh.Trim();

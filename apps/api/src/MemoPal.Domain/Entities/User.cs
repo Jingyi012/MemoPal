@@ -11,6 +11,8 @@ public sealed class User : AuditableBaseEntity
     public string? AvatarUrl { get; set; }
     public string AvatarSource { get; set; } = AvatarSources.Companion;
     public string? SelectedAvatarId { get; set; }
+    /// <summary>The active in-game companion, independent from the profile avatar.</summary>
+    public string? CompanionAvatarId { get; set; }
     public string? SelectedAvatarFrameId { get; set; }
     public string? SelectedAvatarDecorationId { get; set; }
     public string? SelectedAvatarOutfitId { get; set; }

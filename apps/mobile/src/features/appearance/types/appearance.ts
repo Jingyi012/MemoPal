@@ -6,6 +6,10 @@ export interface AppearanceDefinition {
   itemType: AppearanceItemType;
   companionAvatarKey?: string | null;
   setKey?: string | null;
+  setTitleEn?: string | null;
+  setTitleZh?: string | null;
+  setStoryEn?: string | null;
+  setStoryZh?: string | null;
   assetKey: string;
   imageUrl?: string | null;
   titleEn: string;

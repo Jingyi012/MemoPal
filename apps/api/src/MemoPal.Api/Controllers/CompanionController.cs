@@ -14,6 +14,10 @@ public sealed class CompanionController(ISender sender) : ApiControllerBase(send
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken ct) => Ok(await Sender.Send(new GetCompanionQuery(GetUserIdOrThrow()), ct));
 
+    [HttpPut("selection")]
+    public async Task<IActionResult> Select([FromBody] SelectCompanionRequest request, CancellationToken ct) =>
+        Ok(await Sender.Send(new SelectCompanionCommand(GetUserIdOrThrow(), request.AvatarId), ct));
+
     [HttpPost("greet")]
     public async Task<IActionResult> Greet(CancellationToken ct) => Ok(await Sender.Send(new GreetCompanionCommand(GetUserIdOrThrow()), ct));
 
@@ -38,3 +42,5 @@ public sealed class CompanionController(ISender sender) : ApiControllerBase(send
     public async Task<IActionResult> DeletePreset(string id, CancellationToken ct) =>
         Ok(await Sender.Send(new DeleteCompanionLookPresetCommand(GetUserIdOrThrow(), id), ct));
 }
+
+public sealed record SelectCompanionRequest(string AvatarId);

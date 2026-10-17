@@ -27,7 +27,7 @@ public sealed class SaveCompanionLookCommandHandler(IAppDbContext db)
         var user = await db.Users.FirstOrDefaultAsync(x => x.Id == command.UserId && !x.IsDeleted, ct)
             ?? throw new NotFoundAppException("User not found.");
         var resolvedAvatarId = await GetCompanionQueryHandler.ResolveAvatarId(
-            db, user.SelectedAvatarId, user.Level, ct);
+            db, user.CompanionAvatarId, user.Level, ct);
         if (string.IsNullOrWhiteSpace(resolvedAvatarId) || command.Request.AvatarId != resolvedAvatarId)
             throw new ValidationAppException("The requested companion is not the selected unlocked companion.");
 

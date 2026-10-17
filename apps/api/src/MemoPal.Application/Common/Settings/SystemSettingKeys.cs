@@ -11,6 +11,20 @@ public static class SystemSettingKeys
     public const string GrowthReferralProgramConfig = "growth.referral.program_config";
     public const string AuthLoginMethods = "auth.login_methods";
     public const string NumberPegDefinitions = "number-peg.definitions";
+    public const string CompanionBondStages = "companion.bond_stages";
+}
+
+public sealed record CompanionBondStageConfig(string Key, int Points, string TitleEn, string TitleZh, string MessageEn, string MessageZh);
+
+public static class CompanionBondStageDefaults
+{
+    public static IReadOnlyList<CompanionBondStageConfig> All { get; } =
+    [
+        new("new", 0, "Just met", "初识", "", ""),
+        new("familiar", 25, "Getting familiar", "熟悉", "Your bond became familiar.", "你们变得更加熟悉了。"),
+        new("in_sync", 100, "In sync", "默契", "You found a steady rhythm together.", "你们一起培养出了默契。"),
+        new("best_friends", 300, "Best friends", "挚友", "You became best friends.", "你们成为了最好的伙伴。"),
+    ];
 }
 
 public static class SystemSettingDefaults

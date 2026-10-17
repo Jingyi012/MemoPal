@@ -5,6 +5,7 @@ public sealed record AvatarDefinitionDto(
     string Key,
     string AssetKey,
     string? ImageUrl,
+    string? CompanionCharacterImageUrl,
     string TitleEn,
     string TitleZh,
     string DescriptionEn,
@@ -24,6 +25,7 @@ public sealed class AvatarDefinitionUpsertRequest
     public string? Key { get; set; }
     public string? AssetKey { get; set; }
     public string? ImageUrl { get; set; }
+    public string? CompanionCharacterImageUrl { get; set; }
     public string? TitleEn { get; set; }
     public string? TitleZh { get; set; }
     public string? DescriptionEn { get; set; }

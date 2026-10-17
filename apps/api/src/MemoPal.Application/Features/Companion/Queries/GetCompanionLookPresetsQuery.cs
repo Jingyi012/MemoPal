@@ -16,8 +16,8 @@ public sealed class GetCompanionLookPresetsQueryHandler(IAppDbContext db)
     public async Task<ApiResponse<IReadOnlyList<CompanionLookPresetDto>>> Handle(GetCompanionLookPresetsQuery request, CancellationToken ct)
     {
         var user = await db.Users.AsNoTracking().Where(x => x.Id == request.UserId && !x.IsDeleted)
-            .Select(x => new { x.SelectedAvatarId, x.Level }).FirstOrDefaultAsync(ct);
-        var avatarId = await GetCompanionQueryHandler.ResolveAvatarId(db, user?.SelectedAvatarId, user?.Level ?? 1, ct);
+            .Select(x => new { x.CompanionAvatarId, x.Level }).FirstOrDefaultAsync(ct);
+        var avatarId = await GetCompanionQueryHandler.ResolveAvatarId(db, user?.CompanionAvatarId, user?.Level ?? 1, ct);
         var presets = string.IsNullOrWhiteSpace(avatarId) ? [] : await db.CompanionLookPresets.AsNoTracking()
             .Where(x => x.UserId == request.UserId && x.AvatarId == avatarId && !x.IsDeleted)
             .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id)
