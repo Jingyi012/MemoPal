@@ -8,3 +8,4 @@ export { default as NumberPegComposerScreen } from './screens/NumberPegComposerS
 export { default as NumberPegSessionScreen } from './screens/NumberPegSessionScreen';
 export { default as NumberPegFamiliarityScreen } from './screens/NumberPegFamiliarityScreen';
 export { default as NumberPegMapScreen } from './screens/NumberPegMapScreen';
+export { default as NumberPegMemoriesScreen } from './screens/NumberPegMemoriesScreen';

@@ -1,0 +1,91 @@
+import AnimatedPressable from '@/components/AnimatedPressable';
+import { CommonHeader } from '@/components/CommonHeader';
+import LoadingView from '@/components/LoadingView';
+import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
+import { useTranslation } from '@/core/i18n/useTranslation';
+import { useMemorySets } from '@/features/memory-sets';
+import { useDueMemoryReviews } from '@/features/practice-attempts';
+import { NumberPegMemoryRow } from '@/features/number-peg/components/NumberPegMemoryRow';
+import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
+import { createThemedStyles } from '@/theme/createThemedStyles';
+import { typography } from '@/theme/typography';
+import { Href, useRouter } from 'expo-router';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+
+type MemoryFilter = 'all' | 'recall' | 'building';
+
+export default function NumberPegMemoriesScreen() {
+  const { styles } = useStyles();
+  const { t } = useTranslation('numberPeg');
+  const router = useRouter();
+  const { isOffline, canShowRequestErrors } = useNetworkStatus();
+  const memorySets = useMemorySets('number-peg');
+  const dueReviews = useDueMemoryReviews();
+  const [filter, setFilter] = useState<MemoryFilter>('all');
+  const sets = useMemo(() => [...(memorySets.data ?? [])]
+    .filter((set) => set.status !== 'archived')
+    .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt)), [memorySets.data]);
+  const dueBySet = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const review of dueReviews.data ?? []) counts.set(review.memorySetId, (counts.get(review.memorySetId) ?? 0) + 1);
+    return counts;
+  }, [dueReviews.data]);
+  const visibleSets = sets.filter((set) => filter === 'all' || (filter === 'building' ? set.status === 'draft' : set.status !== 'draft'));
+  const refresh = () => { void Promise.allSettled([memorySets.refetch(), dueReviews.refetch()]); };
+
+  return (
+    <View style={styles.page}>
+      <CommonHeader title={t('memoryListTitle')} backAction={() => router.back()} />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={memorySets.isRefetching || dueReviews.isRefetching} onRefresh={refresh} />}>
+        <Text style={styles.subtitle}>{t('memoryListSubtitle', { count: sets.length })}</Text>
+        <View style={styles.filterRail}>
+          {(['all', 'recall', 'building'] as MemoryFilter[]).map((key) => {
+            const selected = filter === key;
+            const label = key === 'all' ? t('filterAll') : key === 'recall' ? t('filterRecall') : t('filterBuilding');
+            return (
+              <AnimatedPressable key={key} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => setFilter(key)} style={[styles.filterChip, selected && styles.filterChipSelected]}>
+                <Text style={[styles.filterText, selected && styles.filterTextSelected]}>{label}</Text>
+              </AnimatedPressable>
+            );
+          })}
+        </View>
+        {!isOffline && memorySets.isLoading ? (
+          <View style={styles.loading}><LoadingView description={t('loading')} /></View>
+        ) : canShowRequestErrors && memorySets.isError ? (
+          <ModuleNoticeCard title={t('unavailable')} body={getNumberPegErrorMessage(memorySets.error, t('connection'))} onAction={() => void memorySets.refetch()} />
+        ) : visibleSets.length ? (
+          <View style={styles.list}>
+            {visibleSets.map((memorySet) => (
+              <NumberPegMemoryRow
+                key={memorySet.id}
+                memorySet={memorySet}
+                dueCount={dueBySet.get(memorySet.id) ?? 0}
+                onPress={() => router.push(`/number-peg/${memorySet.id}` as Href)}
+              />
+            ))}
+          </View>
+        ) : (
+          <ModuleNoticeCard emoji="🎒" title={sets.length ? t('emptyFilter') : t('empty')} body={sets.length ? t('emptyFilterBody') : t('emptyBody')} />
+        )}
+      </ScrollView>
+    </View>
+  );
+}
+
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
+  page: { flex: 1, backgroundColor: 'transparent' },
+  content: { gap: 13, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 36 },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
+  filterRail: { flexDirection: 'row', gap: 8 },
+  filterChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 999, borderWidth: 1.5, justifyContent: 'center', minHeight: 40, paddingHorizontal: 14 },
+  filterChipSelected: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
+  filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  filterTextSelected: { color: theme.onAccent },
+  list: { gap: 9 },
+  loading: { height: 120, overflow: 'hidden' },
+}));

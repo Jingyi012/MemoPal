@@ -15,6 +15,7 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, BookOpen, Plus, RefreshCcw } from '@/core/icons';
 import { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -202,23 +203,34 @@ export default function PracticeScreen() {
                     accessibilityHint={t('tapToStartTechnique')}
                     accessibilityLabel={isPeg ? t('numberPeg') : t('palace')}
                     onPress={() => startTechnique(key)}
-                    style={[
-                      styles.techniqueCard,
-                      { backgroundColor: isPeg ? activeTheme.berryTint : activeTheme.violetTint },
-                    ]}>
+                    style={styles.techniqueCard}>
+                    <LinearGradient
+                      colors={isPeg
+                        ? [activeTheme.berryTint, activeTheme.paper]
+                        : [activeTheme.violetTint, activeTheme.paper]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    <View style={[styles.techniqueOrb, { backgroundColor: isPeg ? activeTheme.berryDeep : activeTheme.violetDeep }]} />
                     <View style={styles.techniqueHeading}>
-                      <View style={[styles.techniqueIcon, { backgroundColor: isPeg ? activeTheme.paper : activeTheme.paper }]}>
+                      <View style={[styles.techniqueIcon, { backgroundColor: activeTheme.paper }]}>
                         <Text style={styles.techniqueEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
                       </View>
                       <View style={styles.techniqueTitleBlock}>
                         <Text style={[styles.techniqueName, { color: activeTheme.ink }]}>{isPeg ? t('numberPeg') : t('palace')}</Text>
                         <Text style={[styles.techniqueDescription, { color: activeTheme.inkSoft }]}>{isPeg ? t('numberPegDescription') : t('palaceDescription')}</Text>
                       </View>
-                      <ArrowRight size={19} color={isPeg ? activeTheme.berryDeep : activeTheme.violetDeep} />
+                      <View style={[styles.techniqueArrow, { backgroundColor: activeTheme.paper }]}>
+                        <ArrowRight size={16} color={isPeg ? activeTheme.berryDeep : activeTheme.violetDeep} />
+                      </View>
                     </View>
-                    <View style={styles.techniqueTags}>
+                    <View style={styles.techniqueBottom}>
+                      <View style={styles.techniqueTags}>
                       {(isPeg ? ['pegTagAnchor', 'pegTagList'] as const : ['palaceTagRoute', 'palaceTagLong'] as const)
                         .map((tag) => <View key={tag} style={styles.techniqueTag}><Text style={styles.techniqueTagText}>{t(tag)}</Text></View>)}
+                      </View>
+                      <TechniqueIllustration isPeg={isPeg} color={isPeg ? activeTheme.berryDeep : activeTheme.violetDeep} />
                     </View>
                   </AnimatedPressable>
                 </View>
@@ -238,6 +250,29 @@ export default function PracticeScreen() {
           </AnimatedPressable>
         </SpotlightTarget>
       </ScrollView>
+    </View>
+  );
+}
+
+function TechniqueIllustration({ isPeg, color }: { isPeg: boolean; color: string }) {
+  const { styles } = useStyles();
+  if (isPeg) {
+    return (
+      <View style={styles.pegIllustration} accessibilityElementsHidden>
+        {[1, 2, 3].map((number) => (
+          <View key={number} style={[styles.pegIllustrationNode, { borderColor: color }]}>
+            <Text style={[styles.pegIllustrationNumber, { color }]}>{number}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
+  return (
+    <View style={styles.routeIllustration} accessibilityElementsHidden>
+      <View style={[styles.routeLine, { backgroundColor: color }]} />
+      <View style={[styles.routeNode, styles.routeNodeStart, { borderColor: color, backgroundColor: color }]} />
+      <View style={[styles.routeNode, styles.routeNodeMiddle, { borderColor: color }]} />
+      <View style={[styles.routeNode, styles.routeNodeEnd, { borderColor: color, backgroundColor: color }]} />
     </View>
   );
 }
@@ -300,7 +335,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   intentChipText: { fontFamily: typography.bodyExtraBold, fontSize: 12 },
   preparingCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 52, paddingHorizontal: 14 },
   preparingText: { fontFamily: typography.bodyBold, fontSize: 11.5 },
-  reviewBanner: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 18, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 72, paddingHorizontal: 12, paddingVertical: 10 },
+  reviewBanner: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderLeftColor: theme.violetDeep, borderLeftWidth: 4, borderRadius: 18, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 72, paddingHorizontal: 12, paddingVertical: 10 },
   reviewCount: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 14, height: 46, justifyContent: 'center', minWidth: 46, paddingHorizontal: 6 },
   reviewCountText: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 21 },
   reviewCopy: { flex: 1, gap: 3, minWidth: 0 },
@@ -314,16 +349,28 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   courseLinkText: { fontFamily: typography.bodyExtraBold, fontSize: 11 },
   techniqueList: { gap: 13 },
   techniqueCardWrap: { position: 'relative' },
-  techniqueCard: { borderColor: 'transparent', borderRadius: 21, borderWidth: 1.5, gap: 12, minHeight: 134, padding: 15 },
+  techniqueCard: { borderColor: theme.line, borderRadius: 21, borderWidth: 1.5, gap: 12, minHeight: 148, overflow: 'hidden', padding: 15 },
+  techniqueOrb: { borderRadius: 48, height: 96, opacity: 0.055, position: 'absolute', right: -27, top: -40, width: 96 },
   techniqueHeading: { alignItems: 'center', flexDirection: 'row', gap: 12 },
   techniqueIcon: { alignItems: 'center', borderRadius: 17, height: 52, justifyContent: 'center', width: 52 },
   techniqueEmoji: { fontSize: 29, lineHeight: 34 },
   techniqueTitleBlock: { flex: 1, gap: 4, minWidth: 0 },
   techniqueName: { fontFamily: typography.displayExtraBold, fontSize: 16 },
   techniqueDescription: { fontFamily: typography.bodySemibold, fontSize: 11.5, lineHeight: 17 },
-  techniqueTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingLeft: 64 },
+  techniqueArrow: { alignItems: 'center', borderRadius: 14, height: 32, justifyContent: 'center', width: 32 },
+  techniqueBottom: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 31, paddingLeft: 64 },
+  techniqueTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   techniqueTag: { backgroundColor: theme.paper, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
   techniqueTagText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  routeIllustration: { height: 28, position: 'relative', width: 58 },
+  routeLine: { height: 2, left: 10, opacity: 0.25, position: 'absolute', right: 10, top: 13 },
+  routeNode: { borderRadius: 8, borderWidth: 2, height: 12, position: 'absolute', top: 8, width: 12 },
+  routeNodeStart: { left: 4 },
+  routeNodeMiddle: { backgroundColor: theme.paper, height: 15, left: 22, top: 6, width: 15 },
+  routeNodeEnd: { right: 4 },
+  pegIllustration: { alignItems: 'center', flexDirection: 'row', gap: 4 },
+  pegIllustrationNode: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: 10, borderWidth: 1.5, height: 21, justifyContent: 'center', width: 21 },
+  pegIllustrationNumber: { fontFamily: typography.bodyExtraBold, fontSize: 9 },
   recommendedBadge: { alignSelf: 'flex-end', backgroundColor: theme.sun, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, position: 'absolute', right: 13, top: -9, zIndex: 1 },
   recommendedText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   createMemoryCard: { alignItems: 'center', borderColor: theme.violetLine, borderRadius: 19, borderStyle: 'dashed', borderWidth: 1.5, flexDirection: 'row', gap: 12, minHeight: 76, paddingHorizontal: 13, paddingVertical: 11 },

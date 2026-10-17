@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>数字记忆页改版</title>
+<style>
+:root{--bg:#F6F3FF;--card:#fff;--ink:#241B4B;--sub:#5E5784;--line:#E6E0F7;--p:#6A4CD8;--pl:#EEE8FF;--gold:#FFC93C;--pink:#D6336C;--pinkl:#FFE8EF;--orange:#C75A12;--orl:#FFEBD9;--grey:#E9E6F2;--shadow:0 6px 20px rgba(80,50,180,.12);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--pinkl:#4A2040;--orl:#4A3020;--orange:#FFB27A;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--pinkl:#4A2040;--orl:#4A3020;--orange:#FFB27A;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:"Nunito","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;padding:16px 20px 40px}
+header{display:flex;align-items:center;gap:12px}
+.back{width:40px;height:40px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--p);font-size:18px;font-weight:800;cursor:pointer;flex:none}
+header .t{flex:1;min-width:0}header h1{font-size:24px;font-weight:800}header p{font-size:12px;color:var(--sub);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-weight:800;font-size:14px;flex:none}
+h3{font-size:17px;font-weight:800}
+.sh{display:flex;justify-content:space-between;align-items:center;margin:26px 0 12px}
+.link{border:0;background:none;color:var(--p);font:800 13px inherit;font-family:inherit;cursor:pointer;padding:4px}
+button:focus-visible{outline:3px solid var(--p);outline-offset:2px}
+.create{margin-top:18px;border-radius:24px;padding:18px;background:linear-gradient(135deg,var(--pinkl),var(--pl));border:1px solid var(--line);box-shadow:var(--shadow)}
+.create h2{font-size:20px;font-weight:800}
+.ex{margin-top:12px;background:var(--card);border-radius:18px;padding:14px;display:flex;gap:12px;align-items:flex-start}
+.ex .pair{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none;width:58px}
+.ex .pair b{font-size:12px;color:var(--p)}.ex .pair span{font-size:34px;line-height:1.1}.ex .pair small{font-size:12px;font-weight:800}
+.ex .st small{font-size:12px;color:var(--pink);font-weight:800}
+.ex .st p{font-size:14px;font-weight:700;line-height:1.55;margin-top:2px}
+.swap{border:0;background:none;color:var(--sub);font:800 12px inherit;font-family:inherit;cursor:pointer;margin-top:6px;padding:2px 0}
+.steps{display:flex;gap:6px;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--sub);margin-top:12px}
+.steps i{width:6px;height:6px;border-radius:50%;background:var(--sub);opacity:.4}
+.go{margin-top:12px;width:100%;border:0;border-radius:16px;padding:15px;background:var(--gold);color:#3A2800;font:800 17px inherit;font-family:inherit;cursor:pointer;box-shadow:0 5px 0 #D9A41A}
+.go:active{transform:translateY(3px);box-shadow:0 2px 0 #D9A41A}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:7px 14px;font:700 13px inherit;font-family:inherit;cursor:pointer}
+.tab.act{background:var(--p);border-color:var(--p);color:#fff}
+.row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--card);border:0;border-radius:18px;padding:12px;box-shadow:var(--shadow);margin-bottom:10px;font-family:inherit;color:inherit;cursor:pointer}
+.cnt{width:52px;height:52px;border-radius:14px;background:var(--pinkl);color:var(--pink);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;flex:none}
+.cnt b{font-size:20px}.cnt small{font-size:11px;font-weight:800;margin-top:2px}
+.rt{flex:1;min-width:0}.rt b{display:block;font-size:15px}
+.st2{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;margin-top:3px}
+.st2.r{background:var(--pl);color:var(--p)}.st2.b{background:var(--orl);color:var(--orange)}
+.bar{height:5px;border-radius:99px;background:var(--grey);margin-top:7px;overflow:hidden}.bar i{display:block;height:100%;background:var(--p)}
+.chev{color:var(--sub);font-size:18px}
+.anc{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--shadow)}
+.ah{display:flex;align-items:center;gap:14px}
+.ring{width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--p) 30%,var(--grey) 0);display:grid;place-items:center;flex:none}
+.ring span{width:50px;height:50px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:14px;font-weight:800}
+.ah b{display:block;font-size:16px}.ah small{font-size:12px;color:var(--sub);font-weight:700}
+.ag{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.a{position:relative;background:var(--pl);border-radius:16px;padding:10px 4px 8px;text-align:center}
+.a em{position:absolute;top:6px;left:8px;font-style:normal;font-size:11px;font-weight:800;color:var(--p)}
+.a span{display:block;font-size:30px;line-height:1.2}.a small{font-size:12px;font-weight:800}
+.a.more{background:transparent;border:2px dashed var(--line);display:flex;flex-direction:column;justify-content:center;color:var(--sub)}
+.a.more span{font-size:20px;font-weight:800}
+.prac{margin-top:14px;width:100%;border:0;border-radius:14px;padding:12px;background:var(--p);color:#fff;font:800 15px inherit;font-family:inherit;cursor:pointer;box-shadow:0 4px 0 #4B33A8}
+.prac:active{transform:translateY(2px);box-shadow:0 2px 0 #4B33A8}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <button class="back" aria-label="返回">‹</button>
+    <div class="t"><h1>数字记忆</h1><p>一个数字，一个角色，一个记得住的故事</p></div>
+    <div class="chip">🪙 999k</div>
+  </header>
+
+  <section class="create">
+    <h2>把要记的内容，变成你的故事</h2>
+    <div class="ex">
+      <div class="pair"><b id="n">1</b><span id="e">🕯️</span><small id="w">passport</small></div>
+      <div class="st"><small>比如，这样联想</small><p id="s">蜡烛递上蜡做的护照。海关一盖章，护照就融化了，把整个机场封进蜡里。</p><button class="swap" id="swap">🔄 换一个例子</button></div>
+    </div>
+    <div class="steps">选内容 <i></i> 联想故事 <i></i> 数字回忆</div>
+    <button class="go">创建新记忆 →</button>
+  </section>
+
+  <div class="sh"><h3>我的记忆</h3></div>
+  <div class="tabs" id="tabs">
+    <button class="tab act" data-f="all">全部</button><button class="tab" data-f="r">待回忆</button><button class="tab" data-f="b">建立中</button>
+  </div>
+  <div id="list"></div>
+
+  <div class="sh"><h3>我的锚点</h3><button class="link">查看全部 100 ›</button></div>
+  <section class="anc">
+    <div class="ah"><div class="ring"><span>30</span></div>
+      <div><b>已解锁 30 / 100</b><small>继续练习，解锁下一组 31–40</small></div></div>
+    <div class="ag">
+      <div class="a"><em>1</em><span>🕯️</span><small>蜡烛</small></div>
+      <div class="a"><em>2</em><span>🦢</span><small>天鹅</small></div>
+      <div class="a"><em>3</em><span>❤️</span><small>爱心</small></div>
+      <div class="a"><em>4</em><span>⛵</span><small>帆船</small></div>
+      <div class="a"><em>5</em><span>🪝</span><small>钩子</small></div>
+      <div class="a more"><span>+25</span><small>已解锁</small></div>
+    </div>
+    <button class="prac">🧠 练习锚点，解锁下一组</button>
+  </section>
+</main>
+<script>
+var ex=[["1","🕯️","passport","蜡烛递上蜡做的护照。海关一盖章，护照就融化了，把整个机场封进蜡里。"],
+["2","🦢","umbrella","天鹅优雅地撑开一把巨大的雨伞，伞面一抖，把整片湖水都甩上了天。"],
+["3","❤️","coffee","一颗爱心里灌满热咖啡，轻轻一按，整个房间都喷出咖啡香。"]],xi=0;
+document.getElementById("swap").addEventListener("click",function(){
+  xi=(xi+1)%ex.length;var d=ex[xi];
+  document.getElementById("n").textContent=d[0];document.getElementById("e").textContent=d[1];
+  document.getElementById("w").textContent=d[2];document.getElementById("s").textContent=d[3];
+});
+var M=[
+ {n:"拼写探险",c:5,s:"r",l:"准备回忆",p:0},
+ {n:"亚洲十国",c:10,s:"b",l:"继续建立 · 4/10",p:40},
+ {n:"欧洲十五国",c:15,s:"b",l:"继续建立 · 0/15",p:0}
+];
+function draw(f){
+  var h="";
+  M.forEach(function(m){
+    if(f!=="all"&&m.s!==f)return;
+    h+='<button class="row"><div class="cnt"><b>'+m.c+'</b><small>项</small></div><div class="rt"><b>'+m.n+'</b><span class="st2 '+m.s+'">'+m.l+'</span><div class="bar"><i style="width:'+m.p+'%"></i></div></div><span class="chev">›</span></button>';
+  });
+  document.getElementById("list").innerHTML=h||'<p style="color:var(--sub);font-weight:700;padding:12px 0">这里还空着，去创建一个新记忆吧 ✨</p>';
+}
+draw("all");
+document.getElementById("tabs").addEventListener("click",function(e){
+  var t=e.target.closest(".tab");if(!t)return;
+  document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("act")});
+  t.classList.add("act");draw(t.dataset.f);
+});
+</script>
+</body>
+</html>
