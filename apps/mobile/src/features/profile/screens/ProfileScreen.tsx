@@ -387,9 +387,7 @@ export default function ProfileScreen() {
           title={language === 'zh' ? '伙伴' : 'Companion'}
           accentColor={theme.violetDeep}>
           <ProfileSettingsRow
-            icon={
-              <Ionicons name="paw" size={21} color={theme.violetDeep} />
-            }
+            icon={<Ionicons name="paw" size={21} color={theme.violetDeep} />}
             iconBackgroundColor={theme.violetTint}
             title={language === 'zh' ? '伙伴空间' : 'Companion space'}
             onPress={() => router.push('/companion')}
@@ -656,7 +654,6 @@ const useStyles = createThemedStyles((theme) =>
       color: theme.inkSoft,
       fontFamily: typography.bodyBold,
       fontSize: 12,
-      marginTop: 2,
     },
     premiumBadge: {
       flexDirection: 'row',
@@ -685,7 +682,7 @@ const useStyles = createThemedStyles((theme) =>
       borderColor: theme.violetLine,
       borderWidth: 1,
       borderRadius: 999,
-      marginTop: 0,
+      marginTop: 5,
       paddingHorizontal: 8,
       paddingVertical: 4,
       maxWidth: '100%',

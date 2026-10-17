@@ -13,6 +13,7 @@ import Animated, {
 const PressableBase = cssInterop(Pressable, {
   className: 'style',
 });
+const AnimatedPressableBase = Animated.createAnimatedComponent(PressableBase);
 
 interface AnimatedPressableProps extends PressableProps {
   children: React.ReactNode;
@@ -58,25 +59,26 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   };
 
   return (
-    <Animated.View style={[containerStyle, animatedStyle]}>
-      <PressableBase
-        {...rest}
-        {...classNameProps}
-        accessibilityRole={accessibilityRole}
-        style={style}
-        onPressIn={(e) => {
-          if (!reduceMotion) scale.value = withSpring(0.96, { stiffness: 300 });
-          if (pressOnIn) firePress(e);
-        }}
-        onPressOut={() => {
-          if (!reduceMotion) scale.value = withSpring(1);
-        }}
-        onPress={(e) => {
-          if (!pressOnIn) firePress(e);
-        }}>
-        {children}
-      </PressableBase>
-    </Animated.View>
+    <AnimatedPressableBase
+      {...rest}
+      {...classNameProps}
+      accessibilityRole={accessibilityRole}
+      // Keep layout and visual styles on the actual press target. A wrapper
+      // View can otherwise shrink-wrap content and ignore width/flex styles
+      // intended for the button itself.
+      style={[containerStyle, style, animatedStyle]}
+      onPressIn={(e) => {
+        if (!reduceMotion) scale.value = withSpring(0.96, { stiffness: 300 });
+        if (pressOnIn) firePress(e);
+      }}
+      onPressOut={() => {
+        if (!reduceMotion) scale.value = withSpring(1);
+      }}
+      onPress={(e) => {
+        if (!pressOnIn) firePress(e);
+      }}>
+      {children}
+    </AnimatedPressableBase>
   );
 };
 

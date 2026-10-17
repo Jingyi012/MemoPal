@@ -59,16 +59,19 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
-              <View style={styles.headerIcon}><Pencil size={19} color={theme.violetDeep} /></View>
+              <View style={styles.headerIcon}><Pencil size={20} color={theme.paper} /></View>
               <View style={styles.headerCopy}>
                 <Text style={styles.title}>{t('editProfile')}</Text>
                 <Text style={styles.subtitle}>{t('editDetails')}</Text>
               </View>
             </View>
 
-            <Text style={styles.fieldLabel}>{t('displayName')}</Text>
-            <View style={styles.inputWrap}>
-              <Pencil size={16} color="#9B8CFF" />
+            <View style={styles.formCard}>
+              <View style={styles.nameLabelRow}>
+                <Text style={styles.fieldLabel}>{t('displayName')}</Text>
+                <Text style={styles.characterCount}>{displayName.length}/80</Text>
+              </View>
+              <View style={styles.inputWrap}>
               <TextInput
                 style={styles.input}
                 placeholder={t('displayName')}
@@ -77,38 +80,29 @@ export const EditProfileSheet = forwardRef<Ref, Props>(
                 onChangeText={setDisplayName}
                 maxLength={80}
                 returnKeyType="done"
+                accessibilityLabel={t('displayName')}
               />
+              </View>
             </View>
 
-            <Text style={styles.fieldLabel}>{t('email')}</Text>
-            <View style={[styles.inputWrap, styles.lockedInputWrap]}>
-              <Mail size={16} color={theme.inkSoft} />
-              <TextInput
-                style={[styles.input, styles.lockedInput]}
-                placeholder={t('email')}
-                placeholderTextColor="#AAA6B8"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                editable={false}
-                selectTextOnFocus={false}
-              />
-              <LockKeyhole size={15} color={theme.inkSoft} />
+            <View style={styles.emailCard}>
+              <View style={styles.emailIcon}><Mail size={17} color={theme.violetDeep} /></View>
+              <View style={styles.emailCopy}>
+                <Text style={styles.emailLabel}>{t('email')}</Text>
+                <Text style={styles.emailValue} numberOfLines={1}>{email}</Text>
+              </View>
+              <View style={styles.lockBadge}><LockKeyhole size={14} color={theme.inkSoft} /></View>
             </View>
             <Text style={styles.helper}>{t('emailImmutable')}</Text>
 
             <View style={styles.footer}>
-              <View style={styles.buttonSlot}>
-                <AnimatedPressable onPress={close} style={styles.cancelButton}>
-                  <Text style={styles.cancelText}>{t('cancel')}</Text>
-                </AnimatedPressable>
-              </View>
-              <View style={styles.buttonSlot}>
-                <AnimatedPressable disabled={saving || !displayName.trim()} onPress={() => { void save(); }} style={[styles.saveButton, (saving || !displayName.trim()) && styles.disabledButton]}>
-                  <Check size={17} color="#2B2A3D" />
+              <AnimatedPressable onPress={close} style={styles.cancelButton}>
+                <Text style={styles.cancelText}>{t('cancel')}</Text>
+              </AnimatedPressable>
+              <AnimatedPressable disabled={saving || !displayName.trim()} onPress={() => { void save(); }} style={[styles.saveButton, (saving || !displayName.trim()) && styles.disabledButton]}>
+                  <Check size={17} color={theme.paper} />
                   <Text style={styles.saveText}>{saving ? t('saving') : t('save')}</Text>
-                </AnimatedPressable>
-              </View>
+              </AnimatedPressable>
             </View>
           </BottomSheetScrollView>
         </KeyboardAvoidingView>
@@ -121,23 +115,29 @@ EditProfileSheet.displayName = 'EditProfileSheet';
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   flex: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingTop: 12 },
-  header: { alignItems: 'center', flexDirection: 'row', gap: 11, marginBottom: 15 },
-  headerIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 14, height: 42, justifyContent: 'center', width: 42 },
+  content: { paddingHorizontal: 22, paddingTop: 18 },
+  header: { alignItems: 'center', flexDirection: 'row', gap: 13, marginBottom: 25 },
+  headerIcon: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 18, height: 52, justifyContent: 'center', width: 52, boxShadow: '0px 5px 12px rgba(103, 80, 200, 0.22)' },
   headerCopy: { flex: 1 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 20 },
-  subtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, marginTop: 2 },
-  fieldLabel: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 11, letterSpacing: 0.5, marginBottom: 7, marginTop: 17, textTransform: 'uppercase' },
-  inputWrap: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 14, borderWidth: 2, flexDirection: 'row', gap: 9, minHeight: 52, paddingHorizontal: 13 },
-  lockedInputWrap: { backgroundColor: theme.violetTint, borderColor: theme.line },
-  input: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 14, paddingVertical: 0 },
-  lockedInput: { color: theme.inkSoft },
-  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 16, marginTop: 6 },
-  footer: { borderTopColor: theme.line, borderTopWidth: 2, flexDirection: 'row', gap: 10, marginTop: 22, paddingTop: 14, paddingBottom: 5 },
-  buttonSlot: { flex: 1 },
-  cancelButton: { alignItems: 'center', backgroundColor: theme.sand, borderColor: theme.peachLine, borderRadius: 14, borderWidth: 2, justifyContent: 'center', minHeight: 52, width: '100%' },
-  cancelText: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 13 },
-  saveButton: { alignItems: 'center', backgroundColor: theme.sun, borderColor: theme.sunDeep, borderRadius: 14, borderWidth: 2, boxShadow: '0px 4px 0px #F2A900', flexDirection: 'row', gap: 7, justifyContent: 'center', minHeight: 52, width: '100%' },
-  saveText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 13 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 22 },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 12, marginTop: 4 },
+  formCard: { padding: 16, borderRadius: 20, backgroundColor: theme.violetTint },
+  nameLabelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 9 },
+  fieldLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  characterCount: { color: theme.inkMuted, fontFamily: typography.bodySemibold, fontSize: 11 },
+  inputWrap: { justifyContent: 'center', minHeight: 54, paddingHorizontal: 14, borderWidth: 1.5, borderColor: theme.violetLine, borderRadius: 14, backgroundColor: theme.paper },
+  input: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 15, paddingVertical: 0 },
+  emailCard: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14, paddingHorizontal: 14, borderWidth: 1, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.paper },
+  emailIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: theme.violetTint },
+  emailCopy: { flex: 1 },
+  emailLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
+  emailValue: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 13, marginTop: 4 },
+  lockBadge: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: theme.sand },
+  helper: { color: theme.inkMuted, fontFamily: typography.body, fontSize: 10.5, lineHeight: 15, marginTop: 7, marginLeft: 4 },
+  footer: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 22, paddingTop: 4, paddingBottom: 5 },
+  cancelButton: { alignItems: 'center', justifyContent: 'center', minHeight: 54, paddingHorizontal: 18 },
+  cancelText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  saveButton: { flex: 1, alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 16, boxShadow: '0px 4px 0px #4D37A8', flexDirection: 'row', gap: 8, justifyContent: 'center', minHeight: 54 },
+  saveText: { color: theme.paper, fontFamily: typography.displayExtraBold, fontSize: 14 },
   disabledButton: { opacity: 0.5 },
 }));
