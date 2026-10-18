@@ -1,4 +1,4 @@
-import { EyeInvisibleOutlined, EyeOutlined, FileSearchOutlined } from "@ant-design/icons";
+import { EyeInvisibleOutlined, EyeOutlined, FileSearchOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import type { ProColumns } from "@ant-design/pro-components";
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,7 +27,7 @@ export default function CommunityMemorySetsPage() {
   const [selected, setSelected] = useState<CommunityMemorySetView | null>(null);
   const [hideTarget, setHideTarget] = useState<CommunityMemorySetView | null>(null);
   const [hideReason, setHideReason] = useState("");
-  const { hideMutation, restoreMutation } = useAdminCommunityMemorySets();
+  const { hideMutation, restoreMutation, featuredMutation } = useAdminCommunityMemorySets();
 
   const columns = useMemo<ProColumns<CommunityMemorySetView>[]>(
     () => [
@@ -54,6 +54,8 @@ export default function CommunityMemorySetsPage() {
       { title: "Technique", dataIndex: "techniqueKey", search: false, width: 120 },
       { title: "Items", dataIndex: "itemCount", search: false, width: 76 },
       { title: "Copies", dataIndex: "copyCount", search: false, width: 76 },
+      { title: "Featured", dataIndex: "featuredAt", search: false, width: 100,
+        render: (_, row) => row.featuredAt ? <Tag color="gold">Featured</Tag> : <Tag>Not featured</Tag> },
       {
         title: "Reports",
         dataIndex: "reportCount",
@@ -86,11 +88,16 @@ export default function CommunityMemorySetsPage() {
         key: "actions",
         search: false,
         fixed: "right",
-        width: 210,
+        width: 300,
         render: (_, row) =>
           <Space>
             <Button size="small" icon={<FileSearchOutlined />} onClick={() => setSelected(row)}>
               Review
+            </Button>
+            <Button size="small" disabled={row.communityStatus !== "visible"} icon={row.featuredAt ? <StarFilled /> : <StarOutlined />}
+              loading={featuredMutation.isPending && featuredMutation.variables?.id === row.id}
+              onClick={() => featuredMutation.mutate({ id: row.id, featured: !row.featuredAt })}>
+              {row.featuredAt ? "Unfeature" : "Feature"}
             </Button>
             {row.communityStatus === "hidden" ? (
             <Button
@@ -111,7 +118,7 @@ export default function CommunityMemorySetsPage() {
           </Space>,
       },
     ],
-    [hideMutation, restoreMutation],
+    [featuredMutation, hideMutation, restoreMutation],
   );
 
   return (

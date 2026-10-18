@@ -11,6 +11,9 @@ internal static class CommunityMemorySetMapper
         MemorySet memorySet,
         User author,
         int copyCount,
+        int helpfulCount,
+        bool isHelpful,
+        bool isBookmarked,
         string? existingCopyId,
         string? coverImageUrl) => new(
             memorySet.Id,
@@ -22,6 +25,10 @@ internal static class CommunityMemorySetMapper
             new CommunityAuthorDto(author.Id, author.DisplayName, author.AvatarUrl),
             memorySet.PublishedAt ?? memorySet.UpdatedAt,
             copyCount,
+            helpfulCount,
+            isHelpful,
+            isBookmarked,
+            memorySet.FeaturedAt,
             existingCopyId,
             coverImageUrl);
 
@@ -29,6 +36,9 @@ internal static class CommunityMemorySetMapper
         MemorySet memorySet,
         User author,
         int copyCount,
+        int helpfulCount,
+        bool isHelpful,
+        bool isBookmarked,
         string? existingCopyId,
         string? coverImageUrl)
     {
@@ -57,7 +67,7 @@ internal static class CommunityMemorySetMapper
                         x.MemoryItemId, x.LocusId, x.AssociationText))
                     .ToList());
 
-        var summary = ToSummary(memorySet, author, copyCount, existingCopyId, coverImageUrl);
+        var summary = ToSummary(memorySet, author, copyCount, helpfulCount, isHelpful, isBookmarked, existingCopyId, coverImageUrl);
         return new CommunityMemorySetDetailDto(
             summary.Id,
             summary.Title,
@@ -68,6 +78,10 @@ internal static class CommunityMemorySetMapper
             summary.Author,
             summary.PublishedAt,
             summary.CopyCount,
+            summary.HelpfulCount,
+            summary.IsHelpful,
+            summary.IsBookmarked,
+            summary.FeaturedAt,
             summary.ExistingCopyId,
             summary.CoverImageUrl,
             items,

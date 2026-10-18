@@ -184,7 +184,7 @@ public sealed class AiCreditService(AppDbContext db, IOptions<AiCreditOptions> o
     public Task GrantAsync(string userId, string reference, string source, int amount, DateTime? expiresAt, CancellationToken ct)
     {
         if (amount is < 1 or > 1000000 || string.IsNullOrWhiteSpace(reference) || reference.Length > 200 ||
-            source is not ("subscription" or "purchase" or "manual") ||
+            source is not ("subscription" or "purchase" or "manual" or "leaderboard") ||
             expiresAt.HasValue && (expiresAt.Value.Kind != DateTimeKind.Utc || expiresAt <= DateTime.UtcNow))
             throw new ValidationAppException("Invalid credit grant, reference, or UTC expiry.");
         return LockedAsync(userId, async () =>
@@ -199,7 +199,7 @@ public sealed class AiCreditService(AppDbContext db, IOptions<AiCreditOptions> o
             }
             db.AiCreditGrants.Add(new AiCreditGrant { Id = Guid.NewGuid().ToString("N"), UserId = userId,
                 Reference = reference, Source = source, Amount = amount, Remaining = amount, ExpiresAt = expiresAt });
-            Entry(userId, reference, "grant", amount);
+            Entry(userId, reference, source == "leaderboard" ? "leaderboard-reward" : "grant", amount);
             return true;
         }, ct);
     }

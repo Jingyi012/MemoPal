@@ -1,19 +1,28 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   authSessionExpiredEventName,
   clearStoredAuthSession,
   getStoredAccessToken,
   getStoredRefreshToken,
   setStoredAuthSession,
-} from '../lib/apiClient';
-import type { AuthUser } from '../types/auth';
-import { useAuthApi } from './useAuthApi';
+} from "../lib/apiClient";
+import type { AuthUser } from "../types/auth";
+import { useAuthApi } from "./useAuthApi";
 
-function readRoleFromJwt(token: string): 'User' | 'Admin' | undefined {
+function readRoleFromJwt(token: string): "User" | "Admin" | undefined {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ?? payload.role;
-    return role === 'Admin' ? 'Admin' : role === 'User' ? 'User' : undefined;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const role =
+      payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
+      payload.role;
+    return role === "Admin" ? "Admin" : role === "User" ? "User" : undefined;
   } catch {
     return undefined;
   }
@@ -23,7 +32,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser>;
   logout: () => void;
 };
 
@@ -62,9 +71,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     };
 
-    window.addEventListener(authSessionExpiredEventName, handleAuthSessionExpired);
+    window.addEventListener(
+      authSessionExpiredEventName,
+      handleAuthSessionExpired,
+    );
     return () => {
-      window.removeEventListener(authSessionExpiredEventName, handleAuthSessionExpired);
+      window.removeEventListener(
+        authSessionExpiredEventName,
+        handleAuthSessionExpired,
+      );
     };
   }, []);
 
@@ -72,11 +87,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       loading,
-      isAdmin: user?.role === 'Admin',
+      isAdmin: user?.role === "Admin",
       login: async (email, password) => {
         const auth = await loginApi(email, password);
-        setStoredAuthSession({ token: auth.token, refreshToken: auth.refreshToken });
-        setUser({ ...auth.user, role: auth.user.role ?? readRoleFromJwt(auth.token) });
+        setStoredAuthSession({
+          token: auth.token,
+          refreshToken: auth.refreshToken,
+        });
+        const authenticatedUser = {
+          ...auth.user,
+          role: auth.user.role ?? readRoleFromJwt(auth.token),
+        };
+        setUser(authenticatedUser);
+        return authenticatedUser;
       },
       logout: () => {
         const refreshToken = getStoredRefreshToken();
@@ -96,6 +119,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 }

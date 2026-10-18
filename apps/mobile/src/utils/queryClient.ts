@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { onlineManager, QueryClient } from '@tanstack/react-query';
+import { focusManager, onlineManager, QueryClient } from '@tanstack/react-query';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { subscribeToOnlineState } from '@/core/network/networkStatus';
 
@@ -9,6 +9,12 @@ export const QUERY_CACHE_KEY = 'memopal-query-cache-v1';
 export const QUERY_CACHE_BUSTER = 'memopal-query-cache-v1';
 
 onlineManager.setEventListener((setOnline) => subscribeToOnlineState(setOnline));
+if (Platform.OS !== 'web') {
+  focusManager.setEventListener(setFocused => {
+    const subscription = AppState.addEventListener('change', state => setFocused(state === 'active'));
+    return () => subscription.remove();
+  });
+}
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,7 +23,7 @@ export const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 5, // 5 minutes
       gcTime: 1000 * 60 * 60, // 1 hour
       refetchOnReconnect: true,
-      refetchOnWindowFocus: false, // RN has no window focus
+      refetchOnWindowFocus: true,
       networkMode: 'online',
     },
     mutations: {

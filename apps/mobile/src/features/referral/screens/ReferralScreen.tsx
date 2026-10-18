@@ -10,6 +10,7 @@ import { syncEntitlementToLocal } from '@/features/subscription/services/subscri
 import type { Notification } from '@/features/notifications/types/notification';
 import type { ReferralSummary } from '@/features/referral/types/referral';
 import * as Clipboard from 'expo-clipboard';
+import * as ExpoLinking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { Check, Copy, MessageCircle, Share2 } from '@/core/icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -126,7 +127,8 @@ const ReferralScreen: React.FC = () => {
   const handleShare = async (platform: 'whatsapp' | 'native') => {
     if (!summary) return;
 
-    const message = `Join me on MemoPal and use my referral code ${summary.referralCode} to unlock rewards: https://mindpal.app/join/${summary.referralCode}`;
+    const referralUrl = ExpoLinking.createURL('register', { queryParams: { referralCode: summary.referralCode } });
+    const message = `Join me on MemoPal and use my referral code ${summary.referralCode} to unlock rewards. Open in MemoPal: ${referralUrl}`;
     if (platform === 'whatsapp') {
       const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
       Linking.openURL(url).catch(() =>

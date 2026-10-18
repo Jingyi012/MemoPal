@@ -22,6 +22,12 @@ import { HomeHeader } from '../components/Header/HomeHeader';
 import { TodayReviewCard } from '../components/TodayReviewCard';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
+import { EducationAssignmentsList } from '@/features/education/components/EducationAssignmentsList';
+import { EducationFamilyReportsShortcut } from '@/features/education/components/EducationFamilyReportsShortcut';
+import { EducationClassroomInvitations } from '@/features/education/components/EducationClassroomInvitations';
+import { EducationGuardianRequests } from '@/features/education/components/EducationGuardianRequests';
+import { useMyEducationAssignments } from '@/features/education/hooks/useMyEducationAssignments';
+import { useEducationClassroomInvitations, useEducationGuardianRequests } from '@/features/education/hooks/useEducationClassroomInvitations';
 
 export default function HomeScreen() {
   const { styles } = useStyles();
@@ -37,6 +43,9 @@ export default function HomeScreen() {
   const dueReviews = useDueMemoryReviews();
   const activityQuery = useXpEvents({ recentDays: 7 });
   const practiceStatsQuery = usePracticeStats();
+  const educationAssignmentsQuery = useMyEducationAssignments();
+  const classroomInvitations = useEducationClassroomInvitations();
+  const guardianRequests = useEducationGuardianRequests();
   const gamificationRules = useGamificationRules();
   const activeMemorySets = (memorySets.data ?? [])
     .filter((item) => item.status !== 'archived')
@@ -76,7 +85,7 @@ export default function HomeScreen() {
   } : null;
 
   const refreshHome = async () => {
-    await Promise.allSettled([memorySets.refetch(), activityQuery.refetch(), practiceStatsQuery.refetch(), dueReviews.refetch()]);
+    await Promise.allSettled([memorySets.refetch(), activityQuery.refetch(), practiceStatsQuery.refetch(), dueReviews.refetch(), educationAssignmentsQuery.refetch(), classroomInvitations.memberships.refetch(), guardianRequests.guardianLinks.refetch()]);
   };
 
   return (
@@ -94,7 +103,7 @@ export default function HomeScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={memorySets.isRefetching || activityQuery.isFetching} onRefresh={refreshHome} />}
+        refreshControl={<RefreshControl refreshing={memorySets.isRefetching || activityQuery.isFetching || educationAssignmentsQuery.isRefetching} onRefresh={refreshHome} />}
         contentContainerStyle={styles.content}>
         <SectionHeading
           first
@@ -175,6 +184,43 @@ export default function HomeScreen() {
             />
           </>
         ) : null}
+
+        <EducationClassroomInvitations
+          memberships={classroomInvitations.memberships.data ?? []}
+          isLoading={classroomInvitations.memberships.isLoading}
+          isError={classroomInvitations.memberships.isError}
+          acceptingId={classroomInvitations.accept.isPending ? classroomInvitations.accept.variables : undefined}
+          acceptError={classroomInvitations.accept.isError}
+          decliningId={classroomInvitations.decline.isPending ? classroomInvitations.decline.variables : undefined}
+          declineError={classroomInvitations.decline.isError}
+          onAccept={(membershipId) => classroomInvitations.accept.mutate(membershipId)}
+          onDecline={(membershipId) => classroomInvitations.decline.mutate(membershipId)}
+          onRetry={() => { void classroomInvitations.memberships.refetch(); }}
+        />
+        <EducationGuardianRequests
+          links={guardianRequests.guardianLinks.data ?? []}
+          userId={authUser?.id ?? ''}
+          isLoading={guardianRequests.guardianLinks.isLoading}
+          isError={guardianRequests.guardianLinks.isError}
+          confirmingId={guardianRequests.confirm.isPending ? guardianRequests.confirm.variables : undefined}
+          confirmError={guardianRequests.confirm.isError}
+          decliningId={guardianRequests.decline.isPending ? guardianRequests.decline.variables : undefined}
+          declineError={guardianRequests.decline.isError}
+          onConfirm={(linkId) => guardianRequests.confirm.mutate(linkId)}
+          onDecline={(linkId) => guardianRequests.decline.mutate(linkId)}
+          onRetry={() => { void guardianRequests.guardianLinks.refetch(); }}
+        />
+        <EducationAssignmentsList
+          assignments={educationAssignmentsQuery.data ?? []}
+          isLoading={educationAssignmentsQuery.isLoading}
+          isError={educationAssignmentsQuery.isError}
+          onRetry={() => { void educationAssignmentsQuery.refetch(); }}
+          onOpen={(assignment) => router.push({
+            pathname: '/education/assignments',
+            params: { assignmentId: assignment.id },
+          } as Href)}
+        />
+        <EducationFamilyReportsShortcut />
 
         <WeekFootprints activity={practiceStatsQuery.data?.weeklyActivity ?? []} streak={streak} />
 

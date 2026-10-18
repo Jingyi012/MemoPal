@@ -47,6 +47,11 @@ Configure these secrets in both GitHub Environments (`uat` and `prod`):
 - `MEMOPAL_GOOGLE_WEB_CLIENT_ID`
 - Optional: `MEMOPAL_GOOGLE_IOS_CLIENT_ID`, `MEMOPAL_GOOGLE_HOSTED_DOMAIN`
 
+The mobile build workflows set the public Education authoring portal URL per
+environment (`memopal-admin-uat` for preview builds and `memopal-admin` for
+production). Local builds can set `EXPO_PUBLIC_ADMIN_PORTAL_URL` in the local
+`.env`; the Community screen hides the creator entry when it is unset.
+
 Configure required reviewers on the `prod` Environment so a production build
 cannot start without approval. Preview and production workflows use separate
 concurrency groups, preventing duplicate builds of the same type from running

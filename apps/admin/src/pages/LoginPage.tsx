@@ -2,9 +2,9 @@ import "../components/portal.css";
 import { BookOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Flex, Form, Input, Typography } from 'antd';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { adminPaths } from '../navigation/adminPaths';
+import { getPostLoginDestination } from '../auth/postLoginDestination';
 
 type LoginFormValues = {
   email: string;
@@ -14,6 +14,7 @@ type LoginFormValues = {
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [form] = Form.useForm<LoginFormValues>();
 
   const [error, setError] = useState('');
@@ -23,8 +24,9 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(values.email, values.password);
-      navigate(adminPaths.users);
+      const authenticatedUser = await login(values.email, values.password);
+      const state = location.state as { returnTo?: unknown } | null;
+      navigate(getPostLoginDestination(state?.returnTo, authenticatedUser), { replace: true });
     } catch {
       setError('Login failed. Check credentials.');
     } finally {
@@ -40,11 +42,11 @@ export default function LoginPage() {
     >
       <Card className='portal-auth-card'>
         <div className='portal-auth-mark'><BookOutlined /></div>
-        <div className='portal-eyebrow'>MemoPal administration</div>
+        <div className='portal-eyebrow'>MemoPal workspace</div>
         <Typography.Title level={3} style={{ marginBottom: 4 }}>
           Welcome back
         </Typography.Title>
-        <Typography.Text type='secondary'>Sign in to manage your community and learning content.</Typography.Text>
+        <Typography.Text type='secondary'>Sign in to open your learning workspace. Platform administration is available to admin accounts.</Typography.Text>
 
         <Form<LoginFormValues>
           form={form}

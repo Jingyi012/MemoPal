@@ -45,6 +45,12 @@ public sealed class CopyCommunityMemorySetCommandHandler(IAppDbContext db)
 
         var copy = MemorySetAggregate.Create(request.UserId, duplicateRequest);
         copy.CopiedFromMemorySetId = source.Id;
+        var sourceItemByPosition = source.Items.ToDictionary(x => x.Position);
+        foreach (var copiedItem in copy.Items)
+        {
+            var sourceItem = sourceItemByPosition[copiedItem.Position];
+            copiedItem.OriginMemoryItemId = sourceItem.OriginMemoryItemId ?? sourceItem.Id;
+        }
         await db.MemorySets.AddAsync(copy, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 

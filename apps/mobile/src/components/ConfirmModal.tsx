@@ -16,6 +16,7 @@ interface ConfirmModalProps {
   visible: boolean;
   title?: string;
   description?: string;
+  children?: ReactNode;
   subject?: string;
   icon?: ReactNode;
   confirmText?: string;
@@ -32,6 +33,7 @@ export function ConfirmModal({
   visible,
   title = 'Are you sure?',
   description,
+  children,
   subject,
   icon,
   confirmText = 'Confirm',
@@ -70,6 +72,7 @@ export function ConfirmModal({
                 </View>
               ) : null}
               {description ? <Text style={styles.description}>{description}</Text> : null}
+              {children}
 
               {alternativeText && onAlternative ? (
                 <AnimatedPressable

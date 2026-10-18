@@ -89,7 +89,12 @@
         }
       ],
       "expo-secure-store",
-      "expo-audio"
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow MemoPal to record spoken answers for your education assignments."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

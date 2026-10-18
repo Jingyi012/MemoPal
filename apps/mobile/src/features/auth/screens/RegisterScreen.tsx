@@ -16,11 +16,13 @@ import { LoginMethods } from '@/features/auth/types/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { getSafeAuthReturnTo } from '@/features/auth/utils/safeAuthReturnTo';
+import { getSafeReferralCode } from '@/features/auth/utils/safeReferralCode';
 
 const DEFAULT_LOGIN_METHODS: LoginMethods = {
   emailPassword: true,
@@ -30,14 +32,22 @@ const DEFAULT_LOGIN_METHODS: LoginMethods = {
 
 export default function Register() {
   const router = useRouter();
+  const { returnTo: returnToParam, referralCode: referralCodeParam } = useLocalSearchParams<{ returnTo?: string | string[]; referralCode?: string | string[] }>();
+  const returnTo = getSafeAuthReturnTo(Array.isArray(returnToParam) ? returnToParam[0] : returnToParam);
+  const linkedReferralCode = getSafeReferralCode(Array.isArray(referralCodeParam) ? referralCodeParam[0] : referralCodeParam);
+  const continueAfterRegistration = () => router.replace((returnTo ?? '/') as Href);
   const { t } = useTranslation('auth');
   const { register, loginWithGoogle, loginWithFacebook } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [referralCode, setReferralCode] = useState('');
+  const [referralCode, setReferralCode] = useState(linkedReferralCode);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginMethods, setLoginMethods] = useState<LoginMethods>(DEFAULT_LOGIN_METHODS);
+
+  useEffect(() => {
+    if (linkedReferralCode) setReferralCode(current => current || linkedReferralCode);
+  }, [linkedReferralCode]);
 
   useEffect(() => {
     let isMounted = true;
@@ -102,7 +112,7 @@ export default function Register() {
         }
       }
 
-      router.replace('/');
+      continueAfterRegistration();
     } catch (error: any) {
       Toast.show({
         type: 'error',
@@ -204,7 +214,7 @@ export default function Register() {
                 setIsSubmitting(true);
                 const idToken = await getGoogleIdToken();
                 await loginWithGoogle(idToken);
-                router.replace('/');
+                continueAfterRegistration();
               } catch (error: any) {
                 Toast.show({
                   type: 'error',
@@ -242,7 +252,7 @@ export default function Register() {
                 setIsSubmitting(true);
                 const token = await getFacebookAccessToken();
                 await loginWithFacebook(token);
-                router.replace('/');
+                continueAfterRegistration();
               } catch (error: any) {
                 Toast.show({
                   type: 'error',
@@ -260,7 +270,7 @@ export default function Register() {
           </AnimatedPressable>
         )}
 
-        <AnimatedPressable onPress={() => router.replace('/login')} className="min-h-11 items-center justify-center">
+        <AnimatedPressable onPress={() => router.replace({ pathname: '/login', params: returnTo ? { returnTo } : {} })} className="min-h-11 items-center justify-center">
           <Text className="text-primary-active">{t('hasAccount')}</Text>
         </AnimatedPressable>
     </AuthLayout>

@@ -27,6 +27,12 @@ public sealed class GetCommunityMemorySetQueryHandler(IAppDbContext db)
             ?? throw new NotFoundAppException("Public memory set not found.");
         var copyCount = await db.MemorySets.CountAsync(x =>
             x.CopiedFromMemorySetId == memorySet.Id && !x.IsDeleted, cancellationToken);
+        var helpfulCount = await db.CommunityMemorySetReactions.CountAsync(x =>
+            x.MemorySetId == memorySet.Id && !x.IsDeleted, cancellationToken);
+        var isHelpful = await db.CommunityMemorySetReactions.AnyAsync(x =>
+            x.MemorySetId == memorySet.Id && x.UserId == request.UserId && !x.IsDeleted, cancellationToken);
+        var isBookmarked = await db.CommunityMemorySetBookmarks.AnyAsync(x =>
+            x.MemorySetId == memorySet.Id && x.UserId == request.UserId && !x.IsDeleted, cancellationToken);
         var existingCopyId = await db.MemorySets.AsNoTracking()
             .Where(x => x.UserId == request.UserId && x.CopiedFromMemorySetId == memorySet.Id && !x.IsDeleted)
             .Select(x => x.Id)
@@ -38,6 +44,6 @@ public sealed class GetCommunityMemorySetQueryHandler(IAppDbContext db)
             : null;
 
         return ApiResponse<CommunityMemorySetDetailDto>.Ok(
-            CommunityMemorySetMapper.ToDetail(memorySet, author, copyCount, existingCopyId, coverImageUrl));
+            CommunityMemorySetMapper.ToDetail(memorySet, author, copyCount, helpfulCount, isHelpful, isBookmarked, existingCopyId, coverImageUrl));
     }
 }

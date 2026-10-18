@@ -25,6 +25,7 @@ export const communityMemorySetApi = {
         techniqueKey: filters.techniqueKey,
         goalType: filters.goalType,
         sort: filters.sort,
+        bookmarkedOnly: filters.bookmarkedOnly || undefined,
       },
     });
     const data = unwrap(response.data, 'Could not load community memories.');
@@ -48,6 +49,20 @@ export const communityMemorySetApi = {
       `/v1/community/memory-sets/${encodeURIComponent(memorySetId)}/copy`,
     );
     return unwrap(response.data, 'Could not copy this community memory.');
+  },
+
+  async setHelpful(memorySetId: string, isHelpful: boolean): Promise<{ memorySetId: string; isHelpful: boolean; helpfulCount: number }> {
+    const response = await api.put<GeneralResponse<{ memorySetId: string; isHelpful: boolean; helpfulCount: number }>>(
+      `/v1/community/memory-sets/${encodeURIComponent(memorySetId)}/reaction`, { isHelpful },
+    );
+    return unwrap(response.data, 'Could not update this reaction.');
+  },
+
+  async setBookmarked(memorySetId: string, isBookmarked: boolean): Promise<{ memorySetId: string; isBookmarked: boolean }> {
+    const response = await api.put<GeneralResponse<{ memorySetId: string; isBookmarked: boolean }>>(
+      `/v1/community/memory-sets/${encodeURIComponent(memorySetId)}/bookmark`, { isBookmarked },
+    );
+    return unwrap(response.data, 'Could not update this bookmark.');
   },
 
   async report(memorySetId: string, reason: string, details?: string): Promise<void> {

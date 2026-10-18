@@ -6,4 +6,5 @@ public sealed class FileStorageOptions
 
     public string RootPath { get; set; } = "storage";
     public string PublicBasePath { get; set; } = "/files";
+    public string PrivateRootPath { get; set; } = "App_Data/private-uploads";
 }

@@ -2,11 +2,13 @@
 
 MemoPal keeps uploaded media on the filesystem and stores the media metadata
 and relative path in PostgreSQL. The deployment compose file uses host-folder
-bind mounts so database data and uploads survive container replacement.
+bind mounts so database data, public uploads, and private education attachments
+survive container replacement. Private attachments are stored outside the API's
+static-file root and must not be exposed by a CDN or web-server alias.
 
 ## Persistent folders
 
-Copy `.env.example` to `.env` on the server and set the two absolute host
+Copy `.env.example` to `.env` on the server and set the three absolute host
 paths for that environment:
 
 ```text
@@ -17,10 +19,14 @@ container: /var/lib/postgresql/data
 MEMOPAL_UPLOADS_PATH=/srv/memopal/uploads
 host:      /srv/memopal/uploads
 container: /data/uploads
+
+MEMOPAL_PRIVATE_UPLOADS_PATH=/srv/memopal/private-uploads
+host:      /srv/memopal/private-uploads
+container: /data/private-uploads
 ```
 
-The Docker service account must be able to read and write both folders. Back
-up the PostgreSQL folder and the uploads folder together. Changing either path
+The Docker service account must be able to read and write all three folders.
+Back up the PostgreSQL folder and both upload folders together. Changing a path
 does not migrate existing data; copy the existing folder (or use `pg_dump` and
 `pg_restore` for PostgreSQL) before switching paths.
 

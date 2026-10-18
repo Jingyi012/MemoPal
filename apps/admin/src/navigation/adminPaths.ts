@@ -2,11 +2,18 @@ export const adminPaths = {
   root: '/admin',
   login: '/login',
   forbidden: '/forbidden',
+  education: '/education',
+  educationFamilyAssignments: '/education/family-practice',
+  educationClassroom: (classroomId: string) => `/education/classrooms/${classroomId}`,
+  educationCourses: '/education/courses',
+  educationCourse: (courseId: string) => `/education/courses/${courseId}`,
+  educationAssessment: (assessmentId: string) => `/education/assessments/${assessmentId}`,
 
   dashboard: '/admin/dashboard',
 
   users: '/admin/users',
   communityMemorySets: '/admin/community-memory-sets',
+  educationCourseReports: '/admin/education/course-reports',
   contentRoot: '/admin/content',
   memoryCollections: '/admin/content/memory-collections',
   memoryCollectionLessons: (collectionId: string) => `/admin/content/memory-collections/${collectionId}/lessons`,
@@ -22,6 +29,7 @@ export const adminPaths = {
   configMilestones: '/admin/configs/milestones',
   configAvatars: '/admin/configs/avatars',
   configAppearance: '/admin/configs/appearance',
+  configLeaderboards: '/admin/configs/leaderboards',
 
   referralsRoot: '/admin/referrals',
   referralConfig: '/admin/referrals/config',

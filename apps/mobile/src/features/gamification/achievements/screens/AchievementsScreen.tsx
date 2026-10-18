@@ -8,7 +8,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { LevelProgressHeader } from '@/features/gamification/achievements/components/LevelProgressHeader';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { useMilestones } from '@/features/gamification/shared/hooks/useMilestones';
-import { WeekFootprintCard } from '@/features/gamification/shared';
+import { ProgressShareCardButton, WeekFootprintCard } from '@/features/gamification/shared';
 import type { Milestone } from '@/features/gamification/shared/types/milestone';
 import { getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
@@ -21,7 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
 
 type MilestoneProgress = Milestone & {
@@ -138,6 +138,8 @@ export default function AchievementsScreen() {
   const palaceUnlocked =
     palaceScenes.data?.filter((scene) => !scene.isPremium || Boolean(user?.isPremium)).length ?? 0;
   const weeklyActivity = practiceStats?.weeklyActivity ?? [];
+  const weeklyActiveDays = weeklyActivity.filter(day => day.sessions > 0).length;
+  const weeklySessions = weeklyActivity.reduce((total, day) => total + day.sessions, 0);
   const selectedActivity =
     weeklyActivity.find((day) => day.date === selectedActivityDate) ??
     [...weeklyActivity].reverse().find((day) => day.sessions > 0);
@@ -215,6 +217,25 @@ export default function AchievementsScreen() {
           footerText={weekFooterText}
           selectedDate={selectedActivityDate ?? selectedActivity?.date}
           onSelectDate={setSelectedActivityDate}
+        />
+        <ProgressShareCardButton
+          streak={Math.max(0, user?.stats?.currentStreak ?? 0)}
+          activeDays={weeklyActiveDays}
+          weeklySessions={weeklySessions}
+          copy={{
+            button: t('shareProgressButton'),
+            brand: t('shareProgressBrand'),
+            close: t('shareProgressClose'),
+            previewTitle: t('shareProgressPreviewTitle'),
+            cardTitle: t('shareProgressCardTitle'),
+            streak: t('shareProgressStreak'),
+            activeDays: t('shareProgressActiveDays'),
+            sessions: t('shareProgressSessions'),
+            privacyNote: t('shareProgressPrivacyNote'),
+            shareImage: Platform.OS === 'web' ? t('shareProgressTextAction') : t('shareProgressImageAction'),
+            shareText: t('shareProgressTextFallback'),
+            shareError: t('shareProgressError'),
+          }}
         />
 
         <View style={styles.learningOverview}>

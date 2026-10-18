@@ -11,6 +11,8 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<AiCreditGrant> AiCreditGrants => Set<AiCreditGrant>();
     public DbSet<AiGeneration> AiGenerations => Set<AiGeneration>();
     public DbSet<AiCreditEntry> AiCreditEntries => Set<AiCreditEntry>();
+    public DbSet<LeaderboardSeason> LeaderboardSeasons => Set<LeaderboardSeason>();
+    public DbSet<LeaderboardSeasonParticipant> LeaderboardSeasonParticipants => Set<LeaderboardSeasonParticipant>();
     private readonly ICurrentUserAccessor? _currentUserAccessor;
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUserAccessor? currentUserAccessor = null)
@@ -52,6 +54,8 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<MemoryFolder> MemoryFolders => Set<MemoryFolder>();
     public DbSet<PredefinedMemoryCollection> PredefinedMemoryCollections => Set<PredefinedMemoryCollection>();
     public DbSet<MemorySetReport> MemorySetReports => Set<MemorySetReport>();
+    public DbSet<CommunityMemorySetReaction> CommunityMemorySetReactions => Set<CommunityMemorySetReaction>();
+    public DbSet<CommunityMemorySetBookmark> CommunityMemorySetBookmarks => Set<CommunityMemorySetBookmark>();
     public DbSet<MemoryItem> MemoryItems => Set<MemoryItem>();
     public DbSet<TechniquePlan> TechniquePlans => Set<TechniquePlan>();
     public DbSet<PegBinding> PegBindings => Set<PegBinding>();
@@ -64,9 +68,139 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<PredefinedMemoryLesson> PredefinedMemoryLessons => Set<PredefinedMemoryLesson>();
     public DbSet<PredefinedMemoryLessonItem> PredefinedMemoryLessonItems => Set<PredefinedMemoryLessonItem>();
     public DbSet<PredefinedMemoryLessonCategory> PredefinedMemoryLessonCategories => Set<PredefinedMemoryLessonCategory>();
+    public DbSet<EducationClassroom> EducationClassrooms => Set<EducationClassroom>();
+    public DbSet<EducationMembership> EducationMemberships => Set<EducationMembership>();
+    public DbSet<EducationGuardianLink> EducationGuardianLinks => Set<EducationGuardianLink>();
+    public DbSet<EducationCourse> EducationCourses => Set<EducationCourse>();
+    public DbSet<EducationObjective> EducationObjectives => Set<EducationObjective>();
+    public DbSet<EducationAssessment> EducationAssessments => Set<EducationAssessment>();
+    public DbSet<EducationQuestion> EducationQuestions => Set<EducationQuestion>();
+    public DbSet<EducationAssignment> EducationAssignments => Set<EducationAssignment>();
+    public DbSet<EducationAssignmentRecipient> EducationAssignmentRecipients => Set<EducationAssignmentRecipient>();
+    public DbSet<EducationAssignmentLeaderboardEntry> EducationAssignmentLeaderboardEntries => Set<EducationAssignmentLeaderboardEntry>();
+    public DbSet<EducationAssessmentAttempt> EducationAssessmentAttempts => Set<EducationAssessmentAttempt>();
+    public DbSet<EducationAssessmentResponse> EducationAssessmentResponses => Set<EducationAssessmentResponse>();
+    public DbSet<EducationAssessmentAttachment> EducationAssessmentAttachments => Set<EducationAssessmentAttachment>();
+    public DbSet<EducationGradeRevision> EducationGradeRevisions => Set<EducationGradeRevision>();
+    public DbSet<EducationPublicPracticeProgress> EducationPublicPracticeProgress => Set<EducationPublicPracticeProgress>();
+    public DbSet<EducationSavedCourse> EducationSavedCourses => Set<EducationSavedCourse>();
+    public DbSet<EducationCourseReport> EducationCourseReports => Set<EducationCourseReport>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var educationAuthoring = new EducationAuthoringConfiguration();
+        modelBuilder.ApplyConfiguration<EducationCourse>(educationAuthoring);
+        modelBuilder.ApplyConfiguration<EducationObjective>(educationAuthoring);
+        modelBuilder.ApplyConfiguration<EducationAssessment>(educationAuthoring);
+        modelBuilder.ApplyConfiguration<EducationQuestion>(educationAuthoring);
+        var educationAssignments = new EducationAssignmentConfiguration();
+        modelBuilder.ApplyConfiguration<EducationAssignment>(educationAssignments);
+        modelBuilder.ApplyConfiguration<EducationAssignmentRecipient>(educationAssignments);
+        modelBuilder.Entity<EducationAssignmentLeaderboardEntry>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.AssignmentId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.StudentUserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.Alias).HasMaxLength(32).IsRequired();
+            b.Property(x => x.Score).HasPrecision(12, 2);
+            b.Property(x => x.MaxScore).HasPrecision(12, 2);
+            b.HasIndex(x => new { x.AssignmentId, x.ResultsPublishedAt, x.StudentUserId }).IsUnique();
+            b.HasIndex(x => new { x.AssignmentId, x.ResultsPublishedAt, x.Rank });
+            b.HasOne<EducationAssignment>().WithMany().HasForeignKey(x => x.AssignmentId).OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.StudentUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+        var educationAttempts = new EducationAttemptConfiguration();
+        modelBuilder.ApplyConfiguration<EducationAssessmentAttempt>(educationAttempts);
+        modelBuilder.ApplyConfiguration<EducationAssessmentResponse>(educationAttempts);
+        modelBuilder.Entity<EducationPublicPracticeProgress>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.CourseId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.AssessmentId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.QuestionId).HasMaxLength(64).IsRequired();
+            b.HasIndex(x => new { x.UserId, x.QuestionId }).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.UserId, x.LastAnsweredAtUtc });
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<EducationSavedCourse>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.CourseId).HasMaxLength(64).IsRequired();
+            b.HasIndex(x => new { x.UserId, x.CourseId }).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.UserId, x.CreatedAt });
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<EducationCourseReport>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.CourseId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.Reason).HasMaxLength(32).IsRequired();
+            b.Property(x => x.Details).HasMaxLength(500);
+            b.Property(x => x.Status).HasMaxLength(16).HasDefaultValue(EducationCourseReportStatuses.Pending).IsRequired();
+            b.Property(x => x.ResolutionNote).HasMaxLength(500);
+            b.HasIndex(x => new { x.UserId, x.CourseId }).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.CourseId, x.Status, x.CreatedAt });
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<EducationCourse>().WithMany().HasForeignKey(x => x.CourseId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.ResolvedByUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<EducationAssessmentAttachment>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.AttemptId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.QuestionId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.UploadedByUserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.StorageKey).HasMaxLength(64).IsRequired();
+            b.Property(x => x.ContentType).HasMaxLength(64).IsRequired();
+            b.HasIndex(x => new { x.AttemptId, x.QuestionId }).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => x.StorageKey).IsUnique();
+            b.HasOne<EducationAssessmentAttempt>().WithMany().HasForeignKey(x => x.AttemptId).OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<EducationQuestion>().WithMany().HasForeignKey(x => x.QuestionId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UploadedByUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<EducationGradeRevision>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.AttemptId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.CorrectedByUserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.PreviousScore).HasPrecision(12, 2);
+            b.Property(x => x.NewScore).HasPrecision(12, 2);
+            b.Property(x => x.MaxScore).HasPrecision(12, 2);
+            b.Property(x => x.Reason).HasMaxLength(1000).IsRequired();
+            b.HasIndex(x => new { x.AttemptId, x.CreatedAt });
+            b.HasOne<EducationAssessmentAttempt>().WithMany().HasForeignKey(x => x.AttemptId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.CorrectedByUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<EducationClassroom>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.OwnerUserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.Name).HasMaxLength(120).IsRequired();
+            b.HasIndex(x => new { x.OwnerUserId, x.IsDeleted });
+        });
+        modelBuilder.Entity<EducationMembership>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.ClassroomId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.UserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.Role).HasMaxLength(16).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(16).IsRequired();
+            b.HasIndex(x => new { x.ClassroomId, x.UserId }).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.UserId, x.Status, x.ExpiresAt });
+        });
+        modelBuilder.Entity<EducationGuardianLink>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.GuardianUserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.StudentUserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(16).IsRequired();
+            b.Property(x => x.AdminVerifiedBy).HasMaxLength(64);
+            b.HasIndex(x => new { x.GuardianUserId, x.StudentUserId }).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.StudentUserId, x.Status });
+        });
         modelBuilder.Entity<PredefinedMemoryCollection>(b =>
         {
             b.HasKey(x => x.Id);
@@ -87,6 +221,28 @@ public class AppDbContext : DbContext, IAppDbContext
         modelBuilder.ApplyConfiguration(new AiCreditGrantConfiguration());
         modelBuilder.ApplyConfiguration(new AiGenerationConfiguration());
         modelBuilder.ApplyConfiguration(new AiCreditEntryConfiguration());
+        modelBuilder.Entity<LeaderboardSeason>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.LeaderboardId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.ConfigJson).HasColumnType("text").IsRequired();
+            b.Property(x => x.Status).HasMaxLength(24).IsRequired();
+            b.HasIndex(x => new { x.LeaderboardId, x.WeekStartsAtUtc }).IsUnique();
+            b.ToTable(t => t.HasCheckConstraint("CK_LeaderboardSeason_Week", "\"WeekEndsAtUtc\" > \"WeekStartsAtUtc\""));
+        });
+        modelBuilder.Entity<LeaderboardSeasonParticipant>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.SeasonId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.UserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.RewardStatus).HasMaxLength(32).IsRequired();
+            b.Property(x => x.RewardFailureCode).HasMaxLength(64);
+            b.HasIndex(x => new { x.SeasonId, x.UserId }).IsUnique();
+            b.HasIndex(x => new { x.UserId, x.RewardStatus });
+            b.HasOne<LeaderboardSeason>().WithMany().HasForeignKey(x => x.SeasonId).OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+            b.ToTable(t => t.HasCheckConstraint("CK_LeaderboardSeasonParticipant_Amounts", "\"FinalScore\" >= 0 AND \"ActiveDays\" >= 0 AND \"RewardCredits\" >= 0 AND \"RewardAttempts\" >= 0"));
+        });
         modelBuilder.Entity<User>(b =>
         {
             b.HasKey(x => x.Id);
@@ -100,6 +256,8 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.SelectedAvatarDecorationId).HasMaxLength(64);
             b.Property(x => x.SelectedAvatarOutfitId).HasMaxLength(64);
             b.Property(x => x.Role).HasMaxLength(32).HasDefaultValue(UserRoles.User);
+            b.Property(x => x.CommunityLeaderboardOptIn).HasDefaultValue(false);
+            b.Property(x => x.CommunityLeaderboardOptIn).HasDefaultValue(false);
             b.Property(x => x.ReferredByUserId).HasMaxLength(64);
             b.Property(x => x.OnboardingStatus).HasMaxLength(32).HasDefaultValue(OnboardingStatuses.NotStarted);
             b.Property(x => x.OnboardingStep).HasMaxLength(32).HasDefaultValue(OnboardingSteps.ChooseCategory);
@@ -325,6 +483,7 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.Status).HasMaxLength(32);
             b.Property(x => x.Visibility).HasMaxLength(32);
             b.Property(x => x.CommunityStatus).HasMaxLength(32).HasDefaultValue(MemorySetCommunityStatuses.Visible);
+            b.HasIndex(x => new { x.FeaturedAt, x.PublishedAt });
             b.Property(x => x.SharesPrivateAssets).HasDefaultValue(false);
             b.Property(x => x.HiddenReason).HasMaxLength(500);
             b.Property(x => x.CopiedFromMemorySetId).HasMaxLength(64);
@@ -360,6 +519,14 @@ public class AppDbContext : DbContext, IAppDbContext
                 .WithOne(x => x.MemorySet)
                 .HasForeignKey(x => x.MemorySetId)
                 .OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.HelpfulReactions)
+                .WithOne(x => x.MemorySet)
+                .HasForeignKey(x => x.MemorySetId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.CommunityBookmarks)
+                .WithOne(x => x.MemorySet)
+                .HasForeignKey(x => x.MemorySetId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<MemorySetReport>(b =>
@@ -379,6 +546,36 @@ public class AppDbContext : DbContext, IAppDbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<CommunityMemorySetReaction>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.MemorySetId).HasMaxLength(64);
+            b.HasIndex(x => new { x.UserId, x.MemorySetId })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.MemorySetId, x.IsDeleted });
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CommunityMemorySetBookmark>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).HasMaxLength(64);
+            b.Property(x => x.MemorySetId).HasMaxLength(64);
+            b.HasIndex(x => new { x.UserId, x.MemorySetId })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = FALSE");
+            b.HasIndex(x => new { x.MemorySetId, x.IsDeleted });
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<MemoryItem>(b =>
         {
             b.HasKey(x => x.Id);
@@ -387,6 +584,8 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.Hint).HasMaxLength(1000);
             b.Property(x => x.PronunciationAudioUrl).HasMaxLength(2048);
             b.Property(x => x.NormalizedAnswer).HasMaxLength(500);
+            b.Property(x => x.OriginMemoryItemId).HasMaxLength(64);
+            b.HasIndex(x => x.OriginMemoryItemId);
             b.HasIndex(x => new { x.MemorySetId, x.Position })
                 .IsUnique()
                 .HasFilter("\"IsDeleted\" = FALSE");
@@ -433,6 +632,7 @@ public class AppDbContext : DbContext, IAppDbContext
         modelBuilder.Entity<PracticeResponse>(b =>
         {
             b.HasKey(x => x.Id);
+            b.Property(x => x.WasDueAtSubmission).HasDefaultValue(false);
             b.HasIndex(x => new { x.PracticeAttemptId, x.MemoryItemId }).IsUnique();
             b.HasOne(x => x.MemoryItem)
                 .WithMany()

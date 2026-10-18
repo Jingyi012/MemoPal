@@ -42,6 +42,7 @@ export const ArrowLeftRight = createIcon('swap-horizontal');
 export const ArrowRight = createIcon('arrow-forward');
 export const BookOpen = createIcon('book');
 export const BookOpenCheck = createIcon('book');
+export const Bookmark = createIcon('bookmark');
 export const Bell = createIcon('notifications');
 export const Building2 = createIcon('business');
 export const CalendarClock = createIcon('calendar');

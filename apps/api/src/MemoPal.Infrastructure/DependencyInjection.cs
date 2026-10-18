@@ -22,7 +22,7 @@ public static class DependencyInjection
         {
             if (useInMemoryDatabase)
             {
-                options.UseInMemoryDatabase("MemoPalDb");
+                options.UseInMemoryDatabase(configuration["Database:InMemoryName"] ?? "MemoPalDb");
             }
             else
             {
@@ -53,6 +53,7 @@ public static class DependencyInjection
             client.MaxResponseContentBufferSize = 10_000_000;
         }).RemoveAllLoggers();
         services.AddHostedService<AiImageWorker>();
+        services.AddHostedService<LeaderboardRewardWorker>();
 
         var jwtOptions = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
         var socialAuthOptions = configuration.GetSection(SocialAuthOptions.SectionName).Get<SocialAuthOptions>() ?? new SocialAuthOptions();
@@ -65,6 +66,8 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        services.AddSingleton<IPrivateAttachmentStorage, LocalPrivateAttachmentStorage>();
+        services.AddHostedService<EducationAttachmentOrphanCleanupWorker>();
 
         services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
         services.AddHttpClient<IFacebookTokenValidator, FacebookTokenValidator>();

@@ -13,6 +13,7 @@ public sealed class MemorySet : UserOwnedEntity
     public string Visibility { get; set; } = MemorySetVisibilities.Private;
     public string CommunityStatus { get; set; } = MemorySetCommunityStatuses.Visible;
     public DateTime? PublishedAt { get; set; }
+    public DateTime? FeaturedAt { get; set; }
     public DateTime? HiddenAt { get; set; }
     public string? HiddenReason { get; set; }
     public bool SharesPrivateAssets { get; set; }
@@ -25,6 +26,8 @@ public sealed class MemorySet : UserOwnedEntity
     public MemorySet? CopiedFromMemorySet { get; set; }
     public ICollection<MemorySet> Copies { get; set; } = new List<MemorySet>();
     public ICollection<MemorySetReport> Reports { get; set; } = new List<MemorySetReport>();
+    public ICollection<CommunityMemorySetReaction> HelpfulReactions { get; set; } = new List<CommunityMemorySetReaction>();
+    public ICollection<CommunityMemorySetBookmark> CommunityBookmarks { get; set; } = new List<CommunityMemorySetBookmark>();
     public MemoryFolder? MemoryFolder { get; set; }
 }
 

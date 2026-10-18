@@ -43,6 +43,8 @@ public sealed class UpdateMemorySetVisibilityCommandHandler(IAppDbContext db)
         if (memorySet.Visibility != request.Visibility)
         {
             memorySet.Visibility = request.Visibility;
+            if (request.Visibility != MemorySetVisibilities.Public)
+                memorySet.FeaturedAt = null;
             memorySet.SharesPrivateAssets = request.Visibility == MemorySetVisibilities.Public && sharesPrivateAssets;
             if (request.Visibility == MemorySetVisibilities.Public)
                 memorySet.PublishedAt ??= DateTime.UtcNow;

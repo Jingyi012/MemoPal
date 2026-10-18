@@ -22,6 +22,7 @@ export interface CommunityMemorySetView {
   visibility: string;
   communityStatus: CommunityMemorySetStatus;
   publishedAt: string | null;
+  featuredAt: string | null;
   hiddenAt: string | null;
   hiddenReason: string | null;
   author: CommunityMemorySetAuthorDto;

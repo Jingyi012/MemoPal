@@ -9,6 +9,8 @@ public interface IAppDbContext
     DbSet<AiCreditGrant> AiCreditGrants { get; }
     DbSet<AiGeneration> AiGenerations { get; }
     DbSet<AiCreditEntry> AiCreditEntries { get; }
+    DbSet<LeaderboardSeason> LeaderboardSeasons { get; }
+    DbSet<LeaderboardSeasonParticipant> LeaderboardSeasonParticipants { get; }
     DbSet<User> Users { get; }
     DbSet<CompanionBond> CompanionBonds { get; }
     DbSet<CompanionMemory> CompanionMemories { get; }
@@ -35,6 +37,8 @@ public interface IAppDbContext
     DbSet<MemoryFolder> MemoryFolders { get; }
     DbSet<PredefinedMemoryCollection> PredefinedMemoryCollections { get; }
     DbSet<MemorySetReport> MemorySetReports { get; }
+    DbSet<CommunityMemorySetReaction> CommunityMemorySetReactions { get; }
+    DbSet<CommunityMemorySetBookmark> CommunityMemorySetBookmarks { get; }
     DbSet<MemoryItem> MemoryItems { get; }
     DbSet<TechniquePlan> TechniquePlans { get; }
     DbSet<PegBinding> PegBindings { get; }
@@ -47,6 +51,23 @@ public interface IAppDbContext
     DbSet<PredefinedMemoryLesson> PredefinedMemoryLessons { get; }
     DbSet<PredefinedMemoryLessonItem> PredefinedMemoryLessonItems { get; }
     DbSet<PredefinedMemoryLessonCategory> PredefinedMemoryLessonCategories { get; }
+    DbSet<EducationClassroom> EducationClassrooms { get; }
+    DbSet<EducationMembership> EducationMemberships { get; }
+    DbSet<EducationGuardianLink> EducationGuardianLinks { get; }
+    DbSet<EducationCourse> EducationCourses { get; }
+    DbSet<EducationObjective> EducationObjectives { get; }
+    DbSet<EducationAssessment> EducationAssessments { get; }
+    DbSet<EducationQuestion> EducationQuestions { get; }
+    DbSet<EducationAssignment> EducationAssignments { get; }
+    DbSet<EducationAssignmentRecipient> EducationAssignmentRecipients { get; }
+    DbSet<EducationAssignmentLeaderboardEntry> EducationAssignmentLeaderboardEntries { get; }
+    DbSet<EducationAssessmentAttempt> EducationAssessmentAttempts { get; }
+    DbSet<EducationAssessmentResponse> EducationAssessmentResponses { get; }
+    DbSet<EducationAssessmentAttachment> EducationAssessmentAttachments { get; }
+    DbSet<EducationGradeRevision> EducationGradeRevisions { get; }
+    DbSet<EducationPublicPracticeProgress> EducationPublicPracticeProgress { get; }
+    DbSet<EducationSavedCourse> EducationSavedCourses { get; }
+    DbSet<EducationCourseReport> EducationCourseReports { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

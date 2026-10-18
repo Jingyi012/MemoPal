@@ -11,6 +11,8 @@ public sealed class MemoryItem : AuditableBaseEntity
     public string? Hint { get; set; }
     public string? PronunciationAudioUrl { get; set; }
     public string? NormalizedAnswer { get; set; }
+    /// <summary>Canonical source item identity for copies; null means this item is an original.</summary>
+    public string? OriginMemoryItemId { get; set; }
 
     public MemorySet? MemorySet { get; set; }
 }

@@ -36,7 +36,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: theme.violetDeep,
         tabBarInactiveTintColor: theme.inkSoft,
         headerShown: false,
-        tabBarLabelStyle: { fontFamily: typography.bodyExtraBold, fontSize: 11 },
+        tabBarLabelStyle: { fontFamily: typography.bodyExtraBold, fontSize: 10 },
         tabBarItemStyle: { paddingTop: 6, paddingBottom: 3 },
         tabBarButton: HapticTab,
         tabBarStyle: {
@@ -66,6 +66,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="community"
+        options={{
+          title: t('community'),
+          tabBarIcon: ({ focused }) => <TabIcon icon="globe" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="library"
         options={{
           title: t('library'),
@@ -82,8 +89,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: t('profile'),
-          tabBarIcon: ({ focused }) => <SpotlightTarget id="profile" onActivate={() => router.navigate('/(tabs)/profile')}><TabIcon icon="person" focused={focused} /></SpotlightTarget>,
+          title: t('me'),
+          tabBarIcon: ({ focused }) => <TabIcon icon="person" focused={focused} />,
         }}
       />
     </Tabs>

@@ -17,6 +17,10 @@ export type CommunityMemorySetSummary = {
   author: CommunityMemorySetOwner;
   publishedAt: string;
   copyCount: number;
+  helpfulCount: number;
+  isHelpful: boolean;
+  isBookmarked: boolean;
+  featuredAt?: string | null;
   existingCopyId?: string | null;
   coverImageUrl?: string | null;
 };
@@ -43,13 +47,14 @@ export type CommunityTechniquePlan = {
   palaceBindings: { memoryItemId: string; locusId: string; associationText: string }[];
 };
 
-export type CommunityMemorySetSort = 'newest' | 'popular';
+export type CommunityMemorySetSort = 'newest' | 'popular' | 'featured';
 
 export type CommunityMemorySetFilters = {
   search?: string;
   techniqueKey?: MemoryTechniqueKey;
   goalType?: MemoryGoalType;
   sort?: CommunityMemorySetSort;
+  bookmarkedOnly?: boolean;
 };
 
 export type CommunityMemorySetPage = {

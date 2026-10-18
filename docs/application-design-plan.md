@@ -34,6 +34,10 @@ The recommended decisions are:
 6. **Remove the mobile SQLite replica and sync engine.** Screens call the backend through typed API functions and TanStack Query owns server-state caching. SecureStore owns tokens; a small key-value store may hold preferences, drafts, and active-session recovery only. There is no local entity graph, mutation outbox, conflict resolver, or background synchronization loop.
 7. **Treat the redesign as the new product baseline.** No production user-data compatibility contract is assumed. Remove superseded features instead of maintaining dual reads, and generate deployment databases from the fresh redesign migration.
 
+### Future education expansion
+
+The [family, classroom, and assessment plan](education-assessment-plan.md) describes the education module and remaining roadmap. Its current implementation includes family/classroom assignments, objective and manual grading, privacy-scoped guardian/teacher reports, mastery evidence, and assignment-specific classroom rankings; remaining verification and delivery gaps are tracked in the [education implementation status](education-implementation-status.md). Keep personal recall records separate from server-graded assessment attempts; family and classroom memberships authorize access to a student's reports. Community participation points must not substitute for exam grades or evidence of learning-objective mastery.
+
 ### Product terminology
 
 Use **memory** for the reusable content a person creates: a named list of
@@ -96,16 +100,19 @@ The UI should be child-friendly without looking like a preschool app. Adults sho
 
 ## 4. Information architecture
 
-Use four bottom tabs and place Profile/Settings behind the avatar in the top bar:
+Use five bottom tabs, with Community as a first-class destination. The mobile navigation now exposes Today, Practice, Community, Library, and Progress; Profile remains a full destination opened from the avatar on Today. Validate profile discoverability on small screens. See [the community and leaderboard plan](community-leaderboard-plan.md) for staged delivery and scoring rules.
 
 | Destination | Purpose | Primary content |
 |---|---|---|
 | **Today** | Resume and review | Due reviews, continue card, daily goal, recent result |
 | **Practice** | Create and start | New memory set, quick templates, technique shortcuts |
-| **Library** | Find saved content | My sets, Palace templates, peg anchors, optional Discover |
+| **Community** | Discover and participate | Public memory sets, weekly leaderboard, friends, challenges |
+| **Library** | Find saved content | My sets, folders, Palace templates, peg anchors |
 | **Progress** | Understand improvement | Strength, accuracy trend, streak, milestones |
 
-This removes the current overlap between Home and Practice. Community belongs under Library → Discover and should be feature-flagged and age-aware, rather than occupying a primary tab for every user.
+Profile remains a full destination accessed through the avatar: account, companion, preferences, privacy, and subscriptions.
+
+This removes the current overlap between Home and Practice. Community is feature-flagged and age-aware, but it has its own primary destination because discovery, social comparison, and friend challenges are recurring user tasks rather than library management tasks.
 
 ### Primary creation and learning flow
 

@@ -31,11 +31,11 @@ export default function AiCreditsScreen() {
     setHistoryHasMore(history.data.length === 50);
   }, [history.data, skip]);
   const refresh = () => { setSkip(0); setHistoryEntries([]); setHistoryHasMore(false); void balance.refetch(); void generations.refetch(); void history.refetch(); };
-  const labels: Record<string, string> = zh ? { grant: '发放', reserve: '预留', release: '释放预留', charge: '实际扣费', expire: '到期' } : { grant: 'Granted', reserve: 'Reserved', release: 'Hold released', charge: 'Charged', expire: 'Expired' };
+  const labels: Record<string, string> = zh ? { grant: '发放', 'leaderboard-reward': '排行榜奖励', reserve: '预留', release: '释放预留', charge: '实际扣费', expire: '到期' } : { grant: 'Granted', 'leaderboard-reward': 'Leaderboard reward', reserve: 'Reserved', release: 'Hold released', charge: 'Charged', expire: 'Expired' };
   const states: Record<string, string> = zh ? { reserved: '排队中', processing: '生成中', completed: '已完成', failed: '失败 · 未扣费' } : { reserved: 'Queued', processing: 'Generating', completed: 'Completed', failed: 'Failed · no charge' };
   const visibleGenerations = generations.data?.filter((job) => job.status !== 'failed').slice(0, 5) ?? [];
   const failedGenerationCount = generations.data?.filter((job) => job.status === 'failed').length ?? 0;
-  const visibleHistory = historyEntries.filter((entry) => ['grant', 'charge', 'expire'].includes(entry.kind));
+  const visibleHistory = historyEntries.filter((entry) => ['grant', 'leaderboard-reward', 'charge', 'expire'].includes(entry.kind));
   return <View style={styles.page}>
     <CommonHeader title={zh ? 'AI credit 钱包' : 'AI credit wallet'} showAiCredits={false} />
     <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={balance.isRefetching || generations.isRefetching || history.isRefetching} onRefresh={refresh} />} contentContainerStyle={styles.content}>

@@ -15,7 +15,8 @@ public sealed record GetCommunityMemorySetsQuery(
     string? GoalType,
     string? Sort,
     int PageNumber,
-    int PageSize) : IRequest<PaginatedResponse<CommunityMemorySetSummaryDto>>;
+    int PageSize,
+    bool BookmarkedOnly = false) : IRequest<PaginatedResponse<CommunityMemorySetSummaryDto>>;
 
 public sealed class GetCommunityMemorySetsQueryHandler(IAppDbContext db)
     : IRequestHandler<GetCommunityMemorySetsQuery, PaginatedResponse<CommunityMemorySetSummaryDto>>
@@ -27,6 +28,9 @@ public sealed class GetCommunityMemorySetsQueryHandler(IAppDbContext db)
         var pageNumber = Math.Max(1, request.PageNumber);
         var pageSize = Math.Clamp(request.PageSize, 1, 50);
         var query = db.MemorySets.AsNoTracking().Where(IsDiscoverable());
+        if (request.BookmarkedOnly)
+            query = query.Where(x => db.CommunityMemorySetBookmarks.Any(bookmark =>
+                bookmark.MemorySetId == x.Id && bookmark.UserId == request.UserId && !bookmark.IsDeleted));
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
@@ -41,7 +45,10 @@ public sealed class GetCommunityMemorySetsQueryHandler(IAppDbContext db)
             query = query.Where(x => x.GoalType == request.GoalType);
 
         var totalCount = await query.CountAsync(cancellationToken);
-        query = string.Equals(request.Sort, "popular", StringComparison.OrdinalIgnoreCase)
+        query = string.Equals(request.Sort, "featured", StringComparison.OrdinalIgnoreCase)
+            ? query.OrderByDescending(x => x.FeaturedAt != null).ThenByDescending(x => x.FeaturedAt)
+                .ThenByDescending(x => x.PublishedAt).ThenBy(x => x.Id)
+            : string.Equals(request.Sort, "popular", StringComparison.OrdinalIgnoreCase)
             ? query.OrderByDescending(x => x.Copies.Count(copy => !copy.IsDeleted))
                 .ThenByDescending(x => x.PublishedAt)
                 .ThenBy(x => x.Id)
@@ -77,6 +84,20 @@ public sealed class GetCommunityMemorySetsQueryHandler(IAppDbContext db)
             .Where(x => x.UserId == userId && x.CopiedFromMemorySetId != null &&
                         ids.Contains(x.CopiedFromMemorySetId) && !x.IsDeleted)
             .ToDictionaryAsync(x => x.CopiedFromMemorySetId!, x => x.Id, cancellationToken);
+        var helpfulReactions = await db.CommunityMemorySetReactions.AsNoTracking()
+            .Where(x => !x.IsDeleted && ids.Contains(x.MemorySetId))
+            .GroupBy(x => x.MemorySetId)
+            .Select(group => new
+            {
+                MemorySetId = group.Key,
+                Count = group.Count(),
+                IsHelpful = group.Any(x => x.UserId == userId),
+            })
+            .ToDictionaryAsync(x => x.MemorySetId, cancellationToken);
+        var bookmarks = await db.CommunityMemorySetBookmarks.AsNoTracking()
+            .Where(x => !x.IsDeleted && x.UserId == userId && ids.Contains(x.MemorySetId))
+            .Select(x => x.MemorySetId)
+            .ToHashSetAsync(cancellationToken);
         var covers = await db.PalaceScenes.AsNoTracking().Where(x => sceneIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id, x => x.ImageUrl, cancellationToken);
 
@@ -85,6 +106,9 @@ public sealed class GetCommunityMemorySetsQueryHandler(IAppDbContext db)
                 x,
                 authors[x.UserId],
                 copies.GetValueOrDefault(x.Id),
+                helpfulReactions.GetValueOrDefault(x.Id)?.Count ?? 0,
+                helpfulReactions.GetValueOrDefault(x.Id)?.IsHelpful ?? false,
+                bookmarks.Contains(x.Id),
                 x.UserId == userId ? x.Id : existingCopies.GetValueOrDefault(x.Id),
                 x.TechniquePlan?.PalaceSceneId is { } sceneId ? covers.GetValueOrDefault(sceneId) : null))
             .ToList();

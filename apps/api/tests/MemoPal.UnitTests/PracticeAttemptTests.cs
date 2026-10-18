@@ -276,6 +276,7 @@ public sealed class PracticeAttemptTests
         Assert.Equal(1, schedule.IntervalDays);
         Assert.True(schedule.LastResultCorrect);
         Assert.Equal(attempt.Id, schedule.LastAttemptId);
+        Assert.False(await db.PracticeResponses.Select(x => x.WasDueAtSubmission).SingleAsync());
     }
 
     [Fact]
@@ -321,6 +322,7 @@ public sealed class PracticeAttemptTests
         Assert.Equal(105, attempt.TotalXp);
         Assert.Equal(1, attempt.PreviousLevel);
         Assert.Equal(2, attempt.CurrentLevel);
+        Assert.True(await db.PracticeResponses.Select(x => x.WasDueAtSubmission).SingleAsync());
     }
 
     [Fact]

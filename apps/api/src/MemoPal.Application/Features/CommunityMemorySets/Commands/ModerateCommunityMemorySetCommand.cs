@@ -30,6 +30,7 @@ public sealed class ModerateCommunityMemorySetCommandHandler(IAppDbContext db)
         memorySet.CommunityStatus = request.Hidden
             ? MemorySetCommunityStatuses.Hidden
             : MemorySetCommunityStatuses.Visible;
+        if (request.Hidden) memorySet.FeaturedAt = null;
         memorySet.HiddenAt = request.Hidden ? DateTime.UtcNow : null;
         memorySet.HiddenReason = request.Hidden ? reason : null;
         await db.SaveChangesAsync(cancellationToken);

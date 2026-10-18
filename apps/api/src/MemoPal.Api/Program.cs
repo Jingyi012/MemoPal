@@ -192,6 +192,8 @@ app.UseCors("MemoPalCors");
 var fileStorage = builder.Configuration.GetSection(FileStorageOptions.SectionName).Get<FileStorageOptions>() ?? new FileStorageOptions();
 var fileRoot = Path.GetFullPath(fileStorage.RootPath);
 Directory.CreateDirectory(fileRoot);
+_ = app.Services.GetRequiredService<IPrivateAttachmentStorage>();
+Directory.CreateDirectory(Path.GetFullPath(fileStorage.PrivateRootPath));
 var palaceAssetRoot = Path.Combine(app.Environment.ContentRootPath, "Assets", "PalaceScenes");
 var companionAssetRoot = Path.Combine(app.Environment.ContentRootPath, "Assets", "Companions");
 if (Directory.Exists(palaceAssetRoot))

@@ -17,11 +17,12 @@ public sealed class CommunityMemorySetsController(ISender sender) : ApiControlle
         [FromQuery] string? techniqueKey,
         [FromQuery] string? goalType,
         [FromQuery] string? sort = "newest",
+        [FromQuery] bool bookmarkedOnly = false,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default) =>
         Ok(await Sender.Send(new GetCommunityMemorySetsQuery(
-            GetUserIdOrThrow(), search, techniqueKey, goalType, sort, pageNumber, pageSize), cancellationToken));
+            GetUserIdOrThrow(), search, techniqueKey, goalType, sort, pageNumber, pageSize, bookmarkedOnly), cancellationToken));
 
     [HttpGet("{memorySetId}")]
     public async Task<IActionResult> GetById(string memorySetId, CancellationToken cancellationToken) =>
@@ -30,6 +31,22 @@ public sealed class CommunityMemorySetsController(ISender sender) : ApiControlle
     [HttpPost("{memorySetId}/copy")]
     public async Task<IActionResult> Copy(string memorySetId, CancellationToken cancellationToken) =>
         Ok(await Sender.Send(new CopyCommunityMemorySetCommand(GetUserIdOrThrow(), memorySetId), cancellationToken));
+
+    [HttpPut("{memorySetId}/reaction")]
+    public async Task<IActionResult> SetHelpfulReaction(
+        string memorySetId,
+        [FromBody] SetCommunityMemorySetHelpfulRequest request,
+        CancellationToken cancellationToken) =>
+        Ok(await Sender.Send(new SetCommunityMemorySetHelpfulCommand(
+            GetUserIdOrThrow(), memorySetId, request.IsHelpful), cancellationToken));
+
+    [HttpPut("{memorySetId}/bookmark")]
+    public async Task<IActionResult> SetBookmark(
+        string memorySetId,
+        [FromBody] SetCommunityMemorySetBookmarkRequest request,
+        CancellationToken cancellationToken) =>
+        Ok(await Sender.Send(new SetCommunityMemorySetBookmarkCommand(
+            GetUserIdOrThrow(), memorySetId, request.IsBookmarked), cancellationToken));
 
     [HttpPost("{memorySetId}/reports")]
     public async Task<IActionResult> Report(

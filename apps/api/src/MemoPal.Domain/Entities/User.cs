@@ -18,6 +18,8 @@ public sealed class User : AuditableBaseEntity
     public string? SelectedAvatarOutfitId { get; set; }
     public int TotalXp { get; set; }
     public int Level { get; set; } = 1;
+    public bool CommunityLeaderboardOptIn { get; set; }
+    public DateTime? CommunityLeaderboardJoinedAtUtc { get; set; }
     public bool IsPremium { get; set; }
     public string? ReferredByUserId { get; set; }
     public int OnboardingVersion { get; set; } = 1;

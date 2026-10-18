@@ -14,6 +14,7 @@ export const adminMenuItems: AdminMenuItem[] = [
   { path: adminPaths.dashboard, name: "Overview", icon: "dashboard" },
   { path: adminPaths.users, name: "Users", icon: "users" },
   { path: adminPaths.communityMemorySets, name: "Community Memory Sets", icon: "moderation" },
+  { path: adminPaths.educationCourseReports, name: "Public Learning Reports", icon: "moderation" },
   {
     path: adminPaths.contentRoot,
     name: "Content Studio",
@@ -38,6 +39,7 @@ export const adminMenuItems: AdminMenuItem[] = [
       { path: adminPaths.configMilestones, name: "Milestone Definitions" },
       { path: adminPaths.configAvatars, name: "Avatar Gallery" },
       { path: adminPaths.configAppearance, name: "Appearance Studio" },
+      { path: adminPaths.configLeaderboards, name: "Leaderboards" },
     ],
   },
   {

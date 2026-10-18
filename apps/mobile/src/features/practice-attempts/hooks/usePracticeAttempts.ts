@@ -15,6 +15,7 @@ import { resolveNextStreak } from '@/features/gamification/shared/utils/streak';
 import { XP_KEYS } from '@/features/gamification/shared/hooks/useXpEvents';
 import { MILESTONE_KEYS } from '@/features/gamification/shared/hooks/useMilestones';
 import { COMPANION_KEYS } from '@/features/profile/hooks/useCompanion';
+import { COMMUNITY_LEADERBOARD_KEYS } from '@/features/leaderboard/hooks/useCommunityLeaderboard';
 
 import { PRACTICE_KEYS } from '../queryKeys';
 export { PRACTICE_KEYS } from '../queryKeys';
@@ -55,6 +56,7 @@ export function useCreatePracticeAttempt() {
       void queryClient.invalidateQueries({ queryKey: XP_KEYS.all });
       void queryClient.invalidateQueries({ queryKey: MILESTONE_KEYS.all });
       void queryClient.invalidateQueries({ queryKey: COMPANION_KEYS.all });
+      void queryClient.invalidateQueries({ queryKey: COMMUNITY_LEADERBOARD_KEYS.all });
       void InAppNotificationSync.syncAllUpcoming(
         userState.notifications.reviewReminders,
         userState.preferences.language,

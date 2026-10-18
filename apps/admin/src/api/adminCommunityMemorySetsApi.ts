@@ -39,4 +39,8 @@ export const adminCommunityMemorySetsApi = {
   async restore(id: string): Promise<void> {
     await apiClient.patch(`${endpoint}/${id}/restore`);
   },
+
+  async setFeatured(id: string, featured: boolean): Promise<void> {
+    await apiClient.patch(`${endpoint}/${id}/featured`, { featured });
+  },
 };

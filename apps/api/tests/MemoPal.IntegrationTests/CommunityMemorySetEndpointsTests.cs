@@ -38,6 +38,8 @@ public sealed class CommunityMemorySetEndpointsTests : IClassFixture<CustomWebAp
 
         var publish = await owner.PatchAsJsonAsync($"/v1/memory-sets/{memorySetId}/visibility", new { visibility = "public" });
         publish.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await reader.PatchAsJsonAsync($"/admin/community-memory-sets/{memorySetId}/featured", new { featured = true }))
+            .StatusCode.Should().Be(HttpStatusCode.Forbidden);
         var discovered = (await Browse(reader)).Single(x => x.GetProperty("id").GetString() == memorySetId);
         discovered.GetProperty("author").GetProperty("displayName").GetString().Should().Be("Owner");
         discovered.TryGetProperty("createdBy", out _).Should().BeFalse();
@@ -53,7 +55,7 @@ public sealed class CommunityMemorySetEndpointsTests : IClassFixture<CustomWebAp
         secondCopyData.GetProperty("alreadyCopied").GetBoolean().Should().BeTrue();
         secondCopyData.GetProperty("memorySet").GetProperty("id").GetString().Should().Be(copyId);
 
-        (await reader.PostAsJsonAsync($"/v1/community/memory-sets/{memorySetId}/reports", new { reason = "spam", details = "Repeated advertising" }))
+        (await reader.PostAsJsonAsync($"/v1/community/memory-sets/{memorySetId}/reports", new { reason = "copyright", details = "Possible copied material" }))
             .StatusCode.Should().Be(HttpStatusCode.OK);
 
         using var admin = _factory.CreateClient();
@@ -75,7 +77,15 @@ public sealed class CommunityMemorySetEndpointsTests : IClassFixture<CustomWebAp
         var moderationItem = moderationQueue.GetProperty("data").EnumerateArray()
             .Single(x => x.GetProperty("id").GetString() == memorySetId);
         moderationItem.GetProperty("reports")[0].GetProperty("details").GetString()
-            .Should().Be("Repeated advertising");
+            .Should().Be("Possible copied material");
+        moderationItem.GetProperty("reports")[0].GetProperty("reason").GetString()
+            .Should().Be("copyright");
+        (await admin.PatchAsJsonAsync($"/admin/community-memory-sets/{memorySetId}/featured", new { featured = true }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        var featured = (await Browse(reader)).Single(x => x.GetProperty("id").GetString() == memorySetId);
+        featured.GetProperty("featuredAt").ValueKind.Should().Be(JsonValueKind.String);
+        (await reader.GetAsync($"/v1/community/memory-sets?sort=featured&pageSize=50"))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
         (await admin.DeleteAsync($"/admin/users/{adminAuth.UserId}"))
             .StatusCode.Should().Be(HttpStatusCode.Conflict);
         (await admin.DeleteAsync($"/admin/users/{ownerAuth.UserId}"))
@@ -89,6 +99,12 @@ public sealed class CommunityMemorySetEndpointsTests : IClassFixture<CustomWebAp
         (await admin.PatchAsJsonAsync($"/admin/community-memory-sets/{memorySetId}/hide", new { reason = "Reported" }))
             .StatusCode.Should().Be(HttpStatusCode.OK);
 
+        (await admin.PatchAsJsonAsync($"/admin/community-memory-sets/{memorySetId}/featured", new { featured = true }))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var hiddenItem = (await admin.GetFromJsonAsync<JsonElement>("/admin/community-memory-sets?pageSize=50"))
+            .GetProperty("data").EnumerateArray().Single(x => x.GetProperty("id").GetString() == memorySetId);
+        hiddenItem.GetProperty("featuredAt").ValueKind.Should().Be(JsonValueKind.Null);
+
         (await reader.GetAsync($"/v1/community/memory-sets/{memorySetId}"))
             .StatusCode.Should().Be(HttpStatusCode.NotFound);
         (await reader.PostAsync($"/v1/community/memory-sets/{memorySetId}/copy", null))
@@ -97,6 +113,65 @@ public sealed class CommunityMemorySetEndpointsTests : IClassFixture<CustomWebAp
             .StatusCode.Should().Be(HttpStatusCode.OK);
         (await reader.GetAsync($"/v1/community/memory-sets/{memorySetId}"))
             .StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Helpful_feedback_is_user_scoped_private_and_reversible()
+    {
+        var suffix = Guid.NewGuid().ToString("N");
+        using var author = _factory.CreateClient();
+        var authorAuth = await Register(author, $"helpful-author-{suffix}@example.com", "Helpful author");
+        author.DefaultRequestHeaders.Authorization = Bearer(authorAuth.Token);
+        var create = await author.PostAsJsonAsync("/v1/memory-sets", BuildMemoryRequest());
+        create.StatusCode.Should().Be(HttpStatusCode.OK);
+        var setId = (await create.Content.ReadFromJsonAsync<JsonElement>())
+            .GetProperty("data").GetProperty("id").GetString()!;
+        (await author.PatchAsJsonAsync($"/v1/memory-sets/{setId}/visibility", new { visibility = "public" }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+
+        using var reader = _factory.CreateClient();
+        var readerAuth = await Register(reader, $"helpful-reader-{suffix}@example.com", "Helpful reader");
+        reader.DefaultRequestHeaders.Authorization = Bearer(readerAuth.Token);
+        var before = await reader.GetFromJsonAsync<JsonElement>($"/v1/community/memory-sets/{setId}");
+        before.GetProperty("data").GetProperty("helpfulCount").GetInt32().Should().Be(0);
+        before.GetProperty("data").GetProperty("isHelpful").GetBoolean().Should().BeFalse();
+        before.GetProperty("data").GetProperty("isBookmarked").GetBoolean().Should().BeFalse();
+
+        (await reader.PutAsJsonAsync($"/v1/community/memory-sets/{setId}/bookmark", new { isBookmarked = true }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        (await reader.PutAsJsonAsync($"/v1/community/memory-sets/{setId}/bookmark", new { isBookmarked = true }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        var savedView = await reader.GetFromJsonAsync<JsonElement>($"/v1/community/memory-sets/{setId}");
+        savedView.GetProperty("data").GetProperty("isBookmarked").GetBoolean().Should().BeTrue();
+        var savedOnly = await reader.GetFromJsonAsync<JsonElement>("/v1/community/memory-sets?bookmarkedOnly=true&pageSize=50");
+        savedOnly.GetProperty("data").EnumerateArray().Select(item => item.GetProperty("id").GetString())
+            .Should().ContainSingle().Which.Should().Be(setId);
+        (await author.GetFromJsonAsync<JsonElement>($"/v1/community/memory-sets/{setId}"))
+            .GetProperty("data").GetProperty("isBookmarked").GetBoolean().Should().BeFalse();
+
+        (await reader.PutAsJsonAsync($"/v1/community/memory-sets/{setId}/reaction", new { isHelpful = true }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        (await reader.PutAsJsonAsync($"/v1/community/memory-sets/{setId}/reaction", new { isHelpful = true }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        var readerView = await reader.GetFromJsonAsync<JsonElement>($"/v1/community/memory-sets/{setId}");
+        readerView.GetProperty("data").GetProperty("helpfulCount").GetInt32().Should().Be(1);
+        readerView.GetProperty("data").GetProperty("isHelpful").GetBoolean().Should().BeTrue();
+
+        var authorView = await author.GetFromJsonAsync<JsonElement>($"/v1/community/memory-sets/{setId}");
+        authorView.GetProperty("data").GetProperty("helpfulCount").GetInt32().Should().Be(1);
+        authorView.GetProperty("data").GetProperty("isHelpful").GetBoolean().Should().BeFalse();
+        (await author.PutAsJsonAsync($"/v1/community/memory-sets/{setId}/reaction", new { isHelpful = true }))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        (await reader.PutAsJsonAsync($"/v1/community/memory-sets/{setId}/reaction", new { isHelpful = false }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        var afterRemoval = await reader.GetFromJsonAsync<JsonElement>($"/v1/community/memory-sets/{setId}");
+        afterRemoval.GetProperty("data").GetProperty("helpfulCount").GetInt32().Should().Be(0);
+        afterRemoval.GetProperty("data").GetProperty("isHelpful").GetBoolean().Should().BeFalse();
+        (await reader.PutAsJsonAsync($"/v1/community/memory-sets/{setId}/bookmark", new { isBookmarked = false }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        (await reader.GetFromJsonAsync<JsonElement>($"/v1/community/memory-sets/{setId}"))
+            .GetProperty("data").GetProperty("isBookmarked").GetBoolean().Should().BeFalse();
     }
 
     private static async Task<(string UserId, string Token)> Register(HttpClient client, string email, string displayName)

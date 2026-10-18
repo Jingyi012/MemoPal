@@ -12,11 +12,12 @@ import {
 import { LoginMethods } from '@/features/auth/types/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { getSafeAuthReturnTo } from '@/features/auth/utils/safeAuthReturnTo';
 
 const DEFAULT_LOGIN_METHODS: LoginMethods = {
   emailPassword: true,
@@ -26,6 +27,9 @@ const DEFAULT_LOGIN_METHODS: LoginMethods = {
 
 export const LoginScreen: React.FC = () => {
   const router = useRouter();
+  const { returnTo: returnToParam } = useLocalSearchParams<{ returnTo?: string | string[] }>();
+  const returnTo = getSafeAuthReturnTo(Array.isArray(returnToParam) ? returnToParam[0] : returnToParam);
+  const continueAfterLogin = () => router.replace((returnTo ?? '/') as Href);
   const { t } = useTranslation('auth');
   const { login, loginWithGoogle, loginWithFacebook } = useAuth();
   const [email, setEmail] = useState('');
@@ -71,7 +75,7 @@ export const LoginScreen: React.FC = () => {
     try {
       setIsSubmitting(true);
       await login({ email: email.trim(), password });
-      router.replace('/');
+      continueAfterLogin();
     } catch (error: any) {
       Toast.show({
         type: 'error',
@@ -171,7 +175,7 @@ export const LoginScreen: React.FC = () => {
                 setIsSubmitting(true);
                 const idToken = await getGoogleIdToken();
                 await loginWithGoogle(idToken);
-                router.replace('/');
+                continueAfterLogin();
               } catch (error: any) {
                 Toast.show({
                   type: 'error',
@@ -209,7 +213,7 @@ export const LoginScreen: React.FC = () => {
                 setIsSubmitting(true);
                 const token = await getFacebookAccessToken();
                 await loginWithFacebook(token);
-                router.replace('/');
+                continueAfterLogin();
               } catch (error: any) {
                 Toast.show({
                   type: 'error',
@@ -227,7 +231,7 @@ export const LoginScreen: React.FC = () => {
           </AnimatedPressable>
         )}
 
-        <AnimatedPressable onPress={() => router.push('/register')} className="min-h-11 items-center justify-center">
+        <AnimatedPressable onPress={() => router.push({ pathname: '/register', params: returnTo ? { returnTo } : {} })} className="min-h-11 items-center justify-center">
           <Text className="text-primary-active">{t('noAccount')}</Text>
         </AnimatedPressable>
     </AuthLayout>

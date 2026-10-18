@@ -31,7 +31,6 @@ import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { MemoryActionsSheet } from '../components/MemoryActionsSheet';
-import { DiscoverMemorySetsScreen } from './DiscoverMemorySetsScreen';
 import { MemoryFolderCard } from '../components/MemoryFolderCard';
 import { MemoryFolderActionsSheet } from '../components/MemoryFolderActionsSheet';
 import { FolderNameModal } from '../components/FolderNameModal';
@@ -39,7 +38,6 @@ import { MemoryMoveModal } from '../components/MemoryMoveModal';
 
 type LibraryFilter = 'all' | MemoryTechniqueKey | 'archived';
 type LibraryViewMode = 'card' | 'list';
-type LibraryTab = 'mine' | 'discover';
 
 const filters: { key: LibraryFilter }[] = [
   { key: 'all' },
@@ -70,13 +68,12 @@ export default function LibraryScreen() {
   const { createFolder, renameFolder, deleteFolder } = useMemoryFolderMutations();
   const memoryActionsRef = useRef<BottomSheetModal>(null);
   const collectionActionsRef = useRef<BottomSheetModal>(null);
-  const [libraryTab, setLibraryTab] = useState<LibraryTab>('mine');
-  const replayTour = usePageTour('libraryPage', authUser?.onboardingStatus === 'not-started', libraryTab === 'mine');
+  const replayTour = usePageTour('libraryPage', authUser?.onboardingStatus === 'not-started', true);
   useEffect(() => {
-    if (libraryTab !== 'mine' || !replayRequested) return;
+    if (!replayRequested) return;
     setReplayRequested(false);
     replayTour();
-  }, [libraryTab, replayRequested, replayTour]);
+  }, [replayRequested, replayTour]);
   const [actionMemorySet, setActionMemorySet] = useState<MemorySet>();
   const [actionCollection, setActionCollection] = useState<MemoryFolder>();
   const [deleteConfirmationMemory, setDeleteConfirmationMemory] = useState<MemorySet>();
@@ -325,32 +322,11 @@ export default function LibraryScreen() {
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
-        actions={[{ icon: CircleHelp, onPress: () => { setLibraryTab('mine'); setReplayRequested(true); }, accessibilityLabel: tourT('guideEntry') }]}
+        actions={[{ icon: CircleHelp, onPress: () => setReplayRequested(true), accessibilityLabel: tourT('guideEntry') }]}
         hideBackButton
       />
 
-      <View style={[styles.libraryTabBar, { backgroundColor: activeTheme.canvas, borderBottomColor: activeTheme.line }]}>
-        <View style={[styles.libraryTabs, { backgroundColor: activeTheme.violetTint, borderColor: activeTheme.violetLine }]}>
-          <AnimatedPressable
-            accessibilityState={{ selected: libraryTab === 'mine' }}
-            containerStyle={styles.libraryTabContainer}
-            onPress={() => setLibraryTab('mine')}
-            style={[styles.libraryTab, libraryTab === 'mine' && styles.libraryTabSelected, libraryTab === 'mine' ? { backgroundColor: activeTheme.violetDeep } : undefined]}>
-            <Text style={styles.libraryTabEmoji}>📚</Text>
-            <Text style={[styles.libraryTabText, { color: libraryTab === 'mine' ? activeTheme.onAccent : activeTheme.inkSoft }]}>{t('myMemories')}</Text>
-          </AnimatedPressable>
-          <AnimatedPressable
-            accessibilityState={{ selected: libraryTab === 'discover' }}
-            containerStyle={styles.libraryTabContainer}
-            onPress={() => setLibraryTab('discover')}
-            style={[styles.libraryTab, libraryTab === 'discover' && styles.libraryTabSelected, libraryTab === 'discover' ? { backgroundColor: activeTheme.violetDeep } : undefined]}>
-            <Text style={styles.libraryTabEmoji}>🧭</Text>
-            <Text style={[styles.libraryTabText, { color: libraryTab === 'discover' ? activeTheme.onAccent : activeTheme.inkSoft }]}>{t('discover')}</Text>
-          </AnimatedPressable>
-        </View>
-      </View>
-
-      {libraryTab === 'discover' ? <DiscoverMemorySetsScreen embedded /> : <ScrollView
+      <ScrollView
         ref={scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -478,17 +454,15 @@ export default function LibraryScreen() {
             <Text style={styles.loadMoreText}>{t('loadMore')}</Text>
           </AnimatedPressable>
         ) : pagedMemorySets.isFetchingNextPage ? <Text style={styles.loadMoreText}>{t('loading')}</Text> : null}
-      </ScrollView>}
-      {libraryTab === 'mine' ? (
-        <AnimatedPressable
-          accessibilityRole="button"
-          accessibilityLabel={t('create')}
-          accessibilityHint={t('newMemoryBody')}
-          onPress={createMemory}
-          style={[styles.createFab, { bottom: Math.max(16, insets.bottom + 10), backgroundColor: activeTheme.sun }]}>
-          <Plus size={26} color={activeTheme.onSun} strokeWidth={2.8} />
-        </AnimatedPressable>
-      ) : null}
+      </ScrollView>
+      <AnimatedPressable
+        accessibilityRole="button"
+        accessibilityLabel={t('create')}
+        accessibilityHint={t('newMemoryBody')}
+        onPress={createMemory}
+        style={[styles.createFab, { bottom: Math.max(16, insets.bottom + 10), backgroundColor: activeTheme.sun }]}>
+        <Plus size={26} color={activeTheme.onSun} strokeWidth={2.8} />
+      </AnimatedPressable>
 
       <MemoryActionsSheet
         ref={memoryActionsRef}
@@ -611,41 +585,6 @@ function hasPrivateAssets(
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  libraryTabBar: {
-    backgroundColor: theme.canvas,
-    borderBottomColor: theme.line,
-    borderBottomWidth: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    position: 'relative',
-    zIndex: 20,
-  },
-  libraryTabs: {
-    backgroundColor: theme.violetTint,
-    borderColor: theme.violetLine,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    flexDirection: 'row',
-    gap: 4,
-    padding: 3,
-  },
-  libraryTabContainer: { flex: 1 },
-  libraryTab: {
-    alignItems: 'center',
-    borderRadius: 10,
-    flexDirection: 'row',
-    gap: 7,
-    justifyContent: 'center',
-    minHeight: 48,
-    paddingHorizontal: 12,
-  },
-  libraryTabSelected: {
-    backgroundColor: theme.violetDeep,
-    boxShadow: '0px 3px 8px rgba(111, 86, 220, 0.22)',
-  },
-  libraryTabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  libraryTabEmoji: { fontSize: 16, lineHeight: 20 },
-  libraryTabTextSelected: { color: theme.onAccent},
   content: { padding: 20, paddingBottom: 112 },
   createFab: { alignItems: 'center', borderRadius: 30, elevation: 6, height: 60, justifyContent: 'center', position: 'absolute', right: 20, shadowColor: theme.ink, shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 60 },
   summaryCard: {

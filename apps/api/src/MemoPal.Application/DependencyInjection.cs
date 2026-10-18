@@ -1,6 +1,7 @@
 using Mapster;
 using MediatR;
 using MemoPal.Application.Common.Mapping;
+using MemoPal.Application.Features.Education.Relationships;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -18,6 +19,7 @@ public static class DependencyInjection
         config.Scan(Assembly.GetExecutingAssembly());
 
         services.AddMediatR(Assembly.GetExecutingAssembly());
+        services.AddScoped<EducationAccess>();
         return services;
     }
 }

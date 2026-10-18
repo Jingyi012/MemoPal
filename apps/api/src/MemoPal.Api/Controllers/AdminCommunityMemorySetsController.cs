@@ -33,4 +33,13 @@ public sealed class AdminCommunityMemorySetsController(ISender sender) : ApiCont
     [HttpPatch("{memorySetId}/restore")]
     public async Task<IActionResult> Restore(string memorySetId, CancellationToken cancellationToken) =>
         Ok(await Sender.Send(new ModerateCommunityMemorySetCommand(memorySetId, false, null), cancellationToken));
+
+    [HttpPatch("{memorySetId}/featured")]
+    public async Task<IActionResult> SetFeatured(
+        string memorySetId,
+        [FromBody] SetCommunityMemorySetFeaturedRequest request,
+        CancellationToken cancellationToken) =>
+        Ok(await Sender.Send(new SetCommunityMemorySetFeaturedCommand(memorySetId, request.Featured), cancellationToken));
 }
+
+public sealed record SetCommunityMemorySetFeaturedRequest(bool Featured);

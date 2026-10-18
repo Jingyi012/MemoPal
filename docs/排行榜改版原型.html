@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>排行榜改版</title>
+<style>
+:root{--bg:#F6F3FF;--card:#fff;--ink:#241B4B;--sub:#5E5784;--line:#E6E0F7;--p:#6A4CD8;--pl:#EEE8FF;--gold:#FFC93C;--gl:#FFF3D1;--green:#1B7A3E;--grey:#E9E6F2;--shadow:0 6px 20px rgba(80,50,180,.12);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--gl:#4A3A12;--green:#7FE0A0;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg:#15112B;--card:#211B40;--ink:#F1EDFF;--sub:#B2AAD6;--line:#352D5E;--pl:#2E2557;--gl:#4A3A12;--green:#7FE0A0;--grey:#2D2750;--shadow:0 6px 20px rgba(0,0,0,.35)}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:"Nunito","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;padding:16px 20px 48px}
+.scr{display:none}.scr.on{display:block}
+header{display:flex;align-items:center;gap:12px}
+.back{width:40px;height:40px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--p);font-size:18px;font-weight:800;cursor:pointer;flex:none}
+header h1{font-size:24px;font-weight:800}
+.sub{font-size:13px;color:var(--sub);font-weight:700;margin:10px 0 0 52px}
+button:focus-visible{outline:3px solid var(--p);outline-offset:2px}
+h3{font-size:17px;font-weight:800;margin:26px 0 12px;display:flex;justify-content:space-between;align-items:baseline}
+h3 small{font-size:12px;color:var(--sub);font-weight:700}
+.hero{border-radius:24px;padding:18px;color:#fff;background:linear-gradient(140deg,#5B3BC4,#9B7BFF);box-shadow:var(--shadow);margin-top:18px;width:100%;text-align:left;border:0;font-family:inherit;display:block}
+button.hero{cursor:pointer}
+.pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:800}
+.top{display:flex;justify-content:space-between;align-items:center}
+.hero h2{font-size:24px;font-weight:800;margin:12px 0 4px}
+.hero p{font-size:13px;opacity:.9;font-weight:700}
+.me{margin-top:14px;background:var(--card);color:var(--ink);border-radius:18px;padding:14px;display:flex;align-items:center;gap:14px}
+.me .pt b{font-size:34px;font-weight:800;color:var(--p);line-height:1}.me .pt span{font-size:14px;font-weight:800;color:var(--p)}
+.me small{display:block;font-size:12px;color:var(--sub);font-weight:700}
+.me .rk{margin-left:auto;text-align:right}.me .rk b{font-size:20px;display:block}
+.prog{margin-top:12px;font-size:12px;font-weight:800;display:flex;justify-content:space-between}
+.bar{height:8px;border-radius:99px;background:rgba(255,255,255,.28);margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .5s}
+.go{margin-top:14px;width:100%;border:0;border-radius:16px;padding:15px;background:var(--gold);color:#3A2800;font:800 17px inherit;font-family:inherit;cursor:pointer;box-shadow:0 5px 0 #D9A41A}
+.go:active{transform:translateY(3px);box-shadow:0 2px 0 #D9A41A}
+.go:disabled{opacity:.75;cursor:default;box-shadow:none}
+.cta2{display:flex;align-items:center;justify-content:space-between;margin-top:14px;font-size:13px;font-weight:800}
+.av{display:flex}.av i{width:26px;height:26px;border-radius:50%;background:#fff;color:var(--p);display:grid;place-items:center;font-style:normal;font-size:14px;border:2px solid #8A68F0;margin-left:-8px}.av i:first-child{margin-left:0}
+.soon{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sn{background:var(--card);border:2px dashed var(--line);border-radius:18px;padding:14px;text-align:center;color:var(--sub);font-weight:800;font-size:13px}
+.sn span{display:block;font-size:26px;filter:grayscale(1);opacity:.6;margin-bottom:4px}.sn small{display:block;font-size:11px;margin-top:2px}
+.days{display:flex;justify-content:space-between;margin-top:14px;color:#fff}
+.d{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:800;opacity:.95}
+.dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:12px;border:2px dashed rgba(255,255,255,.4)}
+.dot.t{border:2px solid #fff;background:rgba(255,255,255,.2)}.dot.on{background:var(--gold);border-color:var(--gold);color:#3A2800}
+.lb{background:var(--card);border-radius:20px;padding:6px 14px;box-shadow:var(--shadow)}
+.r{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.r:last-child{border-bottom:0}
+.rn{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;background:var(--grey);color:var(--sub);flex:none}
+.r.ghost{opacity:.55}.r.ghost .rn{border:2px dashed var(--line);background:transparent}
+.r b{flex:1;font-size:15px}.r span.s{font-weight:800;color:var(--p)}
+.r.you{background:var(--pl);margin:0 -14px;padding:12px 14px;border-radius:14px;border:0}
+.hint{font-size:13px;color:var(--sub);font-weight:700;text-align:center;padding:10px 0 6px}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ru{border-radius:18px;padding:14px}.ru.a{background:var(--pl)}.ru.b{background:var(--gl)}
+.ru .sc{display:inline-block;font-weight:800;font-size:18px;border-radius:12px;padding:4px 10px;color:#fff;background:var(--p)}
+.ru.b .sc{background:var(--gold);color:#3A2800}
+.ru p{font-size:13px;font-weight:700;margin-top:8px;line-height:1.5}
+.cap{display:inline-block;margin-top:10px;font-size:12px;font-weight:800;background:var(--gl);border-radius:99px;padding:4px 10px}
+.det{margin-top:10px;font-size:12px;color:var(--sub);font-weight:700}
+.det summary{cursor:pointer;padding:6px 0}.det p{line-height:1.6}
+.priv{margin-top:14px;display:flex;gap:10px;background:var(--pl);border-radius:14px;padding:12px;font-size:12px;font-weight:700;color:var(--sub);line-height:1.5}
+.leave{display:block;margin:24px auto 0;border:1px solid var(--line);background:transparent;color:var(--sub);border-radius:99px;padding:9px 18px;font:800 13px inherit;font-family:inherit;cursor:pointer}
+.mask{position:fixed;inset:0;background:rgba(20,10,50,.5);display:none;align-items:center;justify-content:center;padding:24px}
+.mask.on{display:flex}
+.dlg{background:var(--card);border-radius:22px;padding:20px;max-width:340px;width:100%}
+.dlg h4{font-size:18px;font-weight:800}.dlg p{font-size:13px;color:var(--sub);font-weight:700;margin-top:6px;line-height:1.6}
+.dlg div{display:flex;gap:10px;margin-top:16px}
+.dlg button{flex:1;border:0;border-radius:14px;padding:12px;font:800 14px inherit;font-family:inherit;cursor:pointer}
+.dlg .k{background:var(--p);color:#fff}.dlg .x{background:var(--grey);color:var(--ink)}
+.toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translate(-50%,-80px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:800;font-size:13px;transition:transform .25s}
+.toast.show{transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.bar i,.toast{transition:none}}
+</style>
+</head>
+<body>
+<main class="app">
+
+<!-- 页面 1：排行榜中心 -->
+<div class="scr on" id="s1">
+  <header><button class="back" aria-label="返回">‹</button><h1>排行榜</h1></header>
+  <button class="hero" id="open">
+    <div class="top"><span class="pill">🏆 本周挑战</span><span class="pill">⏳ <span class="cd">--</span></span></div>
+    <h2>本周回忆挑战</h2>
+    <p>每天回忆练习赚积分，匿名上榜</p>
+    <div class="me">
+      <div class="pt"><small>我的积分</small><b class="pts">0</b> <span>分</span></div>
+      <div class="rk"><small>当前排名</small><b class="rank">—</b></div>
+    </div>
+    <div class="prog"><span>今天 <span class="today">0</span>/5 项</span><span class="pill" style="padding:3px 10px">查看榜单 ›</span></div>
+    <div class="bar"><i class="tb"></i></div>
+    <div class="cta2"><span class="av"><i>🦉</i><i>🐱</i><i>🦊</i></span><span>本周 1 人参与</span></div>
+  </button>
+  <h3>更多榜单 <small>敬请期待</small></h3>
+  <div class="soon">
+    <div class="sn"><span>🔥</span>连续天数榜<small>即将开放</small></div>
+    <div class="sn"><span>👥</span>好友榜<small>即将开放</small></div>
+  </div>
+</div>
+
+<!-- 页面 2：本周回忆挑战 -->
+<div class="scr" id="s2">
+  <header><button class="back" id="back" aria-label="返回">‹</button><h1>本周回忆挑战</h1></header>
+  <section class="hero" style="cursor:default">
+    <div class="top"><span class="pill">⏳ <span class="cd">--</span></span><span class="pill">10/12 – 10/19</span></div>
+    <div class="me" style="margin-top:14px">
+      <div class="pt"><small>本周积分</small><b class="pts">0</b> <span>分</span></div>
+      <div class="rk"><small>当前排名</small><b class="rank">—</b></div>
+    </div>
+    <div class="days" id="days"></div>
+    <div class="prog"><span>今天 <span class="today">0</span>/5 项</span><span id="pg">做 5 项 +10 分</span></div>
+    <div class="bar"><i class="tb"></i></div>
+    <button class="go" id="go">开始今日练习 →</button>
+  </section>
+
+  <h3>本周榜单 <small>匿名显示</small></h3>
+  <div class="lb" id="lb"></div>
+
+  <h3>怎么得分 <span class="cap" style="margin:0">每天最多 15 分</span></h3>
+  <div class="rules">
+    <div class="ru a"><span class="sc">+10</span><p>一天回忆 5 个不同的项目</p></div>
+    <div class="ru b"><span class="sc">+5</span><p>再复习 5 个已到期项目，额外加分</p></div>
+  </div>
+  <details class="det"><summary>计分细则</summary><p>按 UTC 每天计算；重复或复制的项目只计一次；答对与否不影响积分。</p></details>
+  <div class="priv"><span>🔒</span><span>榜单只显示匿名昵称和积分；你的姓名、记忆内容和答案不会公开。</span></div>
+  <button class="leave" id="leave">退出排行榜</button>
+</div>
+</main>
+
+<div class="mask" id="mask"><div class="dlg" role="dialog" aria-modal="true"><h4>确定退出排行榜？</h4><p>退出后你的本周积分将不再显示在榜单上，之后可以重新加入。</p><div><button class="x" id="no">再想想</button><button class="k" id="yes">退出</button></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+var $=function(i){return document.getElementById(i)},all=function(s){return [].slice.call(document.querySelectorAll(s))};
+var items=0,pts=0,todayI=6,names=["一","二","三","四","五","六","日"];
+function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1700)}
+function show(id){all(".scr").forEach(function(s){s.classList.toggle("on",s.id===id)});window.scrollTo(0,0)}
+$("open").addEventListener("click",function(){show("s2")});
+$("back").addEventListener("click",function(){show("s1")});
+function cd(){var ms=Date.UTC(2026,9,19)-Date.now();var t;
+  if(ms<=0)t="已结束";else{var h=Math.floor(ms/36e5);t="还剩 "+(h>=24?Math.floor(h/24)+" 天 "+(h%24)+" 小时":h+" 小时")}
+  all(".cd").forEach(function(e){e.textContent=t})}
+cd();
+function draw(){
+  all(".pts").forEach(function(e){e.textContent=pts});
+  all(".today").forEach(function(e){e.textContent=Math.min(items,10)});
+  all(".rank").forEach(function(e){e.textContent=pts?"🥇 1":"—"});
+  all(".tb").forEach(function(e){e.style.width=Math.min(items,10)*10+"%"});
+  $("pg").textContent=items<5?"做 5 项 +10 分":items<10?"再复习 5 项 +5 分":"今日满分 🎉";
+  var g=$("go");if(items>=10){g.textContent="今天已拿满 15 分 ✓";g.disabled=true}else g.textContent=items?"继续练习 →":"开始今日练习 →";
+  $("days").innerHTML=names.map(function(n,i){var on=i===todayI&&pts;return '<div class="d"><div class="dot '+(on?"on":i===todayI?"t":"")+'">'+(on?"+"+pts:"")+'</div>'+n+'</div>'}).join("");
+  var h="";
+  if(pts)h+='<div class="r you"><span class="rn" style="background:var(--gold);color:#3A2800">1</span><b>🦉 匿名学徒（你）</b><span class="s">'+pts+' 分</span></div>';
+  else h+='<div class="r you"><span class="rn">—</span><b>🦉 匿名学徒（你）</b><span class="s">0 分</span></div>';
+  [pts?2:1,pts?3:2,pts?4:3].slice(0,pts?2:3).forEach(function(n){h+='<div class="r ghost"><span class="rn">'+n+'</span><b>虚位以待</b><span class="s">—</span></div>'});
+  h+='<p class="hint">'+(pts?"你目前领先！邀请朋友来挑战吧":"榜单还空着，完成一次回忆就能抢到第 1 名 🥇")+'</p>';
+  $("lb").innerHTML=h;
+}
+$("go").addEventListener("click",function(){
+  if(items===0){items=5;pts=10;toast("+10 分！")}else if(items===5){items=10;pts=15;toast("再 +5 分，今天满分！")}
+  draw();
+});
+$("leave").addEventListener("click",function(){$("mask").classList.add("on")});
+$("no").addEventListener("click",function(){$("mask").classList.remove("on")});
+$("yes").addEventListener("click",function(){$("mask").classList.remove("on");toast("已退出（原型仅演示）")});
+draw();
+</script>
+</body>
+</html>

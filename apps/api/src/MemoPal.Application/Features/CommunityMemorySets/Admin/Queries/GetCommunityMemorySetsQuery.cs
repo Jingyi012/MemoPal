@@ -66,7 +66,7 @@ public sealed class GetCommunityMemorySetsQueryHandler(IAppDbContext db)
             var author = authors[set.UserId];
             return new CommunityMemorySetView(
                 set.Id, set.Title, set.Description, set.GoalType, set.TechniqueKey,
-                set.Visibility, set.CommunityStatus, set.PublishedAt, set.HiddenAt, set.HiddenReason,
+                set.Visibility, set.CommunityStatus, set.PublishedAt, set.FeaturedAt, set.HiddenAt, set.HiddenReason,
                 new CommunityAuthorDto(author.Id, author.DisplayName, author.AvatarUrl),
                 x.ItemCount, x.CopyCount, x.ReportCount,
                 reportsByMemorySet.GetValueOrDefault(set.Id, []),

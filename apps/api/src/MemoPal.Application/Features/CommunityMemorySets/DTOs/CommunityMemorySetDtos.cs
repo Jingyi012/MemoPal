@@ -14,6 +14,10 @@ public sealed record CommunityMemorySetSummaryDto(
     CommunityAuthorDto Author,
     DateTime PublishedAt,
     int CopyCount,
+    int HelpfulCount,
+    bool IsHelpful,
+    bool IsBookmarked,
+    DateTime? FeaturedAt,
     string? ExistingCopyId,
     string? CoverImageUrl);
 
@@ -53,6 +57,10 @@ public sealed record CommunityMemorySetDetailDto(
     CommunityAuthorDto Author,
     DateTime PublishedAt,
     int CopyCount,
+    int HelpfulCount,
+    bool IsHelpful,
+    bool IsBookmarked,
+    DateTime? FeaturedAt,
     string? ExistingCopyId,
     string? CoverImageUrl,
     IReadOnlyList<CommunityMemoryItemDto> Items,
@@ -72,6 +80,12 @@ public sealed class ReportMemorySetRequest
     public string? Details { get; set; }
 }
 
+public sealed record SetCommunityMemorySetHelpfulRequest(bool IsHelpful);
+
+public sealed record CommunityMemorySetReactionDto(string MemorySetId, bool IsHelpful, int HelpfulCount);
+public sealed record SetCommunityMemorySetBookmarkRequest(bool IsBookmarked);
+public sealed record CommunityMemorySetBookmarkDto(string MemorySetId, bool IsBookmarked);
+
 public sealed record MemorySetReportDto(string Id, string MemorySetId, string Reason, DateTime CreatedAt);
 
 public sealed record MemorySetReportView(
@@ -89,6 +103,7 @@ public sealed record CommunityMemorySetView(
     string Visibility,
     string CommunityStatus,
     DateTime? PublishedAt,
+    DateTime? FeaturedAt,
     DateTime? HiddenAt,
     string? HiddenReason,
     CommunityAuthorDto Author,

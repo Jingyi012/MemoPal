@@ -148,6 +148,8 @@ public sealed class CreatePracticeAttemptBatchCommandHandler
             foreach (var response in input.Responses)
             {
                 var schedule = schedules.FirstOrDefault(x => x.MemoryItemId == response.MemoryItemId);
+                var savedResponse = attempt.Responses.First(x => x.MemoryItemId == response.MemoryItemId);
+                savedResponse.WasDueAtSubmission = schedule is not null && schedule.DueAt <= now;
                 if (schedule is null)
                 {
                     schedule = new MemoryReviewSchedule

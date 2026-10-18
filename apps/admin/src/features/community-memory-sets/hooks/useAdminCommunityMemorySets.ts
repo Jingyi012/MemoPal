@@ -29,5 +29,14 @@ export function useAdminCommunityMemorySets() {
     },
   });
 
-  return { hideMutation, restoreMutation };
+  const featuredMutation = useMutation({
+    mutationFn: ({ id, featured }: { id: string; featured: boolean }) =>
+      adminCommunityMemorySetsApi.setFeatured(id, featured),
+    onSuccess: async (_, variables) => {
+      message.success(variables.featured ? "Memory set featured in Community." : "Memory set removed from featured content.");
+      await invalidate();
+    },
+  });
+
+  return { hideMutation, restoreMutation, featuredMutation };
 }

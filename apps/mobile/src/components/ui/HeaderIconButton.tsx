@@ -14,7 +14,7 @@ type Props = {
 export function HeaderIconButton({ icon: Icon, accessibilityLabel, onPress, children }: Props) {
   const { theme, styles } = useStyles();
   return (
-    <AnimatedPressable accessibilityLabel={accessibilityLabel} onPress={onPress} style={styles.button}>
+    <AnimatedPressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} onPress={onPress} style={styles.button}>
       {Icon ? <Icon size={21} strokeWidth={2.2} color={theme.violetDeep} /> : null}
       {children}
     </AnimatedPressable>

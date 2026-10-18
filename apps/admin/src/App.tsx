@@ -11,6 +11,7 @@ const LevelConfigsPage = lazy(() => import('./pages/LevelConfigsPage'));
 const MilestoneDefinitionsPage = lazy(() => import('./pages/MilestoneDefinitionsPage'));
 const AvatarDefinitionsPage = lazy(() => import('./pages/AvatarDefinitionsPage'));
 const AppearanceDefinitionsPage = lazy(() => import('./pages/AppearanceDefinitionsPage'));
+const LeaderboardConfigPage = lazy(() => import('./features/leaderboards/pages/LeaderboardConfigPage'));
 const ReferralConfigPage = lazy(() => import('./pages/ReferralConfigPage'));
 const ReferralUsersPage = lazy(() => import('./pages/ReferralUsersPage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
@@ -25,6 +26,15 @@ const MemoryCollectionsPage = lazy(() => import('./features/predefined-memory-le
 const MemoryCollectionEditorPage = lazy(() => import('./features/predefined-memory-lessons/pages/MemoryCollectionEditorPage'));
 const PredefinedMemoryLessonCategoriesPage = lazy(() => import('./features/predefined-memory-lessons/pages/PredefinedMemoryLessonCategoriesPage'));
 const CommunityMemorySetsPage = lazy(() => import('./features/community-memory-sets/pages/CommunityMemorySetsPage'));
+const EducationCourseReportsPage = lazy(() => import('./features/education/pages/EducationCourseReportsPage'));
+const EducationLayout = lazy(() => import('./features/education/pages/EducationLayout'));
+const EducationHomePage = lazy(() => import('./features/education/pages/EducationHomePage'));
+const EducationFamilyAssignmentsPage = lazy(() => import('./features/education/pages/EducationFamilyAssignmentsPage'));
+const ClassroomDetailPage = lazy(() => import('./features/education/pages/ClassroomDetailPage'));
+const GuardianRelationshipsPage = lazy(() => import('./features/education/pages/GuardianRelationshipsPage'));
+const EducationCoursesPage = lazy(() => import('./features/education/pages/EducationCoursesPage'));
+const EducationCoursePage = lazy(() => import('./features/education/pages/EducationCoursePage'));
+const EducationAssessmentPage = lazy(() => import('./features/education/pages/EducationAssessmentPage'));
 
 function RouteFallback() {
   return <Flex align="center" justify="center" style={{ minHeight: 240 }}><Spin size="large" /></Flex>;
@@ -38,12 +48,22 @@ export default function App() {
       <Route path={adminPaths.forbidden} element={<ForbiddenPage />} />
 
       <Route element={<ProtectedRoute />}>
+        <Route path="/education" element={<EducationLayout />}>
+          <Route index element={<EducationHomePage />} />
+          <Route path="family-practice" element={<EducationFamilyAssignmentsPage />} />
+          <Route path="guardians" element={<GuardianRelationshipsPage />} />
+          <Route path="courses" element={<EducationCoursesPage />} />
+          <Route path="courses/:courseId" element={<EducationCoursePage />} />
+          <Route path="assessments/:assessmentId" element={<EducationAssessmentPage />} />
+          <Route path="classrooms/:classroomId" element={<ClassroomDetailPage />} />
+        </Route>
         <Route element={<AdminRoute />}>
           <Route path={adminPaths.root} element={<Layout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="community-memory-sets" element={<CommunityMemorySetsPage />} />
+            <Route path="education/course-reports" element={<EducationCourseReportsPage />} />
             <Route path="content">
               <Route index element={<Navigate to="memory-collections" replace />} />
               <Route path="palace-scenes" element={<PalaceScenesPage />} />
@@ -64,6 +84,7 @@ export default function App() {
               <Route path="milestones" element={<MilestoneDefinitionsPage />} />
               <Route path="avatars" element={<AvatarDefinitionsPage />} />
               <Route path="appearance" element={<AppearanceDefinitionsPage />} />
+              <Route path="leaderboards" element={<LeaderboardConfigPage />} />
             </Route>
             <Route path="referrals">
               <Route index element={<Navigate to="config" replace />} />

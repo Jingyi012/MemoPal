@@ -1,5 +1,6 @@
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Common.Settings;
+using MemoPal.Application.Features.Leaderboards;
 using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,7 @@ public sealed class AdminBootstrapper
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
+        await EnsureLeaderboardCatalogAsync(cancellationToken);
         await EnsureGamificationSettingsAsync(cancellationToken);
         await EnsureStarterMilestonesAsync(cancellationToken);
         await EnsureStarterAvatarsAsync(cancellationToken);
@@ -52,6 +54,34 @@ public sealed class AdminBootstrapper
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task EnsureLeaderboardCatalogAsync(CancellationToken cancellationToken)
+    {
+        var setting = await _db.SystemSettings
+            .FirstOrDefaultAsync(x => x.Key == SystemSettingKeys.LeaderboardCatalog, cancellationToken);
+        if (setting is { IsDeleted: false }) return;
+
+        var now = DateTime.UtcNow;
+        if (setting is null)
+        {
+            setting = new SystemSetting
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Key = SystemSettingKeys.LeaderboardCatalog,
+                CreatedAt = now,
+                CreatedBy = "system"
+            };
+            _db.SystemSettings.Add(setting);
+        }
+
+        setting.Value = LeaderboardCatalogSerializer.Serialize(LeaderboardCatalogSerializer.GetDefault());
+        setting.Description = "Admin-managed leaderboard catalog and scoring settings.";
+        setting.UpdatedAt = now;
+        setting.UpdatedBy = "system";
+        setting.IsDeleted = false;
+        setting.DeletedAt = null;
+        setting.DeletedBy = null;
     }
 
     private async Task EnsureCompanionBondStagesAsync(CancellationToken cancellationToken)

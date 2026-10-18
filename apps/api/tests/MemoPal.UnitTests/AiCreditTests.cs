@@ -125,6 +125,23 @@ public sealed class AiCreditTests
     }
 
     [Fact]
+    public async Task LeaderboardGrantIsStoredAsAVisibleRewardHistoryEntry()
+    {
+        using var db = CreateDb();
+        await SeedUser(db);
+        var credits = CreateService(db);
+
+        await credits.GrantAsync("user", "leaderboard:community-weekly:20261012:user", "leaderboard", 600,
+            DateTime.UtcNow.AddDays(90), default);
+
+        var history = await credits.HistoryAsync("user", 0, default);
+        var reward = Assert.Single(history);
+        Assert.Equal("leaderboard-reward", reward.Kind);
+        Assert.Equal(600, reward.Amount);
+        Assert.Equal(600, (await credits.BalanceAsync("user", default)).Available);
+    }
+
+    [Fact]
     public async Task AbandonedReservationIsReleasedAndExpiredGrantDoesNotBecomeSpendable()
     {
         using var db = CreateDb();

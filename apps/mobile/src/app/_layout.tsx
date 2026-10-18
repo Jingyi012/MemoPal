@@ -63,7 +63,6 @@ function AppLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="notifications" />
-            <Stack.Screen name="rewards-history" />
           </Stack>
           </SpotlightTourProvider>
         </SafeAreaView>

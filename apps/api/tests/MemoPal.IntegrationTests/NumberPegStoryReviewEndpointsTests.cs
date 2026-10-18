@@ -90,6 +90,7 @@ public sealed class NumberPegStoryReviewEndpointsTests(CustomWebApplicationFacto
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         var first = (await saved.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("data")[0];
         Assert.Equal(0, first.GetProperty("firstAttemptCorrectCount").GetInt32());
+        Assert.False(first.GetProperty("responses")[0].TryGetProperty("wasDueAtSubmission", out _));
         Assert.Equal(hintCount, first.GetProperty("responses")[0].GetProperty("hintCount").GetInt32());
         Assert.Equal(attemptCount, first.GetProperty("responses")[0].GetProperty("attemptCount").GetInt32());
         var nextReviewAt = first.GetProperty("nextReviewAt").GetDateTime();
