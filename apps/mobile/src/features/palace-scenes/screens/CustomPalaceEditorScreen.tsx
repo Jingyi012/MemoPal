@@ -21,7 +21,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Check, Plus, Trash2 } from '@/core/icons';
-import { useEffect, useRef, useState } from 'react';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   findNodeHandle,
   Keyboard,
@@ -60,7 +61,12 @@ export default function CustomPalaceEditorScreen() {
   const [hydratedSceneId, setHydratedSceneId] = useState<string | null>(null);
   const [draftHydrated, setDraftHydrated] = useState(Boolean(sceneId));
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [markerTouchActive, setMarkerTouchActive] = useState(false);
+  const canvasRef = useRef<View>(null);
+  const dragMovedRef = useRef(false);
+  const canvasBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
+  const scrollGesture = useMemo(() => Gesture.Native(), []);
   const locusInputRefs = useRef<(TextInput | null)[]>([]);
   const focusedLocusInputRef = useRef<TextInput | null>(null);
 
@@ -224,6 +230,38 @@ export default function CustomPalaceEditorScreen() {
     });
   };
 
+  const localizedSpotName = (spotName: string, index: number) => {
+    const number = String(index + 1);
+    const defaultName = t('defaultSpotName').replace('{number}', number);
+    return spotName === `Spot ${number}` || spotName === `位置 ${number}` ? defaultName : spotName;
+  };
+
+  const startLocusDrag = (index: number) => {
+    dragMovedRef.current = false;
+    setSelectedIndex(index);
+    setMarkerTouchActive(true);
+    canvasRef.current?.measureInWindow((x, y, width, height) => {
+      canvasBoundsRef.current = { x, y, width, height };
+    });
+  };
+
+  const moveLocusDrag = (index: number, pageX: number, pageY: number) => {
+    const bounds = canvasBoundsRef.current;
+    if (!bounds || !bounds.width || !bounds.height) return;
+    dragMovedRef.current = true;
+    const xPercent = Math.max(0, Math.min(100, ((pageX - bounds.x) / bounds.width) * 100));
+    const yPercent = Math.max(0, Math.min(100, ((pageY - bounds.y) / bounds.height) * 100));
+    setLoci((current) => current.map((locus, locusIndex) =>
+      locusIndex === index ? { ...locus, xPercent, yPercent } : locus
+    ));
+  };
+
+  const endLocusDrag = (index: number) => {
+    if (!dragMovedRef.current) setSelectedIndex(index);
+    canvasBoundsRef.current = null;
+    setMarkerTouchActive(false);
+  };
+
   const save = async () => {
     if (!canSave) {
       router.push('/premium' as Href);
@@ -275,12 +313,14 @@ export default function CustomPalaceEditorScreen() {
         description={t('description')}
         backAction={() => router.back()}
       />
-      <ScrollView
-        ref={scrollViewRef}
-        contentContainerStyle={[styles.content, editorStep === 3 && styles.contentWithDock]}
-        keyboardDismissMode="interactive"
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
+      <GestureDetector gesture={scrollGesture}>
+        <ScrollView
+          ref={scrollViewRef}
+          scrollEnabled={!markerTouchActive}
+          contentContainerStyle={[styles.content, editorStep === 3 && styles.contentWithDock]}
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
         <View style={styles.privacyCard}>
           <Text style={styles.privacyEmoji}>🔒</Text>
           <View style={styles.flex}>
@@ -392,6 +432,7 @@ export default function CustomPalaceEditorScreen() {
           </Text>
         </View>
         <View
+          ref={canvasRef}
           onLayout={(event) =>
             setCanvasSize({
               width: event.nativeEvent.layout.width,
@@ -410,23 +451,19 @@ export default function CustomPalaceEditorScreen() {
             </View>
           )}
           {loci.map((locus, index) => (
-            <Pressable
+            <DraggableLocusMarker
               key={locus.id ?? index}
-              accessibilityRole="button"
-              accessibilityLabel={t('locusAccessibility').replace('{number}', String(index + 1)).replace('{name}', locus.name)}
-              accessibilityState={{ selected: selectedIndex === index }}
-              onPress={(event) => {
-                event.stopPropagation();
-                setSelectedIndex(index);
-              }}
-              style={[
-                styles.marker,
-                { left: `${locus.xPercent}%`, top: `${locus.yPercent}%` },
-              ]}>
-              <View style={[styles.markerDisc, selectedIndex === index && styles.markerActive]}>
-                <Text style={styles.markerText}>{index + 1}</Text>
-              </View>
-            </Pressable>
+              index={index}
+              selected={selectedIndex === index}
+              label={t('dragLocusAccessibility').replace('{number}', String(index + 1)).replace('{name}', localizedSpotName(locus.name, index))}
+              onSelect={() => setSelectedIndex(index)}
+              onDragStart={startLocusDrag}
+              onDrag={moveLocusDrag}
+              onDragEnd={endLocusDrag}
+              scrollGesture={scrollGesture}
+              xPercent={locus.xPercent}
+              yPercent={locus.yPercent}
+            />
           ))}
         </View>
         <AnimatedPressable onPress={addLocus} style={styles.addLocusButton}>
@@ -453,7 +490,7 @@ export default function CustomPalaceEditorScreen() {
               </View>
               <TextInput
                 ref={(input) => { locusInputRefs.current[index] = input; }}
-                value={locus.name}
+                value={localizedSpotName(locus.name, index)}
                 onChangeText={(value) =>
                   setLoci((current) =>
                     current.map((entry, entryIndex) =>
@@ -496,7 +533,8 @@ export default function CustomPalaceEditorScreen() {
         ) : null}
         <AppButton fullWidth label={t('back')} onPress={() => setEditorStep(2)} size="large" style={styles.backStandalone} variant="secondary" />
         </View> : null}
-      </ScrollView>
+        </ScrollView>
+      </GestureDetector>
       {editorStep === 3 && !keyboardVisible ? (
         <View style={[styles.bottomDock, { paddingBottom: Math.max(insets.bottom, 10) }]}>
           <AppButton
@@ -519,6 +557,55 @@ export default function CustomPalaceEditorScreen() {
         </View>
       ) : null}
     </KeyboardAvoidingView>
+  );
+}
+
+function DraggableLocusMarker({
+  index,
+  label,
+  selected,
+  xPercent,
+  yPercent,
+  onSelect,
+  onDragStart,
+  onDrag,
+  onDragEnd,
+  scrollGesture,
+}: {
+  index: number;
+  label: string;
+  selected: boolean;
+  xPercent: number;
+  yPercent: number;
+  onSelect: () => void;
+  onDragStart: (index: number) => void;
+  onDrag: (index: number, pageX: number, pageY: number) => void;
+  onDragEnd: (index: number) => void;
+  scrollGesture: ReturnType<typeof Gesture.Native>;
+}) {
+  const callbacks = useRef({ onDragStart, onDrag, onDragEnd });
+  callbacks.current = { onDragStart, onDrag, onDragEnd };
+  const dragGesture = useMemo(() => Gesture.Pan()
+    .minDistance(1)
+    .blocksExternalGesture(scrollGesture)
+    .runOnJS(true)
+    .onBegin(() => callbacks.current.onDragStart(index))
+    .onUpdate((event) => callbacks.current.onDrag(index, event.absoluteX, event.absoluteY))
+    .onFinalize(() => callbacks.current.onDragEnd(index)), [index, scrollGesture]);
+
+  return (
+    <GestureDetector gesture={dragGesture}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ selected }}
+        onPress={onSelect}
+        style={[styles.marker, { left: `${xPercent}%`, top: `${yPercent}%` }]}>
+        <View style={[styles.markerDisc, selected && styles.markerActive]}>
+          <Text style={styles.markerText}>{index + 1}</Text>
+        </View>
+      </Pressable>
+    </GestureDetector>
   );
 }
 
