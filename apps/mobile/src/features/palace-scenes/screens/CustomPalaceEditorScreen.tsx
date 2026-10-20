@@ -19,6 +19,7 @@ import { firstParam } from '@/features/memory-composer/utils/composerParams';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Check, Plus, Trash2 } from '@/core/icons';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -39,6 +40,7 @@ type CanvasSize = { width: number; height: number };
 
 export default function CustomPalaceEditorScreen() {
   const { t } = useTranslation('palace');
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{ sceneId?: string | string[] }>();
   const sceneId = firstParam(params.sceneId);
@@ -57,18 +59,24 @@ export default function CustomPalaceEditorScreen() {
   const [isUploading, setIsUploading] = useState(false);
   const [hydratedSceneId, setHydratedSceneId] = useState<string | null>(null);
   const [draftHydrated, setDraftHydrated] = useState(Boolean(sceneId));
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const locusInputRefs = useRef<(TextInput | null)[]>([]);
   const focusedLocusInputRef = useRef<TextInput | null>(null);
 
   useEffect(() => {
-    const subscription = Keyboard.addListener('keyboardDidShow', () => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
       const inputHandle = findNodeHandle(focusedLocusInputRef.current);
       if (inputHandle !== null) {
         scrollViewRef.current?.scrollResponderScrollNativeHandleToKeyboard(inputHandle, 24, true);
       }
     });
-    return () => subscription.remove();
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -269,7 +277,7 @@ export default function CustomPalaceEditorScreen() {
       />
       <ScrollView
         ref={scrollViewRef}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, editorStep === 3 && styles.contentWithDock]}
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
@@ -404,7 +412,9 @@ export default function CustomPalaceEditorScreen() {
           {loci.map((locus, index) => (
             <Pressable
               key={locus.id ?? index}
+              accessibilityRole="button"
               accessibilityLabel={t('locusAccessibility').replace('{number}', String(index + 1)).replace('{name}', locus.name)}
+              accessibilityState={{ selected: selectedIndex === index }}
               onPress={(event) => {
                 event.stopPropagation();
                 setSelectedIndex(index);
@@ -412,9 +422,10 @@ export default function CustomPalaceEditorScreen() {
               style={[
                 styles.marker,
                 { left: `${locus.xPercent}%`, top: `${locus.yPercent}%` },
-                selectedIndex === index && styles.markerActive,
               ]}>
-              <Text style={styles.markerText}>{index + 1}</Text>
+              <View style={[styles.markerDisc, selectedIndex === index && styles.markerActive]}>
+                <Text style={styles.markerText}>{index + 1}</Text>
+              </View>
             </Pressable>
           ))}
         </View>
@@ -483,27 +494,30 @@ export default function CustomPalaceEditorScreen() {
             <Text style={styles.messageText}>{message}</Text>
           </View>
         ) : null}
-        <AppButton
-          disabled={isUploading || createCustom.isPending || updateCustom.isPending}
-          fullWidth
-          icon={Check}
-          label={isUploading
-            ? t('uploadingImage')
-            : createCustom.isPending || updateCustom.isPending
-              ? t('saving')
-              : canSave
-                ? sceneId
-                  ? t('savePalaceChanges')
-                  : t('savePalace')
-                : t('unlockCustomPalaces')}
-          loading={isUploading || createCustom.isPending || updateCustom.isPending}
-          onPress={save}
-          size="large"
-          style={styles.saveButton}
-        />
         <AppButton fullWidth label={t('back')} onPress={() => setEditorStep(2)} size="large" style={styles.backStandalone} variant="secondary" />
         </View> : null}
       </ScrollView>
+      {editorStep === 3 && !keyboardVisible ? (
+        <View style={[styles.bottomDock, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+          <AppButton
+            disabled={isUploading || createCustom.isPending || updateCustom.isPending}
+            fullWidth
+            icon={Check}
+            label={isUploading
+              ? t('uploadingImage')
+              : createCustom.isPending || updateCustom.isPending
+                ? t('saving')
+                : canSave
+                  ? sceneId
+                    ? t('savePalaceChanges')
+                    : t('savePalace')
+                  : t('unlockCustomPalaces')}
+            loading={isUploading || createCustom.isPending || updateCustom.isPending}
+            onPress={save}
+            size="large"
+          />
+        </View>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
@@ -511,6 +525,7 @@ export default function CustomPalaceEditorScreen() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 44 },
+  contentWithDock: { paddingBottom: 126 },
   flex: { flex: 1 },
   privacyCard: {
     flexDirection: 'row',
@@ -585,7 +600,7 @@ const styles = StyleSheet.create({
   upgradeButton: {
     minHeight: 38,
     borderRadius: 11,
-    backgroundColor: theme.ink,
+    backgroundColor: theme.violetDeep,
     paddingHorizontal: 15,
     alignItems: 'center',
     justifyContent: 'center',
@@ -680,10 +695,16 @@ const styles = StyleSheet.create({
   },
   marker: {
     position: 'absolute',
+    width: 44,
+    height: 44,
+    marginLeft: -22,
+    marginTop: -22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  markerDisc: {
     width: 34,
     height: 34,
-    marginLeft: -17,
-    marginTop: -17,
     borderRadius: 17,
     borderWidth: 3,
     borderColor: 'white',
@@ -759,5 +780,5 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     textAlign: 'center',
   },
-  saveButton: { marginTop: 18 },
+  bottomDock: { backgroundColor: theme.canvas, borderTopColor: theme.line, borderTopWidth: 1, paddingHorizontal: 16, paddingTop: 10 },
 });

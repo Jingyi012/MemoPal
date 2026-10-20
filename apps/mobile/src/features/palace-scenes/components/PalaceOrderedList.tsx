@@ -26,11 +26,11 @@ export function PalaceOrderedList({ items, activeIndex, onSelect }: PalaceOrdere
       <View style={styles.headingRow}>
         <View style={styles.headingIcon}><Text style={styles.headingEmoji}>📋</Text></View>
         <View style={styles.headingCopy}>
-          <Text style={styles.eyebrow}>{t('accessibleRoute')}</Text>
+          <Text style={styles.eyebrow}>{t('palaceDirectory')}</Text>
           <Text style={styles.title}>{t('palaceInOrder')}</Text>
         </View>
       </View>
-      <Text style={styles.helper}>{t('accessibleRouteHelper')}</Text>
+      <Text style={styles.helper}>{t('palaceDirectoryHelper')}</Text>
       <View style={styles.list}>
         {items.map((item, index) => {
           const active = index === activeIndex;

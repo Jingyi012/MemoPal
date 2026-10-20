@@ -3,6 +3,7 @@ import type { PalaceLocus, PalaceScene } from '@/features/palace-scenes/types/pa
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Polyline } from 'react-native-svg';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 
@@ -28,6 +29,17 @@ export function PalaceLocusMap({
     <View style={[styles.canvas, height ? { height } : undefined]}>
       <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={StyleSheet.absoluteFillObject} />
       <View pointerEvents="none" style={styles.floor} />
+      <Svg pointerEvents="none" style={StyleSheet.absoluteFillObject} viewBox="0 0 100 100" preserveAspectRatio="none" accessibilityElementsHidden>
+        <Polyline
+          points={loci.map((locus) => `${locus.xPercent},${locus.yPercent}`).join(' ')}
+          fill="none"
+          stroke="#FFC43F"
+          strokeDasharray="2.2 2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={0.8}
+        />
+      </Svg>
       {loci.map((locus, index) => {
         const isPlaced = index < placedCount;
         const isActive = index === activeIndex;
@@ -35,11 +47,15 @@ export function PalaceLocusMap({
           <View key={locus.id} style={[styles.markerAnchor, { left: `${locus.xPercent}%`, top: `${locus.yPercent}%` }]}>
             {isActive ? <View pointerEvents="none" style={styles.activeHalo} /> : null}
             <Pressable
+              accessibilityRole="button"
               accessibilityLabel={`${t('locusLabel')} ${index + 1}: ${getPalaceLocusName(locus, language)}`}
+              accessibilityState={{ selected: isActive, disabled: !onSelect }}
               disabled={!onSelect}
               onPress={() => onSelect?.(index)}
-              style={[styles.marker, isPlaced && styles.markerPlaced, isActive && styles.markerActive]}>
-              <Text style={styles.markerText}>{index + 1}</Text>
+              style={styles.markerTapTarget}>
+              <View style={[styles.marker, isPlaced && styles.markerPlaced, isActive && styles.markerActive]}>
+                <Text style={styles.markerText}>{index + 1}</Text>
+              </View>
             </Pressable>
           </View>
         );
@@ -73,24 +89,25 @@ const styles = StyleSheet.create({
   },
   markerAnchor: {
     alignItems: 'center',
-    height: 32,
+    height: 44,
     justifyContent: 'center',
-    marginLeft: -16,
-    marginTop: -16,
+    marginLeft: -22,
+    marginTop: -22,
     position: 'absolute',
-    width: 32,
+    width: 44,
     zIndex: 2,
   },
+  markerTapTarget: { alignItems: 'center', height: 44, justifyContent: 'center', width: 44 },
   marker: {
     alignItems: 'center',
     backgroundColor: '#9B8CFF',
     borderColor: 'white',
     borderRadius: 16,
     borderWidth: 3,
-    height: 32,
+    height: 34,
     justifyContent: 'center',
     boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.18)',
-    width: 32,
+    width: 34,
   },
   activeHalo: {
     backgroundColor: 'rgba(255, 196, 63, 0.28)',

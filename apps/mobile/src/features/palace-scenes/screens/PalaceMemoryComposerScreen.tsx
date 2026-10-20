@@ -39,6 +39,7 @@ import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text,
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { usePredefinedMemoryLesson } from '@/features/predefined-memory-lessons/hooks/usePredefinedMemoryLessons';
 import { findPredefinedMemoryLessonItem } from '@/features/predefined-memory-lessons/utils/predefinedMemoryLessonLocalization';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ComposerStep = 'setup' | 'place';
 const MAX_PALACE_ITEMS = 100;
@@ -46,6 +47,7 @@ const MAX_PALACE_ITEMS = 100;
 export default function PalaceMemoryComposerScreen() {
   const { language, t } = useTranslation('palace');
   const { styles, theme } = useStyles();
+  const insets = useSafeAreaInsets();
   const { canShowRequestErrors } = useNetworkStatus();
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -81,6 +83,7 @@ export default function PalaceMemoryComposerScreen() {
   const [generationMessage, setGenerationMessage] = useState<string | null>(null);
   const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
   const [activeLocusIndex, setActiveLocusIndex] = useState(0);
+  const requestedSceneId = firstParam(params.sceneId);
   const [selectedSceneId, setSelectedSceneId] = useState(() => firstParam(params.sceneId) ?? '');
   const origin: ComposerOrigin = parseComposerOrigin(params.origin);
   const memoryFolderId = firstParam(params.memoryFolderId) || undefined;
@@ -164,7 +167,6 @@ export default function PalaceMemoryComposerScreen() {
       if (selectedSceneId) setSelectedSceneId('');
       return;
     }
-    const requestedSceneId = firstParam(params.sceneId);
     const selectedSceneIsValid = availableScenes.some(
       (scene) => scene.id === selectedSceneId && sceneFitsPalaceItems(scene, items.length),
     );
@@ -209,9 +211,10 @@ export default function PalaceMemoryComposerScreen() {
   const visibleScenes = useMemo(() => {
     if (showAllScenes || sceneSearch.trim()) return matchingScenes;
     const selected = matchingScenes.find((scene) => scene.id === selectedSceneId);
+    if (requestedSceneId && selected) return [selected];
     const remaining = matchingScenes.filter((scene) => scene.id !== selectedSceneId);
     return selected ? [selected, ...remaining].slice(0, 4) : remaining.slice(0, 4);
-  }, [matchingScenes, sceneSearch, selectedSceneId, showAllScenes]);
+  }, [matchingScenes, requestedSceneId, sceneSearch, selectedSceneId, showAllScenes]);
 
   const capacityHint = (scene: PalaceScene) => t('capacityReason')
     .replace('{capacity}', String(getPalaceCapacity(scene)))
@@ -492,25 +495,22 @@ export default function PalaceMemoryComposerScreen() {
           scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
         }}
         scrollEventThrottle={16}
-        contentContainerStyle={[styles.content, keyboardInset > 0 && { paddingBottom: keyboardInset + 24 }]}>
-        {step === 'setup' && <ComposerProgress currentStep={1} firstLabel={t('chooseRoom')} secondLabel={t('placeMemoriesStep')} />}
-        {step === 'setup' && (
-          <View style={styles.infoCard}>
-            <View style={styles.infoIcon}>
-              <Text style={styles.infoEmoji}>🏡</Text>
-            </View>
-            <View style={styles.infoCopy}>
-              <Text style={styles.infoTitle}>{t('routeTitle')}</Text>
-              <Text style={styles.infoText}>{t('routeBody')}</Text>
-            </View>
-          </View>
-        )}
+        contentContainerStyle={[
+          styles.content,
+          keyboardInset === 0 && styles.contentWithDock,
+          keyboardInset > 0 && { paddingBottom: keyboardInset + 24 },
+        ]}>
+        <ComposerProgress currentStep={step === 'setup' ? 1 : 2} firstLabel={t('chooseRoom')} secondLabel={t('placeMemoriesStep')} />
 
         {step === 'setup' && fromSharedComposer ? (
           <View style={styles.draftCard}>
             <Text style={styles.draftEyebrow}>{t('memoryReady')}</Text>
             <Text numberOfLines={1} style={styles.draftTitle}>{title || suggestMemoryTitle(goalType, items)}</Text>
             <Text style={styles.draftMeta}>{items.length} {t('items')} · {t('chooseSceneToPlace')}</Text>
+            <AnimatedPressable accessibilityRole="button" onPress={() => returnToSharedComposer(true)} style={styles.editContentButton}>
+              <Text style={styles.editContentText}>{t('editSetup')}</Text>
+              <ArrowLeft size={14} color={theme.violetDeep} />
+            </AnimatedPressable>
           </View>
         ) : step === 'setup' ? (
           <>
@@ -529,13 +529,58 @@ export default function PalaceMemoryComposerScreen() {
           </>
          ) : null}
 
+        {step === 'setup' && !fromSharedComposer ? (
+          <>
+            <View style={styles.labelRow}>
+              <Text style={styles.label}>{t('addItems')}</Text>
+              <Text style={styles.counter}>{items.length}/{MAX_PALACE_ITEMS}</Text>
+            </View>
+            <View style={styles.addRow}>
+              <TextInput
+                ref={newItemInputRef}
+                value={newItem}
+                onChangeText={setNewItem}
+                onFocus={() => handleInputFocus(newItemInputRef.current)}
+                onSubmitEditing={addItem}
+                returnKeyType="done"
+                placeholder={t('itemPlaceholder')}
+                placeholderTextColor={theme.inkSoft}
+                selectionColor={theme.violetDeep}
+                cursorColor={theme.violetDeep}
+                style={[styles.input, { flex: 1 }]}
+              />
+              <AppButton accessibilityLabel={t('addItemAccessibility')} icon={Plus} onPress={addItem} size="regular" style={styles.addButton} variant="primary" />
+            </View>
+            {items.map((item, index) => (
+              <View key={`${item}-${index}`} style={styles.itemRow}>
+                <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.itemText}>{item}</Text>
+                  <Text style={styles.locusText}>{loci[index] ? getPalaceLocusName(loci[index], language) : t('chooseSceneAssignLocus')}</Text>
+                </View>
+                <AnimatedPressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t('removeAccessibility')} ${item}`}
+                  onPress={() => {
+                    setItems((current) => current.filter((_, i) => i !== index));
+                    setAssociations((current) => current.filter((_, i) => i !== index));
+                    setActiveLocusIndex((current) => Math.min(current, Math.max(0, items.length - 2)));
+                  }}
+                  style={styles.deleteButton}>
+                  <Trash2 size={17} color={theme.inkSoft} />
+                </AnimatedPressable>
+              </View>
+            ))}
+          </>
+        ) : null}
+
         {step === 'setup' && (
           <View style={styles.sceneHeadingRow}>
             <View style={styles.sceneHeadingCopy}>
               <Text style={[styles.label, styles.sceneLabel]}>{t('chooseScene')}</Text>
               {availableScenes.length ? <Text style={styles.sceneCount}>{availableScenes.length} {t('sceneCount')}</Text> : null}
             </View>
-            {availableScenes.length > 4 ? (
+            {availableScenes.length > (requestedSceneId ? 1 : 4) ? (
               <AnimatedPressable
                 accessibilityRole="button"
                 accessibilityLabel={showAllScenes ? t('hideScenes') : t('seeAllScenes')}
@@ -560,7 +605,7 @@ export default function PalaceMemoryComposerScreen() {
           <Text style={styles.helper}>{t('loadingScenes')}</Text>
         ) : availableScenes.length ? (
           <>
-            {showAllScenes && availableScenes.length > 4 ? (
+            {showAllScenes && availableScenes.length > (requestedSceneId ? 1 : 4) ? (
               <View style={styles.sceneSearchWrap}>
                 <Search size={17} color={theme.inkSoft} />
                 <TextInput
@@ -576,50 +621,28 @@ export default function PalaceMemoryComposerScreen() {
               </View>
             ) : null}
             {visibleScenes.length ? (
-              showAllScenes || sceneSearch.trim() ? (
-                <View style={styles.sceneGrid}>
-                  {visibleScenes.map((scene) => {
-                    const fits = sceneFitsPalaceItems(scene, items.length);
-                    const active = scene.id === selectedSceneId && fits;
-                    return (
-                      <AnimatedPressable
-                        key={scene.id}
-                        accessibilityState={{ disabled: !fits || (isPredefinedLesson && scene.id !== predefinedLesson?.palaceSceneId) }}
-                        disabled={!fits || (isPredefinedLesson && scene.id !== predefinedLesson?.palaceSceneId)}
-                        onPress={() => selectScene(scene)}
-                        containerStyle={styles.sceneGridItem}
-                        style={[styles.sceneOption, styles.sceneOptionGrid, active && styles.sceneOptionActive, !fits && styles.sceneOptionLimited]}>
-                        <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneThumb} />
-                        <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
-                        <Text style={styles.sceneMeta}>
-                          {scene.loci.length} {t('loci')}{scene.isPremium ? ` · ${t('premium')}` : ''}{!fits ? ` · ${capacityHint(scene)}` : ''}
-                        </Text>
-                      </AnimatedPressable>
-                    );
-                  })}
-                </View>
-              ) : (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sceneRail}>
-                  {visibleScenes.map((scene) => {
-                    const fits = sceneFitsPalaceItems(scene, items.length);
-                    const active = scene.id === selectedSceneId && fits;
-                    return (
-                      <AnimatedPressable
-                        key={scene.id}
-                        accessibilityState={{ disabled: !fits || (isPredefinedLesson && scene.id !== predefinedLesson?.palaceSceneId) }}
-                        disabled={!fits || (isPredefinedLesson && scene.id !== predefinedLesson?.palaceSceneId)}
-                        onPress={() => selectScene(scene)}
-                        style={[styles.sceneOption, active && styles.sceneOptionActive, !fits && styles.sceneOptionLimited]}>
-                        <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneThumb} />
-                        <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
-                        <Text style={styles.sceneMeta}>
-                          {scene.loci.length} {t('loci')}{scene.isPremium ? ` · ${t('premium')}` : ''}{!fits ? ` · ${capacityHint(scene)}` : ''}
-                        </Text>
-                      </AnimatedPressable>
-                    );
-                  })}
-                </ScrollView>
-              )
+              <View style={styles.sceneGrid}>
+                {visibleScenes.map((scene) => {
+                  const fits = sceneFitsPalaceItems(scene, items.length);
+                  const active = scene.id === selectedSceneId && fits;
+                  return (
+                    <AnimatedPressable
+                      key={scene.id}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active, disabled: !fits || (isPredefinedLesson && scene.id !== predefinedLesson?.palaceSceneId) }}
+                      disabled={!fits || (isPredefinedLesson && scene.id !== predefinedLesson?.palaceSceneId)}
+                      onPress={() => selectScene(scene)}
+                      containerStyle={styles.sceneGridItem}
+                      style={[styles.sceneOption, active && styles.sceneOptionActive, !fits && styles.sceneOptionLimited]}>
+                      <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneThumb} />
+                      <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
+                      <Text style={styles.sceneMeta}>
+                        {scene.loci.length} {t('loci')}{scene.isPremium ? ` · ${t('premium')}` : ''}{!fits ? ` · ${capacityHint(scene)}` : ''}
+                      </Text>
+                    </AnimatedPressable>
+                  );
+                })}
+              </View>
             ) : (
               <Text style={styles.noMatchingScenes}>{t('noMatchingScenes')}</Text>
             )}
@@ -680,59 +703,7 @@ export default function PalaceMemoryComposerScreen() {
           </>
         )}
 
-        {step === 'setup' ? (
-          <>
-            {!fromSharedComposer ? (
-              <>
-                <View style={styles.labelRow}><Text style={styles.label}>{t('addItems')}</Text><Text style={styles.counter}>{items.length}/{MAX_PALACE_ITEMS}</Text></View>
-                <View style={styles.addRow}>
-                  <TextInput
-                    ref={newItemInputRef}
-                    value={newItem}
-                    onChangeText={setNewItem}
-                    onFocus={() => handleInputFocus(newItemInputRef.current)}
-                    onSubmitEditing={addItem}
-                    returnKeyType="done"
-                    placeholder={t('itemPlaceholder')}
-                    placeholderTextColor={theme.inkSoft}
-                    selectionColor={theme.violetDeep}
-                    cursorColor={theme.violetDeep}
-                    style={[styles.input, { flex: 1 }]}
-                  />
-                  <AppButton accessibilityLabel={t('addItemAccessibility')} icon={Plus} onPress={addItem} size="regular" style={styles.addButton} variant="primary" />
-                </View>
-                {items.map((item, index) => (
-                  <View key={`${item}-${index}`} style={styles.itemRow}>
-                    <View style={styles.itemNumber}><Text style={styles.itemNumberText}>{index + 1}</Text></View>
-                    <View style={{ flex: 1 }}><Text style={styles.itemText}>{item}</Text><Text style={styles.locusText}>{loci[index] ? getPalaceLocusName(loci[index], language) : t('chooseSceneAssignLocus')}</Text></View>
-                    <AnimatedPressable
-                      accessibilityLabel={`${t('removeAccessibility')} ${item}`}
-                      onPress={() => {
-                        setItems((current) => current.filter((_, i) => i !== index));
-                        setAssociations((current) => current.filter((_, i) => i !== index));
-                        setActiveLocusIndex((current) => Math.min(current, Math.max(0, items.length - 2)));
-                      }}
-                      style={styles.deleteButton}>
-                      <Trash2 size={17} color={theme.inkSoft} />
-                    </AnimatedPressable>
-                  </View>
-                ))}
-              </>
-            ) : null}
-            <View style={styles.fullWidthButton}>
-              <AppButton
-                label={t('continuePlace')}
-                variant="primary"
-                size="large"
-                fullWidth
-                trailingIcon={ArrowRight}
-                disabled={noFittingScene}
-                onPress={continueToPlacement}
-                style={styles.continueButton}
-              />
-            </View>
-          </>
-        ) : (
+        {step === 'place' && (
           <View style={styles.fullWidthButton}>
             <AnimatedPressable onPress={() => setStep('setup')} style={styles.editSetupButton}>
               <Text style={styles.editSetupText}>{t('editSetup')}</Text>
@@ -742,31 +713,33 @@ export default function PalaceMemoryComposerScreen() {
         )}
 
         {(message || error) && <View style={styles.errorCard}><Text style={styles.errorText}>{message ?? error}</Text></View>}
-        {step === 'place' && (
-          <View style={styles.fullWidthButton}>
-            <AppButton
-              label={createMemorySet.isPending || updateMemorySet.isPending ? t('saving') : error ? t('trySavingAgain') : t('savePalace')}
-              variant="primary"
-              size="large"
-              fullWidth
-              icon={Check}
-              trailingIcon={ArrowRight}
-              loading={createMemorySet.isPending || updateMemorySet.isPending}
-              onPress={save}
-              style={styles.saveButton}
-            />
-          </View>
-        )}
       </ScrollView>
+      {keyboardInset === 0 ? (
+        <View style={[styles.bottomDock, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+          <AppButton
+            label={step === 'setup'
+              ? t('continuePlace')
+              : createMemorySet.isPending || updateMemorySet.isPending
+                ? t('saving')
+                : error
+                  ? t('trySavingAgain')
+                  : t('savePalace')}
+            variant="primary"
+            size="large"
+            fullWidth
+            trailingIcon={step === 'setup' ? ArrowRight : Check}
+            disabled={step === 'setup' && noFittingScene}
+            loading={step === 'place' && (createMemorySet.isPending || updateMemorySet.isPending)}
+            onPress={step === 'setup' ? continueToPlacement : save}
+          />
+        </View>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 42 },
-  infoCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 19, backgroundColor: theme.violetTint, borderWidth: 1.5, borderColor: theme.violetLine, padding: 14 },
-  infoIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
-  infoEmoji: { fontSize: 25, lineHeight: 30 }, infoCopy: { flex: 1, minWidth: 0 }, infoTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 19 }, infoText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
+  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 42 }, contentWithDock: { paddingBottom: 126 },
   sceneImageEmoji: { fontSize: 24 },
   draftCard: {
     marginTop: 16,
@@ -814,16 +787,15 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   },
   editContentText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 }, optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 18 },
-  sceneHeadingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between' }, sceneHeadingCopy: { flex: 1 }, sceneLabel: { marginBottom: 2 }, sceneCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginBottom: 9 }, seeAllScenesButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: theme.violetTint, marginBottom: 8, paddingLeft: 11, paddingRight: 7 }, seeAllScenesText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 }, sceneSearchWrap: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 8, marginBottom: 10, paddingHorizontal: 12 }, sceneSearchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13, minHeight: 44 }, sceneGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }, sceneGridItem: { marginBottom: 10, width: '48%' }, sceneOptionGrid: { marginRight: 0, width: '100%' }, noMatchingScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, paddingVertical: 16, textAlign: 'center' },
+  sceneHeadingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between' }, sceneHeadingCopy: { flex: 1 }, sceneLabel: { marginBottom: 2 }, sceneCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginBottom: 9 }, seeAllScenesButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: theme.violetTint, marginBottom: 8, paddingLeft: 11, paddingRight: 7 }, seeAllScenesText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 }, sceneSearchWrap: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 8, marginBottom: 10, paddingHorizontal: 12 }, sceneSearchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13, minHeight: 44 }, sceneGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }, sceneGridItem: { marginBottom: 10, width: '48.5%' }, noMatchingScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, paddingVertical: 16, textAlign: 'center' },
   input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 14, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
-  sceneRail: { marginHorizontal: -16, paddingLeft: 16 }, sceneOption: { width: 172, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8, marginRight: 10 }, sceneOptionActive: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint }, sceneOptionLimited: { opacity: 0.72 }, sceneThumb: { height: 92, borderRadius: 12 }, sceneName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 8 }, sceneMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 2 },
+  sceneOption: { width: '100%', borderRadius: 17, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 7, minHeight: 145 }, sceneOptionActive: { borderColor: theme.violetDeep, borderWidth: 2, backgroundColor: theme.violetTint }, sceneOptionLimited: { opacity: 0.72 }, sceneThumb: { height: 84, borderRadius: 11 }, sceneName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 7 }, sceneMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9.5, lineHeight: 13, marginTop: 2 },
   canvasHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, textAlign: 'center', marginTop: 8 }, capacityCard: { marginTop: 11, borderRadius: 14, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 12 }, capacityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 }, capacityText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 3 },
   emptyScenes: { borderWidth: 2, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.paper, padding: 18, alignItems: 'center' }, helper: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center' }, refreshButton: { alignSelf: 'center', marginTop: 10 },
   addRow: { flexDirection: 'row', gap: 9 }, addButton: { width: 50, height: 50, borderRadius: 14 },
   itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line }, itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: theme.violet, alignItems: 'center', justifyContent: 'center' }, itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 }, itemText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginLeft: 11 }, locusText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginLeft: 11, marginTop: 2 }, deleteButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   errorCard: { marginTop: 14, borderRadius: 14, backgroundColor: theme.berryTint, borderWidth: 1.5, borderColor: theme.berryLine, padding: 12 }, errorText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   fullWidthButton: { alignSelf: 'stretch' },
-  continueButton: { marginTop: 20 },
+  bottomDock: { backgroundColor: theme.canvas, borderTopColor: theme.line, borderTopWidth: 1, paddingHorizontal: 16, paddingTop: 10 },
   editSetupButton: { width: '100%', minHeight: 45, marginTop: 18, borderRadius: 14, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center' }, editSetupText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  saveButton: { marginTop: 20 },
 }));

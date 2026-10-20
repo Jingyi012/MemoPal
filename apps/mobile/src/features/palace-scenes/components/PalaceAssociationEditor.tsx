@@ -180,6 +180,9 @@ export function PalaceAssociationEditor({
         <View style={styles.headingCopy}>
           <Text style={styles.title}>{t('placementTitle')}</Text>
         </View>
+        <View style={styles.progressPill} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: items.length, now: safeIndex + 1 }}>
+          <Text style={styles.progressText}>{safeIndex + 1} / {items.length}</Text>
+        </View>
         {onGenerate ? (
           <AnimatedPressable
             accessibilityRole="button"
@@ -201,6 +204,9 @@ export function PalaceAssociationEditor({
         ) : null}
       </View>
       <Text style={styles.helper}>{t('placementHelper')}</Text>
+      <View style={styles.progressTrack} accessibilityElementsHidden>
+        <View style={[styles.progressFill, { width: `${((safeIndex + 1) / items.length) * 100}%` }]} />
+      </View>
       {generationMessage ? <Text numberOfLines={1} ellipsizeMode="tail" style={styles.generationMessage}>{generationMessage}</Text> : null}
 
       <View style={styles.cardStack}>
@@ -269,6 +275,10 @@ const styles = StyleSheet.create({
   generateButtonDisabled: { opacity: 0.62 },
   compactGenerateText: { color: theme.violetDeep, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 15, marginTop: 4, marginBottom: 5 },
+  progressPill: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 999, justifyContent: 'center', minHeight: 30, paddingHorizontal: 9 },
+  progressText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
+  progressTrack: { backgroundColor: '#E8E2F6', borderRadius: 999, height: 5, marginBottom: 8, overflow: 'hidden' },
+  progressFill: { backgroundColor: theme.violet, borderRadius: 999, height: '100%' },
   generationMessage: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9.5, lineHeight: 13, marginBottom: 4, textAlign: 'center' },
   regenerateButton: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#DCD4FF', borderRadius: 10, borderWidth: 1, height: 30, justifyContent: 'center', width: 30 },
   regenerateButtonDisabled: { opacity: 0.62 },

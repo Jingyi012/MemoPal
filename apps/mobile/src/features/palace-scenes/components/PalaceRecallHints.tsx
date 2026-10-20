@@ -1,10 +1,13 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { ChevronDown, ChevronUp, Lightbulb } from '@/core/icons';
 import type { MemoryItem, PalaceBinding } from '@/features/memory-sets';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { Check, Lightbulb, LockKeyhole, MapPin } from '@/core/icons';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+
+export const PALACE_MAX_HINTS = 2;
 
 type Props = {
   item: MemoryItem;
@@ -17,88 +20,76 @@ type Props = {
 
 export function PalaceRecallHints({ item, binding, hintCount, feedback, disabled, onHint }: Props) {
   const { t } = useTranslation('palace');
-  const { styles } = useStyles();
-  const revealed = hintCount >= 3 || feedback === 'wrong';
-  const actionLabel = hintCount === 0 ? t('showAssociationHint')
-    : hintCount === 1 ? t('showStoryClue') : t('showAnswerAndAssociation');
+  const { styles, theme } = useStyles();
+  const [expanded, setExpanded] = useState(false);
+  const revealed = hintCount >= PALACE_MAX_HINTS;
+
+  useEffect(() => {
+    setExpanded(false);
+  }, [item.id, feedback]);
+
+  // Answer feedback already includes the answer; avoid repeating it here.
+  if (feedback) return null;
 
   return (
-    <View style={styles.card} accessibilityLiveRegion="polite">
-      <View style={styles.header}>
-        <View style={styles.iconCircle}><Lightbulb size={15} color={styles.icon.color} /></View>
-        <View style={styles.headerCopy}>
-          <Text style={styles.title}>{t('hintTitle')}</Text>
+    <View style={styles.container}>
+      <AnimatedPressable
+        accessibilityRole="button"
+        accessibilityLabel={expanded ? t('collapseHints') : t('hintEntry')}
+        accessibilityState={{ disabled, expanded }}
+        disabled={disabled}
+        onPress={() => {
+          if (!expanded && hintCount === 0) onHint();
+          setExpanded((value) => !value);
+        }}
+        style={[styles.trigger, disabled && styles.disabled]}>
+        <View style={styles.triggerIcon}>
+          <Lightbulb size={15} color={theme.sunDeep} />
         </View>
-        <Text style={styles.counter}>{hintCount}/3</Text>
-      </View>
-      <View style={styles.steps}>
-        <View style={styles.step}>
-          <View style={[styles.stepDot, hintCount > 0 && styles.stepDotDone]}>
-            {hintCount > 0 ? <Check size={12} color={styles.stepCheck.color} /> : <MapPin size={13} color={styles.stepNumber.color} />}
+        <Text style={styles.triggerText}>{expanded ? t('collapseHints') : t('hintEntry')}</Text>
+        {expanded
+          ? <ChevronUp size={14} color={theme.inkSoft} />
+          : <ChevronDown size={14} color={theme.inkSoft} />}
+      </AnimatedPressable>
+      {expanded ? (
+        <View style={styles.content} accessibilityLiveRegion="polite">
+          <View style={styles.contentHeader}>
+            <Text style={styles.label}>{t('associationHint')}</Text>
           </View>
-          <Text style={[styles.stepText, hintCount > 0 && styles.stepTextDone]}>{t('associationHint')}</Text>
-        </View>
-        <View style={[styles.connector, hintCount > 0 && styles.connectorDone]} />
-        <View style={styles.step}>
-          <View style={[styles.stepDot, revealed && styles.stepDotDone]}>
-            {revealed ? <Check size={12} color={styles.stepCheck.color} /> : <LockKeyhole size={12} color={styles.stepNumber.color} />}
-          </View>
-          <Text style={[styles.stepText, hintCount >= 2 && styles.stepTextDone]}>{t('showStoryClue')}</Text>
-        </View>
-        <View style={[styles.connector, hintCount >= 2 && styles.connectorDone]} />
-        <View style={styles.step}>
-          <View style={[styles.stepDot, revealed && styles.stepDotDone]}>
-            {revealed ? <Check size={12} color={styles.stepCheck.color} /> : <LockKeyhole size={12} color={styles.stepNumber.color} />}
-          </View>
-          <Text style={[styles.stepText, revealed && styles.stepTextDone]}>{t('recallAnswerLabel')}</Text>
-        </View>
-      </View>
-      {hintCount > 0 ? (
-        <View style={styles.revealCard}>
-          <Text style={styles.label}>{t('associationHint')}</Text>
           <Text style={styles.body}>{binding?.associationText || t('associationHintMissing')}</Text>
+          {revealed ? (
+            <View style={styles.answerRow}>
+              <Text style={styles.label}>{t('recallAnswerLabel')}</Text>
+              <Text selectable style={styles.answer}>{item.answer}</Text>
+            </View>
+          ) : (
+            <AnimatedPressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled }}
+              disabled={disabled}
+              onPress={onHint}
+              style={[styles.revealButton, disabled && styles.disabled]}>
+              <Text style={styles.revealText}>{t('showAnswerAndAssociation')}</Text>
+            </AnimatedPressable>
+          )}
         </View>
-      ) : null}
-      {revealed ? (
-        <View style={styles.answerCard}>
-          <Text style={styles.label}>{t('recallAnswerLabel')}</Text>
-          <Text style={styles.answer}>{item.answer}</Text>
-        </View>
-      ) : null}
-      {hintCount < 3 && !feedback ? (
-        <AnimatedPressable accessibilityRole="button" accessibilityLabel={actionLabel}
-          disabled={disabled} onPress={onHint} style={styles.button}>
-          <Text style={styles.buttonText}>{actionLabel}</Text>
-        </AnimatedPressable>
       ) : null}
     </View>
   );
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { gap: 8, padding: 10, borderRadius: 14, borderWidth: 1, borderColor: theme.violetLine, backgroundColor: theme.paper },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  iconCircle: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.violetTint },
-  icon: { color: theme.violetDeep },
-  headerCopy: { flex: 1, gap: 2 },
-  title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11 },
-  counter: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  steps: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 2 },
-  step: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  stepDot: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.canvas, borderWidth: 1, borderColor: theme.violetLine },
-  stepDotDone: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
-  stepCheck: { color: theme.onAccent },
-  stepNumber: { color: theme.violetDeep },
-  stepText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
-  stepTextDone: { color: theme.violetDeep },
-  connector: { flex: 1, height: 2, marginHorizontal: 7, backgroundColor: theme.violetLine },
-  connectorDone: { backgroundColor: theme.violetDeep },
-  revealCard: { gap: 3, padding: 9, borderRadius: 10, backgroundColor: theme.violetTint },
-  answerCard: { gap: 3, padding: 9, borderRadius: 10, backgroundColor: theme.berryTint },
-  label: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.4 },
-  body: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17 },
-  answer: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 16 },
-  button: { minHeight: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 11, backgroundColor: theme.violetDeep, paddingHorizontal: 12, paddingVertical: 8 },
-  buttonText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  container: { alignSelf: 'stretch' },
+  trigger: { minHeight: 44, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8, paddingHorizontal: 0 },
+  triggerIcon: { width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.sunTint },
+  triggerText: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: 12 },
+  disabled: { opacity: 0.5 },
+  content: { borderRadius: 14, borderWidth: 1, borderLeftWidth: 3, borderColor: theme.line, borderLeftColor: theme.sunDeep, backgroundColor: theme.paper, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 10, gap: 8 },
+  contentHeader: { minHeight: 20, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  label: { flex: 1, color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11, letterSpacing: 0.15 },
+  body: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21 },
+  answerRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.line, marginTop: 6, paddingTop: 12, gap: 4 },
+  answer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 18, lineHeight: 25 },
+  revealButton: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
+  revealText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
 }));

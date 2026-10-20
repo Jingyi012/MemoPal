@@ -1,5 +1,4 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { AppButton } from '@/components/ui/AppButton';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -8,10 +7,12 @@ import { RecallAnswerCard } from '@/components/RecallAnswerCard';
 import { RecallResultCard } from '@/components/RecallResultCard';
 import { PalaceFocusCard } from '@/features/palace-scenes/components/PalaceFocusCard';
 import { PalaceOrderedList } from '@/features/palace-scenes/components/PalaceOrderedList';
-import { PalaceRecallHints } from '@/features/palace-scenes/components/PalaceRecallHints';
+import { PALACE_MAX_HINTS, PalaceRecallHints } from '@/features/palace-scenes/components/PalaceRecallHints';
+import { List, MapPin } from '@/core/icons';
 import { useMemorySet, type MemorySet } from '@/features/memory-sets';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
 import { createThemedStyles } from '@/theme/createThemedStyles';
+import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { usePalaceScene } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import {
@@ -24,7 +25,6 @@ import {
   upsertRecallResponse,
   restoreRecallQueue,
   reinforceRecallQueue,
-  MAX_RECALL_ATTEMPTS,
   useCreatePracticeAttempt,
   type PracticeAttemptInput,
   type PracticeResponseInput,
@@ -36,8 +36,9 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Svg, { Polyline } from 'react-native-svg';
 
-type SessionMode = 'browse' | 'walk' | 'list' | 'recall';
+type SessionMode = 'walk' | 'list' | 'recall';
 type Feedback = 'correct' | 'wrong' | null;
 
 export default function PalaceMemorySessionScreen({
@@ -67,7 +68,7 @@ export default function PalaceMemorySessionScreen({
   const sceneQuery = usePalaceScene(sceneId);
   const [activeIndex, setActiveIndex] = useState(0);
   const [recallOrder, setRecallOrder] = useState<string[]>([]);
-  const [mode, setMode] = useState<SessionMode>(startInRecall ? 'recall' : 'browse');
+  const [mode, setMode] = useState<SessionMode>(startInRecall ? 'recall' : 'walk');
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [questionHintCount, setQuestionHintCount] = useState(0);
@@ -211,7 +212,7 @@ export default function PalaceMemorySessionScreen({
         return;
       }
 
-      setMode(snapshot.mode);
+      setMode(snapshot.mode === 'browse' ? 'walk' : snapshot.mode);
       setActiveIndex(snapshot.activeIndex);
       setRecallOrder(restoreRecallQueue(memorySet.items, snapshot.recallOrder));
       setFeedback(snapshot.feedback ?? null);
@@ -328,6 +329,21 @@ export default function PalaceMemorySessionScreen({
     : placements[activeIndex];
   const recallComplete = mode === 'recall' && activeIndex >= currentRecallOrder.length;
 
+  const selectLocus = (index: number) => {
+    setActiveIndex(index);
+    void Haptics.selectionAsync();
+  };
+
+  const advanceWalk = () => {
+    if (activeIndex === placements.length - 1) {
+      playSound('complete');
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setActiveIndex(0);
+      return;
+    }
+    selectLocus(activeIndex + 1);
+  };
+
   const startRecall = () => {
     if (browseOnly) return;
     checkingAnswerRef.current = false;
@@ -408,22 +424,29 @@ export default function PalaceMemorySessionScreen({
   };
 
   const requestHint = () => {
-    if (!active || questionHintCount >= 3 || feedback || isFinishing) return;
-    setQuestionHintCount((count) => Math.min(3, count + 1));
+    if (!active || questionHintCount >= PALACE_MAX_HINTS || feedback || isFinishing) return;
+    setQuestionHintCount((count) => Math.min(PALACE_MAX_HINTS, count + 1));
     setResponses((current) => {
       const existing = current.find((response) => response.memoryItemId === active.item.id);
       if (existing) return current.map((response) => response.memoryItemId === active.item.id
-        ? { ...response, hintCount: Math.min(3, (response.hintCount ?? 0) + 1) } : response);
+        ? { ...response, hintCount: Math.min(PALACE_MAX_HINTS, (response.hintCount ?? 0) + 1) } : response);
       return [...current, { memoryItemId: active.item.id, isCorrect: false, attemptCount: 0, responseMs: 0, hintCount: 1 }];
     });
   };
 
   const renderRecallCue = () => {
     if (!active?.locus) return null;
-    const zoom = 2.15;
+    const zoom = 1.65;
+    // Clamp the crop to the image edges so peripheral loci never expose empty space.
+    const imageLeft = Math.max(100 - zoom * 100, Math.min(0, 50 - zoom * active.locus.xPercent));
+    const imageTop = Math.max(100 - zoom * 100, Math.min(0, 50 - zoom * active.locus.yPercent));
     return (
       <View style={styles.recallCue}>
-        <View style={styles.recallCueWindow}>
+      <View
+        accessible
+        accessibilityRole="image"
+        accessibilityLabel={`${t('locusLabel')} ${active.item.position}: ${getPalaceLocusName(active.locus, language)}`}
+        style={styles.recallCueWindow}>
           <AppImage
             imageUrl={scene.imageUrl}
             imageSource={scene.imageSource}
@@ -431,101 +454,83 @@ export default function PalaceMemorySessionScreen({
               styles.recallCueImage,
               {
                 height: `${zoom * 100}%`,
-                left: `${50 - zoom * active.locus.xPercent}%`,
-                top: `${50 - zoom * active.locus.yPercent}%`,
+                left: `${imageLeft}%`,
+                top: `${imageTop}%`,
                 width: `${zoom * 100}%`,
               },
             ]}
             transition={250}
           />
-          <View style={styles.recallCueTarget}>
-            <Text style={styles.recallCuePin}>📍</Text>
-          </View>
-          <View style={styles.recallCueLabel}>
-            <Text style={styles.recallCueLabelText}>{getPalaceLocusName(active.locus, language)}</Text>
+          <View style={[styles.recallCueTarget, {
+            left: `${imageLeft + zoom * active.locus.xPercent}%`,
+            top: `${imageTop + zoom * active.locus.yPercent}%`,
+          }]}>
+            <Text style={styles.recallCuePin}>{active.item.position}</Text>
           </View>
         </View>
-        <Text style={styles.recallCueCaption}>{t('recallCueHint')}</Text>
       </View>
     );
   };
 
   const renderModeRail = () => {
     const isRehearsing = mode !== 'recall';
-    const openRehearsalView = (nextMode: 'browse' | 'walk' | 'list') => {
-      setMode(nextMode);
-      setActiveIndex(0);
-      setFeedback(null);
-      setAnswer('');
-    };
 
     return (
-      <>
-        <View style={styles.modeRail}>
-          <Pressable
-            accessibilityRole="tab"
-            accessibilityLabel={t('rehearseMode')}
-            accessibilityState={{ selected: isRehearsing, disabled: !isRehearsing && !recallComplete }}
-            disabled={!isRehearsing && !recallComplete}
-            onPress={() => {
-              if (!isRehearsing) openRehearsalView('browse');
-            }}
-            style={[styles.modeCard, isRehearsing && styles.modeCardActive]}>
-            <Text style={styles.modeEmoji}>👀</Text>
-            <View style={styles.modeCardCopy}>
-              <Text style={[styles.modeTabText, isRehearsing && styles.modeTabTextActive]}>
-                {t('rehearseMode')}
-              </Text>
-              <Text style={[styles.modeTabBody, isRehearsing && styles.modeTabBodyActive]}>
-                {t('rehearseModeBody')}
-              </Text>
-            </View>
-          </Pressable>
-          {!browseOnly ? <Pressable
-            accessibilityRole="tab"
-            accessibilityLabel={t('recallMode')}
-            accessibilityState={{ selected: mode === 'recall', disabled: mode === 'recall' && !recallComplete }}
-            disabled={mode === 'recall' && !recallComplete}
-            onPress={startRecall}
-            style={[styles.modeCard, mode === 'recall' && styles.modeCardActive]}>
-            <Text style={styles.modeEmoji}>🧠</Text>
-            <View style={styles.modeCardCopy}>
-              <Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>
-                {t('recallMode')}
-              </Text>
-              <Text style={[styles.modeTabBody, mode === 'recall' && styles.modeTabBodyActive]}>
-                {t('recallModeBody')}
-              </Text>
-            </View>
-          </Pressable> : null}
-        </View>
-        {isRehearsing ? (
-          <View style={styles.subModeRail}>
-            {(
-              [
-                ['browse', '🗺️', t('map')],
-                ['walk', '🚶', t('walk')],
-                ['list', '📋', t('list')],
-              ] as const
-            ).map(([nextMode, emoji, label]) => (
-              <Pressable
-                key={nextMode}
-                accessibilityRole="tab"
-                accessibilityLabel={label}
-                accessibilityState={{ selected: mode === nextMode }}
-                onPress={() => openRehearsalView(nextMode)}
-                style={[styles.subModeTab, mode === nextMode && styles.subModeTabActive]}>
-                <Text style={styles.subModeEmoji}>{emoji}</Text>
-                <Text style={[styles.subModeText, mode === nextMode && styles.subModeTextActive]}>
-                  {label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-      </>
+      <View style={styles.modeRail}>
+        <Pressable
+          accessibilityRole="tab"
+          accessibilityLabel={`${t('rehearseMode')}. ${t('rehearseModeBody')}`}
+          accessibilityState={{ selected: isRehearsing, disabled: !isRehearsing && !recallComplete }}
+          disabled={!isRehearsing && !recallComplete}
+          onPress={() => {
+            if (mode === 'list') {
+              setMode('walk');
+              return;
+            }
+            if (mode === 'recall' && recallComplete) {
+              setMode('walk');
+              setActiveIndex(0);
+              setFeedback(null);
+              setAnswer('');
+            }
+          }}
+          style={[styles.modeCard, isRehearsing && styles.modeCardActive]}>
+          <Text style={styles.modeEmoji}>🚶</Text>
+          <Text style={[styles.modeTabText, isRehearsing && styles.modeTabTextActive]}>{t('rehearseMode')}</Text>
+        </Pressable>
+        {!browseOnly ? <Pressable
+          accessibilityRole="tab"
+          accessibilityLabel={`${t('recallMode')}. ${t('recallModeBody')}`}
+          accessibilityState={{ selected: mode === 'recall', disabled: mode === 'recall' && !recallComplete }}
+          disabled={mode === 'recall' && !recallComplete}
+          onPress={startRecall}
+          style={[styles.modeCard, mode === 'recall' && styles.modeCardActive]}>
+          <Text style={styles.modeEmoji}>🧠</Text>
+          <Text style={[styles.modeTabText, mode === 'recall' && styles.modeTabTextActive]}>{t('recallMode')}</Text>
+        </Pressable> : null}
+      </View>
     );
   };
+
+  const renderViewAction = () => (
+    <View style={styles.viewActionRow}>
+      <AnimatedPressable
+        accessibilityRole="button"
+        accessibilityLabel={mode === 'list' ? t('returnToScene') : t('openDirectory')}
+        onPress={() => setMode(mode === 'list' ? 'walk' : 'list')}
+        style={styles.viewActionButton}>
+        {mode === 'list' ? (
+          <MapPin size={16} color={theme.violetDeep} />
+        ) : (
+          <List size={16} color={theme.violetDeep} />
+        )}
+        <Text style={styles.viewActionText}>
+          {mode === 'list' ? t('returnToScene') : t('openDirectory')}
+        </Text>
+        {mode !== 'list' ? <Text style={styles.viewActionCount}>{placements.length}</Text> : null}
+      </AnimatedPressable>
+    </View>
+  );
 
   const renderRecallPanel = () =>
     recallComplete ? (
@@ -594,23 +599,23 @@ export default function PalaceMemorySessionScreen({
         feedbackText={
           feedback === 'correct'
             ? t('correctFeedback')
-            : `${reviewText('answerFeedback').replace('{answer}', active.item.answer)} ${
-              (responses.find((item) => item.memoryItemId === active.item.id)?.attemptCount ?? 0) >= MAX_RECALL_ATTEMPTS
-                ? reviewText('reinforcementFinished') : reviewText('reinforcementLater')}`
+            : reviewText('answerFeedback').replace('{answer}', active.item.answer)
         }
         actionLabel={
           isFinishing
             ? t('savingProgress')
             : feedback
-              ? t('nextLocusAction')
+              ? activeIndex === currentRecallOrder.length - 1
+                ? t('finishRecallAction')
+                : t('nextLocusAction')
               : t('checkAnswer')
         }
         actionDisabled={isFinishing}
         answerAccessibilityLabel={t('typeYourAnswer')}
         answerPlaceholder={t('typeYourAnswer')}
         progressLabel={`${t('recalledFirstTrySoFar')}: ${recalledFirstTry} / ${placements.length}`}
-        cue={<View>
-          {renderRecallCue()}
+        cue={renderRecallCue()}
+        assistance={
           <PalaceRecallHints
             item={active.item}
             binding={active.binding ?? null}
@@ -619,10 +624,7 @@ export default function PalaceMemorySessionScreen({
             disabled={isFinishing}
             onHint={requestHint}
           />
-          {feedback === 'wrong' && active.binding?.associationText ? (
-            <Text style={styles.saveState}>{active.binding.associationText}</Text>
-          ) : null}
-        </View>}
+        }
         onAnswerFocus={queueRecallInputScroll}
         actionAreaRef={(view) => {
           recallActionRef.current = view;
@@ -637,75 +639,92 @@ export default function PalaceMemorySessionScreen({
       />
     ) : null;
 
-  const renderMap = () => (
-    <View style={styles.mapStage}>
-      <View style={styles.canvas}>
-        <AppImage
-          imageUrl={scene.imageUrl}
-          imageSource={scene.imageSource}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <View pointerEvents="none" style={styles.floor} />
-        {placements.map((placement, index) =>
-          placement.locus ? (
-            <Pressable
-              key={placement.item.id}
-              accessibilityLabel={t('locusAccessibility')
-                .replace('{number}', String(index + 1))
-                .replace('{name}', getPalaceLocusName(placement.locus, language))}
-              onPress={() => mode === 'browse' && setActiveIndex(index)}
-              style={[
-                styles.marker,
-                { left: `${placement.locus.xPercent}%`, top: `${placement.locus.yPercent}%` },
-                index === activeIndex && styles.activeMarker,
-              ]}>
-              <Text style={styles.markerText}>{index + 1}</Text>
-            </Pressable>
-          ) : null
-        )}
+  const renderMap = () => {
+    const routePoints = placements
+      .flatMap(({ locus }) => locus ? [`${locus.xPercent},${locus.yPercent}`] : [])
+      .join(' ');
+    const progressPercent = placements.length
+      ? Math.min(100, ((activeIndex + 1) / placements.length) * 100)
+      : 0;
+    const progressLabel = t('walkProgress')
+      .replace('{current}', String(activeIndex + 1))
+      .replace('{total}', String(placements.length));
+    return (
+      <View style={styles.mapStage}>
+        <View style={styles.mapToolbar}>
+          <View
+            accessibilityLabel={progressLabel}
+            accessibilityRole="progressbar"
+            accessibilityValue={{ min: 0, max: placements.length, now: activeIndex + 1 }}
+            style={styles.routeProgress}>
+            <Text numberOfLines={1} style={styles.routeProgressText}>{progressLabel}</Text>
+            <View style={styles.routeProgressTrack}>
+              <View style={[styles.routeProgressFill, { width: `${progressPercent}%` }]} />
+            </View>
+          </View>
+          <AnimatedPressable
+            accessibilityRole="button"
+            accessibilityLabel={t('openDirectory')}
+            onPress={() => setMode('list')}
+            style={styles.mapDirectoryButton}>
+            <List size={18} color={theme.violetDeep} />
+          </AnimatedPressable>
+        </View>
+        <View style={styles.canvas}>
+          <AppImage
+            imageUrl={scene.imageUrl}
+            imageSource={scene.imageSource}
+            style={StyleSheet.absoluteFillObject}
+          />
+          <View pointerEvents="none" style={styles.floor} />
+          <Svg pointerEvents="none" style={StyleSheet.absoluteFillObject} viewBox="0 0 100 100" preserveAspectRatio="none" accessibilityElementsHidden>
+            <Polyline points={routePoints} fill="none" stroke="#FFC43F" strokeDasharray="2.2 2.4" strokeLinecap="round" strokeLinejoin="round" strokeWidth={0.8} />
+          </Svg>
+          {placements.map((placement, index) =>
+            placement.locus ? (
+              <Pressable
+                accessibilityRole="button"
+                key={placement.item.id}
+                accessibilityLabel={t('locusAccessibility')
+                  .replace('{number}', String(index + 1))
+                  .replace('{name}', getPalaceLocusName(placement.locus, language))}
+                accessibilityState={{ selected: index === activeIndex, disabled: mode !== 'walk' }}
+                disabled={mode !== 'walk'}
+                onPress={() => mode === 'walk' && selectLocus(index)}
+                style={[
+                  styles.markerHit,
+                  { left: `${placement.locus.xPercent}%`, top: `${placement.locus.yPercent}%` },
+                ]}>
+                <View style={[
+                  styles.marker,
+                  index < activeIndex && styles.visitedMarker,
+                  index === activeIndex && styles.activeMarker,
+                ]}>
+                  <Text style={[
+                    styles.markerText,
+                  index === activeIndex && styles.activeMarkerText,
+                    index < activeIndex && styles.visitedMarkerText,
+                  ]}>{index < activeIndex ? '✓' : index + 1}</Text>
+                </View>
+              </Pressable>
+            ) : null
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const renderSessionPanel = () => (
     <>
-      {mode === 'browse' && active ? (
-        <View style={styles.previewCard}>
-          <View style={styles.previewTop}>
-            <View style={styles.previewIcon}>
-              <Text style={styles.sceneSparkle}>✨</Text>
-            </View>
-            <View style={styles.previewCopy}>
-              <Text style={styles.eyebrow}>
-                {t('locusLabel').toUpperCase()} {activeIndex + 1} ·{' '}
-                {active.locus ? getPalaceLocusName(active.locus, language).toUpperCase() : t('memorySpot')}
-              </Text>
-              <Text style={styles.previewAnswer}>{active.item.answer}</Text>
-            </View>
-          </View>
-          <Text style={styles.previewAssociation}>
-            {active.binding?.associationText ?? t('associationFallback')}
-          </Text>
-        </View>
-      ) : null}
-
       {mode === 'walk' && active ? (
         active.locus ? (
           <PalaceFocusCard
             answer={active.item.answer}
             association={active.binding?.associationText}
-            index={activeIndex}
             isLast={activeIndex === placements.length - 1}
             locus={active.locus}
-            onPrevious={() => setActiveIndex((value) => Math.max(0, value - 1))}
-            onNext={() =>
-              activeIndex === placements.length - 1
-                ? setActiveIndex(0)
-                : setActiveIndex((value) => value + 1)
-            }
-            onStartRecall={browseOnly ? undefined : startRecall}
-            scene={scene}
-            total={placements.length}
+            onPrevious={activeIndex > 0 ? () => selectLocus(activeIndex - 1) : undefined}
+            onNext={advanceWalk}
           />
         ) : null
       ) : mode === 'recall' ? (
@@ -719,44 +738,9 @@ export default function PalaceMemorySessionScreen({
             association: placement.binding?.associationText,
             locusName: placement.locus ? getPalaceLocusName(placement.locus, language) : undefined,
           }))}
-          onSelect={setActiveIndex}
+          onSelect={selectLocus}
         />
-      ) : (
-        <>
-          {placements.map((placement, index) => (
-            <AnimatedPressable
-              key={placement.item.id}
-              onPress={() => setActiveIndex(index)}
-              style={[styles.itemRow, index === activeIndex && styles.activeRow]}>
-              <View style={styles.itemNumber}>
-                <Text style={styles.itemNumberText}>{index + 1}</Text>
-              </View>
-              <View style={styles.flex}>
-                <Text style={styles.itemAnswer}>{placement.item.answer}</Text>
-                <Text style={styles.itemLocus}>{placement.locus ? getPalaceLocusName(placement.locus, language) : null}</Text>
-              </View>
-            </AnimatedPressable>
-          ))}
-          <AppButton
-            fullWidth
-            label={`🚶 ${t('walkThrough')}`}
-            onPress={() => {
-              setActiveIndex(0);
-              setMode('walk');
-            }}
-            size="large"
-            style={styles.primaryButton}
-          />
-          <AppButton
-            fullWidth
-            label={browseOnly ? planText('backToMemory') : t('recallChallenge')}
-            onPress={browseOnly ? leaveSession : startRecall}
-            size="large"
-            style={styles.secondaryButton}
-            variant="secondary"
-          />
-        </>
-      )}
+      ) : null}
     </>
   );
 
@@ -787,21 +771,28 @@ export default function PalaceMemorySessionScreen({
             ? { paddingBottom: recallKeyboardOverlay + 24 }
             : null,
         ]}>
-        {mode !== 'recall' ? renderMap() : null}
+        {sessionScope && startInRecall ? null : (
+          <View style={styles.modePanel}>
+            {hasRestoredSession ? (
+              <AnimatedPressable
+                onPress={() => setHasRestoredSession(false)}
+                style={styles.restoreNotice}>
+                <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
+              </AnimatedPressable>
+            ) : null}
+            {renderModeRail()}
+          </View>
+        )}
+        {mode === 'walk' ? renderMap() : null}
         <View style={styles.sessionPanel}>
-          <Text style={styles.hint}>
-            {mode === 'recall'
-              ? t('activeLocusHint')
-              : t('routeNavigationHint')}
-          </Text>
-          {hasRestoredSession ? (
+          {sessionScope && startInRecall && hasRestoredSession ? (
             <AnimatedPressable
               onPress={() => setHasRestoredSession(false)}
               style={styles.restoreNotice}>
               <Text style={styles.restoreNoticeText}>{t('restored')}</Text>
             </AnimatedPressable>
           ) : null}
-          {sessionScope && startInRecall ? null : renderModeRail()}
+          {mode === 'list' ? renderViewAction() : null}
           {renderSessionPanel()}
         </View>
       </ScrollView>
@@ -814,8 +805,9 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   sessionScroll: { flex: 1 },
   sessionContent: { paddingBottom: 24 },
   sessionPanel: { paddingHorizontal: 16, paddingBottom: 24 },
-  mapStage: { padding: 16, paddingBottom: 24 },
-  flex: { flex: 1 },
+  modePanel: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+  mapStage: { paddingHorizontal: 16, paddingTop: 2, paddingBottom: 8 },
+  mapToolbar: { alignItems: 'center', flexDirection: 'row', gap: 8, marginBottom: 8 },
   canvas: {
     aspectRatio: 4 / 3,
     borderRadius: 20,
@@ -835,12 +827,18 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     borderColor: theme.sunLine,
     borderRadius: 14,
   },
-  marker: {
+  markerHit: {
     position: 'absolute',
+    width: 44,
+    height: 44,
+    marginLeft: -22,
+    marginTop: -22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  marker: {
     width: 34,
     height: 34,
-    marginLeft: -17,
-    marginTop: -17,
     borderRadius: 17,
     backgroundColor: theme.violet,
     borderWidth: 2.5,
@@ -849,8 +847,46 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     justifyContent: 'center',
     boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.18)',
   },
-  activeMarker: { backgroundColor: theme.violetDeep, transform: [{ scale: 1.18 }] },
-  markerText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  visitedMarker: { backgroundColor: theme.mintTint, borderColor: theme.mintLine },
+  activeMarker: {
+    backgroundColor: theme.violetDeep,
+    borderWidth: 3,
+    transform: [{ scale: 1.2 }],
+    boxShadow: '0px 0px 0px 5px rgba(255, 255, 255, 0.58), 0px 4px 10px rgba(43, 42, 61, 0.24)',
+  },
+  markerText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  activeMarkerText: { color: theme.onAccent },
+  visitedMarkerText: { color: theme.successText },
+  routeProgress: {
+    alignItems: 'center',
+    backgroundColor: theme.paper,
+    borderColor: theme.violetLine,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    flex: 1,
+    flexDirection: 'row',
+    gap: 10,
+    height: 44,
+    paddingHorizontal: 12,
+  },
+  routeProgressText: {
+    color: theme.violetDeep,
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 10,
+    flexShrink: 0,
+  },
+  routeProgressTrack: { flex: 1, height: 5, borderRadius: 999, overflow: 'hidden', backgroundColor: theme.violetTint },
+  routeProgressFill: { height: '100%', borderRadius: 999, backgroundColor: theme.sun },
+  mapDirectoryButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.94)',
+  },
   hint: {
     color: theme.inkSoft,
     fontFamily: typography.bodyBold,
@@ -875,106 +911,38 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     lineHeight: 17,
     textAlign: 'center',
   },
-  modeRail: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  modeRail: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: 17, backgroundColor: theme.violetTint, marginBottom: 12 },
   modeCard: {
     flex: 1,
     minWidth: 0,
-    minHeight: 70,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.paper,
+    minHeight: 44,
+    borderRadius: 13,
+    borderWidth: 0,
+    backgroundColor: 'transparent',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
-    paddingHorizontal: 9,
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
   },
   modeCardActive: {
-    backgroundColor: theme.night,
-    borderColor: theme.night,
-    boxShadow: '0px 3px 0px rgba(43,42,61,0.12)',
+    backgroundColor: theme.paper,
+    boxShadow: '0px 2px 6px rgba(43, 42, 61, 0.06)',
   },
-  modeEmoji: { fontSize: 15 },
+  modeEmoji: { fontSize: 14 },
   modeTabText: {
     color: theme.inkSoft,
     flexShrink: 1,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 11.5,
+    fontSize: 11,
+    textAlign: 'center',
   },
-  modeTabTextActive: { color: 'white' },
-  modeCardCopy: { flex: 1, minWidth: 0 },
-  modeTabBody: {
-    color: theme.inkSoft,
-    fontFamily: typography.bodySemibold,
-    fontSize: 9.5,
-    lineHeight: 13,
-    marginTop: 2,
-  },
-  modeTabBodyActive: { color: 'rgba(255,255,255,0.78)' },
-  subModeRail: { flexDirection: 'row', gap: 6, marginBottom: 12 },
-  subModeTab: {
-    alignItems: 'center',
-    backgroundColor: theme.violetTint,
-    borderColor: theme.violetLine,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    flex: 1,
-    flexDirection: 'row',
-    gap: 4,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingVertical: 8,
-    paddingHorizontal: 5,
-  },
-  subModeTabActive: { backgroundColor: theme.violetTint, borderColor: theme.violet },
-  subModeEmoji: { fontSize: 13 },
-  subModeText: { color: theme.inkSoft, flexShrink: 1, textAlign: 'center', fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  subModeTextActive: { color: theme.violetDeep },
-  previewCard: {
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: theme.violetLine,
-    backgroundColor: theme.violetTint,
-    padding: 14,
-    marginBottom: 12,
-  },
-  previewTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  previewIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
-    backgroundColor: theme.violetTint,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  previewCopy: { flex: 1 },
-  eyebrow: {
-    color: theme.violetDeep,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 10,
-    letterSpacing: 0.8,
-  },
-  previewAnswer: {
-    color: theme.ink,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 19,
-    marginTop: 4,
-  },
-  previewAssociation: {
-    color: theme.inkSoft,
-    fontFamily: typography.bodyBold,
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 10,
-  },
-  sceneSparkle: { fontSize: 18 },
-  recallEmoji: { fontSize: 22 },
+  modeTabTextActive: { color: theme.violetDeep },
   recallCue: { width: '100%' },
   recallCueWindow: {
-    aspectRatio: 2.15,
-    borderColor: theme.violetLine,
-    borderRadius: 16,
-    borderWidth: 2,
+    aspectRatio: 4 / 3,
+    borderRadius: 20,
+    borderWidth: 0,
     overflow: 'hidden',
     position: 'relative',
     backgroundColor: theme.violetTint,
@@ -996,56 +964,30 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     width: 40,
     boxShadow: '0px 2px 6px rgba(43, 42, 61, 0.22)',
   },
-  recallCuePin: { fontSize: 14 },
-  recallCueLabel: {
-    backgroundColor: 'rgba(36,31,56,.84)',
-    borderRadius: 999,
-    left: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    position: 'absolute',
-    top: 10,
-  },
-  recallCueLabelText: {
-    color: 'white',
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 9,
-    letterSpacing: 0.5,
-  },
-  recallCueCaption: {
-    color: theme.inkSoft,
-    fontFamily: typography.bodySemibold,
-    fontSize: 10,
-    lineHeight: 15,
-    marginTop: 7,
-    textAlign: 'center',
-  },
-  itemRow: {
-    minHeight: 62,
+  recallCuePin: { fontSize: 14, color: theme.ink, fontFamily: typography.bodyExtraBold },
+  viewActionRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 10 },
+  viewActionButton: {
+    alignItems: 'center',
+    backgroundColor: theme.violetTint,
+    borderColor: theme.violetLine,
+    borderRadius: 14,
+    borderWidth: 1.5,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: theme.line,
+    gap: 7,
+    minHeight: 44,
+    paddingHorizontal: 12,
+  },
+  viewActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  viewActionCount: {
     backgroundColor: theme.paper,
-    padding: 10,
-    marginBottom: 8,
+    borderRadius: 999,
+    color: theme.violetDeep,
+    fontFamily: typography.bodyExtraBold,
+    fontSize: 10,
+    overflow: 'hidden',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
   },
-  activeRow: { borderColor: theme.violet, backgroundColor: theme.violetTint },
-  itemNumber: {
-    width: 29,
-    height: 29,
-    borderRadius: 15,
-    backgroundColor: theme.violet,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  itemLocus: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginTop: 2 },
-  primaryButton: { marginTop: 10 },
-  secondaryButton: { marginTop: 12 },
   saveState: {
     color: theme.inkSoft,
     fontFamily: typography.bodyBold,

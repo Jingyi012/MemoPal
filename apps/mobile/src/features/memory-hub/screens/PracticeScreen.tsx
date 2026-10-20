@@ -199,8 +199,8 @@ export default function PracticeScreen() {
               const recommended = recommendedTechnique === key && availableTechniques.has(key);
               const cardInk = '#211A36';
               const gradientColors = isPeg
-                ? ['#FFE17D', '#FFC080', '#FF9EB6']
-                : ['#D3C7FF', '#C2AEFF', '#DCA9EC'];
+                ? (['#FFE17D', '#FFC080', '#FF9EB6'] as const)
+                : (['#D3C7FF', '#C2AEFF', '#DCA9EC'] as const);
               return (
                 <View key={module.key} style={styles.techniqueCardWrap}>
                   {recommended ? <View style={styles.recommendedBadge}><Text style={styles.recommendedText}>✦ {t('recommended')}</Text></View> : null}

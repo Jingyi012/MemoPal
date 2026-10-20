@@ -1,30 +1,54 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { AppButton } from '@/components/ui/AppButton';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
-import { typography } from '@/theme/typography';
 import { usePalaceScenes } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import { isPalaceSceneUnlocked } from '@/features/palace-scenes/utils/palaceCapacity';
+import { getPalaceSceneName } from '@/features/palace-scenes/utils/palaceLocalization';
+import type { PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
+import { createThemedStyles } from '@/theme/createThemedStyles';
+import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
-import { Href, useRouter } from 'expo-router';
-import { ArrowRight } from '@/core/icons';
+import { useRouter } from 'expo-router';
+import { ArrowRight, Check, LockKeyhole } from '@/core/icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+type SceneCategory = 'all' | 'home' | 'work' | 'outdoor';
+const CATEGORY_LABEL: Record<SceneCategory, 'allScenes' | 'homeScenes' | 'workScenes' | 'outdoorScenes'> = {
+  all: 'allScenes', home: 'homeScenes', work: 'workScenes', outdoor: 'outdoorScenes',
+};
 
 export default function PalaceMapScreen() {
+  const { styles, theme } = useStyles();
   const router = useRouter();
-  const { t } = useTranslation('palace');
+  const insets = useSafeAreaInsets();
+  const { t, language } = useTranslation('palace');
   const { isOffline, canShowRequestErrors } = useNetworkStatus();
   const { user } = useCurrentUser();
-  const scenes = usePalaceScenes();
+  const scenesQuery = usePalaceScenes();
+  const [category, setCategory] = useState<SceneCategory>('all');
+  const [selectedSceneId, setSelectedSceneId] = useState<string | null>(null);
   const isPremium = Boolean(user?.isPremium);
   const currentLevel = Math.max(1, user?.level ?? 1);
-  const availableScenes = (scenes.data ?? []).filter((scene) => isPalaceSceneUnlocked(scene, currentLevel, isPremium));
+  const scenes = scenesQuery.data ?? [];
+  const filteredScenes = useMemo(
+    () => scenes.filter((scene) => category === 'all' || getSceneCategory(scene) === category),
+    [category, scenes]
+  );
+  const selectedScene = scenes.find((scene) => scene.id === selectedSceneId);
+  const availableCount = scenes.filter((scene) => isPalaceSceneUnlocked(scene, currentLevel, isPremium)).length;
+  const openSelectedScene = () => {
+    if (selectedScene) {
+      router.push({ pathname: '/palaces/create-memory', params: { sceneId: selectedScene.id } });
+    }
+  };
 
   return (
     <View style={styles.page}>
@@ -35,105 +59,173 @@ export default function PalaceMapScreen() {
         backAction={() => router.back()}
       />
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, selectedScene && styles.contentWithDock]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={scenes.isRefetching} onRefresh={scenes.refetch} />}>
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryIcon}><Text style={styles.summaryEmoji}>🗺️</Text></View>
-          <View style={styles.summaryCopy}>
-            <Text style={styles.summaryTitle}>{t('roomsReadyTitle').replace('{count}', String(availableScenes.length))}</Text>
-            <Text style={styles.summaryBody}>{t('roomsReadyBody')}</Text>
+        refreshControl={<RefreshControl refreshing={scenesQuery.isRefetching} onRefresh={() => void scenesQuery.refetch()} />}>
+        <View style={styles.libraryIntro}>
+          <View style={styles.introIcon}><Text style={styles.introEmoji}>🗺️</Text></View>
+          <View style={styles.introCopy}>
+            <Text style={styles.introTitle}>{t('roomsReadyTitle').replace('{count}', String(availableCount))}</Text>
           </View>
         </View>
 
         <View style={styles.headingRow}>
-          <View>
+          <View style={styles.headingCopy}>
             <Text style={styles.eyebrow}>{t('roomLibrary')}</Text>
             <Text style={styles.heading}>{t('chooseScene')}</Text>
           </View>
-          <Text style={styles.countPill}>{scenes.data?.length ?? 0} {t('totalCount')}</Text>
+          <Text style={styles.countPill}>{filteredScenes.length} {t('totalCount')}</Text>
         </View>
 
-        {!isOffline && scenes.isLoading ? (
+        {!isOffline && scenesQuery.isLoading ? (
           <View style={styles.loadingFrame}><LoadingView description={t('loading')} /></View>
-        ) : canShowRequestErrors && scenes.isError ? (
+        ) : canShowRequestErrors && scenesQuery.isError ? (
           <ModuleNoticeCard
             title={t('doorsStuck')}
-            body={getNumberPegErrorMessage(scenes.error, t('connection'))}
-            onAction={scenes.refetch}
+            body={getNumberPegErrorMessage(scenesQuery.error, t('connection'))}
+            onAction={() => void scenesQuery.refetch()}
           />
-        ) : scenes.data?.length ? (
-          <View style={styles.grid}>
-            {scenes.data.map((scene) => {
-              const locked = !isPalaceSceneUnlocked(scene, currentLevel, isPremium);
-              const lockReason = scene.isPremium && !isPremium
-                ? t('premium')
-                : t('unlockAtLevel').replace('{level}', String(scene.unlockLevel ?? 1));
-              return (
-                <AnimatedPressable
-                  key={scene.id}
-                  accessibilityLabel={(locked ? t('unlockScene') : t('useScene')).replace('{name}', scene.name)}
-                  onPress={() => {
-                    if (!locked) router.push(`/palaces/create-memory?sceneId=${encodeURIComponent(scene.id)}` as Href);
-                  }}
-                  style={[styles.sceneCard, locked && styles.sceneCardLocked]}>
-                  <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={styles.sceneImage} />
-                  <View style={styles.sceneShade} />
-                  {locked ? <View style={styles.lockBadge}><Text style={styles.lockEmoji}>🔒</Text><Text style={styles.lockText}>{lockReason}</Text></View> : null}
-                  <View style={styles.sceneCopy}>
-                    <Text numberOfLines={1} style={styles.sceneName}>{scene.name}</Text>
-                    <Text style={styles.sceneMeta}>{t('lociCount').replace('{count}', String(scene.loci.length))}</Text>
-                  </View>
-                </AnimatedPressable>
-              );
-            })}
-          </View>
+        ) : scenes.length ? (
+          <>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRail}>
+              {(Object.keys(CATEGORY_LABEL) as SceneCategory[]).map((key) => {
+                const active = category === key;
+                return (
+                  <AnimatedPressable
+                    key={key}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    onPress={() => {
+                      setCategory(key);
+                      setSelectedSceneId(null);
+                    }}
+                    style={[styles.categoryChip, active && styles.categoryChipActive]}>
+                    <Text style={[styles.categoryText, active && styles.categoryTextActive]}>{t(CATEGORY_LABEL[key])}</Text>
+                  </AnimatedPressable>
+                );
+              })}
+            </ScrollView>
+            {filteredScenes.length ? (
+              <View style={styles.grid}>
+                {filteredScenes.map((scene) => {
+                  const locked = !isPalaceSceneUnlocked(scene, currentLevel, isPremium);
+                  const selected = selectedSceneId === scene.id;
+                  const lockReason = scene.isPremium && !isPremium
+                    ? t('premium')
+                    : t('unlockAtLevel').replace('{level}', String(scene.unlockLevel ?? 1));
+                  return (
+                    <SceneCard
+                      key={scene.id}
+                      scene={scene}
+                      name={getPalaceSceneName(scene, language)}
+                      selected={selected}
+                      locked={locked}
+                      lockReason={lockReason}
+                      onPress={() => setSelectedSceneId((current) => current === scene.id ? null : scene.id)}
+                    />
+                  );
+                })}
+              </View>
+            ) : (
+              <Text style={styles.noScenes}>{t('noScenesInCategory')}</Text>
+            )}
+          </>
         ) : (
-          <ModuleNoticeCard
-            title={t('noScenes')}
-            body={t('publishScene')}
-            onAction={scenes.refetch}
-          />
+          <ModuleNoticeCard title={t('noScenes')} body={t('publishScene')} onAction={() => void scenesQuery.refetch()} />
         )}
-
-        <AppButton
-          label={t('buildMemoryPalace')}
-          variant="primary"
-          size="large"
-          fullWidth
-          trailingIcon={ArrowRight}
-          onPress={() => router.push('/palaces/create-memory' as Href)}
-          style={styles.startButton}
-        />
       </ScrollView>
+
+      {selectedScene ? (
+        <View style={[styles.bottomDock, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+          <AnimatedPressable accessibilityRole="button" onPress={openSelectedScene} style={styles.createSelectedButton}>
+            <Text numberOfLines={1} style={styles.createSelectedText}>{t('createWithScene', { name: getPalaceSceneName(selectedScene, language) })}</Text>
+            <ArrowRight size={18} color={theme.onAccent} />
+          </AnimatedPressable>
+        </View>
+      ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function SceneCard({ scene, name, selected, locked, lockReason, onPress }: {
+  scene: PalaceScene;
+  name: string;
+  selected: boolean;
+  locked: boolean;
+  lockReason: string;
+  onPress: () => void;
+}) {
+  const { styles, theme } = useStyles();
+  const { t } = useTranslation('palace');
+  return (
+    <AnimatedPressable
+      accessibilityRole="button"
+      accessibilityLabel={`${locked ? t('unlockScene') : t('useScene')}: ${name}`}
+      accessibilityState={{ selected, disabled: locked }}
+      disabled={locked}
+      onPress={onPress}
+      style={[styles.sceneCard, selected && styles.sceneCardSelected, locked && styles.sceneCardLocked]}>
+      <AppImage imageUrl={scene.imageUrl} imageSource={scene.imageSource} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(30,23,53,0.02)', 'rgba(30,23,53,0.04)', 'rgba(30,23,53,0.78)']} locations={[0, 0.48, 1]} style={StyleSheet.absoluteFill} />
+      {locked ? (
+        <View style={styles.lockBadge}>
+          <LockKeyhole size={12} color="#FFFFFF" />
+          <Text numberOfLines={1} style={styles.lockText}>{lockReason}</Text>
+        </View>
+      ) : null}
+      {selected ? <View style={styles.selectedBadge}><Check size={15} color={theme.onSun} strokeWidth={3} /></View> : null}
+      <View style={styles.sceneCopy}>
+        <Text numberOfLines={2} style={styles.sceneName}>{name}</Text>
+        <Text style={styles.sceneMeta}>{t('lociCount').replace('{count}', String(scene.loci.length))}</Text>
+      </View>
+    </AnimatedPressable>
+  );
+}
+
+function getSceneCategory(scene: PalaceScene): Exclude<SceneCategory, 'all'> | null {
+  const text = `${scene.name} ${scene.description}`.toLocaleLowerCase();
+  if (/garden|backyard|park|trail|street|outdoor|patio|beach|forest|花园|后院|公园|户外|街道|海边|森林|露台/.test(text)) return 'outdoor';
+  if (/office|workshop|work|classroom|school|studio|desk|办公室|工作室|教室|学校|书房|工作/.test(text)) return 'work';
+  if (/home|house|foyer|entry|living|dining|kitchen|pantry|laundry|utility|bedroom|room|家|房|玄关|客厅|餐厅|厨房|储藏|洗衣|卧室/.test(text)) return 'home';
+  const id = scene.id.toLocaleLowerCase();
+  if (/garden|backyard|park|trail|street|outdoor|patio|beach|forest/.test(id)) return 'outdoor';
+  if (/office|workshop|work|classroom|school|studio|desk/.test(id)) return 'work';
+  if (/home|house|foyer|entry|living|dining|kitchen|pantry|laundry|utility|bedroom|room/.test(id)) return 'home';
+  return null;
+}
+
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 16, paddingBottom: 40 },
-  summaryCard: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 18, borderWidth: 2, borderColor: '#DCD4FF', backgroundColor: '#F7F5FF', padding: 13 },
-  summaryIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEE9FF' },
-  summaryEmoji: { fontSize: 20 },
-  summaryCopy: { flex: 1 },
-  summaryTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 14 },
-  summaryBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, marginTop: 2 },
-  headingRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 25, marginBottom: 12 },
+  content: { gap: 16, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 30 },
+  contentWithDock: { paddingBottom: 116 },
+  libraryIntro: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 18, borderWidth: 1.5, flexDirection: 'row', gap: 11, padding: 12 },
+  introIcon: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: 13, height: 42, justifyContent: 'center', width: 42 },
+  introEmoji: { fontSize: 22 },
+  introCopy: { flex: 1 },
+  introTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 13 },
+  headingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 },
+  headingCopy: { flex: 1 },
   eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
-  heading: { color: theme.ink, fontFamily: typography.display, fontSize: 18, marginTop: 3 },
-  countPill: { color: theme.violetDeep, backgroundColor: '#EEE9FF', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 6, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  grid: { flexDirection: 'column', gap: 14 },
-  sceneCard: { width: '100%', height: 110, overflow: 'hidden', borderRadius: 20, backgroundColor: '#CFC6F4', borderWidth: 2, borderColor: '#E5DFFF' },
+  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, marginTop: 3 },
+  countPill: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 6, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  categoryRail: { gap: 8, paddingVertical: 2, paddingRight: 3 },
+  categoryChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 999, borderWidth: 1.5, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
+  categoryChipActive: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
+  categoryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  categoryTextActive: { color: theme.onAccent },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
+  sceneCard: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 19, borderWidth: 2, height: 164, overflow: 'hidden', width: '48.5%' },
+  sceneCardSelected: { borderColor: theme.sunDeep, borderWidth: 3 },
   sceneCardLocked: { opacity: 0.78 },
-  sceneImage: { ...StyleSheet.absoluteFillObject },
-  sceneShade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(43,42,61,0.28)' },
-  lockBadge: { position: 'absolute', top: 9, left: 9, flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, backgroundColor: 'rgba(43,42,61,.86)', paddingHorizontal: 7, paddingVertical: 5 },
-  lockEmoji: { fontSize: 11 },
-  lockText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 9 },
-  sceneCopy: { position: 'absolute', left: 16, right: 16, bottom: 14 },
-  sceneName: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 16, textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 5 },
-  sceneMeta: { color: 'rgba(255,255,255,0.85)', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 2 },
-  loadingFrame: { height: 150, overflow: 'hidden', borderRadius: 18 },
-  startButton: { marginTop: 20 },
-});
+  lockBadge: { alignItems: 'center', backgroundColor: 'rgba(35,29,54,0.78)', borderRadius: 999, flexDirection: 'row', gap: 4, left: 7, maxWidth: '86%', paddingHorizontal: 7, paddingVertical: 5, position: 'absolute', top: 7 },
+  lockText: { color: '#FFFFFF', flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 8.5 },
+  selectedBadge: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 14, height: 28, justifyContent: 'center', position: 'absolute', right: 8, top: 8, width: 28 },
+  sceneCopy: { bottom: 0, left: 0, paddingBottom: 10, paddingHorizontal: 10, paddingTop: 32, position: 'absolute', right: 0 },
+  sceneName: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 13, lineHeight: 18 },
+  sceneMeta: { color: 'rgba(255,255,255,0.92)', fontFamily: typography.bodyBold, fontSize: 10, marginTop: 3 },
+  noScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, paddingVertical: 20, textAlign: 'center' },
+  loadingFrame: { height: 150, justifyContent: 'center' },
+  bottomDock: { backgroundColor: theme.canvas, borderTopColor: theme.line, borderTopWidth: 1, bottom: 0, left: 0, paddingHorizontal: 20, paddingTop: 10, position: 'absolute', right: 0 },
+  createSelectedButton: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 16, flexDirection: 'row', gap: 9, justifyContent: 'center', minHeight: 50, paddingHorizontal: 14 },
+  createSelectedText: { color: theme.onAccent, flexShrink: 1, fontFamily: typography.displayExtraBold, fontSize: 13.5 },
+}));
