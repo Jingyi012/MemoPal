@@ -4,6 +4,7 @@ import { practiceCreateHref } from '@/features/onboarding/utils/onboardingRoutes
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
+import { AppButton } from '@/components/ui/AppButton';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useEnabledMemoryModules } from '@/core/memory';
@@ -177,16 +178,17 @@ export default function PracticeScreen() {
 
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{t('chooseTechnique')}</Text>
-          <AnimatedPressable
-            accessibilityRole="button"
+          <AppButton
+            label={t('allLessons')}
             accessibilityLabel={t('allLessons')}
             accessibilityHint={t('allLessonsBody')}
+            variant="secondary"
+            size="compact"
+            icon={BookOpen}
+            trailingIcon={ArrowRight}
             onPress={() => router.push('/lessons' as Href)}
-            style={styles.courseLink}>
-            <BookOpen size={15} color={activeTheme.violetDeep} />
-            <Text style={[styles.courseLinkText, { color: activeTheme.violetDeep }]}>{t('allLessons')}</Text>
-            <ArrowRight size={14} color={activeTheme.violetDeep} />
-          </AnimatedPressable>
+            style={styles.courseLink}
+          />
         </View>
 
         {modules.length ? (
@@ -195,42 +197,45 @@ export default function PracticeScreen() {
               const isPeg = module.key === 'number-peg';
               const key: TechniqueKey = isPeg ? 'number-peg' : 'palace';
               const recommended = recommendedTechnique === key && availableTechniques.has(key);
+              const cardInk = '#211A36';
+              const gradientColors = isPeg
+                ? ['#FFE17D', '#FFC080', '#FF9EB6']
+                : ['#D3C7FF', '#C2AEFF', '#DCA9EC'];
               return (
                 <View key={module.key} style={styles.techniqueCardWrap}>
                   {recommended ? <View style={styles.recommendedBadge}><Text style={styles.recommendedText}>✦ {t('recommended')}</Text></View> : null}
                   <AnimatedPressable
+                    lively
                     accessibilityRole="button"
                     accessibilityHint={t('tapToStartTechnique')}
                     accessibilityLabel={isPeg ? t('numberPeg') : t('palace')}
                     onPress={() => startTechnique(key)}
                     style={styles.techniqueCard}>
                     <LinearGradient
-                      colors={isPeg
-                        ? [activeTheme.berryTint, activeTheme.paper]
-                        : [activeTheme.violetTint, activeTheme.paper]}
+                      colors={gradientColors}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={StyleSheet.absoluteFill}
                     />
-                    <View style={[styles.techniqueOrb, { backgroundColor: isPeg ? activeTheme.berryDeep : activeTheme.violetDeep }]} />
+                    <View style={styles.techniqueOrb} />
                     <View style={styles.techniqueHeading}>
-                      <View style={[styles.techniqueIcon, { backgroundColor: activeTheme.paper }]}>
+                      <View style={styles.techniqueIcon}>
                         <Text style={styles.techniqueEmoji}>{isPeg ? '🕯️' : '🏰'}</Text>
                       </View>
                       <View style={styles.techniqueTitleBlock}>
-                        <Text style={[styles.techniqueName, { color: activeTheme.ink }]}>{isPeg ? t('numberPeg') : t('palace')}</Text>
-                        <Text style={[styles.techniqueDescription, { color: activeTheme.inkSoft }]}>{isPeg ? t('numberPegDescription') : t('palaceDescription')}</Text>
+                        <Text style={[styles.techniqueName, { color: cardInk }]}>{isPeg ? t('numberPeg') : t('palace')}</Text>
+                        <Text numberOfLines={2} style={[styles.techniqueDescription, { color: cardInk }]}>{isPeg ? t('numberPegDescription') : t('palaceDescription')}</Text>
                       </View>
-                      <View style={[styles.techniqueArrow, { backgroundColor: activeTheme.paper }]}>
-                        <ArrowRight size={16} color={isPeg ? activeTheme.berryDeep : activeTheme.violetDeep} />
+                      <View style={styles.techniqueArrow}>
+                        <ArrowRight size={16} color={cardInk} />
                       </View>
                     </View>
                     <View style={styles.techniqueBottom}>
                       <View style={styles.techniqueTags}>
-                      {(isPeg ? ['pegTagAnchor', 'pegTagList'] as const : ['palaceTagRoute', 'palaceTagLong'] as const)
-                        .map((tag) => <View key={tag} style={styles.techniqueTag}><Text style={styles.techniqueTagText}>{t(tag)}</Text></View>)}
+                        {(isPeg ? ['pegTagAnchor', 'pegTagList'] as const : ['palaceTagRoute', 'palaceTagLong'] as const)
+                          .map((tag) => <View key={tag} style={styles.techniqueTag}><Text style={[styles.techniqueTagText, { color: cardInk }]}>{t(tag)}</Text></View>)}
                       </View>
-                      <TechniqueIllustration isPeg={isPeg} color={isPeg ? activeTheme.berryDeep : activeTheme.violetDeep} />
+                      <TechniqueIllustration isPeg={isPeg} color={cardInk} />
                     </View>
                   </AnimatedPressable>
                 </View>
@@ -241,7 +246,7 @@ export default function PracticeScreen() {
 
         <SpotlightTarget id="practiceCreate" onReveal={revealTop} onActivate={() => openMemoryFlow(true)}>
           <AnimatedPressable accessibilityRole="button" onPress={createMemory} style={styles.createMemoryCard}>
-            <View style={styles.createMemoryIcon}><Plus size={21} color={theme.onSun} /></View>
+            <View style={styles.createMemoryIcon}><Plus size={21} color={theme.violetDeep} /></View>
             <View style={styles.createMemoryCopy}>
               <Text style={styles.createMemoryTitle}>{t('newMemory')}</Text>
               <Text style={styles.createMemoryBody}>{t('newMemoryBody')}</Text>
@@ -335,7 +340,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   intentChipText: { fontFamily: typography.bodyExtraBold, fontSize: 12 },
   preparingCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 52, paddingHorizontal: 14 },
   preparingText: { fontFamily: typography.bodyBold, fontSize: 11.5 },
-  reviewBanner: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderLeftColor: theme.violetDeep, borderLeftWidth: 4, borderRadius: 18, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 72, paddingHorizontal: 12, paddingVertical: 10 },
+  reviewBanner: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderLeftColor: theme.violetDeep, borderLeftWidth: 4, borderRadius: 21, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 72, paddingHorizontal: 12, paddingVertical: 10, boxShadow: '0px 4px 14px rgba(122,104,224,0.09)' },
   reviewCount: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 14, height: 46, justifyContent: 'center', minWidth: 46, paddingHorizontal: 6 },
   reviewCountText: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 21 },
   reviewCopy: { flex: 1, gap: 3, minWidth: 0 },
@@ -345,40 +350,39 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   reviewActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
   sectionHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 1, minHeight: 44 },
   sectionTitle: { fontFamily: typography.displayExtraBold, fontSize: 17 },
-  courseLink: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 6, minHeight: 44, paddingHorizontal: 11 },
-  courseLinkText: { fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  courseLink: { flexShrink: 0 },
   techniqueList: { gap: 13 },
   techniqueCardWrap: { position: 'relative' },
-  techniqueCard: { borderColor: theme.line, borderRadius: 21, borderWidth: 1.5, gap: 12, minHeight: 148, overflow: 'hidden', padding: 15 },
-  techniqueOrb: { borderRadius: 48, height: 96, opacity: 0.055, position: 'absolute', right: -27, top: -40, width: 96 },
+  techniqueCard: { borderColor: 'rgba(255,255,255,0.48)', borderRadius: 24, borderWidth: 1, gap: 13, minHeight: 156, overflow: 'hidden', padding: 15, boxShadow: '0px 6px 16px rgba(43,42,61,0.11)' },
+  techniqueOrb: { backgroundColor: 'rgba(255,255,255,0.17)', borderRadius: 74, height: 148, position: 'absolute', right: -42, top: -65, width: 148 },
   techniqueHeading: { alignItems: 'center', flexDirection: 'row', gap: 12 },
-  techniqueIcon: { alignItems: 'center', borderRadius: 17, height: 52, justifyContent: 'center', width: 52 },
+  techniqueIcon: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.18)', borderColor: 'rgba(255,255,255,0.34)', borderRadius: 18, borderWidth: 1, height: 54, justifyContent: 'center', width: 54 },
   techniqueEmoji: { fontSize: 29, lineHeight: 34 },
   techniqueTitleBlock: { flex: 1, gap: 4, minWidth: 0 },
   techniqueName: { fontFamily: typography.displayExtraBold, fontSize: 16 },
   techniqueDescription: { fontFamily: typography.bodySemibold, fontSize: 11.5, lineHeight: 17 },
-  techniqueArrow: { alignItems: 'center', borderRadius: 14, height: 32, justifyContent: 'center', width: 32 },
+  techniqueArrow: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.76)', borderColor: 'rgba(255,255,255,0.82)', borderRadius: 17, borderWidth: 1, height: 36, justifyContent: 'center', width: 36 },
   techniqueBottom: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 31, paddingLeft: 64 },
   techniqueTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  techniqueTag: { backgroundColor: theme.paper, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
-  techniqueTagText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  techniqueTag: { backgroundColor: 'rgba(255,255,255,0.52)', borderColor: 'rgba(255,255,255,0.68)', borderRadius: 999, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 4 },
+  techniqueTagText: { fontFamily: typography.bodyExtraBold, fontSize: 10 },
   routeIllustration: { height: 28, position: 'relative', width: 58 },
-  routeLine: { height: 2, left: 10, opacity: 0.25, position: 'absolute', right: 10, top: 13 },
+  routeLine: { height: 2, left: 10, opacity: 0.32, position: 'absolute', right: 10, top: 13 },
   routeNode: { borderRadius: 8, borderWidth: 2, height: 12, position: 'absolute', top: 8, width: 12 },
   routeNodeStart: { left: 4 },
-  routeNodeMiddle: { backgroundColor: theme.paper, height: 15, left: 22, top: 6, width: 15 },
+  routeNodeMiddle: { backgroundColor: 'rgba(255,255,255,0.52)', height: 15, left: 22, top: 6, width: 15 },
   routeNodeEnd: { right: 4 },
   pegIllustration: { alignItems: 'center', flexDirection: 'row', gap: 4 },
-  pegIllustrationNode: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: 10, borderWidth: 1.5, height: 21, justifyContent: 'center', width: 21 },
+  pegIllustrationNode: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.52)', borderRadius: 10, borderWidth: 1.5, height: 21, justifyContent: 'center', width: 21 },
   pegIllustrationNumber: { fontFamily: typography.bodyExtraBold, fontSize: 9 },
   recommendedBadge: { alignSelf: 'flex-end', backgroundColor: theme.sun, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, position: 'absolute', right: 13, top: -9, zIndex: 1 },
   recommendedText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  createMemoryCard: { alignItems: 'center', borderColor: theme.violetLine, borderRadius: 19, borderStyle: 'dashed', borderWidth: 1.5, flexDirection: 'row', gap: 12, minHeight: 76, paddingHorizontal: 13, paddingVertical: 11 },
-  createMemoryIcon: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 15, height: 44, justifyContent: 'center', width: 44 },
+  createMemoryCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 22, borderStyle: 'dashed', borderWidth: 1.5, flexDirection: 'row', gap: 12, minHeight: 76, paddingHorizontal: 13, paddingVertical: 11, boxShadow: '0px 4px 12px rgba(122,104,224,0.06)' },
+  createMemoryIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 15, height: 44, justifyContent: 'center', width: 44 },
   createMemoryCopy: { flex: 1, gap: 3, minWidth: 0 },
   createMemoryTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 13 },
   createMemoryBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, lineHeight: 15 },
-  continueCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 82, paddingHorizontal: 10, paddingVertical: 9 },
+  continueCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 22, borderWidth: 1.25, flexDirection: 'row', gap: 10, minHeight: 82, paddingHorizontal: 10, paddingVertical: 9, boxShadow: '0px 4px 14px rgba(122,104,224,0.09)' },
   continueIcon: { alignItems: 'center', borderRadius: 13, height: 42, justifyContent: 'center', width: 42 },
   continuePeg: { backgroundColor: theme.berryTint },
   continuePalace: { backgroundColor: theme.violetTint },

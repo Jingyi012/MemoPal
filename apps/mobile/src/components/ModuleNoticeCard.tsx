@@ -1,4 +1,4 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { useColorScheme } from 'nativewind';
 import { memopalThemes, type MemoPalTheme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
@@ -35,14 +35,13 @@ export function ModuleNoticeCard({
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.body}>{body}</Text>
       {onAction ? (
-        <AnimatedPressable
-          accessibilityLabel={actionLabel}
-          accessibilityRole="button"
+        <AppButton
+          label={actionLabel}
+          size="compact"
+          leadingContent={actionIcon ?? <RefreshCcw size={16} color={theme.onAccent} />}
           onPress={onAction}
-          style={styles.retryButton}>
-          {actionIcon ?? <RefreshCcw size={16} color={memopalThemes.light.ink} />}
-          <Text style={styles.retryText}>{actionLabel}</Text>
-        </AnimatedPressable>
+          style={styles.retryButton}
+        />
       ) : null}
     </View>
   );
@@ -70,15 +69,6 @@ const createStyles = (theme: MemoPalTheme) => StyleSheet.create({
   title: { color: theme.ink, fontFamily: typography.display, fontSize: 18, textAlign: 'center' },
   body: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' },
   retryButton: {
-    alignItems: 'center',
-    backgroundColor: theme.sun,
-    borderRadius: 16,
-    flexDirection: 'row',
-    gap: 7,
     marginTop: 14,
-    minHeight: 44,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
   },
-  retryText: { color: memopalThemes.light.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
 });

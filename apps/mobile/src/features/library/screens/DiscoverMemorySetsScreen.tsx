@@ -1,5 +1,6 @@
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
@@ -13,7 +14,7 @@ import { Href, useRouter } from 'expo-router';
 import { ArrowRight, Bookmark, BookOpen, Check, Pencil, Search, SlidersHorizontal, Sparkles, Trophy, X } from '@/core/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { forwardRef, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Linking, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Linking, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -83,9 +84,7 @@ export function DiscoverMemorySetsScreen() {
                 <View style={styles.heroBadge}><Sparkles size={13} color={theme.onAccent} /><Text style={styles.heroBadgeText}>{t('communityHeroEyebrow')}</Text></View>
                 <Text style={styles.heroTitle}>{t('communityHeroTitle')}</Text>
                 <Text style={styles.heroDescription}>{t('communityHeroBody')}</Text>
-                <AnimatedPressable accessibilityRole="button" onPress={() => setSort('featured')} style={styles.heroButton}>
-                  <Text style={styles.heroButtonText}>{t('communityHeroAction')}</Text><ArrowRight size={16} color={theme.violetDeep} />
-                </AnimatedPressable>
+                <AppButton label={t('communityHeroAction')} variant="secondary" size="compact" trailingIcon={ArrowRight} onPress={() => setSort('featured')} style={styles.heroButton} />
               </View>
               <View style={styles.heroArt} accessibilityElementsHidden>
                 <View style={[styles.heroMemoryTile, styles.heroTileBack]}><Text style={styles.heroTileEmoji}>🏰</Text></View>
@@ -170,8 +169,8 @@ export function DiscoverMemorySetsScreen() {
           </View>
         }
         renderItem={({ item }) => <CommunityMemoryCard item={item} onPress={() => router.push(`/community/memory-sets/${item.id}` as Href)} onToggleBookmark={() => toggleBookmark(item)} bookmarkPending={bookmarkMutation.isPending} t={t} />}
-        ListEmptyComponent={!isOffline && query.isLoading ? <View style={styles.loading}><LoadingView description={t('discoverLoading')} /></View> : canShowRequestErrors && query.isError ? <View style={styles.empty}><Text style={styles.emptyEmoji}>🫧</Text><Text style={styles.emptyTitle}>{t('discoverUnavailable')}</Text><Text style={styles.emptyBody}>{t('connectionRetry')}</Text><AnimatedPressable onPress={() => void query.refetch()} style={styles.retry}><Text style={styles.retryText}>{t('retry')}</Text></AnimatedPressable></View> : !isOffline ? <View style={styles.empty}><Text style={styles.emptyEmoji}>🌱</Text><Text style={styles.emptyTitle}>{t('discoverEmpty')}</Text><Text style={styles.emptyBody}>{t('discoverEmptyBody')}</Text></View> : null}
-        ListFooterComponent={!isOffline && query.hasNextPage ? <AnimatedPressable disabled={query.isFetchingNextPage} onPress={() => void query.fetchNextPage()} style={styles.loadMore}>{query.isFetchingNextPage ? <ActivityIndicator color={theme.violetDeep} /> : <><Text style={styles.loadMoreText}>{t('loadMore')}</Text><ArrowRight size={15} color={theme.violetDeep} /></>}</AnimatedPressable> : <View style={styles.footerSpace} />}
+        ListEmptyComponent={!isOffline && query.isLoading ? <View style={styles.loading}><LoadingView description={t('discoverLoading')} /></View> : canShowRequestErrors && query.isError ? <View style={styles.empty}><Text style={styles.emptyEmoji}>🫧</Text><Text style={styles.emptyTitle}>{t('discoverUnavailable')}</Text><Text style={styles.emptyBody}>{t('connectionRetry')}</Text><AppButton label={t('retry')} size="compact" onPress={() => void query.refetch()} style={styles.retry} /></View> : !isOffline ? <View style={styles.empty}><Text style={styles.emptyEmoji}>🌱</Text><Text style={styles.emptyTitle}>{t('discoverEmpty')}</Text><Text style={styles.emptyBody}>{t('discoverEmptyBody')}</Text></View> : null}
+        ListFooterComponent={!isOffline && query.hasNextPage ? <AppButton label={t('loadMore')} variant="secondary" size="compact" loading={query.isFetchingNextPage} disabled={query.isFetchingNextPage} trailingIcon={query.isFetchingNextPage ? undefined : ArrowRight} onPress={() => void query.fetchNextPage()} style={styles.loadMore} /> : <View style={styles.footerSpace} />}
       />
       <DiscoverFiltersSheet
         ref={filtersSheetRef}
@@ -211,7 +210,7 @@ type DiscoverFiltersSheetProps = {
 
 const DiscoverFiltersSheet = forwardRef<BottomSheetModal, DiscoverFiltersSheetProps>(
   ({ techniqueKey, goalType, sort, onTechniqueChange, onGoalChange, onSortChange, onReset, onDone }, ref) => {
-    const { styles, theme } = useStyles();
+    const { styles } = useStyles();
     const { t } = useTranslation('library');
     const insets = useSafeAreaInsets();
     const toggleTechnique = (value: NonNullable<CommunityMemorySetFilters['techniqueKey']>) => onTechniqueChange(techniqueKey === value ? undefined : value);
@@ -252,10 +251,7 @@ const DiscoverFiltersSheet = forwardRef<BottomSheetModal, DiscoverFiltersSheetPr
           <SortChip label={t('sortNewest')} selected={sort === 'newest'} onPress={() => onSortChange('newest')} />
         </View>
 
-        <AnimatedPressable accessibilityRole="button" onPress={onDone} style={styles.doneButton}>
-          <Check size={17} color={theme.onAccent} />
-          <Text style={styles.doneButtonText}>{t('filtersDone')}</Text>
-        </AnimatedPressable>
+        <AppButton label={t('filtersDone')} fullWidth icon={Check} onPress={onDone} style={styles.doneButton} />
       </BottomSheetScrollView>
     </CustomBottomSheetModal>;
   },
@@ -308,7 +304,7 @@ function CommunityMemoryCard({ item, onPress, onToggleBookmark, bookmarkPending,
         </View>
       </AnimatedPressable>
       <AnimatedPressable accessibilityRole="button" accessibilityState={{ selected: item.isBookmarked, disabled: bookmarkPending }} accessibilityLabel={t(item.isBookmarked ? 'communityBookmarkRemoveAction' : 'communityBookmarkAction')} disabled={bookmarkPending} onPress={onToggleBookmark} style={[styles.bookmarkButton, item.isBookmarked && styles.bookmarkButtonSelected]}>
-        <Bookmark size={17} color={item.isBookmarked ? theme.sunDeep : theme.inkSoft} fill={item.isBookmarked ? theme.sun : 'none'} />
+        <Bookmark size={17} color={item.isBookmarked ? theme.violetDeep : theme.inkSoft} fill={item.isBookmarked ? theme.violetDeep : 'none'} />
       </AnimatedPressable>
     </View>
   );
@@ -329,8 +325,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   heroBadgeText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.5, textTransform: 'uppercase' },
   heroTitle: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 22, lineHeight: 28, maxWidth: 230 },
   heroDescription: { color: 'rgba(255,255,255,0.86)', fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, maxWidth: 220 },
-  heroButton: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.paper, borderRadius: 999, flexDirection: 'row', gap: 7, marginTop: 2, minHeight: 44, paddingHorizontal: 14 },
-  heroButtonText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  heroButton: { alignSelf: 'flex-start', marginTop: 2 },
   heroArt: { height: 138, position: 'relative', width: 108 },
   heroMemoryTile: { alignItems: 'center', borderColor: 'rgba(255,255,255,0.7)', borderRadius: 18, borderWidth: 1.5, height: 100, justifyContent: 'center', position: 'absolute', width: 74 },
   heroTileBack: { backgroundColor: '#E5DFFF', right: 5, top: 7, transform: [{ rotate: '10deg' }] },
@@ -385,8 +380,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   chipSelected: { backgroundColor: theme.violetTint, borderColor: theme.violetDeep },
   chipText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   chipTextSelected: { color: theme.violetDeep },
-  doneButton: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: theme.violetDeep, borderRadius: 15, flexDirection: 'row', gap: 7, justifyContent: 'center', marginTop: 22, minHeight: 48 },
-  doneButtonText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  doneButton: { marginTop: 22 },
   headingRow: { alignItems: 'center', flexDirection: 'row', gap: 7, marginBottom: 2, marginTop: 3 },
   sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 },
   sectionSubtitle: { color: theme.inkSoft, flex: 1, fontFamily: typography.bodySemibold, fontSize: 10 },
@@ -424,9 +418,9 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   cardBottomRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginTop: 1 },
   cardStats: { alignItems: 'center', flexDirection: 'row', gap: 4 },
   cardItemCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9 },
-  openAction: { alignItems: 'center', backgroundColor: theme.sunTint, borderRadius: 999, flexDirection: 'row', gap: 3, justifyContent: 'center', minHeight: 30, paddingHorizontal: 8 },
+  openAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 999, flexDirection: 'row', gap: 3, justifyContent: 'center', minHeight: 30, paddingHorizontal: 8 },
   openActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 8 },
   bookmarkButton: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 14, borderWidth: 1, height: 44, justifyContent: 'center', position: 'absolute', right: 10, top: 10, width: 44 },
-  bookmarkButtonSelected: { backgroundColor: theme.sunTint },
-  separator: { height: 1 }, loading: { height: 200, overflow: 'hidden' }, empty: { alignItems: 'center', paddingHorizontal: 25, paddingVertical: 64 }, emptyEmoji: { fontSize: 34 }, emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, marginTop: 11, textAlign: 'center' }, emptyBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' }, retry: { backgroundColor: theme.sun, borderRadius: 13, marginTop: 15, paddingHorizontal: 18, paddingVertical: 11 }, retryText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 13 }, loadMore: { alignItems: 'center', alignSelf: 'center', backgroundColor: theme.violetTint, borderRadius: 14, flexDirection: 'row', gap: 7, justifyContent: 'center', marginTop: 17, minHeight: 44, paddingHorizontal: 17 }, loadMoreText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 }, footerSpace: { height: 10 },
+  bookmarkButtonSelected: { backgroundColor: theme.violetTint, borderColor: theme.violetLine },
+  separator: { height: 1 }, loading: { height: 200, overflow: 'hidden' }, empty: { alignItems: 'center', paddingHorizontal: 25, paddingVertical: 64 }, emptyEmoji: { fontSize: 34 }, emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, marginTop: 11, textAlign: 'center' }, emptyBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' }, retry: { alignSelf: 'center', marginTop: 15 }, loadMore: { alignSelf: 'center', marginTop: 17 }, footerSpace: { height: 10 },
 }));

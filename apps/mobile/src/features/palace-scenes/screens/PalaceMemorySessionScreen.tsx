@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -736,17 +737,24 @@ export default function PalaceMemorySessionScreen({
               </View>
             </AnimatedPressable>
           ))}
-          <AnimatedPressable
+          <AppButton
+            fullWidth
+            label={`🚶 ${t('walkThrough')}`}
             onPress={() => {
               setActiveIndex(0);
               setMode('walk');
             }}
-            style={styles.primaryButton}>
-            <Text style={styles.primaryText}>🚶 {t('walkThrough')}</Text>
-          </AnimatedPressable>
-          <AnimatedPressable onPress={browseOnly ? leaveSession : startRecall} style={styles.secondaryButton}>
-            <Text style={styles.secondaryText}>{browseOnly ? planText('backToMemory') : t('recallChallenge')}</Text>
-          </AnimatedPressable>
+            size="large"
+            style={styles.primaryButton}
+          />
+          <AppButton
+            fullWidth
+            label={browseOnly ? planText('backToMemory') : t('recallChallenge')}
+            onPress={browseOnly ? leaveSession : startRecall}
+            size="large"
+            style={styles.secondaryButton}
+            variant="secondary"
+          />
         </>
       )}
     </>
@@ -841,7 +849,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     justifyContent: 'center',
     boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.18)',
   },
-  activeMarker: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.18 }] },
+  activeMarker: { backgroundColor: theme.violetDeep, transform: [{ scale: 1.18 }] },
   markerText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   hint: {
     color: theme.inkSoft,
@@ -1036,36 +1044,8 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   itemLocus: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginTop: 2 },
-  primaryButton: {
-    width: '100%',
-    minHeight: 53,
-    borderRadius: 16,
-    backgroundColor: theme.sun,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-    paddingHorizontal: 16,
-    boxShadow: `0px 5px 0px ${theme.sunDeep}`,
-  },
-  primaryText: {
-    color: theme.onSun,
-    fontFamily: typography.bodyExtraBold,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  secondaryButton: {
-    width: '100%',
-    minHeight: 49,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: theme.violet,
-    backgroundColor: theme.violetTint,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-    paddingHorizontal: 16,
-  },
-  secondaryText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  primaryButton: { marginTop: 10 },
+  secondaryButton: { marginTop: 12 },
   saveState: {
     color: theme.inkSoft,
     fontFamily: typography.bodyBold,

@@ -1,6 +1,7 @@
 import { usePageTour, useSpotlightTour } from '@/features/onboarding/components/SpotlightTourProvider';
 import { CircleHelp } from '@/core/icons';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
@@ -742,18 +743,8 @@ export default function NumberPegSessionScreen({
                           <Text style={styles.reminderChoiceError}>{reminderMessage}</Text>
                         ) : null}
                         <View style={styles.reminderChoiceActions}>
-                          <AnimatedPressable
-                            onPress={() => void saveOnboardingReminderChoice(false)}
-                            style={styles.reminderLaterButton}
-                            containerStyle={{ width: '50%' }}>
-                            <Text style={styles.reminderLaterText}>{t('notNow')}</Text>
-                          </AnimatedPressable>
-                          <AnimatedPressable
-                            onPress={() => void saveOnboardingReminderChoice(true)}
-                            style={styles.reminderEnableButton}
-                            containerStyle={{ width: '50%' }}>
-                            <Text style={styles.reminderEnableText}>{t('enableReminder')}</Text>
-                          </AnimatedPressable>
+                          <AppButton label={t('notNow')} onPress={() => void saveOnboardingReminderChoice(false)} size="compact" style={styles.reminderAction} variant="secondary" />
+                          <AppButton label={t('enableReminder')} onPress={() => void saveOnboardingReminderChoice(true)} size="compact" style={styles.reminderAction} />
                         </View>
                       </View>
                     ) : null}
@@ -1000,18 +991,6 @@ const useStyles = createThemedStyles((theme) =>
       lineHeight: 19,
       marginTop: 5,
     },
-    primaryButton: {
-      minHeight: 53,
-      borderRadius: 16,
-      backgroundColor: theme.sun,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      paddingHorizontal: 16,
-      boxShadow: `0px 5px 0px ${theme.sunDeep}`,
-      marginTop: 4,
-    },
     recallScroll: { flex: 1 },
     recallContent: { padding: 18, paddingTop: 16, paddingBottom: 24, flexGrow: 1 },
     recallProgressRow: {
@@ -1038,7 +1017,7 @@ const useStyles = createThemedStyles((theme) =>
     },
     dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: theme.line },
     doneDot: { backgroundColor: theme.grass },
-    currentDot: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.25 }] },
+    currentDot: { backgroundColor: theme.violetDeep, transform: [{ scale: 1.25 }] },
     quizEmoji: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 36 },
     safeHint: {
       color: theme.inkSoft,
@@ -1112,32 +1091,7 @@ const useStyles = createThemedStyles((theme) =>
       gap: 8,
       marginTop: 10,
     },
-    reminderLaterButton: {
-      flex: 1,
-      minWidth: 0,
-      minHeight: 40,
-      borderRadius: 12,
-      borderWidth: 1.5,
-      borderColor: theme.line,
-      backgroundColor: theme.paper,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 8,
-      gap: 4,
-    },
-    reminderLaterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-    reminderEnableButton: {
-      flex: 1,
-      minWidth: 0,
-      minHeight: 40,
-      borderRadius: 12,
-      backgroundColor: theme.sun,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 8,
-      gap: 4,
-    },
-    reminderEnableText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+    reminderAction: { flex: 1, minWidth: 0 },
     centerState: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
   })
 );

@@ -1,4 +1,4 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { QuestionCard, QuestionInput, type QuestionInputLabels } from '@/features/education/components/question-inputs';
 import { createEmptyEducationAnswer } from '@/features/education/components/question-inputs/createEmptyEducationAnswer';
 import { useEducationCopy } from '@/features/education/i18n';
@@ -40,9 +40,7 @@ export function EducationPracticeReview({ attemptId, questions, labels, onCheckA
     return (
       <View style={styles.panel}>
         <Text accessibilityRole="alert" style={styles.body}>{copy.practiceNoFormatItems}</Text>
-        <AnimatedPressable accessibilityRole="button" onPress={onExit} style={styles.action}>
-          <Text style={styles.actionText}>{copy.practiceReturn}</Text>
-        </AnimatedPressable>
+        <AppButton fullWidth label={copy.practiceReturn} onPress={onExit} size="large" />
       </View>
     );
   }
@@ -53,9 +51,7 @@ export function EducationPracticeReview({ attemptId, questions, labels, onCheckA
         <Text accessibilityRole="header" style={styles.title}>{copy.practiceComplete}</Text>
         <Text style={styles.body}>{copy.practiceNoGrades}</Text>
         <EducationResultShareButton questionTypes={questions.map(item => item.type)} />
-        <AnimatedPressable accessibilityRole="button" onPress={onExit} style={styles.action}>
-          <Text style={styles.actionText}>{copy.practiceReturn}</Text>
-        </AnimatedPressable>
+        <AppButton fullWidth label={copy.practiceReturn} onPress={onExit} size="large" />
       </View>
     );
   }
@@ -90,30 +86,23 @@ export function EducationPracticeReview({ attemptId, questions, labels, onCheckA
       ) : null}
       {error ? <Text accessibilityRole="alert" style={styles.error}>{copy.practiceCheckError}</Text> : null}
       {hasChecked ? (
-        <AnimatedPressable accessibilityRole="button" onPress={advance} style={styles.action}>
-          <Text style={styles.actionText}>{index === questions.length - 1 ? copy.practiceFinish : copy.next}</Text>
-        </AnimatedPressable>
+        <AppButton fullWidth label={index === questions.length - 1 ? copy.practiceFinish : copy.next} onPress={advance} size="large" />
       ) : result ? (
         <View style={styles.actions}>
-          <AnimatedPressable accessibilityRole="button" disabled={checking} onPress={retryCurrent} style={styles.secondaryAction}>
-            <Text style={styles.secondaryActionText}>{copy.practiceTryAgain}</Text>
-          </AnimatedPressable>
-          <AnimatedPressable accessibilityRole="button" disabled={checking} onPress={advance} style={styles.action}>
-            <Text style={styles.actionText}>{copy.practiceContinue}</Text>
-          </AnimatedPressable>
+          <AppButton disabled={checking} label={copy.practiceTryAgain} onPress={retryCurrent} size="regular" style={styles.rowAction} variant="secondary" />
+          <AppButton disabled={checking} label={copy.practiceContinue} onPress={advance} size="regular" style={styles.rowAction} />
         </View>
       ) : (
-        <AnimatedPressable
-          accessibilityRole="button"
-          disabled={checking || isBlankResponse(question, answer)}
+        <AppButton
+          disabled={isBlankResponse(question, answer)}
+          fullWidth
+          label={checking ? copy.practiceChecking : copy.practiceCheck}
+          loading={checking}
           onPress={() => void checkAnswer()}
-          style={[styles.action, (checking || isBlankResponse(question, answer)) && styles.disabled]}>
-          <Text style={styles.actionText}>{checking ? copy.practiceChecking : copy.practiceCheck}</Text>
-        </AnimatedPressable>
+          size="large"
+        />
       )}
-      <AnimatedPressable accessibilityRole="button" onPress={onExit} style={styles.exitAction}>
-        <Text style={styles.exitText}>{copy.practiceReturn}</Text>
-      </AnimatedPressable>
+      <AppButton fullWidth label={copy.practiceReturn} onPress={onExit} size="compact" variant="tertiary" />
     </View>
   );
 
@@ -162,12 +151,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   correct: { color: theme.successText },
   incorrect: { color: theme.berryDeep },
   error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 13 },
-  action: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 14, justifyContent: 'center', minHeight: 48, paddingHorizontal: 16 },
-  actionText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  secondaryAction: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetDeep, borderRadius: 14, borderWidth: 1, justifyContent: 'center', minHeight: 48, paddingHorizontal: 14 },
-  secondaryActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  exitAction: { alignItems: 'center', justifyContent: 'center', minHeight: 44, paddingHorizontal: 12 },
-  exitText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  disabled: { opacity: 0.5 },
+  rowAction: { flex: 1 },
 }));

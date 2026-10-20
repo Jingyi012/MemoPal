@@ -1,5 +1,6 @@
-import { NightEmphasisCard } from '@/components/NightEmphasisCard';
+import { HighlightCard } from '@/components/HighlightCard';
 import { LevelXpProgressBar, getLevelProgressMetrics } from '@/components/LevelXpProgressBar';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import React from 'react';
 import { Text, View, type StyleProp, type ViewStyle } from 'react-native';
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar, appearance, cardStyle }) => {
+  const { styles } = useStyles();
   const { language, t } = useTranslation('achievements');
   const { isMaxLevel } = getLevelProgressMetrics(level.xpInCurrentLevel, level.xpToNextLevel);
   const localizedTitles: Record<string, string> = {
@@ -44,7 +46,7 @@ export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar, ap
     : level.title;
 
   return (
-    <NightEmphasisCard style={[styles.card, cardStyle]}>
+    <HighlightCard style={[styles.card, cardStyle]}>
       <View style={styles.topRow}>
         <View style={styles.avatarRing}>
           <MemoryAvatar
@@ -72,28 +74,28 @@ export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar, ap
         <LevelXpProgressBar
           xpInCurrentLevel={level.xpInCurrentLevel}
           xpToNextLevel={level.xpToNextLevel}
-          trackClassName="h-2 overflow-hidden rounded-full bg-white/15"
-          fillClassName="h-full rounded-full bg-[#9B8CFF]"
+          trackClassName="h-2 overflow-hidden rounded-full bg-[#F3F0FF] dark:bg-[#37304F]"
+          fillClassName="h-full rounded-full"
         />
       </View>
       <View style={styles.xpLabels}>
         <Text style={styles.xpLabel}>{t('level')} {level.currentLevel}</Text>
         <Text style={styles.xpLabel}>{t('level')} {level.currentLevel + 1}</Text>
       </View>
-    </NightEmphasisCard>
+    </HighlightCard>
   );
 };
 
-const styles = {
+const useStyles = createThemedStyles((theme) => ({
   card: { marginBottom: 18 },
-  topRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12, zIndex: 1 as const },
-  avatarRing: { width: 60, height: 60, borderRadius: 30, borderWidth: 3, borderColor: 'rgba(255,255,255,0.25)', overflow: 'visible' as const },
-  levelCopy: { flex: 1 },
-  levelTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 14.5 },
-  levelSubtitle: { color: '#C9C5E0', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 1 },
-  streakPill: { backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
-  streakText: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 12 },
-  progressTrack: { marginTop: 13, zIndex: 1 as const },
-  xpLabels: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, marginTop: 6, zIndex: 1 as const },
-  xpLabel: { color: '#C9C5E0', fontFamily: typography.bodyBold, fontSize: 10.5 },
-};
+  topRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12 },
+  avatarRing: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: theme.violetLine, overflow: 'visible' as const },
+  levelCopy: { flex: 1, minWidth: 0 },
+  levelTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15 },
+  levelSubtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, marginTop: 2 },
+  streakPill: { backgroundColor: theme.sunTint, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
+  streakText: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 12 },
+  progressTrack: { marginTop: 13 },
+  xpLabels: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, marginTop: 6 },
+  xpLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5 },
+}));

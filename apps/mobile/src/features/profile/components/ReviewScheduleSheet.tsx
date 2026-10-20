@@ -1,4 +1,5 @@
 import { createThemedStyles } from '@/theme/createThemedStyles';
+import { AppButton } from '@/components/ui/AppButton';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -151,18 +152,10 @@ export const ReviewScheduleSheet = forwardRef<Ref, ReviewScheduleSheetProps>(
 
           <View style={styles.footer}>
             <View style={styles.buttonSlot}>
-              <AnimatedPressable onPress={handleDismiss} style={styles.cancelButton}>
-                <Text style={styles.cancelText}>{t('cancel')}</Text>
-              </AnimatedPressable>
+              <AppButton fullWidth label={t('cancel')} onPress={handleDismiss} variant="secondary" />
             </View>
             <View style={styles.buttonSlot}>
-              <AnimatedPressable
-                onPress={() => {
-                  void onSave(selectedTimeRef.current);
-                }}
-                style={styles.saveButton}>
-                <Text style={styles.saveText}>{t('saveTime')}</Text>
-              </AnimatedPressable>
+              <AppButton fullWidth label={t('saveTime')} onPress={() => void onSave(selectedTimeRef.current)} />
             </View>
           </View>
         </BottomSheetScrollView>
@@ -346,26 +339,4 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     paddingBottom: 5,
   },
   buttonSlot: { flex: 1 },
-  cancelButton: {
-    alignItems: 'center',
-    backgroundColor: theme.violetTint,
-    borderColor: theme.line,
-    borderRadius: 14,
-    borderWidth: 2,
-    justifyContent: 'center',
-    minHeight: 48,
-    width: '100%',
-  },
-  cancelText: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 13 },
-  saveButton: {
-    alignItems: 'center',
-    backgroundColor: theme.sun,
-    borderColor: theme.sunDeep,
-    borderRadius: 14,
-    borderWidth: 2,
-    justifyContent: 'center',
-    minHeight: 48,
-    width: '100%',
-  },
-  saveText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 13 },
 }));

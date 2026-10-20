@@ -1,4 +1,4 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -41,12 +41,8 @@ export function FolderNameModal({ visible, initialName, initialEmoji, initialDes
             <TextInput value={description} onChangeText={setDescription} editable={!isLoading} maxLength={500} multiline numberOfLines={3} textAlignVertical="top" placeholder={t('collectionDescriptionPlaceholder')} placeholderTextColor={theme.inkSoft} style={[styles.input, styles.descriptionInput]} accessibilityLabel={t('collectionDescription')} />
           </View>
           <View style={styles.actions}>
-            <AnimatedPressable containerStyle={styles.actionContainer} disabled={isLoading} pressOnIn onPress={close} style={styles.cancel}>
-              <Text style={styles.cancelText}>{t('cancel')}</Text>
-            </AnimatedPressable>
-            <AnimatedPressable containerStyle={styles.actionContainer} disabled={isLoading || !name.trim()} pressOnIn onPress={submit} style={[styles.confirm, (!name.trim() || isLoading) && styles.disabled]}>
-              <Text style={styles.confirmText}>{initialName ? t('save') : t('create')}</Text>
-            </AnimatedPressable>
+            <AppButton label={t('cancel')} variant="secondary" size="regular" disabled={isLoading} pressOnIn onPress={close} style={styles.actionContainer} />
+            <AppButton label={initialName ? t('save') : t('create')} variant="primary" size="regular" disabled={!name.trim()} loading={Boolean(isLoading)} pressOnIn onPress={submit} style={styles.actionContainer} />
           </View>
           </View>
         </ScrollView>
@@ -70,9 +66,4 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   descriptionInput: { fontSize: 14, lineHeight: 20, marginTop: 0, minHeight: 84, paddingBottom: 10, paddingTop: 11, width: '100%' },
   actions: { flexDirection: 'row', gap: 10, marginTop: 18 },
   actionContainer: { flex: 1 },
-  cancel: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, justifyContent: 'center', minHeight: 50, width: '100%' },
-  confirm: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 14, justifyContent: 'center', minHeight: 50, width: '100%' },
-  cancelText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  confirmText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  disabled: { opacity: 0.55 },
 }));

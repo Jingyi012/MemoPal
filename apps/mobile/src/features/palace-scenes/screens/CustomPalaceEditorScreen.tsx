@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import { mediaApi } from '@/core/api/media';
@@ -336,12 +337,7 @@ export default function CustomPalaceEditorScreen() {
           cursorColor={theme.violetDeep}
           style={[styles.input, styles.descriptionInput]}
         />
-        <AnimatedPressable
-          containerStyle={styles.nextButtonFull}
-          onPress={() => setEditorStep(2)}
-          style={[styles.nextButton, styles.nextButtonFull]}>
-          <Text style={styles.nextButtonText}>{t('continue')}</Text>
-        </AnimatedPressable>
+        <AppButton fullWidth label={t('continue')} onPress={() => setEditorStep(2)} size="large" style={styles.nextButton} />
         </View> : null}
 
         {editorStep === 2 ? <View style={styles.stepPanel}>
@@ -370,14 +366,8 @@ export default function CustomPalaceEditorScreen() {
           )}
         </AnimatedPressable>
         <View style={styles.stepActions}>
-          <AnimatedPressable onPress={() => setEditorStep(1)} style={styles.backButton}><Text style={styles.backButtonText}>{t('back')}</Text></AnimatedPressable>
-          <AnimatedPressable
-            containerStyle={styles.nextButtonInRow}
-            disabled={!imageUri}
-            onPress={() => setEditorStep(3)}
-            style={[styles.nextButton, styles.nextButtonFull, styles.nextButtonInRowInner, !imageUri && styles.disabled]}>
-            <Text style={styles.nextButtonText}>{t('continue')}</Text>
-          </AnimatedPressable>
+          <AppButton label={t('back')} onPress={() => setEditorStep(1)} size="large" style={styles.rowAction} variant="secondary" />
+          <AppButton disabled={!imageUri} label={t('continue')} onPress={() => setEditorStep(3)} size="large" style={styles.rowAction} />
         </View>
         </View> : null}
 
@@ -493,27 +483,25 @@ export default function CustomPalaceEditorScreen() {
             <Text style={styles.messageText}>{message}</Text>
           </View>
         ) : null}
-        <AnimatedPressable
+        <AppButton
           disabled={isUploading || createCustom.isPending || updateCustom.isPending}
+          fullWidth
+          icon={Check}
+          label={isUploading
+            ? t('uploadingImage')
+            : createCustom.isPending || updateCustom.isPending
+              ? t('saving')
+              : canSave
+                ? sceneId
+                  ? t('savePalaceChanges')
+                  : t('savePalace')
+                : t('unlockCustomPalaces')}
+          loading={isUploading || createCustom.isPending || updateCustom.isPending}
           onPress={save}
-          style={[
-            styles.saveButton,
-            (isUploading || createCustom.isPending || updateCustom.isPending) && styles.disabled,
-          ]}>
-          <Check size={19} color={theme.ink} />
-          <Text style={styles.saveText}>
-            {isUploading
-              ? t('uploadingImage')
-              : createCustom.isPending || updateCustom.isPending
-                ? t('saving')
-                : canSave
-                  ? sceneId
-                    ? t('savePalaceChanges')
-                    : t('savePalace')
-                  : t('unlockCustomPalaces')}
-          </Text>
-        </AnimatedPressable>
-        <AnimatedPressable onPress={() => setEditorStep(2)} style={styles.backButton}><Text style={styles.backButtonText}>{t('back')}</Text></AnimatedPressable>
+          size="large"
+          style={styles.saveButton}
+        />
+        <AppButton fullWidth label={t('back')} onPress={() => setEditorStep(2)} size="large" style={styles.backStandalone} variant="secondary" />
         </View> : null}
       </ScrollView>
     </KeyboardAvoidingView>
@@ -559,29 +547,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   stepActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
-  nextButton: {
-    minHeight: 50,
-    borderRadius: 14,
-    backgroundColor: theme.sun,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-  },
-  nextButtonFull: { width: '100%' },
-  nextButtonInRow: { flex: 1, minWidth: 0 },
-  nextButtonInRowInner: { marginTop: 0 },
-  nextButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  backButton: {
-    minHeight: 50,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: theme.line,
-    backgroundColor: theme.canvas,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 18,
-  },
-  backButtonText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  nextButton: { marginTop: 16 },
+  rowAction: { flex: 1 },
+  backStandalone: { marginTop: 10 },
   upgradeCard: {
     marginTop: 14,
     borderRadius: 19,
@@ -724,7 +692,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     boxShadow: '0px 2px 4px rgba(36, 31, 56, 0.25)',
   },
-  markerActive: { backgroundColor: theme.sunDeep, borderWidth: 4, transform: [{ scale: 1.12 }] },
+  markerActive: { backgroundColor: theme.violetDeep, borderWidth: 4, transform: [{ scale: 1.12 }] },
   markerText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 12 },
   addLocusButton: {
     width: '100%',
@@ -791,18 +759,5 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     textAlign: 'center',
   },
-  saveButton: {
-    width: '100%',
-    minHeight: 54,
-    marginTop: 18,
-    borderRadius: 16,
-    backgroundColor: theme.sun,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    boxShadow: `0px 5px 0px ${theme.sunDeep}`,
-  },
-  saveText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  disabled: { opacity: 0.55 },
+  saveButton: { marginTop: 18 },
 });

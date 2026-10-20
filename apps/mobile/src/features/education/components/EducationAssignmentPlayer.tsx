@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { QuestionCard, QuestionInput } from '@/features/education/components/question-inputs';
 import { educationAttemptApi } from '@/features/education/api/educationAttempt.api';
@@ -370,16 +371,17 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
       {submitError ? (
         <Text accessibilityRole="alert" style={styles.error}>{copy.submitError}</Text>
       ) : null}
-      <AnimatedPressable
-        accessibilityRole="button"
+      <AppButton
         disabled={isSubmitting || isRecording}
+        fullWidth
+        label={isSubmitting ? copy.submitting : submitError ? copy.retrySubmit : copy.submit}
+        loading={isSubmitting}
         onPress={() => {
           if (hasExpired || submitError) void submitAttempt(hasExpired);
           else setConfirmSubmit(true);
         }}
-        style={[styles.submitAction, (isSubmitting || isRecording) && styles.disabledAction]}>
-        <Text style={styles.submitText}>{isSubmitting ? copy.submitting : submitError ? copy.retrySubmit : copy.submit}</Text>
-      </AnimatedPressable>
+        size="large"
+      />
       <ConfirmModal
         visible={confirmSubmit}
         title={copy.submitConfirmTitle}
@@ -419,7 +421,5 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   navigation: { flexDirection: 'row', gap: 10, justifyContent: 'space-between' },
   secondaryAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 13, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
   secondaryActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  submitAction: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 14, justifyContent: 'center', minHeight: 50, paddingHorizontal: 16 },
-  submitText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   disabledAction: { opacity: 0.55 },
 }));

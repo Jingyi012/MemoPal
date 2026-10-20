@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import {
@@ -247,7 +248,7 @@ export default function AiCreditPurchaseScreen() {
             </Text>
             <Text style={styles.checkoutPrice}>{selectedCredits > 0 ? priceText : '—'}</Text>
           </View>
-          <ArrowRight size={19} color={theme.ink} strokeWidth={2.5} />
+          <ArrowRight size={19} color={theme.onAccent} strokeWidth={2.5} />
         </AnimatedPressable>
 
         <View style={styles.premiumCard}>
@@ -269,17 +270,12 @@ export default function AiCreditPurchaseScreen() {
             <Text style={styles.premiumButtonText}>
               {zh ? '比较月付与年付' : 'Compare monthly and yearly'}
             </Text>
-            <ArrowRight size={17} color={theme.ink} strokeWidth={2.5} />
+            <ArrowRight size={17} color={theme.onAccent} strokeWidth={2.5} />
           </AnimatedPressable>
         </View>
 
         {balance.isError ? (
-          <AnimatedPressable onPress={() => void balance.refetch()} style={styles.retryButton}>
-            <RefreshCw size={16} color={theme.berryDeep} />
-            <Text style={styles.retryText}>
-              {zh ? '购买配置加载失败，点击重试' : 'Purchase options failed to load. Tap to retry.'}
-            </Text>
-          </AnimatedPressable>
+          <AppButton icon={RefreshCw} label={zh ? '购买配置加载失败，点击重试' : 'Purchase options failed to load. Tap to retry.'} onPress={() => void balance.refetch()} size="regular" style={styles.retryButton} variant="secondary" />
         ) : null}
         <Text style={styles.footnote}>
           {zh
@@ -488,15 +484,16 @@ const useStyles = createThemedStyles((theme) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: theme.sun,
-      boxShadow: '0px 5px 0px rgba(242,169,0,0.85)',
+      backgroundColor: theme.violetDeep,
+      boxShadow: '0px 5px 0px rgba(105,80,204,0.28)',
     },
     checkoutButtonDisabled: { opacity: 0.72, boxShadow: '0px 3px 0px rgba(154,151,167,0.35)' },
-    checkoutTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+    checkoutTitle: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
     checkoutPrice: {
-      color: theme.inkSoft,
+      color: theme.onAccent,
       fontFamily: typography.bodySemibold,
       fontSize: 10,
+      opacity: 0.8,
       marginTop: 2,
     },
     premiumCard: {
@@ -542,25 +539,11 @@ const useStyles = createThemedStyles((theme) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: theme.sun,
+      backgroundColor: theme.violetDeep,
     },
-    premiumButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+    premiumButtonText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
     retryButton: {
-      minHeight: 48,
-      borderRadius: 15,
-      paddingHorizontal: 14,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 9,
-      backgroundColor: theme.berryTint,
-      borderWidth: 1,
-      borderColor: theme.berryLine,
-    },
-    retryText: {
-      flex: 1,
-      color: theme.berryDeep,
-      fontFamily: typography.bodyExtraBold,
-      fontSize: 11,
+      alignSelf: 'stretch',
     },
     footnote: {
       color: theme.inkMuted,

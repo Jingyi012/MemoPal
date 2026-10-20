@@ -3,8 +3,9 @@ import { typography } from '@/theme/typography';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check, Sparkles, Trophy } from '@/core/icons';
+import { AppButton } from '@/components/ui/AppButton';
 import React, { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, Text, View } from 'react-native';
 
 type LevelUpModalProps = {
   level: number;
@@ -49,9 +50,7 @@ export function LevelUpModal({ level, visible, onClose }: LevelUpModalProps) {
               <View style={styles.rewardIcon}><Check size={16} color="#267A55" strokeWidth={3} /></View>
               <Text style={styles.rewardText}>{t('levelUpReward')}</Text>
             </View>
-            <Pressable accessibilityRole="button" onPress={close} style={styles.button}>
-              <Text style={styles.buttonText}>{t('levelUpContinue')}</Text>
-            </Pressable>
+            <AppButton label={t('levelUpContinue')} onPress={close} fullWidth style={styles.button} />
           </View>
         </View>
       </View>
@@ -74,6 +73,5 @@ const styles = StyleSheet.create({
   rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 14, borderRadius: 999, backgroundColor: theme.mintTint, paddingHorizontal: 12, paddingVertical: 8 },
   rewardIcon: { width: 21, height: 21, alignItems: 'center', justifyContent: 'center', borderRadius: 11, backgroundColor: '#DDF5E9' },
   rewardText: { color: '#267A55', fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  button: { width: '100%', minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: theme.sun, marginTop: 18 },
-  buttonText: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 13.5 },
+  button: { marginTop: 18 },
 });

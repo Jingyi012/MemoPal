@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { useAuth } from '@/contexts/AuthProvider';
@@ -98,9 +99,7 @@ export function OnboardingScreen() {
             <Text style={styles.eyebrow}>{t('memoryReady')}</Text>
             <Text style={styles.title}>{t('finishFirstRecall')}</Text>
             <Text style={styles.body}>{t('finishFirstRecallBody')}</Text>
-            <AnimatedPressable accessibilityRole="button" onPress={() => resumeMemoryId && router.replace(guidedStarterSessionHref(resumeMemoryId))} style={styles.primary}>
-              <Text style={styles.primaryText}>{t('starterContinue')}</Text><ArrowRight size={18} color={theme.onSun} />
-            </AnimatedPressable>
+            <AppButton fullWidth label={t('starterContinue')} onPress={() => resumeMemoryId && router.replace(guidedStarterSessionHref(resumeMemoryId))} size="large" style={styles.primary} trailingIcon={ArrowRight} />
             <AnimatedPressable accessibilityRole="button" onPress={() => setChooseAnother(true)} style={styles.textButton}>
               <Text style={styles.link}>{t('chooseAnotherLesson')}</Text>
             </AnimatedPressable>
@@ -190,11 +189,16 @@ export function OnboardingScreen() {
         )}
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-        {!resume ? <AnimatedPressable accessibilityRole="button" disabled={!selectedLesson || isOffline || start.isPending || lessonsQuery.isError}
-          onPress={beginLesson} style={[styles.primary, (!selectedLesson || isOffline || start.isPending || lessonsQuery.isError) && styles.disabled]}>
-          <Text style={styles.primaryText}>{start.isPending ? t('starting') : t('starterPickerStart')}</Text>
-          <ArrowRight size={18} color={theme.onSun} />
-        </AnimatedPressable> : null}
+        {!resume ? <AppButton
+          disabled={!selectedLesson || isOffline || lessonsQuery.isError}
+          fullWidth
+          label={start.isPending ? t('starting') : t('starterPickerStart')}
+          loading={start.isPending}
+          onPress={beginLesson}
+          size="large"
+          style={styles.primary}
+          trailingIcon={ArrowRight}
+        /> : null}
         <AnimatedPressable accessibilityRole="button" disabled={start.isPending} onPress={() => router.push('/create-memory' as Href)} style={styles.textButton}>
           <Text style={styles.link}>{t('starterOwnContent')}</Text>
         </AnimatedPressable>
@@ -216,7 +220,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   guideBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, marginTop: 2 },
   categories: { gap: 8, paddingBottom: 14 },
   chip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 22, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper },
-  selectedChip: { backgroundColor: theme.sunTint, borderColor: theme.sunDeep },
+  selectedChip: { backgroundColor: theme.violetTint, borderColor: theme.violetDeep },
   chipText: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 12 },
   lessons: { gap: 11 },
   lesson: { padding: 13, borderRadius: 20, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper },
@@ -245,9 +249,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   state: { color: theme.inkSoft, marginVertical: 24, textAlign: 'center' },
   error: { color: theme.berryDeep, fontFamily: typography.bodyBold, marginTop: 12 },
   footer: { paddingHorizontal: 18, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.line, backgroundColor: theme.canvas },
-  primary: { alignSelf: 'stretch', minHeight: 52, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  primaryText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  primary: { alignSelf: 'stretch' },
   textButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   link: { color: theme.link, fontFamily: typography.bodyBold, fontSize: 12 },
-  disabled: { opacity: 0.45 },
 }));

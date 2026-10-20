@@ -1,9 +1,9 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { LevelUpModal } from '@/components/LevelUpModal';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Home, RefreshCcw } from '@/core/icons';
+import { AppButton } from '@/components/ui/AppButton';
 import React from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -46,7 +46,7 @@ export function RecallResultCard({
   returnHomeLabel,
   onReturnHome,
 }: RecallResultCardProps) {
-  const { styles, theme } = useStyles();
+  const { styles } = useStyles();
   const { t } = useTranslation('achievements');
   const isPeg = tone === 'peg';
   const [levelUpVisible, setLevelUpVisible] = React.useState(Boolean(levelUpTo));
@@ -80,34 +80,34 @@ export function RecallResultCard({
       ) : null}
       {saveStatus}
       <View style={styles.actionWrap}>
-        <AnimatedPressable
-          accessibilityRole="button"
+        <AppButton
+          label={retryLabel}
           accessibilityLabel={retryAccessibilityLabel}
+          variant="primary"
+          size="large"
+          fullWidth
+          icon={RefreshCcw}
           onPress={onRetry}
-          style={styles.primaryButton}>
-          <RefreshCcw size={18} color={theme.onSun} />
-          <Text style={styles.primaryText}>{retryLabel}</Text>
-        </AnimatedPressable>
+        />
       </View>
       {secondaryAction ? (
         <View style={[styles.actionWrap, styles.secondaryActionWrap]}>
-          <AnimatedPressable
-            accessibilityRole="button"
-            accessibilityLabel={secondaryAction.label}
+          <AppButton
+            label={secondaryAction.label}
+            variant="secondary"
+            size="large"
+            fullWidth
             onPress={secondaryAction.onPress}
-            style={styles.secondaryButton}>
-            <Text style={styles.secondaryText}>{secondaryAction.label}</Text>
-          </AnimatedPressable>
+          />
         </View>
       ) : null}
-      <AnimatedPressable
-        accessibilityRole="button"
-        accessibilityLabel={returnHomeLabel}
+      <AppButton
+        label={returnHomeLabel}
+        variant="tertiary"
+        size="compact"
+        icon={Home}
         onPress={onReturnHome}
-        style={styles.returnHomeButton}>
-        <Home size={16} color={theme.inkSoft} />
-        <Text style={styles.returnHomeText}>{returnHomeLabel}</Text>
-      </AnimatedPressable>
+      />
     </View>
   );
 }
@@ -129,10 +129,4 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   levelText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
   actionWrap: { alignSelf: 'stretch' },
   secondaryActionWrap: { marginTop: 12 },
-  primaryButton: { width: '100%', minHeight: 53, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
-  primaryText: { color: theme.onSun, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
-  secondaryButton: { width: '100%', minHeight: 49, borderRadius: 16, borderWidth: 2, borderColor: theme.violet, backgroundColor: theme.violetTint, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
-  secondaryText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  returnHomeButton: { minHeight: 44, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
-  returnHomeText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
 }));

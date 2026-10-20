@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { ArrowRight } from '@/core/icons';
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
@@ -61,10 +61,15 @@ export default function NumberPegMapScreen() {
           ))}
         </View>
 
-        <AnimatedPressable style={styles.startButton} onPress={() => router.push('/number-peg/create')}>
-          <Text style={styles.startButtonText}>{t('buildMemoryWithPegs')}</Text>
-          <ArrowRight size={17} color={theme.ink} />
-        </AnimatedPressable>
+        <AppButton
+          label={t('buildMemoryWithPegs')}
+          variant="primary"
+          size="large"
+          fullWidth
+          trailingIcon={ArrowRight}
+          onPress={() => router.push('/number-peg/create')}
+          style={styles.startButton}
+        />
       </ScrollView>
     </View>
   );
@@ -88,6 +93,5 @@ const styles = StyleSheet.create({
   lockEmoji: { fontSize: 12 },
   lockPillText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 9 },
-  startButton: { minHeight: 50, marginTop: 20, borderRadius: 15, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
-  startButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  startButton: { marginTop: 20 },
 });

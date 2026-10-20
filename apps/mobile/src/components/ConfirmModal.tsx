@@ -2,7 +2,6 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import type { ReactNode } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   StyleSheet,
   ScrollView,
@@ -10,7 +9,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import AnimatedPressable from './AnimatedPressable';
+import { AppButton } from './ui/AppButton';
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -45,7 +44,7 @@ export function ConfirmModal({
   onCancel,
   onAlternative,
 }: ConfirmModalProps) {
-  const { styles, theme } = useStyles();
+  const { styles } = useStyles();
   const close = () => {
     if (!isLoading) onCancel();
   };
@@ -75,40 +74,33 @@ export function ConfirmModal({
               {children}
 
               {alternativeText && onAlternative ? (
-                <AnimatedPressable
+                <AppButton
+                  label={alternativeText}
+                  variant="secondary"
+                  fullWidth
                   disabled={isLoading}
                   onPress={onAlternative}
-                  style={[styles.alternativeButton, isLoading && styles.disabled]}
-                  containerStyle={{ alignSelf: 'stretch' }}>
-                  <Text style={styles.alternativeText}>{alternativeText}</Text>
-                </AnimatedPressable>
+                  style={styles.alternativeButton}
+                />
               ) : null}
 
               <View style={styles.actions}>
-                <AnimatedPressable
+                <AppButton
+                  label={cancelText}
+                  variant="secondary"
+                  size="large"
                   disabled={isLoading}
                   onPress={close}
-                  style={[styles.button, styles.cancelButton, isLoading && styles.disabled]}
-                  containerStyle={styles.buttonSlot}>
-                  <Text style={styles.cancelText}>{cancelText}</Text>
-                </AnimatedPressable>
-                <AnimatedPressable
-                  disabled={isLoading}
+                  style={styles.buttonSlot}
+                />
+                <AppButton
+                  label={confirmText}
+                  variant={destructive ? 'destructive' : 'primary'}
+                  size="large"
+                  loading={isLoading}
                   onPress={onConfirm}
-                  style={[
-                    styles.button,
-                    destructive ? styles.destructiveButton : styles.confirmButton,
-                    isLoading && styles.disabled,
-                  ]}
-                  containerStyle={styles.buttonSlot}>
-                  {isLoading ? (
-                    <ActivityIndicator color={destructive ? theme.onAccent : theme.onSun} />
-                  ) : (
-                    <Text style={[styles.confirmText, destructive && styles.destructiveText]}>
-                      {confirmText}
-                    </Text>
-                  )}
-                </AnimatedPressable>
+                  style={styles.buttonSlot}
+                />
               </View>
             </ScrollView>
           </TouchableWithoutFeedback>
@@ -183,32 +175,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 20, width: '100%' },
   alternativeButton: {
-    alignItems: 'center',
-    alignSelf: 'stretch',
-    backgroundColor: theme.violetTint,
-    borderColor: theme.violetLine,
-    borderRadius: 15,
-    borderWidth: 1.5,
-    justifyContent: 'center',
     marginTop: 18,
-    minHeight: 48,
-    paddingHorizontal: 14,
   },
-  alternativeText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
-  button: {
-    minHeight: 52,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 15,
-    flex: 1,
-    justifyContent: 'center',
-  },
-  cancelButton: { backgroundColor: theme.canvas, borderColor: theme.line, borderWidth: 1.5 },
-  confirmButton: { backgroundColor: theme.sun },
-  destructiveButton: { backgroundColor: theme.berryDeep },
-  cancelText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
-  confirmText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
-  destructiveText: { color: theme.onAccent },
-  disabled: { opacity: 0.65 },
 }));

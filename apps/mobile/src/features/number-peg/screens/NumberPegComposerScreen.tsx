@@ -20,6 +20,7 @@ import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import type {
   MemoryGoalType,
@@ -504,10 +505,7 @@ export default function NumberPegComposerScreen() {
             cursorColor={theme.berryDeep}
             style={styles.input}
           />
-          <AnimatedPressable onPress={addItem} style={styles.next}>
-            <Text style={styles.buttonText}>{t('addItem')}</Text>
-            <ArrowRight size={17} color={theme.onSun} />
-          </AnimatedPressable>
+          <AppButton label={t('addItem')} onPress={addItem} size="regular" trailingIcon={ArrowRight} variant="secondary" />
           <View style={styles.itemList}>
             {items.map((item, i) => (
               <View key={`${item}-${i}`} style={styles.itemRow}>
@@ -534,15 +532,14 @@ export default function NumberPegComposerScreen() {
               <Text style={styles.messageText}>{message}</Text>
             </View>
           ) : null}
-          <AnimatedPressable
+          <AppButton
             disabled={isGenerating}
+            label={language === 'zh' ? '进入联想编辑 · 免费模板' : 'Start with free associations'}
+            loading={isGenerating}
             onPress={buildScenes}
-            style={[styles.next, isGenerating && styles.disabled]}>
-            <Text style={styles.buttonText}>
-              {language === 'zh' ? '进入联想编辑 · 免费模板' : 'Start with free associations'}
-            </Text>
-            <ArrowRight size={17} color={theme.onSun} />
-          </AnimatedPressable>
+            size="large"
+            trailingIcon={ArrowRight}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     );
@@ -918,8 +915,8 @@ export default function NumberPegComposerScreen() {
               <Text style={styles.heading}>{copy.preview}</Text>
               <Text style={styles.sectionHint}>{copy.previewHint}</Text>
               <Text style={styles.caption}>{storyPreview.scene.sceneText}</Text>
-              <AnimatedPressable
-                style={[styles.next, styles.previewAction]}
+              <AppButton
+                label={copy.useStory}
                 onPress={() => {
                   setScenes((all) =>
                     all.map((scene, i) => (i === storyPreview.index ? storyPreview.scene : scene))
@@ -927,9 +924,10 @@ export default function NumberPegComposerScreen() {
                   setStoryPreview(null);
                   setEditStory(false);
                   setMessage(null);
-                }}>
-                <Text style={styles.buttonText}>{copy.useStory}</Text>
-              </AnimatedPressable>
+                }}
+                size="large"
+                style={styles.previewAction}
+              />
               <AnimatedPressable
                 style={styles.replay}
                 onPress={() => {
@@ -971,43 +969,35 @@ export default function NumberPegComposerScreen() {
           </Text>
         </AnimatedPressable>
         <View style={styles.actions}>
-          <AnimatedPressable
-            containerStyle={styles.equalSlot}
+          <AppButton
             disabled={!index || isSaving || isGenerating || Boolean(storyPreview)}
+            icon={ArrowLeft}
+            label={t('previousScene')}
             onPress={() => openScene(Math.max(0, index - 1))}
-            style={[
-              styles.back,
-              (!index || isSaving || isGenerating || Boolean(storyPreview)) && styles.disabled,
-            ]}>
-            <ArrowLeft size={17} color={theme.ink} />
-            <Text style={[styles.buttonText, styles.navigationButtonText, { color: theme.ink }]}>
-              {t('previousScene')}
-            </Text>
-          </AnimatedPressable>
+            size="regular"
+            style={styles.equalSlot}
+            variant="secondary"
+          />
           <View style={styles.equalSlot}>
             <SpotlightTarget
               id="builderNext"
               onReveal={() => studioScroll.current?.scrollToEnd({ animated: false })}
               onActivate={advance}>
-              <AnimatedPressable
+              <AppButton
                 disabled={isSaving || isGenerating || Boolean(storyPreview)}
+                label={isSaving
+                  ? t('saving')
+                  : index === items.length - 1
+                    ? isOnboarding && !guidedStarter
+                      ? t('startRecall')
+                      : t('saveMemory')
+                    : copy.accept}
+                loading={isSaving}
                 onPress={advance}
-                accessibilityState={{ disabled: isSaving || isGenerating || Boolean(storyPreview) }}
-                style={[
-                  styles.next,
-                  (isSaving || isGenerating || Boolean(storyPreview)) && styles.disabled,
-                ]}>
-                <Text style={[styles.buttonText, styles.navigationButtonText]}>
-                  {isSaving
-                    ? t('saving')
-                    : index === items.length - 1
-                      ? isOnboarding && !guidedStarter
-                        ? t('startRecall')
-                        : t('saveMemory')
-                      : copy.accept}
-                </Text>
-                <ArrowRight size={17} color={theme.onSun} />
-              </AnimatedPressable>
+                size="regular"
+                style={styles.equalSlot}
+                trailingIcon={ArrowRight}
+              />
             </SpotlightTarget>
           </View>
         </View>
@@ -1140,7 +1130,7 @@ const useStyles = createThemedStyles((theme) =>
       gap: 5,
       paddingHorizontal: 8,
     },
-    goalSelected: { borderColor: theme.sunDeep, backgroundColor: theme.sunTint },
+    goalSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint },
     itemList: { gap: 7, marginTop: 12 },
     itemRow: {
       minHeight: 42,
@@ -1198,7 +1188,7 @@ const useStyles = createThemedStyles((theme) =>
       justifyContent: 'center',
     },
     dotLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-    activeDot: { backgroundColor: theme.sun, borderColor: theme.sunDeep },
+    activeDot: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
     guidedCard: {
       borderRadius: 16,
       borderWidth: 1.5,
@@ -1301,7 +1291,6 @@ const useStyles = createThemedStyles((theme) =>
       fontSize: 10,
       marginTop: 2,
     },
-    buttonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 13 },
     heading: {
       color: theme.ink,
       fontFamily: typography.bodyExtraBold,
@@ -1414,31 +1403,6 @@ const useStyles = createThemedStyles((theme) =>
       width: '100%',
       alignSelf: 'stretch',
     },
-    back: {
-      width: '100%',
-      minHeight: 49,
-      borderRadius: 13,
-      backgroundColor: theme.paper,
-      borderWidth: 1.5,
-      borderColor: theme.line,
-      paddingHorizontal: 11,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 4,
-    },
-    next: {
-      width: '100%',
-      minHeight: 49,
-      borderRadius: 13,
-      backgroundColor: theme.sun,
-      paddingHorizontal: 11,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-    },
-    navigationButtonText: { flexShrink: 1, textAlign: 'center', fontSize: 12 },
     disabled: { opacity: 0.35 },
   })
 );

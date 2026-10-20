@@ -1,5 +1,5 @@
 import { SpotlightTarget } from '@/features/onboarding/components/SpotlightTourProvider';
-import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
@@ -36,7 +36,7 @@ export function NumberPegRehearsalCard({
   onRevealScene,
   onRevealNext,
 }: NumberPegRehearsalCardProps) {
-  const { styles, theme } = useStyles();
+  const { styles } = useStyles();
   const { t } = useTranslation('numberPeg');
   const localizedPeg = useMemo(() => localizeNumberPeg(peg, t), [peg, t]);
   const isFirst = index === 0;
@@ -66,19 +66,25 @@ export function NumberPegRehearsalCard({
         <Text style={styles.wordTagText}>{item.answer}</Text>
       </View>
       <View style={styles.actions}>
-        <AnimatedPressable
+        <AppButton
           accessibilityLabel={t('previousPeg')}
           disabled={isFirst}
+          icon={ArrowLeft}
           onPress={onPrevious}
-          style={[styles.roundButton, isFirst && styles.disabled]}>
-          <ArrowLeft size={19} color={theme.onSun} />
-        </AnimatedPressable>
+          size="compact"
+          style={[styles.roundButton, isFirst && styles.disabled]}
+          variant="icon"
+        />
         <View style={styles.nextButtonWrap}>
           <SpotlightTarget id="sessionRecall" onReveal={onRevealNext} onActivate={onNext}>
-          <AnimatedPressable onPress={onNext} style={styles.nextButton}>
-            <Text style={styles.nextText}>{isLast ? lastActionLabel ?? t('startRecall') : t('next')}</Text>
-            <ArrowRight size={17} color={theme.onSun} />
-          </AnimatedPressable>
+          <AppButton
+            fullWidth
+            label={isLast ? lastActionLabel ?? t('startRecall') : t('next')}
+            onPress={onNext}
+            size="compact"
+            style={styles.nextButton}
+            trailingIcon={ArrowRight}
+          />
           </SpotlightTarget>
         </View>
       </View>
@@ -143,7 +149,6 @@ const useStyles = createThemedStyles((theme) =>
     actions: { alignItems: 'center', flexDirection: 'row', gap: 9, marginTop: 18, width: '100%' },
     roundButton: {
       alignItems: 'center',
-      backgroundColor: theme.sun,
       borderRadius: 23,
       minHeight: 46,
       justifyContent: 'center',
@@ -151,24 +156,6 @@ const useStyles = createThemedStyles((theme) =>
     },
     disabled: { opacity: 0.3 },
     nextButtonWrap: { flex: 1, minWidth: 0 },
-    nextButton: {
-      alignItems: 'center',
-      backgroundColor: theme.sun,
-      borderRadius: 14,
-      flex: 1,
-      flexDirection: 'row',
-      gap: 7,
-      minHeight: 46,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      justifyContent: 'center',
-    },
-    nextText: {
-      color: theme.onSun,
-      flexShrink: 1,
-      textAlign: 'center',
-      fontFamily: typography.bodyExtraBold,
-      fontSize: 12,
-    },
+    nextButton: { flex: 1 },
   })
 );

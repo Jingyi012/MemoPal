@@ -1,6 +1,7 @@
 import { systemSettingsApi } from '@/core/settings/api/systemSettings';
 import { ActionSheet } from '@/components/ActionSheet';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { BaseCard } from '@/components/BaseCard';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -164,9 +165,7 @@ const PremiumScreen: React.FC = () => {
           <Text style={styles.unavailableBody}>
             {loadError ?? 'Please try again in a moment.'}
           </Text>
-          <AnimatedPressable style={styles.retryButton} onPress={() => void loadPremiumConfig()}>
-            <Text style={styles.retryButtonText}>{t('tryAgain')}</Text>
-          </AnimatedPressable>
+          <AppButton label={t('tryAgain')} onPress={() => void loadPremiumConfig()} size="regular" style={styles.retryButton} variant="secondary" />
         </View>
       </View>
     );
@@ -327,16 +326,16 @@ const PremiumScreen: React.FC = () => {
             ]}>
             {config.subscribeButton.enabled ? (
               <LinearGradient
-                colors={[theme.sun, theme.sunDeep]}
+                colors={[activeTheme.violetDeep, activeTheme.violet]}
                 start={[0, 0]}
                 end={[1, 0]}
                 style={styles.subscribeGradient}>
-                <Text style={styles.subscribeText}>{config.subscribeButton.label}</Text>
-                <Check size={18} color={theme.ink} strokeWidth={3} />
+                <Text style={[styles.subscribeText, { color: activeTheme.onAccent }]}>{config.subscribeButton.label}</Text>
+                <Check size={18} color={activeTheme.onAccent} strokeWidth={3} />
               </LinearGradient>
             ) : (
-              <View style={styles.disabledInner}>
-                <Text style={styles.disabledText}>{config.subscribeButton.disabledLabel}</Text>
+              <View style={[styles.disabledInner, { backgroundColor: activeTheme.violetTint }]}>
+                <Text style={[styles.disabledText, { color: activeTheme.violetDeep }]}>{config.subscribeButton.disabledLabel}</Text>
                 <Text style={styles.disabledHint}>{zh ? '点击查看开放状态' : 'Tap for availability details'}</Text>
               </View>
             )}
@@ -411,7 +410,7 @@ const styles = StyleSheet.create({
   planLabel: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 1 },
   selectionSummary: { minHeight: 70, marginTop: 14, borderRadius: 18, borderWidth: 1.5, paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, backgroundColor: theme.paper }, selectionCopy: { flex: 1, minWidth: 0 }, selectionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 8, letterSpacing: 0.7 }, selectionName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 3 }, selectionPriceBlock: { alignItems: 'flex-end' }, selectionPrice: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 }, selectionPeriod: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9 },
   subscribeButton: { width: '100%', minHeight: 56, borderRadius: 18, marginTop: 20, overflow: 'visible' },
-  subscribeShadow: { boxShadow: '0px 6px 0px rgba(242, 169, 0, 0.9)' },
+  subscribeShadow: { boxShadow: '0px 6px 0px rgba(105, 80, 204, 0.3)' },
   subscribeGradient: { minHeight: 56, borderRadius: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16 },
   subscribeText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
   subscribeDisabled: { opacity: 0.78 },
@@ -425,8 +424,7 @@ const styles = StyleSheet.create({
   unavailableIcon: { width: 56, height: 56, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.skyTint, marginBottom: 14 },
   unavailableTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 16, lineHeight: 22, textAlign: 'center' },
   unavailableBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 7, marginBottom: 18 },
-  retryButton: { borderRadius: 14, backgroundColor: theme.sun, paddingHorizontal: 22, paddingVertical: 12, boxShadow: '0px 4px 0px rgba(242, 169, 0, 0.8)' },
-  retryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  retryButton: { alignSelf: 'center' },
 });
 
 export default PremiumScreen;

@@ -4,7 +4,8 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
-import { NightEmphasisCard } from '@/components/NightEmphasisCard';
+import { HighlightCard } from '@/components/HighlightCard';
+import { AppButton } from '@/components/ui/AppButton';
 import { useMemorySets } from '@/features/memory-sets';
 import type { MemorySet } from '@/features/memory-sets/types/memorySet.types';
 import { groupMemoryReviews, useDueMemoryReviews, usePracticeAttemptHistory, usePracticeStats, type DueMemoryReview, type PracticeAttempt } from '@/features/practice-attempts';
@@ -30,7 +31,7 @@ import { useMyEducationAssignments } from '@/features/education/hooks/useMyEduca
 import { useEducationClassroomInvitations, useEducationGuardianRequests } from '@/features/education/hooks/useEducationClassroomInvitations';
 
 export default function HomeScreen() {
-  const { styles } = useStyles();
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const { user: authUser } = useAuth();
   const replayTour = usePageTour('overview', authUser?.onboardingStatus === 'not-started');
@@ -105,25 +106,26 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={memorySets.isRefetching || activityQuery.isFetching || educationAssignmentsQuery.isRefetching} onRefresh={refreshHome} />}
         contentContainerStyle={styles.content}>
-        <SectionHeading
-          first
-          title={t('todaysFocus')}
-          trailing={focusReward ? <Text style={styles.sectionReward}>+{focusReward} {t('xpReward')}</Text> : null}
-        />
-        <DailyFocusCard
-          dueCount={dueItemCount}
-          reviewsCompleted={reviewsCompleted}
-          memorySet={memorySet}
-          review={focusReview}
-          onPress={() => {
-            if (focusReview) openReview(router, focusReview);
-            else if (memorySet) router.push(`/memory-details/${memorySet.id}` as Href);
-            else router.push('/create-memory' as Href);
-          }}
-        />
+        <View style={styles.section}>
+          <SectionHeading
+            title={t('todaysFocus')}
+            trailing={focusReward ? <Text style={styles.sectionReward}>+{focusReward} {t('xpReward')}</Text> : null}
+          />
+          <DailyFocusCard
+            dueCount={dueItemCount}
+            reviewsCompleted={reviewsCompleted}
+            memorySet={memorySet}
+            review={focusReview}
+            onPress={() => {
+              if (focusReview) openReview(router, focusReview);
+              else if (memorySet) router.push(`/memory-details/${memorySet.id}` as Href);
+              else router.push('/create-memory' as Href);
+            }}
+          />
+        </View>
 
         {onboardingSteps && !Object.values(onboardingSteps).every(Boolean) ? (
-          <>
+          <View style={styles.section}>
             <SectionHeading
               title={t('gettingStartedTitle')}
               trailing={<Text style={styles.gettingStartedCount}>{(onboardingSteps.practiced ? 2 : 1) + (onboardingSteps.createdOwn ? 1 : 0) + (onboardingSteps.exploredPalace ? 1 : 0)}/4</Text>}
@@ -140,35 +142,39 @@ export default function HomeScreen() {
                 }
               }}
             />
-          </>
+          </View>
         ) : null}
 
         {!isOffline && memorySets.isLoading ? (
           <View style={styles.loadingFrame}><LoadingView description={t('loading')} /></View>
         ) : canShowRequestErrors && memorySets.isError ? (
-          <ModuleNoticeCard
-            title={t('recentError')}
-            body={t('retry')}
-            onAction={memorySets.refetch}
-          />
+          <View style={styles.section}>
+            <ModuleNoticeCard
+              title={t('recentError')}
+              body={t('retry')}
+              onAction={memorySets.refetch}
+            />
+          </View>
         ) : continueMemorySet ? (
-          <>
+          <View style={styles.section}>
             <SectionHeading title={t('continuePractice')} />
             <ContinueSessionCardShim memorySet={continueMemorySet} latestAttempt={continueAttempt} onPress={() => router.push(`/memory-details/${continueMemorySet.id}`)} />
-          </>
+          </View>
         ) : (
-          <ModuleNoticeCard
-            icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
-            title={t('newMemory')}
-            body={t('newMemoryBody')}
-            actionLabel={t('tapToStart')}
-            actionIcon={<Plus size={15} color="#2B2A3D" />}
-            onAction={() => router.push('/create-memory' as Href)}
-          />
+          <View style={styles.section}>
+            <ModuleNoticeCard
+              icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
+              title={t('newMemory')}
+              body={t('newMemoryBody')}
+              actionLabel={t('tapToStart')}
+              actionIcon={<Plus size={15} color={theme.onAccent} />}
+              onAction={() => router.push('/create-memory' as Href)}
+            />
+          </View>
         )}
 
         {dueReviews.data?.length ? (
-          <>
+          <View style={styles.section}>
             <SectionHeading
               title={t('dueTodaySection')}
               trailing={dueReviewGroups.length > 2 ? (
@@ -182,7 +188,7 @@ export default function HomeScreen() {
               visibleCount={showAllReviews ? Number.MAX_SAFE_INTEGER : 2}
               onOpen={(review) => openReview(router, review)}
             />
-          </>
+          </View>
         ) : null}
 
         <EducationClassroomInvitations
@@ -224,8 +230,10 @@ export default function HomeScreen() {
 
         <WeekFootprints activity={practiceStatsQuery.data?.weeklyActivity ?? []} streak={streak} />
 
-        <SectionHeading title={t('memoryTip')} />
-        <MemoryTipCard />
+        <View style={styles.section}>
+          <SectionHeading title={t('memoryTip')} />
+          <MemoryTipCard />
+        </View>
       </ScrollView>
     </View>
   );
@@ -258,18 +266,22 @@ function GettingStartedCard({
           </View>
         ))}
       </View>
-      <AnimatedPressable onPress={onNext} style={styles.gettingStartedAction}>
-        <Text style={styles.gettingStartedActionText}>{t('continueGuide')}</Text>
-        <ArrowRight size={16} color="#2B2A3D" strokeWidth={2.5} />
-      </AnimatedPressable>
+      <AppButton
+        label={t('continueGuide')}
+        variant="secondary"
+        size="compact"
+        trailingIcon={ArrowRight}
+        onPress={onNext}
+        style={styles.gettingStartedAction}
+      />
     </View>
   );
 }
 
-function SectionHeading({ title, trailing, first = false }: { title: string; trailing?: React.ReactNode; first?: boolean }) {
+function SectionHeading({ title, trailing }: { title: string; trailing?: React.ReactNode }) {
   const { styles } = useStyles();
   return (
-    <View style={[styles.sectionHeadingRow, first && styles.sectionHeadingFirst]}>
+    <View style={styles.sectionHeadingRow}>
       <Text style={styles.sectionHeading}>{title}</Text>
       {trailing}
     </View>
@@ -293,7 +305,7 @@ function DailyFocusCard({
   review?: DueMemoryReview;
   onPress: () => void;
 }) {
-  const { styles } = useStyles();
+  const { styles, theme } = useStyles();
   const { t } = useTranslation('home');
   const isDraft = memorySet?.status === 'draft';
   const title = review
@@ -318,13 +330,16 @@ function DailyFocusCard({
         ? t('continueBuilding')
         : t('extraPractice');
   return (
-    <NightEmphasisCard style={styles.focusCard}>
+    <HighlightCard style={styles.focusCard}>
       <View style={styles.focusMain}>
         <View style={styles.focusCountRing}>
           <Svg width={82} height={82} viewBox="0 0 82 82" style={StyleSheet.absoluteFill}>
-            <SvgCircle cx={41} cy={41} r={35} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={6} />
-            <SvgCircle cx={41} cy={41} r={35} fill="none" stroke="#FFC93C" strokeWidth={6} strokeDasharray={`${2 * Math.PI * 35 * (dueCount ? 0.82 : 0.18)} ${2 * Math.PI * 35}`} strokeLinecap="round" rotation={-90} origin="41, 41" />
+            <SvgCircle cx={41} cy={41} r={35} fill="none" stroke={theme.violetLine} strokeWidth={6} />
+            <SvgCircle cx={41} cy={41} r={35} fill="none" stroke={reviewsCompleted ? theme.grass : theme.violetDeep} strokeWidth={6} strokeDasharray={`${2 * Math.PI * 35 * (dueCount ? 0.82 : 0.18)} ${2 * Math.PI * 35}`} strokeLinecap="round" rotation={-90} origin="41, 41" />
           </Svg>
+          <View accessible={false} pointerEvents="none" style={styles.focusSparkle}>
+            <Text style={styles.focusSparkleEmoji}>✨</Text>
+          </View>
           <Text style={styles.focusCount}>{dueCount}</Text>
           <Text style={styles.focusCountLabel}>{t('itemsDue')}</Text>
         </View>
@@ -335,16 +350,21 @@ function DailyFocusCard({
       </View>
       {reviewsCompleted ? (
         <View style={[styles.focusAction, styles.focusActionComplete]}>
-          <Text style={[styles.focusActionText, styles.focusActionCompleteText]}>{t('allDoneTitle')}</Text>
-          <Check size={17} color="#FFFFFF" strokeWidth={2.5} />
+          <Text style={styles.focusActionCompleteText}>{t('allDoneTitle')}</Text>
+          <Check size={17} color={theme.successText} strokeWidth={2.5} />
         </View>
       ) : (
-        <AnimatedPressable accessibilityRole="button" onPress={onPress} style={styles.focusAction}>
-          <Text style={styles.focusActionText}>{action}</Text>
-          <ArrowRight size={17} color="#3A2800" strokeWidth={2.5} />
-        </AnimatedPressable>
+        <AppButton
+          label={action}
+          variant="primary"
+          size="large"
+          fullWidth
+          trailingIcon={ArrowRight}
+          onPress={onPress}
+          style={styles.focusAction}
+        />
       )}
-    </NightEmphasisCard>
+    </HighlightCard>
   );
 }
 
@@ -362,7 +382,7 @@ function MemoryTipCard() {
   const tip = MEMORY_TIPS[tipIndex - 1];
   return (
     <View style={styles.tipCard}>
-      <Text style={styles.tipEmoji}>{tip.emoji}</Text>
+      <View style={styles.tipIcon}><Text style={styles.tipEmoji}>{tip.emoji}</Text></View>
       <View style={styles.tipCopy}>
         <View style={styles.tipHeader}>
           <AnimatedPressable accessibilityRole="button" accessibilityLabel={t('changeTip')} onPress={() => setTipIndex((current) => current % MEMORY_TIPS.length + 1)} style={styles.tipChange}>
@@ -412,7 +432,6 @@ function ContinueSessionCardShim({ memorySet, latestAttempt, onPress }: { memory
 }
 
 function WeekFootprints({ activity, streak }: { activity: { date: string; sessions: number }[]; streak: number }) {
-  const { styles } = useStyles();
   const { t } = useTranslation('home');
   const nudge = streak > 0 && streak < 3
     ? t('streakNudge').replace('{count}', String(3 - streak))
@@ -423,38 +442,37 @@ function WeekFootprints({ activity, streak }: { activity: { date: string; sessio
       title={t('weekFootprints')}
       activity={activity}
       footerText={nudge}
-      containerStyle={styles.weekFootprintsSpacing}
     />
   );
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 128 },
-  weekFootprintsSpacing: { marginTop: 16 },
+  page: { flex: 1, backgroundColor: theme.canvas },
+  content: { gap: 16, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 32 },
+  section: { gap: 8 },
   focusCard: { marginBottom: 0 },
   focusMain: { zIndex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 },
-  focusCountRing: { width: 82, height: 82, borderRadius: 41, alignItems: 'center', justifyContent: 'center' },
-  focusCount: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 25, lineHeight: 28 },
-  focusCountLabel: { color: '#E1DDF4', fontFamily: typography.bodyBold, fontSize: 9, marginTop: 1 },
+  focusCountRing: { width: 82, height: 82, borderRadius: 41, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.violetTint },
+  focusSparkle: { position: 'absolute', top: -3, right: -3, width: 23, height: 23, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.sunLine, backgroundColor: theme.sunTint },
+  focusSparkleEmoji: { fontSize: 12, lineHeight: 16 },
+  focusCount: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 25, lineHeight: 28 },
+  focusCountLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginTop: 1 },
   focusCopy: { flex: 1, minWidth: 0 },
-  focusTitle: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 18 },
-  focusBody: { color: '#D6D1EA', fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 5 },
-  focusAction: { zIndex: 1, minHeight: 48, width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#FFC93C', borderRadius: 14, paddingHorizontal: 15, marginTop: 16 },
-  focusActionComplete: { backgroundColor: theme.grass },
-  focusActionCompleteText: { color: '#FFFFFF' },
-  focusActionText: { color: '#3A2800', fontFamily: typography.displayExtraBold, fontSize: 14 },
-  gettingStartedCard: { borderRadius: 19, borderWidth: 2, borderColor: theme.skyLine, backgroundColor: theme.skyTint, padding: 15 },
+  focusTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17 },
+  focusBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12.5, lineHeight: 18, marginTop: 5 },
+  focusAction: { zIndex: 1, marginTop: 16 },
+  focusActionComplete: { backgroundColor: theme.mintTint, borderColor: theme.mintLine, borderWidth: 1 },
+  focusActionCompleteText: { color: theme.successText },
+  gettingStartedCard: { borderRadius: 20, borderWidth: 1.5, borderColor: theme.skyLine, backgroundColor: theme.paper, padding: 15, boxShadow: '0px 4px 14px rgba(43,42,61,0.06)' },
   gettingStartedCount: { color: theme.ink, backgroundColor: theme.paper, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
   gettingStartedRows: { gap: 8 },
   gettingStartedRow: { minHeight: 24, flexDirection: 'row', alignItems: 'center', gap: 9 },
   stepDone: { width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.grass },
   gettingStartedLabel: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 11.5 },
   gettingStartedLabelDone: { color: theme.inkMuted, textDecorationLine: 'line-through' },
-  gettingStartedAction: { minHeight: 48, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 13, backgroundColor: theme.sun, paddingHorizontal: 14, marginTop: 13 },
-  gettingStartedActionText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  gettingStartedAction: { alignSelf: 'flex-start', marginTop: 13 },
   emptyIconEmoji: { fontSize: 24 },
-  continueCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 18, padding: 13, boxShadow: '0px 8px 20px rgba(43,42,61,0.08)' },
+  continueCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.violetLine, borderRadius: 20, padding: 13, boxShadow: '0px 5px 14px rgba(43,42,61,0.07)' },
   techniqueBadge: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   techniqueEmoji: { fontSize: 21, lineHeight: 25 },
   palaceBadge: { backgroundColor: theme.violetTint },
@@ -464,19 +482,19 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   continueTrack: { height: 6, backgroundColor: theme.line, borderRadius: 999, overflow: 'hidden' },
   continueFill: { height: '100%', backgroundColor: theme.violet, borderRadius: 999 },
   continueMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 5 },
-  sectionHeadingRow: { minHeight: 27, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 16, marginBottom: 8 },
-  sectionHeadingFirst: { marginTop: 0 },
+  sectionHeadingRow: { minHeight: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   sectionHeading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15 },
   sectionReward: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
   reviewToggle: { borderRadius: 999, backgroundColor: theme.violetTint, paddingHorizontal: 9, paddingVertical: 5 },
   reviewToggleText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   reviewCount: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
   loadingFrame: { height: 145, borderRadius: 18, overflow: 'hidden' },
-  tipCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: theme.mintTint, borderWidth: 1.5, borderColor: theme.mintLine, borderRadius: 18, padding: 14 },
-  tipEmoji: { fontSize: 24, lineHeight: 30 },
+  tipCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.mintLine, borderRadius: 20, padding: 14, boxShadow: '0px 4px 14px rgba(43,42,61,0.06)' },
+  tipIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.mintTint },
+  tipEmoji: { fontSize: 22, lineHeight: 27 },
   tipCopy: { flex: 1 },
   tipHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  tipChange: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: theme.paper },
+  tipChange: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 10, backgroundColor: theme.paper },
   tipChangeText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
   tipTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 2 },
   tipBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 3 },

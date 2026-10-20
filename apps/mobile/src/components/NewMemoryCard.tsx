@@ -19,7 +19,7 @@ export function NewMemoryCard({ title, body, onPress }: NewMemoryCardProps) {
       <View style={styles.glow} />
       <View style={styles.iconWrap}>
         <View style={styles.icon}>
-        <Plus size={23} color={theme.onSun} strokeWidth={2.7} />
+        <Plus size={23} color={theme.onAccent} strokeWidth={2.7} />
         </View>
         <View style={styles.sparkle}><Sparkles size={11} color={theme.sunDeep} /></View>
       </View>
@@ -27,7 +27,7 @@ export function NewMemoryCard({ title, body, onPress }: NewMemoryCardProps) {
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.body}>{body}</Text>
       </View>
-      <View style={styles.arrow}><ChevronRight size={18} color={theme.onSun} strokeWidth={2.8} /></View>
+      <View style={styles.arrow}><ChevronRight size={18} color={theme.onAccent} strokeWidth={2.8} /></View>
     </AnimatedPressable>
   );
 }
@@ -35,8 +35,8 @@ export function NewMemoryCard({ title, body, onPress }: NewMemoryCardProps) {
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: {
     alignItems: 'center',
-    backgroundColor: theme.sunTint,
-    borderColor: theme.sunLine,
+    backgroundColor: theme.violetTint,
+    borderColor: theme.violetLine,
     borderRadius: 24,
     borderWidth: 1.5,
     boxShadow: '0px 6px 16px rgba(43, 42, 61, 0.06)',
@@ -47,20 +47,20 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 14,
   },
-  glow: { position: 'absolute', width: 150, height: 150, borderRadius: 75, right: -54, top: -68, backgroundColor: 'rgba(255, 201, 60, 0.22)' },
+  glow: { position: 'absolute', width: 150, height: 150, borderRadius: 75, right: -54, top: -68, backgroundColor: theme.violetLine, opacity: 0.45 },
   iconWrap: { position: 'relative', width: 55, height: 55 },
   icon: {
     alignItems: 'center',
-    backgroundColor: theme.sun,
+    backgroundColor: theme.violetDeep,
     borderRadius: 18,
     height: 50,
     justifyContent: 'center',
     width: 50,
-    boxShadow: '0px 4px 8px rgba(210, 151, 18, 0.22)',
+    boxShadow: '0px 4px 8px rgba(105, 80, 204, 0.22)',
   },
   sparkle: { position: 'absolute', right: -2, top: -4, width: 21, height: 21, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
   copy: { flex: 1, minWidth: 0 },
   title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17 },
   body: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 16, marginTop: 3 },
-  arrow: { alignItems: 'center', backgroundColor: theme.sunDeep, borderRadius: 17, height: 34, justifyContent: 'center', width: 34 },
+  arrow: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 17, height: 34, justifyContent: 'center', width: 34 },
 }));

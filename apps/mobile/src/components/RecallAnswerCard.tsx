@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Check, X } from '@/core/icons';
@@ -178,13 +179,7 @@ export function RecallAnswerCard({
         </View>
       ) : null}
       <View ref={actionAreaRef} style={styles.actionButtonWrap}>
-        <AnimatedPressable
-          disabled={actionDisabled || (!answer.trim() && !feedback)}
-          pressOnIn
-          onPress={onSubmit}
-          style={[styles.actionButton, (actionDisabled || (!answer.trim() && !feedback)) && styles.disabledButton]}>
-          <Text style={styles.actionText}>{actionLabel}</Text>
-        </AnimatedPressable>
+        <AppButton disabled={actionDisabled || (!answer.trim() && !feedback)} fullWidth label={actionLabel} onPress={onSubmit} pressOnIn size="large" />
       </View>
       {!feedback && onSkip && skipLabel ? (
         <AnimatedPressable accessibilityRole="button" disabled={actionDisabled} onPress={onSkip} style={styles.skipButton}>
@@ -213,9 +208,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   feedback: { alignItems: 'center', alignSelf: 'stretch', flexDirection: 'row', gap: 7, marginTop: 12 },
   feedbackText: { flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   actionButtonWrap: { alignSelf: 'stretch', marginTop: 18 },
-  actionButton: { width: '100%', minHeight: 48, borderRadius: 14, backgroundColor: theme.night, borderWidth: 1.5, borderColor: theme.violetLine, paddingHorizontal: 12, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
-  actionText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  disabledButton: { opacity: 0.4 },
   skipButton: { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   progress: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center', marginTop: 15 },
 }));

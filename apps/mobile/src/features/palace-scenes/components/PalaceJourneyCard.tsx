@@ -48,7 +48,7 @@ export function PalaceJourneyCard({ memorySet, scene, featured = false, actionLa
       </View>
       <View style={[styles.journeyAction, featured && styles.featuredAction]}>
         <Text numberOfLines={1} style={[styles.journeyActionText, featured && styles.featuredActionText]}>{actionLabel}</Text>
-        {featured ? <ArrowRight size={15} color={theme.onSun} /> : <ChevronRight size={16} color={theme.violetDeep} />}
+        {featured ? <ArrowRight size={15} color={theme.violetDeep} /> : <ChevronRight size={16} color={theme.violetDeep} />}
       </View>
     </AnimatedPressable>
   );
@@ -84,6 +84,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   featuredProgressFill: { backgroundColor: theme.sun },
   journeyAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 13, flexDirection: 'row', gap: 2, justifyContent: 'center', minHeight: 40, paddingHorizontal: 7 },
   journeyActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  featuredAction: { backgroundColor: theme.sun, borderRadius: 14, minHeight: 42, paddingHorizontal: 10 },
-  featuredActionText: { color: theme.onSun, fontSize: 11 },
+  featuredAction: { backgroundColor: theme.paper, borderRadius: 14, minHeight: 42, paddingHorizontal: 10 },
+  featuredActionText: { color: theme.violetDeep, fontSize: 11 },
 }));

@@ -5,7 +5,8 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
-import { NightEmphasisCard } from '@/components/NightEmphasisCard';
+import { HighlightCard } from '@/components/HighlightCard';
+import { AppButton } from '@/components/ui/AppButton';
 import LoadingView from '@/components/LoadingView';
 import { useInfiniteMemorySets, useMemorySetMutations } from '@/features/memory-sets';
 import { useMemoryFolderMutations, useMemoryFolders } from '../hooks/useMemoryFolders';
@@ -17,7 +18,6 @@ import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practi
 import type { DueMemoryReview } from '@/features/practice-attempts';
 import { InAppNotificationSync } from '@/features/notifications/services/inAppNotificationSync';
 import { useUserState } from '@/contexts/UserStateContext';
-import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -26,7 +26,6 @@ import { CircleHelp, Globe2, Layers, LayoutGrid, List as ListIcon, LockKeyhole, 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { useColorScheme } from 'nativewind';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -87,8 +86,6 @@ export default function LibraryScreen() {
   const pendingMoveMemoryRef = useRef<MemorySet | undefined>(undefined);
   const pendingCollectionActionRef = useRef<(() => void) | undefined>(undefined);
   const viewMode: LibraryViewMode = userState.ui.libraryViewMode ?? 'card';
-  const { colorScheme } = useColorScheme();
-  const activeTheme = memopalThemes[colorScheme ?? 'light'];
   const { isOffline, canShowRequestErrors } = useNetworkStatus();
 
   useEffect(() => {
@@ -336,7 +333,7 @@ export default function LibraryScreen() {
             onRefresh={() => { void Promise.allSettled([pagedMemorySets.refetch(), foldersQuery.refetch(), palaceScenes.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
           />
         }>
-        <NightEmphasisCard style={styles.summaryCard}>
+        <HighlightCard style={styles.summaryCard}>
           <View style={styles.summaryIcon}>
             <Text style={styles.summaryEmoji}>🧠</Text>
           </View>
@@ -349,11 +346,15 @@ export default function LibraryScreen() {
             <Text style={styles.summaryBody}>{t('collectionBody')}</Text>
           </View>
           <SpotlightTarget id="libraryStarter" onReveal={revealTop} onActivate={createMemory}>
-            <AnimatedPressable accessibilityLabel={t('create')} onPress={createMemory} style={styles.addButton}>
-              <Plus size={21} color={theme.onSun} />
-            </AnimatedPressable>
+            <AppButton
+              accessibilityLabel={t('create')}
+              variant="primary"
+              icon={Plus}
+              onPress={createMemory}
+              style={styles.addButton}
+            />
           </SpotlightTarget>
-        </NightEmphasisCard>
+        </HighlightCard>
 
         <SpotlightTarget id="libraryFilter" onReveal={revealTop}>
         <View style={styles.filterRow}>
@@ -374,10 +375,13 @@ export default function LibraryScreen() {
 
         </SpotlightTarget>
         <View style={styles.viewToolbar}>
-          <AnimatedPressable accessibilityLabel={t('newFolder')} onPress={() => setFolderNameModal({})} style={styles.newFolderButton}>
-            <Layers size={17} color={theme.onAccent} />
-            <Text style={styles.newFolderText}>{t('newFolder')}</Text>
-          </AnimatedPressable>
+          <AppButton
+            label={t('newFolder')}
+            variant="secondary"
+            size="compact"
+            icon={Layers}
+            onPress={() => setFolderNameModal({})}
+          />
           <View accessibilityLabel={t('viewMode')} style={styles.viewToggle}>
             <AnimatedPressable
               accessibilityRole="button"
@@ -404,10 +408,13 @@ export default function LibraryScreen() {
           <View style={styles.noticeCard}>
             <Text style={styles.noticeTitle}>{t('unavailable')}</Text>
             <Text style={styles.noticeBody}>{t('connectionRetry')}</Text>
-            <AnimatedPressable onPress={() => { void Promise.allSettled([foldersQuery.refetch(), pagedMemorySets.refetch()]); }} style={styles.retryButton}>
-              <RefreshCcw size={16} color={theme.onSun} />
-              <Text style={styles.retryText}>{t('retry')}</Text>
-            </AnimatedPressable>
+            <AppButton
+              label={t('retry')}
+              size="compact"
+              icon={RefreshCcw}
+              onPress={() => { void Promise.allSettled([foldersQuery.refetch(), pagedMemorySets.refetch()]); }}
+              style={styles.retryButton}
+            />
           </View>
         ) : null}
 
@@ -438,7 +445,7 @@ export default function LibraryScreen() {
             title={t('newMemory')}
             body={t('newMemoryBody')}
             actionLabel={t('tapToStart')}
-            actionIcon={<Plus size={15} color={theme.onSun} />}
+            actionIcon={<Plus size={15} color={theme.onAccent} />}
             onAction={createMemory}
           />
         ) : !isOffline && !explorerHasError ? (
@@ -446,23 +453,27 @@ export default function LibraryScreen() {
             <Text style={styles.emptyEmoji}>{filter === 'palace' ? '🏡' : filter === 'number-peg' ? '🦢' : '📦'}</Text>
             <Text style={styles.noticeTitle}>{filter === 'archived' ? t('archiveEmpty') : t('collectionEmpty')}</Text>
             <Text style={styles.noticeBody}>{filter === 'archived' ? t('archiveBody') : t('buildFirstBody')}</Text>
-            {filter !== 'archived' && <AnimatedPressable onPress={createMemory} style={styles.emptyButton}><Plus size={17} color={theme.onAccent} /><Text style={styles.emptyButtonText}>{t('create')}</Text></AnimatedPressable>}
+            {filter !== 'archived' ? <AppButton label={t('create')} icon={Plus} onPress={createMemory} style={styles.emptyButton} /> : null}
           </View>
         ) : null}
         {!isOffline && pagedMemorySets.hasNextPage && !pagedMemorySets.isFetchingNextPage ? (
-          <AnimatedPressable onPress={() => void pagedMemorySets.fetchNextPage()} style={styles.loadMoreButton}>
-            <Text style={styles.loadMoreText}>{t('loadMore')}</Text>
-          </AnimatedPressable>
+          <AppButton
+            label={t('loadMore')}
+            variant="secondary"
+            size="compact"
+            onPress={() => void pagedMemorySets.fetchNextPage()}
+            style={styles.loadMoreButton}
+          />
         ) : pagedMemorySets.isFetchingNextPage ? <Text style={styles.loadMoreText}>{t('loading')}</Text> : null}
       </ScrollView>
-      <AnimatedPressable
-        accessibilityRole="button"
+      <AppButton
         accessibilityLabel={t('create')}
         accessibilityHint={t('newMemoryBody')}
+        variant="primary"
+        icon={Plus}
         onPress={createMemory}
-        style={[styles.createFab, { bottom: Math.max(16, insets.bottom + 10), backgroundColor: activeTheme.sun }]}>
-        <Plus size={26} color={activeTheme.onSun} strokeWidth={2.8} />
-      </AnimatedPressable>
+        style={[styles.createFab, { bottom: Math.max(16, insets.bottom + 10) }]}
+      />
 
       <MemoryActionsSheet
         ref={memoryActionsRef}
@@ -584,9 +595,9 @@ function hasPrivateAssets(
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 20, paddingBottom: 112 },
-  createFab: { alignItems: 'center', borderRadius: 30, elevation: 6, height: 60, justifyContent: 'center', position: 'absolute', right: 20, shadowColor: theme.ink, shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 60 },
+  page: { flex: 1, backgroundColor: theme.canvas },
+  content: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 112 },
+  createFab: { alignItems: 'center', borderRadius: 30, elevation: 6, height: 60, justifyContent: 'center', position: 'absolute', right: 18, shadowColor: theme.ink, shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 60 },
   summaryCard: {
     minHeight: 112,
     flexDirection: 'row',
@@ -596,25 +607,18 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor: theme.sun,
+    borderWidth: 1,
+    borderColor: theme.violetLine,
+    backgroundColor: theme.violetTint,
     alignItems: 'center',
     justifyContent: 'center',
   },
   summaryEmoji: { fontSize: 24 },
   summaryCopy: { flex: 1, marginHorizontal: 13 },
-  summaryEyebrow: { color: '#C9C5E0', fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.9 },
-  summaryTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 20, marginTop: 3 },
-  summaryBody: { color: '#DAD6E8', fontSize: 11, lineHeight: 16, marginTop: 3 },
-  addButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: theme.sun,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  newFolderButton: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 13, flexDirection: 'row', gap: 7, minHeight: 46, paddingHorizontal: 15 },
-  newFolderText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  summaryEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.6 },
+  summaryTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, marginTop: 3 },
+  summaryBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17, marginTop: 3 },
+  addButton: { width: 44, height: 44, paddingHorizontal: 0, borderRadius: 14 },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 18 },
   filterChip: {
     minHeight: 44,
@@ -647,33 +651,13 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   },
   noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center' },
   noticeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 5 },
-  retryButton: {
-    marginTop: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: theme.sun,
-    flexDirection: 'row',
-    gap: 7,
-    alignItems: 'center',
-  },
-  retryText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  retryButton: { alignSelf: 'center', marginTop: 14 },
   emptyIconEmoji: { fontSize: 24 },
   emptyEmoji: { fontSize: 32, marginBottom: 9 },
-  emptyButton: {
-    marginTop: 15,
-    borderRadius: 13,
-    backgroundColor: theme.violetDeep,
-    paddingHorizontal: 15,
-    paddingVertical: 11,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-  },
-  emptyButtonText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  loadMoreButton: { alignSelf: 'center', marginTop: 16, borderRadius: 999, backgroundColor: theme.skyTint, paddingHorizontal: 18, paddingVertical: 10 },
-  loadMoreText: { textAlign: 'center', color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  emptyButton: { alignSelf: 'center', marginTop: 15 },
+  loadMoreButton: { alignSelf: 'center', marginTop: 16 },
   lessonEntry: { alignItems: 'center', backgroundColor: theme.sunTint, borderColor: theme.sunLine, borderRadius: 999, borderWidth: 1.5, flexDirection: 'row', gap: 5, paddingHorizontal: 9, paddingVertical: 6 },
   lessonEntryTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 10 }, lessonEntryArrow: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 },
+  loadMoreText: { alignSelf: 'center', color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 16 },
   loadingFrame: { height: 180, overflow: 'hidden', borderRadius: 20 },
 }));

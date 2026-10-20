@@ -1,8 +1,9 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { RefreshCw } from '@/core/icons';
+import { ArrowRight, RefreshCw } from '@/core/icons';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -58,14 +59,7 @@ export function NumberPegStoryHero({ onStart }: { onStart: () => void }) {
         ))}
       </View>
 
-      <AnimatedPressable
-        accessibilityRole="button"
-        accessibilityLabel={t('makeMemory')}
-        onPress={onStart}
-        style={styles.start}>
-        <Text style={styles.startText}>{t('makeMemory')}</Text>
-        <Text style={styles.startArrow}>→</Text>
-      </AnimatedPressable>
+      <AppButton label={t('makeMemory')} onPress={onStart} size="large" trailingIcon={ArrowRight} />
     </View>
   );
 }
@@ -93,7 +87,4 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   stepLine: { backgroundColor: theme.violetLine, height: 1.5, marginRight: 5, width: 16 },
   stepDot: { backgroundColor: theme.violetDeep, borderRadius: 4, height: 7, width: 7 },
   stepText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9.5 },
-  start: { alignItems: 'center', backgroundColor: theme.sun, borderBottomColor: theme.sunDeep, borderBottomWidth: 3, borderRadius: 14, flexDirection: 'row', gap: 8, justifyContent: 'center', minHeight: 46, paddingHorizontal: 14 },
-  startText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 13 },
-  startArrow: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 17 },
 }));

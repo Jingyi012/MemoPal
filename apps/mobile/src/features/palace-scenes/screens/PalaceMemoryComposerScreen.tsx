@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useMemorySetMutations } from '@/features/memory-sets';
@@ -627,7 +628,7 @@ export default function PalaceMemoryComposerScreen() {
           <View style={styles.emptyScenes}>
             <Text style={styles.sceneImageEmoji}>🖼️</Text>
               <Text style={styles.helper}>{t('noPublishedScenes')}</Text>
-              <AnimatedPressable onPress={() => scenesQuery.refetch()} style={styles.refreshButton}><RefreshCcw size={15} color={theme.onSun} /><Text style={styles.refreshText}>{t('refresh')}</Text></AnimatedPressable>
+              <AppButton icon={RefreshCcw} label={t('refresh')} onPress={() => void scenesQuery.refetch()} size="compact" style={styles.refreshButton} variant="secondary" />
           </View>
         )}
           </>
@@ -698,7 +699,7 @@ export default function PalaceMemoryComposerScreen() {
                     cursorColor={theme.violetDeep}
                     style={[styles.input, { flex: 1 }]}
                   />
-                  <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} style={styles.addButton}><Plus size={21} color="white" /></AnimatedPressable>
+                  <AppButton accessibilityLabel={t('addItemAccessibility')} icon={Plus} onPress={addItem} size="regular" style={styles.addButton} variant="primary" />
                 </View>
                 {items.map((item, index) => (
                   <View key={`${item}-${index}`} style={styles.itemRow}>
@@ -719,14 +720,16 @@ export default function PalaceMemoryComposerScreen() {
               </>
             ) : null}
             <View style={styles.fullWidthButton}>
-              <AnimatedPressable
-                accessibilityState={{ disabled: noFittingScene }}
+              <AppButton
+                label={t('continuePlace')}
+                variant="primary"
+                size="large"
+                fullWidth
+                trailingIcon={ArrowRight}
                 disabled={noFittingScene}
                 onPress={continueToPlacement}
-                style={[styles.continueButton, noFittingScene && styles.continueButtonDisabled]}>
-              <Text style={[styles.continueText, noFittingScene && styles.continueTextDisabled]}>{t('continuePlace')}</Text>
-                <ArrowRight size={18} color={noFittingScene ? theme.inkSoft : theme.onSun} />
-              </AnimatedPressable>
+                style={styles.continueButton}
+              />
             </View>
           </>
         ) : (
@@ -741,9 +744,17 @@ export default function PalaceMemoryComposerScreen() {
         {(message || error) && <View style={styles.errorCard}><Text style={styles.errorText}>{message ?? error}</Text></View>}
         {step === 'place' && (
           <View style={styles.fullWidthButton}>
-            <AnimatedPressable disabled={createMemorySet.isPending || updateMemorySet.isPending} onPress={save} style={[styles.saveButton, (createMemorySet.isPending || updateMemorySet.isPending) && { opacity: 0.5 }]}>
-              <Check size={19} color={theme.onSun} /><Text style={styles.saveText}>{createMemorySet.isPending ? t('saving') : error ? t('trySavingAgain') : t('savePalace')}</Text><ArrowRight size={18} color={theme.onSun} />
-            </AnimatedPressable>
+            <AppButton
+              label={createMemorySet.isPending || updateMemorySet.isPending ? t('saving') : error ? t('trySavingAgain') : t('savePalace')}
+              variant="primary"
+              size="large"
+              fullWidth
+              icon={Check}
+              trailingIcon={ArrowRight}
+              loading={createMemorySet.isPending || updateMemorySet.isPending}
+              onPress={save}
+              style={styles.saveButton}
+            />
           </View>
         )}
       </ScrollView>
@@ -807,12 +818,12 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 14, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
   sceneRail: { marginHorizontal: -16, paddingLeft: 16 }, sceneOption: { width: 172, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 8, marginRight: 10 }, sceneOptionActive: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint }, sceneOptionLimited: { opacity: 0.72 }, sceneThumb: { height: 92, borderRadius: 12 }, sceneName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 8 }, sceneMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginTop: 2 },
   canvasHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, textAlign: 'center', marginTop: 8 }, capacityCard: { marginTop: 11, borderRadius: 14, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 12 }, capacityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 }, capacityText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 3 },
-  emptyScenes: { borderWidth: 2, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.paper, padding: 18, alignItems: 'center' }, helper: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center' }, refreshButton: { marginTop: 10, flexDirection: 'row', gap: 6, backgroundColor: theme.sun, borderRadius: 11, paddingHorizontal: 12, paddingVertical: 8 }, refreshText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  addRow: { flexDirection: 'row', gap: 9 }, addButton: { width: 50, height: 50, borderRadius: 14, backgroundColor: theme.night, alignItems: 'center', justifyContent: 'center' },
+  emptyScenes: { borderWidth: 2, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.paper, padding: 18, alignItems: 'center' }, helper: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center' }, refreshButton: { alignSelf: 'center', marginTop: 10 },
+  addRow: { flexDirection: 'row', gap: 9 }, addButton: { width: 50, height: 50, borderRadius: 14 },
   itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line }, itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: theme.violet, alignItems: 'center', justifyContent: 'center' }, itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 }, itemText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginLeft: 11 }, locusText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginLeft: 11, marginTop: 2 }, deleteButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   errorCard: { marginTop: 14, borderRadius: 14, backgroundColor: theme.berryTint, borderWidth: 1.5, borderColor: theme.berryLine, padding: 12 }, errorText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   fullWidthButton: { alignSelf: 'stretch' },
-  continueButton: { width: '100%', minHeight: 53, marginTop: 20, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 5px 0px ${theme.sunDeep}` }, continueButtonDisabled: { backgroundColor: theme.disabled, boxShadow: 'none' }, continueText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 }, continueTextDisabled: { color: theme.inkSoft },
+  continueButton: { marginTop: 20 },
   editSetupButton: { width: '100%', minHeight: 45, marginTop: 18, borderRadius: 14, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center' }, editSetupText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  saveButton: { width: '100%', minHeight: 53, marginTop: 20, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 5px 0px ${theme.sunDeep}` }, saveText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  saveButton: { marginTop: 20 },
 }));

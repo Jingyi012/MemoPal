@@ -1,4 +1,4 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { AppImage } from '@/components/AppImage';
 import type { PalaceLocus, PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
@@ -72,30 +72,31 @@ export function PalaceFocusCard({
       </View>
       {onPrevious || onNext ? (
         <View style={styles.navigationRow}>
-          <AnimatedPressable
+          <AppButton
             accessibilityLabel={t('previousLocus')}
             disabled={!onPrevious || index === 0}
-            onPress={onPrevious}
-            style={[styles.roundButton, (!onPrevious || index === 0) && styles.disabledButton]}>
-            <ChevronLeft size={21} color={theme.ink} />
-          </AnimatedPressable>
+            icon={ChevronLeft}
+            onPress={() => onPrevious?.()}
+            size="compact"
+            style={[styles.roundButton, (!onPrevious || index === 0) && styles.disabledButton]}
+            variant="icon"
+          />
           <Text style={styles.position}>
             {total ? `${index + 1} / ${total}` : `${t('locusLabel')} ${index + 1}`}
           </Text>
-          <AnimatedPressable
+          <AppButton
             accessibilityLabel={isLast ? t('restartWalk') : t('nextLocus')}
             disabled={!onNext}
-            onPress={onNext}
-            style={styles.roundButton}>
-            {isLast ? <RotateCcw size={19} color={theme.ink} /> : <ChevronRight size={21} color={theme.ink} />}
-          </AnimatedPressable>
+            icon={isLast ? RotateCcw : ChevronRight}
+            onPress={() => onNext?.()}
+            size="compact"
+            style={styles.roundButton}
+            variant="icon"
+          />
         </View>
       ) : null}
       {onStartRecall ? (
-        <AnimatedPressable accessibilityLabel={t('recallChallenge')} onPress={onStartRecall} style={styles.recallButton}>
-          <Text style={styles.recallEmoji}>🧠</Text>
-          <Text style={styles.recallText}>{t('recallChallenge')}</Text>
-        </AnimatedPressable>
+        <AppButton label={t('recallChallenge')} leadingContent={<Text style={styles.recallEmoji}>🧠</Text>} onPress={onStartRecall} style={styles.recallButton} />
       ) : null}
     </View>
   );
@@ -154,10 +155,9 @@ const styles = StyleSheet.create({
   hiddenAnswer: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 6 },
   association: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 7 },
   navigationRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 14, marginBottom: 12 },
-  roundButton: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 23, height: 46, justifyContent: 'center', width: 46 },
+  roundButton: { borderRadius: 23, height: 46, width: 46 },
   disabledButton: { opacity: 0.35 },
   position: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  recallButton: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#9B8CFF', borderRadius: 13, borderWidth: 2, flexDirection: 'row', gap: 7, justifyContent: 'center', marginHorizontal: 14, marginBottom: 14, minHeight: 45 },
-  recallText: { color: '#6654D9', fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  recallButton: { marginHorizontal: 14, marginBottom: 14 },
   recallEmoji: { fontSize: 15 },
 });

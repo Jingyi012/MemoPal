@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import type { MemoryGoalType } from '@/features/memory-sets';
 import { createThemedStyles } from '@/theme/createThemedStyles';
@@ -301,9 +302,15 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                   cursorColor={theme.violetDeep}
                   style={[styles.input, styles.addInput]}
                 />
-                <AnimatedPressable accessibilityLabel={t('addItemAccessibility')} onPress={addItem} pressOnIn containerStyle={styles.addButtonContainer} style={styles.addButton}>
-                  <Plus size={21} color="white" />
-                </AnimatedPressable>
+                <AppButton
+                  accessibilityLabel={t('addItemAccessibility')}
+                  variant="primary"
+                  size="large"
+                  icon={Plus}
+                  pressOnIn
+                  onPress={addItem}
+                  style={styles.addButton}
+                />
               </View>
               <View style={styles.importActions}>
                 <AnimatedPressable
@@ -343,10 +350,13 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                     cursorColor={theme.violetDeep}
                     style={[styles.input, styles.bulkInput]}
                   />
-                  <AnimatedPressable onPress={addBulkItems} style={styles.bulkButton}>
-                    <Text style={styles.bulkButtonText}>{t('addLines')}</Text>
-                    <ArrowRight size={16} color={theme.onSun} />
-                  </AnimatedPressable>
+                  <AppButton
+                    label={t('addLines')}
+                    size="compact"
+                    trailingIcon={ArrowRight}
+                    onPress={addBulkItems}
+                    style={styles.bulkButton}
+                  />
                 </View>
               ) : null}
               <MemoryItemReorderProvider>
@@ -423,15 +433,15 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
       </ScrollView>
       {step === 'content' && keyboardInset === 0 ? (
         <View style={[styles.bottomDock, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-          <AnimatedPressable
+          <AppButton
+            label={items.length ? t('continueWithItems').replace('{count}', String(items.length)) : t('addFirstItem')}
+            variant="primary"
+            size="large"
+            fullWidth
+            trailingIcon={ArrowRight}
             disabled={!items.length || isReordering}
             onPress={continueToTechniques}
-            style={[styles.primaryButton, (!items.length || isReordering) && styles.primaryButtonDisabled]}>
-            <Text style={[styles.primaryButtonText, (!items.length || isReordering) && styles.primaryButtonTextDisabled]}>
-              {items.length ? t('continueWithItems').replace('{count}', String(items.length)) : t('addFirstItem')}
-            </Text>
-            <ArrowRight size={18} color={!items.length || isReordering ? theme.inkSoft : theme.onSun} />
-          </AnimatedPressable>
+          />
         </View>
       ) : null}
     </KeyboardAvoidingView>
@@ -517,8 +527,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   bulkCard: { borderRadius: 15, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 10, marginBottom: 10 },
   bulkTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginBottom: 7 },
   bulkInput: { minHeight: 105, paddingTop: 12, textAlignVertical: 'top', backgroundColor: theme.paper },
-  bulkButton: { minHeight: 44, borderRadius: 11, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8 },
-  bulkButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  bulkButton: { alignSelf: 'stretch', marginTop: 8 },
   optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
   input: { minHeight: 49, borderRadius: 12, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 12, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
   goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -529,17 +538,12 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   goalLabelSelected: { color: theme.ink },
   addRow: { flexDirection: 'row', gap: 8 },
   addInput: { flex: 1 },
-  addButtonContainer: { width: 52, minHeight: 52 },
-  addButton: { width: '100%', minHeight: 52, borderRadius: 15, borderWidth: 1.5, borderColor: theme.violetDeep, backgroundColor: theme.violetDeep, alignItems: 'center', justifyContent: 'center' },
+  addButton: { width: 52, height: 52, minHeight: 52, paddingHorizontal: 0, borderRadius: 15 },
   chipRow: { gap: 8 },
   emptyItems: { minHeight: 76, alignItems: 'center', justifyContent: 'center', borderRadius: 15, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.line, backgroundColor: theme.paper },
   emptyItemsText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, textAlign: 'center', paddingHorizontal: 16 },
   hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: 12 },
   bottomDock: { paddingHorizontal: 16, paddingTop: 12, backgroundColor: theme.canvas, borderTopWidth: 1, borderTopColor: theme.line },
-  primaryButton: { minHeight: 53, borderRadius: 15, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: `0px 4px 0px ${theme.sunDeep}` },
-  primaryButtonDisabled: { backgroundColor: theme.line, boxShadow: 'none' },
-  primaryButtonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 15 },
-  primaryButtonTextDisabled: { color: theme.inkSoft },
   messageCard: { marginTop: 13, borderRadius: 13, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 11 },
   messageText: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
   recommendationBanner: { flexDirection: 'row', gap: 11, borderRadius: 18, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 14, marginBottom: 16 },

@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
@@ -96,9 +97,7 @@ export default function NumberPegFamiliarityScreen() {
                 </AnimatedPressable>;
               })}
             </View>
-            <AnimatedPressable onPress={() => setStarted(true)} style={styles.rangeStartButton}>
-              <Text style={styles.rangeStartText}>{t('startRange')}</Text><ArrowRight size={18} color={theme.onSun} />
-            </AnimatedPressable>
+            <AppButton label={t('startRange')} size="large" fullWidth trailingIcon={ArrowRight} onPress={() => setStarted(true)} style={styles.rangeStartButton} />
           </View>
         ) : isComplete ? (
           <View style={styles.completeCard}>
@@ -109,15 +108,9 @@ export default function NumberPegFamiliarityScreen() {
               {t('familiarityCompleteBody')}
             </Text>
             <View style={styles.primaryButtonWrap}>
-              <AnimatedPressable onPress={() => router.push('/number-peg/create' as Href)} style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>{t('buildMemory')}</Text>
-                <ArrowRight size={18} color={theme.ink} />
-              </AnimatedPressable>
+              <AppButton label={t('buildMemory')} size="large" fullWidth trailingIcon={ArrowRight} onPress={() => router.push('/number-peg/create' as Href)} style={styles.primaryButton} />
             </View>
-            <AnimatedPressable onPress={restart} style={styles.secondaryButton}>
-              <RefreshCcw size={16} color={theme.inkSoft} />
-              <Text style={styles.secondaryButtonText}>{t('practiceAgain')}</Text>
-            </AnimatedPressable>
+            <AppButton label={t('practiceAgain')} variant="secondary" size="compact" icon={RefreshCcw} onPress={restart} style={styles.secondaryButton} />
           </View>
         ) : (
           <>
@@ -172,10 +165,7 @@ export default function NumberPegFamiliarityScreen() {
 
               {feedback && (
                 <View style={styles.primaryButtonWrap}>
-                  <AnimatedPressable onPress={next} style={styles.primaryButton}>
-                    <Text style={styles.primaryButtonText}>{questionIndex === pegs.length - 1 ? t('seeMyScore') : t('nextAnchor')}</Text>
-                    <ArrowRight size={18} color={theme.ink} />
-                  </AnimatedPressable>
+                  <AppButton label={questionIndex === pegs.length - 1 ? t('seeMyScore') : t('nextAnchor')} size="large" fullWidth trailingIcon={ArrowRight} onPress={next} style={styles.primaryButton} />
                 </View>
               )}
             </View>
@@ -207,8 +197,7 @@ const styles = StyleSheet.create({
   rangeNumberSelected: { color: theme.violetDeep },
   rangeLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9, marginTop: 2 },
   rangeLabelSelected: { color: theme.violetDeep },
-  rangeStartButton: { minHeight: 49, marginTop: 17, borderRadius: 14, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
-  rangeStartText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  rangeStartButton: { marginTop: 17 },
   tipCard: { flexDirection: 'row', gap: 11, borderRadius: 18, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 14 },
   tipIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF0F4' },
   tipEmoji: { fontSize: 21 },
@@ -218,7 +207,7 @@ const styles = StyleSheet.create({
   progressCount: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center', marginVertical: 18 },
   progressDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: theme.line },
   progressDone: { backgroundColor: theme.grass },
-  progressCurrent: { backgroundColor: theme.sunDeep, transform: [{ scale: 1.25 }] },
+  progressCurrent: { backgroundColor: theme.violetDeep, transform: [{ scale: 1.25 }] },
   questionCard: { borderRadius: 22, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 20, alignItems: 'center', boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.08)' },
   numberBadge: { width: 58, height: 58, borderRadius: 29, backgroundColor: theme.berry, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 3px 8px ${theme.berry}59` },
   numberBadgeText: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 22 },
@@ -238,13 +227,11 @@ const styles = StyleSheet.create({
   feedbackCorrect: { color: theme.grass },
   feedbackWrong: { color: theme.berryDeep },
   primaryButtonWrap: { alignSelf: 'stretch', marginTop: 17 },
-  primaryButton: { width: '100%', minHeight: 51, borderRadius: 15, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
-  primaryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  primaryButton: { alignSelf: 'stretch' },
   completeCard: { borderRadius: 23, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 24, alignItems: 'center', boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.08)' },
   completeEmoji: { fontSize: 54 },
   completeTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 20, textAlign: 'center', marginTop: 10 },
   completeScore: { color: theme.grass, fontFamily: typography.displayExtraBold, fontSize: 35, marginTop: 8 },
   completeBody: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 8 },
-  secondaryButton: { minHeight: 43, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 9 },
-  secondaryButtonText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
+  secondaryButton: { alignSelf: 'center', marginTop: 9 },
 });

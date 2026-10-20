@@ -1,7 +1,7 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { MemoryLearningCard } from '@/components/MemoryLearningCard';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
+import { AppButton } from '@/components/ui/AppButton';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { usePredefinedMemoryLessons, type PredefinedMemoryLesson } from '@/features/predefined-memory-lessons';
@@ -89,15 +89,18 @@ export default function PredefinedLessonCategoryScreen() {
           </View>
         ) : null}
 
-        {collectionParam === '1' && collection ? <AnimatedPressable accessibilityRole="button"
-          accessibilityState={{ disabled: download.isPending || isOffline, busy: download.isPending }}
-          disabled={download.isPending || isOffline} style={[styles.downloadButton, (download.isPending || isOffline) && { opacity: 0.6 }]}
+        {collectionParam === '1' && collection ? <AppButton
+          label={download.isPending ? (language === 'zh' ? '正在加入…' : 'Adding…') : (language === 'zh' ? '加入我的记忆库' : 'Add to my library')}
+          variant="primary"
+          loading={download.isPending}
+          disabled={isOffline}
+          fullWidth
           onPress={() => download.mutate({ id: collection.id, language }, {
             onSuccess: (result) => router.push(`/memory-folders/${result.folderId}` as Href),
             onError: () => { if (canShowRequestErrors) Toast.show({ type: 'error', text1: language === 'zh' ? '合集下载失败，请重试' : 'Could not download collection. Try again.' }); },
-          })}>
-          <Text style={styles.downloadText}>{download.isPending ? (language === 'zh' ? '正在加入…' : 'Adding…') : (language === 'zh' ? '加入我的记忆库' : 'Add to my library')}</Text>
-        </AnimatedPressable> : null}
+          })}
+          style={styles.downloadButton}
+        /> : null}
 
         <View style={styles.search}>
           <Search size={18} color={theme.inkSoft} />
@@ -167,8 +170,7 @@ function openLesson(router: ReturnType<typeof useRouter>, lesson: PredefinedMemo
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  downloadButton: { minHeight: 48, padding: 14, borderRadius: 18, backgroundColor: theme.sun, alignItems: 'center' },
-  downloadText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  downloadButton: { alignSelf: 'stretch' },
   content: { padding: 16, paddingBottom: 36, gap: 16 },
   collectionHero: { minHeight: 112, borderRadius: 26, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
   heroArtwork: { width: 76, height: 76, borderRadius: 27, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-3deg' }] },

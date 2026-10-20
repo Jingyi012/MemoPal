@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import type { MemorySet } from '@/features/memory-sets';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { createThemedStyles } from '@/theme/createThemedStyles';
@@ -47,9 +48,7 @@ export function MemoryMoveModal({ memorySet, folders, isLoading = false, onCance
             ))}
             <MoveOption label={t('newFolder')} icon={<Layers size={20} color={theme.violetDeep} />} disabled={isLoading} onPress={onCreateFolder} />
           </ScrollView>
-          <AnimatedPressable disabled={isLoading} onPress={onCancel} style={styles.cancel}>
-            <Text style={styles.cancelText}>{t('cancel')}</Text>
-          </AnimatedPressable>
+          <AppButton disabled={isLoading} label={t('cancel')} onPress={onCancel} size="regular" style={styles.cancel} variant="secondary" />
         </View>
       </View>
     </Modal>
@@ -77,7 +76,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   option: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 14, borderWidth: 1, flexDirection: 'row', minHeight: 52, paddingHorizontal: 12 },
   optionIcon: { alignItems: 'center', width: 32 },
   optionText: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 14, marginHorizontal: 8 },
-  cancel: { alignItems: 'center', borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, justifyContent: 'center', marginTop: 14, minHeight: 48 },
-  cancelText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  cancel: { marginTop: 14 },
   disabled: { opacity: 0.55 },
 }));

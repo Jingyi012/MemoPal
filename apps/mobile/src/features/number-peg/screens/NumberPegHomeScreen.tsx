@@ -106,7 +106,7 @@ export default function NumberPegHomeScreen() {
             title={numberPegSets.length ? t('emptyFilter') : t('empty')}
             body={numberPegSets.length ? t('emptyFilterBody') : t('emptyBody')}
             actionLabel={numberPegSets.length ? undefined : t('makeMemory')}
-            actionIcon={numberPegSets.length ? undefined : <ArrowRight size={16} color={theme.onSun} />}
+            actionIcon={numberPegSets.length ? undefined : <ArrowRight size={16} color={theme.onAccent} />}
             onAction={numberPegSets.length ? undefined : () => router.push('/number-peg/create' as Href)}
           />
         )}

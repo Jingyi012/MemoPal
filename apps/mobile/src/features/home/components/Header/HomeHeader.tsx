@@ -111,7 +111,7 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
 
 const styles = {
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     paddingTop: 8,
     paddingBottom: 6,
   },

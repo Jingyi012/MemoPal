@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
@@ -312,14 +313,8 @@ function ChoosePhotoState({
 
       {message ? <MessageCard message={message} /> : null}
 
-      <AnimatedPressable onPress={onCamera} style={styles.primaryButton}>
-        <Camera size={19} color={theme.ink} />
-        <Text style={styles.primaryButtonText}>{t('scanTakePhoto')}</Text>
-      </AnimatedPressable>
-      <AnimatedPressable onPress={onLibrary} style={styles.secondaryButton}>
-        <Images size={19} color={theme.inkSoft} strokeWidth={2.2} />
-        <Text style={styles.secondaryButtonText}>{t('scanChoosePhoto')}</Text>
-      </AnimatedPressable>
+      <AppButton fullWidth icon={Camera} label={t('scanTakePhoto')} onPress={onCamera} size="large" style={styles.primaryButton} />
+      <AppButton fullWidth icon={Images} label={t('scanChoosePhoto')} onPress={onLibrary} size="large" style={styles.secondaryButton} variant="secondary" />
       <Text style={styles.privacyNote}>{t('scanPrivacy')}</Text>
     </>
   );
@@ -467,14 +462,8 @@ function ReviewState({
           </AnimatedPressable>
         </>
       )}
-      <AnimatedPressable onPress={onUse} style={styles.primaryButton}>
-        <Check size={19} color={theme.ink} strokeWidth={2.8} />
-        <Text style={styles.primaryButtonText}>{t('scanUseItems')}</Text>
-      </AnimatedPressable>
-      <AnimatedPressable onPress={onRetake} style={styles.secondaryButton}>
-        <RefreshCcw size={17} color={theme.inkSoft} strokeWidth={2.2} />
-        <Text style={styles.secondaryButtonText}>{t('scanRetake')}</Text>
-      </AnimatedPressable>
+      <AppButton fullWidth icon={Check} label={t('scanUseItems')} onPress={onUse} size="large" style={styles.primaryButton} />
+      <AppButton fullWidth icon={RefreshCcw} label={t('scanRetake')} onPress={onRetake} size="large" style={styles.secondaryButton} variant="secondary" />
       <Text style={styles.privacyNote}>{t('scanReviewPrivacy')}</Text>
     </>
   );
@@ -563,34 +552,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
   },
   smallActionText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  primaryButton: {
-    minHeight: 53,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderRadius: 15,
-    backgroundColor: theme.sun,
-    marginTop: 16,
-    paddingHorizontal: 14,
-    boxShadow: `0px 5px 0px ${theme.sunDeep}`,
-  },
-  primaryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  secondaryButton: {
-    minHeight: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: theme.line,
-    backgroundColor: theme.canvas,
-    marginTop: 13,
-    paddingHorizontal: 14,
-    boxShadow: '0px 2px 7px rgba(43, 42, 61, 0.05)',
-  },
-  secondaryButtonText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  primaryButton: { marginTop: 16 },
+  secondaryButton: { marginTop: 13 },
   privacyNote: {
     color: theme.inkSoft,
     fontFamily: typography.bodySemibold,

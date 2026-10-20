@@ -3,6 +3,7 @@ import { FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Tex
 import { LinearGradient } from 'expo-linear-gradient';
 import { Href, useRouter } from 'expo-router';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import LoadingView from '@/components/LoadingView';
@@ -89,19 +90,11 @@ export default function CommunityLeaderboardScreen() {
       <View style={styles.signInIcon}><LockKeyhole size={22} color={theme.violetDeep} /></View>
       <Text style={styles.confirmTitle}>{t('leaderboardSignInTitle')}</Text>
       <Text style={styles.body}>{t('leaderboardSignInBody')}</Text>
-      <AnimatedPressable
-        accessibilityRole="button"
-        onPress={() => router.push({ pathname: '/login', params: { returnTo: '/community/leaderboard' } })}
-        style={styles.signInButton}>
-        <Text style={styles.signInButtonText}>{tAuth('signIn')}</Text>
-        <ArrowRight size={16} color={theme.onAccent} />
-      </AnimatedPressable>
+      <AppButton fullWidth label={tAuth('signIn')} onPress={() => router.push({ pathname: '/login', params: { returnTo: '/community/leaderboard' } })} style={styles.signInButton} trailingIcon={ArrowRight} />
     </View> : null}
     {auth.user && leaderboard.isError && !data ? <View style={styles.notice}>
       <Text accessibilityRole="alert" style={styles.body}>{t('leaderboardUnavailable')}</Text>
-      <AnimatedPressable accessibilityRole="button" onPress={() => void leaderboard.refetch()} style={styles.secondaryButton}>
-        <Text style={styles.secondaryButtonText}>{t('retry')}</Text>
-      </AnimatedPressable>
+      <AppButton label={t('retry')} onPress={() => void leaderboard.refetch()} size="compact" style={styles.retryButton} variant="secondary" />
     </View> : null}
     {auth.user && data ? <FlatList
       data={data.optedIn ? additionalEntries : []}
@@ -142,16 +135,15 @@ export default function CommunityLeaderboardScreen() {
             </View>}
           </View>
           <View style={styles.heroActions}>
-            <AnimatedPressable
-              accessibilityRole="button"
-              disabled={data.optedIn ? false : preference.isPending}
+            <AppButton
+              disabled={!data.optedIn && preference.isPending}
+              label={data.optedIn ? t('leaderboardPracticeAction') : preference.isPending ? t('leaderboardSaving') : t('leaderboardJoin')}
+              loading={!data.optedIn && preference.isPending}
               onPress={data.optedIn ? goToPractice : joinBoard}
-              style={[styles.heroAction, !data.optedIn && preference.isPending && styles.disabled]}>
-              <Text style={styles.heroActionText}>{data.optedIn
-                ? t('leaderboardPracticeAction')
-                : preference.isPending ? t('leaderboardSaving') : t('leaderboardJoin')}</Text>
-              <ArrowRight size={17} color={theme.onSun} />
-            </AnimatedPressable>
+              size="compact"
+              style={styles.heroAction}
+              trailingIcon={ArrowRight}
+            />
             {todayTasks.length > 0 ? <AnimatedPressable
               accessibilityRole="button"
               accessibilityLabel={`${t('leaderboardTodayTasks')}, ${t('leaderboardTaskSummary', { completed: completedTaskCount, total: todayTasks.length })}`}
@@ -241,12 +233,8 @@ export default function CommunityLeaderboardScreen() {
             <Text style={styles.confirmTitle}>{t('leaderboardLeaveTitle')}</Text>
             <Text style={styles.body}>{t('leaderboardLeaveBody')}</Text>
             <View style={styles.confirmActions}>
-              <AnimatedPressable accessibilityRole="button" onPress={() => setConfirmLeave(false)} style={styles.secondaryButton}>
-                <Text style={styles.secondaryButtonText}>{t('cancel')}</Text>
-              </AnimatedPressable>
-              <AnimatedPressable accessibilityRole="button" disabled={preference.isPending} onPress={() => { preference.mutate(false); setConfirmLeave(false); }} style={styles.dangerButton}>
-                <Text style={styles.primaryButtonText}>{preference.isPending ? t('leaderboardSaving') : t('leaderboardLeave')}</Text>
-              </AnimatedPressable>
+              <AppButton label={t('cancel')} onPress={() => setConfirmLeave(false)} size="compact" style={styles.confirmAction} variant="secondary" />
+              <AppButton disabled={preference.isPending} label={preference.isPending ? t('leaderboardSaving') : t('leaderboardLeave')} loading={preference.isPending} onPress={() => { preference.mutate(false); setConfirmLeave(false); }} size="compact" style={styles.confirmAction} variant="destructive" />
             </View>
           </View> : null}
           {preference.isError ? <Text accessibilityRole="alert" style={styles.errorText}>{t('leaderboardPreferenceError')}</Text> : null}
@@ -323,8 +311,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   helpClose: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 13, height: 44, justifyContent: 'center', width: 44 },
   signInCard: { alignItems: 'center', alignSelf: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 22, borderWidth: 1.5, gap: 10, margin: 16, marginTop: 22, maxWidth: 420, padding: 22, width: '90%' },
   signInIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 17, height: 52, justifyContent: 'center', width: 52 },
-  signInButton: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 13, flexDirection: 'row', gap: 8, justifyContent: 'center', marginTop: 3, minHeight: 46, paddingHorizontal: 20, width: '100%' },
-  signInButtonText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  signInButton: { marginTop: 3 },
   refreshWarning: { alignItems: 'center', backgroundColor: theme.sunTint, borderColor: theme.sunLine, borderRadius: 13, borderWidth: 1, flexDirection: 'row', gap: 8, justifyContent: 'space-between', paddingHorizontal: 11, paddingVertical: 8 },
   refreshWarningText: { color: theme.inkSoft, flex: 1, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16 },
   refreshRetry: { alignItems: 'center', justifyContent: 'center', minHeight: 34, paddingHorizontal: 7 },
@@ -354,13 +341,11 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   statusPillText: { color: '#FFFFFF', fontFamily: typography.bodyExtraBold, fontSize: 11 },
   privatePillText: { color: theme.violetDeep },
   heroActions: { alignItems: 'stretch', flexDirection: 'row', gap: 8 },
-  heroAction: { alignItems: 'center', backgroundColor: theme.sun, borderColor: 'rgba(255,255,255,0.48)', borderRadius: 14, borderWidth: 1, flex: 1, flexDirection: 'row', gap: 6, justifyContent: 'center', minHeight: 44, paddingHorizontal: 8 },
-  heroActionText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center' },
+  heroAction: { flex: 1 },
   heroTaskAction: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.94)', borderColor: 'rgba(255,255,255,0.9)', borderRadius: 14, borderWidth: 1, flexDirection: 'row', gap: 5, justifyContent: 'center', minHeight: 44, paddingHorizontal: 8 },
   heroTaskLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   heroTaskBadge: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 8, justifyContent: 'center', minHeight: 23, minWidth: 27, paddingHorizontal: 4 },
   heroTaskBadgeText: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 10 },
-  disabled: { opacity: 0.6 },
   scoreGuide: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 19, borderWidth: 1, gap: 10, padding: 13 },
   scoreGuideIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 11, height: 31, justifyContent: 'center', width: 31 },
   sectionTitle: { color: theme.ink, flex: 1, fontFamily: typography.displayExtraBold, fontSize: 15, lineHeight: 20 },
@@ -380,7 +365,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   peopleIcon: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: 12, height: 37, justifyContent: 'center', width: 37 },
   body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
   participantCountText: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 16 },
-  primaryButtonText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   momentumCard: { alignItems: 'center', backgroundColor: theme.sunTint, borderColor: theme.sunLine, borderRadius: 15, borderWidth: 1, flexDirection: 'row', gap: 9, minHeight: 48, paddingHorizontal: 11, paddingVertical: 7 },
   momentumIcon: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: 11, height: 30, justifyContent: 'center', width: 30 },
   momentumText: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18 },
@@ -388,7 +372,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   shareRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 42 },
   leaveButton: { alignItems: 'center', alignSelf: 'center', justifyContent: 'center', minHeight: 44, paddingHorizontal: 12 },
   leaveButtonText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  dangerButton: { alignItems: 'center', backgroundColor: theme.berryDeep, borderRadius: 12, flex: 1, justifyContent: 'center', minHeight: 44 },
   activeBoardCard: { alignItems: 'center', backgroundColor: theme.mintTint, borderColor: theme.mintLine, borderRadius: 16, borderWidth: 1, flexDirection: 'row', gap: 9, padding: 11 },
   activeBoardText: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
   previewCard: { backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 19, borderWidth: 1.5, gap: 8, padding: 12 },
@@ -425,6 +408,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   confirmCard: { backgroundColor: theme.paper, borderColor: theme.berryDeep, borderRadius: 15, borderWidth: 1, gap: 9, padding: 13 },
   confirmTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   confirmActions: { flexDirection: 'row', gap: 9, marginTop: 2 },
-  secondaryButton: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 12, borderWidth: 1, flex: 1, justifyContent: 'center', minHeight: 44 },
-  secondaryButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  retryButton: { alignSelf: 'center' },
+  confirmAction: { flex: 1 },
 }));

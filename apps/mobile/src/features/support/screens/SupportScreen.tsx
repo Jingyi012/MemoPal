@@ -1,4 +1,4 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
@@ -89,14 +89,7 @@ export default function Support() {
           style={[styles.input, styles.messageInput]}
         />
 
-        <AnimatedPressable
-          onPress={handleSend}
-          disabled={!supportEnabled}
-          style={[styles.sendButton, !supportEnabled && styles.sendButtonDisabled]}>
-          <Text style={[styles.sendText, !supportEnabled && styles.sendTextDisabled]}>
-            {supportButtonTitle}
-          </Text>
-        </AnimatedPressable>
+        <AppButton disabled={!supportEnabled} fullWidth label={supportButtonTitle} onPress={handleSend} size="large" />
       </View>
     </View>
   );
@@ -149,15 +142,5 @@ const useStyles = createThemedStyles((theme) =>
       paddingHorizontal: 14,
     },
     messageInput: { minHeight: 140, paddingBottom: 12, paddingTop: 12, textAlignVertical: 'top' },
-    sendButton: {
-      alignItems: 'center',
-      backgroundColor: theme.sun,
-      borderRadius: 16,
-      minHeight: 52,
-      justifyContent: 'center',
-    },
-    sendButtonDisabled: { backgroundColor: theme.line },
-    sendText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-    sendTextDisabled: { color: theme.inkMuted },
   })
 );

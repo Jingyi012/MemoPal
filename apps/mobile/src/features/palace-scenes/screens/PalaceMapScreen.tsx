@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -95,10 +96,15 @@ export default function PalaceMapScreen() {
           />
         )}
 
-        <AnimatedPressable style={styles.startButton} onPress={() => router.push('/palaces/create-memory' as Href)}>
-          <Text style={styles.startButtonText}>{t('buildMemoryPalace')}</Text>
-          <ArrowRight size={17} color={theme.ink} />
-        </AnimatedPressable>
+        <AppButton
+          label={t('buildMemoryPalace')}
+          variant="primary"
+          size="large"
+          fullWidth
+          trailingIcon={ArrowRight}
+          onPress={() => router.push('/palaces/create-memory' as Href)}
+          style={styles.startButton}
+        />
       </ScrollView>
     </View>
   );
@@ -129,6 +135,5 @@ const styles = StyleSheet.create({
   sceneName: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 16, textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 5 },
   sceneMeta: { color: 'rgba(255,255,255,0.85)', fontFamily: typography.bodyBold, fontSize: 11, marginTop: 2 },
   loadingFrame: { height: 150, overflow: 'hidden', borderRadius: 18 },
-  startButton: { minHeight: 50, marginTop: 20, borderRadius: 15, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
-  startButtonText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  startButton: { marginTop: 20 },
 });

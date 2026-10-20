@@ -61,7 +61,7 @@ export function getBaseCardClassName({
     CARD_PADDING_CLASS[padding],
     CARD_RADIUS_CLASS[radius],
     CARD_SHADOW_CLASS[shadow],
-    bordered ? 'border-2 border-line' : '',
+    bordered ? 'border border-line' : '',
     className
   );
 }

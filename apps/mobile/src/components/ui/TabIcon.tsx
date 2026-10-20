@@ -13,7 +13,7 @@ export function TabIcon({ icon, focused }: Props) {
   const { colorScheme } = useColorScheme();
   const theme = memopalThemes[colorScheme ?? 'light'];
   return (
-    <View accessible={false} style={[styles.icon, focused && { backgroundColor: theme.sunTint, borderColor: theme.sunLine }]}>
+    <View accessible={false} style={[styles.icon, focused && { backgroundColor: theme.violetTint, borderColor: theme.violetLine }]}>
       <Ionicons color={focused ? theme.violetDeep : theme.inkSoft} name={icon} size={20} />
       {focused ? <View style={[styles.dot, { backgroundColor: theme.violetDeep }]} /> : null}
     </View>

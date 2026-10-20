@@ -1,4 +1,4 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
+import { AppButton } from '@/components/ui/AppButton';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { ArrowRight } from '@/core/icons';
@@ -37,13 +37,14 @@ export function TechniqueHeroCard({
       <Text style={styles.heroEyebrow}>{eyebrow}</Text>
       <Text style={styles.heroTitle}>{title}</Text>
       <Text style={styles.heroBody}>{body}</Text>
-      <AnimatedPressable
-        accessibilityLabel={actionLabel}
+      <AppButton
+        label={actionLabel}
+        variant="primary"
+        size="large"
+        trailingIcon={ArrowRight}
         onPress={onAction}
-        style={styles.primaryButton}>
-        <Text style={styles.primaryButtonText}>{actionLabel}</Text>
-        <ArrowRight size={19} color={theme.ink} />
-      </AnimatedPressable>
+        style={styles.primaryButton}
+      />
     </LinearGradient>
   );
 }
@@ -59,6 +60,5 @@ const styles = StyleSheet.create({
   heroEyebrow: { color: '#E3DFFF', fontFamily: typography.bodyExtraBold, fontSize: 11, letterSpacing: 1.1 },
   heroTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 25, marginTop: 6 },
   heroBody: { color: '#E8E5F4', fontFamily: typography.body, fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 320 },
-  primaryButton: { marginTop: 20, minHeight: 52, borderRadius: 16, backgroundColor: theme.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, paddingHorizontal: 14, boxShadow: `0px 5px 0px ${theme.sunDeep}` },
-  primaryButtonText: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center' },
+  primaryButton: { marginTop: 20, alignSelf: 'stretch' },
 });
