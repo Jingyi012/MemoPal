@@ -5,7 +5,6 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
-import { HighlightCard } from '@/components/HighlightCard';
 import { AppButton } from '@/components/ui/AppButton';
 import LoadingView from '@/components/LoadingView';
 import { useInfiniteMemorySets, useMemorySetMutations } from '@/features/memory-sets';
@@ -22,7 +21,7 @@ import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Href, useRouter } from 'expo-router';
-import { CircleHelp, Globe2, Layers, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from '@/core/icons';
+import { Archive, Check, CircleHelp, Globe2, Layers, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from '@/core/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -108,22 +107,12 @@ export default function LibraryScreen() {
   }, [filter, pagedMemorySets.data]);
 
   const folders = foldersQuery.data ?? [];
-  const showFolders = filter !== 'archived';
+  const showFolders = filter === 'all';
   const hasExplorerEntries = (showFolders && folders.length > 0) || visibleSets.length > 0;
-  const explorerEntries = [
-    ...(showFolders ? folders.map((folder, index) => ({ kind: 'folder' as const, folder, index })) : []),
-    ...visibleSets.map((memorySet) => ({ kind: 'memorySet' as const, memorySet })),
-  ];
-  const cardColumns = [
-    explorerEntries.filter((_, index) => index % 2 === 0),
-    explorerEntries.filter((_, index) => index % 2 === 1),
-  ];
   const explorerHasError = canShowRequestErrors && (foldersQuery.isError || pagedMemorySets.isError);
   const explorerIsLoading = !hasExplorerEntries && !isOffline &&
     (foldersQuery.isLoading || pagedMemorySets.isLoading);
-  const memoryCount = filter === 'archived'
-    ? pagedMemorySets.data?.pages[0]?.totalCount ?? 0
-    : (pagedMemorySets.data?.pages[0]?.totalCount ?? 0) + folders.reduce((total, folder) => total + folder.memorySetCount, 0);
+  const showCreateFab = filter !== 'archived' && (hasExplorerEntries || explorerIsLoading || explorerHasError || isOffline);
   const palaceSceneById = useMemo(
     () => new Map((palaceScenes.data ?? []).map((scene) => [scene.id, scene])),
     [palaceScenes.data],
@@ -333,55 +322,38 @@ export default function LibraryScreen() {
             onRefresh={() => { void Promise.allSettled([pagedMemorySets.refetch(), foldersQuery.refetch(), palaceScenes.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
           />
         }>
-        <HighlightCard style={styles.summaryCard}>
-          <View style={styles.summaryIcon}>
-            <Text style={styles.summaryEmoji}>🧠</Text>
-          </View>
-          <View style={styles.summaryCopy}>
-            <Text style={styles.summaryEyebrow}>{t('collection')}</Text>
-            <Text style={styles.summaryTitle}>
-              {memoryCount}{' '}
-              {memoryCount === 1 ? t('memory') : t('memories')}
-            </Text>
-            <Text style={styles.summaryBody}>{t('collectionBody')}</Text>
-          </View>
-          <SpotlightTarget id="libraryStarter" onReveal={revealTop} onActivate={createMemory}>
-            <AppButton
-              accessibilityLabel={t('create')}
-              variant="primary"
-              icon={Plus}
-              onPress={createMemory}
-              style={styles.addButton}
-            />
-          </SpotlightTarget>
-        </HighlightCard>
-
         <SpotlightTarget id="libraryFilter" onReveal={revealTop}>
-        <View style={styles.filterRow}>
-          {filters.map((item) => {
-            const selected = item.key === filter;
-            return (
-              <AnimatedPressable
-                key={item.key}
-                onPress={() => setFilter(item.key)}
-                style={[styles.filterChip, selected && styles.filterChipSelected]}>
-                <Text style={[styles.filterText, selected && styles.filterTextSelected]}>
-                  {item.key === 'all' ? t('all') : item.key === 'palace' ? t('palaces') : item.key === 'number-peg' ? t('numberPeg') : t('archived')}
-                </Text>
-              </AnimatedPressable>
-            );
-          })}
-        </View>
-
+          <ScrollView
+            horizontal
+            contentContainerStyle={styles.filterRow}
+            showsHorizontalScrollIndicator={false}>
+            {filters.map((item) => {
+              const selected = item.key === filter;
+              return (
+                <AnimatedPressable
+                  key={item.key}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => setFilter(item.key)}
+                  style={[styles.filterChip, selected && styles.filterChipSelected]}>
+                  {selected && item.key !== 'archived' ? <Check size={14} color={theme.violetDeep} /> : null}
+                  {item.key === 'archived' ? <Archive size={14} color={selected ? theme.violetDeep : theme.inkSoft} /> : null}
+                  <Text style={[styles.filterText, selected && styles.filterTextSelected]}>
+                    {item.key === 'all' ? t('all') : item.key === 'palace' ? t('palaces') : item.key === 'number-peg' ? t('numberPeg') : t('archived')}
+                  </Text>
+                </AnimatedPressable>
+              );
+            })}
+          </ScrollView>
         </SpotlightTarget>
         <View style={styles.viewToolbar}>
-          <AppButton
+          {filter !== 'archived' ? <AppButton
             label={t('newFolder')}
             variant="secondary"
             size="compact"
             icon={Layers}
             onPress={() => setFolderNameModal({})}
-          />
+          /> : <View style={styles.toolbarSpacer} />}
           <View accessibilityLabel={t('viewMode')} style={styles.viewToggle}>
             <AnimatedPressable
               accessibilityRole="button"
@@ -390,7 +362,7 @@ export default function LibraryScreen() {
               hitSlop={4}
               onPress={() => changeViewMode('card')}
               style={[styles.viewOption, viewMode === 'card' && styles.viewOptionSelected]}>
-              <LayoutGrid size={16} color={viewMode === 'card' ? theme.onAccent : theme.violetDeep} />
+              <LayoutGrid size={16} color={theme.violetDeep} />
             </AnimatedPressable>
             <AnimatedPressable
               accessibilityRole="button"
@@ -399,7 +371,7 @@ export default function LibraryScreen() {
               hitSlop={4}
               onPress={() => changeViewMode('list')}
               style={[styles.viewOption, viewMode === 'list' && styles.viewOptionSelected]}>
-              <ListIcon size={16} color={viewMode === 'list' ? theme.onAccent : theme.violetDeep} />
+              <ListIcon size={16} color={theme.violetDeep} />
             </AnimatedPressable>
           </View>
         </View>
@@ -423,31 +395,65 @@ export default function LibraryScreen() {
             <LoadingView description={t('loading')} />
           </View>
         ) : hasExplorerEntries ? (
-          viewMode === 'card' ? (
-            <View style={styles.cardGrid}>
-              {cardColumns.map((column, columnIndex) => (
-                <View key={columnIndex} style={styles.cardGridColumn}>
-                  {column.map((entry) => entry.kind === 'folder'
-                    ? renderFolderCard(entry.folder, entry.index, 'card')
-                    : renderMemorySetCard(entry.memorySet, 'card'))}
+          <View style={styles.librarySections}>
+            {showFolders && folders.length ? (
+              <View style={styles.librarySection}>
+                <View style={styles.sectionHeading}>
+                  <View style={styles.sectionTitleGroup}>
+                    <Text style={styles.sectionTitle}>{t('folders')}</Text>
+                    <View style={styles.sectionCount}><Text style={styles.sectionCountText}>{folders.length}</Text></View>
+                  </View>
                 </View>
-              ))}
-            </View>
-          ) : (
-            <View style={[styles.cardList, styles.listCardList]}>
-              {showFolders ? folders.map((folder, index) => renderFolderCard(folder, index, 'list')) : null}
-              {visibleSets.map((memorySet) => renderMemorySetCard(memorySet, 'list'))}
-            </View>
-          )
+                {viewMode === 'card' ? (
+                  <View style={styles.cardGrid}>
+                    {folders.map((folder, index) => (
+                      <View key={`folder-cell-${folder.id}`} style={styles.cardGridCell}>
+                        {renderFolderCard(folder, index, 'card')}
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <View style={[styles.cardList, styles.listCardList]}>
+                    {folders.map((folder, index) => renderFolderCard(folder, index, 'list'))}
+                  </View>
+                )}
+              </View>
+            ) : null}
+            {visibleSets.length ? (
+              <View style={styles.librarySection}>
+                <View style={styles.sectionHeading}>
+                  <View style={styles.sectionTitleGroup}>
+                    <Text style={styles.sectionTitle}>{filter === 'archived' ? t('archived') : t('myMemories')}</Text>
+                    <View style={styles.sectionCount}><Text style={styles.sectionCountText}>{visibleSets.length}</Text></View>
+                  </View>
+                </View>
+                {viewMode === 'card' ? (
+                  <View style={styles.cardGrid}>
+                    {visibleSets.map((memorySet) => (
+                      <View key={`memory-cell-${memorySet.id}`} style={styles.cardGridCell}>
+                        {renderMemorySetCard(memorySet, 'card')}
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <View style={[styles.cardList, styles.listCardList]}>
+                    {visibleSets.map((memorySet) => renderMemorySetCard(memorySet, 'list'))}
+                  </View>
+                )}
+              </View>
+            ) : null}
+          </View>
         ) : !isOffline && !explorerHasError && filter === 'all' ? (
-          <ModuleNoticeCard
-            icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
-            title={t('newMemory')}
-            body={t('newMemoryBody')}
-            actionLabel={t('tapToStart')}
-            actionIcon={<Plus size={15} color={theme.onAccent} />}
-            onAction={createMemory}
-          />
+          <SpotlightTarget id="libraryStarter" onReveal={revealTop} onActivate={createMemory}>
+            <ModuleNoticeCard
+              icon={<Text style={styles.emptyIconEmoji}>✨</Text>}
+              title={t('newMemory')}
+              body={t('newMemoryBody')}
+              actionLabel={t('tapToStart')}
+              actionIcon={<Plus size={15} color={theme.onAccent} />}
+              onAction={createMemory}
+            />
+          </SpotlightTarget>
         ) : !isOffline && !explorerHasError ? (
           <View style={styles.noticeCard}>
             <Text style={styles.emptyEmoji}>{filter === 'palace' ? '🏡' : filter === 'number-peg' ? '🦢' : '📦'}</Text>
@@ -466,14 +472,20 @@ export default function LibraryScreen() {
           />
         ) : pagedMemorySets.isFetchingNextPage ? <Text style={styles.loadMoreText}>{t('loading')}</Text> : null}
       </ScrollView>
-      <AppButton
-        accessibilityLabel={t('create')}
-        accessibilityHint={t('newMemoryBody')}
-        variant="primary"
-        icon={Plus}
-        onPress={createMemory}
-        style={[styles.createFab, { bottom: Math.max(16, insets.bottom + 10) }]}
-      />
+      {showCreateFab ? (
+        <View style={[styles.createFabAnchor, { bottom: Math.max(16, insets.bottom + 10) }]}>
+          <SpotlightTarget id="libraryStarter" onReveal={revealTop} onActivate={createMemory}>
+            <AppButton
+              accessibilityLabel={t('create')}
+              accessibilityHint={t('newMemoryBody')}
+              variant="primary"
+              icon={Plus}
+              onPress={createMemory}
+              style={styles.createFab}
+            />
+          </SpotlightTarget>
+        </View>
+      ) : null}
 
       <MemoryActionsSheet
         ref={memoryActionsRef}
@@ -596,51 +608,41 @@ function hasPrivateAssets(
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
-  content: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 112 },
-  createFab: { alignItems: 'center', borderRadius: 30, elevation: 6, height: 60, justifyContent: 'center', position: 'absolute', right: 18, shadowColor: theme.ink, shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 60 },
-  summaryCard: {
-    minHeight: 112,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  summaryIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.violetLine,
-    backgroundColor: theme.violetTint,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  summaryEmoji: { fontSize: 24 },
-  summaryCopy: { flex: 1, marginHorizontal: 13 },
-  summaryEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.6 },
-  summaryTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, marginTop: 3 },
-  summaryBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17, marginTop: 3 },
-  addButton: { width: 44, height: 44, paddingHorizontal: 0, borderRadius: 14 },
-  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 18 },
+  content: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 128 },
+  createFabAnchor: { alignItems: 'center', height: 60, justifyContent: 'center', position: 'absolute', right: 18, width: 60, zIndex: 5 },
+  createFab: { alignItems: 'center', borderRadius: 30, elevation: 6, height: 60, justifyContent: 'center', shadowColor: theme.ink, shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 60 },
+  filterRow: { alignItems: 'center', flexDirection: 'row', gap: 7, paddingVertical: 12 },
   filterChip: {
     minHeight: 44,
     borderRadius: 999,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: theme.line,
     backgroundColor: theme.paper,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     alignItems: 'center',
+    flexDirection: 'row',
+    gap: 5,
     justifyContent: 'center',
   },
-  filterChipSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetDeep },
+  filterChipSelected: { borderColor: theme.violetLine, backgroundColor: theme.violetTint },
   filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  filterTextSelected: { color: theme.onAccent},
-  viewToolbar: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
-  viewToggle: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 13, borderWidth: 1.5, flexDirection: 'row', padding: 3 },
+  filterTextSelected: { color: theme.violetDeep },
+  viewToolbar: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 18, marginTop: 1 },
+  toolbarSpacer: { flex: 1 },
+  viewToggle: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 13, borderWidth: 1, flexDirection: 'row', padding: 3 },
   viewOption: { alignItems: 'center', borderRadius: 9, height: 44, justifyContent: 'center', width: 44 },
-  viewOptionSelected: { backgroundColor: theme.violetDeep },
+  viewOptionSelected: { backgroundColor: theme.paper, boxShadow: '0px 2px 5px rgba(73,55,154,0.12)' },
+  librarySections: { gap: 22 },
+  librarySection: { gap: 11 },
+  sectionHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 28 },
+  sectionTitleGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 },
+  sectionCount: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 999, minWidth: 24, paddingHorizontal: 7, paddingVertical: 3 },
+  sectionCountText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   cardList: { gap: 10 },
-  listCardList: { gap: 6 },
-  cardGrid: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  cardGridColumn: { flex: 1, minWidth: 0, gap: 18 },
+  listCardList: { gap: 9 },
+  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
+  cardGridCell: { width: '48.5%' },
   noticeCard: {
     borderWidth: 2,
     borderColor: theme.line,

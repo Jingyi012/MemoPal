@@ -140,7 +140,36 @@ export default function MemoryFolderDetailScreen() {
   return <View style={styles.page}>
     <CommonHeader eyebrow={t('folderEyebrow')} title={folder?.name ?? t('folder')} description={folder ? `${folder.memorySetCount} ${folder.memorySetCount === 1 ? t('list') : t('lists')} · ${folder.itemCount} ${folder.itemCount === 1 ? t('item') : t('items')}` : undefined} backAction={() => router.back()} actions={[{ icon: Pencil, accessibilityLabel: t('editCollection'), onPress: openFolderEditor }]} />
     <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={setsQuery.isRefetching} onRefresh={() => { void Promise.allSettled([folderQuery.refetch(), setsQuery.refetch()]); }} />}>
-      {sets.length ? <View style={[styles.list, userState.ui.libraryViewMode !== 'list' && styles.cardGrid]}>{sets.map((memorySet) => <View key={memorySet.id} style={userState.ui.libraryViewMode !== 'list' ? styles.cardGridItem : undefined}><MemorySetCard memorySet={memorySet} onOpen={() => router.push(`/memory-details/${memorySet.id}` as Href)} onActions={() => { setActionMemorySet(memorySet); actionsRef.current?.present(); }} layout={userState.ui.libraryViewMode === 'list' ? 'row' : 'grid'} variant={userState.ui.libraryViewMode === 'list' ? 'list' : 'card'} /></View>)}</View> : !isOffline && setsQuery.isLoading ? <View style={styles.loading}><LoadingView description={t('loading')} /></View> : canShowRequestErrors && setsQuery.isError ? <View style={styles.notice}><Text style={styles.noticeTitle}>{t('unavailable')}</Text><Text style={styles.noticeBody}>{getNumberPegErrorMessage(setsQuery.error, t('connectionRetry'))}</Text><AppButton label={t('retry')} size="compact" icon={RefreshCcw} onPress={() => setsQuery.refetch()} style={styles.retry} /></View> : !isOffline ? <View style={styles.notice}><Text style={styles.empty}>{folder?.emoji ?? '📚'}</Text><Text style={styles.noticeTitle}>{t('folderEmpty')}</Text><Text style={styles.noticeBody}>{t('folderEmptyBody')}</Text><AppButton label={t('create')} icon={Plus} onPress={() => router.push(`/create-memory?memoryFolderId=${encodeURIComponent(folderId ?? '')}` as Href)} style={styles.create} /></View> : null}
+      {sets.length ? (
+        <View style={[styles.list, userState.ui.libraryViewMode !== 'list' && styles.cardGrid]}>
+          {sets.map((memorySet) => (
+            <View key={memorySet.id} style={userState.ui.libraryViewMode === 'list' ? undefined : styles.cardGridCell}>
+              <MemorySetCard
+                memorySet={memorySet}
+                onOpen={() => router.push(`/memory-details/${memorySet.id}` as Href)}
+                onActions={() => { setActionMemorySet(memorySet); actionsRef.current?.present(); }}
+                layout={userState.ui.libraryViewMode === 'list' ? 'row' : 'grid'}
+                variant={userState.ui.libraryViewMode === 'list' ? 'list' : 'card'}
+              />
+            </View>
+          ))}
+        </View>
+      ) : !isOffline && setsQuery.isLoading ? (
+        <View style={styles.loading}><LoadingView description={t('loading')} /></View>
+      ) : canShowRequestErrors && setsQuery.isError ? (
+        <View style={styles.notice}>
+          <Text style={styles.noticeTitle}>{t('unavailable')}</Text>
+          <Text style={styles.noticeBody}>{getNumberPegErrorMessage(setsQuery.error, t('connectionRetry'))}</Text>
+          <AppButton label={t('retry')} size="compact" icon={RefreshCcw} onPress={() => setsQuery.refetch()} style={styles.retry} />
+        </View>
+      ) : !isOffline ? (
+        <View style={styles.notice}>
+          <Text style={styles.empty}>{folder?.emoji ?? '📚'}</Text>
+          <Text style={styles.noticeTitle}>{t('folderEmpty')}</Text>
+          <Text style={styles.noticeBody}>{t('folderEmptyBody')}</Text>
+          <AppButton label={t('create')} icon={Plus} onPress={() => router.push(`/create-memory?memoryFolderId=${encodeURIComponent(folderId ?? '')}` as Href)} style={styles.create} />
+        </View>
+      ) : null}
       {!isOffline && setsQuery.hasNextPage ? <AppButton label={t('loadMore')} variant="secondary" size="compact" onPress={() => void setsQuery.fetchNextPage()} style={styles.loadMore} /> : null}
     </ScrollView>
     <AppButton accessibilityLabel={t('create')} accessibilityHint={t('newMemoryBody')} variant="primary" icon={Plus} onPress={() => router.push(`/create-memory?memoryFolderId=${encodeURIComponent(folderId ?? '')}` as Href)} style={[styles.createFab, { bottom: Math.max(16, insets.bottom + 10) }]} />
@@ -177,7 +206,5 @@ export default function MemoryFolderDetailScreen() {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 16 },
-  cardGridItem: { width: '48.5%' },
-  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 20, paddingBottom: 112 }, createFab: { alignItems: 'center', borderRadius: 30, elevation: 6, height: 60, justifyContent: 'center', position: 'absolute', right: 20, shadowColor: theme.ink, shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 60 }, loading: { height: 180, borderRadius: 20, overflow: 'hidden' }, list: { gap: 8 }, notice: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 20, borderWidth: 2, padding: 22 }, empty: { fontSize: 32, marginBottom: 8 }, noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center' }, noticeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' }, retry: { alignSelf: 'center', marginTop: 14 }, create: { alignSelf: 'center', marginTop: 15 }, loadMore: { alignSelf: 'center', marginTop: 16 },
+  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 20, paddingBottom: 112 }, createFab: { alignItems: 'center', borderRadius: 30, elevation: 6, height: 60, justifyContent: 'center', position: 'absolute', right: 20, shadowColor: theme.ink, shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 60 }, loading: { height: 180, borderRadius: 20, overflow: 'hidden' }, list: { gap: 8 }, cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 }, cardGridCell: { width: '48.5%' }, notice: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 20, borderWidth: 2, padding: 22 }, empty: { fontSize: 32, marginBottom: 8 }, noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center' }, noticeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' }, retry: { alignSelf: 'center', marginTop: 14 }, create: { alignSelf: 'center', marginTop: 15 }, loadMore: { alignSelf: 'center', marginTop: 16 },
 }));

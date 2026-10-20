@@ -83,6 +83,7 @@ export const List = createIcon('list');
 export const LogOut = createIcon('log-out');
 export const LockKeyhole = createIcon('lock-closed');
 export const Mail = createIcon('mail');
+export const MoreHorizontal = createIcon('ellipsis-horizontal');
 export const MapPin = createIcon('location');
 export const Maximize2 = createIcon('expand');
 export const MessageCircle = createIcon('chatbubble');
