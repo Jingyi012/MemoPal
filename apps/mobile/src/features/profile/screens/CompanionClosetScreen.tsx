@@ -60,13 +60,13 @@ export default function CompanionClosetScreen() {
   const initialDraft = useMemo<AppearanceDraft>(
     () => ({
       source: currentSource,
-      avatarId: equippedAvatar?.id ?? null,
+      avatarId: avatars.some((avatar) => avatar.id === user?.selectedAvatarId) ? user?.selectedAvatarId ?? null : null,
       photoUri: null,
       frameId: equippedAppearance.frame?.id ?? null,
       decorationId: equippedAppearance.decoration?.id ?? null,
       outfitId: equippedAppearance.outfit?.id ?? null,
     }),
-    [currentSource, equippedAvatar?.id, equippedAppearance.decoration?.id, equippedAppearance.frame?.id, equippedAppearance.outfit?.id],
+    [avatars, currentSource, user?.selectedAvatarId, equippedAppearance.decoration?.id, equippedAppearance.frame?.id, equippedAppearance.outfit?.id],
   );
   const [tab, setTab] = useState<WardrobeTab>('companion');
   const [draft, setDraft] = useState<AppearanceDraft>(initialDraft);
@@ -170,7 +170,7 @@ export default function CompanionClosetScreen() {
           <Animated.View style={[styles.heroStar, styles.heroStarOne, { transform: [{ translateY: floatValue.interpolate({ inputRange: [0, 1], outputRange: [0, -9] }) }, { rotate: floatValue.interpolate({ inputRange: [0, 1], outputRange: ['-8deg', '8deg'] }) }] }]}><Sparkles color={theme.onAccent} size={18} /></Animated.View>
           <Animated.View style={[styles.heroStar, styles.heroStarTwo, { transform: [{ translateY: floatValue.interpolate({ inputRange: [0, 1], outputRange: [-4, 6] }) }, { rotate: floatValue.interpolate({ inputRange: [0, 1], outputRange: ['10deg', '-8deg'] }) }] }]}><Star color={theme.sun} size={14} fill={theme.sun} /></Animated.View>
           <View style={styles.liveBadge}><View style={styles.liveDot} /><Text style={styles.liveBadgeText}>{t('appearancePreview')}</Text></View>
-          <Animated.View style={[styles.heroAvatar, { transform: [{ translateY: floatValue.interpolate({ inputRange: [0, 1], outputRange: [0, -6] }) }] }]}><MemoryAvatar avatar={previewAvatar} appearance={previewAppearance} imageUrl={previewPhoto} size={176} /></Animated.View>
+          <Animated.View style={[styles.heroAvatar, { transform: [{ translateY: floatValue.interpolate({ inputRange: [0, 1], outputRange: [0, -6] }) }] }]}><MemoryAvatar avatar={previewAvatar} appearance={previewAppearance} imageUrl={previewPhoto} level={level} size={176} /></Animated.View>
           <Text style={styles.heroName}>{draft.source === 'photo' ? t('photoTab') : previewAvatar ? getName(previewAvatar, language) : t('companionTab')}</Text>
         </View>
 
@@ -198,7 +198,7 @@ export default function CompanionClosetScreen() {
         {tab === 'photo' ? (
           <View style={styles.photoPanel}>
             <View style={styles.photoPreview}>
-              {previewPhoto ? <MemoryAvatar avatar={previewAvatar} appearance={previewAppearance} imageUrl={previewPhoto} size={132} /> : <View style={styles.photoPlaceholder}><Camera color={theme.violetDeep} size={30} /></View>}
+              {previewPhoto ? <MemoryAvatar avatar={previewAvatar} appearance={previewAppearance} imageUrl={previewPhoto} level={level} size={132} /> : <View style={styles.photoPlaceholder}><Camera color={theme.violetDeep} size={30} /></View>}
             </View>
             <View style={styles.photoCopy}>
               <Text style={styles.photoTitle}>{t('photoTab')}</Text>
@@ -213,7 +213,7 @@ export default function CompanionClosetScreen() {
             {avatars.map((avatar) => {
               const unlocked = avatar.requiredLevel <= level;
               const selected = draft.source === 'companion' && avatar.id === draft.avatarId;
-              return <WardrobeCard key={avatar.id} avatar={avatar} appearance={previewAppearance} language={language} unlocked={unlocked} selected={selected} level={level} labels={{ locked: t('avatarLocked'), selected: t('avatarSelected') }} onPress={() => updateDraft({ source: 'companion', avatarId: avatar.id })} />;
+              return <WardrobeCard key={avatar.id} avatar={avatar} appearance={{}} language={language} unlocked={unlocked} selected={selected} level={level} labels={{ locked: t('avatarLocked'), selected: t('avatarSelected') }} onPress={() => updateDraft({ source: 'companion', avatarId: avatar.id })} />;
             })}
           </View>
         ) : (
@@ -285,7 +285,7 @@ function WardrobeCard({
           <AppearanceItemPreview item={item} size={88} />
         </LinearGradient>
       ) : (
-        <View style={[styles.cardVisual, styles.companionVisual]}><MemoryAvatar avatar={avatar} appearance={appearance} locked={!unlocked} size={88} /></View>
+        <View style={[styles.cardVisual, styles.companionVisual]}><MemoryAvatar avatar={avatar} appearance={appearance} locked={!unlocked} level={level} size={88} /></View>
       )}
       <Text numberOfLines={1} style={styles.cardTitle}>{title}</Text>
       <Text style={[styles.cardMeta, unlocked && styles.cardMetaUnlocked]}>{selected ? labels.selected : unlocked ? `Lv. ${item?.requiredLevel ?? avatar?.requiredLevel ?? 1}` : labels.locked.replace('{level}', String(item?.requiredLevel ?? avatar?.requiredLevel ?? level))}</Text>

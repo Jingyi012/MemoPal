@@ -4,7 +4,7 @@
     "slug": "MemoPal",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/momo-ray-icon.png",
     "scheme": "memopal",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -21,8 +21,8 @@
         "android.permission.CAMERA"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#2B2641",
-        "foregroundImage": "./assets/images/icon-foreground.png"
+        "backgroundColor": "#29264F",
+        "foregroundImage": "./assets/images/momo-ray-icon.png"
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
@@ -31,7 +31,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/momo-ray-icon.png"
     },
     "plugins": [
       "expo-router",

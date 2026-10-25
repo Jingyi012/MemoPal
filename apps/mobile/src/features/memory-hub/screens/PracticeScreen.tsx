@@ -21,6 +21,7 @@ import { ArrowRight, BookOpen, Plus, RefreshCcw } from '@/core/icons';
 import { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
+import { CompanionLearningPresence } from '@/features/profile/companion/CompanionLearningPresence';
 
 type TechniqueKey = 'palace' | 'number-peg';
 type IntentKey = 'words' | 'numbers' | 'list' | 'speech' | 'places';
@@ -104,6 +105,7 @@ export default function PracticeScreen() {
       />
 
       <ScrollView ref={scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <CompanionLearningPresence state="practice" />
         {canShowRequestErrors && dueReviews.isError ? (
           <ModuleNoticeCard
             icon={<RefreshCcw size={21} color={theme.inkSoft} />}

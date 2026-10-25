@@ -387,12 +387,12 @@ export default function ProfileScreen() {
         </AnimatedPressable>
 
         <SettingsSection
-          title={language === 'zh' ? '伙伴' : 'Companion'}
+          title={language === 'zh' ? '沫沫' : 'Momo'}
           accentColor={theme.violetDeep}>
           <ProfileSettingsRow
             icon={<Ionicons name="paw" size={21} color={theme.violetDeep} />}
             iconBackgroundColor={theme.violetTint}
-            title={language === 'zh' ? '伙伴空间' : 'Companion space'}
+            title={language === 'zh' ? '沫沫空间' : 'Momo’s space'}
             onPress={() => router.push('/companion')}
             last
           />

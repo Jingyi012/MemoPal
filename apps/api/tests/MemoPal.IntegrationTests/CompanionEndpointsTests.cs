@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using MemoPal.Api.Security;
 using MemoPal.Domain.Entities;
 using MemoPal.Infrastructure.Persistence;
 using MemoPal.IntegrationTests.Fixtures;
@@ -13,12 +14,37 @@ namespace MemoPal.IntegrationTests;
 public sealed class CompanionEndpointsTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
 {
     [Fact]
+    public async Task Momo_Portraits_Unlock_One_Per_Account_Level()
+    {
+        using var client = factory.CreateClient();
+        using var scope = factory.Services.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<AdminBootstrapper>().SeedAsync();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var portraits = await db.AvatarDefinitions.AsNoTracking()
+            .Where(x => x.Key.StartsWith("momo-") && x.IsActive && !x.IsDeleted)
+            .OrderBy(x => x.RequiredLevel)
+            .ToListAsync();
+
+        Assert.Equal(10, portraits.Count);
+        for (var index = 0; index < portraits.Count; index++)
+        {
+            var level = index + 1;
+            Assert.Equal($"momo-{level:00}", portraits[index].Key);
+            Assert.Equal(level, portraits[index].RequiredLevel);
+            Assert.Equal($"/assets/companions/avatars/momo-{level:00}.png", portraits[index].ImageUrl);
+        }
+    }
+
+    [Fact]
     public async Task Starter_Companion_Presets_Are_Served_As_Api_Hosted_Png_Assets()
     {
         var paths = new[]
         {
             "avatars/memory-bear.png", "avatars/memory-fox.png", "avatars/memory-hummingbird.png",
             "avatars/memory-otter.png", "avatars/memory-owl.png",
+            "avatars/momo-01.png", "avatars/momo-02.png", "avatars/momo-03.png", "avatars/momo-04.png",
+            "avatars/momo-05.png", "avatars/momo-06.png", "avatars/momo-07.png", "avatars/momo-08.png",
+            "avatars/momo-09.png", "avatars/momo-10.png",
             "characters/memory-bear.png", "characters/memory-fox.png", "characters/memory-hummingbird.png",
             "characters/memory-otter.png", "characters/memory-owl.png",
             "appearance/astral-cape.png", "appearance/aurora-bloom-frame.png", "appearance/celestial-headband.png",

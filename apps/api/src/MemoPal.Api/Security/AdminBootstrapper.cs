@@ -247,6 +247,51 @@ public sealed class AdminBootstrapper
     private async Task EnsureStarterAvatarsAsync(CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
+        var momoStages = new[]
+        {
+            ("A little possibility", "小小的期待"),
+            ("Hello, Momo", "你好，沫沫"),
+            ("First swim", "初次游泳"),
+            ("Finding a rhythm", "渐入佳境"),
+            ("Golden ripples", "金色涟漪"),
+            ("Brave explorer", "勇敢探索"),
+            ("Coral blossom", "珊瑚花开"),
+            ("Pearl guardian", "珍珠守护"),
+            ("Starlight swimmer", "逐星而行"),
+            ("Moonlit companion", "月光伙伴"),
+        };
+        for (var index = 0; index < momoStages.Length; index++)
+        {
+            var stage = index + 1;
+            var key = $"momo-{stage:00}";
+            var existing = await _db.AvatarDefinitions.FirstOrDefaultAsync(x => x.Key == key, cancellationToken);
+            if (existing is not null)
+            {
+                existing.ImageUrl ??= $"/assets/companions/avatars/{key}.png";
+                continue;
+            }
+
+            _db.AvatarDefinitions.Add(new AvatarDefinition
+            {
+                Id = key,
+                Key = key,
+                AssetKey = key,
+                ImageUrl = $"/assets/companions/avatars/{key}.png",
+                TitleEn = momoStages[index].Item1,
+                TitleZh = momoStages[index].Item2,
+                DescriptionEn = $"Momo's Level {stage} portrait.",
+                DescriptionZh = $"沫沫的 {stage} 级纪念头像。",
+                RequiredLevel = stage,
+                SortOrder = stage,
+                IsActive = true,
+                CreatedAt = now,
+                UpdatedAt = now,
+                CreatedBy = "system",
+                UpdatedBy = "system",
+            });
+        }
+
+        // Keep legacy avatars active so existing companion bonds and memories remain available.
         var defaults = new[]
         {
             ("memory-fox", "memory-fox", "Memory Fox", "记忆狐", "A curious companion for your first memory palace.", "陪你走进第一个记忆宫殿的好奇伙伴。", 1, 10),

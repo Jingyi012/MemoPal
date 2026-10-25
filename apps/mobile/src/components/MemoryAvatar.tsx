@@ -1,11 +1,13 @@
 import { AppImage } from '@/components/AppImage';
+import { LinearGradient } from 'expo-linear-gradient';
 import { LockKeyhole } from '@/core/icons';
 import type { AvatarDefinition } from '@/features/avatars/types/avatar';
+import { momoGrowthScaleForLevel, momoPortraitForKey, momoPortraitForLevel } from '@/features/avatars/momoPortraits';
 import type { AppearanceDefinition, EquippedAppearance } from '@/features/appearance/types/appearance';
 import { typography } from '@/theme/typography';
 import { useColorScheme } from 'nativewind';
 import React from 'react';
-import { ImageStyle, StyleProp, StyleSheet, Text, View } from 'react-native';
+import { Image, ImageStyle, StyleProp, StyleSheet, Text, View } from 'react-native';
 import { memopalThemes } from '@/theme/memopalTheme';
 
 interface Props {
@@ -18,10 +20,19 @@ interface Props {
   imageUrl?: string | null;
 }
 
+const momoStageColors = [
+  ['#E7F7FF', '#FAF8FF'], ['#E1F4FF', '#F6ECFF'], ['#CDE9FF', '#EEE9FF'],
+  ['#D2EDFF', '#E8E4FF'], ['#D8E9FF', '#FFF0D7'], ['#CDEBEF', '#E7E6FF'],
+  ['#E8E4FF', '#FFE5E8'], ['#E0E6FF', '#FFF2DF'], ['#D9DCFF', '#F0E6FF'],
+  ['#D2DCFF', '#FFF0D8'],
+] as const;
+
 export function MemoryAvatar({ avatar, size = 72, level, showLevelBadge = false, locked = false, appearance, imageUrl }: Props) {
   const { colorScheme } = useColorScheme();
   const theme = memopalThemes[colorScheme ?? 'light'];
-  const borderColor = avatar && avatar.requiredLevel >= 10 ? theme.sun : avatar && avatar.requiredLevel >= 5 ? theme.violet : theme.sky;
+  const portraitLevel = avatar?.key.match(/^momo-(0[1-9]|10)$/)?.[1];
+  const stageLevel = Math.max(1, Math.min(10, Number(portraitLevel ?? level ?? 1)));
+  const borderColor = stageLevel >= 10 ? theme.sun : stageLevel >= 5 ? theme.violet : theme.sky;
   const badgeSize = Math.max(20, Math.round(size * 0.28));
   const hasCustomFrame = Boolean(appearance?.frame);
   const auraPadding = Math.max(2, Math.round(size * 0.045));
@@ -29,21 +40,25 @@ export function MemoryAvatar({ avatar, size = 72, level, showLevelBadge = false,
   // Only the cosmetic frame is enlarged and nudged to align around it.
   const baseImageSize = hasCustomFrame ? size - auraPadding * 2 : size;
   const frameOffsetX = Math.round(size * 0.04);
+  const momoPortrait = momoPortraitForKey(avatar?.key) ?? (!avatar ? momoPortraitForLevel(level ?? 1) : null);
 
   return (
-    <View accessible accessibilityLabel={avatar?.titleEn ?? 'Memory companion'} style={{ width: size, height: size }}>
+    <View accessible accessibilityLabel={avatar?.titleEn ?? 'Momo'} style={{ width: size, height: size }}>
       <View style={[styles.aura, { borderRadius: size / 2, borderColor: `${borderColor}${hasCustomFrame ? '22' : '55'}`, borderWidth: hasCustomFrame ? 1 : 2, padding: auraPadding }]}>
         <View style={[styles.frame, { borderRadius: size / 2, borderColor, borderWidth: hasCustomFrame ? 0 : 2, backgroundColor: theme.paper }]}>
-          {imageUrl || avatar?.imageUrl ? (
+          <LinearGradient colors={momoStageColors[stageLevel - 1]} style={StyleSheet.absoluteFillObject} />
+          {imageUrl || avatar?.imageUrl || momoPortrait ? (
             <View style={[styles.avatarImageSlot, { width: baseImageSize, height: baseImageSize, borderRadius: baseImageSize / 2 }]}>
-              <AppImage
-                contentFit="contain"
-                imageUrl={imageUrl ?? avatar?.imageUrl ?? undefined}
-                placeholder={null}
-                cachePolicy="memory-disk"
-                transition={160}
-                style={[styles.image, { borderRadius: baseImageSize / 2 }]}
-              />
+              {imageUrl || !momoPortrait ? (
+                <AppImage
+                  contentFit="contain"
+                  imageUrl={imageUrl ?? avatar?.imageUrl ?? undefined}
+                  placeholder={null}
+                  cachePolicy="memory-disk"
+                  transition={160}
+                  style={[styles.image, { borderRadius: baseImageSize / 2 }]}
+                />
+              ) : <Image source={momoPortrait} resizeMode="contain" style={[styles.image, { transform: [{ scale: .55 + .45 * momoGrowthScaleForLevel(stageLevel) }] }]} />}
             </View>
           ) : null}
           {appearance?.outfit ? <AppearanceLayer item={appearance.outfit} style={styles.outfitLayer} /> : null}

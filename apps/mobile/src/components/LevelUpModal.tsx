@@ -2,7 +2,9 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 import { typography } from '@/theme/typography';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Check, Sparkles, Trophy } from '@/core/icons';
+import { Check, Sparkles } from '@/core/icons';
+import { CompanionActor } from '@/features/profile/companion/CompanionActor';
+import { getCompanionStage } from '@/features/profile/companion/growth';
 import { AppButton } from '@/components/ui/AppButton';
 import React, { useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
@@ -15,7 +17,8 @@ type LevelUpModalProps = {
 
 /** A short, celebratory confirmation shown only after the server confirms a level-up. */
 export function LevelUpModal({ level, visible, onClose }: LevelUpModalProps) {
-  const { t } = useTranslation('achievements');
+  const { t, language } = useTranslation('achievements');
+  const growthStage = getCompanionStage(level);
   const [dismissed, setDismissed] = useState(false);
 
   React.useEffect(() => {
@@ -39,10 +42,11 @@ export function LevelUpModal({ level, visible, onClose }: LevelUpModalProps) {
           <LinearGradient colors={['#302849', '#1E1A30']} style={styles.hero}>
             <View style={styles.sparkleOne}><Sparkles size={19} color="#FFC93C" /></View>
             <View style={styles.sparkleTwo}><Sparkles size={14} color="#FF9AB4" /></View>
-            <View style={styles.trophyRing}><Trophy size={39} color="#2B2A3D" fill="#FFC93C" /></View>
+            {visible && !dismissed ? <CompanionActor size={200} stage={level} cue={{ action: 'celebrate', sequence: level }} label={language === 'zh' ? '沫沫为你的成长庆祝' : 'Momo celebrates your growth'} /> : null}
             <Text style={styles.eyebrow}>{t('levelUpEyebrow')}</Text>
             <Text style={styles.title}>{t('levelUpTitle')}</Text>
             <Text style={styles.level}>{t('level')} {level}</Text>
+            {level <= 10 ? <Text style={styles.growth}>{language === 'zh' ? `新形态解锁 · ${growthStage.zh}` : `New stage unlocked · ${growthStage.en}`}</Text> : null}
           </LinearGradient>
           <View style={styles.body}>
             <Text style={styles.bodyText}>{t('levelUpBody')}</Text>
@@ -64,7 +68,7 @@ const styles = StyleSheet.create({
   hero: { minHeight: 216, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 22 },
   sparkleOne: { position: 'absolute', top: 31, left: 48, transform: [{ rotate: '-18deg' }] },
   sparkleTwo: { position: 'absolute', top: 55, right: 52, transform: [{ rotate: '20deg' }] },
-  trophyRing: { width: 78, height: 78, alignItems: 'center', justifyContent: 'center', borderRadius: 39, backgroundColor: '#FFC93C', borderWidth: 5, borderColor: 'rgba(255,255,255,0.2)', marginBottom: 12 },
+  growth: { color: '#FFE4B9', fontFamily: typography.bodyBold, fontSize: 12, textAlign: 'center', marginTop: 10 },
   eyebrow: { color: '#FFC93C', fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1.1, textTransform: 'uppercase' },
   title: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 27, marginTop: 3 },
   level: { color: '#D7D2EE', fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 3 },

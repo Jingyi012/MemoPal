@@ -94,7 +94,7 @@ export const LoginScreen: React.FC = () => {
           className="self-center mb-6 h-24 w-24 overflow-hidden rounded-[26px]"
           style={{ boxShadow: '0px 5px 12px rgba(43, 38, 65, 0.22)' }}>
           <Image
-            source={require('../../../../assets/images/icon.png')}
+            source={require('../../../../assets/images/momo-ray-icon.png')}
             style={{ width: '100%', height: '100%' }}
             contentFit="cover"
           />

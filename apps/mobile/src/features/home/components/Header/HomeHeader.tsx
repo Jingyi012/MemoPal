@@ -62,15 +62,14 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
             <SvgCircle cx={26} cy={26} r={23} fill="none" stroke="#FFC93C" strokeWidth={3} strokeDasharray={`${2 * Math.PI * 23 * levelProgress} ${2 * Math.PI * 23}`} strokeLinecap="round" rotation={-90} origin="26, 26" />
           </Svg>
           <View style={styles.avatarInner}>
-            {usePhoto || equippedAvatar?.imageUrl ? (
-              <MemoryAvatar
-                avatar={equippedAvatar}
-                appearance={equippedAppearance}
-                imageUrl={usePhoto ? userData.avatarUrl : undefined}
-                size={40}
-                showLevelBadge={false}
-              />
-            ) : <Text style={styles.avatarFallback}>🦉</Text>}
+            <MemoryAvatar
+              avatar={equippedAvatar}
+              appearance={equippedAppearance}
+              imageUrl={usePhoto ? userData.avatarUrl : undefined}
+              level={level}
+              size={40}
+              showLevelBadge={false}
+            />
           </View>
           <Text style={[styles.levelBadge, { backgroundColor: theme.violetDeep, color: theme.onAccent }]}>Lv.{level}</Text>
         </AnimatedPressable>
@@ -123,7 +122,6 @@ const styles = {
   avatarRing: { width: 48, height: 48, borderRadius: 24, alignItems: 'center' as const, justifyContent: 'center' as const, position: 'relative' as const },
   avatarProgress: { position: 'absolute' as const, left: -2, top: -2 },
   avatarInner: { width: 40, height: 40, borderRadius: 20, alignItems: 'center' as const, justifyContent: 'center' as const, backgroundColor: '#EEE8FF' },
-  avatarFallback: { fontSize: 24 },
   levelBadge: { position: 'absolute' as const, right: -6, bottom: -5, borderRadius: 10, borderWidth: 2, borderColor: '#FFFFFF', paddingHorizontal: 5, paddingVertical: 1, fontFamily: typography.bodyExtraBold, fontSize: 8 },
   greetingCopy: { flex: 1, minWidth: 0 },
   greetingTitle: { fontFamily: typography.displayExtraBold, fontSize: 18 },

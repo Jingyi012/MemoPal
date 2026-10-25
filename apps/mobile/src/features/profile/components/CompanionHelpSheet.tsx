@@ -1,5 +1,5 @@
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
-import { BookOpen, Heart, Shirt, Sparkles } from '@/core/icons';
+import { BookOpen, Heart, Sparkles } from '@/core/icons';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
@@ -17,7 +17,8 @@ const CompanionHelpSheet = forwardRef<BottomSheetModal>((_, ref) => {
   const items = [
     { Icon: BookOpen, title: chinese ? '一起复习' : 'Practice together', detail: chinese ? '每次复习增加 5 点羁绊' : 'Earn 5 bond points per practice', color: theme.violetDeep },
     { Icon: Heart, title: chinese ? '每天问候' : 'Say hello daily', detail: chinese ? '每日首次问候增加 1 点' : 'Your first hello each day earns 1 point', color: theme.berryDeep },
-    { Icon: Shirt, title: chinese ? '装扮伙伴' : 'Dress your companion', detail: chinese ? '打开衣橱试穿并保存造型' : 'Try on and save looks in the wardrobe', color: theme.violetDeep },
+    { Icon: Sparkles, title: chinese ? '十段成长' : 'Ten stages of growth', detail: chinese ? '沫沫从 1 级的幼年模样开始，随账号等级一点点长大，10 级成为月光伙伴。' : 'Momo starts as a tiny youngster at level 1 and grows with your account level into a moonlit companion at 10.', color: theme.violetDeep },
+    { Icon: Sparkles, title: chinese ? '海底寻宝' : 'Pearl quest', detail: chinese ? '翻贝壳找四对宝藏，连续配对会得到沫沫的欢呼。' : 'Turn shells to find four pairs; Momo cheers for your matches.', color: theme.violetDeep },
   ];
 
   return (
@@ -27,7 +28,7 @@ const CompanionHelpSheet = forwardRef<BottomSheetModal>((_, ref) => {
           <View style={styles.headingIcon}><Sparkles size={19} color={theme.violetDeep} /></View>
           <View style={styles.headingCopy}>
             <Text style={styles.title}>{chinese ? '和伙伴一起成长' : 'Grow together'}</Text>
-            <Text style={styles.subtitle}>{chinese ? '复习、问候，慢慢解锁更亲密的关系。' : 'Practice and say hello to grow your bond.'}</Text>
+            <Text style={styles.subtitle}>{chinese ? '学习让沫沫成长，问候加深羁绊。互动小游戏不消耗也不增加经验。' : 'Learning grows Momo. Greetings grow your bond. Play is just for fun, with no XP cost or reward.'}</Text>
           </View>
         </View>
         <View style={styles.list}>

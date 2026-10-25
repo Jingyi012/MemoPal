@@ -3,12 +3,13 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --dev-client",
     "preandroid": "expo prebuild --platform android --no-install",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "node --experimental-strip-types --test test/recall.test.mjs test/numberPegMovie.test.mjs test/ocr.test.mjs test/theme.test.mjs test/onboarding.test.mjs test/i18nInterpolation.test.mjs test/educationOrdering.test.mjs test/educationMatching.test.mjs test/educationAttemptAnswers.test.mjs test/educationAttemptWriteQueue.test.mjs test/educationAssignmentGroups.test.mjs test/educationClassroomInvitations.test.mjs test/educationShareSummary.test.mjs test/educationPracticePreference.test.mjs test/educationAuthoringPortal.test.mjs test/leaderboardMomentum.test.mjs test/leaderboardPodium.test.mjs test/leaderboardShareSummary.test.mjs test/progressShare.test.mjs test/safeAuthReturnTo.test.mjs test/safeReferralCode.test.mjs",
+    "generate:momo-swim-lv3": "node scripts/generate-momo-lv3-swim.cjs",
+    "test": "node --experimental-strip-types --test test/recall.test.mjs test/companion.test.mjs test/numberPegMovie.test.mjs test/ocr.test.mjs test/theme.test.mjs test/onboarding.test.mjs test/i18nInterpolation.test.mjs test/educationOrdering.test.mjs test/educationMatching.test.mjs test/educationAttemptAnswers.test.mjs test/educationAttemptWriteQueue.test.mjs test/educationAssignmentGroups.test.mjs test/educationClassroomInvitations.test.mjs test/educationShareSummary.test.mjs test/educationPracticePreference.test.mjs test/educationAuthoringPortal.test.mjs test/leaderboardMomentum.test.mjs test/leaderboardPodium.test.mjs test/leaderboardShareSummary.test.mjs test/progressShare.test.mjs test/safeAuthReturnTo.test.mjs test/safeReferralCode.test.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint"
   },
@@ -23,6 +24,7 @@
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
+    "@rive-app/react-canvas": "^4.37.0",
     "@tanstack/query-async-storage-persister": "^5.102.2",
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-query-persist-client": "^5.102.2",
@@ -66,9 +68,9 @@
     "react-native-reanimated": "~4.1.6",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "react-native-view-shot": "4.0.3",
     "react-native-svg": "15.12.1",
     "react-native-toast-message": "^2.3.3",
+    "react-native-view-shot": "4.0.3",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.5.1",
     "tailwind-merge": "^3.4.0"
@@ -77,6 +79,7 @@
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
+    "pngjs": "^7.0.0",
     "prettier-plugin-tailwindcss": "0.5.11",
     "tailwindcss": "3.4.17",
     "typescript": "~5.9.2"

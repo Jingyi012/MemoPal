@@ -1,10 +1,12 @@
 import { useTranslation } from '@/core/i18n/useTranslation';
+import { CompanionLearningPresence } from '@/features/profile/companion/CompanionLearningPresence';
 import { LevelUpModal } from '@/components/LevelUpModal';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { Check, Home, RefreshCcw } from '@/core/icons';
 import { AppButton } from '@/components/ui/AppButton';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -58,6 +60,10 @@ export function RecallResultCard({
 
   return (
     <View style={[styles.card, !isPeg && styles.palaceCard]} accessibilityRole="summary">
+      <LinearGradient pointerEvents="none" colors={[theme.sunTint, theme.skyTint, theme.paper]} style={styles.sceneWash} />
+      <View pointerEvents="none" style={styles.sceneBubbleOne} />
+      <View pointerEvents="none" style={styles.sceneBubbleTwo} />
+      <CompanionLearningPresence state="complete" corner />
       {levelUpTo ? <LevelUpModal level={levelUpTo} visible={levelUpVisible} onClose={() => setLevelUpVisible(false)} /> : null}
       {isPeg ? <Text style={styles.emoji}>🏆</Text> : (
         <View style={styles.palaceHero}>
@@ -120,6 +126,9 @@ export function RecallResultCard({
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: { flex: 1, minHeight: 390, borderRadius: 25, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 24, alignItems: 'center', justifyContent: 'center' },
+  sceneWash: { position: 'absolute', top: 0, left: 0, right: 0, height: 185, borderTopLeftRadius: 24, borderTopRightRadius: 24, opacity: .58 },
+  sceneBubbleOne: { position: 'absolute', top: 31, right: 132, width: 14, height: 14, borderRadius: 7, borderWidth: 1.5, borderColor: theme.skyLine },
+  sceneBubbleTwo: { position: 'absolute', top: 102, right: 16, width: 8, height: 8, borderRadius: 4, borderWidth: 1, borderColor: theme.sunLine },
   palaceCard: { minHeight: 360, borderColor: theme.violetLine, borderRadius: 23, paddingHorizontal: 20, paddingVertical: 24, justifyContent: 'flex-start' },
   palaceHero: { alignItems: 'center', marginBottom: 4 },
   palaceCheck: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.mintTint, marginBottom: 12 },

@@ -10,18 +10,25 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Build and install the Android development client (from the repository root)
 
    ```bash
-   npx expo start
+   npm run android
    ```
 
-In the output, you'll find options to open the app in a
+For subsequent JavaScript-only changes, run `npm run dev:mobile` from the
+repository root and open the installed MemoPal development client.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+MemoPal requires a [development build](https://docs.expo.dev/develop/development-builds/introduction/).
+Expo Go does not contain its OCR native module. After adding or
+updating native dependencies, rerun `npm run android`; restarting Metro or
+reloading the app does not update the installed native binary. On macOS, use
+`npm run ios --workspace=memopal` for an iOS development build.
+
+Momo's companion animation uses shaded image poses and React Native animations;
+it does not require a separate native animation runtime. Ten distinct level
+portraits, wing-stroke frames, and matching reaction poses live in
+`assets/images/momo-levels/`.
 
 ## EAS Android builds
 

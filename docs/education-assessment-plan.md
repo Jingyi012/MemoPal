@@ -253,7 +253,7 @@ MemoPal 的学习与练习能力不应只服务于学生。任何玩家都可以
 | 班级学习参与榜 | 同班学生的课堂任务参与 | 相同必交活动的完成天数/完成率 | 班内，可由老师启用 |
 | 作业/测验成绩榜 | 同一测评版本与评分条件下的学生 | 已发布正式成绩 | 默认本人名次；班级展示另行启用 |
 
-学生确实可以在已发布测评结果中查看自己在班级/某次测验的排名，并可在老师启用且学生同意时查看化名完整榜；只有有效班级成员可进入。家长在孩子报告中看该孩子获准显示的名次，不因此获得全班实名成绩表。当前 Community Tab 仅承载公开记忆集探索，通用社区 Leaderboard 尚未实现，也不作为班级成绩榜的入口。
+学生可以在已发布测评结果中查看自己在班级/某次测验的排名，并可在老师启用且学生同意时查看化名完整榜；只有有效班级成员可进入。家长在孩子报告中看该孩子获准显示的名次，不因此获得全班实名成绩表。Community 另有独立的每周社区榜：Community Discover 的快捷入口进入 `/community/leaderboard`，再进入 `/community/leaderboard/community-weekly`。它使用社区参与/回忆活动规则，不是班级正式成绩榜，也不能用于教育成绩或掌握判断。当前路由/UI 证据：`apps/mobile/src/features/library/screens/DiscoverMemorySetsScreen.tsx`、`apps/mobile/src/app/community/leaderboard.tsx`、`apps/mobile/src/app/community/leaderboard/community-weekly.tsx`、`apps/mobile/src/features/leaderboard/screens/LeaderboardCenterScreen.tsx`。
 
 成绩榜发布条件：同一任务比较组截止、评分完成且成绩已发布。未交/缺席/免交/待批改不按 0 分排最后；明确“已发布可排名人数 / 应参加人数”，有待批改时不发布最终名次。未交名单仅老师/对应家长可见。
 
@@ -308,7 +308,7 @@ API 草案按当前响应与 CQRS 模式实现，每个操作都校验实际关�
 
 ### 现在的社区计划应立即遵循
 
-- Community 保持独立 Tab，榜单界面可明确展示“社区/我的班级”范围；尚无班级时不显示空入口。
+- Community 保持独立 Tab；现有社区周榜走 `/community/leaderboard` → `/community/leaderboard/community-weekly`，与 Education 任务中的班级成绩榜/名次分开标注和授权。新增班级榜入口只在用户有当前班级/任务资格时显示，不把两种榜单合成同一数据源。现有 Community 入口见 `apps/mobile/src/app/(tabs)/_layout.tsx`、`DiscoverMemorySetsScreen.tsx`；社区周榜路由见上述 route files。
 - XP、学习分、正式成绩与掌握证据分开命名和计算。
 - 公开分享只访问安全摘要；不能直接序列化将来的学生结果实体。
 - 默认不公开儿童成绩，关系授权与班级授权由后端负责。
