@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MemoPal.Application.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +10,7 @@ namespace MemoPal.Api.Controllers;
 public sealed class HealthController : ControllerBase
 {
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public ActionResult<ApiResponse<object>> Get()
     {
         return Ok(ApiResponse<object>.Ok(new { status = "ok", utcNow = DateTime.UtcNow }));

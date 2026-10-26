@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.MemoryFolders.Commands;
 using MemoPal.Application.Features.MemoryFolders.DTOs;
@@ -12,6 +13,7 @@ namespace MemoPal.Api.Controllers;
 public sealed class MemoryFoldersController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         return Ok(await Sender.Send(
@@ -19,6 +21,7 @@ public sealed class MemoryFoldersController(ISender sender) : ApiControllerBase(
     }
 
     [HttpPost]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Create(
         [FromBody] MemoryFolderRequest request,
         CancellationToken cancellationToken)
@@ -28,6 +31,7 @@ public sealed class MemoryFoldersController(ISender sender) : ApiControllerBase(
     }
 
     [HttpPatch("{folderId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Rename(
         string folderId,
         [FromBody] MemoryFolderRequest request,
@@ -38,6 +42,7 @@ public sealed class MemoryFoldersController(ISender sender) : ApiControllerBase(
     }
 
     [HttpDelete("{folderId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Delete(string folderId, CancellationToken cancellationToken)
     {
         return Ok(await Sender.Send(

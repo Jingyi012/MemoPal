@@ -23,6 +23,7 @@ public sealed class UpdateMemorySetVisibilityCommandHandler(IAppDbContext db)
         UpdateMemorySetVisibilityCommand request,
         CancellationToken cancellationToken)
     {
+        await AccountRestrictions.RequirePrivateAsync(db, request.UserId, request.Visibility, cancellationToken);
         if (request.Visibility is not (MemorySetVisibilities.Private or MemorySetVisibilities.Public))
             throw new ValidationAppException("Visibility must be private or public.");
 

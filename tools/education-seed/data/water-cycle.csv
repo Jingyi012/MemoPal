@@ -1,0 +1,7 @@
+﻿key,kind,primary,secondary,phonetic,extra,hint,position,language
+water-warm,OrderedList,阳光加热水面（solar heating）,太阳照着水面，水会逐渐变暖。,,这六步只演示水循环的一条路线，真实的水会走不同的路线。,,1,zh-Hans
+water-evaporate,OrderedList,水蒸发成水蒸气（evaporation）,水面的一部分水变成看不见的水蒸气，进入空气。,,这六步只演示水循环的一条路线，真实的水会走不同的路线。,,2,zh-Hans
+water-rise,OrderedList,湿空气向较高处上升（rising air）,带着水蒸气的空气可以向较高的地方移动。,,这六步只演示水循环的一条路线，真实的水会走不同的路线。,,3,zh-Hans
+water-condense,OrderedList,水蒸气冷却凝结（condensation）,水蒸气在较冷的高处变成小水滴；许多小水滴或冰晶聚在一起形成云。,,这六步只演示水循环的一条路线，真实的水会走不同的路线。,,4,zh-Hans
+water-precipitate,OrderedList,云里的水落向地面（precipitation）,云里的水滴或冰晶长大后会落下；在温暖的地方，常见的是雨。,,这六步只演示水循环的一条路线，真实的水会走不同的路线。,,5,zh-Hans
+water-collect,OrderedList,水汇集并继续流动（collection）,落下的水有的流进河流、湖泊和海洋，有的渗入土里；水还会继续循环。,,这六步只演示水循环的一条路线，真实的水会走不同的路线。,,6,zh-Hans

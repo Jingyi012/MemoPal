@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.PredefinedMemoryLessons.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -10,6 +11,7 @@ namespace MemoPal.Api.Controllers;
 public sealed class PredefinedMemoryLessonsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetPublished([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default) =>
         Ok(await Sender.Send(new GetPagedPublishedPredefinedMemoryLessonsQuery(pageNumber, pageSize), cancellationToken));
 }

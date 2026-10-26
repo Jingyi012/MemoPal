@@ -41,7 +41,7 @@ public sealed class EducationPublicLearningEndpointsTests(CustomWebApplicationFa
             (await learner.PostAsJsonAsync($"/v1/education/public/courses/{courseId}/practice-check",
                 new { assessmentId, questionId = "missing", answer = new { type = "true-false", booleanValue = true } })).StatusCode);
 
-        var visible = await DataAsync(await teacher.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true }));
+        var visible = await DataAsync(await teacher.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true, notConfidentialExamContent = true }));
         Assert.True(visible.GetProperty("isPublic").GetBoolean());
         Assert.Equal(HttpStatusCode.NotFound,
             (await stranger.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = false })).StatusCode);
@@ -152,7 +152,7 @@ public sealed class EducationPublicLearningEndpointsTests(CustomWebApplicationFa
         var notYetPublic = await learner.PostAsJsonAsync($"/v1/education/public/courses/{courseId}/reports",
             new { reason = "incorrect", details = "The explanation is wrong." });
         Assert.Equal(HttpStatusCode.NotFound, notYetPublic.StatusCode);
-        await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true }));
+        await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true, notConfidentialExamContent = true }));
 
         var first = await DataAsync(await learner.PostAsJsonAsync($"/v1/education/public/courses/{courseId}/reports",
             new { reason = "incorrect", details = "The explanation is wrong." }));
@@ -185,7 +185,7 @@ public sealed class EducationPublicLearningEndpointsTests(CustomWebApplicationFa
         var courseId = course.GetProperty("id").GetString()!;
         var objective = await DataAsync(await author.PostAsJsonAsync($"/v1/education/courses/{courseId}/objectives", new { title = "Topic" }));
         var assessmentId = await CreatePublishedAssessmentAsync(author, courseId, objective.GetProperty("id").GetString()!);
-        await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true }));
+        await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true, notConfidentialExamContent = true }));
         await DataAsync(await learner.PostAsJsonAsync($"/v1/education/public/courses/{courseId}/reports",
             new { reason = "incorrect", details = "Please review this explanation." }));
 
@@ -245,7 +245,7 @@ public sealed class EducationPublicLearningEndpointsTests(CustomWebApplicationFa
         Assert.DoesNotContain((await DataAsync(await learner.GetAsync("/v1/education/public/saved-courses"))).EnumerateArray(),
             item => item.GetProperty("id").GetString() == courseId);
 
-        await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true }));
+        await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true, notConfidentialExamContent = true }));
         Assert.Equal(HttpStatusCode.NotFound, (await learner.GetAsync($"/v1/education/public/courses/{courseId}")).StatusCode);
         var hidden = await DataAsync(await admin.PatchAsync($"/admin/education/course-reports/{courseId}/restore", null));
         Assert.False(hidden.GetProperty("isModerationHidden").GetBoolean());
@@ -262,7 +262,7 @@ public sealed class EducationPublicLearningEndpointsTests(CustomWebApplicationFa
         var objective = await DataAsync(await teacher.PostAsJsonAsync($"/v1/education/courses/{courseId}/objectives", new { title = "Private topic" }));
         await CreatePublishedAssessmentAsync(teacher, courseId, objective.GetProperty("id").GetString()!,
             "Private assessment", isPublicPractice: false);
-        var response = await teacher.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true });
+        var response = await teacher.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true, notConfidentialExamContent = true });
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
@@ -293,7 +293,7 @@ public sealed class EducationPublicLearningEndpointsTests(CustomWebApplicationFa
         var objective = await DataAsync(await author.PostAsJsonAsync($"/v1/education/courses/{courseId}/objectives",
             new { title = "Cell basics", recommendedMemorySetId = memorySetId }));
         var assessmentId = await CreatePublishedAssessmentAsync(author, courseId, objective.GetProperty("id").GetString()!);
-        await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true }));
+        await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true, notConfidentialExamContent = true }));
 
         var detail = await DataAsync(await learner.GetAsync($"/v1/education/public/courses/{courseId}"));
         var recommendation = Assert.Single(detail.GetProperty("objectives").EnumerateArray())

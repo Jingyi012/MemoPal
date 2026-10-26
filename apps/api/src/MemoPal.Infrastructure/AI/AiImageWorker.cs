@@ -1,5 +1,7 @@
 using System.Text.Json;
 using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Common;
+using MemoPal.Domain.Common;
 using MemoPal.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,6 +50,7 @@ public sealed class AiImageWorker(IServiceScopeFactory scopes, ILogger<AiImageWo
             !scope.ServiceProvider.GetRequiredService<IOptions<AiImageGenerationOptions>>().Value.IsConfigured)
             return expiredUsers.Count > 0;
         var candidate = await db.AiGenerations.AsNoTracking().Where(x => x.Kind == "number-peg-image" && x.Status == "reserved")
+            .Where(x => db.Users.Any(user => user.Id == x.UserId && !user.IsDeleted && user.AccountMode == AccountMode.Standard))
             .OrderBy(x => x.CreatedAt).Select(x => new { x.Id, x.UserId }).FirstOrDefaultAsync(ct);
         if (candidate is null) return expiredUsers.Count > 0;
         var input = await credits.LockedAsync(candidate.UserId, async () =>
@@ -61,6 +64,12 @@ public sealed class AiImageWorker(IServiceScopeFactory scopes, ILogger<AiImageWo
         if (input is null) return true;
         try
         {
+            // A job may have been queued before the Admin changed account mode.
+            if (await AccountRestrictions.IsRestrictedAsync(db, candidate.UserId, ct))
+            {
+                await credits.FailAsync(candidate.UserId, candidate.Id, ct);
+                return true;
+            }
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
             timeout.CancelAfter(TimeSpan.FromMinutes(3));
             var image = await scope.ServiceProvider.GetRequiredService<NumberPegImageGenerator>().GenerateAsync(input, timeout.Token);

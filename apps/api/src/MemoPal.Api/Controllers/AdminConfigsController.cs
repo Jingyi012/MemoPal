@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.Milestones.Commands;
 using MemoPal.Application.Features.Milestones.DTOs;
@@ -17,6 +18,7 @@ public sealed class AdminConfigsController : ApiControllerBase
     }
 
     [HttpGet("milestone-definitions")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetMilestoneDefinitions(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
@@ -28,6 +30,7 @@ public sealed class AdminConfigsController : ApiControllerBase
     }
 
     [HttpGet("milestone-definitions/{milestoneId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetMilestoneDefinition(string milestoneId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetMilestoneDefinitionQuery(milestoneId), cancellationToken); 
@@ -35,6 +38,7 @@ public sealed class AdminConfigsController : ApiControllerBase
     }
 
     [HttpPost("milestone-definitions")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> CreateMilestoneDefinition([FromBody] MilestoneDefinitionUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new CreateMilestoneDefinitionCommand(request), cancellationToken); 
@@ -42,6 +46,7 @@ public sealed class AdminConfigsController : ApiControllerBase
     }
 
     [HttpPut("milestone-definitions/{milestoneId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> UpdateMilestoneDefinition(string milestoneId, [FromBody] MilestoneDefinitionUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new UpdateMilestoneDefinitionCommand(milestoneId, request), cancellationToken); 
@@ -49,6 +54,7 @@ public sealed class AdminConfigsController : ApiControllerBase
     }
 
     [HttpDelete("milestone-definitions/{milestoneId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> DeleteMilestoneDefinition(string milestoneId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new DeleteMilestoneDefinitionCommand(milestoneId), cancellationToken);

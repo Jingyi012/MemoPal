@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.PalaceAssociations.Commands;
 using MemoPal.Application.Features.PalaceAssociations.DTOs;
@@ -11,6 +12,7 @@ namespace MemoPal.Api.Controllers;
 public sealed class PalaceAssociationsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpPost("generate")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Generate(
         [FromBody] GeneratePalaceAssociationsRequest request,
         CancellationToken cancellationToken)

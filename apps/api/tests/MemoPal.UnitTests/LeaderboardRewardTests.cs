@@ -4,6 +4,7 @@ using MemoPal.Application.Features.Leaderboards;
 using MemoPal.Application.Features.Leaderboards.Commands;
 using MemoPal.Application.Features.Leaderboards.DTOs;
 using MemoPal.Domain.Entities;
+using MemoPal.Domain.Common;
 using MemoPal.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -12,6 +13,63 @@ namespace MemoPal.UnitTests;
 
 public sealed class LeaderboardRewardTests
 {
+    [Fact]
+    public async Task Restricted_players_are_excluded_from_settlement_without_erasing_standard_optout_activity()
+    {
+        await using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N")).Options);
+        var currentWeek = LeaderboardSeasonLifecycle.GetWeekStart(DateTime.UtcNow);
+        var previousWeek = currentWeek.AddDays(-7);
+        var board = Assert.Single(LeaderboardCatalogSerializer.GetDefault().Boards);
+        var season = new LeaderboardSeason
+        {
+            LeaderboardId = board.Id, WeekStartsAtUtc = previousWeek, WeekEndsAtUtc = currentWeek,
+            ConfigJson = JsonSerializer.Serialize(board, new JsonSerializerOptions(JsonSerializerDefaults.Web)),
+            Status = LeaderboardSeasonStatuses.Open
+        };
+        db.LeaderboardSeasons.Add(season);
+        foreach (var userId in new[] { "standard-active", "standard-optout", "restricted" })
+        {
+            db.Users.Add(new User
+            {
+                Id = userId, Email = userId + "@example.test", CommunityLeaderboardOptIn = userId != "standard-optout",
+                CommunityLeaderboardJoinedAtUtc = previousWeek,
+                AccountMode = userId == "restricted" ? AccountMode.RestrictedLearner : AccountMode.Standard
+            });
+            db.LeaderboardSeasonParticipants.Add(new LeaderboardSeasonParticipant
+            {
+                SeasonId = season.Id, UserId = userId, JoinedAtUtc = previousWeek,
+                OptedOutAtUtc = userId == "standard-optout" ? currentWeek.AddHours(-1) : null
+            });
+            var memory = new MemorySet { UserId = userId, Title = "Settlement fixture" };
+            db.MemorySets.Add(memory);
+            var items = Enumerable.Range(1, 5).Select(position => new MemoryItem { MemorySetId = memory.Id, Position = position }).ToArray();
+            db.MemoryItems.AddRange(items);
+            for (var day = 1; day <= 3; day++)
+            {
+                var attempt = new PracticeAttempt
+                {
+                    UserId = userId, MemorySetId = memory.Id, ClientAttemptId = Guid.NewGuid().ToString("N"),
+                    Mode = PracticeModes.Recall, StartedAt = previousWeek.AddDays(day), CompletedAt = previousWeek.AddDays(day).AddMinutes(1)
+                };
+                db.PracticeAttempts.Add(attempt);
+                foreach (var item in items)
+                    db.PracticeResponses.Add(new PracticeResponse { PracticeAttemptId = attempt.Id, MemoryItemId = item.Id, WasDueAtSubmission = true });
+            }
+        }
+        await db.SaveChangesAsync();
+        var credits = new RecordingAiCredits();
+        await new ProcessLeaderboardRewardsCommandHandler(db, credits, NullLogger<ProcessLeaderboardRewardsCommandHandler>.Instance)
+            .Handle(new ProcessLeaderboardRewardsCommand(currentWeek.AddDays(2)), default);
+        var rows = await db.LeaderboardSeasonParticipants.Where(x => x.SeasonId == season.Id).ToDictionaryAsync(x => x.UserId);
+        Assert.Equal(1, rows["standard-active"].FinalRank);
+        Assert.True(rows["standard-optout"].FinalScore > 0);
+        Assert.Equal(0, rows["restricted"].RewardCredits);
+        Assert.NotEqual(LeaderboardRewardStatuses.Awarded, rows["restricted"].RewardStatus);
+        Assert.Single(credits.References);
+        Assert.EndsWith(":standard-active", credits.References[0]);
+    }
+
     [Fact]
     public void Default_weekly_reward_schedule_allocates_exactly_five_thousand_credits()
     {

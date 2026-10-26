@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Api.Controllers;
 using MemoPal.Application.Features.Education.Attempts.Commands;
@@ -14,22 +15,27 @@ namespace MemoPal.Api.Controllers;
 public sealed class EducationAttemptsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpPost("assignments/{assignmentId}/attempts")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Start(string assignmentId, CancellationToken ct) =>
         Ok(await Sender.Send(new StartEducationAssessmentAttemptCommand(GetUserIdOrThrow(), assignmentId), ct));
 
     [HttpGet("attempts/{attemptId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Get(string attemptId, CancellationToken ct) =>
         Ok(await Sender.Send(new GetEducationAssessmentAttemptQuery(GetUserIdOrThrow(), attemptId), ct));
 
     [HttpPut("attempts/{attemptId}/responses")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Save(string attemptId, [FromBody] SaveEducationAttemptResponseRequest request, CancellationToken ct) =>
         Ok(await Sender.Send(new SaveEducationAssessmentResponseCommand(GetUserIdOrThrow(), attemptId, request), ct));
 
     [HttpPost("attempts/{attemptId}/practice-check")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> CheckPracticeAnswer(string attemptId, [FromBody] EducationPracticeCheckRequest request, CancellationToken ct) =>
         Ok(await Sender.Send(new CheckEducationPracticeAnswerCommand(GetUserIdOrThrow(), attemptId, request), ct));
 
     [HttpGet("practice/items")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetPracticeItems(CancellationToken ct) =>
         Ok(await Sender.Send(new GetMyEducationPracticeItemsQuery(GetUserIdOrThrow()), ct));
 
@@ -37,6 +43,7 @@ public sealed class EducationAttemptsController(ISender sender) : ApiControllerB
     [HttpPost("attempts/{attemptId}/responses/{questionId}/audio")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(11_000_000)]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> UploadAttachment(string attemptId, string questionId, [FromForm] int expectedVersion,
         [FromForm] IFormFile? file, CancellationToken ct)
     {
@@ -50,6 +57,7 @@ public sealed class EducationAttemptsController(ISender sender) : ApiControllerB
 
     [HttpGet("attempts/{attemptId}/responses/{questionId}/photos/{attachmentId}")]
     [HttpGet("attempts/{attemptId}/responses/{questionId}/attachments/{attachmentId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetAttachment(string attemptId, string questionId, string attachmentId, CancellationToken ct)
     {
         var content = await Sender.Send(new GetEducationAttemptAttachmentQuery(GetUserIdOrThrow(), attemptId, questionId, attachmentId), ct);
@@ -58,6 +66,7 @@ public sealed class EducationAttemptsController(ISender sender) : ApiControllerB
     }
 
     [HttpPost("attempts/{attemptId}/submit")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Submit(string attemptId, CancellationToken ct) =>
         Ok(await Sender.Send(new SubmitEducationAssessmentAttemptCommand(GetUserIdOrThrow(), attemptId), ct));
 }

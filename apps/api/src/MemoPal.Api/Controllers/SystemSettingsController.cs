@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.SystemSettings.Queries;
@@ -18,6 +19,7 @@ public sealed class SystemSettingsController : ApiControllerBase
     /// Fetch all public system settings used by the mobile app.
     /// </summary>
     [HttpGet("all")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetAllSettings(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetAllSystemSettingsQuery(), cancellationToken);
@@ -28,6 +30,7 @@ public sealed class SystemSettingsController : ApiControllerBase
     /// Fetch feature limits settings
     /// </summary>
     [HttpGet("feature-limits")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> GetFeatureLimits(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -40,6 +43,7 @@ public sealed class SystemSettingsController : ApiControllerBase
     /// Fetch help and FAQ settings.
     /// </summary>
     [HttpGet("help-faq")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> GetHelpFaq(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -52,6 +56,7 @@ public sealed class SystemSettingsController : ApiControllerBase
     /// Fetch privacy policy settings.
     /// </summary>
     [HttpGet("privacy-policy")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> GetPrivacyPolicy(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -64,6 +69,7 @@ public sealed class SystemSettingsController : ApiControllerBase
     /// Fetch premium subscription page configuration.
     /// </summary>
     [HttpGet("premium-subscription")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetPremiumSubscription(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -76,6 +82,7 @@ public sealed class SystemSettingsController : ApiControllerBase
     /// Fetch level configurations
     /// </summary>
     [HttpGet("level-configs")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> GetLevelConfigs(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetSystemSettingsByKeyQuery(SystemSettingKeys.LevelConfigs), cancellationToken);
@@ -86,6 +93,7 @@ public sealed class SystemSettingsController : ApiControllerBase
     /// Fetch the simple, user-visible gamification rules.
     /// </summary>
     [HttpGet("gamification-rules")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> GetGamificationRules(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetGamificationRulesQuery(), cancellationToken);
@@ -96,6 +104,7 @@ public sealed class SystemSettingsController : ApiControllerBase
     /// Fetch the editable 1–100 Number Peg definitions.
     /// </summary>
     [HttpGet("number-peg-definitions")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> GetNumberPegDefinitions(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(

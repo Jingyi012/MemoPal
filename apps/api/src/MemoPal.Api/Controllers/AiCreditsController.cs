@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.AiCredits.Commands;
 using MemoPal.Application.Features.AiCredits.Queries;
@@ -12,20 +13,25 @@ namespace MemoPal.Api.Controllers;
 public sealed class AiCreditsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Balance(CancellationToken ct) => Ok(await Sender.Send(new GetAiCreditBalanceQuery(GetUserIdOrThrow()), ct));
 
     [HttpGet("history")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> History([FromQuery] int skip, CancellationToken ct) =>
         Ok(await Sender.Send(new GetAiCreditHistoryQuery(GetUserIdOrThrow(), skip), ct));
 
     [HttpGet("generations")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Generations(CancellationToken ct) => Ok(await Sender.Send(new GetAiGenerationsQuery(GetUserIdOrThrow()), ct));
 
     [HttpPost("number-peg-images")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GenerateImage([FromBody] GenerateNumberPegImageRequest request, CancellationToken ct) =>
         Ok(await Sender.Send(new GenerateNumberPegImageCommand(GetUserIdOrThrow(), request), ct));
 
     [HttpGet("images/{id}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Image(string id, CancellationToken ct)
     {
         var result = await Sender.Send(new GetAiImageQuery(GetUserIdOrThrow(), id), ct);
@@ -34,6 +40,7 @@ public sealed class AiCreditsController(ISender sender) : ApiControllerBase(send
     }
 
     [HttpGet("images/{id}/data")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> ImageData(string id, CancellationToken ct)
     {
         var result = await Sender.Send(new GetAiImageQuery(GetUserIdOrThrow(), id), ct);
@@ -43,14 +50,17 @@ public sealed class AiCreditsController(ISender sender) : ApiControllerBase(send
 
     [Authorize(Roles = UserRoles.Admin)]
     [HttpGet("users/{userId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> UserBalance(string userId, CancellationToken ct) => Ok(await Sender.Send(new GetAiCreditBalanceQuery(userId), ct));
 
     [Authorize(Roles = UserRoles.Admin)]
     [HttpGet("users/{userId}/history")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> UserHistory(string userId, [FromQuery] int skip, CancellationToken ct) => Ok(await Sender.Send(new GetAiCreditHistoryQuery(userId, skip), ct));
 
     [Authorize(Roles = UserRoles.Admin)]
     [HttpPost("users/{userId}/grants")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Grant(string userId, [FromBody] GrantAiCreditsRequest request, CancellationToken ct) =>
         Ok(await Sender.Send(new GrantAiCreditsCommand(userId, request), ct));
 }

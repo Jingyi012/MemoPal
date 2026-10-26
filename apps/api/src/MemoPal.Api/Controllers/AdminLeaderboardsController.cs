@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.Leaderboards.Commands;
 using MemoPal.Application.Features.Leaderboards.DTOs;
@@ -13,10 +14,12 @@ namespace MemoPal.Api.Controllers;
 public sealed class AdminLeaderboardsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpGet("config")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetConfig(CancellationToken cancellationToken) =>
         Ok(await Sender.Send(new GetAdminLeaderboardCatalogQuery(), cancellationToken));
 
     [HttpPut("config")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> UpdateConfig(
         [FromBody] UpdateLeaderboardCatalogRequest request,
         CancellationToken cancellationToken)

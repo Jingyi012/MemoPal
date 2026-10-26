@@ -11,6 +11,7 @@ public interface IAppDbContext
     DbSet<AiCreditEntry> AiCreditEntries { get; }
     DbSet<LeaderboardSeason> LeaderboardSeasons { get; }
     DbSet<LeaderboardSeasonParticipant> LeaderboardSeasonParticipants { get; }
+    DbSet<AccountModeAudit> AccountModeAudits { get; }
     DbSet<User> Users { get; }
     DbSet<CompanionBond> CompanionBonds { get; }
     DbSet<CompanionMemory> CompanionMemories { get; }
@@ -53,9 +54,13 @@ public interface IAppDbContext
     DbSet<PredefinedMemoryLessonCategory> PredefinedMemoryLessonCategories { get; }
     DbSet<EducationClassroom> EducationClassrooms { get; }
     DbSet<EducationMembership> EducationMemberships { get; }
+    DbSet<EducationClassroomCourse> EducationClassroomCourses { get; }
     DbSet<EducationGuardianLink> EducationGuardianLinks { get; }
     DbSet<EducationCourse> EducationCourses { get; }
     DbSet<EducationObjective> EducationObjectives { get; }
+    DbSet<EducationObjectiveStudyItem> EducationObjectiveStudyItems { get; }
+    DbSet<EducationObjectiveDerivedMemorySet> EducationObjectiveDerivedMemorySets { get; }
+    DbSet<EducationDerivedItemMap> EducationDerivedItemMaps { get; }
     DbSet<EducationAssessment> EducationAssessments { get; }
     DbSet<EducationQuestion> EducationQuestions { get; }
     DbSet<EducationAssignment> EducationAssignments { get; }

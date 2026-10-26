@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Education.Authoring;
 
-public sealed record SetEducationCourseVisibilityCommand(string UserId, string CourseId, bool IsPublic)
+public sealed record SetEducationCourseVisibilityCommand(string UserId, string CourseId, bool IsPublic, bool NotConfidentialExamContent = false)
     : IRequest<ApiResponse<EducationCourseDto>>;
 
 public sealed class SetEducationCourseVisibilityHandler(IAppDbContext db)
@@ -21,6 +21,9 @@ public sealed class SetEducationCourseVisibilityHandler(IAppDbContext db)
         var course = await AuthoringValidation.OwnedCourse(db, q.UserId, q.CourseId, ct);
         if (q.IsPublic)
         {
+            if (!q.NotConfidentialExamContent &&
+                (!course.IsPublic || course.NotConfidentialExamContentConfirmedAtUtc is null))
+                throw new ValidationAppException("Explicitly confirm that the course contains no confidential exam content before making it public.");
             var supportedTypes = new[]
             {
                 ObjectiveQuestionTypeCodes.SingleChoice,
@@ -41,6 +44,8 @@ public sealed class SetEducationCourseVisibilityHandler(IAppDbContext db)
                 throw new ValidationAppException("Publish at least one assessment containing objective practice questions before making this course public.");
         }
 
+        if (q.IsPublic && q.NotConfidentialExamContent)
+            course.ConfirmNotConfidentialExamContent(q.UserId, DateTime.UtcNow);
         course.SetPublic(q.IsPublic, DateTime.UtcNow);
         await db.SaveChangesAsync(ct);
         return ApiResponse<EducationCourseDto>.Ok(new(course.Id, course.Title, course.CreatedAt, course.IsPublic, course.PubliclyPublishedAt));

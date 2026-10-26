@@ -5,6 +5,8 @@ import type {
   CreateClassroomRequest,
   CreateGuardianLinkRequest,
   EducationMembershipDto,
+  EducationClassroomCourseSummaryDto,
+  EducationCourseClassroomDto,
   GuardianLinkDto,
   InviteClassroomMemberRequest,
 } from '../types/educationRelationships';
@@ -21,6 +23,18 @@ export const educationRelationshipsApi = {
   async listMembers(classroomId: string) {
     const response = await apiClient.get<ApiResponse<EducationMembershipDto[]>>(`/v1/education/classrooms/${classroomId}/members`);
     return response.data.data;
+  },
+  async listClassroomCourses(classroomId: string) {
+    return (await apiClient.get<ApiResponse<EducationClassroomCourseSummaryDto[]>>(`/v1/education/classrooms/${classroomId}/courses`)).data.data;
+  },
+  async listCourseClassrooms(courseId: string) {
+    return (await apiClient.get<ApiResponse<EducationCourseClassroomDto[]>>(`/v1/education/courses/${courseId}/classrooms`)).data.data;
+  },
+  async attachCourse(classroomId: string, courseId: string) {
+    return (await apiClient.post<ApiResponse<EducationClassroomCourseSummaryDto>>(`/v1/education/classrooms/${classroomId}/courses/${courseId}`)).data.data;
+  },
+  async detachCourse(classroomId: string, courseId: string) {
+    return (await apiClient.delete<ApiResponse<boolean>>(`/v1/education/classrooms/${classroomId}/courses/${courseId}`)).data.data;
   },
   async listOwnMemberships() {
     const response = await apiClient.get<ApiResponse<EducationMembershipDto[]>>('/v1/education/memberships');

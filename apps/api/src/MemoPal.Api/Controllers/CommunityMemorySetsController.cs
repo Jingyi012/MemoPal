@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.CommunityMemorySets.Commands;
 using MemoPal.Application.Features.CommunityMemorySets.DTOs;
@@ -12,6 +13,7 @@ namespace MemoPal.Api.Controllers;
 public sealed class CommunityMemorySetsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? search,
         [FromQuery] string? techniqueKey,
@@ -25,14 +27,17 @@ public sealed class CommunityMemorySetsController(ISender sender) : ApiControlle
             GetUserIdOrThrow(), search, techniqueKey, goalType, sort, pageNumber, pageSize, bookmarkedOnly), cancellationToken));
 
     [HttpGet("{memorySetId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetById(string memorySetId, CancellationToken cancellationToken) =>
         Ok(await Sender.Send(new GetCommunityMemorySetQuery(GetUserIdOrThrow(), memorySetId), cancellationToken));
 
     [HttpPost("{memorySetId}/copy")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Copy(string memorySetId, CancellationToken cancellationToken) =>
         Ok(await Sender.Send(new CopyCommunityMemorySetCommand(GetUserIdOrThrow(), memorySetId), cancellationToken));
 
     [HttpPut("{memorySetId}/reaction")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> SetHelpfulReaction(
         string memorySetId,
         [FromBody] SetCommunityMemorySetHelpfulRequest request,
@@ -41,6 +46,7 @@ public sealed class CommunityMemorySetsController(ISender sender) : ApiControlle
             GetUserIdOrThrow(), memorySetId, request.IsHelpful), cancellationToken));
 
     [HttpPut("{memorySetId}/bookmark")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> SetBookmark(
         string memorySetId,
         [FromBody] SetCommunityMemorySetBookmarkRequest request,
@@ -49,6 +55,7 @@ public sealed class CommunityMemorySetsController(ISender sender) : ApiControlle
             GetUserIdOrThrow(), memorySetId, request.IsBookmarked), cancellationToken));
 
     [HttpPost("{memorySetId}/reports")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Report(
         string memorySetId,
         [FromBody] ReportMemorySetRequest request,

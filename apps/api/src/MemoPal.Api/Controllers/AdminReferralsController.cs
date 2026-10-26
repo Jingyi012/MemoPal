@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.Referrals.Commands;
 using MemoPal.Application.Features.Referrals.DTOs;
@@ -17,6 +18,7 @@ public sealed class AdminReferralsController : ApiControllerBase
     }
 
     [HttpGet("config")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetConfig(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetReferralProgramConfigQuery(), cancellationToken);
@@ -24,6 +26,7 @@ public sealed class AdminReferralsController : ApiControllerBase
     }
 
     [HttpPut("config")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> UpdateConfig([FromBody] UpsertReferralProgramConfigRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new UpsertReferralProgramConfigCommand(request), cancellationToken);
@@ -31,6 +34,7 @@ public sealed class AdminReferralsController : ApiControllerBase
     }
 
     [HttpGet("users")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetUsers(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
@@ -42,6 +46,7 @@ public sealed class AdminReferralsController : ApiControllerBase
     }
 
     [HttpGet("records")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetRecords(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,

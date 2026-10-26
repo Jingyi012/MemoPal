@@ -52,7 +52,7 @@ public sealed class ProcessLeaderboardRewardsCommandHandler(
 
         var season = await LeaderboardSeasonLifecycle.GetOrCreateCurrentAsync(db, board, nowUtc, cancellationToken);
         var optedInUsers = await db.Users.AsNoTracking()
-            .Where(x => !x.IsDeleted && x.CommunityLeaderboardOptIn && x.CommunityLeaderboardJoinedAtUtc != null)
+            .Where(x => !x.IsDeleted && x.AccountMode == MemoPal.Domain.Common.AccountMode.Standard && x.CommunityLeaderboardOptIn && x.CommunityLeaderboardJoinedAtUtc != null)
             .Select(x => new { x.Id, x.CommunityLeaderboardJoinedAtUtc })
             .ToListAsync(cancellationToken);
         foreach (var user in optedInUsers)
@@ -68,7 +68,7 @@ public sealed class ProcessLeaderboardRewardsCommandHandler(
             await CalculateAndFreezeResultsAsync(season, nowUtc, cancellationToken);
 
         var awards = await db.LeaderboardSeasonParticipants
-            .Where(x => !x.IsDeleted && x.SeasonId == season.Id &&
+            .Where(x => !x.IsDeleted && x.SeasonId == season.Id && db.Users.Any(u => u.Id == x.UserId && !u.IsDeleted && u.AccountMode == MemoPal.Domain.Common.AccountMode.Standard) &&
                         (x.RewardStatus == LeaderboardRewardStatuses.Pending ||
                          x.RewardStatus == LeaderboardRewardStatuses.Failed))
             .OrderBy(x => x.FinalRank)
@@ -79,6 +79,8 @@ public sealed class ProcessLeaderboardRewardsCommandHandler(
         var issued = 0;
         foreach (var award in awards)
         {
+            if (await MemoPal.Application.Common.AccountRestrictions.IsRestrictedAsync(db, award.UserId, cancellationToken))
+                continue;
             try
             {
                 var reference = $"leaderboard:{season.LeaderboardId}:{season.WeekStartsAtUtc:yyyyMMdd}:{award.UserId}";
@@ -113,7 +115,7 @@ public sealed class ProcessLeaderboardRewardsCommandHandler(
 
         db.ClearTracking();
         var hasOutstandingRewards = await db.LeaderboardSeasonParticipants.AnyAsync(x =>
-            !x.IsDeleted && x.SeasonId == seasonId &&
+            !x.IsDeleted && x.SeasonId == seasonId && db.Users.Any(u => u.Id == x.UserId && !u.IsDeleted && u.AccountMode == MemoPal.Domain.Common.AccountMode.Standard) &&
             (x.RewardStatus == LeaderboardRewardStatuses.Open ||
              x.RewardStatus == LeaderboardRewardStatuses.Pending ||
              x.RewardStatus == LeaderboardRewardStatuses.Failed), cancellationToken);
@@ -143,12 +145,19 @@ public sealed class ProcessLeaderboardRewardsCommandHandler(
         var activeUserIds = candidateIds.Length == 0
             ? new HashSet<string>(StringComparer.Ordinal)
             : await db.Users.AsNoTracking()
-                .Where(x => !x.IsDeleted && candidateIds.Contains(x.Id))
+                .Where(x => !x.IsDeleted && x.AccountMode == MemoPal.Domain.Common.AccountMode.Standard && candidateIds.Contains(x.Id))
                 .Select(x => x.Id)
                 .ToHashSetAsync(cancellationToken);
         activeParticipants = activeParticipants.Where(x => activeUserIds.Contains(x.UserId)).ToList();
 
-        var dailyPoints = await GetDailyPointsAsync(season, participants, cancellationToken);
+        // Opting out affects ranks, but previously recorded personal activity must
+        // remain intact for Standard accounts. Only account mode adds an exclusion.
+        var participantUserIds = participants.Select(x => x.UserId).Distinct().ToArray();
+        var standardScoringUsers = await db.Users.AsNoTracking()
+            .Where(x => participantUserIds.Contains(x.Id) && x.AccountMode == MemoPal.Domain.Common.AccountMode.Standard)
+            .Select(x => x.Id).ToHashSetAsync(cancellationToken);
+        var dailyPoints = await GetDailyPointsAsync(season,
+            participants.Where(x => standardScoringUsers.Contains(x.UserId)).ToList(), cancellationToken);
         var scores = participants.ToDictionary(x => x.UserId, _ => 0, StringComparer.Ordinal);
         var activeDays = participants.ToDictionary(x => x.UserId, _ => 0, StringComparer.Ordinal);
         foreach (var group in dailyPoints.GroupBy(x => x.Key.UserId))

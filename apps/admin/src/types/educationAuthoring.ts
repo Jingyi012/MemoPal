@@ -23,6 +23,38 @@ export interface EducationObjectiveDto {
   title: string;
   createdAt: string;
   recommendedMemorySetId: string | null;
+  memoryContentType?: EducationMemoryContentType;
+  languageCode?: string | null;
+  gradeCode?: string | null;
+  curriculumCode?: string | null;
+  subjectCode?: string | null;
+  contentOrigin?: EducationContentOrigin;
+  reviewStatus?: EducationContentReviewStatus;
+}
+export type EducationMemoryContentType = "VocabularyPair" | "OrderedList" | "NumberDate" | "FormulaSymbols" | "CategoryMembership" | "VerbatimText" | "LabelDiagram" | "LanguageItem" | "ConceptUnderstanding" | "ReasoningProcedure" | "NotApplicable";
+export type EducationContentOrigin = "Original" | "PublicDomainConfirmed" | "Imported";
+export type EducationContentReviewStatus = "Unreviewed" | "TeacherReviewed";
+export interface EducationStudyItemAuthorDto {
+  id: string; objectiveId: string; stableKey: string; position: number; kind: EducationMemoryContentType;
+  primary: string; secondary: string | null; phonetic: string | null; extra: string | null; hint: string | null;
+  mediaRef: string | null; languageCode: string | null; status: "Draft" | "Published"; contentVersion: number;
+  notConfidentialExamContentConfirmedByUserId: string | null; notConfidentialExamContentConfirmedAtUtc: string | null;
+  createdAtUtc: string; updatedAtUtc: string;
+}
+export interface EducationStudyItemRequest {
+  stableKey?: string | null; position: number; kind: EducationMemoryContentType; primary: string;
+  secondary?: string | null; phonetic?: string | null; extra?: string | null; hint?: string | null;
+  mediaRef?: string | null; languageCode?: string | null;
+}
+export interface EducationStudyItemImportError { row: number; field: string; reasonCode: string; message: string }
+export interface EducationStudyItemImportResult {
+  imported: boolean; created: number; updated: number; unchanged: number; rejectedRows: number;
+  canImport: boolean; errors: EducationStudyItemImportError[];
+}
+export interface EducationLearnerStudyItemDto {
+  id: string; position: number; kind: EducationMemoryContentType; primary: string; secondary: string | null;
+  phonetic: string | null; extra: string | null; languageCode: string | null; contentVersion: number;
+  reviewStatus: EducationContentReviewStatus; contentOrigin: EducationContentOrigin;
 }
 export interface EducationOptionDto {
   id: string;

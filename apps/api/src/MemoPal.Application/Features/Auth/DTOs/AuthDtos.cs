@@ -41,7 +41,8 @@ public sealed record UserWithStatDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     bool IsDeleted,
-    DateTime? DeletedAt
+    DateTime? DeletedAt,
+    string AccountMode = "Standard"
 );
 
 

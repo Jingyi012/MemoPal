@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.CommunityMemorySets.Commands;
 using MemoPal.Application.Features.CommunityMemorySets.DTOs;
@@ -13,6 +14,7 @@ namespace MemoPal.Api.Controllers;
 public sealed class AdminCommunityMemorySetsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? search,
         [FromQuery] string? status,
@@ -23,6 +25,7 @@ public sealed class AdminCommunityMemorySetsController(ISender sender) : ApiCont
             search, status, pageNumber, pageSize), cancellationToken));
 
     [HttpPatch("{memorySetId}/hide")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Hide(
         string memorySetId,
         [FromBody] HideCommunityMemorySetRequest request,
@@ -31,10 +34,12 @@ public sealed class AdminCommunityMemorySetsController(ISender sender) : ApiCont
             memorySetId, true, request.Reason), cancellationToken));
 
     [HttpPatch("{memorySetId}/restore")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Restore(string memorySetId, CancellationToken cancellationToken) =>
         Ok(await Sender.Send(new ModerateCommunityMemorySetCommand(memorySetId, false, null), cancellationToken));
 
     [HttpPatch("{memorySetId}/featured")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> SetFeatured(
         string memorySetId,
         [FromBody] SetCommunityMemorySetFeaturedRequest request,

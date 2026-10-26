@@ -60,6 +60,7 @@ public sealed class GetEducationPublicCourseHandler(IAppDbContext db)
             ? new Dictionary<string, EducationRecommendedMemorySetDto>()
             : await db.MemorySets.AsNoTracking()
                 .Where(GetCommunityMemorySetsQueryHandler.IsDiscoverable())
+                .Where(memory => db.Users.Any(author => author.Id == memory.UserId && !author.IsDeleted && author.AccountMode == MemoPal.Domain.Common.AccountMode.Standard))
                 .Where(memorySet => recommendedIds.Contains(memorySet.Id))
                 .Select(memorySet => new EducationRecommendedMemorySetDto(
                     memorySet.Id, memorySet.Title, memorySet.GoalType, memorySet.TechniqueKey, memorySet.Description))

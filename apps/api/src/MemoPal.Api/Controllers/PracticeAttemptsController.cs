@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.PracticeAttempts.Commands;
 using MemoPal.Application.Features.PracticeAttempts.DTOs;
@@ -16,6 +17,7 @@ public sealed class PracticeAttemptsController : ApiControllerBase
     }
 
     [HttpPost("batch")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> CreateBatch(
         [FromBody] PracticeAttemptBatchRequest request,
         CancellationToken cancellationToken)
@@ -27,6 +29,7 @@ public sealed class PracticeAttemptsController : ApiControllerBase
     }
 
     [HttpGet("stats")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetStats(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -36,6 +39,7 @@ public sealed class PracticeAttemptsController : ApiControllerBase
     }
 
     [HttpGet("memory-set/{memorySetId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetHistory(
         string memorySetId,
         CancellationToken cancellationToken)
@@ -47,6 +51,7 @@ public sealed class PracticeAttemptsController : ApiControllerBase
     }
 
     [HttpGet("/v1/reviews/due")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetDue(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -56,6 +61,7 @@ public sealed class PracticeAttemptsController : ApiControllerBase
     }
 
     [HttpGet("/v1/reviews/memory-set/{memorySetId}/progress")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetProgress(string memorySetId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -64,6 +70,7 @@ public sealed class PracticeAttemptsController : ApiControllerBase
     }
 
     [HttpGet("/v1/reviews/upcoming")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetUpcoming(
         [FromQuery] int days = 30,
         CancellationToken cancellationToken = default)

@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Features.Milestones.DTOs;
@@ -15,6 +16,7 @@ public sealed class MilestonesController : ApiControllerBase
     }
 
     [HttpGet("/milestones")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var data = await Sender.Send(new GetMilestonesQuery(GetUserIdOrThrow()), cancellationToken);
@@ -22,6 +24,7 @@ public sealed class MilestonesController : ApiControllerBase
     }
 
     [HttpGet("/milestones/{milestoneId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetById(string milestoneId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetMilestoneQuery(GetUserIdOrThrow(), milestoneId), cancellationToken);

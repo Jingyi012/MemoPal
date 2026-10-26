@@ -1,0 +1,5 @@
+﻿key,kind,primary,secondary,phonetic,extra,hint,position,language
+butterfly-egg,OrderedList,卵（egg）,蝴蝶妈妈把卵产在合适的地方，常见的是幼虫能吃的植物上。,,观察真实昆虫时不随意触碰；这是四个阶段的简要演示。,,1,zh-Hans
+butterfly-larva,OrderedList,幼虫（larva / caterpillar）,小幼虫从卵里出来，吃食物并逐渐长大，还会脱皮。,,观察真实昆虫时不随意触碰；这是四个阶段的简要演示。,,2,zh-Hans
+butterfly-pupa,OrderedList,蛹（pupa / chrysalis）,幼虫变成蛹，身体在蛹期发生变化；蛹不是蝴蝶的卵。,,观察真实昆虫时不随意触碰；这是四个阶段的简要演示。,,3,zh-Hans
+butterfly-adult,OrderedList,成蝶（adult butterfly）,成蝶从蛹里出来，翅膀展开后可以飞；成熟的雌蝶能产下下一代的卵。,,观察真实昆虫时不随意触碰；这是四个阶段的简要演示。,,4,zh-Hans

@@ -1,6 +1,6 @@
 import { apiClient } from '../lib/apiClient';
 import type { ApiResponse } from '../types/api';
-import type { EducationAssessmentDto, EducationCourseDto, EducationObjectiveDto, EducationQuestionRequest } from '../types/educationAuthoring';
+import type { EducationAssessmentDto, EducationCourseDto, EducationLearnerStudyItemDto, EducationObjectiveDto, EducationQuestionRequest, EducationStudyItemAuthorDto, EducationStudyItemImportResult, EducationStudyItemRequest } from '../types/educationAuthoring';
 
 export const educationAuthoringApi = {
   async listRecommendableMemorySets() {
@@ -21,6 +21,39 @@ export const educationAuthoringApi = {
       `/v1/education/courses/${courseId}/objectives/${objectiveId}/memory-recommendation`,
       { recommendedMemorySetId },
     )).data.data;
+  },
+  async setObjectiveStudyMetadata(courseId: string, objectiveId: string, input: { memoryContentType: string; languageCode: string | null; gradeCode: string | null; curriculumCode: string | null; subjectCode: string | null; contentOrigin: string; reviewStatus: string }) {
+    return (await apiClient.put<ApiResponse<EducationObjectiveDto>>(`/v1/education/courses/${courseId}/objectives/${objectiveId}/study-metadata`, input)).data.data;
+  },
+  async listStudyItems(courseId: string, objectiveId: string) {
+    return (await apiClient.get<ApiResponse<EducationStudyItemAuthorDto[]>>(`/v1/education/courses/${courseId}/objectives/${objectiveId}/study-items`)).data.data;
+  },
+  async createStudyItem(courseId: string, objectiveId: string, input: EducationStudyItemRequest) {
+    return (await apiClient.post<ApiResponse<EducationStudyItemAuthorDto>>(`/v1/education/courses/${courseId}/objectives/${objectiveId}/study-items`, input)).data.data;
+  },
+  async updateStudyItem(courseId: string, objectiveId: string, itemId: string, input: EducationStudyItemRequest) {
+    return (await apiClient.put<ApiResponse<EducationStudyItemAuthorDto>>(`/v1/education/courses/${courseId}/objectives/${objectiveId}/study-items/${itemId}`, input)).data.data;
+  },
+  async deleteStudyItem(courseId: string, objectiveId: string, itemId: string) {
+    return (await apiClient.delete<ApiResponse<boolean>>(`/v1/education/courses/${courseId}/objectives/${objectiveId}/study-items/${itemId}`)).data.data;
+  },
+  async reorderStudyItems(courseId: string, objectiveId: string, itemIds: string[]) {
+    return (await apiClient.put<ApiResponse<EducationStudyItemAuthorDto[]>>(`/v1/education/courses/${courseId}/objectives/${objectiveId}/study-items/reorder`, { itemIds })).data.data;
+  },
+  async publishStudyItem(courseId: string, objectiveId: string, itemId: string, notConfidentialExamContent: boolean) {
+    return (await apiClient.post<ApiResponse<EducationStudyItemAuthorDto>>(`/v1/education/courses/${courseId}/objectives/${objectiveId}/study-items/${itemId}/publish`, { notConfidentialExamContent })).data.data;
+  },
+  async retractStudyItem(courseId: string, objectiveId: string, itemId: string) {
+    return (await apiClient.post<ApiResponse<EducationStudyItemAuthorDto>>(`/v1/education/courses/${courseId}/objectives/${objectiveId}/study-items/${itemId}/retract`, {})).data.data;
+  },
+  async importJson(courseId: string, objectiveId: string, items: EducationStudyItemRequest[], dryRun: boolean) {
+    return (await apiClient.post<ApiResponse<EducationStudyItemImportResult>>(`/v1/education/courses/${courseId}/objectives/${objectiveId}/study-items/import/json`, items, { params: { dryRun } })).data.data;
+  },
+  async importCsv(courseId: string, objectiveId: string, content: Blob, dryRun: boolean) {
+    return (await apiClient.post<ApiResponse<EducationStudyItemImportResult>>(`/v1/education/courses/${courseId}/objectives/${objectiveId}/study-items/import/csv`, content, { params: { dryRun }, headers: { 'Content-Type': 'text/csv' } })).data.data;
+  },
+  async learnerStudyItems(objectiveId: string) {
+    return (await apiClient.get<ApiResponse<EducationLearnerStudyItemDto[]>>(`/v1/education/public/objectives/${objectiveId}/study-items`)).data.data;
   },
   async listAssessments(courseId: string) { return (await apiClient.get<ApiResponse<EducationAssessmentDto[]>>(`/v1/education/courses/${courseId}/assessments`)).data.data; },
   async createAssessment(courseId: string, title: string) { return (await apiClient.post<ApiResponse<EducationAssessmentDto>>(`/v1/education/courses/${courseId}/assessments`, { title })).data.data; },

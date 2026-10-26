@@ -26,26 +26,35 @@ public sealed class CreateMemorySetCommandHandler
         CreateMemorySetCommand request,
         CancellationToken cancellationToken)
     {
-        if (request.Request.Visibility != MemorySetVisibilities.Private)
-            throw new ValidationAppException("New memories must be private. Use the visibility endpoint after completing the memory.");
-        if (request.Request.MemoryFolderId is not null)
-        {
-            var folderExists = await _db.MemoryFolders.AnyAsync(
-                x => x.Id == request.Request.MemoryFolderId &&
-                    x.UserId == request.UserId && !x.IsDeleted,
-                cancellationToken);
-            if (!folderExists)
-                throw new NotFoundAppException("Memory folder not found.");
-        }
-        await MemorySetPalaceValidator.ValidateAsync(
-            _db,
-            request.UserId,
-            request.Request,
-            cancellationToken);
-        await MemorySetAiImageValidator.ValidateAsync(_db, request.UserId, request.Request, cancellationToken);
-        var entity = MemorySetAggregate.Create(request.UserId, request.Request);
+        await AccountRestrictions.RequirePrivateAsync(_db, request.UserId, request.Request.Visibility, cancellationToken);
+        var entity = await MemorySetCreation.BuildValidatedAsync(
+            _db, request.UserId, request.Request, cancellationToken);
         await _db.MemorySets.AddAsync(entity, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
         return ApiResponse<MemorySetDto>.Ok(MemorySetAggregate.ToDto(entity));
+    }
+}
+
+/// <summary>Shared memory creation validation path, also used by education derivation.</summary>
+public static class MemorySetCreation
+{
+    public static async Task<MemorySet> BuildValidatedAsync(
+        IAppDbContext db,
+        string userId,
+        MemorySetUpsertRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.Visibility != MemorySetVisibilities.Private)
+            throw new ValidationAppException("New memories must be private. Use the visibility endpoint after completing the memory.");
+        if (request.MemoryFolderId is not null)
+        {
+            var folderExists = await db.MemoryFolders.AnyAsync(
+                x => x.Id == request.MemoryFolderId && x.UserId == userId && !x.IsDeleted,
+                cancellationToken);
+            if (!folderExists) throw new NotFoundAppException("Memory folder not found.");
+        }
+        await MemorySetPalaceValidator.ValidateAsync(db, userId, request, cancellationToken);
+        await MemorySetAiImageValidator.ValidateAsync(db, userId, request, cancellationToken);
+        return MemorySetAggregate.Create(userId, request);
     }
 }

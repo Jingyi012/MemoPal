@@ -27,6 +27,7 @@ public sealed class UpdateMemorySetCommandHandler
         UpdateMemorySetCommand request,
         CancellationToken cancellationToken)
     {
+        await AccountRestrictions.RequirePrivateAsync(_db, request.UserId, request.Request.Visibility, cancellationToken);
         var entity = await _db.ForUser(request.UserId)
             .WithAggregate()
             .FirstOrDefaultAsync(x => x.Id == request.MemorySetId, cancellationToken)

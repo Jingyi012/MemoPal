@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Features.SystemSettings.Commands;
@@ -18,6 +19,7 @@ public sealed class AdminSystemSettingsController : ApiControllerBase
     }
 
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetPaged(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
@@ -29,6 +31,7 @@ public sealed class AdminSystemSettingsController : ApiControllerBase
     }
 
     [HttpGet("{key}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetByKey(
         [FromRoute] string key,
         CancellationToken cancellationToken = default)
@@ -39,6 +42,7 @@ public sealed class AdminSystemSettingsController : ApiControllerBase
     }
 
     [HttpPost]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Upsert(
         [FromBody] UpsertSystemSettingRequest request,
         CancellationToken cancellationToken)

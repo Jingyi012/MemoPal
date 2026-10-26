@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.XpEvents.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -13,6 +14,7 @@ public sealed class XpEventsController : ApiControllerBase
     }
 
     [HttpGet("/xp-events")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetAll([FromQuery] int? recentDays, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetXpEventsQuery(GetUserIdOrThrow(), recentDays), cancellationToken);

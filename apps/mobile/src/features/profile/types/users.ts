@@ -1,5 +1,6 @@
 export interface User {
   id: string;
+  accountMode?: 'Standard' | 'RestrictedLearner';
   displayName: string;
   avatarUrl?: string | null;
   avatarSource?: 'companion' | 'photo';

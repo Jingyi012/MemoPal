@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.Notifications.Commands;
 using MemoPal.Application.Features.Notifications.DTOs;
@@ -15,6 +16,7 @@ public sealed class NotificationsController : ApiControllerBase
     }
 
     [HttpGet("/notifications")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var data = await Sender.Send(new GetNotificationsQuery(GetUserIdOrThrow()), cancellationToken);
@@ -22,6 +24,7 @@ public sealed class NotificationsController : ApiControllerBase
     }
 
     [HttpGet("/notifications/{notificationId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetById(string notificationId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetNotificationQuery(GetUserIdOrThrow(), notificationId), cancellationToken);
@@ -29,6 +32,7 @@ public sealed class NotificationsController : ApiControllerBase
     }
 
     [HttpGet("/palaces/{palaceId}/notifications")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetByPalace(string palaceId, CancellationToken cancellationToken)
     {
         var data = await Sender.Send(new GetNotificationsByPalaceQuery(GetUserIdOrThrow(), palaceId), cancellationToken);
@@ -36,6 +40,7 @@ public sealed class NotificationsController : ApiControllerBase
     }
 
     [HttpPost("/notifications")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Create([FromBody] NotificationUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new CreateNotificationCommand(GetUserIdOrThrow(), request), cancellationToken);
@@ -43,6 +48,7 @@ public sealed class NotificationsController : ApiControllerBase
     }
 
     [HttpPut("/notifications/{notificationId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Update(string notificationId, [FromBody] NotificationUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new UpdateNotificationCommand(GetUserIdOrThrow(), notificationId, request), cancellationToken);
@@ -50,6 +56,7 @@ public sealed class NotificationsController : ApiControllerBase
     }
 
     [HttpDelete("/notifications/{notificationId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Delete(string notificationId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new DeleteNotificationCommand(GetUserIdOrThrow(), notificationId), cancellationToken);
@@ -57,6 +64,7 @@ public sealed class NotificationsController : ApiControllerBase
     }
 
     [HttpGet("/notifications/unread")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetUnread(CancellationToken cancellationToken)
     {
         var data = await Sender.Send(new GetUnreadNotificationsQuery(GetUserIdOrThrow()), cancellationToken);

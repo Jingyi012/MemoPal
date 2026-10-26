@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.Avatars.Commands;
 using MemoPal.Application.Features.Avatars.DTOs;
@@ -13,6 +14,7 @@ namespace MemoPal.Api.Controllers;
 public sealed class AdminAvatarsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetAvatars(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
@@ -24,6 +26,7 @@ public sealed class AdminAvatarsController(ISender sender) : ApiControllerBase(s
     }
 
     [HttpPost]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Create([FromBody] AvatarDefinitionUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new CreateAvatarDefinitionCommand(request), cancellationToken);
@@ -31,6 +34,7 @@ public sealed class AdminAvatarsController(ISender sender) : ApiControllerBase(s
     }
 
     [HttpPut("{avatarId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Update(string avatarId, [FromBody] AvatarDefinitionUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new UpdateAvatarDefinitionCommand(avatarId, request), cancellationToken);
@@ -38,6 +42,7 @@ public sealed class AdminAvatarsController(ISender sender) : ApiControllerBase(s
     }
 
     [HttpDelete("{avatarId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Delete(string avatarId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new DeleteAvatarDefinitionCommand(avatarId), cancellationToken);

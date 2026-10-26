@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
@@ -27,6 +28,7 @@ public sealed class BillingController : ApiControllerBase
 
     [Authorize]
     [HttpGet("entitlement")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetEntitlement(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetEntitlementQuery(GetUserIdOrThrow()), cancellationToken); return Ok(result);
@@ -34,6 +36,7 @@ public sealed class BillingController : ApiControllerBase
 
     [Authorize]
     [HttpPost("subscribe")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Subscribe([FromBody] SubscribeRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new SubscribeCommand(GetUserIdOrThrow(), request), cancellationToken); return Ok(result);
@@ -41,6 +44,7 @@ public sealed class BillingController : ApiControllerBase
 
     [Authorize]
     [HttpPost("cancel")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Cancel(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new CancelSubscriptionCommand(GetUserIdOrThrow()), cancellationToken); return Ok(result);
@@ -49,6 +53,7 @@ public sealed class BillingController : ApiControllerBase
     // For provider webhook relay / admin simulation. In production this should be protected by provider signature verification.
     [Authorize(Roles = UserRoles.Admin)]
     [HttpPost("webhooks/subscription")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> HandleWebhook(
         [FromBody] WebhookSubscriptionEventRequest request,
         CancellationToken cancellationToken)

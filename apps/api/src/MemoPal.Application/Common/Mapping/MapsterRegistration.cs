@@ -33,6 +33,7 @@ public sealed class MapsterRegistration : IRegister
             .Map(dest => dest.SelectedAvatarDecorationId, src => src.User.SelectedAvatarDecorationId)
             .Map(dest => dest.SelectedAvatarOutfitId, src => src.User.SelectedAvatarOutfitId)
             .Map(dest => dest.Email, src => src.User.Email)
+            .Map(dest => dest.AccountMode, src => src.User.AccountMode.ToString())
             .Map(dest => dest.TotalXp, src => src.User.TotalXp)
             .Map(dest => dest.Level, src => src.User.Level)
             .Map(dest => dest.IsPremium, src => src.User.IsPremium)

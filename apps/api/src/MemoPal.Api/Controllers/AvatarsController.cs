@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.Avatars.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -10,6 +11,7 @@ namespace MemoPal.Api.Controllers;
 public sealed class AvatarsController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> GetAvatars(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetAvatarsQuery(), cancellationToken);

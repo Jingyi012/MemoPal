@@ -37,7 +37,15 @@ public sealed class ExceptionHandlingMiddleware
         {
             context.Response.StatusCode = ex.StatusCode;
             context.Response.ContentType = "application/json";
-            var payload = new ApiResponse<object?> { Success = false, Message = ex.Message, Data = null };
+            var payload = new ApiResponse<object?>
+            {
+                Success = false,
+                Message = ex.Message,
+                Data = null,
+                Errors = ex is MemoPal.Application.Features.Education.MemoryBridge.EducationMemoryDerivationRuleException derivation
+                    ? [derivation.ReasonCode]
+                    : null
+            };
             await context.Response.WriteAsync(JsonSerializer.Serialize(payload, SerializerOptions));
         }
         catch (Exception ex)

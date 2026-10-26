@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.MemorySets.Commands;
 using MemoPal.Application.Features.MemorySets.DTOs;
@@ -19,6 +20,7 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 50,
@@ -33,6 +35,7 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpGet("{memorySetId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetById(string memorySetId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -42,6 +45,7 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpPost]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Create(
         [FromBody] MemorySetUpsertRequest request,
         CancellationToken cancellationToken)
@@ -53,6 +57,7 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpPut("{memorySetId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Update(
         string memorySetId,
         [FromBody] MemorySetUpsertRequest request,
@@ -65,6 +70,7 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpPost("{memorySetId}/duplicate")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Duplicate(string memorySetId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -74,6 +80,7 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpPatch("{memorySetId}/folder")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> MoveToFolder(
         string memorySetId,
         [FromBody] MoveMemorySetToFolderRequest request,
@@ -86,6 +93,7 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpPatch("{memorySetId}/visibility")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> UpdateVisibility(
         string memorySetId,
         [FromBody] UpdateMemorySetVisibilityRequest request,
@@ -99,6 +107,7 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpPatch("{memorySetId}/archive")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Archive(string memorySetId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -108,6 +117,7 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpPatch("{memorySetId}/restore")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Restore(string memorySetId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -117,6 +127,7 @@ public sealed class MemorySetsController : ApiControllerBase
     }
 
     [HttpDelete("{memorySetId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Delete(string memorySetId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(

@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
@@ -22,6 +23,7 @@ public sealed class MediaController : ApiControllerBase
     [HttpPost("images")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(10_000_000)]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> UploadImage(
         [FromForm] UploadImageRequest request,
         CancellationToken cancellationToken)

@@ -3,6 +3,7 @@ using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Education.Authoring.DTOs;
 using MemoPal.Domain.Entities;
+using MemoPal.Application.Features.Education.StudyItems;
 
 namespace MemoPal.Application.Features.Education.Authoring;
 
@@ -17,7 +18,7 @@ public sealed class CreateObjectiveCommandHandler(IAppDbContext db) : IRequestHa
         var objective = new EducationObjective
         {
             CourseId = command.CourseId,
-            Title = AuthoringValidation.Title(command.Request.Title, "Objective"),
+            Title = EducationStudyItemValidation.Clean(command.Request.Title, 200, "Objective title", true),
             RecommendedMemorySetId = memorySetId
         };
         db.EducationObjectives.Add(objective);

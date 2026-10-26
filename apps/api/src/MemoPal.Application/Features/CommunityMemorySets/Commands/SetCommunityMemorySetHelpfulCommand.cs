@@ -21,6 +21,7 @@ public sealed class SetCommunityMemorySetHelpfulCommandHandler(IAppDbContext db)
     {
         var memorySet = await db.MemorySets.AsNoTracking()
             .Where(GetCommunityMemorySetsQueryHandler.IsDiscoverable())
+            .Where(memory => db.Users.Any(author => author.Id == memory.UserId && !author.IsDeleted && author.AccountMode == MemoPal.Domain.Common.AccountMode.Standard))
             .FirstOrDefaultAsync(x => x.Id == request.MemorySetId, cancellationToken)
             ?? throw new NotFoundAppException("Public memory set not found.");
         if (memorySet.UserId == request.UserId)
@@ -51,7 +52,7 @@ public sealed class SetCommunityMemorySetHelpfulCommandHandler(IAppDbContext db)
 
         await db.SaveChangesAsync(cancellationToken);
         var helpfulCount = await db.CommunityMemorySetReactions.CountAsync(x =>
-            x.MemorySetId == memorySet.Id && !x.IsDeleted, cancellationToken);
+            x.MemorySetId == memorySet.Id && !x.IsDeleted && db.Users.Any(u => u.Id == x.UserId && !u.IsDeleted && u.AccountMode == MemoPal.Domain.Common.AccountMode.Standard), cancellationToken);
         return ApiResponse<CommunityMemorySetReactionDto>.Ok(
             new CommunityMemorySetReactionDto(memorySet.Id, request.IsHelpful, helpfulCount));
     }

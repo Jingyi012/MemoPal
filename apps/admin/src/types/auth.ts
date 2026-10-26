@@ -2,6 +2,7 @@ export type UserRole = 'User' | 'Admin';
 
 export interface AuthUser {
   id: string;
+  accountMode?: 'Standard' | 'RestrictedLearner';
   displayName: string;
   email: string;
   role?: UserRole;

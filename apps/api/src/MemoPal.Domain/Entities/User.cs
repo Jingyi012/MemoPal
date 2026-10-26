@@ -8,6 +8,7 @@ public sealed class User : AuditableBaseEntity
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string Role { get; set; } = UserRoles.User;
+    public AccountMode AccountMode { get; set; } = AccountMode.Standard;
     public string? AvatarUrl { get; set; }
     public string AvatarSource { get; set; } = AvatarSources.Companion;
     public string? SelectedAvatarId { get; set; }

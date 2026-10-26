@@ -22,6 +22,7 @@ public sealed class CopyCommunityMemorySetCommandHandler(IAppDbContext db)
         CancellationToken cancellationToken)
     {
         var source = await db.MemorySets.Where(GetCommunityMemorySetsQueryHandler.IsDiscoverable())
+            .Where(memory => db.Users.Any(author => author.Id == memory.UserId && !author.IsDeleted && author.AccountMode == MemoPal.Domain.Common.AccountMode.Standard))
             .WithAggregate()
             .FirstOrDefaultAsync(x => x.Id == request.MemorySetId, cancellationToken)
             ?? throw new NotFoundAppException("Public memory set not found.");

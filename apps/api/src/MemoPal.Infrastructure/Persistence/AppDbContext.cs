@@ -70,9 +70,11 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<PredefinedMemoryLessonCategory> PredefinedMemoryLessonCategories => Set<PredefinedMemoryLessonCategory>();
     public DbSet<EducationClassroom> EducationClassrooms => Set<EducationClassroom>();
     public DbSet<EducationMembership> EducationMemberships => Set<EducationMembership>();
+    public DbSet<EducationClassroomCourse> EducationClassroomCourses => Set<EducationClassroomCourse>();
     public DbSet<EducationGuardianLink> EducationGuardianLinks => Set<EducationGuardianLink>();
     public DbSet<EducationCourse> EducationCourses => Set<EducationCourse>();
     public DbSet<EducationObjective> EducationObjectives => Set<EducationObjective>();
+    public DbSet<EducationObjectiveStudyItem> EducationObjectiveStudyItems => Set<EducationObjectiveStudyItem>();
     public DbSet<EducationAssessment> EducationAssessments => Set<EducationAssessment>();
     public DbSet<EducationQuestion> EducationQuestions => Set<EducationQuestion>();
     public DbSet<EducationAssignment> EducationAssignments => Set<EducationAssignment>();
@@ -91,6 +93,7 @@ public class AppDbContext : DbContext, IAppDbContext
         var educationAuthoring = new EducationAuthoringConfiguration();
         modelBuilder.ApplyConfiguration<EducationCourse>(educationAuthoring);
         modelBuilder.ApplyConfiguration<EducationObjective>(educationAuthoring);
+        modelBuilder.ApplyConfiguration(new EducationObjectiveStudyItemConfiguration());
         modelBuilder.ApplyConfiguration<EducationAssessment>(educationAuthoring);
         modelBuilder.ApplyConfiguration<EducationQuestion>(educationAuthoring);
         var educationAssignments = new EducationAssignmentConfiguration();
@@ -190,6 +193,19 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.Status).HasMaxLength(16).IsRequired();
             b.HasIndex(x => new { x.ClassroomId, x.UserId }).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
             b.HasIndex(x => new { x.UserId, x.Status, x.ExpiresAt });
+        });
+        modelBuilder.Entity<EducationClassroomCourse>(b =>
+        {
+            b.ToTable("EducationClassroomCourses");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.ClassroomId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.CourseId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.AttachedByUserId).HasMaxLength(64).IsRequired();
+            b.Property(x => x.AttachedAtUtc).IsRequired();
+            b.HasIndex(x => new { x.ClassroomId, x.CourseId }).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
+            b.HasOne<EducationClassroom>().WithMany().HasForeignKey(x => x.ClassroomId).OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<EducationCourse>().WithMany().HasForeignKey(x => x.CourseId).OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.AttachedByUserId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<EducationGuardianLink>(b =>
         {

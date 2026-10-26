@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Features.Users.DTOs;
@@ -15,6 +16,7 @@ public sealed class UsersController : ApiControllerBase
     }
 
     [HttpGet("/users/stats")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetStats(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetUserStatsQuery(GetUserIdOrThrow()), cancellationToken); 
@@ -22,6 +24,7 @@ public sealed class UsersController : ApiControllerBase
     }
 
     [HttpGet("/users/level")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetLevel(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetUserLevelQuery(GetUserIdOrThrow()), cancellationToken); 
@@ -29,6 +32,7 @@ public sealed class UsersController : ApiControllerBase
     }
 
     [HttpGet("/users/feature-limits")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetFeatureLimits(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetFeatureLimitsQuery(GetUserIdOrThrow()), cancellationToken);

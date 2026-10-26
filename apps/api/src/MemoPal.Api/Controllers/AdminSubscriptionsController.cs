@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Features.Subscriptions.Commands;
@@ -18,6 +19,7 @@ public sealed class AdminSubscriptionsController : ApiControllerBase
     }
 
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetPaged(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
@@ -39,6 +41,7 @@ public sealed class AdminSubscriptionsController : ApiControllerBase
     }
 
     [HttpPatch("{subscriptionId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Update(
         [FromRoute] string subscriptionId,
         [FromBody] UpdateSubscriptionRequest request,

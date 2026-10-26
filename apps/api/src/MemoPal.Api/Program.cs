@@ -74,7 +74,7 @@ static bool IsDevelopmentOriginAllowed(string origin)
 }
 
 builder.Services
-    .AddControllers()
+    .AddControllers(options => options.Filters.Add<RestrictedLearnerFilter>())
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;

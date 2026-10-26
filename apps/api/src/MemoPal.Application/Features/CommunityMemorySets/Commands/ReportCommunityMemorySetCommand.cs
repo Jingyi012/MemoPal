@@ -29,6 +29,7 @@ public sealed class ReportCommunityMemorySetCommandHandler(IAppDbContext db)
         if (details?.Length > 500) throw new ValidationAppException("Report details cannot exceed 500 characters.");
 
         var source = await db.MemorySets.AsNoTracking().Where(GetCommunityMemorySetsQueryHandler.IsDiscoverable())
+            .Where(memory => db.Users.Any(author => author.Id == memory.UserId && !author.IsDeleted && author.AccountMode == MemoPal.Domain.Common.AccountMode.Standard))
             .FirstOrDefaultAsync(x => x.Id == request.MemorySetId, cancellationToken)
             ?? throw new NotFoundAppException("Public memory set not found.");
         if (source.UserId == request.UserId) throw new ValidationAppException("You cannot report your own memory.");

@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Common;
 using MemoPal.Application.Common.Interfaces;
@@ -22,6 +23,7 @@ public sealed class AuthController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpGet("login-methods")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> GetLoginMethods(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetLoginMethodsQuery(), cancellationToken);
@@ -30,6 +32,7 @@ public sealed class AuthController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpPost("register")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -40,6 +43,7 @@ public sealed class AuthController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpPost("login")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -50,6 +54,7 @@ public sealed class AuthController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpPost("google")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request, CancellationToken cancellationToken)
     {
         var token = FirstNonEmpty(
@@ -65,6 +70,7 @@ public sealed class AuthController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpPost("facebook")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> FacebookLogin([FromBody] FacebookLoginRequest request, CancellationToken cancellationToken)
     {
         var token = string.IsNullOrWhiteSpace(request.FacebookAccessToken) ? request.AccessToken : request.FacebookAccessToken;
@@ -76,6 +82,7 @@ public sealed class AuthController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpPost("refresh")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -86,6 +93,7 @@ public sealed class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpPost("logout")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> Logout([FromBody] LogoutRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -96,6 +104,7 @@ public sealed class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpGet("me")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> GetMe(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetMeQuery(GetUserIdOrThrow()), cancellationToken);
@@ -104,6 +113,7 @@ public sealed class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpPatch("profile")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -114,6 +124,7 @@ public sealed class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpPatch("avatar-selection")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> SelectAvatar([FromBody] SelectAvatarRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -124,6 +135,7 @@ public sealed class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpPatch("appearance")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> SaveAppearance([FromBody] SaveAppearanceRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -141,6 +153,7 @@ public sealed class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpPost("onboarding/start")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> StartOnboarding(
         [FromBody] StartOnboardingRequest request,
         CancellationToken cancellationToken)
@@ -153,6 +166,7 @@ public sealed class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpPost("onboarding/memory")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> LinkOnboardingMemory(
         [FromBody] CompleteOnboardingRequest request,
         CancellationToken cancellationToken)
@@ -165,6 +179,7 @@ public sealed class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpPost("onboarding/complete")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> CompleteOnboarding(
         [FromBody] CompleteOnboardingRequest request,
         CancellationToken cancellationToken)
@@ -177,6 +192,7 @@ public sealed class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpPost("onboarding/skip")]
+    [RestrictedLearner(RestrictedLearnerAccess.Allow)]
     public async Task<IActionResult> SkipOnboarding(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new SkipOnboardingCommand(GetUserIdOrThrow()), cancellationToken);
@@ -187,6 +203,7 @@ public sealed class AuthController : ApiControllerBase
     [HttpPost("avatar-upload")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(10_000_000)]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> UploadAvatar([FromForm] UploadAvatarRequest request, CancellationToken cancellationToken)
     {
         var file = request.File;

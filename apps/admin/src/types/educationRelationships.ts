@@ -41,3 +41,9 @@ export interface InviteClassroomMemberRequest {
 export interface CreateGuardianLinkRequest {
   studentUserId: string;
 }
+
+export interface EducationClassroomCourseSummaryDto {
+  classroomId: string; courseId: string; title: string; attachedAtUtc: string;
+  objectives: { id: string; title: string; memoryContentType: string; languageCode: string | null; publishedStudyItemCount: number }[];
+}
+export interface EducationCourseClassroomDto { classroomId: string; classroomName: string; attachedAtUtc: string }

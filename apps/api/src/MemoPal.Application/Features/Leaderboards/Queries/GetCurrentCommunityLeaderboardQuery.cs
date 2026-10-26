@@ -45,7 +45,7 @@ public sealed class GetCurrentCommunityLeaderboardQueryHandler(IAppDbContext db)
             ?? throw new NotFoundAppException("User not found.");
 
         var optedInUsers = await db.Users.AsNoTracking()
-            .Where(x => !x.IsDeleted && x.CommunityLeaderboardOptIn &&
+            .Where(x => !x.IsDeleted && x.AccountMode == MemoPal.Domain.Common.AccountMode.Standard && x.CommunityLeaderboardOptIn &&
                         x.CommunityLeaderboardJoinedAtUtc != null &&
                         x.CommunityLeaderboardJoinedAtUtc < weekEnd)
             .Select(x => new { x.Id, x.CommunityLeaderboardJoinedAtUtc })

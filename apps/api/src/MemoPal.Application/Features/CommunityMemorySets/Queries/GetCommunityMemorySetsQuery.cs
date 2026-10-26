@@ -27,7 +27,8 @@ public sealed class GetCommunityMemorySetsQueryHandler(IAppDbContext db)
     {
         var pageNumber = Math.Max(1, request.PageNumber);
         var pageSize = Math.Clamp(request.PageSize, 1, 50);
-        var query = db.MemorySets.AsNoTracking().Where(IsDiscoverable());
+        var query = db.MemorySets.AsNoTracking().Where(IsDiscoverable())
+            .Where(memory => db.Users.Any(author => author.Id == memory.UserId && !author.IsDeleted && author.AccountMode == MemoPal.Domain.Common.AccountMode.Standard));
         if (request.BookmarkedOnly)
             query = query.Where(x => db.CommunityMemorySetBookmarks.Any(bookmark =>
                 bookmark.MemorySetId == x.Id && bookmark.UserId == request.UserId && !bookmark.IsDeleted));
@@ -49,7 +50,7 @@ public sealed class GetCommunityMemorySetsQueryHandler(IAppDbContext db)
             ? query.OrderByDescending(x => x.FeaturedAt != null).ThenByDescending(x => x.FeaturedAt)
                 .ThenByDescending(x => x.PublishedAt).ThenBy(x => x.Id)
             : string.Equals(request.Sort, "popular", StringComparison.OrdinalIgnoreCase)
-            ? query.OrderByDescending(x => x.Copies.Count(copy => !copy.IsDeleted))
+            ? query.OrderByDescending(x => x.Copies.Count(copy => !copy.IsDeleted && db.Users.Any(u => u.Id == copy.UserId && !u.IsDeleted && u.AccountMode == MemoPal.Domain.Common.AccountMode.Standard)))
                 .ThenByDescending(x => x.PublishedAt)
                 .ThenBy(x => x.Id)
             : query.OrderByDescending(x => x.PublishedAt).ThenBy(x => x.Id);
@@ -76,16 +77,16 @@ public sealed class GetCommunityMemorySetsQueryHandler(IAppDbContext db)
         var authors = await db.Users.AsNoTracking().Where(x => authorIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id, cancellationToken);
         var copies = await db.MemorySets.AsNoTracking()
-            .Where(x => x.CopiedFromMemorySetId != null && ids.Contains(x.CopiedFromMemorySetId) && !x.IsDeleted)
+            .Where(x => db.Users.Any(u => u.Id == x.UserId && !u.IsDeleted && u.AccountMode == MemoPal.Domain.Common.AccountMode.Standard) && x.CopiedFromMemorySetId != null && ids.Contains(x.CopiedFromMemorySetId) && !x.IsDeleted)
             .GroupBy(x => x.CopiedFromMemorySetId!)
             .Select(x => new { Id = x.Key, Count = x.Count() })
             .ToDictionaryAsync(x => x.Id, x => x.Count, cancellationToken);
         var existingCopies = await db.MemorySets.AsNoTracking()
-            .Where(x => x.UserId == userId && x.CopiedFromMemorySetId != null &&
+            .Where(x => x.UserId == userId && db.Users.Any(u => u.Id == x.UserId && !u.IsDeleted && u.AccountMode == MemoPal.Domain.Common.AccountMode.Standard) && x.CopiedFromMemorySetId != null &&
                         ids.Contains(x.CopiedFromMemorySetId) && !x.IsDeleted)
             .ToDictionaryAsync(x => x.CopiedFromMemorySetId!, x => x.Id, cancellationToken);
         var helpfulReactions = await db.CommunityMemorySetReactions.AsNoTracking()
-            .Where(x => !x.IsDeleted && ids.Contains(x.MemorySetId))
+            .Where(x => !x.IsDeleted && ids.Contains(x.MemorySetId) && db.Users.Any(u => u.Id == x.UserId && !u.IsDeleted && u.AccountMode == MemoPal.Domain.Common.AccountMode.Standard))
             .GroupBy(x => x.MemorySetId)
             .Select(group => new
             {

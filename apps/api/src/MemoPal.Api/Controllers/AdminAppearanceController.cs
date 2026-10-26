@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.Appearance.Commands;
 using MemoPal.Application.Features.Appearance.DTOs;
@@ -13,6 +14,7 @@ namespace MemoPal.Api.Controllers;
 public sealed class AdminAppearanceController(ISender sender) : ApiControllerBase(sender)
 {
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetItems(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
@@ -24,6 +26,7 @@ public sealed class AdminAppearanceController(ISender sender) : ApiControllerBas
     }
 
     [HttpPost]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Create([FromBody] AppearanceDefinitionUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new CreateAppearanceDefinitionCommand(request), cancellationToken);
@@ -31,6 +34,7 @@ public sealed class AdminAppearanceController(ISender sender) : ApiControllerBas
     }
 
     [HttpPut("{appearanceId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Update(string appearanceId, [FromBody] AppearanceDefinitionUpsertRequest request, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new UpdateAppearanceDefinitionCommand(appearanceId, request), cancellationToken);
@@ -38,6 +42,7 @@ public sealed class AdminAppearanceController(ISender sender) : ApiControllerBas
     }
 
     [HttpDelete("{appearanceId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> Delete(string appearanceId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new DeleteAppearanceDefinitionCommand(appearanceId), cancellationToken);

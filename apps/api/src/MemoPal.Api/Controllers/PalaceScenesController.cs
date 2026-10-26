@@ -1,3 +1,4 @@
+using MemoPal.Api.Security;
 using MediatR;
 using MemoPal.Application.Features.PalaceScenes.Queries;
 using MemoPal.Application.Features.PalaceScenes.Commands;
@@ -14,6 +15,7 @@ public sealed class PalaceScenesController : ApiControllerBase
     public PalaceScenesController(ISender sender) : base(sender) { }
 
     [HttpGet]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var result = await Sender.Send(new GetPalaceScenesQuery(GetUserIdOrThrow()), cancellationToken);
@@ -21,6 +23,7 @@ public sealed class PalaceScenesController : ApiControllerBase
     }
 
     [HttpGet("{palaceSceneId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetById(string palaceSceneId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(
@@ -30,6 +33,7 @@ public sealed class PalaceScenesController : ApiControllerBase
     }
 
     [HttpPost]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> CreateCustom(
         [FromBody] PalaceSceneUpsertRequest request,
         CancellationToken cancellationToken)
@@ -41,6 +45,7 @@ public sealed class PalaceScenesController : ApiControllerBase
     }
 
     [HttpPut("{palaceSceneId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> UpdateCustom(
         string palaceSceneId,
         [FromBody] PalaceSceneUpsertRequest request,
@@ -53,6 +58,7 @@ public sealed class PalaceScenesController : ApiControllerBase
     }
 
     [HttpDelete("{palaceSceneId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> DeleteCustom(string palaceSceneId, CancellationToken cancellationToken)
     {
         var result = await Sender.Send(

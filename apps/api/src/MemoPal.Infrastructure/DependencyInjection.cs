@@ -2,9 +2,11 @@ using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Infrastructure.Auth;
 using MemoPal.Infrastructure.AI;
+using MemoPal.Infrastructure.Education;
 using MemoPal.Infrastructure.Persistence;
 using MemoPal.Infrastructure.Security;
 using MemoPal.Infrastructure.Storage;
+using MemoPal.Application.Features.Education.MemoryBridge;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,6 +40,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+        services.AddSingleton<IEducationMemoryBridgeLock, StripedEducationMemoryBridgeLock>();
         services.AddOptions<AiCreditOptions>()
             .Validate(x => x.TextCost is > 0 and <= 10000 && x.ImageCost is > 0 and <= 10000, "AI credit costs must be between 1 and 10000.")
             .ValidateOnStart();
