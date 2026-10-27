@@ -3,6 +3,7 @@ import {
   DashboardOutlined,
   EyeOutlined,
   LogoutOutlined,
+  ReadOutlined,
   ShareAltOutlined,
   SettingOutlined,
   TeamOutlined,
@@ -35,6 +36,8 @@ export default function Layout() {
           <TeamOutlined />
         ) : item.icon === "content" ? (
           <BookOutlined />
+        ) : item.icon === "learning" ? (
+          <ReadOutlined />
         ) : item.icon === "referral" ? (
           <ShareAltOutlined />
         ) : item.icon === "moderation" ? (

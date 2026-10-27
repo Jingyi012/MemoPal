@@ -36,6 +36,12 @@ export const educationRelationshipsApi = {
   async detachCourse(classroomId: string, courseId: string) {
     return (await apiClient.delete<ApiResponse<boolean>>(`/v1/education/classrooms/${classroomId}/courses/${courseId}`)).data.data;
   },
+  async setGuidedPractice(classroomId: string, courseId: string, enabled: boolean, notConfidentialExamContent?: boolean) {
+    return (await apiClient.put<ApiResponse<EducationClassroomCourseSummaryDto>>(
+      `/v1/education/classrooms/${classroomId}/courses/${courseId}/guided-practice`,
+      { enabled, ...(notConfidentialExamContent ? { notConfidentialExamContent: true } : {}) },
+    )).data.data;
+  },
   async listOwnMemberships() {
     const response = await apiClient.get<ApiResponse<EducationMembershipDto[]>>('/v1/education/memberships');
     return response.data.data;

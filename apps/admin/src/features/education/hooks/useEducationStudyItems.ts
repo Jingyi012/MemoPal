@@ -48,7 +48,11 @@ export function useClassroomCourses(userId: string, classroomId: string, enabled
   const onError = (error: unknown) => message.error(extractApiErrorMessage(error, t('requestError')));
   const attach = useMutation({ mutationFn: (courseId: string) => educationRelationshipsApi.attachCourse(classroomId, courseId), onSuccess: async () => { await refresh(); message.success(t('linked')); }, onError, meta: { suppressGlobalErrorToast: true }, retry: false });
   const detach = useMutation({ mutationFn: (courseId: string) => educationRelationshipsApi.detachCourse(classroomId, courseId), onSuccess: async () => { await refresh(); message.success(t('unlinked')); }, onError, meta: { suppressGlobalErrorToast: true }, retry: false });
-  return { courses, attach, detach };
+  const setGuidedPractice = useMutation({
+    mutationFn: ({ courseId, enabled }: { courseId: string; enabled: boolean }) => educationRelationshipsApi.setGuidedPractice(classroomId, courseId, enabled, enabled),
+    onSuccess: refresh, onError, meta: { suppressGlobalErrorToast: true }, retry: false,
+  });
+  return { courses, attach, detach, setGuidedPractice };
 }
 
 export function useCourseClassrooms(userId: string, courseId: string, enabled: boolean) {

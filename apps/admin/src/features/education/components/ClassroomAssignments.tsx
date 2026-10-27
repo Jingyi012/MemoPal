@@ -47,7 +47,7 @@ export function ClassroomAssignments({ userId, classroomId, canManage }: { userI
   };
 
   return <Card title="Assignments" style={{ marginTop: 20 }} extra={canManage && <Button type="primary" onClick={() => setOpen(true)}>Assign assessment</Button>}>
-    <Table rowKey="id" loading={assignments.assignments.isPending} dataSource={assignments.assignments.data ?? []} pagination={{ pageSize: 5 }} locale={{ emptyText: 'No classroom assignments yet.' }} expandable={{
+    <Table rowKey="id" loading={assignments.assignments.isPending} dataSource={assignments.assignments.data ?? []} scroll={{ x: 900 }} pagination={{ pageSize: 5 }} locale={{ emptyText: 'No classroom assignments yet.' }} expandable={{
       expandedRowKeys: expandedAssignmentId ? [expandedAssignmentId] : [],
       showExpandColumn: false,
       expandedRowRender: row => <EducationAssignmentGradebook userId={userId} assignment={row} enabled={expandedAssignmentId === row.id} />,

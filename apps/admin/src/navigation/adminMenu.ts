@@ -1,7 +1,7 @@
 import { adminPaths } from "./adminPaths";
 
 export type AdminMenuIcon =
-  "dashboard" | "users" | "content" | "config" | "referral" | "moderation" | "generic";
+  "dashboard" | "users" | "content" | "learning" | "config" | "referral" | "moderation" | "generic";
 
 export interface AdminMenuItem {
   path: string;
@@ -10,11 +10,25 @@ export interface AdminMenuItem {
   routes?: AdminMenuItem[];
 }
 
+export const learningStudioMenuItem: AdminMenuItem = {
+  path: adminPaths.education,
+  name: "Learning Studio",
+  icon: "learning",
+  routes: [
+    { path: adminPaths.educationHome, name: "Overview" },
+    { path: adminPaths.educationClassrooms, name: "Classrooms" },
+    { path: adminPaths.educationCourses, name: "Courses" },
+    { path: `${adminPaths.education}/guardians`, name: "Guardian relationships" },
+    { path: adminPaths.educationFamilyAssignments, name: "Family practice" },
+  ],
+};
+
 export const adminMenuItems: AdminMenuItem[] = [
   { path: adminPaths.dashboard, name: "Overview", icon: "dashboard" },
   { path: adminPaths.users, name: "Users", icon: "users" },
   { path: adminPaths.communityMemorySets, name: "Community Memory Sets", icon: "moderation" },
   { path: adminPaths.educationCourseReports, name: "Public Learning Reports", icon: "moderation" },
+  learningStudioMenuItem,
   {
     path: adminPaths.contentRoot,
     name: "Content Studio",

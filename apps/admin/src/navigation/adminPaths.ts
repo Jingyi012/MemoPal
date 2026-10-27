@@ -3,10 +3,13 @@ export const adminPaths = {
   login: '/login',
   forbidden: '/forbidden',
   education: '/education',
+  educationHome: '/education/home',
   educationFamilyAssignments: '/education/family-practice',
+  educationClassrooms: '/education/classrooms',
   educationClassroom: (classroomId: string) => `/education/classrooms/${classroomId}`,
   educationCourses: '/education/courses',
   educationCourse: (courseId: string) => `/education/courses/${courseId}`,
+  educationObjective: (courseId: string, objectiveId: string) => `/education/courses/${courseId}/objectives/${objectiveId}`,
   educationAssessment: (assessmentId: string) => `/education/assessments/${assessmentId}`,
 
   dashboard: '/admin/dashboard',

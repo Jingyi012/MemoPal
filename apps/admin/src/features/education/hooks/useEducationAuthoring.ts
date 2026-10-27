@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { educationAuthoringApi } from '../../../api/educationAuthoringApi';
 import { extractApiErrorMessage } from '../../../lib/errorMessage';
 import type { EducationQuestionRequest } from '../../../types/educationAuthoring';
+import { useEducationText } from '../i18n/useEducationText';
 
 export const educationAuthoringKeys = {
   courses: (userId: string) => ['education', userId, 'courses'] as const,
@@ -14,9 +15,15 @@ export const educationAuthoringKeys = {
 export function useEducationCourses(userId: string) {
   const client = useQueryClient();
   const { message } = App.useApp();
+  const { t } = useEducationText();
   const courses = useQuery({ queryKey: educationAuthoringKeys.courses(userId), queryFn: educationAuthoringApi.listCourses, enabled: !!userId });
   const onError = (error: unknown) => message.error(extractApiErrorMessage(error, 'Could not complete the request. Please try again.'));
   const createCourse = useMutation({ mutationFn: educationAuthoringApi.createCourse, onSuccess: async () => { await client.invalidateQueries({ queryKey: educationAuthoringKeys.courses(userId) }); message.success('Course created.'); }, onError, meta: { suppressGlobalErrorToast: true }, retry: false });
+  const updateCourseTitle = useMutation({
+    mutationFn: (input: { courseId: string; title: string }) => educationAuthoringApi.updateCourseTitle(input.courseId, input.title),
+    onSuccess: async () => { await client.invalidateQueries({ queryKey: educationAuthoringKeys.courses(userId) }); message.success(t('titleUpdated')); },
+    onError, meta: { suppressGlobalErrorToast: true }, retry: false,
+  });
   const setCourseVisibility = useMutation({
     mutationFn: (input: { courseId: string; isPublic: boolean }) => educationAuthoringApi.setCourseVisibility(input.courseId, input.isPublic),
     onSuccess: async (_course, input) => {
@@ -27,7 +34,7 @@ export function useEducationCourses(userId: string) {
     meta: { suppressGlobalErrorToast: true },
     retry: false,
   });
-  return { courses, createCourse, setCourseVisibility };
+  return { courses, createCourse, updateCourseTitle, setCourseVisibility };
 }
 
 export function useEducationCourse(userId: string, courseId: string) {
@@ -49,7 +56,24 @@ export function useEducationCourse(userId: string, courseId: string) {
     onError, meta: { suppressGlobalErrorToast: true }, retry: false,
   });
   const createAssessment = useMutation({ mutationFn: (title: string) => educationAuthoringApi.createAssessment(courseId, title), onSuccess: async () => { await refresh(); message.success('Assessment created.'); }, onError, meta: { suppressGlobalErrorToast: true }, retry: false });
-  return { objectives, assessments, memorySets, createObjective, setMemoryRecommendation, createAssessment };
+  const createRevisionDraft = useMutation({
+    mutationFn: ({ assessmentId, expectedVersion }: { assessmentId: string; expectedVersion: number }) =>
+      educationAuthoringApi.createAssessmentRevisionDraft(assessmentId, expectedVersion),
+    onSuccess: async () => { await refresh(); message.success('Revision draft created.'); },
+    onError, meta: { suppressGlobalErrorToast: true }, retry: false,
+  });
+  const setAssessmentPublicPractice = useMutation({
+    mutationFn: ({ assessmentId, isPublicPractice, notConfidentialExamContent }: {
+      assessmentId: string; isPublicPractice: boolean; notConfidentialExamContent: boolean;
+    }) => educationAuthoringApi.setAssessmentPublicPractice(assessmentId, isPublicPractice, notConfidentialExamContent),
+    onSuccess: async (_assessment, input) => {
+      await refresh();
+      message.success(input.isPublicPractice ? 'Assessment is visible for self-practice.' : 'Assessment was removed from self-practice.');
+    },
+    onError, meta: { suppressGlobalErrorToast: true }, retry: false,
+  });
+  return { objectives, assessments, memorySets, createObjective, setMemoryRecommendation, createAssessment,
+    createRevisionDraft, setAssessmentPublicPractice };
 }
 
 export function useEducationAssessment(userId: string, assessmentId: string) {

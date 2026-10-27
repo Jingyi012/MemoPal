@@ -10,13 +10,14 @@ interface PortalPageContainerProps {
   eyebrow?: string;
   actions?: ReactNode;
   navigation?: ReactNode;
+  className?: string;
 }
 
-export function PortalPageContainer({ children, title, description, eyebrow, actions, navigation }: PortalPageContainerProps) {
+export function PortalPageContainer({ children, title, description, eyebrow, actions, navigation, className }: PortalPageContainerProps) {
   return (
     <PageContainer
       ghost
-      className={title ? 'portal-workspace' : undefined}
+      className={[title ? 'portal-workspace' : '', className ?? ''].filter(Boolean).join(' ') || undefined}
       contentWidth='Fluid'
       header={{ title: undefined, breadcrumb: undefined }}
       style={{ width: '100%', maxWidth: '100%', margin: 0 }}

@@ -11,6 +11,9 @@ export const educationAuthoringApi = {
   },
   async listCourses() { return (await apiClient.get<ApiResponse<EducationCourseDto[]>>('/v1/education/courses')).data.data; },
   async createCourse(title: string) { return (await apiClient.post<ApiResponse<EducationCourseDto>>('/v1/education/courses', { title })).data.data; },
+  async updateCourseTitle(courseId: string, title: string) {
+    return (await apiClient.put<ApiResponse<EducationCourseDto>>(`/v1/education/courses/${courseId}/title`, { title })).data.data;
+  },
   async setCourseVisibility(courseId: string, isPublic: boolean) {
     return (await apiClient.put<ApiResponse<EducationCourseDto>>(`/v1/education/courses/${courseId}/visibility`, { isPublic })).data.data;
   },
@@ -65,5 +68,13 @@ export const educationAuthoringApi = {
   },
   async publishAssessment(id: string, expectedVersion: number, isPublicPractice: boolean) {
     return (await apiClient.post<ApiResponse<EducationAssessmentDto>>(`/v1/education/assessments/${id}/publish`, { expectedVersion, isPublicPractice })).data.data;
+  },
+  async createAssessmentRevisionDraft(id: string, expectedVersion: number) {
+    return (await apiClient.post<ApiResponse<EducationAssessmentDto>>(`/v1/education/assessments/${id}/revision-draft`, { expectedVersion })).data.data;
+  },
+  async setAssessmentPublicPractice(id: string, isPublicPractice: boolean, notConfidentialExamContent: boolean) {
+    return (await apiClient.put<ApiResponse<EducationAssessmentDto>>(`/v1/education/assessments/${id}/public-practice`, {
+      isPublicPractice, notConfidentialExamContent,
+    })).data.data;
   },
 };

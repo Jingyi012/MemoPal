@@ -30,9 +30,11 @@ body {
 
 .ant-pro-layout .ant-pro-grid-content,
 .ant-pro-page-container .ant-pro-grid-content,
-.ant-pro-page-container-children-container {
+.ant-pro-page-container-children-container,
+.ant-pro-layout .ant-pro-layout-content {
   width: 100%;
   max-width: 100% !important;
+  min-width: 0;
 }
 
 .ant-pro-page-container-children-container {

@@ -29,11 +29,13 @@ const CommunityMemorySetsPage = lazy(() => import('./features/community-memory-s
 const EducationCourseReportsPage = lazy(() => import('./features/education/pages/EducationCourseReportsPage'));
 const EducationLayout = lazy(() => import('./features/education/pages/EducationLayout'));
 const EducationHomePage = lazy(() => import('./features/education/pages/EducationHomePage'));
+const EducationClassroomsPage = lazy(() => import('./features/education/pages/EducationClassroomsPage'));
 const EducationFamilyAssignmentsPage = lazy(() => import('./features/education/pages/EducationFamilyAssignmentsPage'));
 const ClassroomDetailPage = lazy(() => import('./features/education/pages/ClassroomDetailPage'));
 const GuardianRelationshipsPage = lazy(() => import('./features/education/pages/GuardianRelationshipsPage'));
 const EducationCoursesPage = lazy(() => import('./features/education/pages/EducationCoursesPage'));
 const EducationCoursePage = lazy(() => import('./features/education/pages/EducationCoursePage'));
+const EducationObjectivePage = lazy(() => import('./features/education/pages/EducationObjectivePage'));
 const EducationAssessmentPage = lazy(() => import('./features/education/pages/EducationAssessmentPage'));
 
 function RouteFallback() {
@@ -50,9 +52,12 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/education" element={<EducationLayout />}>
           <Route index element={<EducationHomePage />} />
+          <Route path="home" element={<Navigate to={adminPaths.education} replace />} />
+          <Route path="classrooms" element={<EducationClassroomsPage />} />
           <Route path="family-practice" element={<EducationFamilyAssignmentsPage />} />
           <Route path="guardians" element={<GuardianRelationshipsPage />} />
           <Route path="courses" element={<EducationCoursesPage />} />
+          <Route path="courses/:courseId/objectives/:objectiveId" element={<EducationObjectivePage />} />
           <Route path="courses/:courseId" element={<EducationCoursePage />} />
           <Route path="assessments/:assessmentId" element={<EducationAssessmentPage />} />
           <Route path="classrooms/:classroomId" element={<ClassroomDetailPage />} />

@@ -44,6 +44,7 @@ export interface CreateGuardianLinkRequest {
 
 export interface EducationClassroomCourseSummaryDto {
   classroomId: string; courseId: string; title: string; attachedAtUtc: string;
+  guidedPracticeEnabled: boolean; canManageGuidedPractice: boolean;
   objectives: { id: string; title: string; memoryContentType: string; languageCode: string | null; publishedStudyItemCount: number }[];
 }
 export interface EducationCourseClassroomDto { classroomId: string; classroomName: string; attachedAtUtc: string }

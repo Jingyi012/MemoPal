@@ -6,11 +6,13 @@ import { PortalPageContainer } from '../../../components/PortalPageContainer';
 import { QueryState } from '../components/QueryState';
 import { EducationQuestionEditor, type AssessmentFormValue } from '../components/EducationQuestionEditor';
 import { useEducationAssessment, useEducationCourse } from '../hooks/useEducationAuthoring';
+import { useEducationText } from '../i18n/useEducationText';
 
 export default function EducationAssessmentPage() {
   const { assessmentId = '' } = useParams();
   const { user } = useAuth();
   const { modal } = App.useApp();
+  const { t } = useEducationText();
   const [form] = Form.useForm<AssessmentFormValue>();
   const [publicPractice, setPublicPractice] = useState(false);
   const data = useEducationAssessment(user?.id ?? '', assessmentId);
@@ -38,6 +40,7 @@ export default function EducationAssessmentPage() {
         Include objective questions in public self-practice
       </Checkbox>
       {publicPractice && <Alert type="warning" showIcon message="Public questions are not confidential and must not be used for secure exams." />}
+      <Alert type="info" showIcon message={t('guidedPracticeAssessmentHelp')} />
     </Space>,
     okText: 'Publish',
     onOk: () => data.publish.mutateAsync({ version: assessment.version, isPublicPractice: publicPractice }),

@@ -56,6 +56,7 @@ export function ClassroomObjectiveProgress({ userId, classroomId, enabled }: {
       <Table<typeof rows[number]>
         rowKey={row => `${row.studentUserId}-${row.objectiveId}`}
         dataSource={rows}
+        scroll={{ x: 1160 }}
         pagination={{ pageSize: 10 }}
         locale={{ emptyText: 'No students have assigned learning objectives yet.' }}
         expandable={{

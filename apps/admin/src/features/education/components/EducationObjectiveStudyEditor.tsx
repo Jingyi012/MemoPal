@@ -22,13 +22,6 @@ export function educationMemoryTypeLabel(type: string | undefined): Parameters<R
   return type && type in typeText ? typeText[type as EducationMemoryContentType].label : 'typeNone';
 }
 
-function LanguageSwitch() {
-  const { language, setLanguage, t } = useEducationText();
-  return <Select aria-label={t('language')} size="small" value={language} onChange={setLanguage} style={{ width: 130 }} options={[
-    { value: 'zh-Hans', label: t('zhHans') }, { value: 'en', label: t('english') },
-  ]} />;
-}
-
 function messageForImportError(code: string, fallback: string, t: ReturnType<typeof useEducationText>['t']) {
   return importReasonTranslations[code] ? t(importReasonTranslations[code]) : fallback;
 }
@@ -141,24 +134,24 @@ export function StudyItemEditor({ courseId, objective, isPublic }: { courseId: s
     } catch { message.error(t('requestError')); } finally { setCommitting(false); }
   };
 
-  const headerActions = <Space wrap>
+  const headerActions = <Space wrap className="education-study-actions">
     <Button aria-label={t('import')} icon={<ImportOutlined />} onClick={() => { setImportOpen(true); setPreflight(null); }}>{t('import')}</Button>
     <Button aria-label={t('previewLearner')} icon={<EyeOutlined />} onClick={() => setPreviewOpen(true)}>{t('previewLearner')}</Button>
     <Button aria-label={t('addItem')} icon={<PlusOutlined />} type="primary" onClick={beginCreate}>{t('addItem')}</Button>
   </Space>;
 
-  return <Card title={`${t('studyContent')} · ${t(typeHint.label)}`} extra={<Space><LanguageSwitch />{headerActions}</Space>}>
+  return <Card className="education-study-editor" title={`${t('studyContent')} · ${t(typeHint.label)}`} extra={<div className="education-study-card-actions">{headerActions}</div>}>
     <Typography.Paragraph type="secondary">{t(typeHint.description)}{' · '}{t(typeHint.fit === 'ordinaryPractice' ? typeHint.fit : (selectedType === 'NumberDate' || selectedType === 'FormulaSymbols' ? 'suitablePeg' : selectedType === 'VerbatimText' || selectedType === 'LabelDiagram' ? 'suitablePalace' : typeHint.fit))}</Typography.Paragraph>
     <Form layout="vertical" className="education-study-metadata">
-      <Space wrap align="start">
-        <Form.Item label={t('memoryType')}><Select aria-label={t('memoryType')} value={selectedType} style={{ width: 190 }} onChange={changeType} options={contentTypes.map(value => ({ value, label: t(typeText[value].label) }))} /></Form.Item>
-        <Form.Item label={t('languageCode')}><Select aria-label={t('languageCode')} value={objective.languageCode ?? undefined} allowClear style={{ width: 140 }} onChange={value => updateMetadata('languageCode', value ?? null)} options={[{ value: 'zh-Hans', label: t('langZhHans') }, { value: 'en', label: t('langEn') }, { value: 'zh-Hant', label: t('langZhHant') }, { value: 'ms', label: t('langMs') }]} /></Form.Item>
-        <Form.Item label={t('grade')}><Select aria-label={t('grade')} value={objective.gradeCode ?? undefined} allowClear showSearch style={{ width: 130 }} onChange={value => updateMetadata('gradeCode', value ?? null)} options={[...Array.from({ length: 6 }, (_, i) => `MY-P${i + 1}`), ...Array.from({ length: 5 }, (_, i) => `MY-F${i + 1}`), 'MY-UEC-J1', 'MY-UEC-S1'].map(value => ({ value, label: value }))} /></Form.Item>
-        <Form.Item label={t('curriculum')}><Select aria-label={t('curriculum')} value={objective.curriculumCode ?? undefined} allowClear showSearch style={{ width: 150 }} onChange={value => updateMetadata('curriculumCode', value ?? null)} options={['KSSR', 'KSSM', 'IGCSE', 'UEC'].map(value => ({ value, label: value }))} /></Form.Item>
-        <Form.Item label={t('subject')}><Select aria-label={t('subject')} value={objective.subjectCode ?? undefined} allowClear showSearch style={{ width: 150 }} onChange={value => updateMetadata('subjectCode', value ?? null)} options={[
+      <Space wrap align="start" className="education-study-metadata-fields">
+        <Form.Item label={t('memoryType')}><Select aria-label={t('memoryType')} value={selectedType} onChange={changeType} options={contentTypes.map(value => ({ value, label: t(typeText[value].label) }))} /></Form.Item>
+        <Form.Item label={t('languageCode')}><Select aria-label={t('languageCode')} value={objective.languageCode ?? undefined} allowClear onChange={value => updateMetadata('languageCode', value ?? null)} options={[{ value: 'zh-Hans', label: t('langZhHans') }, { value: 'en', label: t('langEn') }, { value: 'zh-Hant', label: t('langZhHant') }, { value: 'ms', label: t('langMs') }]} /></Form.Item>
+        <Form.Item label={t('grade')}><Select aria-label={t('grade')} value={objective.gradeCode ?? undefined} allowClear showSearch onChange={value => updateMetadata('gradeCode', value ?? null)} options={[...Array.from({ length: 6 }, (_, i) => `MY-P${i + 1}`), ...Array.from({ length: 5 }, (_, i) => `MY-F${i + 1}`), 'MY-UEC-J1', 'MY-UEC-S1'].map(value => ({ value, label: value }))} /></Form.Item>
+        <Form.Item label={t('curriculum')}><Select aria-label={t('curriculum')} value={objective.curriculumCode ?? undefined} allowClear showSearch onChange={value => updateMetadata('curriculumCode', value ?? null)} options={['KSSR', 'KSSM', 'IGCSE', 'UEC'].map(value => ({ value, label: value }))} /></Form.Item>
+        <Form.Item label={t('subject')}><Select aria-label={t('subject')} value={objective.subjectCode ?? undefined} allowClear showSearch onChange={value => updateMetadata('subjectCode', value ?? null)} options={[
           ['Chinese', 'subjectChinese'], ['English', 'subjectEnglish'], ['Science', 'subjectScience'], ['Mathematics', 'subjectMathematics'], ['Bahasa Melayu', 'subjectMalay'], ['History', 'subjectHistory'],
         ].map(([value, key]) => ({ value, label: t(key as Parameters<typeof t>[0]) }))} /></Form.Item>
-        <Form.Item label={t('contentOrigin')}><Select aria-label={t('contentOrigin')} value={objective.contentOrigin ?? 'Original'} style={{ width: 180 }} onChange={value => updateMetadata('contentOrigin', value)} options={[
+        <Form.Item label={t('contentOrigin')}><Select aria-label={t('contentOrigin')} value={objective.contentOrigin ?? 'Original'} onChange={value => updateMetadata('contentOrigin', value)} options={[
           { value: 'Original', label: t('original') }, { value: 'PublicDomainConfirmed', label: t('publicDomain') }, { value: 'Imported', label: t('imported') },
         ]} /></Form.Item>
         <Button loading={data.setMetadata.isPending} onClick={() => void markReviewed()} disabled={objective.reviewStatus === 'TeacherReviewed'}>{t('markReviewed')}</Button>
@@ -173,7 +166,7 @@ export function StudyItemEditor({ courseId, objective, isPublic }: { courseId: s
     {data.items.isPending ? <div role="status"><Spin /> {t('loading')}</div> : data.items.isError ? null : ordered.length === 0 && editing !== 'new'
       ? <Typography.Paragraph type="secondary">{t('emptyItems')}</Typography.Paragraph>
       : <Space direction="vertical" style={{ width: '100%' }}>
-        {ordered.map((item, index) => editing === item.id ? <Card size="small" key={item.id}>{renderEditor()}</Card> : <Card size="small" key={item.id} title={<Space><Tag color={item.status === 'Published' ? 'green' : 'gold'}>{t(item.status === 'Published' ? 'published' : 'draft')}</Tag><Typography.Text>{item.primary}</Typography.Text></Space>} extra={<Space wrap>
+        {ordered.map((item, index) => editing === item.id ? <Card size="small" key={item.id}>{renderEditor()}</Card> : <Card className="education-study-item-card" size="small" key={item.id} title={<Space className="education-study-item-title"><Tag color={item.status === 'Published' ? 'green' : 'gold'}>{t(item.status === 'Published' ? 'published' : 'draft')}</Tag><Typography.Text>{item.primary}</Typography.Text></Space>} extra={<Space wrap className="education-study-item-actions">
           <Button aria-label={t('moveUp')} icon={<ArrowUpOutlined />} disabled={index === 0 || data.reorder.isPending} onClick={() => reorderBy(index, -1)} />
           <Button aria-label={t('moveDown')} icon={<ArrowDownOutlined />} disabled={index === ordered.length - 1 || data.reorder.isPending} onClick={() => reorderBy(index, 1)} />
           {item.status === 'Draft' && <Button aria-label={t('edit')} icon={<EditOutlined />} onClick={() => beginEdit(item)}>{t('edit')}</Button>}
@@ -233,8 +226,8 @@ export function StudyItemEditor({ courseId, objective, isPublic }: { courseId: s
     const compositionProps = { onCompositionStart: () => { composingRef.current = true; setIsComposing(true); }, onCompositionEnd: () => { composingRef.current = false; setIsComposing(false); } };
     const codePointRule = (max: number) => ({ validator: (_: unknown, value?: string) => unicodeCodePointLength(value ?? '') <= max ? Promise.resolve() : Promise.reject(new Error(t('overLimit'))) });
     const itemBeingEdited = editing === 'new' ? null : ordered.find(item => item.id === editing);
-    return <Form form={form} layout="vertical" onFinish={handleSave} onSubmitCapture={event => { if (composingRef.current) { event.preventDefault(); event.stopPropagation(); } }} validateTrigger={isComposing ? [] : 'onBlur'}>
-      <Space wrap align="start">
+    return <Form className="education-study-item-form" form={form} layout="vertical" onFinish={handleSave} onSubmitCapture={event => { if (composingRef.current) { event.preventDefault(); event.stopPropagation(); } }} validateTrigger={isComposing ? [] : 'onBlur'}>
+      <Space wrap align="start" className="education-study-item-fields">
         <Form.Item name="primary" label={t('primary')} rules={[{ required: true, message: t('requiredPrimary') }, codePointRule(500)]}>
           <Input aria-label={t('primary')} placeholder={maxPrimary} showCount={{ formatter: ({ value }) => t('chars', { count: unicodeCodePointLength(value), max: 500 }) }} {...compositionProps} />
         </Form.Item>
@@ -256,4 +249,3 @@ export function EducationObjectiveStudyEditor({ courseId, objective, isPublic }:
   return <StudyItemEditor key={objective.id} courseId={courseId} objective={objective} isPublic={isPublic} />;
 }
 
-export { LanguageSwitch };

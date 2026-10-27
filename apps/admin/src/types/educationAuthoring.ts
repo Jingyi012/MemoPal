@@ -16,6 +16,7 @@ export interface EducationCourseDto {
   createdAt: string;
   isPublic: boolean;
   publiclyPublishedAt: string | null;
+  isPlatformCourse?: boolean;
 }
 export interface EducationObjectiveDto {
   id: string;

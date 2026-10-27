@@ -10,7 +10,18 @@ export function CreateClassroomButton({ onSubmit, loading }: { onSubmit: (value:
 }
 
 export function InviteMemberForm({ onSubmit, loading }: { onSubmit: (value: InviteClassroomMemberRequest) => void; loading: boolean }) {
-  return <Form layout="inline" onFinish={onSubmit}><Form.Item name="userId" rules={[{ required: true, message: 'Enter a MemoPal account ID.' }]}><Input placeholder="MemoPal account ID" /></Form.Item><Form.Item name="role" initialValue="student"><Select options={[{ value: 'student', label: 'Student' }, { value: 'teacher', label: 'Teacher' }]} /></Form.Item><Button type="primary" htmlType="submit" loading={loading}>Invite</Button><Typography.Text type="secondary" style={{ width: '100%' }}>Ask them to copy their account ID from Education → Assignments.</Typography.Text></Form>;
+  const [open, setOpen] = useState(false);
+  return <>
+    <Button type="primary" onClick={() => setOpen(true)}>Invite member</Button>
+    <Modal title="Invite a classroom member" open={open} onCancel={() => !loading && setOpen(false)} footer={null} destroyOnClose>
+      <Typography.Paragraph type="secondary">Ask them to copy their account ID from Education → Assignments.</Typography.Paragraph>
+      <Form layout="vertical" onFinish={value => { onSubmit(value); setOpen(false); }} initialValues={{ role: 'student' }}>
+        <Form.Item name="userId" label="MemoPal account ID" rules={[{ required: true, message: 'Enter a MemoPal account ID.' }]}><Input /></Form.Item>
+        <Form.Item name="role" label="Invite as"><Select options={[{ value: 'student', label: 'Student' }, { value: 'teacher', label: 'Teacher' }]} /></Form.Item>
+        <Button type="primary" htmlType="submit" loading={loading}>Send invitation</Button>
+      </Form>
+    </Modal>
+  </>;
 }
 
 export function CreateGuardianLinkForm({ onSubmit, loading }: { onSubmit: (value: CreateGuardianLinkRequest) => void; loading: boolean }) {
