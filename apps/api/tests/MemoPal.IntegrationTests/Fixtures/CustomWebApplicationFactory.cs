@@ -25,6 +25,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             {
                 ["UseInMemoryDatabase"] = "true",
                 ["Database:InMemoryName"] = _databaseName,
+                ["EducationStarterCatalog:Enabled"] = "false",
                 ["Jwt:Issuer"] = "MemoPal",
                 ["Jwt:Audience"] = "MemoPal.Mobile",
                 ["Jwt:Secret"] = "TEST_SECRET_12345678901234567890",

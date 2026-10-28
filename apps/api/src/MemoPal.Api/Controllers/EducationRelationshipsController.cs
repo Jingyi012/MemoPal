@@ -38,6 +38,12 @@ public sealed class EducationRelationshipsController(ISender sender) : ApiContro
     public async Task<IActionResult> DetachCourse(string classroomId, string courseId, CancellationToken ct) =>
         Ok(await Sender.Send(new DetachEducationCourseFromClassroomCommand(GetUserIdOrThrow(), classroomId, courseId), ct));
 
+    [HttpPut("classrooms/{classroomId}/courses/{courseId}/guided-practice")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> SetClassroomGuidedPractice(string classroomId, string courseId,
+        [FromBody] SetClassroomGuidedPracticeRequest request, CancellationToken ct) =>
+        Ok(await Sender.Send(new SetClassroomGuidedPracticeCommand(GetUserIdOrThrow(), classroomId, courseId, request), ct));
+
     [HttpGet("classrooms/{classroomId}/courses")]
     [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> GetClassroomCourses(string classroomId, CancellationToken ct) =>

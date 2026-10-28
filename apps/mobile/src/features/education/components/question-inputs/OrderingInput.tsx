@@ -1,22 +1,27 @@
 import type { OrderingAnswer, OrderingQuestion } from '@/features/education/types/question.types';
-import { useQuestionInputStyles } from './questionInputStyles';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { typography } from '@/theme/typography';
+import { useQuestionHints, useQuestionInputStyles } from './questionInputStyles';
+import AnimatedPressable from '@/components/AnimatedPressable';
+import { StyleSheet, Text, View } from 'react-native';
+import { learningTypography as typography } from '@/features/education/theme/learningTheme';
 import { reorderEducationOptionIds } from '@/features/education/utils/reorderEducationOptionIds';
+import { addEducationOrderingOption, removeEducationOrderingOption } from '@/features/education/utils/educationOrderingBuilder';
 
 export type OrderingInputProps = Readonly<{
   question: OrderingQuestion;
   value: OrderingAnswer;
   onChange: (value: OrderingAnswer) => void;
-  labels: Readonly<{ hint: string; moveUp: string; moveDown: string }>;
+  labels: Readonly<{ hint: string; moveUp: string; moveDown: string; yourOrder: string; wordBank: (remaining: number) => string; removeWord: string; addWord: string }>;
+  buildFromWordBank?: boolean;
   disabled?: boolean;
 }>;
 
-export function OrderingInput({ question, value, onChange, labels, disabled = false }: OrderingInputProps) {
+export function OrderingInput({ question, value, onChange, labels, buildFromWordBank = false, disabled = false }: OrderingInputProps) {
   const { styles: inputStyles, theme } = useQuestionInputStyles();
-  const items = value.orderedOptionIds.length > 0
-    ? value.orderedOptionIds.map(id => question.options.find(option => option.id === id)).filter((item): item is (typeof question.options)[number] => Boolean(item))
-    : question.options;
+  const showHints = useQuestionHints();
+  const selectedItems = value.orderedOptionIds.map(id => question.options.find(option => option.id === id)).filter((item): item is (typeof question.options)[number] => Boolean(item));
+  const items = buildFromWordBank ? selectedItems : selectedItems.length > 0 ? selectedItems : question.options;
+  const selectedIds = new Set(items.map(item => item.id));
+  const wordBank = buildFromWordBank ? question.options.filter(item => !selectedIds.has(item.id)) : [];
 
   const move = (index: number, offset: -1 | 1) => {
     if (disabled) return;
@@ -24,33 +29,43 @@ export function OrderingInput({ question, value, onChange, labels, disabled = fa
     onChange({ type: 'ordering', orderedOptionIds: reorderEducationOptionIds(ids, index, offset) });
   };
 
-  return (
-    <View style={inputStyles.container}>
-      <Text style={inputStyles.hint}>{labels.hint}</Text>
-      {items.map((item, index) => (
-        <View key={item.id} style={styles.row}>
-          <Text style={[inputStyles.optionLabel, styles.position]}>{index + 1}.</Text>
-          <Text style={[inputStyles.optionLabel, styles.label]}>{item.label}</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel={`${labels.moveUp}: ${item.label}`}
-            accessibilityState={{ disabled: disabled || index === 0 }} disabled={disabled || index === 0}
-            onPress={() => move(index, -1)} style={({ pressed }) => [styles.control, { borderColor: theme.line, backgroundColor: theme.paper, opacity: pressed ? 0.65 : 1 }]}>
-            <Text style={[styles.controlText, { color: theme.link }]}>↑</Text>
-          </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel={`${labels.moveDown}: ${item.label}`}
-            accessibilityState={{ disabled: disabled || index === items.length - 1 }} disabled={disabled || index === items.length - 1}
-            onPress={() => move(index, 1)} style={({ pressed }) => [styles.control, { borderColor: theme.line, backgroundColor: theme.paper, opacity: pressed ? 0.65 : 1 }]}>
-            <Text style={[styles.controlText, { color: theme.link }]}>↓</Text>
-          </Pressable>
-        </View>
-      ))}
+  const append = (id: string) => {
+    if (disabled) return;
+    onChange({ type: 'ordering', orderedOptionIds: addEducationOrderingOption(value.orderedOptionIds, id, question.options.map(item => item.id)) });
+  };
+
+  const remove = (id: string) => {
+    if (disabled) return;
+    onChange({ type: 'ordering', orderedOptionIds: removeEducationOrderingOption(value.orderedOptionIds, id) });
+  };
+
+  if (buildFromWordBank) return <View style={inputStyles.container}>
+    <Text accessibilityRole="header" style={inputStyles.prompt}>{question.prompt}</Text>
+    {showHints ? <Text style={inputStyles.hint}>{labels.hint}</Text> : null}
+    <View accessibilityLabel={labels.yourOrder} style={{ minHeight: 170, borderTopWidth: 2, borderBottomWidth: 2, borderColor: theme.line, paddingVertical: 12, gap: 8 }}>
+      {items.map((item, index) => <AnimatedPressable key={item.id} accessibilityLabel={`${labels.removeWord}: ${item.label}, ${index + 1}`} disabled={disabled} onPress={() => remove(item.id)} style={{ minHeight: 48, borderRadius: 16, borderWidth: 2, borderBottomWidth: 6, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 16, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 10 }}><Text style={[inputStyles.optionLabel, { flex: 0, color: theme.violetDeep }]}>{index + 1}</Text><Text style={[inputStyles.optionLabel, { flexShrink: 1 }]}>{item.label}</Text></AnimatedPressable>)}
     </View>
-  );
+    <View accessibilityLabel={labels.wordBank(wordBank.length)} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
+      {question.options.map(item => {
+        const used = selectedIds.has(item.id);
+        return <AnimatedPressable key={item.id} accessibilityLabel={`${labels.addWord}: ${item.label}`} accessibilityState={{ disabled: disabled || used }} disabled={disabled || used} onPress={() => append(item.id)} style={{ maxWidth: '100%', minHeight: 48, borderRadius: 16, borderWidth: 2, borderBottomWidth: used ? 2 : 6, borderColor: theme.line, backgroundColor: used ? theme.violetTint : theme.paper, paddingVertical: 11, paddingHorizontal: 18 }}><Text style={[inputStyles.optionLabel, { flex: 0, flexShrink: 1, opacity: used ? 0 : 1 }]}>{item.label}</Text></AnimatedPressable>;
+      })}
+    </View>
+  </View>;
+
+  return <View style={inputStyles.container}>
+    <Text accessibilityRole="header" style={inputStyles.prompt}>{question.prompt}</Text>
+    {showHints ? <Text style={inputStyles.hint}>{labels.hint}</Text> : null}
+    {items.map((item,index)=><View key={item.id} style={[styles.row, { borderColor: theme.line, backgroundColor: theme.paper }]}>
+      <Text style={[inputStyles.optionLabel, { flex: 0, color: theme.violetDeep }]}>{index+1}</Text>
+      <Text style={[inputStyles.optionLabel, { flex: 1 }]}>{item.label}</Text>
+      {([-1,1] as const).map(offset=><AnimatedPressable key={offset} accessibilityLabel={`${offset === -1 ? labels.moveUp : labels.moveDown}: ${item.label}`} disabled={disabled || index+offset<0 || index+offset>=items.length} onPress={()=>move(index,offset)} style={styles.control}><Text style={[styles.controlText, {color:theme.violetDeep}]}>{offset===-1?'↑':'↓'}</Text></AnimatedPressable>)}
+    </View>)}
+  </View>;
 }
 
 const styles = StyleSheet.create({
-  row: { alignItems: 'center', flexDirection: 'row', gap: 8, minHeight: 56 },
-  position: { flexGrow: 0, width: 26 },
-  label: { flex: 1 },
-  control: { alignItems: 'center', borderRadius: 12, borderWidth: 1.5, height: 48, justifyContent: 'center', width: 48 },
+  row: { alignItems: 'center', flexDirection: 'row', gap: 8, borderRadius: 16, borderWidth: 2, borderBottomWidth: 6, padding: 12 },
+  control: { alignItems: 'center', borderRadius: 12, height: 44, justifyContent: 'center', width: 44 },
   controlText: { fontFamily: typography.bodyExtraBold, fontSize: 22, lineHeight: 26 },
 });

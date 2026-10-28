@@ -1,6 +1,5 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import { StyleSheet, Text } from 'react-native';
 
 type EducationPracticeItemCardProps = Readonly<{
@@ -21,7 +20,7 @@ export function EducationPracticeItemCard({ title, questionCount, formatSummary,
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 1.5, gap: 5, minHeight: 76, padding: 14 },
+  card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 22, borderWidth: 2, borderBottomWidth: 6, gap: 5, minHeight: 76, padding: 14 },
   title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
   body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18 },
 }));

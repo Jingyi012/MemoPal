@@ -3,6 +3,7 @@ using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Education.PublicLearning.DTOs;
+using MemoPal.Application.Features.Education.Authoring.DTOs;
 using MemoPal.Domain.Education;
 using MemoPal.Domain.Entities;
 using MemoPal.Application.Features.CommunityMemorySets.Queries;
@@ -45,15 +46,34 @@ public sealed class GetEducationPublicCourseHandler(IAppDbContext db)
         if (assessments.Length == 0)
             throw new NotFoundAppException("Public course not found.");
 
-        var author = await db.Users.AsNoTracking().Where(user => user.Id == course.UserId)
-            .Select(user => user.DisplayName).FirstOrDefaultAsync(ct);
+        var author = course.UserId == "system"
+            ? "MemoPal"
+            : await db.Users.AsNoTracking().Where(user => user.Id == course.UserId)
+                .Select(user => user.DisplayName).FirstOrDefaultAsync(ct) ?? "MemoPal creator";
         var isSaved = await db.EducationSavedCourses.AsNoTracking().AnyAsync(saved =>
             saved.UserId == q.UserId && saved.CourseId == course.Id && !saved.IsDeleted, ct);
         var objectives = await db.EducationObjectives.AsNoTracking()
             .Where(objective => objective.CourseId == course.Id && !objective.IsDeleted)
             .OrderBy(objective => objective.Title)
-            .Select(objective => new { objective.Id, objective.Title, objective.RecommendedMemorySetId })
+            .Select(objective => new { objective.Id, objective.Title, objective.RecommendedMemorySetId, objective.ReviewStatus, objective.ContentOrigin })
             .ToListAsync(ct);
+        var objectiveIds = objectives.Select(objective => objective.Id).ToArray();
+        var studyItems = await db.EducationObjectiveStudyItems.AsNoTracking()
+            .Where(item => objectiveIds.Contains(item.ObjectiveId) && !item.IsDeleted &&
+                item.Status == EducationStudyItemStatus.Published)
+            .OrderBy(item => item.ObjectiveId).ThenBy(item => item.Position).ThenBy(item => item.Id)
+            .Select(item => new
+            {
+                item.Id, item.ObjectiveId, item.Position, item.Kind, item.Primary, item.Secondary,
+                item.Phonetic, item.Extra, item.LanguageCode, item.ContentVersion
+            }).ToListAsync(ct);
+        var itemsByObjective = studyItems.GroupBy(item => item.ObjectiveId).ToDictionary(group => group.Key,
+            group => (IReadOnlyList<EducationLearnerStudyItemDto>)group.Select(item => new EducationLearnerStudyItemDto(
+                item.Id, item.Position, item.Kind.ToString(), item.Primary, item.Secondary, item.Phonetic, item.Extra,
+                item.LanguageCode, item.ContentVersion,
+                objectives.Single(objective => objective.Id == item.ObjectiveId).ReviewStatus.ToString(),
+                objectives.Single(objective => objective.Id == item.ObjectiveId).ContentOrigin.ToString())).ToArray(),
+            StringComparer.Ordinal);
         var recommendedIds = objectives.Where(objective => objective.RecommendedMemorySetId != null)
             .Select(objective => objective.RecommendedMemorySetId!).Distinct().ToArray();
         var recommended = recommendedIds.Length == 0
@@ -66,9 +86,11 @@ public sealed class GetEducationPublicCourseHandler(IAppDbContext db)
                     memorySet.Id, memorySet.Title, memorySet.GoalType, memorySet.TechniqueKey, memorySet.Description))
                 .ToDictionaryAsync(memorySet => memorySet.Id, ct);
         return ApiResponse<EducationPublicCourseDetailDto>.Ok(new(course.Id, course.Title,
-            author ?? "MemoPal creator", course.PublishedAt, assessments,
+            author, course.PublishedAt, assessments,
             objectives.Select(objective => new EducationPublicObjectiveDto(
                 objective.Id, objective.Title,
-                objective.RecommendedMemorySetId is { } id ? recommended.GetValueOrDefault(id) : null)).ToArray(), isSaved));
+                objective.RecommendedMemorySetId is { } id ? recommended.GetValueOrDefault(id) : null,
+                itemsByObjective.GetValueOrDefault(objective.Id) ?? [])).ToArray(), isSaved,
+            course.UserId == "system"));
     }
 }

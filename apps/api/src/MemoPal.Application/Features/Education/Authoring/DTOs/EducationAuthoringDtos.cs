@@ -4,6 +4,8 @@ public sealed record CreateCourseRequest(string Title);
 public sealed record CreateObjectiveRequest(string Title, string? RecommendedMemorySetId = null);
 public sealed record SetEducationObjectiveMemoryRecommendationRequest(string? RecommendedMemorySetId);
 public sealed record CreateAssessmentRequest(string Title);
+public sealed record CreateAssessmentRevisionDraftRequest(int ExpectedVersion);
+public sealed record SetAssessmentPublicPracticeRequest(bool IsPublicPractice, bool NotConfidentialExamContent = false);
 public sealed record UpdateAssessmentRequest(int ExpectedVersion, string Title, IReadOnlyList<EducationQuestionRequest> Questions);
 public sealed record EducationQuestionRequest(
     string? Id, string Prompt, string Type, string? FillMode, decimal MaxScore, string ObjectiveId,
@@ -17,7 +19,7 @@ public sealed record EducationQuestionRequest(
     string? Explanation = null);
 public sealed record EducationOptionRequest(string Id, string Label);
 public sealed record EducationMatchingPairRequest(EducationOptionRequest Left, EducationOptionRequest Right);
-public sealed record EducationCourseDto(string Id, string Title, DateTime CreatedAt, bool IsPublic = false, DateTime? PubliclyPublishedAt = null);
+public sealed record EducationCourseDto(string Id, string Title, DateTime CreatedAt, bool IsPublic = false, DateTime? PubliclyPublishedAt = null, bool IsPlatformCourse = false);
 public sealed record SetEducationCourseVisibilityRequest(bool IsPublic, bool NotConfidentialExamContent = false);
 public sealed record EducationObjectiveDto(string Id, string CourseId, string Title, DateTime CreatedAt, string? RecommendedMemorySetId = null,
     string MemoryContentType = "NotApplicable", string? LanguageCode = null, string? GradeCode = null,

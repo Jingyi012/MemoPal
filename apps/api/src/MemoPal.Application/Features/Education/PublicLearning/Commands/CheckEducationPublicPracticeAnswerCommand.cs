@@ -54,6 +54,7 @@ public sealed class CheckEducationPublicPracticeAnswerHandler(IAppDbContext db)
             progress.LastAnsweredAtUtc = DateTime.UtcNow;
         }
         await db.SaveChangesAsync(ct);
-        return ApiResponse<EducationPublicPracticeAnswerDto>.Ok(new(question.Id, grade.IsCorrect, question.Explanation));
+        return ApiResponse<EducationPublicPracticeAnswerDto>.Ok(new(question.Id, grade.IsCorrect, question.Explanation,
+            EducationAttemptMapping.CorrectAnswer(question)));
     }
 }

@@ -431,7 +431,7 @@ public sealed class EducationStudyItemEndpointsTests(CustomWebApplicationFactory
         await DataAsync(await owner.PostAsJsonAsync($"/v1/education/courses/{courseId}/objectives/{objectiveId}/study-items/{published.GetProperty("id").GetString()}/publish", new { }));
         var assessmentId = await CreatePublishedAssessmentAsync(owner, courseId, objectiveId);
 
-        var classroom = await DataAsync(await owner.PostAsJsonAsync("/v1/education/classrooms", new { name = "课程班" }));
+        var classroom = await DataAsync(await owner.PostAsJsonAsync("/v1/education/classrooms", new { name = "Classroom A" }));
         var classroomId = classroom.GetProperty("id").GetString()!;
         var assignedMembership = await DataAsync(await owner.PostAsJsonAsync($"/v1/education/classrooms/{classroomId}/invitations", new { userId = assignedStudentId, role = "student" }));
         await DataAsync(await assignedStudent.PostAsync($"/v1/education/memberships/{assignedMembership.GetProperty("id").GetString()}/accept", null));
@@ -459,10 +459,12 @@ public sealed class EducationStudyItemEndpointsTests(CustomWebApplicationFactory
         Assert.Equal(HttpStatusCode.OK, (await owner.PostAsync(linkPath, null)).StatusCode);
         var secondCourseId = await CreateCourseAsync(owner, "第二门课程");
         Assert.Equal(HttpStatusCode.OK, (await owner.PostAsync($"/v1/education/classrooms/{classroomId}/courses/{secondCourseId}", null)).StatusCode);
-        var secondClassroom = await DataAsync(await owner.PostAsJsonAsync("/v1/education/classrooms", new { name = "第二个班" }));
+        var secondClassroom = await DataAsync(await owner.PostAsJsonAsync("/v1/education/classrooms", new { name = "Classroom B" }));
         var secondClassroomId = secondClassroom.GetProperty("id").GetString()!;
         Assert.Equal(HttpStatusCode.OK, (await owner.PostAsync($"/v1/education/classrooms/{secondClassroomId}/courses/{courseId}", null)).StatusCode);
-        Assert.Equal(2, (await DataAsync(await owner.GetAsync($"/v1/education/courses/{courseId}/classrooms"))).GetArrayLength());
+        var courseClassrooms = await DataAsync(await owner.GetAsync($"/v1/education/courses/{courseId}/classrooms"));
+        Assert.Equal(new[] { "Classroom A", "Classroom B" }, courseClassrooms.EnumerateArray()
+            .Select(x => x.GetProperty("classroomName").GetString()).ToArray());
         Assert.Equal(HttpStatusCode.NotFound, (await unrelatedTeacher.GetAsync($"/v1/education/courses/{courseId}/classrooms")).StatusCode);
         Assert.Equal(2, (await DataAsync(await assignedStudent.GetAsync($"/v1/education/classrooms/{classroomId}/courses"))).GetArrayLength());
         var courseRows = await DataAsync(await linkedOnlyStudent.GetAsync($"/v1/education/classrooms/{classroomId}/courses"));

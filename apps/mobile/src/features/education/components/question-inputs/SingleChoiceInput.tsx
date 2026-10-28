@@ -5,7 +5,7 @@ import type {
   SingleChoiceQuestion,
 } from '@/features/education/types/question.types';
 import { Text, View } from 'react-native';
-import { useQuestionInputStyles } from './questionInputStyles';
+import { useCorrectAnswer, useQuestionInputStyles, useQuestionFeedback } from './questionInputStyles';
 
 export type SingleChoiceInputProps = Readonly<{
   question: SingleChoiceQuestion;
@@ -20,14 +20,19 @@ export function SingleChoiceInput({
   onChange,
   disabled = false,
 }: SingleChoiceInputProps) {
-  const { styles } = useQuestionInputStyles();
+  const { styles, theme } = useQuestionInputStyles();
+  const feedback = useQuestionFeedback();
+  const correctAnswer = useCorrectAnswer();
 
   return (
     <View style={styles.container}>
       <Text accessibilityRole="header" style={styles.prompt}>{question.prompt}</Text>
       <View style={styles.options} accessibilityRole="radiogroup">
-        {question.options.map((option: EducationQuestionOption) => {
+        {question.options.map((option: EducationQuestionOption, index) => {
           const selected = value.optionId === option.id;
+          const correct = correctAnswer?.type === 'single-choice' ? correctAnswer.optionId === option.id : selected && feedback === true;
+          const incorrect = selected && (correctAnswer ? !correct : feedback === false);
+          const markerColor = correct ? theme.successText : incorrect ? theme.berryDeep : theme.violetDeep;
           return (
             <AnimatedPressable
               key={option.id}
@@ -36,10 +41,8 @@ export function SingleChoiceInput({
               accessibilityState={{ checked: selected, disabled }}
               disabled={disabled}
               onPress={() => onChange({ type: 'single-choice', optionId: option.id })}
-              style={[styles.option, selected && styles.optionSelected, disabled && styles.optionDisabled]}>
-              <View style={[styles.radio, selected && styles.radioSelected]}>
-                {selected ? <View style={styles.radioDot} /> : null}
-              </View>
+              style={[styles.option, selected && styles.optionSelected, correct && styles.optionCorrect, incorrect && styles.optionIncorrect]}>
+              <View style={[styles.marker, (selected || correct || incorrect) && { backgroundColor: markerColor, borderColor: markerColor }]}><Text style={[styles.markerText, (selected || correct || incorrect) && { color: theme.onAccent }]}>{String.fromCharCode(65 + index)}</Text></View>
               <Text style={styles.optionLabel}>{option.label}</Text>
             </AnimatedPressable>
           );

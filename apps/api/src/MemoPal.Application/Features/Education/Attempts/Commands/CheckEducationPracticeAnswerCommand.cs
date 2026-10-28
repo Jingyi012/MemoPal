@@ -32,6 +32,7 @@ public sealed class CheckEducationPracticeAnswerHandler(IAppDbContext db)
         catch (ArgumentException ex) { throw new ValidationAppException(ex.Message); }
 
         return ApiResponse<EducationPracticeCheckDto>.Ok(
-            new(question.Id, grade.Score, grade.MaxScore, grade.IsCorrect));
+            new(question.Id, grade.Score, grade.MaxScore, grade.IsCorrect, question.Explanation,
+                EducationAttemptMapping.CorrectAnswer(question)));
     }
 }

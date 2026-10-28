@@ -16,13 +16,19 @@ internal static class AuthoringValidation
         return title;
     }
 
-    public static async Task<EducationCourse> OwnedCourse(IAppDbContext db, string userId, string id, CancellationToken ct) =>
-        await db.EducationCourses.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId && !x.IsDeleted, ct)
+    public const string SystemOwnerId = "system";
+
+    public static async Task<EducationCourse> OwnedCourse(IAppDbContext db, string userId, string id, CancellationToken ct,
+        bool isAdmin = false) =>
+        await db.EducationCourses.FirstOrDefaultAsync(x => x.Id == id &&
+            (x.UserId == userId || (isAdmin && x.UserId == SystemOwnerId)) && !x.IsDeleted, ct)
         ?? throw new NotFoundAppException("Course not found.");
 
-    public static async Task<EducationAssessment> OwnedAssessment(IAppDbContext db, string userId, string id, CancellationToken ct) =>
+    public static async Task<EducationAssessment> OwnedAssessment(IAppDbContext db, string userId, string id, CancellationToken ct,
+        bool isAdmin = false) =>
         await db.EducationAssessments.Include(x => x.Questions)
-            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId && !x.IsDeleted && x.Course != null && !x.Course.IsDeleted, ct)
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted && x.Course != null && !x.Course.IsDeleted &&
+                x.Course.UserId == x.UserId && (x.Course.UserId == userId || (isAdmin && x.Course.UserId == SystemOwnerId)), ct)
         ?? throw new NotFoundAppException("Assessment not found.");
 
     public static async Task<string?> RecommendableMemorySetId(IAppDbContext db, string? requestedId, CancellationToken ct)

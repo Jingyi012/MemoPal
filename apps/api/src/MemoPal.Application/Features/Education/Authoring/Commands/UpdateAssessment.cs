@@ -8,13 +8,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Education.Authoring;
 
-public sealed record UpdateAssessmentCommand(string UserId, string AssessmentId, UpdateAssessmentRequest Request) : IRequest<ApiResponse<EducationAssessmentDto>>;
+public sealed record UpdateAssessmentCommand(string UserId, string AssessmentId, UpdateAssessmentRequest Request, bool IsAdmin = false) : IRequest<ApiResponse<EducationAssessmentDto>>;
 
 public sealed class UpdateAssessmentCommandHandler(IAppDbContext db) : IRequestHandler<UpdateAssessmentCommand, ApiResponse<EducationAssessmentDto>>
 {
     public async Task<ApiResponse<EducationAssessmentDto>> Handle(UpdateAssessmentCommand command, CancellationToken ct)
     {
-        var assessment = await AuthoringValidation.OwnedAssessment(db, command.UserId, command.AssessmentId, ct);
+        var assessment = await AuthoringValidation.OwnedAssessment(db, command.UserId, command.AssessmentId, ct, command.IsAdmin);
         AuthoringValidation.CheckVersion(assessment, command.Request.ExpectedVersion);
         if (assessment.Status != EducationAssessmentStatuses.Draft)
             throw new ConflictAppException("Published assessments are immutable.");
@@ -40,7 +40,7 @@ public sealed class UpdateAssessmentCommandHandler(IAppDbContext db) : IRequestH
         var objectiveIds = questions.Select(question => question.ObjectiveId).Distinct().ToArray();
         var ownedObjectives = await db.EducationObjectives
             .Where(objective => objectiveIds.Contains(objective.Id) && !objective.IsDeleted)
-            .Join(db.EducationCourses.Where(course => course.Id == assessment.CourseId && course.UserId == command.UserId && !course.IsDeleted),
+            .Join(db.EducationCourses.Where(course => course.Id == assessment.CourseId && course.UserId == assessment.UserId && !course.IsDeleted),
                 objective => objective.CourseId, course => course.Id, (objective, _) => objective.Id)
             .ToListAsync(ct);
         if (ownedObjectives.Count != objectiveIds.Length)

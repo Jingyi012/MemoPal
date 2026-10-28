@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MemoPal.Application.Features.Education.Authoring;
 
 public sealed record SetEducationObjectiveMemoryRecommendationCommand(
-    string UserId, string CourseId, string ObjectiveId, string? RecommendedMemorySetId)
+    string UserId, string CourseId, string ObjectiveId, string? RecommendedMemorySetId, bool IsAdmin = false)
     : IRequest<ApiResponse<EducationObjectiveDto>>;
 
 public sealed class SetEducationObjectiveMemoryRecommendationHandler(IAppDbContext db)
@@ -17,7 +17,7 @@ public sealed class SetEducationObjectiveMemoryRecommendationHandler(IAppDbConte
     public async Task<ApiResponse<EducationObjectiveDto>> Handle(
         SetEducationObjectiveMemoryRecommendationCommand command, CancellationToken ct)
     {
-        await AuthoringValidation.OwnedCourse(db, command.UserId, command.CourseId, ct);
+        await AuthoringValidation.OwnedCourse(db, command.UserId, command.CourseId, ct, command.IsAdmin);
         var objective = await db.EducationObjectives.FirstOrDefaultAsync(item =>
             item.Id == command.ObjectiveId && item.CourseId == command.CourseId && !item.IsDeleted, ct)
             ?? throw new NotFoundAppException("Learning objective not found.");

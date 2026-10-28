@@ -73,6 +73,7 @@ export interface EducationQuestionDto {
   fillMode: EducationFillMode | null;
   maxScore: number;
   objectiveId: string;
+  /** Choice/order items, or the optional public word bank for a fill-in question. */
   options: EducationOptionDto[];
   correctOptionId: string | null;
   correctOptionIds: string[];

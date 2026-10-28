@@ -1,7 +1,6 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import { useEducationAssignmentLeaderboard } from '@/features/education/hooks/useEducationAssignmentLeaderboard';
 import { useEducationCopy } from '@/features/education/i18n';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 type EducationAssignmentLeaderboardProps = Readonly<{

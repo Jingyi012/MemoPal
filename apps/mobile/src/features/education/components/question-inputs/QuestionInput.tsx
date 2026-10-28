@@ -1,7 +1,7 @@
 import type {
   EducationAnswer,
+  EducationAttemptAnswerDto,
   EducationQuestion,
-  PhotoResponseAnswer,
   VoiceResponseAnswer,
   EducationResponseAttachmentFile,
 } from '@/features/education/types/question.types';
@@ -14,6 +14,7 @@ import { MatchingInput } from './MatchingInput';
 import { WrittenResponseInput } from './WrittenResponseInput';
 import { PhotoResponseInput } from './PhotoResponseInput';
 import { VoiceResponseInput } from './VoiceResponseInput';
+import { CorrectAnswerContext, QuestionFeedbackContext, QuestionHintsContext } from './questionInputStyles';
 
 export type QuestionInputLabels = Readonly<{
   trueLabel: string;
@@ -21,16 +22,38 @@ export type QuestionInputLabels = Readonly<{
   fillBlankPlaceholder: string;
   multipleSelectHint: string;
   orderingHint: string;
+  orderingYourOrder: string;
+  orderingWordBank: (remaining: number) => string;
+  orderingRemoveWord: string;
+  orderingAddWord: string;
   moveUpLabel: string;
   moveDownLabel: string;
   matchingHint: string;
   chooseMatchLabel: string;
   writtenResponseHint: string;
   photoResponseHint: string;
+  photoResponsePromptHint: string;
   choosePhoto: string;
   photoAttached: string;
   photoUploading: string;
   photoUploadError: string;
+  openHandwritingCanvas: string;
+  handwritingGrid: string;
+  handwritingGridEnabled: string;
+  handwritingUndo: string;
+  handwritingClear: string;
+  handwritingSave: string;
+  handwritingSaving: string;
+  handwritingDiscard: string;
+  handwritingRetry: string;
+  handwritingUploadError: string;
+  handwritingSaved: string;
+  photoReplaceTitle: string;
+  photoReplaceBody: string;
+  photoReplaceConfirm: string;
+  handwritingDiscardBeforeReplace: string;
+  handwritingLimit: string;
+  cancel: string;
   voiceResponseHint: string;
   startVoiceRecording: string;
   stopAndSaveVoiceRecording: string;
@@ -46,16 +69,28 @@ export type QuestionInputLabels = Readonly<{
 
 type QuestionInputProps = Readonly<{
   attemptId: string;
+  identity?: string;
   question: EducationQuestion;
   value: EducationAnswer;
   onChange: (value: EducationAnswer) => void;
   labels: QuestionInputLabels;
   disabled?: boolean;
+  expired?: boolean;
+  orderingBuilder?: boolean;
+  feedback?: boolean | null;
+  correctAnswer?: EducationAttemptAnswerDto | null;
+  showHints?: boolean;
   onUploadAttachment?: (file: EducationResponseAttachmentFile, kind: 'photo' | 'audio') => Promise<string>;
   onRecordingChange?: (recording: boolean) => void;
+  onSketchWorkChange?: (hasUnsavedWork: boolean, processing: boolean) => void;
+  onLocalAttachmentPreview?: (questionId: string, uri: string, cleanup: () => void) => void;
 }>;
 
 export function QuestionInput(props: QuestionInputProps) {
+  return <QuestionFeedbackContext.Provider value={props.feedback ?? null}><CorrectAnswerContext.Provider value={props.correctAnswer ?? null}><QuestionHintsContext.Provider value={props.showHints ?? true}><QuestionInputFields {...props} /></QuestionHintsContext.Provider></CorrectAnswerContext.Provider></QuestionFeedbackContext.Provider>;
+}
+
+function QuestionInputFields(props: QuestionInputProps) {
   if (props.question.type === 'single-choice' && props.value.type === 'single-choice') {
     return (
       <SingleChoiceInput
@@ -74,7 +109,10 @@ export function QuestionInput(props: QuestionInputProps) {
 
   if (props.question.type === 'ordering' && props.value.type === 'ordering') {
     return <OrderingInput key={`${props.attemptId}:${props.question.id}`} question={props.question} value={props.value} onChange={props.onChange}
-      labels={{ hint: props.labels.orderingHint, moveUp: props.labels.moveUpLabel, moveDown: props.labels.moveDownLabel }} disabled={props.disabled} />;
+      labels={{ hint: props.labels.orderingHint, moveUp: props.labels.moveUpLabel, moveDown: props.labels.moveDownLabel,
+        yourOrder: props.labels.orderingYourOrder, wordBank: props.labels.orderingWordBank,
+        removeWord: props.labels.orderingRemoveWord, addWord: props.labels.orderingAddWord }}
+      buildFromWordBank={props.orderingBuilder} disabled={props.disabled} />;
   }
 
   if (props.question.type === 'matching' && props.value.type === 'matching') {
@@ -114,14 +152,25 @@ export function QuestionInput(props: QuestionInputProps) {
   }
 
   if (props.question.type === 'photo-response' && props.value.type === 'photo-response' && props.onUploadAttachment) {
-    return <PhotoResponseInput key={`${props.attemptId}:${props.question.id}`} question={props.question} value={props.value}
-      onUpload={async file => {
-        const photoAttachmentId = await props.onUploadAttachment!(file, 'photo');
-        props.onChange({ type: 'photo-response', photoAttachmentId, localUri: file.uri } satisfies PhotoResponseAnswer);
-      }}
-      labels={{ hint: props.labels.photoResponseHint, choose: props.labels.choosePhoto, attached: props.labels.photoAttached,
-        uploading: props.labels.photoUploading, uploadError: props.labels.photoUploadError }}
-      disabled={props.disabled} />;
+    const identity = props.identity ?? props.attemptId;
+    return <PhotoResponseInput key={`${identity}:${props.attemptId}:${props.question.id}`} identity={identity}
+      question={props.question} value={props.value}
+      onUpload={file => props.onUploadAttachment!(file, 'photo')}
+      onChange={props.onChange}
+      onLocalPreview={(uri, cleanup) => props.onLocalAttachmentPreview?.(props.question.id, uri, cleanup)}
+      onWorkChange={props.onSketchWorkChange ?? (() => undefined)}
+      labels={{ promptHint: props.labels.photoResponsePromptHint, hint: props.labels.photoResponseHint,
+        choose: props.labels.choosePhoto, attached: props.labels.photoAttached, uploading: props.labels.photoUploading,
+        uploadError: props.labels.photoUploadError, openCanvas: props.labels.openHandwritingCanvas,
+        grid: props.labels.handwritingGrid, gridEnabled: props.labels.handwritingGridEnabled,
+        undo: props.labels.handwritingUndo, clear: props.labels.handwritingClear, saveDrawing: props.labels.handwritingSave,
+        savingDrawing: props.labels.handwritingSaving, discardDrawing: props.labels.handwritingDiscard,
+        retryDrawing: props.labels.handwritingRetry, drawingUploadError: props.labels.handwritingUploadError,
+        drawingSaved: props.labels.handwritingSaved, replaceTitle: props.labels.photoReplaceTitle,
+        replaceBody: props.labels.photoReplaceBody, replaceConfirm: props.labels.photoReplaceConfirm,
+        cancel: props.labels.cancel, discardBeforeReplace: props.labels.handwritingDiscardBeforeReplace,
+        handwritingLimit: props.labels.handwritingLimit }}
+      disabled={props.disabled} expired={props.expired} />;
   }
 
   if (props.question.type === 'voice-response' && props.value.type === 'voice-response' && props.onUploadAttachment) {

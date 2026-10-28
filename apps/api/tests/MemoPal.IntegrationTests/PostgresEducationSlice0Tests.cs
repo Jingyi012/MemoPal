@@ -1,5 +1,6 @@
 using MemoPal.Infrastructure.Persistence;
 using MemoPal.Application.Features.Education.MemoryBridge;
+using MemoPal.Application.Features.Education.StudyItems;
 using MemoPal.Domain.Education;
 using MemoPal.Domain.Entities;
 using MemoPal.Infrastructure.Education;
@@ -11,6 +12,58 @@ namespace MemoPal.IntegrationTests;
 public sealed class PostgresEducationSlice0Tests
 {
     private const string BeforeSlice0Migration = "20261018173404_AddLeaderboardCreditRewards";
+
+    [PostgresEducationFact]
+    public async Task Course_classroom_query_orders_before_dto_projection_on_postgres()
+    {
+        var adminConnectionString = Environment.GetEnvironmentVariable("MEMOPAL_CREDIT_TEST_CONNECTION")!;
+        var databaseName = "memopal_course_classrooms_" + Guid.NewGuid().ToString("N");
+        await using var adminConnection = new NpgsqlConnection(adminConnectionString);
+        await adminConnection.OpenAsync();
+        await using (var create = new NpgsqlCommand($"CREATE DATABASE \"{databaseName}\"", adminConnection))
+            await create.ExecuteNonQueryAsync();
+        try
+        {
+            var connectionString = new NpgsqlConnectionStringBuilder(adminConnectionString) { Database = databaseName }.ConnectionString;
+            var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString).Options;
+            var userId = Guid.NewGuid().ToString("N");
+            var courseId = Guid.NewGuid().ToString("N");
+            await using (var seed = new AppDbContext(options))
+            {
+                await seed.Database.MigrateAsync();
+                seed.Users.Add(new User
+                {
+                    Id = userId, Email = $"{userId}@example.test", DisplayName = "Teacher", PasswordHash = "test"
+                });
+                seed.EducationCourses.Add(new EducationCourse { Id = courseId, UserId = userId, Title = "Course" });
+                seed.EducationClassrooms.AddRange(
+                    new EducationClassroom { Id = "classroom-b", OwnerUserId = userId, Name = "Classroom B" },
+                    new EducationClassroom { Id = "classroom-a", OwnerUserId = userId, Name = "Classroom A" });
+                seed.EducationClassroomCourses.AddRange(
+                    new EducationClassroomCourse
+                    {
+                        Id = Guid.NewGuid().ToString("N"), ClassroomId = "classroom-b", CourseId = courseId,
+                        AttachedByUserId = userId
+                    },
+                    new EducationClassroomCourse
+                    {
+                        Id = Guid.NewGuid().ToString("N"), ClassroomId = "classroom-a", CourseId = courseId,
+                        AttachedByUserId = userId
+                    });
+                await seed.SaveChangesAsync();
+            }
+
+            await using var db = new AppDbContext(options);
+            var result = await new GetEducationCourseClassroomsHandler(db)
+                .Handle(new GetEducationCourseClassroomsQuery(userId, courseId), default);
+            Assert.Equal(new[] { "Classroom A", "Classroom B" }, result.Data!.Select(x => x.ClassroomName));
+        }
+        finally
+        {
+            await using var drop = new NpgsqlCommand($"DROP DATABASE \"{databaseName}\" WITH (FORCE)", adminConnection);
+            await drop.ExecuteNonQueryAsync();
+        }
+    }
 
     [PostgresEducationFact]
     public async Task Slice0_and_classroom_course_migrations_round_trip_and_enforce_schema()
@@ -140,7 +193,8 @@ public sealed class PostgresEducationSlice0Tests
         Assert.True(await HasUniqueIndexAsync(connectionString, "EducationObjectiveStudyItems", "IX_EducationObjectiveStudyItems_ObjectiveId_StableKey"));
         Assert.True(await HasUniqueIndexAsync(connectionString, "EducationObjectiveStudyItems", "IX_EducationObjectiveStudyItems_ObjectiveId_Position"));
         Assert.True(await HasUniqueIndexAsync(connectionString, "EducationClassroomCourses", "IX_EducationClassroomCourses_ClassroomId_CourseId"));
-        Assert.True(await HasUniqueIndexAsync(connectionString, "EducationObjectiveDerivedMemorySets", "IX_EducationObjectiveDerivedMemorySets_ObjectiveId_OwnerUserId_TechniqueKey"));
+        // PostgreSQL truncates this long identifier after preserving the unique-index columns.
+        Assert.True(await HasUniqueIndexAsync(connectionString, "EducationObjectiveDerivedMemorySets", "IX_EducationObjectiveDerivedMemorySets_ObjectiveId_OwnerUserId~"));
         Assert.True(await HasUniqueIndexAsync(connectionString, "EducationObjectiveDerivedMemorySets", "IX_EducationObjectiveDerivedMemorySets_MemorySetId"));
         Assert.True(await HasUniqueIndexAsync(connectionString, "EducationDerivedItemMaps", "IX_EducationDerivedItemMaps_DerivedId_StudyItemId"));
         Assert.True(await HasForeignKeyAsync(connectionString, "EducationObjectiveStudyItems", "EducationObjectives"));

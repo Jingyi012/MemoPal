@@ -1,10 +1,9 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { CommonHeader } from '@/components/CommonHeader';
+import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
 import { useEducationCopy } from '@/features/education/i18n';
 import { EducationFamilyReportCard } from '@/features/education/components/EducationFamilyReportCard';
 import { useEducationFamilyChildren, useEducationFamilyReport } from '@/features/education/hooks/useEducationFamilyReports';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';

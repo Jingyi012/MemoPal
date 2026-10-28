@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { toEducationQuestionPreview } from './educationQuestionPreview';
 
 describe('toEducationQuestionPreview', () => {
+  it('shows the fill word bank while keeping accepted answers private', () => {
+    const preview = toEducationQuestionPreview({ prompt: 'A seed grows a ___', type: 'fill-blank', fillMode: 'text', fillUseWordBank: true,
+      maxScore: 1, objectiveId: 'objective', options: [{ id: 'a', label: 'root' }, { id: 'b', label: 'flower' }], allowedTextAnswers: 'root' });
+    expect(preview.options).toEqual(['root', 'flower']);
+    expect(Object.keys(preview)).not.toContain('allowedTextAnswers');
+  });
   it('projects only student-visible matching content and omits the answer key and rubric', () => {
     const preview = toEducationQuestionPreview({
       prompt: 'Match each term.',

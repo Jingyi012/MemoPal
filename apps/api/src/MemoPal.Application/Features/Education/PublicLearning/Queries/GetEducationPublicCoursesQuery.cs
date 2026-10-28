@@ -59,8 +59,12 @@ public sealed class GetEducationPublicCoursesHandler(IAppDbContext db)
 
         var result = courses.Where(course => assessmentCounts.ContainsKey(course.Id))
             .Select(course => new EducationPublicCourseSummaryDto(course.Id, course.Title,
-                authors.GetValueOrDefault(course.UserId) ?? "MemoPal creator", course.PublishedAt,
-                assessmentCounts.GetValueOrDefault(course.Id), questionCounts.GetValueOrDefault(course.Id), savedCourseIds.Contains(course.Id)))
+                course.UserId == "system" ? "MemoPal" : authors.GetValueOrDefault(course.UserId) ?? "MemoPal creator", course.PublishedAt,
+                assessmentCounts.GetValueOrDefault(course.Id), questionCounts.GetValueOrDefault(course.Id), savedCourseIds.Contains(course.Id),
+                course.UserId == "system"))
+            .OrderByDescending(course => course.IsMemoPalStarter)
+            .ThenByDescending(course => course.PublishedAt)
+            .ThenBy(course => course.Title)
             .ToArray();
         return ApiResponse<IReadOnlyList<EducationPublicCourseSummaryDto>>.Ok(result);
     }

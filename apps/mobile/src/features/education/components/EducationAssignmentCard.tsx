@@ -1,7 +1,6 @@
+import { learningTypography as typography, createLearningStyles as createThemedStyles } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ArrowRight } from '@/core/icons';
-import { typography } from '@/theme/typography';
-import { createThemedStyles } from '@/theme/createThemedStyles';
 import type { MyEducationAssignment } from '@/features/education/types/educationAssignment.types';
 import { useEducationCopy } from '@/features/education/i18n';
 import { getEducationAssignmentStatus } from '@/features/education/utils/educationAssignmentStatus';
@@ -53,8 +52,9 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.paper,
     borderColor: theme.line,
-    borderRadius: 16,
-    borderWidth: 1.5,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderBottomWidth: 6,
     flexDirection: 'row',
     gap: 12,
     minHeight: 64,

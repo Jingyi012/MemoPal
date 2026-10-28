@@ -12,15 +12,15 @@ using System.Text.Json;
 namespace MemoPal.Application.Features.Education.StudyItems;
 
 public sealed record UpdateObjectiveStudyMetadataCommand(string UserId, string CourseId, string ObjectiveId,
-    UpdateEducationObjectiveStudyMetadataRequest Request) : IRequest<ApiResponse<EducationObjectiveDto>>;
+    UpdateEducationObjectiveStudyMetadataRequest Request, bool IsAdmin = false) : IRequest<ApiResponse<EducationObjectiveDto>>;
 
 public sealed class UpdateObjectiveStudyMetadataHandler(IAppDbContext db)
     : IRequestHandler<UpdateObjectiveStudyMetadataCommand, ApiResponse<EducationObjectiveDto>>
 {
     public async Task<ApiResponse<EducationObjectiveDto>> Handle(UpdateObjectiveStudyMetadataCommand q, CancellationToken ct)
     {
-        await AuthoringValidation.OwnedCourse(db, q.UserId, q.CourseId, ct);
-        var objective = await OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct);
+        await AuthoringValidation.OwnedCourse(db, q.UserId, q.CourseId, ct, q.IsAdmin);
+        var objective = await OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct, q.IsAdmin);
         objective.MemoryContentType = EducationStudyItemValidation.ParseEnum<EducationMemoryContentType>(q.Request.MemoryContentType, "MemoryContentType");
         objective.LanguageCode = EducationStudyItemValidation.Language(q.Request.LanguageCode);
         objective.GradeCode = EducationStudyItemValidation.GradeCode(q.Request.GradeCode);
@@ -33,9 +33,10 @@ public sealed class UpdateObjectiveStudyMetadataHandler(IAppDbContext db)
     }
 
     internal static async Task<EducationObjective> OwnedObjective(IAppDbContext db, string userId, string courseId,
-        string objectiveId, CancellationToken ct) =>
+        string objectiveId, CancellationToken ct, bool isAdmin = false) =>
         await db.EducationObjectives.FirstOrDefaultAsync(x => x.Id == objectiveId && x.CourseId == courseId &&
-            !x.IsDeleted && x.Course != null && x.Course.UserId == userId && !x.Course.IsDeleted, ct)
+            !x.IsDeleted && x.Course != null && (x.Course.UserId == userId ||
+                (isAdmin && x.Course.UserId == AuthoringValidation.SystemOwnerId)) && !x.Course.IsDeleted, ct)
         ?? throw new NotFoundAppException("Learning objective not found.");
 
     internal static EducationObjectiveDto ToObjectiveDto(EducationObjective x) => new(x.Id, x.CourseId, x.Title,
@@ -44,14 +45,14 @@ public sealed class UpdateObjectiveStudyMetadataHandler(IAppDbContext db)
 }
 
 public sealed record GetAuthorStudyItemsQuery(string UserId, string CourseId, string ObjectiveId)
-    : IRequest<ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>>;
+    : IRequest<ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>> { public bool IsAdmin { get; init; } }
 
 public sealed class GetAuthorStudyItemsHandler(IAppDbContext db)
     : IRequestHandler<GetAuthorStudyItemsQuery, ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>>
 {
     public async Task<ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>> Handle(GetAuthorStudyItemsQuery q, CancellationToken ct)
     {
-        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct);
+        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct, q.IsAdmin);
         var rows = await db.EducationObjectiveStudyItems.AsNoTracking().Where(x => x.ObjectiveId == q.ObjectiveId && !x.IsDeleted)
             .OrderBy(x => x.Position).ToListAsync(ct);
         return ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>.Ok(rows.Select(ToAuthorDto).ToArray());
@@ -65,7 +66,7 @@ public sealed class GetAuthorStudyItemsHandler(IAppDbContext db)
 }
 
 public sealed record CreateObjectiveStudyItemCommand(string UserId, string CourseId, string ObjectiveId,
-    EducationObjectiveStudyItemRequest Request) : IRequest<ApiResponse<EducationObjectiveStudyItemAuthorDto>>;
+    EducationObjectiveStudyItemRequest Request, bool IsAdmin = false) : IRequest<ApiResponse<EducationObjectiveStudyItemAuthorDto>>;
 
 public sealed class CreateObjectiveStudyItemHandler(IAppDbContext db)
     : IRequestHandler<CreateObjectiveStudyItemCommand, ApiResponse<EducationObjectiveStudyItemAuthorDto>>
@@ -73,7 +74,7 @@ public sealed class CreateObjectiveStudyItemHandler(IAppDbContext db)
     public async Task<ApiResponse<EducationObjectiveStudyItemAuthorDto>> Handle(CreateObjectiveStudyItemCommand q, CancellationToken ct)
     {
         var result = await new ImportObjectiveStudyItemsHandler(db).Handle(
-            new(q.UserId, q.CourseId, q.ObjectiveId, [q.Request]), ct);
+            new(q.UserId, q.CourseId, q.ObjectiveId, [q.Request], IsAdmin: q.IsAdmin), ct);
         if (!result.Data!.Imported)
             throw new ValidationAppException(string.Join("; ", result.Data.Errors.Select(x => $"{x.Field}: {x.Message}")));
         var key = EducationStudyItemValidation.StableKey(EducationStudyItemValidation.Normalize(q.Request));
@@ -87,6 +88,7 @@ public sealed record ImportObjectiveStudyItemsCsvCommand(string UserId, string C
     : IRequest<ApiResponse<EducationStudyItemImportResult>>
 {
     public bool DryRun { get; init; }
+    public bool IsAdmin { get; init; }
 }
 
 public sealed class ImportObjectiveStudyItemsCsvHandler(IAppDbContext db)
@@ -94,7 +96,7 @@ public sealed class ImportObjectiveStudyItemsCsvHandler(IAppDbContext db)
 {
     public async Task<ApiResponse<EducationStudyItemImportResult>> Handle(ImportObjectiveStudyItemsCsvCommand q, CancellationToken ct)
     {
-        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct);
+        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct, q.IsAdmin);
         if (q.Content.Length > EducationStudyItemImportPlanner.MaxFileBytes)
             return ApiResponse<EducationStudyItemImportResult>.Ok(EducationStudyItemImportResult.Rejected(
                 [new(1, "file", "FileTooLarge", "CSV file exceeds the 1 MB limit.")]));
@@ -102,11 +104,11 @@ public sealed class ImportObjectiveStudyItemsCsvHandler(IAppDbContext db)
         if (parsed.Errors.Count > 0)
             return ApiResponse<EducationStudyItemImportResult>.Ok(EducationStudyItemImportResult.Rejected(parsed.Errors));
         return await new ImportObjectiveStudyItemsHandler(db).Handle(
-            new(q.UserId, q.CourseId, q.ObjectiveId, parsed.Items, parsed.SourceRows, q.DryRun), ct);
+            new(q.UserId, q.CourseId, q.ObjectiveId, parsed.Items, parsed.SourceRows, q.DryRun, IsAdmin: q.IsAdmin), ct);
     }
 }
 public sealed record ImportObjectiveStudyItemsCommand(string UserId, string CourseId, string ObjectiveId,
-    IReadOnlyList<EducationObjectiveStudyItemRequest> Items, IReadOnlyList<int>? SourceRows = null, bool DryRun = false, long? ContentLength = null)
+    IReadOnlyList<EducationObjectiveStudyItemRequest> Items, IReadOnlyList<int>? SourceRows = null, bool DryRun = false, long? ContentLength = null, bool IsAdmin = false)
     : IRequest<ApiResponse<EducationStudyItemImportResult>>;
 
 public sealed class ImportObjectiveStudyItemsHandler(IAppDbContext db)
@@ -114,7 +116,7 @@ public sealed class ImportObjectiveStudyItemsHandler(IAppDbContext db)
 {
     public async Task<ApiResponse<EducationStudyItemImportResult>> Handle(ImportObjectiveStudyItemsCommand q, CancellationToken ct)
     {
-        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct);
+        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct, q.IsAdmin);
         if (q.ContentLength is > EducationStudyItemImportPlanner.MaxFileBytes ||
             JsonSerializer.SerializeToUtf8Bytes(q.Items).Length > EducationStudyItemImportPlanner.MaxFileBytes)
             return ApiResponse<EducationStudyItemImportResult>.Ok(EducationStudyItemImportResult.Rejected(
@@ -185,14 +187,14 @@ public sealed class ImportObjectiveStudyItemsHandler(IAppDbContext db)
 }
 
 public sealed record UpdateObjectiveStudyItemCommand(string UserId, string CourseId, string ObjectiveId, string ItemId,
-    EducationObjectiveStudyItemRequest Request) : IRequest<ApiResponse<EducationObjectiveStudyItemAuthorDto>>;
+    EducationObjectiveStudyItemRequest Request, bool IsAdmin = false) : IRequest<ApiResponse<EducationObjectiveStudyItemAuthorDto>>;
 
 public sealed class UpdateObjectiveStudyItemHandler(IAppDbContext db)
     : IRequestHandler<UpdateObjectiveStudyItemCommand, ApiResponse<EducationObjectiveStudyItemAuthorDto>>
 {
     public async Task<ApiResponse<EducationObjectiveStudyItemAuthorDto>> Handle(UpdateObjectiveStudyItemCommand q, CancellationToken ct)
     {
-        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct);
+        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct, q.IsAdmin);
         var item = await db.EducationObjectiveStudyItems.FirstOrDefaultAsync(x => x.Id == q.ItemId && x.ObjectiveId == q.ObjectiveId && !x.IsDeleted, ct)
             ?? throw new NotFoundAppException("Study item not found.");
         if (item.Status == EducationStudyItemStatus.Published) throw new ValidationAppException("Withdraw a published item before editing it.");
@@ -210,14 +212,14 @@ public sealed class UpdateObjectiveStudyItemHandler(IAppDbContext db)
     }
 }
 
-public sealed record DeleteObjectiveStudyItemCommand(string UserId, string CourseId, string ObjectiveId, string ItemId)
+public sealed record DeleteObjectiveStudyItemCommand(string UserId, string CourseId, string ObjectiveId, string ItemId, bool IsAdmin = false)
     : IRequest<ApiResponse<bool>>;
 public sealed class DeleteObjectiveStudyItemHandler(IAppDbContext db)
     : IRequestHandler<DeleteObjectiveStudyItemCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(DeleteObjectiveStudyItemCommand q, CancellationToken ct)
     {
-        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct);
+        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct, q.IsAdmin);
         var item = await db.EducationObjectiveStudyItems.FirstOrDefaultAsync(x => x.Id == q.ItemId && x.ObjectiveId == q.ObjectiveId && !x.IsDeleted, ct)
             ?? throw new NotFoundAppException("Study item not found.");
         var remaining = await db.EducationObjectiveStudyItems.Where(x => x.ObjectiveId == q.ObjectiveId && !x.IsDeleted && x.Id != q.ItemId)
@@ -241,14 +243,14 @@ public sealed class DeleteObjectiveStudyItemHandler(IAppDbContext db)
     }
 }
 
-public sealed record ReorderObjectiveStudyItemsCommand(string UserId, string CourseId, string ObjectiveId, IReadOnlyList<string> ItemIds)
+public sealed record ReorderObjectiveStudyItemsCommand(string UserId, string CourseId, string ObjectiveId, IReadOnlyList<string> ItemIds, bool IsAdmin = false)
     : IRequest<ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>>;
 public sealed class ReorderObjectiveStudyItemsHandler(IAppDbContext db)
     : IRequestHandler<ReorderObjectiveStudyItemsCommand, ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>>
 {
     public async Task<ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>> Handle(ReorderObjectiveStudyItemsCommand q, CancellationToken ct)
     {
-        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct);
+        await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct, q.IsAdmin);
         var rows = await db.EducationObjectiveStudyItems.Where(x => x.ObjectiveId == q.ObjectiveId && !x.IsDeleted).ToListAsync(ct);
         if (q.ItemIds is null || q.ItemIds.Count != rows.Count || q.ItemIds.Distinct().Count() != rows.Count || q.ItemIds.Any(id => rows.All(x => x.Id != id)))
             throw new ValidationAppException("Reorder must contain every active study item exactly once.");
@@ -270,13 +272,13 @@ public sealed class ReorderObjectiveStudyItemsHandler(IAppDbContext db)
 }
 
 public sealed record SetObjectiveStudyItemPublicationCommand(string UserId, string CourseId, string ObjectiveId,
-    string ItemId, bool Publish, bool NotConfidentialExamContent) : IRequest<ApiResponse<EducationObjectiveStudyItemAuthorDto>>;
+    string ItemId, bool Publish, bool NotConfidentialExamContent, bool IsAdmin = false) : IRequest<ApiResponse<EducationObjectiveStudyItemAuthorDto>>;
 public sealed class SetObjectiveStudyItemPublicationHandler(IAppDbContext db)
     : IRequestHandler<SetObjectiveStudyItemPublicationCommand, ApiResponse<EducationObjectiveStudyItemAuthorDto>>
 {
     public async Task<ApiResponse<EducationObjectiveStudyItemAuthorDto>> Handle(SetObjectiveStudyItemPublicationCommand q, CancellationToken ct)
     {
-        var objective = await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct);
+        var objective = await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct, q.IsAdmin);
         var item = await db.EducationObjectiveStudyItems.FirstOrDefaultAsync(x => x.Id == q.ItemId && x.ObjectiveId == q.ObjectiveId && !x.IsDeleted, ct)
             ?? throw new NotFoundAppException("Study item not found.");
         var courseIsPublic = await db.EducationCourses.AnyAsync(x => x.Id == q.CourseId && x.IsPublic && !x.IsModerationHidden && !x.IsDeleted, ct);

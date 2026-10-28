@@ -1,8 +1,7 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useEducationCopy } from '@/features/education/i18n';
 import type { EducationGuardianLink } from '@/features/education/types/educationRelationship.types';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 
 type EducationGuardianRequestsProps = Readonly<{

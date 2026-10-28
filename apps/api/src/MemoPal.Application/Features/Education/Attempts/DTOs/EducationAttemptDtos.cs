@@ -69,4 +69,5 @@ public sealed record EducationAttemptSaveDto(string AttemptId, int Version, stri
 
 public sealed record EducationPracticeCheckRequest(string QuestionId, EducationAttemptAnswerInputDto? Answer);
 
-public sealed record EducationPracticeCheckDto(string QuestionId, decimal Score, decimal MaxScore, bool IsCorrect);
+public sealed record EducationPracticeCheckDto(string QuestionId, decimal Score, decimal MaxScore, bool IsCorrect,
+    string? Explanation = null, EducationAttemptAnswerDto? CorrectAnswer = null);

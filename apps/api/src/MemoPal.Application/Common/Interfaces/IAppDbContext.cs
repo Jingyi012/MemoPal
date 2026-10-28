@@ -73,6 +73,9 @@ public interface IAppDbContext
     DbSet<EducationPublicPracticeProgress> EducationPublicPracticeProgress { get; }
     DbSet<EducationSavedCourse> EducationSavedCourses { get; }
     DbSet<EducationCourseReport> EducationCourseReports { get; }
+    DbSet<EducationGuidedLearningSession> EducationGuidedLearningSessions { get; }
+    DbSet<EducationGuidedLearningQuestionProgress> EducationGuidedLearningQuestionProgress { get; }
+    DbSet<EducationGuidedLearningCheckReceipt> EducationGuidedLearningCheckReceipts { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

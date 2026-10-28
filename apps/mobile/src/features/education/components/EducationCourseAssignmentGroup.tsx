@@ -1,5 +1,4 @@
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import type { MyEducationAssignment } from '../types/educationAssignment.types';
 import { EducationAssignmentCard } from './EducationAssignmentCard';
 import { StyleSheet, Text, View } from 'react-native';

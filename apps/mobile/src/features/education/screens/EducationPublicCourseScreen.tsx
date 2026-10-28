@@ -1,35 +1,88 @@
-import { CommonHeader } from '@/components/CommonHeader';
-import LoadingView from '@/components/LoadingView';
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
+import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useEducationCopy } from '@/features/education/i18n';
-import { EducationPublicResourceCard } from '@/features/education/components/EducationPublicResourceCard';
-import { useEducationPublicCourse, useEducationPublicCourseSave, useReportEducationCourse } from '@/features/education/hooks/useEducationPracticeItems';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
+import { LearningCoursePath } from '../components/LearningCoursePath';
+import { LearningMemoryCard } from '../components/LearningMemoryCard';
+import { LearningArrival, LearningButton, LearningProgress, LearningSkeleton, SubjectArtwork, LearningThemeContext, useLearningStyles, learningThemeFor, useLearningCopy } from '../components/LearningUi';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useEducationGuidedCourseProgress, useEducationPublicCourse, useEducationPublicCourseSave, useReportEducationCourse, useStartOrResumeEducationGuidedSession } from '@/features/education/hooks/useEducationPracticeItems';
 import * as Linking from 'expo-linking';
-import { Href, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, Href, Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Flag } from '@/core/icons';
-import { Share, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Share, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useState } from 'react';
+import { useReducedMotion } from 'react-native-reanimated';
+import { useCallback, useRef, useState } from 'react';
+import { useAuth } from '@/contexts/AuthProvider';
 
 export default function EducationPublicCourseScreen() {
   const { courseId = '' } = useLocalSearchParams<{ courseId: string }>();
+  const { styles: ls } = useLearningStyles();
   const copy = useEducationCopy();
+  const ui = useLearningCopy();
+  const reduceMotion = useReducedMotion();
+  const insets = useSafeAreaInsets();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
   const { styles, theme } = useStyles();
   const router = useRouter();
   const course = useEducationPublicCourse(courseId);
   const saveCourse = useEducationPublicCourseSave(courseId);
   const reportCourse = useReportEducationCourse();
+  const guidedProgress = useEducationGuidedCourseProgress(courseId);
+  const startGuided = useStartOrResumeEducationGuidedSession();
+  const { user } = useAuth();
+  const userIdRef = useRef(user?.id);
+  const courseRefreshRef = useRef(course.refetch);
+  const progressRefreshRef = useRef(guidedProgress.refetch);
+  courseRefreshRef.current = course.refetch;
+  progressRefreshRef.current = guidedProgress.refetch;
+  const activeRef = useRef(false);
+  const screenEpochRef = useRef(0);
+  const startInFlightRef = useRef(false);
+  const screenIdentity = `${courseId}:${user?.id ?? ''}:${user?.accountMode ?? ''}`;
+  const screenIdentityRef = useRef(screenIdentity);
+  screenIdentityRef.current = screenIdentity;
+  userIdRef.current = user?.id;
+  useFocusEffect(useCallback(() => {
+    screenIdentityRef.current = screenIdentity;
+    activeRef.current = true;
+    screenEpochRef.current++;
+    startInFlightRef.current = false;
+    if (user?.id && user.accountMode !== 'RestrictedLearner')
+      void Promise.allSettled([courseRefreshRef.current(), progressRefreshRef.current()]);
+    return () => { activeRef.current = false; screenEpochRef.current++; startInFlightRef.current = false; };
+  }, [screenIdentity, user?.id, user?.accountMode]));
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState('inappropriate');
   const [reportDetails, setReportDetails] = useState('');
 
-  return <View style={styles.page}>
-    <CommonHeader title={course.data?.title ?? copy.publicCourseDetailTitle} backAction={() => router.back()} />
-    <ScrollView contentContainerStyle={styles.content}>
-      {course.isLoading ? <View style={styles.state}><LoadingView description={copy.loading} /></View>
+  if (user?.accountMode === 'RestrictedLearner') return <Redirect href="/education/assignments" />;
+
+  const subjectTheme = learningThemeFor(course.data?.title ?? '', theme);
+  const lessons = guidedProgress.data?.lessons ?? [];
+  const total = lessons.reduce((n, lesson) => n + lesson.questionCount, 0);
+  const solved = lessons.reduce((n, lesson) => n + lesson.questionsSolved, 0);
+  const nextId = guidedProgress.data?.nextRecommendedAssessmentId ?? course.data?.assessments[0]?.id;
+  const memoryRecommendation = course.data?.objectives.find(objective => objective.recommendedMemorySet)?.recommendedMemorySet;
+  const uncoveredAssessments = course.data?.assessments.filter(assessment => !lessons.some(lesson => lesson.assessmentId === assessment.id && lesson.objectives.some(item => course.data?.objectives.some(objective => objective.id === item.objectiveId)))) ?? [];
+  const shareCourse = () => {
+    setMenuOpen(false);
+    const url = Linking.createURL(`community/education/${encodeURIComponent(courseId)}`);
+    void Share.share({ message: `${course.data?.title}\n${copy.sharePublicCourseOpenLink}: ${url}`, title: copy.sharePublicCourseTitle }).catch(() => Toast.show({ type: 'error', text1: copy.sharePublicCourseError }));
+  };
+  return <LearningThemeContext.Provider value={subjectTheme}><View style={ls.page}>
+    <Stack.Screen options={{ animation: reduceMotion ? 'none' : 'fade_from_bottom' }} />
+    <CommonHeader title={ui.zh ? '课程' : 'Course'} showAiCredits={false} backAction={() => router.back()} actions={[
+      { component: <AnimatedPressable accessibilityLabel={course.data?.isSaved ? copy.unsavePublicCourse : copy.savePublicCourse} disabled={saveCourse.isPending || !course.data} onPress={() => saveCourse.mutate(!course.data?.isSaved)} style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}><Ionicons name={course.data?.isSaved ? 'bookmark' : 'bookmark-outline'} size={24} color={subjectTheme.color} /></AnimatedPressable> },
+      { component: <AnimatedPressable accessibilityLabel={ui.more} onPress={() => setMenuOpen(true)} style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}><Ionicons name="ellipsis-horizontal" size={24} color={theme.ink} /></AnimatedPressable> },
+    ]} />
+    <ScrollView contentContainerStyle={ls.content}>
+      {course.isLoading ? <LearningSkeleton />
         : course.isError || !course.data ? <View style={styles.errorState}>
           <Text accessibilityRole="alert" style={styles.body}>{copy.publicCoursesError}</Text>
           <AnimatedPressable accessibilityRole="button" onPress={() => void course.refetch()} style={styles.retry}>
@@ -37,59 +90,37 @@ export default function EducationPublicCourseScreen() {
           </AnimatedPressable>
         </View>
           : <>
-            <Text style={styles.author}>{copy.publicCourseAuthor(course.data.authorDisplayName)}</Text>
-            <AnimatedPressable
-              accessibilityRole="button"
-              onPress={() => {
-                const url = Linking.createURL(`community/education/${encodeURIComponent(course.data!.id)}`);
-                void Share.share({ message: `${course.data!.title}\n${copy.sharePublicCourseOpenLink}: ${url}`, title: copy.sharePublicCourseTitle })
-                  .catch(() => Toast.show({ type: 'error', text1: copy.sharePublicCourseError }));
-              }}
-              style={styles.shareButton}
-            >
-              <Text style={styles.saveButtonText}>{copy.sharePublicCourse}</Text>
-            </AnimatedPressable>
-            <AnimatedPressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled: saveCourse.isPending }}
-              disabled={saveCourse.isPending}
-              onPress={() => saveCourse.mutate(!course.data?.isSaved)}
-              style={styles.saveButton}
-            >
-              <Text style={styles.saveButtonText}>{course.data.isSaved ? copy.unsavePublicCourse : copy.savePublicCourse}</Text>
-            </AnimatedPressable>
-            {saveCourse.isError && <Text accessibilityRole="alert" style={styles.saveError}>{copy.savePublicCourseError}</Text>}
-            {course.data.isSaved && <Text style={styles.savedNote}>{copy.publicCourseSaved}</Text>}
-            <AnimatedPressable accessibilityRole="button" onPress={() => setReportOpen(true)} style={styles.reportButton}>
-              <Flag size={15} color={theme.inkSoft} />
-              <Text style={styles.reportText}>{copy.reportPublicCourse}</Text>
-            </AnimatedPressable>
-            <Text style={styles.notice}>{copy.publicCoursePracticeNote}</Text>
-            {course.data.objectives.length > 0 && <>
-              <Text accessibilityRole="header" style={styles.sectionTitle}>{copy.publicCourseObjectives}</Text>
-              <Text style={styles.body}>{copy.publicCourseMemoryBridgeNote}</Text>
-              {course.data.objectives.map(objective => <View key={objective.id} style={styles.objective}>
-                <Text style={styles.objectiveTitle}>{objective.title}</Text>
-                {objective.recommendedMemorySet && <EducationPublicResourceCard
-                  title={objective.recommendedMemorySet.title}
-                  detail={objective.recommendedMemorySet.description ?? copy.publicCourseMemoryPractice}
-                  metadata={objective.recommendedMemorySet.techniqueKey === 'palace' ? copy.memoryTechniquePalace : copy.memoryTechniquePeg}
-                  onPress={() => router.push(`/community/memory-sets/${objective.recommendedMemorySet!.id}` as Href)}
-                />}
-              </View>)}
-            </>}
-            <Text accessibilityRole="header" style={styles.sectionTitle}>{copy.publicCourseAssessmentCount(course.data.assessments.length)}</Text>
-            {course.data.assessments.length ? course.data.assessments.map(assessment => (
-              <EducationPublicResourceCard
-                key={assessment.id}
-                title={assessment.title}
-                detail={copy.practiceQuestionCount(assessment.questionCount)}
-                metadata={assessment.questionTypes.map(type => copy.questionTypeLabels[type]).join(' · ')}
-                onPress={() => router.push(`/community/education/${courseId}/${assessment.id}` as Href)}
-              />
-            )) : <Text style={styles.body}>{copy.publicCourseNoAssessments}</Text>}
+            <LearningArrival><LinearGradient colors={subjectTheme.gradient} start={[0, 0]} end={[1, 1]} style={ls.courseHero}>
+              <View style={{ position: 'absolute', right: 12, top: 10 }}><SubjectArtwork theme={subjectTheme} size={60} /></View>
+              <View style={{ paddingRight: 64, gap: 4 }}><Text numberOfLines={2} accessibilityRole="header" style={[ls.title, { color: subjectTheme.dark }]}>{course.data.title}</Text><Text style={[ls.small, { color: subjectTheme.dark }]}>{copy.publicCourseAuthor(course.data.authorDisplayName)} · {guidedProgress.isLoading ? '…' : guidedProgress.isError ? '—' : ui.correct(solved, total)}</Text></View>
+              <LearningProgress value={solved} total={total} color={subjectTheme.color} />
+            </LinearGradient></LearningArrival>
+            {saveCourse.isError ? <Text accessibilityRole="alert" style={styles.saveError}>{copy.savePublicCourseError}</Text> : null}
+            <AnimatedPressable accessibilityState={{ expanded: noteOpen }} onPress={() => setNoteOpen(value => !value)} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={ls.small}>ⓘ {ui.note} {noteOpen ? '−' : '+'}</Text></AnimatedPressable>
+            {noteOpen ? <View style={ls.card}><Text style={ls.body}>{copy.publicCoursePracticeNote}</Text>{course.data.isMemoPalStarter ? <Text style={ls.small}>{copy.starterCourseLanguageNote}</Text> : null}</View> : null}
+            <LearningCoursePath objectives={course.data.objectives} progress={guidedProgress.data} onMemory={id => router.push(`/community/education/${encodeURIComponent(courseId)}/memory?memorySetId=${encodeURIComponent(id)}` as Href)} onPractice={assessmentId => void openGuidedLesson(assessmentId)} />
+            {memoryRecommendation ? <LearningMemoryCard title={ui.zh ? '用记忆宫殿记住它' : 'Make it memorable'} description={memoryRecommendation.title} label={ui.zh ? '选择记忆法' : 'Choose a memory method'} onPress={() => router.push(`/community/education/${encodeURIComponent(courseId)}/memory?memorySetId=${encodeURIComponent(memoryRecommendation.id)}` as Href)} /> : null}
+            {uncoveredAssessments.length ? <Text accessibilityRole="header" style={ls.heading}>{ui.lessons}</Text> : null}
+            {guidedProgress.isError ? <AnimatedPressable onPress={() => void guidedProgress.refetch()} style={ls.card}><Text accessibilityRole="alert" style={ls.body}>{copy.guidedLessonLoadError} · {copy.retry}</Text></AnimatedPressable> : null}
+            {startGuided.isError ? <Text accessibilityRole="alert" style={styles.saveError}>{copy.guidedLessonSessionError}</Text> : null}
+            {uncoveredAssessments.map(assessment => {
+              const lesson = lessons.find(item => item.assessmentId === assessment.id);
+              return <AnimatedPressable key={assessment.id} disabled={startGuided.isPending} onPress={() => void openGuidedLesson(assessment.id)} style={[ls.card, { borderColor: subjectTheme.line }]}>
+                <View style={ls.row}><Ionicons name={lesson?.isComplete ? 'checkmark-circle' : 'play-circle-outline'} size={28} color={subjectTheme.color} /><Text style={[ls.heading, { flex: 1 }]}>{assessment.title}</Text><Ionicons name="chevron-forward" size={20} color={subjectTheme.color} /></View>
+                <Text style={ls.body}>{ui.correct(lesson?.questionsSolved ?? 0, assessment.questionCount)} · {ui.time(assessment.questionCount)}</Text>
+                {lesson?.latestIncorrectQuestionCount ? <View style={ls.badge}><Text style={ls.small}>{ui.reinforce}</Text></View> : null}
+              </AnimatedPressable>;
+            })}
           </>}
     </ScrollView>
+    {nextId && course.data ? <View style={[ls.dock, { paddingBottom: Math.max(16, insets.bottom) }]}><LearningButton label={lessons.length > 0 && lessons.every(lesson => lesson.isComplete) ? copy.guidedLessonReview : ui.continue} loading={startGuided.isPending} onPress={() => void openGuidedLesson(nextId)} /></View> : null}
+    <Modal transparent visible={menuOpen} animationType={reduceMotion ? 'none' : 'fade'} onRequestClose={() => setMenuOpen(false)}>
+      <View style={{ flex: 1, backgroundColor: 'rgba(20,40,25,.3)', justifyContent: 'flex-end', padding: 20, paddingBottom: Math.max(20, insets.bottom) }}><View style={ls.card}>
+        <LearningButton secondary label={copy.sharePublicCourse} onPress={shareCourse} />
+        <LearningButton secondary label={copy.reportPublicCourse} onPress={() => { setMenuOpen(false); setReportOpen(true); }} />
+        <LearningButton secondary label={ui.close} onPress={() => setMenuOpen(false)} />
+      </View></View>
+    </Modal>
     {course.data ? <ConfirmModal
       visible={reportOpen}
       icon={<Flag size={25} color={theme.berryDeep} />}
@@ -136,7 +167,26 @@ export default function EducationPublicCourseScreen() {
         />
       </View>
     </ConfirmModal> : null}
-  </View>;
+  </View></LearningThemeContext.Provider>;
+
+  async function openGuidedLesson(assessmentId: string) {
+    const userId = user?.id;
+    if (!userId || startGuided.isPending || startInFlightRef.current) return;
+    startInFlightRef.current = true;
+    const epoch = screenEpochRef.current;
+    const identity = screenIdentityRef.current;
+    try {
+      const session = await startGuided.mutateAsync({ courseId, assessmentId });
+      if (!activeRef.current || screenEpochRef.current !== epoch || screenIdentityRef.current !== identity) return;
+      if (userIdRef.current !== userId) { startInFlightRef.current = false; return; }
+      router.push(`/community/education/guided/${encodeURIComponent(session.sessionId)}` as Href);
+    } catch {
+      if (activeRef.current && screenEpochRef.current === epoch && userIdRef.current === userId) {
+        startInFlightRef.current = false;
+        Toast.show({ type: 'error', text1: copy.guidedLessonSessionError });
+      }
+    }
+  }
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
@@ -161,8 +211,16 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17, marginTop: 6 },
   body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
   objective: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 15, borderWidth: 1, gap: 8, padding: 12 },
+  studyItem: { borderTopColor: theme.line, borderTopWidth: 1, gap: 4, paddingTop: 9 },
+  studyDetail: { color: theme.violetDeep, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18 },
   objectiveTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
   errorState: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 1.5, gap: 10, padding: 15 },
   retry: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 12, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
   retryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  progressError: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 14, borderWidth: 1, gap: 8, padding: 12 },
+  lessonCard: { backgroundColor: theme.mintTint, borderColor: theme.mintLine, borderRadius: 18, borderWidth: 1.5, gap: 8, padding: 10 },
+  lessonProgress: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, paddingHorizontal: 3 },
+  recommended: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, paddingHorizontal: 3 },
+  lessonAction: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 13, justifyContent: 'center', minHeight: 46, paddingHorizontal: 16 },
+  lessonActionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
 }));

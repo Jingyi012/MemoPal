@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Globalization;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Features.Education.Attempts.DTOs;
 using MemoPal.Application.Features.Education.Authoring;
@@ -50,6 +51,23 @@ internal static class EducationAttemptMapping
 
     public static EducationStudentQuestionDto ToStudentQuestion(EducationQuestion question, bool includeExplanation = false)
         => EducationAuthoringMapper.ToStudentDto(question, includeExplanation);
+
+    // Call only after an authorized practice check; never add this to a question/read DTO.
+    public static EducationAttemptAnswerDto CorrectAnswer(EducationQuestion question)
+    {
+        var definition = Definition(question);
+        return question.Type switch
+        {
+            ObjectiveQuestionTypeCodes.SingleChoice => new("single-choice", OptionId: definition.CorrectOptionId),
+            ObjectiveQuestionTypeCodes.MultipleSelect => new("multiple-select", OptionIds: definition.CorrectOptionIds),
+            ObjectiveQuestionTypeCodes.Ordering => new("ordering", OrderedOptionIds: definition.CorrectSequenceIds),
+            ObjectiveQuestionTypeCodes.Matching => new("matching", Matches: definition.CorrectMatches.Select(pair => new EducationMatchingAnswerDto(pair.LeftOptionId, pair.MatchTargetId)).ToArray()),
+            ObjectiveQuestionTypeCodes.TrueFalse => new("true-false", BooleanValue: definition.CorrectBooleanAnswer),
+            ObjectiveQuestionTypeCodes.FillBlank when question.FillMode == FillBlankModeCodes.Text => new("text", TextValue: definition.AllowedTextAnswers[0]),
+            ObjectiveQuestionTypeCodes.FillBlank when question.FillMode == FillBlankModeCodes.Number => new("number", NumericValue: definition.AllowedNumericAnswers[0].ToString(CultureInfo.InvariantCulture)),
+            _ => throw new InvalidOperationException("Only objective practice questions have automatic answer feedback.")
+        };
+    }
 
     public static EducationAssessmentAttemptDto ToDto(EducationAssessmentAttempt attempt, EducationAssessment assessment)
     {

@@ -1,6 +1,8 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
+import { useReducedMotion } from 'react-native-reanimated';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { CommonHeader } from '@/components/CommonHeader';
-import LoadingView from '@/components/LoadingView';
+import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
+import { LearningLoadingView as LoadingView } from '@/features/education/components/LearningUi';
 import { educationPracticeApi } from '@/features/education/api/educationPractice.api';
 import { EducationPracticeReview, isPracticeQuestion } from '@/features/education/components/EducationPracticeReview';
 import { EDUCATION_PRACTICE_KEYS, useEducationPublicPracticeAssessment } from '@/features/education/hooks/useEducationPracticeItems';
@@ -8,16 +10,15 @@ import { useEducationCopy } from '@/features/education/i18n';
 import { useAuth } from '@/contexts/AuthProvider';
 import { createEducationQuestionInputLabels } from '@/features/education/utils/createEducationQuestionInputLabels';
 import { toAttemptAnswerDto } from '@/features/education/utils/educationAttemptAnswers';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 
 export default function EducationPublicPracticeScreen() {
   const { courseId = '', assessmentId = '' } = useLocalSearchParams<{ courseId: string; assessmentId: string }>();
   const copy = useEducationCopy();
+  const reduceMotion = useReducedMotion();
   const { styles } = useStyles();
   const router = useRouter();
   const { user } = useAuth();
@@ -26,18 +27,21 @@ export default function EducationPublicPracticeScreen() {
   const questions = useMemo(() => (assessment.data?.questions ?? [])
     .map(item => item.question)
     .filter(isPracticeQuestion), [assessment.data?.questions]);
+  const showPracticePlayer = !!assessment.data && !assessment.isLoading && !assessment.isError && questions.length > 0;
+  if (user?.accountMode === 'RestrictedLearner') return <Redirect href="/education/assignments" />;
 
   const checkAnswer = async (question: (typeof questions)[number], answer: Parameters<typeof toAttemptAnswerDto>[1]) => {
     const result = await educationPracticeApi.checkPublicPracticeAnswer(
       courseId, assessmentId, question.id, toAttemptAnswerDto(question, answer),
     );
     await queryClient.invalidateQueries({ queryKey: EDUCATION_PRACTICE_KEYS.publicHistory(user?.id ?? 'anonymous') });
-    return { isCorrect: result.isCorrect, explanation: result.explanation };
+    return { isCorrect: result.isCorrect, explanation: result.explanation, correctAnswer: result.correctAnswer };
   };
 
-  return <View style={styles.page}>
-    <CommonHeader title={assessment.data?.title ?? copy.publicPracticeTitle} backAction={() => router.back()} />
-    <ScrollView contentContainerStyle={styles.content}>
+  return <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <Stack.Screen options={{ animation: reduceMotion ? 'none' : 'fade_from_bottom' }} />
+    {!showPracticePlayer ? <CommonHeader compact showAiCredits={false} title={assessment.data?.title ?? copy.publicPracticeTitle} backAction={() => router.back()} /> : null}
+    <View style={{ flex: 1 }}>
       {assessment.isLoading ? <View style={styles.state}><LoadingView description={copy.loading} /></View>
         : assessment.isError || !assessment.data ? <View style={styles.errorState}>
           <Text accessibilityRole="alert" style={styles.body}>{copy.publicPracticeUnavailable}</Text>
@@ -50,15 +54,17 @@ export default function EducationPublicPracticeScreen() {
             </AnimatedPressable>
           </View>
         </View>
-          : <EducationPracticeReview
+          : <EducationPracticeReview embedded={false}
             attemptId={`public:${courseId}:${assessmentId}`}
+            sessionIdentity={user?.id ?? 'anonymous'}
             questions={questions}
             labels={createEducationQuestionInputLabels(copy)}
             onCheckAnswer={checkAnswer}
             onExit={() => router.back()}
+            exitLabel={copy.publicPracticeReturn}
           />}
-    </ScrollView>
-  </View>;
+    </View>
+  </KeyboardAvoidingView>;
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({

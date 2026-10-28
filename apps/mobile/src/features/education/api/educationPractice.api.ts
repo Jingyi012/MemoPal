@@ -8,8 +8,19 @@ import type {
   EducationPublicPracticeAssessment,
   EducationPublicPracticeAnswerResult,
   EducationPublicPracticeHistoryItem,
+  EducationGuidedCourseProgress,
+  EducationGuidedLearningSession,
+  EducationGuidedCheckResult,
 } from '@/features/education/types/educationPractice.types';
 import type { EducationAttemptAnswerDto } from '@/features/education/types/question.types';
+
+type GuidedSessionDto = Omit<EducationGuidedLearningSession, 'questions'> & Readonly<{
+  questions: readonly Readonly<{
+    question: EducationAttemptQuestionDto;
+    objectiveTitle: string;
+    progress: EducationGuidedLearningSession['questions'][number]['progress'];
+  }>[];
+}>;
 
 type PublicPracticeAssessmentDto = Omit<EducationPublicPracticeAssessment, 'questions'> & Readonly<{
   questions: readonly Readonly<{ question: EducationAttemptQuestionDto; objectiveTitle: string }>[];
@@ -20,7 +31,49 @@ function readData<T>(response: GeneralResponse<T>, fallback: string): T {
   return response.data;
 }
 
+function guidedBase(classroomId?: string) {
+  return classroomId
+    ? `/v1/education/classrooms/${encodeURIComponent(classroomId)}/guided`
+    : '/v1/education/guided';
+}
+
 export const educationPracticeApi = {
+  async getGuidedHomeProgress(): Promise<EducationGuidedCourseProgress | null> {
+    const response = await api.get<GeneralResponse<EducationGuidedCourseProgress | null>>(
+      '/v1/education/guided/courses/home-progress');
+    return readData(response.data, 'Could not load your current learning course.');
+  },
+  async getGuidedCourseProgress(courseId: string, classroomId?: string): Promise<EducationGuidedCourseProgress> {
+    const response = await api.get<GeneralResponse<EducationGuidedCourseProgress>>(
+      `${guidedBase(classroomId)}/courses/${encodeURIComponent(courseId)}/progress`);
+    return readData(response.data, 'Could not load this course progress.');
+  },
+  async getClassroomLearningContent(classroomId: string, courseId: string, assessmentId: string): Promise<import('@/features/education/types/educationPractice.types').EducationClassroomLearningContent> {
+    const response = await api.get<GeneralResponse<import('@/features/education/types/educationPractice.types').EducationClassroomLearningContent>>(
+      `${guidedBase(classroomId)}/courses/${encodeURIComponent(courseId)}/assessments/${encodeURIComponent(assessmentId)}/learning-content`);
+    return readData(response.data, 'Could not load this lesson introduction.');
+  },
+  async startOrResumeGuidedSession(courseId: string, assessmentId: string, classroomId?: string): Promise<EducationGuidedLearningSession> {
+    const response = await api.post<GeneralResponse<EducationGuidedLearningSession>>(
+      `${guidedBase(classroomId)}/courses/${encodeURIComponent(courseId)}/assessments/${encodeURIComponent(assessmentId)}/sessions`);
+    return readData(response.data, 'Could not open this learning lesson.');
+  },
+  async getGuidedSession(sessionId: string, classroomId?: string): Promise<EducationGuidedLearningSession> {
+    const response = await api.get<GeneralResponse<GuidedSessionDto>>(
+      `${guidedBase(classroomId)}/sessions/${encodeURIComponent(sessionId)}`);
+    const dto = readData(response.data, 'Could not restore this learning session.');
+    return { ...dto, questions: dto.questions.map(item => ({
+      ...item,
+      question: { ...readEducationAttemptQuestion(item.question), objectiveTitle: item.objectiveTitle },
+    })) };
+  },
+  async checkGuidedAnswer(sessionId: string, questionId: string, request: {
+    requestId: string; expectedVersion: number; answer: EducationAttemptAnswerDto;
+  }, classroomId?: string): Promise<EducationGuidedCheckResult> {
+    const response = await api.post<GeneralResponse<EducationGuidedCheckResult>>(
+      `${guidedBase(classroomId)}/sessions/${encodeURIComponent(sessionId)}/questions/${encodeURIComponent(questionId)}/check`, request);
+    return readData(response.data, 'Could not check this learning answer.');
+  },
   async getItems(): Promise<readonly EducationPracticeItem[]> {
     const response = await api.get<GeneralResponse<readonly EducationPracticeItem[]>>('/v1/education/practice/items');
     if (!response.data.success || response.data.data == null) {

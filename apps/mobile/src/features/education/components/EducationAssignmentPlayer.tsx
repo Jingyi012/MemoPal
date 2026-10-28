@@ -1,9 +1,11 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { AppButton } from '@/components/ui/AppButton';
+import { LearningAppButton as AppButton } from '@/features/education/components/LearningAppButton';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { QuestionCard, QuestionInput } from '@/features/education/components/question-inputs';
 import { educationAttemptApi } from '@/features/education/api/educationAttempt.api';
 import { useEducationCopy } from '@/features/education/i18n';
+import { useAuth } from '@/contexts/AuthProvider';
 import { createEducationQuestionInputLabels } from '@/features/education/utils/createEducationQuestionInputLabels';
 import { EducationAssignmentLeaderboard } from '@/features/education/components/EducationAssignmentLeaderboard';
 import { EducationResultShareButton } from '@/features/education/components/EducationResultShareButton';
@@ -22,8 +24,6 @@ import {
   toAttemptAnswerDto,
 } from '@/features/education/utils/educationAttemptAnswers';
 import { enqueueEducationAttemptWrite } from '@/features/education/utils/educationAttemptWriteQueue';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -39,10 +39,12 @@ type EducationAssignmentPlayerProps = Readonly<{
   classroomAssignment: boolean;
   initialPracticeType?: string;
   onAttemptUpdated: (attempt: EducationAssessmentAttempt) => void;
+  onSketchWorkChange?: (hasUnsavedWork: boolean, processing: boolean) => void;
 }>;
 
-export function EducationAssignmentPlayer({ attempt, classroomAssignment, initialPracticeType, onAttemptUpdated }: EducationAssignmentPlayerProps) {
+export function EducationAssignmentPlayer({ attempt, classroomAssignment, initialPracticeType, onAttemptUpdated, onSketchWorkChange }: EducationAssignmentPlayerProps) {
   const copy = useEducationCopy();
+  const { user } = useAuth();
   const { styles } = useStyles();
   const [answers, setAnswers] = useState<Record<string, EducationAnswer>>(() => answersForAttempt(attempt));
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -51,6 +53,8 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [hasUnsavedSketch, setHasUnsavedSketch] = useState(false);
+  const [isSketchProcessing, setIsSketchProcessing] = useState(false);
   const [practiceMode, setPracticeMode] = useState(() => Boolean(initialPracticeType));
   const [secondsRemaining, setSecondsRemaining] = useState(() => remainingSeconds(attempt.expiresAt));
   const answersRef = useRef(answers);
@@ -62,14 +66,21 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
   const attemptRef = useRef(attempt);
   const attemptVersionRef = useRef(attempt.version);
   const onAttemptUpdatedRef = useRef(onAttemptUpdated);
+  const onSketchWorkChangeRef = useRef(onSketchWorkChange);
+  const localPreviewCleanupRef = useRef(new Map<string, { uri: string; cleanup: () => void }>());
   const isSubmittingRef = useRef(false);
   const isRecordingRef = useRef(false);
+  const hasUnsavedSketchRef = useRef(false);
+  const isSketchProcessingRef = useRef(false);
+  const userIdRef = useRef(user?.id ?? null);
+  userIdRef.current = user?.id ?? null;
   const expiryTriggeredRef = useRef(false);
 
   if (attempt.id !== attemptRef.current.id || attempt.version >= attemptRef.current.version) {
     attemptRef.current = attempt;
   }
   onAttemptUpdatedRef.current = onAttemptUpdated;
+  onSketchWorkChangeRef.current = onSketchWorkChange;
   if (attempt.version > attemptVersionRef.current) attemptVersionRef.current = attempt.version;
 
   const queueSave = useCallback((questionId: string) => {
@@ -137,6 +148,7 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
 
   const submitAttempt = useCallback(async (expired: boolean) => {
     if (isSubmittingRef.current || attemptRef.current.status === 'submitted') return;
+    if (!expired && (hasUnsavedSketchRef.current || isSketchProcessingRef.current)) return;
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     setSubmitError(false);
@@ -182,12 +194,40 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
     }
   }, [submitAttempt]);
 
+  const handleSketchWorkChange = useCallback((hasWork: boolean, processing: boolean) => {
+    hasUnsavedSketchRef.current = hasWork;
+    isSketchProcessingRef.current = processing;
+    setHasUnsavedSketch(hasWork);
+    setIsSketchProcessing(processing);
+    onSketchWorkChangeRef.current?.(hasWork, processing);
+  }, []);
+
+  const clearLocalPreview = useCallback((questionId: string, keepUri?: string) => {
+    const preview = localPreviewCleanupRef.current.get(questionId);
+    if (!preview || preview.uri === keepUri) return;
+    localPreviewCleanupRef.current.delete(questionId);
+    try { preview.cleanup(); } catch { /* Cache cleanup is best-effort. */ }
+  }, []);
+
+  const registerLocalPreview = useCallback((questionId: string, uri: string, cleanup: () => void) => {
+    clearLocalPreview(questionId, uri);
+    localPreviewCleanupRef.current.set(questionId, { uri, cleanup });
+  }, [clearLocalPreview]);
+
+  useEffect(() => () => {
+    for (const preview of localPreviewCleanupRef.current.values()) {
+      try { preview.cleanup(); } catch { /* Cache cleanup is best-effort. */ }
+    }
+    localPreviewCleanupRef.current.clear();
+  }, [attempt.id, user?.id]);
+
   const checkPracticeAnswer = useCallback(async (question: PracticeQuestion, answer: EducationAnswer) => {
     const result = await educationAttemptApi.checkPracticeAnswer(attempt.id, question.id, toAttemptAnswerDto(question, answer));
-    return { isCorrect: result.isCorrect };
+    return { isCorrect: result.isCorrect, explanation: result.explanation, correctAnswer: result.correctAnswer };
   }, [attempt.id]);
 
   const changeAnswer = useCallback((question: EducationAttemptQuestion, answer: EducationAnswer) => {
+    if (answer.type === 'photo-response') clearLocalPreview(question.id, answer.localUri);
     const nextAnswers = { ...answersRef.current, [question.id]: answer };
     answersRef.current = nextAnswers;
     setAnswers(nextAnswers);
@@ -218,17 +258,34 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
     } else {
       void queueSave(question.id);
     }
-  }, [queueSave]);
+  }, [clearLocalPreview, queueSave]);
 
   const uploadAttachment = useCallback(async (questionId: string, file: EducationResponseAttachmentFile, kind: 'photo' | 'audio') => {
+    const identityUserId = userIdRef.current;
+    const identityAttemptId = attemptRef.current.id;
     setSaveState('saving');
     let attachmentId = '';
     const operation = enqueueEducationAttemptWrite(queueRef, async () => {
-      const saved = await educationAttemptApi.uploadAttachment(attemptRef.current.id, questionId, attemptVersionRef.current, file, kind);
+      if (userIdRef.current !== identityUserId || attemptRef.current.id !== identityAttemptId) throw new Error('The assignment identity changed.');
+      const saved = await educationAttemptApi.uploadAttachment(identityAttemptId, questionId, attemptVersionRef.current, file, kind);
+      if (userIdRef.current !== identityUserId || attemptRef.current.id !== identityAttemptId) throw new Error('The assignment identity changed.');
       attemptVersionRef.current = saved.version;
-      const updated = { ...attemptRef.current, version: saved.version };
+      const currentAttempt = attemptRef.current;
+      const question = currentAttempt.questions.find(item => item.id === questionId);
+      let uploadedAnswer: EducationAnswer | null = null;
+      if (kind === 'photo' && question?.type === 'photo-response') uploadedAnswer = { type: 'photo-response', photoAttachmentId: saved.attachmentId, localUri: file.uri };
+      if (kind === 'audio' && question?.type === 'voice-response') uploadedAnswer = { type: 'voice-response', audioAttachmentId: saved.attachmentId, localUri: file.uri };
+      const answerDto = question && uploadedAnswer ? toAttemptAnswerDto(question, uploadedAnswer) : null;
+      const responses = currentAttempt.responses.filter(response => response.questionId !== questionId);
+      if (answerDto) responses.push({ questionId, answer: answerDto });
+      const updated = { ...currentAttempt, version: saved.version, responses };
       attemptRef.current = updated;
       onAttemptUpdatedRef.current(updated);
+      if (uploadedAnswer) {
+        const nextAnswers = { ...answersRef.current, [questionId]: uploadedAnswer };
+        answersRef.current = nextAnswers;
+        setAnswers(nextAnswers);
+      }
       attachmentId = saved.attachmentId;
     });
     attachmentUploadsRef.current = operation.then(() => undefined, () => undefined);
@@ -283,7 +340,7 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
       ? practiceQuestions.filter(question => question.type === initialPracticeType)
       : practiceQuestions;
     if (practiceMode) {
-      return <EducationPracticeReview attemptId={attempt.id} questions={selectedPracticeQuestions} labels={labels}
+      return <EducationPracticeReview attemptId={attempt.id} sessionIdentity={user?.id ?? 'anonymous'} questions={selectedPracticeQuestions} labels={labels}
         onCheckAnswer={checkPracticeAnswer} onExit={() => setPracticeMode(false)} />;
     }
     return (
@@ -332,12 +389,16 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
       <QuestionCard questionIndex={questionIndex} totalQuestions={attempt.questions.length} errorText={saveState === 'error' ? copy.saveError : undefined}>
         <QuestionInput
           attemptId={attempt.id}
+          identity={`${user?.id ?? 'anonymous'}:${attempt.id}`}
           question={question}
           value={answer}
           onChange={(nextAnswer) => changeAnswer(question, nextAnswer)}
           labels={labels}
           onUploadAttachment={(file, kind) => uploadAttachment(question.id, file, kind)}
           onRecordingChange={handleRecordingChange}
+          onSketchWorkChange={handleSketchWorkChange}
+          onLocalAttachmentPreview={registerLocalPreview}
+          expired={hasExpired}
           disabled={isSubmitting || hasExpired}
         />
       </QuestionCard>
@@ -351,18 +412,18 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
       <View style={styles.navigation}>
         <AnimatedPressable
           accessibilityRole="button"
-          accessibilityState={{ disabled: questionIndex === 0 || isSubmitting || isRecording }}
-          disabled={questionIndex === 0 || isSubmitting || isRecording}
+          accessibilityState={{ disabled: questionIndex === 0 || isSubmitting || isRecording || hasUnsavedSketch || isSketchProcessing }}
+          disabled={questionIndex === 0 || isSubmitting || isRecording || hasUnsavedSketch || isSketchProcessing}
           onPress={() => setQuestionIndex((index) => Math.max(0, index - 1))}
-          style={[styles.secondaryAction, (questionIndex === 0 || isSubmitting || isRecording) && styles.disabledAction]}>
+          style={[styles.secondaryAction, (questionIndex === 0 || isSubmitting || isRecording || hasUnsavedSketch || isSketchProcessing) && styles.disabledAction]}>
           <Text style={styles.secondaryActionText}>{copy.previous}</Text>
         </AnimatedPressable>
         {questionIndex < attempt.questions.length - 1 ? (
           <AnimatedPressable
             accessibilityRole="button"
-            disabled={isSubmitting || isRecording}
+            disabled={isSubmitting || isRecording || hasUnsavedSketch || isSketchProcessing}
             onPress={() => setQuestionIndex((index) => Math.min(attempt.questions.length - 1, index + 1))}
-            style={[styles.secondaryAction, (isSubmitting || isRecording) && styles.disabledAction]}>
+            style={[styles.secondaryAction, (isSubmitting || isRecording || hasUnsavedSketch || isSketchProcessing) && styles.disabledAction]}>
             <Text style={styles.secondaryActionText}>{copy.next}</Text>
           </AnimatedPressable>
         ) : null}
@@ -372,7 +433,7 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
         <Text accessibilityRole="alert" style={styles.error}>{copy.submitError}</Text>
       ) : null}
       <AppButton
-        disabled={isSubmitting || isRecording}
+        disabled={isSubmitting || isRecording || hasUnsavedSketch || isSketchProcessing}
         fullWidth
         label={isSubmitting ? copy.submitting : submitError ? copy.retrySubmit : copy.submit}
         loading={isSubmitting}

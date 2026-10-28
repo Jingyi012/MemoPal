@@ -9,6 +9,22 @@ export type EducationClassroomMembership = Readonly<{
   classroomName: string | null;
 }>;
 
+export type EducationClassroomCourse = Readonly<{
+  classroomId: string;
+  courseId: string;
+  title: string;
+  attachedAtUtc: string;
+  guidedPracticeEnabled: boolean;
+  canManageGuidedPractice: boolean;
+  objectives: readonly Readonly<{
+    id: string;
+    title: string;
+    memoryContentType: string;
+    languageCode: string | null;
+    publishedStudyItemCount: number;
+  }>[];
+}>;
+
 export type EducationGuardianLink = Readonly<{
   id: string;
   guardianUserId: string;

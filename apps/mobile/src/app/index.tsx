@@ -1,5 +1,4 @@
 import { useAuth } from '@/contexts/AuthProvider';
-import { guidedStarterSessionHref } from '@/features/onboarding/utils/onboardingRoutes';
 import { Redirect } from 'expo-router';
 import React from 'react';
 
@@ -13,10 +12,6 @@ export default function RootIndex() {
   }
 
   if (!isAuthenticated && !isLocalDevMode) return <Redirect href="/login" />;
-
-  if (user?.onboardingStatus === 'in-progress' && user.onboardingMemorySetId) {
-    return <Redirect href={guidedStarterSessionHref(user.onboardingMemorySetId)} />;
-  }
 
   const needsOnboarding = user?.onboardingStatus === 'in-progress';
   return <Redirect href={needsOnboarding ? '/onboarding' : '/(tabs)'} />;

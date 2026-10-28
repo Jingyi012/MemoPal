@@ -70,7 +70,7 @@ export function EducationQuestionPreviewCard({ question, index }: {
         </Space>)}
       </Space>}
       {question.type === 'true-false' && <Radio.Group options={['True', 'False']} />}
-      {question.type === 'fill-blank' && (question.fillMode === 'number'
+      {question.type === 'fill-blank' && (question.options.length ? <Radio.Group optionType="button" options={[...question.options]} /> : question.fillMode === 'number'
         ? <InputNumber placeholder="Your answer" style={{ width: '100%' }} />
         : <Input placeholder="Your answer" />)}
       {question.type === 'written-response' && <Input.TextArea placeholder="Your answer" autoSize={{ minRows: 3, maxRows: 5 }} />}

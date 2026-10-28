@@ -1,7 +1,6 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import type { EducationQuestionTypePerformance } from '@/features/education/api/educationFamilyReport.api';
 import { useEducationCopy } from '@/features/education/i18n';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import { StyleSheet, Text, View } from 'react-native';
 
 type EducationResponseTypeSummaryProps = Readonly<{

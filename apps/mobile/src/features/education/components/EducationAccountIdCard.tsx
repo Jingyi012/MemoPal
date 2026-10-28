@@ -1,7 +1,6 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useEducationCopy } from '@/features/education/i18n';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';

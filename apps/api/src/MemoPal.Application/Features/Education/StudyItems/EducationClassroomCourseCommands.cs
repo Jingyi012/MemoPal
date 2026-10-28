@@ -13,7 +13,9 @@ namespace MemoPal.Application.Features.Education.StudyItems;
 public sealed record EducationClassroomCourseObjectiveSummaryDto(string Id, string Title, string MemoryContentType,
     string? LanguageCode, int PublishedStudyItemCount);
 public sealed record EducationClassroomCourseSummaryDto(string ClassroomId, string CourseId, string Title,
-    DateTime AttachedAtUtc, IReadOnlyList<EducationClassroomCourseObjectiveSummaryDto> Objectives);
+    DateTime AttachedAtUtc, IReadOnlyList<EducationClassroomCourseObjectiveSummaryDto> Objectives,
+    bool GuidedPracticeEnabled, bool CanManageGuidedPractice);
+public sealed record SetClassroomGuidedPracticeRequest(bool Enabled, bool NotConfidentialExamContent = false);
 public sealed record EducationCourseClassroomDto(string ClassroomId, string ClassroomName, DateTime AttachedAtUtc);
 
 public sealed record AttachEducationCourseToClassroomCommand(string UserId, string ClassroomId, string CourseId)
@@ -44,9 +46,12 @@ public sealed class AttachEducationCourseToClassroomHandler(IAppDbContext db)
             link.IsDeleted = false;
             link.AttachedByUserId = q.UserId;
             link.AttachedAtUtc = DateTime.UtcNow;
+            link.GuidedPracticeEnabled = false;
+            link.GuidedPracticeConfirmedByUserId = null;
+            link.GuidedPracticeConfirmedAtUtc = null;
         }
         await db.SaveChangesAsync(ct);
-        return ApiResponse<EducationClassroomCourseSummaryDto>.Ok(await EducationClassroomCourseQueries.Summary(db, link, ct));
+        return ApiResponse<EducationClassroomCourseSummaryDto>.Ok(await EducationClassroomCourseQueries.Summary(db, link, q.UserId, ct));
     }
 }
 
@@ -88,12 +93,12 @@ public sealed class GetEducationClassroomCoursesHandler(IAppDbContext db)
                 link => link.CourseId, course => course.Id, (link, _) => link)
             .OrderBy(x => x.AttachedAtUtc).ToListAsync(ct);
         var results = new List<EducationClassroomCourseSummaryDto>(links.Count);
-        foreach (var link in links) results.Add(await EducationClassroomCourseQueries.Summary(db, link, ct));
+        foreach (var link in links) results.Add(await EducationClassroomCourseQueries.Summary(db, link, q.UserId, ct));
         return ApiResponse<IReadOnlyList<EducationClassroomCourseSummaryDto>>.Ok(results);
     }
 }
 
-public sealed record GetEducationCourseClassroomsQuery(string UserId, string CourseId)
+public sealed record GetEducationCourseClassroomsQuery(string UserId, string CourseId, bool IsAdmin = false)
     : IRequest<ApiResponse<IReadOnlyList<EducationCourseClassroomDto>>>;
 
 public sealed class GetEducationCourseClassroomsHandler(IAppDbContext db)
@@ -101,12 +106,14 @@ public sealed class GetEducationCourseClassroomsHandler(IAppDbContext db)
 {
     public async Task<ApiResponse<IReadOnlyList<EducationCourseClassroomDto>>> Handle(GetEducationCourseClassroomsQuery q, CancellationToken ct)
     {
-        await AuthoringValidation.OwnedCourse(db, q.UserId, q.CourseId, ct);
+        await AuthoringValidation.OwnedCourse(db, q.UserId, q.CourseId, ct, q.IsAdmin);
         var result = await db.EducationClassroomCourses.AsNoTracking()
             .Where(x => x.CourseId == q.CourseId && !x.IsDeleted)
             .Join(db.EducationClassrooms.AsNoTracking().Where(x => !x.IsDeleted), x => x.ClassroomId, y => y.Id,
-                (link, classroom) => new EducationCourseClassroomDto(classroom.Id, classroom.Name, link.AttachedAtUtc))
-            .OrderBy(x => x.ClassroomName).ToListAsync(ct);
+                (link, classroom) => new { Classroom = classroom, Link = link })
+            .OrderBy(x => x.Classroom.Name)
+            .Select(x => new EducationCourseClassroomDto(x.Classroom.Id, x.Classroom.Name, x.Link.AttachedAtUtc))
+            .ToListAsync(ct);
         return ApiResponse<IReadOnlyList<EducationCourseClassroomDto>>.Ok(result);
     }
 }
@@ -114,9 +121,11 @@ public sealed class GetEducationCourseClassroomsHandler(IAppDbContext db)
 internal static class EducationClassroomCourseQueries
 {
     public static async Task<EducationClassroomCourseSummaryDto> Summary(IAppDbContext db,
-        EducationClassroomCourse link, CancellationToken ct)
+        EducationClassroomCourse link, string userId, CancellationToken ct)
     {
         var course = await db.EducationCourses.AsNoTracking().SingleAsync(x => x.Id == link.CourseId, ct);
+        var canManage = course.UserId == userId && !await AccountRestrictions.IsRestrictedAsync(db, userId, ct) &&
+            await new EducationAccess(db).IsActiveClassTeacherAsync(userId, link.ClassroomId, ct);
         var objectives = await db.EducationObjectives.AsNoTracking()
             .Where(x => x.CourseId == link.CourseId && !x.IsDeleted)
             .OrderBy(x => x.Title).Select(x => new
@@ -127,6 +136,36 @@ internal static class EducationClassroomCourseQueries
             }).ToListAsync(ct);
         var summaries = objectives.Select(x => new EducationClassroomCourseObjectiveSummaryDto(
             x.Id, x.Title, x.MemoryContentType.ToString(), x.LanguageCode, x.Count)).ToArray();
-        return new(link.ClassroomId, link.CourseId, course.Title, link.AttachedAtUtc, summaries);
+        return new(link.ClassroomId, link.CourseId, course.Title, link.AttachedAtUtc, summaries,
+            link.GuidedPracticeEnabled, canManage);
+    }
+}
+
+public sealed record SetClassroomGuidedPracticeCommand(string UserId, string ClassroomId, string CourseId,
+    SetClassroomGuidedPracticeRequest Request) : IRequest<ApiResponse<EducationClassroomCourseSummaryDto>>;
+
+public sealed class SetClassroomGuidedPracticeHandler(IAppDbContext db)
+    : IRequestHandler<SetClassroomGuidedPracticeCommand, ApiResponse<EducationClassroomCourseSummaryDto>>
+{
+    public async Task<ApiResponse<EducationClassroomCourseSummaryDto>> Handle(SetClassroomGuidedPracticeCommand q, CancellationToken ct)
+    {
+        await AuthoringValidation.OwnedCourse(db, q.UserId, q.CourseId, ct);
+        if (!await new EducationAccess(db).IsActiveClassTeacherAsync(q.UserId, q.ClassroomId, ct))
+            throw new NotFoundAppException("Classroom course not found.");
+        var link = await db.EducationClassroomCourses.FirstOrDefaultAsync(x => x.ClassroomId == q.ClassroomId &&
+            x.CourseId == q.CourseId && !x.IsDeleted, ct)
+            ?? throw new NotFoundAppException("Classroom course not found.");
+        if (q.Request.Enabled && !q.Request.NotConfidentialExamContent)
+            throw new MemoPal.Application.Common.Exceptions.ValidationAppException(
+                "Confirm that this linked course is safe for guided practice.");
+        link.GuidedPracticeEnabled = q.Request.Enabled;
+        if (q.Request.Enabled)
+        {
+            link.GuidedPracticeConfirmedByUserId = q.UserId;
+            link.GuidedPracticeConfirmedAtUtc = DateTime.UtcNow;
+        }
+        await db.SaveChangesAsync(ct);
+        return ApiResponse<EducationClassroomCourseSummaryDto>.Ok(
+            await EducationClassroomCourseQueries.Summary(db, link, q.UserId, ct));
     }
 }

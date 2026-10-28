@@ -26,6 +26,7 @@ export default function EducationAssessmentPage() {
       questions: assessment.questions.map(question => ({
         ...question,
         fillMode: question.fillMode ?? undefined,
+        fillUseWordBank: question.type === 'fill-blank' && question.options.length > 0,
         allowedTextAnswers: question.allowedTextAnswers.join('\n'),
         allowedNumericAnswers: question.allowedNumericAnswers.join(', '),
       })),

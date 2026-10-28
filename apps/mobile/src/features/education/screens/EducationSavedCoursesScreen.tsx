@@ -1,20 +1,23 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { CommonHeader } from '@/components/CommonHeader';
-import LoadingView from '@/components/LoadingView';
+import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
+import { LearningLoadingView as LoadingView } from '@/features/education/components/LearningUi';
 import { EducationPublicResourceCard } from '@/features/education/components/EducationPublicResourceCard';
 import { useEducationSavedCourses } from '@/features/education/hooks/useEducationPracticeItems';
 import { useEducationCopy } from '@/features/education/i18n';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
-import { Href, useRouter } from 'expo-router';
+import { Href, Redirect, useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthProvider';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 export default function EducationSavedCoursesScreen() {
   const copy = useEducationCopy();
   const { styles } = useStyles();
   const router = useRouter();
+  const { user } = useAuth();
   const courses = useEducationSavedCourses();
   const items = courses.data ?? [];
+
+  if (user?.accountMode === 'RestrictedLearner') return <Redirect href="/education/assignments" />;
 
   return <View style={styles.page}>
     <CommonHeader title={copy.publicSavedCoursesTitle} description={copy.publicSavedCoursesDescription} backAction={() => router.back()} />

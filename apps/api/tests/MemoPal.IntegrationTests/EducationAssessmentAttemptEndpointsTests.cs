@@ -434,6 +434,7 @@ public sealed class EducationAssessmentAttemptEndpointsTests(EducationAttemptsTe
         var practiceCheck = await DataAsync(practiceResponse);
         Assert.True(practiceCheck.GetProperty("isCorrect").GetBoolean());
         Assert.Equal(1m, practiceCheck.GetProperty("score").GetDecimal());
+        Assert.True(practiceCheck.GetProperty("correctAnswer").GetProperty("booleanValue").GetBoolean());
         var practiceItems = await DataAsync(await student.GetAsync("/v1/education/practice/items"));
         var practiceItem = Assert.Single(practiceItems.EnumerateArray());
         Assert.Equal(attemptId, practiceItem.GetProperty("attemptId").GetString());

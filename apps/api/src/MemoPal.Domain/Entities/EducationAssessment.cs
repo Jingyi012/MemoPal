@@ -34,6 +34,13 @@ public sealed class EducationAssessment : AuditableBaseEntity
         PublishedAt = DateTime.SpecifyKind(publishedAtUtc, DateTimeKind.Utc);
         Version++;
     }
+
+    public void SetPublicPractice(bool enabled)
+    {
+        if (Status != EducationAssessmentStatuses.Published)
+            throw new InvalidOperationException("Only published assessments can change self-practice visibility.");
+        IsPublicPractice = enabled;
+    }
 }
 
 public static class EducationAssessmentStatuses

@@ -95,7 +95,7 @@ export function readEducationAttemptQuestion(question: EducationAttemptQuestionD
       return { ...common, type: 'true-false' };
     case 'fill-blank':
       if (question.fillMode === 'text' || question.fillMode === 'number') {
-        return { ...common, type: 'fill-blank', fillMode: question.fillMode };
+        return { ...common, type: 'fill-blank', fillMode: question.fillMode, wordBank: question.options ?? [] };
       }
       throw new Error('The server returned an unsupported fill-in answer mode.');
     case 'written-response':

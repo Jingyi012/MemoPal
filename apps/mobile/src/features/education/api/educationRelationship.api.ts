@@ -1,6 +1,6 @@
 import api from '@/core/api/apiClient';
 import type { GeneralResponse } from '@/core/types/general';
-import type { EducationClassroomMembership, EducationGuardianLink } from '@/features/education/types/educationRelationship.types';
+import type { EducationClassroomCourse, EducationClassroomMembership, EducationGuardianLink } from '@/features/education/types/educationRelationship.types';
 
 function readMemberships(response: GeneralResponse<EducationClassroomMembership[]>) {
   if (!response.success || !response.data) throw new Error(response.message ?? 'Could not load classroom invitations.');
@@ -26,6 +26,12 @@ export const educationRelationshipApi = {
   async getMyClassroomMemberships() {
     const response = await api.get<GeneralResponse<EducationClassroomMembership[]>>('/v1/education/memberships');
     return readMemberships(response.data);
+  },
+  async getClassroomCourses(classroomId: string) {
+    const response = await api.get<GeneralResponse<EducationClassroomCourse[]>>(
+      `/v1/education/classrooms/${encodeURIComponent(classroomId)}/courses`);
+    if (!response.data.success || !response.data.data) throw new Error(response.data.message ?? 'Could not load classroom courses.');
+    return response.data.data;
   },
   async acceptClassroomInvitation(membershipId: string) {
     const response = await api.post<GeneralResponse<EducationClassroomMembership>>(

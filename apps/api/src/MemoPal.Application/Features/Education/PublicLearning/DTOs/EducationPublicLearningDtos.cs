@@ -5,7 +5,7 @@ namespace MemoPal.Application.Features.Education.PublicLearning.DTOs;
 
 public sealed record EducationPublicCourseSummaryDto(
     string Id, string Title, string AuthorDisplayName, DateTime PublishedAt, int AssessmentCount, int QuestionCount,
-    bool IsSaved = false);
+    bool IsSaved = false, bool IsMemoPalStarter = false);
 
 public sealed record EducationPublicAssessmentSummaryDto(
     string Id, string Title, DateTime PublishedAt, int QuestionCount, IReadOnlyList<string> QuestionTypes);
@@ -14,7 +14,7 @@ public sealed record EducationPublicCourseDetailDto(
     string Id, string Title, string AuthorDisplayName, DateTime PublishedAt,
     IReadOnlyList<EducationPublicAssessmentSummaryDto> Assessments,
     IReadOnlyList<EducationPublicObjectiveDto> Objectives,
-    bool IsSaved = false);
+    bool IsSaved = false, bool IsMemoPalStarter = false);
 
 public sealed record EducationPublicCourseSaveDto(string CourseId, bool IsSaved);
 
@@ -23,7 +23,8 @@ public sealed record ReportEducationCourseRequest(string Reason, string? Details
 public sealed record EducationCourseReportDto(string Id, string CourseId, string Reason, string Status, DateTime CreatedAt);
 
 public sealed record EducationPublicObjectiveDto(
-    string Id, string Title, EducationRecommendedMemorySetDto? RecommendedMemorySet);
+    string Id, string Title, EducationRecommendedMemorySetDto? RecommendedMemorySet,
+    IReadOnlyList<EducationLearnerStudyItemDto>? StudyItems = null);
 
 public sealed record EducationRecommendedMemorySetDto(
     string Id, string Title, string GoalType, string TechniqueKey, string? Description);
@@ -36,7 +37,8 @@ public sealed record EducationPublicPracticeAssessmentDto(
 
 public sealed record EducationPublicPracticeAnswerRequest(string AssessmentId, string QuestionId, EducationAttemptAnswerInputDto? Answer);
 
-public sealed record EducationPublicPracticeAnswerDto(string QuestionId, bool IsCorrect, string? Explanation);
+public sealed record EducationPublicPracticeAnswerDto(string QuestionId, bool IsCorrect, string? Explanation,
+    EducationAttemptAnswerDto? CorrectAnswer = null);
 
 public sealed record EducationPublicPracticeHistoryItemDto(
     string CourseId, string CourseTitle, string AssessmentId, string AssessmentTitle,

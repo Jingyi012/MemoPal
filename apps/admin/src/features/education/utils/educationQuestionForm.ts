@@ -6,6 +6,7 @@ export interface QuestionFormValue {
   explanation?: string | null;
   type: EducationQuestionDto['type'];
   fillMode?: 'text' | 'number';
+  fillUseWordBank?: boolean;
   maxScore: number;
   objectiveId: string;
   options?: Array<{ id: string; label: string }>;
@@ -37,7 +38,7 @@ export function toEducationQuestionRequests(value: AssessmentFormValue): Educati
     fillMode: question.type === 'fill-blank' ? question.fillMode ?? null : null,
     maxScore: question.maxScore,
     objectiveId: question.objectiveId,
-    options: question.type === 'single-choice' || question.type === 'multiple-select' || question.type === 'ordering' ? (question.options ?? []) : [],
+    options: question.type === 'single-choice' || question.type === 'multiple-select' || question.type === 'ordering' || (question.type === 'fill-blank' && question.fillUseWordBank) ? (question.options ?? []) : [],
     correctOptionId: question.type === 'single-choice' ? question.correctOptionId ?? null : null,
     correctOptionIds: question.type === 'multiple-select' ? question.correctOptionIds ?? [] : [],
     correctSequenceIds: question.type === 'ordering' ? question.correctSequenceIds ?? [] : [],

@@ -1,9 +1,8 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useEducationCopy } from '@/features/education/i18n';
 import type { EducationAttemptQuestion } from '@/features/education/types/question.types';
 import { buildEducationShareSummary } from '@/features/education/utils/educationShareSummary';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import { Share2 } from 'lucide-react-native';
 import { Share, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';

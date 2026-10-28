@@ -43,6 +43,7 @@ export type FillBlankQuestion = Readonly<{
   prompt: string;
   type: 'fill-blank';
   fillMode: 'text' | 'number';
+  wordBank?: readonly EducationQuestionOption[];
 }>;
 
 export type WrittenResponseQuestion = Readonly<{
@@ -207,4 +208,7 @@ export type EducationPracticeCheckResult = Readonly<{
   maxScore: number;
   isCorrect: boolean;
   explanation?: string | null;
+  correctAnswer?: EducationAttemptAnswerDto | null;
 }>;
+
+export type EducationAnswerFeedback = Readonly<{ isCorrect: boolean; explanation?: string | null; correctAnswer?: EducationAttemptAnswerDto | null }>;

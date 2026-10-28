@@ -13,6 +13,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<AiCreditEntry> AiCreditEntries => Set<AiCreditEntry>();
     public DbSet<LeaderboardSeason> LeaderboardSeasons => Set<LeaderboardSeason>();
     public DbSet<LeaderboardSeasonParticipant> LeaderboardSeasonParticipants => Set<LeaderboardSeasonParticipant>();
+    public DbSet<AccountModeAudit> AccountModeAudits => Set<AccountModeAudit>();
     private readonly ICurrentUserAccessor? _currentUserAccessor;
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUserAccessor? currentUserAccessor = null)
@@ -75,6 +76,8 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<EducationCourse> EducationCourses => Set<EducationCourse>();
     public DbSet<EducationObjective> EducationObjectives => Set<EducationObjective>();
     public DbSet<EducationObjectiveStudyItem> EducationObjectiveStudyItems => Set<EducationObjectiveStudyItem>();
+    public DbSet<EducationObjectiveDerivedMemorySet> EducationObjectiveDerivedMemorySets => Set<EducationObjectiveDerivedMemorySet>();
+    public DbSet<EducationDerivedItemMap> EducationDerivedItemMaps => Set<EducationDerivedItemMap>();
     public DbSet<EducationAssessment> EducationAssessments => Set<EducationAssessment>();
     public DbSet<EducationQuestion> EducationQuestions => Set<EducationQuestion>();
     public DbSet<EducationAssignment> EducationAssignments => Set<EducationAssignment>();
@@ -87,9 +90,18 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<EducationPublicPracticeProgress> EducationPublicPracticeProgress => Set<EducationPublicPracticeProgress>();
     public DbSet<EducationSavedCourse> EducationSavedCourses => Set<EducationSavedCourse>();
     public DbSet<EducationCourseReport> EducationCourseReports => Set<EducationCourseReport>();
+    public DbSet<EducationGuidedLearningSession> EducationGuidedLearningSessions => Set<EducationGuidedLearningSession>();
+    public DbSet<EducationGuidedLearningQuestionProgress> EducationGuidedLearningQuestionProgress => Set<EducationGuidedLearningQuestionProgress>();
+    public DbSet<EducationGuidedLearningCheckReceipt> EducationGuidedLearningCheckReceipts => Set<EducationGuidedLearningCheckReceipt>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfiguration(new AccountModeConfiguration());
+        modelBuilder.ApplyConfiguration(new EducationObjectiveDerivedMemorySetConfiguration());
+        modelBuilder.ApplyConfiguration(new EducationDerivedItemMapConfiguration());
+        modelBuilder.ApplyConfiguration(new EducationGuidedLearningSessionConfiguration());
+        modelBuilder.ApplyConfiguration(new EducationGuidedLearningQuestionProgressConfiguration());
+        modelBuilder.ApplyConfiguration(new EducationGuidedLearningCheckReceiptConfiguration());
         var educationAuthoring = new EducationAuthoringConfiguration();
         modelBuilder.ApplyConfiguration<EducationCourse>(educationAuthoring);
         modelBuilder.ApplyConfiguration<EducationObjective>(educationAuthoring);
@@ -202,6 +214,8 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.CourseId).HasMaxLength(64).IsRequired();
             b.Property(x => x.AttachedByUserId).HasMaxLength(64).IsRequired();
             b.Property(x => x.AttachedAtUtc).IsRequired();
+            b.Property(x => x.GuidedPracticeEnabled).HasDefaultValue(false).IsRequired();
+            b.Property(x => x.GuidedPracticeConfirmedByUserId).HasMaxLength(64);
             b.HasIndex(x => new { x.ClassroomId, x.CourseId }).IsUnique().HasFilter("\"IsDeleted\" = FALSE");
             b.HasOne<EducationClassroom>().WithMany().HasForeignKey(x => x.ClassroomId).OnDelete(DeleteBehavior.Cascade);
             b.HasOne<EducationCourse>().WithMany().HasForeignKey(x => x.CourseId).OnDelete(DeleteBehavior.Cascade);
@@ -271,6 +285,7 @@ public class AppDbContext : DbContext, IAppDbContext
             b.Property(x => x.SelectedAvatarFrameId).HasMaxLength(64);
             b.Property(x => x.SelectedAvatarDecorationId).HasMaxLength(64);
             b.Property(x => x.SelectedAvatarOutfitId).HasMaxLength(64);
+            b.Property(x => x.AccountMode).HasConversion<string>().HasMaxLength(32).HasDefaultValue(AccountMode.Standard);
             b.Property(x => x.Role).HasMaxLength(32).HasDefaultValue(UserRoles.User);
             b.Property(x => x.CommunityLeaderboardOptIn).HasDefaultValue(false);
             b.Property(x => x.CommunityLeaderboardOptIn).HasDefaultValue(false);

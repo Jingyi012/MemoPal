@@ -59,12 +59,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="practice"
+        name="learn"
         options={{
-          title: t('practice'),
-          tabBarIcon: ({ focused }) => <SpotlightTarget id="practice" onActivate={() => router.navigate('/(tabs)/practice')}><TabIcon icon="grid" focused={focused} /></SpotlightTarget>,
+          title: t('learn'),
+          tabBarIcon: ({ focused }) => <TabIcon icon="library" focused={focused} />,
         }}
       />
+      <Tabs.Screen name="practice" options={{ href: null }} />
       <Tabs.Screen
         name="community"
         options={{

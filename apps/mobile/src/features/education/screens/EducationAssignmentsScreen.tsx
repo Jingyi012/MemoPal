@@ -1,8 +1,11 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { CommonHeader } from '@/components/CommonHeader';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
 import { useAuth } from '@/contexts/AuthProvider';
 import { EducationAssignmentsList } from '@/features/education/components/EducationAssignmentsList';
 import { EducationClassroomInvitations } from '@/features/education/components/EducationClassroomInvitations';
+import { EducationClassroomLearningList } from '@/features/education/components/EducationClassroomLearningList';
 import { EducationAccountIdCard } from '@/features/education/components/EducationAccountIdCard';
 import { EducationAssignmentPlayer } from '@/features/education/components/EducationAssignmentPlayer';
 import { EducationFamilyReportsShortcut } from '@/features/education/components/EducationFamilyReportsShortcut';
@@ -16,16 +19,16 @@ import { educationAttemptSession } from '@/features/education/services/education
 import type { EducationAssessmentAttempt } from '@/features/education/types/question.types';
 import type { MyEducationAssignment } from '@/features/education/types/educationAssignment.types';
 import { getEducationAssignmentStatus } from '@/features/education/utils/educationAssignmentStatus';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useNavigation, usePreventRemove, type NavigationAction } from '@react-navigation/native';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 export default function EducationAssignmentsScreen() {
   const { assignmentId, attemptId, practiceType } = useLocalSearchParams<{ assignmentId?: string; attemptId?: string; practiceType?: string }>();
   const router = useRouter();
+  const navigation = useNavigation();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const copy = useEducationCopy();
@@ -40,9 +43,32 @@ export default function EducationAssignmentsScreen() {
   });
   const [checkingSavedAttempt, setCheckingSavedAttempt] = useState(Boolean(assignmentId && !attemptId));
   const [startError, setStartError] = useState(false);
+  const [hasUnsavedSketch, setHasUnsavedSketch] = useState(false);
+  const [isSketchProcessing, setIsSketchProcessing] = useState(false);
+  const [discardSketchVisible, setDiscardSketchVisible] = useState(false);
+  const pendingNavigationAction = useRef<NavigationAction | null>(null);
+  const allowSketchExitRef = useRef(false);
   const assignments = assignmentsQuery.data ?? [];
   const detailAssignmentId = assignmentId ?? attemptQuery.data?.assignmentId;
   const assignment = assignments.find((item) => item.id === detailAssignmentId);
+  const handleSketchWorkChange = useCallback((hasWork: boolean, processing: boolean) => {
+    setHasUnsavedSketch(hasWork);
+    setIsSketchProcessing(processing);
+  }, []);
+  const confirmSketchDiscard = useCallback(({ data }: { data: { action: NavigationAction } }) => {
+    pendingNavigationAction.current = data.action;
+    setDiscardSketchVisible(true);
+  }, []);
+  usePreventRemove((hasUnsavedSketch || isSketchProcessing) && !allowSketchExitRef.current, confirmSketchDiscard);
+
+  useEffect(() => {
+    const action = pendingNavigationAction.current;
+    if (!action || hasUnsavedSketch || isSketchProcessing) return;
+    pendingNavigationAction.current = null;
+    allowSketchExitRef.current = true;
+    setDiscardSketchVisible(false);
+    navigation.dispatch(action);
+  }, [hasUnsavedSketch, isSketchProcessing, navigation]);
 
   useEffect(() => {
     if (!assignmentId || attemptId || !user?.id) {
@@ -107,12 +133,18 @@ export default function EducationAssignmentsScreen() {
           onDecline={(membershipId) => classroomInvitations.decline.mutate(membershipId)}
           onRetry={() => { void classroomInvitations.memberships.refetch(); }}
         />
+        {!detailAssignmentId ? <EducationClassroomLearningList
+          memberships={classroomInvitations.memberships.data ?? []}
+          isLoading={classroomInvitations.memberships.isLoading}
+          isError={classroomInvitations.memberships.isError}
+          onRetry={() => { void classroomInvitations.memberships.refetch(); }}
+        /> : null}
         {!detailAssignmentId ? <EducationFamilyReportsShortcut /> : null}
         {!detailAssignmentId ? (
           <>
-            <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/education/practice' as Href)} style={styles.action}>
+            {user?.accountMode !== 'RestrictedLearner' ? <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/education/practice' as Href)} style={styles.action}>
               <Text style={styles.actionText}>{copy.practiceBrowseTitle}</Text>
-            </AnimatedPressable>
+            </AnimatedPressable> : null}
             <EducationAssignmentsList
               assignments={assignments}
               isLoading={assignmentsQuery.isLoading}
@@ -143,7 +175,7 @@ export default function EducationAssignmentsScreen() {
         ) : attemptId && attemptQuery.isError ? (
           renderNotice({ title: copy.attemptLoadError, body: copy.loadErrorBody, action: copy.attemptLoadRetry, onAction: retryRestore })
         ) : attemptId && attemptQuery.data ? (
-          <EducationAssignmentPlayer attempt={attemptQuery.data} classroomAssignment={assignment.scope === 'classroom'} initialPracticeType={practiceType} onAttemptUpdated={updateAttempt} />
+          <EducationAssignmentPlayer attempt={attemptQuery.data} classroomAssignment={assignment.scope === 'classroom'} initialPracticeType={practiceType} onAttemptUpdated={updateAttempt} onSketchWorkChange={handleSketchWorkChange} />
         ) : (
           renderAssignmentStartCard({
             assignment,
@@ -156,6 +188,19 @@ export default function EducationAssignmentsScreen() {
           })
         )}
       </ScrollView>
+      <ConfirmModal visible={discardSketchVisible}
+        title={isSketchProcessing ? copy.handwritingWaitTitle : copy.handwritingLeaveTitle}
+        description={isSketchProcessing ? copy.handwritingWaitBody : copy.handwritingLeaveBody}
+        confirmText={copy.handwritingLeaveConfirm} cancelText={copy.cancel} destructive isLoading={isSketchProcessing}
+        onCancel={() => { pendingNavigationAction.current = null; setDiscardSketchVisible(false); }}
+        onConfirm={() => {
+          const action = pendingNavigationAction.current;
+          pendingNavigationAction.current = null;
+          setDiscardSketchVisible(false);
+          if (!action || isSketchProcessing) return;
+          allowSketchExitRef.current = true;
+          navigation.dispatch(action);
+        }} />
     </View>
   );
 

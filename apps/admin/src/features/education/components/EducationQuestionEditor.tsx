@@ -34,6 +34,7 @@ function QuestionEditorCard({ form, name, index, objectives, onRemove, disabled 
 }) {
   const type = Form.useWatch(['questions', name, 'type'], form) as QuestionFormValue['type'] | undefined;
   const fillMode = Form.useWatch(['questions', name, 'fillMode'], form) as QuestionFormValue['fillMode'] | undefined;
+  const fillUseWordBank = Form.useWatch(['questions', name, 'fillUseWordBank'], form) as boolean | undefined;
   const options = (Form.useWatch(['questions', name, 'options'], form) ?? []) as Array<{ id: string; label: string }>;
   return <Card size="small" title={`Question ${index + 1}`} extra={!disabled && <Button aria-label={`Remove question ${index + 1}`} danger type="text" icon={<DeleteOutlined />} onClick={onRemove} />}>
     <Form.Item name={[name, 'id']} hidden><Input /></Form.Item>
@@ -104,6 +105,13 @@ function QuestionEditorCard({ form, name, index, objectives, onRemove, disabled 
     </Form.Item>}
 
     {type === 'fill-blank' && <>
+      <Form.Item name={[name, 'fillUseWordBank']} label="Student input" initialValue={false}>
+        <Select disabled={disabled} options={[{ value: false, label: 'Keyboard input' }, { value: true, label: 'Tap a word bank option' }]} />
+      </Form.Item>
+      {fillUseWordBank ? <>
+        <Typography.Text type="secondary">Add 2–12 choices, including an accepted answer and distractors. Students see these choices before checking; accepted answers remain private until they check.</Typography.Text>
+        <QuestionOptionsEditor questionName={name} disabled={disabled} maximum={12} label="Word bank choices" />
+      </> : null}
       <Form.Item name={[name, 'fillMode']} label="Answer format" rules={[{ required: true }]}>
         <Select disabled={disabled} options={[{ value: 'text', label: 'Text' }, { value: 'number', label: 'Number' }]} />
       </Form.Item>

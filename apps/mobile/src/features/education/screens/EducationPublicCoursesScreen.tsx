@@ -1,162 +1,156 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { CommonHeader } from '@/components/CommonHeader';
-import { HeaderIconButton } from '@/components/ui/HeaderIconButton';
-import LoadingView from '@/components/LoadingView';
-import { BookOpen, Bookmark, ChevronLeft, Clock3, Search, Sparkles } from '@/core/icons';
+import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
 import { useDebouncedValue } from '@/core/hooks/useDebouncedValue';
-import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
-import { useEducationCopy } from '@/features/education/i18n';
-import { useEducationPublicCourses } from '@/features/education/hooks/useEducationPracticeItems';
-import { EducationPublicResourceCard } from '@/features/education/components/EducationPublicResourceCard';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
+import { useAuth } from '@/contexts/AuthProvider';
+import { useEducationCopy } from '../i18n';
+import { learningTypography as typography } from '@/features/education/theme/learningTheme';
+import { useEducationGuidedCourseProgress, useEducationGuidedCoursesProgress, useEducationGuidedHomeProgress, useEducationPublicCourses } from '../hooks/useEducationPracticeItems';
+import { LearningArrival, LearningButton, LearningProgress, LearningRing, LearningSkeleton, SubjectArtwork, useLearningStyles, learningThemeFor, useLearningCopy } from '../components/LearningUi';
+import type { EducationPublicCourseSummary } from '../types/educationPractice.types';
+import { CompanionActor } from '@/features/profile/companion/CompanionActor';
+import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Href, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Href, Redirect, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useRef, useState, type ComponentProps } from 'react';
+import { FlatList, Keyboard, Modal, Pressable, RefreshControl, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function EducationPublicCoursesScreen() {
-  const copy = useEducationCopy();
-  const { styles, theme } = useStyles();
-  const router = useRouter();
-  const { isOffline, canShowRequestErrors } = useNetworkStatus();
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebouncedValue(search, 300);
-  const courses = useEducationPublicCourses(debouncedSearch);
-  const data = useMemo(() => courses.data ?? [], [courses.data]);
-  const returnToCommunity = () => router.canGoBack()
-    ? router.back()
-    : router.replace('/(tabs)/community' as Href);
+type CourseSubject = 'all' | 'science' | 'math' | 'english';
+type CourseStatus = 'all' | 'inProgress' | 'new' | 'completed';
 
-  return <View style={styles.page}>
-    <CommonHeader
-      title={copy.publicCoursesTitle}
-      leftComponent={<HeaderIconButton icon={ChevronLeft} accessibilityLabel={copy.backToCommunity} onPress={returnToCommunity} />}
-    />
-    <FlatList
-      data={data}
-      keyExtractor={item => item.id}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-      refreshControl={<RefreshControl refreshing={courses.isRefetching} onRefresh={() => void courses.refetch()} />}
-      ListHeaderComponent={<View style={styles.sections}>
-        <LinearGradient colors={['#7657EA', '#A17AF4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.heroCard}>
-          <View pointerEvents="none" style={styles.heroDecoration}><View style={styles.heroOrbit} /><Sparkles size={37} color="rgba(255,255,255,0.45)" /></View>
-          <View style={styles.heroBadge}><Sparkles size={12} color="#FFFFFF" /><Text style={styles.heroBadgeText}>{copy.publicPracticeHeroBadge}</Text></View>
-          <View style={styles.heroMain}>
-            <View style={styles.heroCopy}>
-              <Text style={styles.heroTitle}>{copy.publicPracticeHeroTitle}</Text>
-              <Text numberOfLines={2} style={styles.heroDescription}>{copy.publicCoursesDescription}</Text>
-            </View>
-            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.heroArtwork}>
-              <View style={styles.heroCardBack}><View style={styles.heroCardLine} /><View style={styles.heroCardLineShort} /></View>
-              <View style={styles.heroCardGold}><Sparkles size={13} color={theme.onSun} /></View>
-              <View style={styles.heroBookTile}><BookOpen size={30} color="#FFFFFF" /></View>
-              <View style={styles.heroSparkle}><Sparkles size={12} color={theme.sunDeep} /></View>
-            </View>
+export default function EducationPublicCoursesScreen({ primaryEntry = false }: { primaryEntry?: boolean }) {
+  const { styles: s, theme: palette } = useLearningStyles();
+  const copy = useEducationCopy(); const ui = useLearningCopy(); const router = useRouter();
+  const { user } = useAuth(); const profile = useCurrentUser(); const home = useEducationGuidedHomeProgress(); const insets = useSafeAreaInsets();
+  const [search, setSearch] = useState(''); const [subject, setSubject] = useState<CourseSubject>('all'); const [status, setStatus] = useState<CourseStatus>('all');
+  const [filterOpen, setFilterOpen] = useState(false); const [draftSubject, setDraftSubject] = useState<CourseSubject>('all'); const [draftStatus, setDraftStatus] = useState<CourseStatus>('all');
+  const courses = useEducationPublicCourses(useDebouncedValue(search, 300));
+  const progressQueries = useEducationGuidedCoursesProgress((courses.data ?? []).map(course => course.id));
+  const refresh = useRef(() => { void courses.refetch(); void home.refetch(); });
+  refresh.current = () => { void courses.refetch(); void home.refetch(); };
+  useFocusEffect(useCallback(() => { if (user?.id && user.accountMode !== 'RestrictedLearner') refresh.current(); }, [user?.id, user?.accountMode]));
+  const data = useMemo(() => (courses.data ?? []).filter((course, index) => {
+    if (subject !== 'all' && learningThemeFor(course.title).key !== subject) return false;
+    if (status === 'all') return true;
+    const lessons = progressQueries[index]?.data?.lessons;
+    if (!lessons) return false;
+    const completed = lessons.length > 0 && lessons.every(lesson => lesson.isComplete);
+    const started = lessons.some(lesson => lesson.isStarted);
+    return status === 'completed' ? completed : status === 'inProgress' ? started && !completed : !started;
+  }), [courses.data, progressQueries, status, subject]);
+  if (user?.accountMode === 'RestrictedLearner') return <Redirect href="/education/assignments" />;
+  const current = home.data; const theme = learningThemeFor(current?.courseTitle ?? '', palette);
+  const total = current?.lessons.reduce((n, lesson) => n + lesson.questionCount, 0) ?? 0;
+  const solved = current?.lessons.reduce((n, lesson) => n + lesson.questionsSolved, 0) ?? 0;
+  return <View style={s.page}>
+    <CommonHeader title={primaryEntry ? copy.learnTitle : copy.publicCoursesTitle} hideBackButton={primaryEntry} backAction={primaryEntry ? undefined : () => router.back()} />
+    <FlatList data={data} keyExtractor={item => item.id} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled"
+      refreshControl={<RefreshControl refreshing={courses.isRefetching} onRefresh={() => refresh.current()} />}
+      ListHeaderComponent={<LearningArrival style={{ gap: 18 }}>
+        <View style={s.row}><View style={{ flex: 1, gap: 7 }}><Text style={s.title}>{ui.hello(profile.user?.displayName || user?.displayName || 'MemoPal')}</Text><Text style={s.body}>{ui.ready}</Text>
+          <View style={[s.row, { flexWrap: 'wrap' }]}>{profile.user?.stats ? <HomeStatChip label={`🔥 ${profile.user.stats.currentStreak} ${ui.zh ? '天' : 'days'}`} /> : null}{profile.user ? <HomeStatChip label={`✦ ${profile.user.totalXp} XP`} /> : null}</View>
+        </View><CompanionActor stage={profile.user?.level ?? 1} size={90} cue={{ action: 'hello', sequence: 0 }} /></View>
+        {current ? <LinearGradient colors={palette.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={{ borderRadius: 26, padding: 18, gap: 13, overflow: 'hidden' }}>
+          <View style={{ position: 'absolute', right: -5, bottom: -16, opacity: .16 }}><Ionicons name={theme.icon} size={112} color="#FFFFFF" /></View>
+          <View style={[s.row, { alignItems: 'flex-start' }]}><View style={{ flex: 1, gap: 7 }}><View style={{ alignSelf: 'flex-start', borderRadius: 99, paddingHorizontal: 11, paddingVertical: 5, backgroundColor: 'rgba(255,255,255,.1)' }}><Text style={{ color: '#FFFFFF', fontFamily: typography.bodyExtraBold, fontSize: 12 }}>{ui.continue}</Text></View><Text numberOfLines={2} style={[s.heading, { color: '#FFFFFF', fontSize: 21, lineHeight: 27 }]}>{current.courseTitle}</Text><Text style={[s.body, { color: '#FFFFFF' }]}>{ui.correct(solved, total)}</Text></View><LearningRing value={solved} total={total} theme={{ ...theme, line: 'rgba(255,255,255,.28)', color: palette.sun, dark: '#FFFFFF' }} /></View>
+          <View style={{ alignSelf: 'flex-start' }}><LearningButton tone="white" compact label={ui.continue} onPress={() => router.push(`/community/education/${current.courseId}` as Href)} /></View>
+        </LinearGradient> : null}
+        {home.isError ? <AnimatedPressable onPress={() => void home.refetch()} style={s.card}><Text style={s.body}>{copy.guidedLessonLoadError} · {copy.retry}</Text></AnimatedPressable> : null}
+        <View style={[s.row, { gap: 10 }]}>
+          <HomeActionTile title={ui.memory} description={ui.toolsBody} icon="sparkles" watermark="library" colors={palette.tools as [string, string]} textColor={palette.toolsInk} onPress={() => router.push('/(tabs)/practice' as Href)} />
+          <HomeActionTile title={ui.challenge} description={ui.challengeBody} icon="trophy" watermark="book" colors={palette.challenge as [string, string]} textColor={palette.challengeInk} disabled={!current && !courses.data?.[0]} onPress={() => { const id = current?.courseId ?? courses.data?.[0]?.id; if (id) router.push(`/community/education/${id}` as Href); }} />
+        </View>
+        <View style={[s.row, { gap: 9 }]}>
+          <View style={[s.row, { flex: 1, borderWidth: 2, borderColor: palette.line, backgroundColor: palette.paper, borderRadius: 18, paddingHorizontal: 14, gap: 8 }]}>
+            <Ionicons name="search" size={22} color={palette.inkSoft} /><TextInput accessibilityLabel={copy.publicCoursesSearch} placeholder={ui.zh ? '搜索课程或知识点' : 'Search courses or study points'} value={search} onChangeText={setSearch} placeholderTextColor={palette.inkSoft} style={[s.body, { flex: 1, minHeight: 52 }]} returnKeyType="search" />
           </View>
-        </LinearGradient>
-
-        <View style={styles.shortcutRow}>
-        <EducationPublicResourceCard
-          title={copy.publicSavedCourses}
-          detail={copy.publicSavedCoursesDescription}
-          icon={Bookmark}
-          compact
-          tone="gold"
-          onPress={() => router.push('/community/education/saved' as Href)}
-        />
-        <EducationPublicResourceCard
-          title={copy.publicPracticeHistory}
-          detail={copy.publicPracticeHistoryDescription}
-          icon={Clock3}
-          compact
-          onPress={() => router.push('/community/education/history' as Href)}
-        />
+          <AnimatedPressable accessibilityRole="button" accessibilityLabel={ui.filter} accessibilityState={{ expanded: filterOpen, selected: subject !== 'all' || status !== 'all' }} onPress={() => { Keyboard.dismiss(); setDraftSubject(subject); setDraftStatus(status); setFilterOpen(true); }} style={{ minHeight: 52, minWidth: 52, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: subject !== 'all' || status !== 'all' ? palette.violetDeep : palette.line, backgroundColor: palette.paper, borderRadius: 18 }}><Ionicons name="options-outline" size={23} color={palette.violetDeep} /></AnimatedPressable>
         </View>
-
-        <View style={styles.searchBox}>
-          <Search size={19} color={theme.violetDeep} />
-          <TextInput
-            accessibilityLabel={copy.publicCoursesSearch}
-            placeholder={copy.publicCoursesSearch}
-            placeholderTextColor={theme.inkSoft}
-            returnKeyType="search"
-            value={search}
-            onChangeText={setSearch}
-            style={styles.searchInput}
-          />
-        </View>
-
-        <View style={styles.resultsHeader}>
-          <Text style={styles.resultsTitle}>{copy.publicPracticeListTitle}</Text>
-          {!courses.isLoading && !courses.isError ? <View style={styles.resultCount}><BookOpen size={12} color={theme.violetDeep} /><Text style={styles.resultCountText}>{copy.publicPracticeCourseCount(data.length)}</Text></View> : null}
-        </View>
-      </View>}
-      renderItem={({ item }) => <EducationPublicResourceCard
-        title={item.title}
-        detail={copy.publicCourseAuthor(item.authorDisplayName)}
-        metadata={`${copy.publicCourseAssessmentCount(item.assessmentCount)} · ${copy.practiceQuestionCount(item.questionCount)}${item.isSaved ? ` · ${copy.publicCourseSaved}` : ''}`}
-        onPress={() => router.push(`/community/education/${item.id}` as Href)}
-      />}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
-      ListEmptyComponent={courses.isLoading ? <View style={styles.state}><LoadingView description={copy.loading} /></View>
-        : canShowRequestErrors && courses.isError ? <View style={styles.notice}>
-          <Text accessibilityRole="alert" style={styles.body}>{copy.publicCoursesError}</Text>
-          <AnimatedPressable accessibilityRole="button" onPress={() => void courses.refetch()} style={styles.retry}>
-            <Text style={styles.retryText}>{copy.retry}</Text>
-          </AnimatedPressable>
-        </View>
-          : isOffline ? <View style={styles.notice}>
-            <Text accessibilityRole="alert" style={styles.body}>{copy.publicCoursesOffline}</Text>
-            <AnimatedPressable accessibilityRole="button" onPress={() => void courses.refetch()} style={styles.retry}>
-              <Text style={styles.retryText}>{copy.retry}</Text>
-            </AnimatedPressable>
-          </View>
-            : <View style={styles.emptyState}>
-              <View style={styles.emptyIcon}><BookOpen size={23} color={theme.violetDeep} /></View>
-              <Text style={styles.empty}>{copy.publicCoursesEmpty}</Text>
-            </View>}
-      ListFooterComponent={<View style={styles.footer} />}
+        {subject !== 'all' || status !== 'all' ? <View style={[s.row, { flexWrap: 'wrap' }]}>
+          {subject !== 'all' ? <FilterPill label={ui[subject as Exclude<CourseSubject, 'all'>]} onRemove={() => setSubject('all')} /> : null}
+          {status !== 'all' ? <FilterPill label={ui[status as Exclude<CourseStatus, 'all'>]} onRemove={() => setStatus('all')} /> : null}
+          <AnimatedPressable onPress={() => { setSubject('all'); setStatus('all'); }} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 10 }}><Text style={[s.small, { color: palette.violetDeep }]}>{ui.clearFilters}</Text></AnimatedPressable>
+        </View> : null}
+        <Text accessibilityRole="header" style={s.heading}>{copy.learnCoursesTitle}</Text>
+      </LearningArrival>}
+      renderItem={({ item }) => <CourseCard course={item} onPress={() => router.push(`/community/education/${item.id}` as Href)} />}
+      ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
+      ListEmptyComponent={courses.isLoading ? <LearningSkeleton /> : courses.isError ? <View style={s.card}><Text accessibilityRole="alert" style={s.body}>{copy.publicCoursesError}</Text><LearningButton secondary label={copy.retry} onPress={() => void courses.refetch()} /></View> : <View style={[s.card, { alignItems: 'center' }]}><CompanionActor stage={profile.user?.level ?? 1} size={88} cue={{ action: 'think', sequence: 0 }} /><Text style={s.body}>{ui.empty}</Text></View>}
+      ListFooterComponent={<View style={[s.row, { justifyContent: 'space-around', marginTop: 20 }]}>{[['/community/education/saved', copy.publicSavedCourses], ['/community/education/history', copy.publicPracticeHistory]].map(([path, label]) => <AnimatedPressable key={path} onPress={() => router.push(path as Href)} style={{ minHeight: 44, justifyContent: 'center', flex: 1 }}><Text style={s.small}>{label} →</Text></AnimatedPressable>)}</View>}
     />
+    <Modal transparent visible={filterOpen} animationType="slide" onRequestClose={() => setFilterOpen(false)}>
+      <View style={{ flex: 1, backgroundColor: 'rgba(20,16,40,.45)', justifyContent: 'flex-end' }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={ui.close} onPress={() => setFilterOpen(false)} style={{ flex: 1 }} />
+        <View style={{ backgroundColor: palette.paper, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: Math.max(20, insets.bottom), gap: 12, borderWidth: 1, borderColor: palette.line }}>
+          <View style={s.row}><Text accessibilityRole="header" style={[s.title, { flex: 1 }]}>{ui.filter}</Text><AnimatedPressable accessibilityLabel={ui.close} onPress={() => setFilterOpen(false)} style={{ minHeight: 44, width: 44, justifyContent: 'center', alignItems: 'center' }}><Ionicons name="close" size={23} color={palette.ink} /></AnimatedPressable></View>
+          <Text style={s.small}>{ui.filterSubject}</Text>
+          <View style={[s.row, { flexWrap: 'wrap' }]}>{(['all', 'science', 'math', 'english'] as const).map(key => <FilterOption key={key} selected={draftSubject === key} label={ui[key]} onPress={() => setDraftSubject(key)} />)}</View>
+          <Text style={s.small}>{ui.filterStatus}</Text>
+          <View style={[s.row, { flexWrap: 'wrap' }]}>{(['all', 'inProgress', 'new', 'completed'] as const).map(key => <FilterOption key={key} selected={draftStatus === key} label={ui[key]} onPress={() => setDraftStatus(key)} />)}</View>
+          <View style={[s.row, { gap: 10, marginTop: 4 }]}>
+            <View style={{ flex: 1 }}><LearningButton secondary label={ui.reset} onPress={() => { setDraftSubject('all'); setDraftStatus('all'); }} /></View>
+            <View style={{ flex: 1 }}><LearningButton label={ui.showCourses((courses.data ?? []).filter((course, index) => {
+              if (draftSubject !== 'all' && learningThemeFor(course.title).key !== draftSubject) return false;
+              if (draftStatus === 'all') return true;
+              const lessons = progressQueries[index]?.data?.lessons;
+              if (!lessons) return false;
+              const completed = lessons.length > 0 && lessons.every(lesson => lesson.isComplete);
+              const started = lessons.some(lesson => lesson.isStarted);
+              return draftStatus === 'completed' ? completed : draftStatus === 'inProgress' ? started && !completed : !started;
+            }).length)} onPress={() => { setSubject(draftSubject); setStatus(draftStatus); setFilterOpen(false); }} /></View>
+          </View>
+        </View>
+      </View>
+    </Modal>
   </View>;
 }
-
-const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { backgroundColor: theme.canvas, flex: 1 },
-  content: { gap: 9, padding: 14, paddingBottom: 30 },
-  sections: { gap: 11, marginBottom: 3 },
-  heroCard: { borderRadius: 23, gap: 8, minHeight: 132, overflow: 'hidden', padding: 13 },
-  heroDecoration: { alignItems: 'center', flexDirection: 'row', gap: 7, opacity: 0.6, position: 'absolute', right: 12, top: 14 },
-  heroOrbit: { borderColor: 'rgba(255,255,255,0.25)', borderRadius: 40, borderWidth: 1, height: 62, position: 'absolute', right: -3, top: -6, width: 62 },
-  heroBadge: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 999, flexDirection: 'row', gap: 5, minHeight: 25, paddingHorizontal: 9 },
-  heroBadgeText: { color: '#FFFFFF', fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.3 },
-  heroMain: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  heroCopy: { flex: 1, gap: 3, maxWidth: '74%' },
-  heroTitle: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 19, lineHeight: 24 },
-  heroDescription: { color: 'rgba(255,255,255,0.9)', fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16 },
-  heroArtwork: { height: 64, position: 'relative', width: 73 },
-  heroCardBack: { backgroundColor: 'rgba(226,217,255,0.9)', borderColor: 'rgba(255,255,255,0.72)', borderRadius: 11, borderWidth: 1, height: 43, left: 1, padding: 8, position: 'absolute', top: 11, transform: [{ rotate: '-12deg' }], width: 38 },
-  heroCardLine: { backgroundColor: 'rgba(105,80,204,0.45)', borderRadius: 2, height: 3, marginTop: 7, width: 20 },
-  heroCardLineShort: { backgroundColor: 'rgba(105,80,204,0.28)', borderRadius: 2, height: 3, marginTop: 4, width: 14 },
-  heroCardGold: { alignItems: 'center', backgroundColor: theme.sun, borderColor: '#FFFFFF', borderRadius: 11, borderWidth: 1.5, height: 29, justifyContent: 'center', position: 'absolute', right: 1, top: 10, transform: [{ rotate: '12deg' }], width: 29 },
-  heroBookTile: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.22)', borderColor: 'rgba(255,255,255,0.7)', borderRadius: 17, borderWidth: 1.5, bottom: 0, height: 47, justifyContent: 'center', position: 'absolute', right: 13, transform: [{ rotate: '4deg' }], width: 47 },
-  heroSparkle: { alignItems: 'center', backgroundColor: theme.sun, borderColor: '#FFFFFF', borderRadius: 11, borderWidth: 1.5, height: 23, justifyContent: 'center', position: 'absolute', right: 0, top: 0, width: 23 },
-  shortcutRow: { flexDirection: 'row', gap: 9 },
-  searchBox: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 16, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 52, paddingHorizontal: 13 },
-  searchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13, minHeight: 48, paddingVertical: 0 },
-  resultsHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginTop: 1, minHeight: 28 },
-  resultsTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 },
-  resultCount: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 999, flexDirection: 'row', gap: 5, minHeight: 25, paddingHorizontal: 9 },
-  resultCountText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  separator: { height: 9 },
-  state: { minHeight: 120, justifyContent: 'center', overflow: 'hidden' },
-  notice: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 17, borderWidth: 1.5, gap: 9, padding: 14 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18 },
-  retry: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 12, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
-  retryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  emptyState: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 18, borderWidth: 1.5, gap: 10, justifyContent: 'center', minHeight: 130, padding: 18 },
-  emptyIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 15, height: 44, justifyContent: 'center', width: 44 },
-  empty: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
-  footer: { height: 20 },
-}));
+function HomeStatChip({ label }: { label: string }) {
+  const { theme, styles } = useLearningStyles();
+  return <View style={{ backgroundColor: theme.paper, borderColor: theme.line, borderWidth: 2, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 3 }}><Text style={styles.small}>{label}</Text></View>;
+}
+function HomeActionTile({ title, description, icon, watermark, colors, textColor, disabled = false, onPress }: {
+  title: string; description: string; icon: ComponentProps<typeof Ionicons>['name']; watermark: ComponentProps<typeof Ionicons>['name']; colors: readonly [string, string]; textColor: string; disabled?: boolean; onPress: () => void;
+}) {
+  return <AnimatedPressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={{ flex: 1, minHeight: 150, borderRadius: 22, overflow: 'hidden', opacity: disabled ? .65 : 1 }}>
+    <LinearGradient colors={colors} start={[0, 0]} end={[1, 1]} style={{ flex: 1, minHeight: 150, justifyContent: 'flex-end', padding: 14, paddingTop: 66, gap: 4, overflow: 'hidden' }}>
+      <Ionicons name={watermark} size={72} color={textColor} style={{ position: 'absolute', right: -7, bottom: -14, opacity: .14 }} />
+      <View style={{ position: 'absolute', left: 11, top: 11, width: 42, height: 42, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.58)', alignItems: 'center', justifyContent: 'center' }}><Ionicons name={icon} size={24} color={textColor} /></View>
+      <View style={{ position: 'absolute', right: 11, top: 11, width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,.72)', alignItems: 'center', justifyContent: 'center' }}><Ionicons name="arrow-forward" size={17} color={textColor} /></View>
+      <Text style={{ color: textColor, fontFamily: typography.displayExtraBold, fontSize: 16 }}>{title}</Text>
+      <Text numberOfLines={2} style={{ color: textColor, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 16 }}>{description}</Text>
+    </LinearGradient>
+  </AnimatedPressable>;
+}
+function FilterOption({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  const { styles: s, theme } = useLearningStyles();
+  return <AnimatedPressable accessibilityRole="button" accessibilityState={{ selected }} onPress={onPress} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 99, borderWidth: 1.5, borderColor: selected ? theme.violetDeep : theme.line, backgroundColor: selected ? theme.violetDeep : theme.paper }}><Text style={[s.small, { color: selected ? theme.onAccent : theme.ink }]}>{label}</Text></AnimatedPressable>;
+}
+function FilterPill({ label, onRemove }: { label: string; onRemove: () => void }) {
+  const { styles: s, theme } = useLearningStyles();
+  const ui = useLearningCopy();
+  return <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${label}, ${ui.removeFilter}`} onPress={onRemove} style={{ minHeight: 44, borderRadius: 99, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: theme.violetTint }}><Text style={[s.small, { color: theme.violetDeep }]}>{label}</Text><Ionicons name="close" size={16} color={theme.violetDeep} /></AnimatedPressable>;
+}
+function CourseCard({ course, onPress }: { course: EducationPublicCourseSummary; onPress: () => void }) {
+  const { styles: s, theme: palette } = useLearningStyles();
+  const progress = useEducationGuidedCourseProgress(course.id); const ui = useLearningCopy(); const theme = learningThemeFor(course.title, palette);
+  const lessons = progress.data?.lessons;
+  const solved = lessons?.reduce((n, lesson) => n + lesson.questionsSolved, 0) ?? 0;
+  const total = lessons?.reduce((n, lesson) => n + lesson.questionCount, 0) ?? course.questionCount;
+  const completed = !!lessons?.length && lessons.every(lesson => lesson.isComplete);
+  const subjectLabel = theme.key === 'other' ? (ui.zh ? '课程' : 'Course') : ui[theme.key];
+  const coverColors = theme.gradient;
+  return <AnimatedPressable lively onPress={onPress} style={[s.card, { borderColor: palette.line, padding: 0, overflow: 'hidden', gap: 0 }]}>
+    <LinearGradient colors={coverColors as [string, string]} start={[0, 0]} end={[1, 1]} style={{ height: 104, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+      <View style={{ position: 'absolute', right: -25, top: -34, width: 112, height: 112, borderRadius: 56, backgroundColor: 'rgba(255,255,255,.24)' }} />
+      <View style={{ position: 'absolute', left: 12, top: 12, borderRadius: 99, paddingHorizontal: 11, paddingVertical: 5, backgroundColor: palette.paper }}><Text style={[s.small, { color: theme.dark }]}>{subjectLabel}</Text></View>
+      <SubjectArtwork theme={theme} size={68} />
+      <Ionicons name="chevron-forward-circle" size={30} color={theme.color} style={{ position: 'absolute', right: 12, top: 12 }} />
+    </LinearGradient>
+    <View style={{ paddingHorizontal: 14, paddingTop: 12, paddingBottom: 15, gap: 8 }}>
+      <Text numberOfLines={2} style={s.heading}>{course.title}</Text>
+      <View style={[s.row, { flexWrap: 'wrap', gap: 6 }]}><Text style={s.small}>📚 {course.assessmentCount} {ui.zh ? '个练习' : 'lessons'}</Text><Text style={s.small}>·</Text><Text style={s.small}>❓ {course.questionCount} {ui.zh ? '题' : 'questions'}</Text><Text style={s.small}>·</Text><Text style={s.small}>⏱ {ui.time(course.questionCount).split('·')[1]?.trim()}</Text></View>
+      {progress.isLoading ? <Text style={s.small}>…</Text> : progress.isError ? <Text style={s.small}>—</Text> : <><LearningProgress value={solved} total={total} color={theme.color} /><View style={[s.row, { justifyContent: 'space-between' }]}><Text style={s.small}>{ui.correct(solved, total)}</Text><Text style={[s.small, { color: theme.dark }]}>{completed ? `✓ ${ui.done}` : lessons?.some(lesson => lesson.isStarted) ? ui.underway : ui.notStarted}</Text></View></>}
+    </View>
+  </AnimatedPressable>;
+}

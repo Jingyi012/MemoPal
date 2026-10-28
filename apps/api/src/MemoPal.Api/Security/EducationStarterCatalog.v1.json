@@ -1,0 +1,691 @@
+[
+  {
+    "courseId": "system-starter-english-requests-v1",
+    "title": "English: Polite requests",
+    "objectiveTitle": "礼貌提出请求",
+    "lessonTitle": "请求与回应",
+    "teachingItems": [
+      {
+        "primary": "Can I borrow …? asks politely to use something for a while.",
+        "secondary": "Can I borrow …? 可以礼貌地询问能否暂时借用某物。"
+      },
+      {
+        "primary": "May I borrow …? asks to use something temporarily. Can I have …? can politely ask someone to give you something.",
+        "secondary": "May I borrow …? 可以询问能否暂时借用；Can I have …? 可以礼貌地请求对方给你某物。"
+      },
+      {
+        "primary": "Please can soften a request. Thank you shows appreciation after someone helps.",
+        "secondary": "please 可以让请求更礼貌；得到帮助后可以说 Thank you。"
+      }
+    ],
+    "questions": [
+      {
+        "id": null,
+        "prompt": "Mia 想暂时借同学的铅笔。哪句话最礼貌地提出请求？",
+        "type": "single-choice",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": [
+          {
+            "id": "A",
+            "label": "Can I borrow your pencil, please?"
+          },
+          {
+            "id": "B",
+            "label": "Give me your pencil now."
+          },
+          {
+            "id": "C",
+            "label": "Pencil. Now."
+          }
+        ],
+        "correctOptionId": "A",
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "Can I borrow …? 是询问能否暂时借用；please 让请求更礼貌。"
+      },
+      {
+        "id": null,
+        "prompt": "选出适合礼貌请求的句子。",
+        "type": "multiple-select",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": [
+          {
+            "id": "A",
+            "label": "May I borrow your ruler, please?"
+          },
+          {
+            "id": "B",
+            "label": "Can I have some water, please?"
+          },
+          {
+            "id": "C",
+            "label": "Give me water!"
+          }
+        ],
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": [
+          "A",
+          "B"
+        ],
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "A 和 B 用问句提出请求；C 像命令。"
+      },
+      {
+        "id": null,
+        "prompt": "把词块排成一句礼貌的借尺子请求。",
+        "type": "ordering",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": [
+          {
+            "id": "p1",
+            "label": "please?"
+          },
+          {
+            "id": "p2",
+            "label": "your"
+          },
+          {
+            "id": "p3",
+            "label": "Can"
+          },
+          {
+            "id": "p4",
+            "label": "ruler,"
+          },
+          {
+            "id": "p5",
+            "label": "borrow"
+          },
+          {
+            "id": "p6",
+            "label": "I"
+          }
+        ],
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": [
+          "p3",
+          "p6",
+          "p5",
+          "p2",
+          "p4",
+          "p1"
+        ],
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "所有词块各使用一次，组成 Can I borrow your ruler, please?"
+      },
+      {
+        "id": null,
+        "prompt": "配对请求与说话者想做的事。",
+        "type": "matching",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": null,
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": [
+          {
+            "left": {
+              "id": "L1",
+              "label": "Can I borrow your ruler, please?"
+            },
+            "right": {
+              "id": "R2",
+              "label": "我想暂时借用你的尺子。"
+            }
+          },
+          {
+            "left": {
+              "id": "L2",
+              "label": "Can I have some water, please?"
+            },
+            "right": {
+              "id": "R1",
+              "label": "我想请你给我一些水。"
+            }
+          }
+        ],
+        "gradingRubric": null,
+        "explanation": "borrow 是暂时借来使用；have some water 在这里是请求对方给一些水。"
+      },
+      {
+        "id": null,
+        "prompt": "朋友把尺子借给你后，说 Thank you. 是合适的回应。",
+        "type": "true-false",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": null,
+        "correctOptionId": null,
+        "correctBooleanAnswer": true,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "Thank you. 可以用来感谢别人给予的帮助。"
+      },
+      {
+        "id": null,
+        "prompt": "填写表示暂时借来使用、之后会归还的词：Can I ___ your ruler, please?",
+        "type": "fill-blank",
+        "fillMode": "text",
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": null,
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": [
+          "borrow"
+        ],
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "borrow 表示暂时借来使用。"
+      }
+    ]
+  },
+  {
+    "courseId": "system-starter-math-fractions-v1",
+    "title": "Math: Fractions of one whole",
+    "objectiveTitle": "同一个整体的分数",
+    "lessonTitle": "分数与等份",
+    "teachingItems": [
+      {
+        "primary": "A fraction describes equal-sized parts of one whole. One half means taking one of two equal parts. In four equal parts, one is 1/4 and three are 3/4.",
+        "secondary": "分数表示一个整体被平均分后的份数。一半就是两个等份中的一份。四等份中的一份是 1/4，三份是 3/4。"
+      },
+      {
+        "primary": "Two fourths and one half are equal parts of the same-sized whole, so 2/4 = 1/2. One quarter of 12 is 3 because 12 ÷ 4 = 3.",
+        "secondary": "同一个整体的 2/4 与 1/2 一样大，即 2/4 = 1/2。12 的 1/4 是 3，因为 12 ÷ 4 = 3。"
+      }
+    ],
+    "questions": [
+      {
+        "id": null,
+        "prompt": "一条巧克力作为一个整体，被平均分成 4 块，涂色 3 块。涂色部分是哪一个分数？",
+        "type": "single-choice",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": [
+          {
+            "id": "A",
+            "label": "3/4"
+          },
+          {
+            "id": "B",
+            "label": "1/4"
+          },
+          {
+            "id": "C",
+            "label": "4/3"
+          }
+        ],
+        "correctOptionId": "A",
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "整体有 4 个等份，取了 3 份，所以是 3/4。"
+      },
+      {
+        "id": null,
+        "prompt": "选出表示同一个整体的一半的描述。",
+        "type": "multiple-select",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": [
+          {
+            "id": "A",
+            "label": "两个一样大的部分中取 1 个。"
+          },
+          {
+            "id": "B",
+            "label": "四个一样大的部分中取 2 个。"
+          },
+          {
+            "id": "C",
+            "label": "四个一样大的部分中取 1 个。"
+          }
+        ],
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": [
+          "A",
+          "B"
+        ],
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "1/2 和 2/4 都表示同一个整体的一半；C 是 1/4。"
+      },
+      {
+        "id": null,
+        "prompt": "三个完整蛋糕大小相同。从取量少到多排列 3/4、1/4、1/2。",
+        "type": "ordering",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": [
+          {
+            "id": "o1",
+            "label": "3/4"
+          },
+          {
+            "id": "o2",
+            "label": "1/4"
+          },
+          {
+            "id": "o3",
+            "label": "1/2"
+          }
+        ],
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": [
+          "o2",
+          "o3",
+          "o1"
+        ],
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "这些分数都以同样大小的完整蛋糕为整体，因此 1/4 < 1/2 < 3/4。"
+      },
+      {
+        "id": null,
+        "prompt": "配对分数和它的意思。",
+        "type": "matching",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": null,
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": [
+          {
+            "left": {
+              "id": "L1",
+              "label": "1/2"
+            },
+            "right": {
+              "id": "R2",
+              "label": "两个同样大小的部分中取一个。"
+            }
+          },
+          {
+            "left": {
+              "id": "L2",
+              "label": "1/4"
+            },
+            "right": {
+              "id": "R3",
+              "label": "四个同样大小的部分中取一个。"
+            }
+          },
+          {
+            "left": {
+              "id": "L3",
+              "label": "3/4"
+            },
+            "right": {
+              "id": "R1",
+              "label": "四个同样大小的部分中取三个。"
+            }
+          }
+        ],
+        "gradingRubric": null,
+        "explanation": "分母表示整体平均分的份数，分子表示取的份数。"
+      },
+      {
+        "id": null,
+        "prompt": "两个同样大小的整体中各取 1/2，所取份量一定相同。",
+        "type": "true-false",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": null,
+        "correctOptionId": null,
+        "correctBooleanAnswer": true,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "两个整体相同大小时，各取一半的实际份量相同。"
+      },
+      {
+        "id": null,
+        "prompt": "12 颗葡萄平均分成 4 组，每组 ___ 颗。",
+        "type": "fill-blank",
+        "fillMode": "number",
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": null,
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": [
+          3
+        ],
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "12 ÷ 4 = 3。"
+      }
+    ]
+  },
+  {
+    "courseId": "system-starter-science-bean-growth-v1",
+    "title": "Science: How a bean seed grows",
+    "objectiveTitle": "豆子种子怎样开始生长",
+    "lessonTitle": "观察豆种萌发",
+    "teachingItems": [
+      {
+        "primary": "萌发（也叫发芽）是种子开始长出根或芽的过程。吸水后常能先观察到小根出现。",
+        "secondary": "萌发（也叫发芽）是种子开始长出根或芽的过程。吸水后常能先观察到小根出现。"
+      },
+      {
+        "primary": "植物需要合适的水、光和温度。根帮助固定并吸水，茎支撑植株并帮助运输水分，叶利用光制造食物。豆苗长大后会长出真叶，之后开花并可能形成豆荚。",
+        "secondary": "植物需要合适的水、光和温度。根帮助固定并吸水，茎支撑植株并帮助运输水分，叶利用光制造食物。"
+      }
+    ],
+    "questions": [
+      {
+        "id": null,
+        "prompt": "一粒豆子刚开始萌发时，最早可能观察到什么？",
+        "type": "single-choice",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": [
+          {
+            "id": "A",
+            "label": "种子里先伸出小根。"
+          },
+          {
+            "id": "B",
+            "label": "长出花朵。"
+          },
+          {
+            "id": "C",
+            "label": "结出豆荚。"
+          }
+        ],
+        "correctOptionId": "A",
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "萌发开始时会先出现根和芽；开花、结豆荚是长大以后的阶段。"
+      },
+      {
+        "id": null,
+        "prompt": "选出帮助豆苗继续健康生长的条件。",
+        "type": "multiple-select",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": [
+          {
+            "id": "A",
+            "label": "适量的水。"
+          },
+          {
+            "id": "B",
+            "label": "适合这种豆苗的光照。"
+          },
+          {
+            "id": "C",
+            "label": "适合这种豆苗的温度。"
+          },
+          {
+            "id": "D",
+            "label": "完全不给它水。"
+          }
+        ],
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": [
+          "A",
+          "B",
+          "C"
+        ],
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "植物需要合适的水、光和温度，不同植物的需要也会有差异。"
+      },
+      {
+        "id": null,
+        "prompt": "这份豆苗观察记录中的阶段，按真实生长过程排列。",
+        "type": "ordering",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": [
+          {
+            "id": "o1",
+            "label": "开花后形成豆荚"
+          },
+          {
+            "id": "o2",
+            "label": "第一对真叶展开"
+          },
+          {
+            "id": "o3",
+            "label": "根尖出现"
+          },
+          {
+            "id": "o4",
+            "label": "嫩芽出土且子叶可见"
+          }
+        ],
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": [
+          "o3",
+          "o4",
+          "o2",
+          "o1"
+        ],
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "依照题目指定的观察节点，先出现根尖，再出土、长真叶，最后开花结荚。"
+      },
+      {
+        "id": null,
+        "prompt": "配对植物部分与主要作用。",
+        "type": "matching",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": null,
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": [
+          {
+            "left": {
+              "id": "L1",
+              "label": "根"
+            },
+            "right": {
+              "id": "R3",
+              "label": "帮助植物固定并吸收水分。"
+            }
+          },
+          {
+            "left": {
+              "id": "L2",
+              "label": "茎"
+            },
+            "right": {
+              "id": "R2",
+              "label": "支撑植株并帮助水分运输。"
+            }
+          },
+          {
+            "left": {
+              "id": "L3",
+              "label": "叶"
+            },
+            "right": {
+              "id": "R1",
+              "label": "帮助植物利用光制造食物。"
+            }
+          }
+        ],
+        "gradingRubric": null,
+        "explanation": "根固定并吸水；茎支撑并帮助运输水分；叶帮助植物利用光制造食物。"
+      },
+      {
+        "id": null,
+        "prompt": "大多数种子在开始萌发前都必须先照到阳光。",
+        "type": "true-false",
+        "fillMode": null,
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": null,
+        "correctOptionId": null,
+        "correctBooleanAnswer": false,
+        "allowedTextAnswers": null,
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "多数种子萌发初期不需要光；长出叶片后仍需要合适光照。"
+      },
+      {
+        "id": null,
+        "prompt": "种子在合适条件下开始长出根或芽的过程称为种子___。",
+        "type": "fill-blank",
+        "fillMode": "text",
+        "maxScore": 1,
+        "objectiveId": "",
+        "options": null,
+        "correctOptionId": null,
+        "correctBooleanAnswer": null,
+        "allowedTextAnswers": [
+          "萌发",
+          "发芽"
+        ],
+        "trimTextAnswers": true,
+        "ignoreCase": true,
+        "allowedNumericAnswers": null,
+        "numericTolerance": 0,
+        "correctOptionIds": null,
+        "correctSequenceIds": null,
+        "matchingPairs": null,
+        "gradingRubric": null,
+        "explanation": "萌发或发芽都能表达种子开始生长。"
+      }
+    ]
+  }
+]

@@ -9,13 +9,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Application.Features.Education.Authoring;
 
-public sealed record PublishAssessmentCommand(string UserId, string AssessmentId, int ExpectedVersion, bool IsPublicPractice = false) : IRequest<ApiResponse<EducationAssessmentDto>>;
+public sealed record PublishAssessmentCommand(string UserId, string AssessmentId, int ExpectedVersion, bool IsPublicPractice = false, bool IsAdmin = false) : IRequest<ApiResponse<EducationAssessmentDto>>;
 
 public sealed class PublishAssessmentCommandHandler(IAppDbContext db) : IRequestHandler<PublishAssessmentCommand, ApiResponse<EducationAssessmentDto>>
 {
     public async Task<ApiResponse<EducationAssessmentDto>> Handle(PublishAssessmentCommand command, CancellationToken ct)
     {
-        var assessment = await AuthoringValidation.OwnedAssessment(db, command.UserId, command.AssessmentId, ct);
+        var assessment = await AuthoringValidation.OwnedAssessment(db, command.UserId, command.AssessmentId, ct, command.IsAdmin);
         AuthoringValidation.CheckVersion(assessment, command.ExpectedVersion);
         if (assessment.Status != EducationAssessmentStatuses.Draft)
             throw new ConflictAppException("Only draft assessments can be published.");

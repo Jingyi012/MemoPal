@@ -13,7 +13,7 @@ export type EducationQuestionPreview = Readonly<{
 
 /** Explicitly projects teacher form values into only the fields shown in the student preview. */
 export function toEducationQuestionPreview(question: QuestionFormValue): EducationQuestionPreview {
-  const hasOptions = question.type === 'single-choice' || question.type === 'multiple-select' || question.type === 'ordering';
+  const hasOptions = question.type === 'single-choice' || question.type === 'multiple-select' || question.type === 'ordering' || (question.type === 'fill-blank' && question.fillUseWordBank);
   return {
     prompt: question.prompt,
     type: question.type,

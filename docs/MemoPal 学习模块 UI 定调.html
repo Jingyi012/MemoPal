@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MemoPal 学习模块 UI 定调</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+:root{box-sizing:border-box;--p:#6B4FCF;--p2:#B067C9;--bg:#FBF8FF;--line:#E4DAFB;--ink:#251F3D;--mut:#6F6790;--soft:#F1ECFF;--ok:#23855A;--okbg:#E6F7EE;--bad:#D6455D;--badbg:#FDEBEE;
+--page:#EEE8FB;--pagetx:#251F3D;--font:'Nunito','PingFang SC','Noto Sans SC','Microsoft YaHei',system-ui,sans-serif;
+padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#17122B;--pagetx:#EDE8FF}}
+:root[data-theme="dark"]{--page:#17122B;--pagetx:#EDE8FF}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--page);color:var(--pagetx);font-family:var(--font);display:flex;flex-direction:column;align-items:center;gap:14px;padding:16px 8px 24px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tabs button{font:800 13px var(--font);border:2px solid var(--line);background:#fff;color:var(--p);border-radius:99px;padding:7px 14px;cursor:pointer}
+.tabs button.on{background:var(--p);color:#fff;border-color:var(--p)}
+.phone{width:100%;max-width:400px;height:820px;max-height:calc(100dvh - 90px);min-height:640px;background:var(--bg);color:var(--ink);border-radius:36px;border:6px solid #2a2347;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.screen{display:none;flex:1;overflow-y:auto;padding:16px 16px 96px;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen.on{display:block;animation:in .28s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.top h1{font-size:26px;font-weight:900;margin:0}
+.ib{width:42px;height:42px;border-radius:14px;border:2px solid var(--line);background:var(--soft);color:var(--p);display:grid;place-items:center;font:900 18px var(--font);cursor:pointer;flex:none}
+.ai{display:flex;align-items:center;gap:6px;border:2px solid var(--line);background:var(--soft);color:var(--p);border-radius:16px;padding:9px 12px;font:900 12px var(--font)}
+button{font-family:var(--font)}
+.hello{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hello b{font-size:22px;font-weight:900;display:block}
+.hello span{color:var(--mut);font-weight:700;font-size:13px}
+.chips{display:flex;gap:8px;margin-top:8px}
+.chip{background:#fff;border:2px solid var(--line);border-radius:99px;padding:3px 10px;font-weight:800;font-size:12px}
+.hero{border-radius:26px;padding:18px;color:#fff;background:linear-gradient(135deg,#6B4FCF,#B067C9);position:relative;overflow:hidden;margin-bottom:12px}
+.hero .tag{display:inline-block;background:rgba(255,255,255,.22);border-radius:99px;padding:4px 11px;font-weight:800;font-size:12px}
+.hero h2{margin:10px 0 4px;font-size:21px;font-weight:900;max-width:200px;line-height:1.25}
+.hero p{margin:0 0 14px;font-size:13px;font-weight:700;opacity:.9}
+.hero .ring{position:absolute;right:16px;top:20px;width:84px;height:84px}
+.hero .fl{position:absolute;right:-8px;bottom:-14px;font-size:70px;transform:rotate(12deg);opacity:.35}
+.btn{display:block;width:100%;border:0;border-radius:18px;padding:14px;font:900 16px var(--font);cursor:pointer;color:#fff;background:var(--p);box-shadow:0 5px 0 #4C35A3;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #4C35A3}
+.btn.w{background:#fff;color:var(--p);box-shadow:0 5px 0 rgba(0,0,0,.18);width:auto;display:inline-block;padding:11px 20px;font-size:14px}
+.btn.dis{background:#D9D3E6;color:#9A93B3;box-shadow:0 5px 0 #C2BAD6;pointer-events:none}
+.btn.ok{background:var(--ok);box-shadow:0 5px 0 #17613F}
+.btn.line{background:#fff;color:var(--p);border:2px solid var(--line);box-shadow:0 4px 0 var(--line);padding:11px;font-size:14px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.tile{border-radius:22px;padding:14px;min-height:112px;position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end}
+.tile .ic{position:absolute;left:12px;top:12px;width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.55);display:grid;place-items:center;font-size:22px}
+.tile .ar{position:absolute;right:12px;top:12px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.75);display:grid;place-items:center;font-weight:900}
+.tile .wm{position:absolute;right:-6px;bottom:-10px;font-size:68px;opacity:.22}
+.tile b{font-size:16px;font-weight:900}
+.tile small{font-weight:700;font-size:12px;opacity:.85}
+.or{background:linear-gradient(135deg,#FFD76B,#FFA24C);color:#5A3300}
+.tl{background:linear-gradient(135deg,#8FE6CF,#4CC3B8);color:#05453F}
+.search{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:20px;padding:12px 14px;color:var(--mut);font-weight:700;margin-bottom:10px;font-size:14px}
+.filters{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.filters button{border:2px solid var(--line);background:#fff;color:var(--ink);font:800 13px var(--font);border-radius:99px;padding:8px 16px;cursor:pointer;white-space:nowrap}
+.filters button.on{background:var(--p);color:#fff;border-color:var(--p)}
+.sec{display:flex;align-items:baseline;gap:8px;margin:4px 0 10px}
+.sec h3{margin:0;font-size:20px;font-weight:900}
+.sec span{color:var(--mut);font-size:13px;font-weight:700}
+.course{background:#fff;border:2px solid var(--line);border-radius:24px;overflow:hidden;margin-bottom:14px;cursor:pointer;box-shadow:0 4px 0 var(--line)}
+.course .th{height:104px;display:grid;place-items:center;font-size:54px;position:relative}
+.course .th i{position:absolute;right:-24px;top:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.35)}
+.course .th em{position:absolute;left:12px;top:12px;font-style:normal;background:#fff;border-radius:99px;padding:4px 11px;font-weight:900;font-size:12px}
+.course .bd{padding:12px 14px 14px}
+.course h4{margin:0 0 6px;font-size:16px;font-weight:900}
+.meta{display:flex;gap:10px;color:var(--mut);font-weight:700;font-size:12px;margin-bottom:10px}
+.bar{height:10px;border-radius:99px;background:var(--soft);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px;transition:width .5s}
+.g1{background:linear-gradient(135deg,#BDF0D3,#4FB27C)}.g2{background:linear-gradient(135deg,#FFE9A8,#FFA24C)}.g3{background:linear-gradient(135deg,#C9DEFF,#7C9CFF)}
+.dh{border-radius:26px;padding:16px;color:#073B25;position:relative;overflow:hidden;margin-bottom:18px}
+.dh .em{font-size:52px;position:absolute;right:14px;top:10px}
+.dh h2{margin:0 0 4px;font-size:22px;font-weight:900;max-width:210px;line-height:1.25}
+.dh p{margin:0 0 12px;font-weight:800;font-size:13px}
+.dh .bar{background:rgba(255,255,255,.55)}.dh .bar>i{background:#1F7A4D}
+.path{position:relative;padding-left:46px;margin-bottom:16px}
+.path::before{content:"";position:absolute;left:17px;top:36px;bottom:-22px;width:6px;border-radius:9px;background:var(--line)}
+.path:last-of-type::before{display:none}
+.node{position:absolute;left:0;top:2px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:17px;color:#fff;border:3px solid #fff;box-shadow:0 0 0 3px var(--line)}
+.n-done{background:var(--ok);box-shadow:0 0 0 3px #BFE8D2}.n-now{background:var(--p);box-shadow:0 0 0 3px #CDBEF7;animation:pulse 1.8s infinite}.n-lock{background:#CFC8E0}
+@keyframes pulse{50%{box-shadow:0 0 0 8px #E4DAFB}}
+.kp{background:#fff;border:2px solid var(--line);border-radius:22px;padding:14px;box-shadow:0 4px 0 var(--line)}
+.kp.lock{opacity:.6;box-shadow:none}
+.kp h4{margin:0 0 4px;font-size:16px;font-weight:900}
+.kp p{margin:0 0 10px;color:var(--mut);font-size:13px;font-weight:700;line-height:1.5}
+.pill{display:inline-block;border-radius:99px;padding:3px 10px;font-size:11px;font-weight:900;margin-right:6px}
+.pl-g{background:var(--okbg);color:var(--ok)}.pl-p{background:var(--soft);color:var(--p)}.pl-o{background:#FFF0D6;color:#9A5200}
+.act{display:flex;gap:8px;margin-top:10px}
+.act .btn{flex:1}
+.read{display:none;background:var(--soft);border-radius:16px;padding:12px;margin-top:10px;font-weight:700;font-size:14px;line-height:1.6}
+.read.on{display:block}
+.mem{background:linear-gradient(135deg,#FFD1DC,#FF9DB5);color:#5E1030}
+.mem .btn{box-shadow:0 5px 0 rgba(0,0,0,.18)}
+.sticky{position:absolute;left:0;right:0;bottom:70px;padding:12px 16px;background:linear-gradient(transparent,var(--bg) 40%);z-index:4}
+.q{display:none;flex-direction:column;position:absolute;inset:0;background:var(--bg);z-index:8;padding:16px}
+.q.on{display:flex}
+.qb{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.qb .bar{flex:1;height:14px}.qb .bar>i{background:linear-gradient(90deg,#4FB27C,#8FE6CF)}
+.qb b{color:#E0566C;font-weight:900}
+.goal{display:inline-block;background:var(--soft);color:var(--p);border-radius:99px;padding:5px 12px;font-weight:800;font-size:12px;margin:12px 0}
+.qc{flex:1;overflow:auto}
+.qc h2{font-size:23px;font-weight:900;line-height:1.35;margin:4px 0 18px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:2px solid var(--line);border-radius:20px;padding:15px;margin-bottom:11px;font:800 16px var(--font);color:var(--ink);cursor:pointer;box-shadow:0 4px 0 var(--line);transition:transform .1s}
+.opt:active{transform:translateY(3px)}
+.opt .k{width:30px;height:30px;border-radius:10px;border:2px solid var(--line);display:grid;place-items:center;font-size:13px;color:var(--mut);flex:none}
+.opt.sel{border-color:var(--p);background:var(--soft);box-shadow:0 4px 0 #BBA8F2}
+.opt.sel .k{background:var(--p);color:#fff;border-color:var(--p)}
+.opt.right{border-color:var(--ok);background:var(--okbg);box-shadow:0 4px 0 #A9DEC2}
+.opt.wrong{border-color:var(--bad);background:var(--badbg);box-shadow:0 4px 0 #F2B8C2;animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.fb{position:absolute;left:0;right:0;bottom:0;border-radius:26px 26px 0 0;background:var(--okbg);padding:16px 18px 20px;transform:translateY(105%);transition:transform .3s cubic-bezier(.2,1.1,.4,1);z-index:9}
+.fb.on{transform:none}
+.fb.bad{background:var(--badbg)}
+.fb h3{margin:0 0 6px;font-size:21px;font-weight:900;color:var(--ok);display:flex;align-items:center;gap:10px}
+.fb.bad h3{color:var(--bad)}
+.fb p{margin:0 0 14px;font-weight:700;font-size:14px;line-height:1.55}
+.xp{position:absolute;right:20px;top:-18px;background:#FFC83D;color:#5A3300;border-radius:99px;padding:6px 14px;font-weight:900;font-size:14px;box-shadow:0 4px 0 #D49A00;animation:pop .5s}
+@keyframes pop{from{transform:scale(.3);opacity:0}}
+.res{text-align:center}
+.res .big{border-radius:30px;padding:26px 16px;color:#fff;background:linear-gradient(135deg,#6B4FCF,#B067C9);margin-bottom:14px}
+.res .stars{font-size:44px;letter-spacing:4px}
+.res h2{margin:6px 0 2px;font-size:25px;font-weight:900}
+.res .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.res .grid div{background:#fff;border:2px solid var(--line);border-radius:18px;padding:10px 4px;font-weight:900;font-size:20px}
+.res .grid small{display:block;color:var(--mut);font-size:11px;font-weight:700}
+.nav{position:absolute;left:0;right:0;bottom:0;height:70px;background:#fff;border-top:2px solid var(--line);display:flex;justify-content:space-around;align-items:center;z-index:6;border-radius:24px 24px 0 0}
+.nav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font:800 11px var(--font);color:var(--mut);padding:6px 10px;border-radius:16px;cursor:pointer}
+.nav button span{font-size:19px}
+.nav button.on{background:var(--soft);color:var(--p)}
+.mascot{width:78px;height:60px}
+.note{max-width:400px;font-size:12px;font-weight:700;opacity:.75;text-align:center;line-height:1.6}
+.tfg{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tfg .opt{flex-direction:column;justify-content:center;padding:28px 10px;font-size:20px;text-align:center}
+.blank{display:inline-block;min-width:64px;border-bottom:4px solid var(--p);text-align:center;color:var(--p);margin:0 4px}.blank.res1{color:var(--ok);border-color:var(--ok)}.blank.res0{color:var(--bad);border-color:var(--bad)}
+.bank{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.wd{border:2px solid var(--line);background:#fff;border-radius:16px;padding:11px 18px;font:800 16px var(--font);color:var(--ink);box-shadow:0 4px 0 var(--line);cursor:pointer}.wd.used{background:var(--soft);color:transparent;box-shadow:none;pointer-events:none}.wd.on{background:var(--p);color:#fff;border-color:var(--p)}
+.ans{min-height:170px;border-top:2px solid var(--line);border-bottom:2px solid var(--line);padding:12px 0;display:flex;flex-direction:column;gap:8px}.ans .wd{text-align:left;display:flex;gap:10px}.ans .wd b{color:var(--p)}
+.mt{display:grid;grid-template-columns:1fr 1fr;gap:12px}.mt .col{display:flex;flex-direction:column;gap:12px}.mt .wd{border-width:3px;text-align:center;padding:16px 8px}
+.srow{display:flex;gap:8px;margin-bottom:10px}.srow .search{flex:1;margin:0}.fbtn{position:relative;width:50px;flex:none;border-radius:20px;border:2px solid var(--line);background:#fff;color:var(--p);cursor:pointer;display:grid;place-items:center;box-shadow:0 3px 0 var(--line)}.fbtn i{position:absolute;right:7px;top:7px;width:10px;height:10px;border-radius:50%;background:#FF6B8A;display:none}.fbtn.act i{display:block}
+#fch:empty{display:none}#fch{margin-bottom:10px}
+.sheet{position:absolute;inset:0;background:rgba(37,31,61,.45);z-index:12;display:none;align-items:flex-end}.sheet.on{display:flex}.sheet .card{width:100%;background:#fff;border-radius:28px 28px 0 0;padding:18px 18px 24px;animation:in .25s}.sheet h3{margin:0 0 4px;font-size:20px;font-weight:900}.sheet h5{margin:14px 0 10px;font-size:13px;color:var(--mut);font-weight:800}
+.seg{display:flex;background:var(--soft);border-radius:18px;padding:4px;margin-bottom:14px}.seg button{flex:1;border:0;background:none;border-radius:14px;padding:10px 4px;font:900 13px var(--font);color:var(--mut);cursor:pointer}.seg button.on{background:#fff;color:var(--p);box-shadow:0 3px 0 var(--line)}
+.stn{display:flex;gap:12px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:20px;padding:12px;margin-bottom:10px;box-shadow:0 4px 0 var(--line)}.stn .pic{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:28px;background:linear-gradient(135deg,#FFE9A8,#FFA24C);flex:none}.stn small{color:var(--mut);font-weight:800;font-size:11px;display:block}.stn b{font-size:14px;font-weight:800;line-height:1.4}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="ray" viewBox="0 0 78 60"><path d="M4 22C14 6 30 4 39 12C48 4 64 6 74 22C66 26 60 26 54 34C46 54 32 54 24 34C18 26 12 26 4 22Z" fill="#7CC4F5"/><ellipse cx="39" cy="30" rx="17" ry="15" fill="#B9E3FF"/><circle cx="32" cy="28" r="3.2" fill="#251F3D"/><circle cx="46" cy="28" r="3.2" fill="#251F3D"/><circle cx="33" cy="27" r="1" fill="#fff"/><circle cx="47" cy="27" r="1" fill="#fff"/><ellipse cx="27" cy="35" rx="3.5" ry="2" fill="#FFA6BE"/><ellipse cx="51" cy="35" rx="3.5" ry="2" fill="#FFA6BE"/><path d="M36 36Q39 39 42 36" stroke="#251F3D" stroke-width="1.8" fill="none" stroke-linecap="round"/></symbol>
+</defs></svg>
+
+<div class="tabs" id="tabs">
+  <button data-s="home" class="on">学习首页</button>
+  <button data-s="detail">课程详情</button>
+  <button data-s="quiz">答题</button>
+  <button data-s="result">完成页</button>
+  <button data-s="mem">记忆练习</button>
+</div>
+
+<div class="tabs" id="qt"><button data-q="0">单选</button><button data-q="1">多选</button><button data-q="2">判断</button><button data-q="3">填空</button><button data-q="4">配对</button><button data-q="5">排序</button></div>
+<div class="phone" id="phone">
+  <!-- 学习首页 -->
+  <section class="screen on" id="home">
+    <div class="top"><h1>学习</h1><div class="ai">✦ AI 999k</div></div>
+    <div class="hello">
+      <div><b>你好，Admin！</b><span>和沫沫一起，向前一步</span>
+        <div class="chips"><span class="chip">🔥 1 天</span><span class="chip">✦ 240 XP</span></div></div>
+      <svg class="mascot"><use href="#ray"/></svg>
+    </div>
+    <div class="hero">
+      <span class="tag">继续学习</span>
+      <h2>Math: Fractions of one whole</h2>
+      <p>已答对 1/6 · 还差 5 题</p>
+      <svg class="ring" viewBox="0 0 84 84"><circle cx="42" cy="42" r="34" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="10"/><circle cx="42" cy="42" r="34" fill="none" stroke="#FFD76B" stroke-width="10" stroke-linecap="round" stroke-dasharray="214" stroke-dashoffset="178" transform="rotate(-90 42 42)"/><text x="42" y="48" text-anchor="middle" fill="#fff" font-size="17" font-weight="900">17%</text></svg>
+      <button class="btn w" data-go="quiz">继续学习</button>
+    </div>
+    <div class="tiles">
+      <div class="tile or" data-go="detail"><div class="ic">🏛️</div><div class="ar">→</div><div class="wm">🏆</div><b>记忆练习</b><small>宫殿和数字桩，记住知识点</small></div>
+      <div class="tile tl" data-go="result"><div class="ic">🎯</div><div class="ar">→</div><div class="wm">📖</div><b>测评挑战</b><small>检验今天学到的内容</small></div>
+    </div>
+    <div class="srow"><div class="search">🔍 搜索课程或知识点</div><button class="fbtn" id="fb0" aria-label="筛选"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 7h16M7 12h10M10 17h4"/></svg><i></i></button></div><div id="fch" class="filters"></div>
+    
+    <div class="sec"><h3>课程</h3><span>3 门</span></div>
+    <div class="course" data-k="g1" data-go="detail"><div class="th g1">🌱<i></i><em>科学</em></div><div class="bd"><h4>How a bean seed grows</h4><div class="meta"><span>📚 2 个知识点</span><span>❓ 6 题</span><span>⏱ 5 分钟</span></div><div class="bar"><i style="width:67%;background:#4FB27C"></i></div></div></div>
+    <div class="course" data-k="g2" data-go="detail"><div class="th g2">🍕<i></i><em>数学</em></div><div class="bd"><h4>Fractions of one whole</h4><div class="meta"><span>📚 3 个知识点</span><span>❓ 6 题</span><span>⏱ 5 分钟</span></div><div class="bar"><i style="width:17%;background:#FFA24C"></i></div></div></div>
+    <div class="course" data-k="g3" data-go="detail"><div class="th g3">💬<i></i><em>英语</em></div><div class="bd"><h4>Polite requests</h4><div class="meta"><span>📚 2 个知识点</span><span>❓ 6 题</span><span>⏱ 5 分钟</span></div><div class="bar"><i style="width:0"></i></div></div></div>
+  </section>
+
+  <!-- 课程详情 -->
+  <section class="screen" id="detail">
+    <div class="top"><div class="ib" data-go="home">‹</div><div style="font-weight:900;font-size:18px;flex:1">课程</div><div class="ib" id="bm">🔖</div><div class="ib">⋯</div></div>
+    <div class="dh g1"><div class="em">🌱</div><h2>How a bean seed grows</h2><p>作者 MemoPal · 已答对 4/6</p><div class="bar"><i style="width:67%"></i></div></div>
+    <div class="sec"><h3>学习路径</h3><span>跟着路线走</span></div>
+    <div class="path"><div class="node n-done">✓</div>
+      <div class="kp"><h4>豆子种子怎样开始生长</h4><p>萌发是种子开始长出根或芽的过程。</p>
+        <span class="pill pl-g">已完成</span><span class="pill pl-o">待巩固</span><span class="pill pl-p">🔢 推荐数字桩</span>
+        <div class="act"><button class="btn line" id="rd">学习内容</button><button class="btn" data-go="quiz">练习</button></div>
+        <div class="read" id="rdbox">① 吸水后，种子常先长出小根。<br>② 植物需要合适的水、光和温度。</div></div></div>
+    <div class="path"><div class="node n-now">2</div>
+      <div class="kp"><h4>植物各部分的作用</h4><p>根固定并吸水，茎运输水分，叶制造食物。</p>
+        <span class="pill pl-p">进行中</span><span class="pill pl-p">🏛️ 推荐宫殿</span>
+        <div class="act"><button class="btn line">学习内容</button><button class="btn" data-go="quiz">练习</button></div></div></div>
+    <div class="path"><div class="node n-lock">🔒</div>
+      <div class="kp lock"><h4>观察日志与排序</h4><p>完成上一个知识点后解锁。</p></div></div>
+    <div class="dh mem" style="margin-bottom:12px"><div class="em">🏛️</div><h2 style="color:#5E1030">用记忆宫殿记住它</h2><p style="color:#5E1030">把 2 个知识点放进你的小房间</p><button class="btn w" data-go="mem">选择记忆法</button></div>
+    <div class="sticky"><button class="btn" data-go="quiz">继续学习</button></div>
+  </section>
+
+  <!-- 完成页 -->
+  <section class="screen" id="result">
+    <div class="res">
+      <div class="big"><svg class="mascot" style="width:96px;height:74px"><use href="#ray"/></svg><div class="stars">⭐⭐⭐</div><h2>太棒了！</h2><div style="font-weight:700;opacity:.9">观察豆种萌发 · 完成</div></div>
+      <div class="grid"><div>5/6<small>答对</small></div><div>+40<small>XP</small></div><div>2<small>待巩固</small></div></div>
+      <div class="dh mem" style="text-align:left"><div class="em">🏛️</div><h2 style="color:#5E1030">趁热记一下</h2><p style="color:#5E1030">用记忆宫殿巩固 2 个知识点</p><button class="btn w">开始记忆练习</button></div>
+      <button class="btn" data-go="detail">回到课程</button>
+    </div>
+  </section>
+
+  <!-- 答题 -->
+  <div class="q" id="quiz">
+    <div class="qb"><div class="ib" style="width:36px;height:36px" data-go="detail">✕</div><div class="bar"><i id="qp" style="width:16%"></i></div><b>❤ 5</b></div>
+    <div class="goal">🎯 豆子种子怎样开始生长</div>
+    <div class="qc" id="qc"></div>
+    <button class="btn dis" id="chk">检查答案</button>
+    <div class="fb" id="fb"><span class="xp" id="xp">+10 XP</span><h3 id="fbt"><svg style="width:52px;height:40px"><use href="#ray"/></svg><span>答对了！</span></h3><p id="fbp">解析：萌发开始时会先出现根和芽；开花、结豆荚是长大以后的阶段。</p><button class="btn ok" id="nx">继续</button></div>
+  </div>
+
+  <section class="screen" id="mem">
+    <div class="top"><div class="ib" data-go="detail">‹</div><div style="font-weight:900;font-size:18px;flex:1">记忆练习</div><div class="ai">✦ AI</div></div>
+    <div class="dh g2" style="color:#4A2A00"><div class="em">🧠</div><h2>把知识点放进记忆里</h2><p>How a bean seed grows · 4 个学习条目</p></div>
+    <div class="seg" id="seg"><button data-m="pal" class="on">🏛️ 宫殿</button><button data-m="peg">🔢 数字桩</button><button data-m="sto">📖 联想故事</button></div>
+    <div class="kp" style="margin-bottom:14px"><span class="pill pl-g" id="rec"></span><p id="md" style="margin:8px 0 0"></p></div>
+    <div id="stn"></div>
+    <div class="sticky"><button class="btn">开始记忆练习</button></div>
+  </section>
+  <div class="sheet" id="fs"><div class="card"><h3>筛选课程</h3><h5>学科</h5><div class="bank" style="margin:0" id="fk"><button class="wd on" data-fk="all">全部</button><button class="wd" data-fk="g1">🌱 科学</button><button class="wd" data-fk="g2">🍕 数学</button><button class="wd" data-fk="g3">💬 英语</button></div><h5>状态</h5><div class="bank" style="margin:0" id="fst"><button class="wd on" data-fs="all">全部</button><button class="wd" data-fs="doing">进行中</button><button class="wd" data-fs="new">未开始</button></div><div class="act" style="margin-top:20px"><button class="btn line" id="frs">重置</button><button class="btn" id="fapply">显示 3 门课程</button></div></div></div>
+  <nav class="nav" id="nav">
+    <button data-go="home"><span>🏠</span>首页</button><button data-go="home" class="on"><span>📚</span>学习</button><button><span>🌏</span>社区</button><button><span>🗂️</span>记忆库</button><button><span>📈</span>进度</button><button><span>🙂</span>我</button>
+  </nav>
+</div>
+<p class="note">这是学习模块的风格定调稿：渐变大卡 + 彩色磁贴 + 立体按钮，和社区、记忆库保持同一套语言。点点看，可以走完一遍流程。</p>
+
+<script>
+(function(){
+  var S=['home','detail','result','mem'],$=function(i){return document.getElementById(i)};
+  window.showS=show;function show(id){
+    S.forEach(function(s){$(s).classList.toggle('on',s===id)});
+    $('quiz').classList.toggle('on',id==='quiz');
+    $('nav').style.display=id==='quiz'?'none':'flex';
+    document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.s===id)});
+    if(id==='quiz'&&window.startQ)window.startQ();
+    var sc=$(id);if(sc&&sc.scrollTo)sc.scrollTo(0,0);
+  }
+  document.addEventListener('click',function(e){
+    var g=e.target.closest('[data-go]');if(g){show(g.dataset.go)}
+    var t=e.target.closest('#tabs button');if(t){show(t.dataset.s)}
+  });
+  $('rd').onclick=function(){$('rdbox').classList.toggle('on')};
+  $('bm').onclick=function(){this.style.background=this.dataset.on?'':'#FFE9A8';this.dataset.on=this.dataset.on?'':'1'};
+  document.querySelectorAll('#flt button').forEach(function(b){b.onclick=function(){
+    document.querySelectorAll('#flt button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');
+    document.querySelectorAll('.course').forEach(function(c){c.style.display=(b.dataset.f==='all'||c.dataset.k===b.dataset.f)?'':'none'});
+  }});
+  var opts=document.querySelectorAll('.opt'),sel=-1,done=false;
+  function resetQ(){sel=-1;done=false;opts.forEach(function(o){o.className='opt'});$('chk').className='btn dis';$('chk').style.display='';$('fb').classList.remove('on','bad');$('qp').style.width='16%'}
+  opts.forEach(function(o,i){o.onclick=function(){if(done)return;sel=i;opts.forEach(function(x,j){x.classList.toggle('sel',j===i)});$('chk').className='btn'}});
+  $('chk').onclick=function(){
+    if(sel<0)return;done=true;var ok=sel===0;
+    opts[0].classList.remove('sel');opts[0].classList.add('right');
+    if(!ok){opts[sel].classList.remove('sel');opts[sel].classList.add('wrong')}
+    $('fb').classList.toggle('bad',!ok);$('fb').classList.add('on');
+    $('fbt').lastChild.textContent=ok?'答对了！':'差一点，再记一下';
+    $('xp').style.display=ok?'':'none';$('nx').className=ok?'btn ok':'btn';
+    $('qp').style.width='33%';$('chk').style.display='none';
+  };
+  $('nx').onclick=function(){show('result')};
+})();
+</script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var Q=[
+{t:'单选 · 选一个最合适的答案',h:'一粒豆子刚开始萌发时，最早可能观察到什么？',o:['种子里先伸出小根。','长出花朵。','结出豆荚。'],a:[0],e:'萌发开始时会先出现根和芽；开花、结豆荚是长大以后的阶段。'},
+{t:'多选 · 选出所有正确答案',h:'豆子萌发和生长需要哪些条件？',o:['水分','光照','合适的温度','糖果'],a:[0,1,2],m:1,e:'植物需要合适的水、光和温度，糖果不是植物需要的。'},
+{t:'判断 · 对还是错',h:'叶的主要作用是利用光制造食物。',o:['对','错'],g:1,a:[0],e:'叶利用光制造食物，像植物的小厨房。'},
+{t:'填空 · 点下面的词放进空格',h:'种子吸水后，常先长出小＿＿＿。',bank:['根','花','叶'],a:'根',e:'吸水后常能先观察到小根出现。'},
+{t:'配对 · 先点左边，再点右边',h:'配对植物部分与主要作用。',L:['根','茎','叶'],R:['固定并吸水','支撑并运水','制造食物'],e:'根固定并吸水，茎运输水分，叶制造食物。'},
+{t:'排序 · 按先后顺序点选',h:'把观察日志按先后排好。',steps:['根尖出现','嫩芽出土','真叶展开','开花结荚'],e:'先长根，再出芽，然后展叶，最后开花结荚。'}];
+var i=0,st,done,res,PAL=['#6B4FCF','#E8863A','#1F9C9C'],RO=[2,0,1],SO=[2,0,3,1];
+function ready(){var q=Q[i];if(q.o)return st.s.length>0;if(q.bank)return st.f!=null;if(q.L)return Object.keys(st.p).length===q.L.length;return st.q.length===q.steps.length}
+function check(){var q=Q[i];if(q.o)return q.a.slice().sort().join()===st.s.slice().sort().join();if(q.bank)return q.bank[st.f]===q.a;if(q.L)return q.L.every(function(_,k){return st.p[k]===k});return st.q.join()==='0,1,2,3'}
+function draw(){var q=Q[i],h='',t=q.h;
+if(q.bank)t=t.replace('＿＿＿','<span class="blank'+(done?' res'+(res?1:0):'')+'">'+(st.f!=null?q.bank[st.f]:'')+'</span>');
+h+='<div style="color:var(--mut);font-weight:800;font-size:13px">'+q.t+'</div><h2>'+t+'</h2>';
+if(q.o)h+='<div class="'+(q.g?'tfg':'')+'">'+q.o.map(function(x,k){var c='opt';if(st.s.indexOf(k)>-1)c+=' sel';if(done){if(q.a.indexOf(k)>-1)c='opt right';else if(st.s.indexOf(k)>-1)c='opt wrong'}return '<button class="'+c+'" data-k="'+k+'"><span class="k">'+(q.g?(k?'✗':'✓'):'ABCD'[k])+'</span>'+x+'</button>'}).join('')+'</div>';
+if(q.bank)h+='<div class="bank">'+q.bank.map(function(x,k){return '<button class="wd'+(st.f===k?' used':'')+'" data-w="'+k+'">'+x+'</button>'}).join('')+'</div>';
+if(q.L){var own={};for(var l in st.p)own[st.p[l]]=l;
+h+='<div class="mt"><div class="col">'+q.L.map(function(x,k){var c=st.p[k]!=null?PAL[k]:(st.l===k?PAL[0]:'');return '<button class="wd" data-l="'+k+'" style="'+(c?'border-color:'+c:'')+(st.l===k?';background:#F1ECFF':'')+'">'+x+'</button>'}).join('')+'</div><div class="col">'+RO.map(function(r){var c=own[r]!=null?PAL[own[r]]:'';return '<button class="wd" data-r="'+r+'" style="'+(c?'border-color:'+c:'')+'">'+q.R[r]+'</button>'}).join('')+'</div></div>'}
+if(q.steps)h+='<div class="ans">'+st.q.map(function(k,n){return '<button class="wd" data-y="'+n+'"><b>'+(n+1)+'</b>'+q.steps[k]+'</button>'}).join('')+'</div><div class="bank">'+SO.map(function(k){return '<button class="wd'+(st.q.indexOf(k)>-1?' used':'')+'" data-x="'+k+'">'+q.steps[k]+'</button>'}).join('')+'</div>';
+$('qc').innerHTML=h;$('chk').className=ready()?'btn':'btn dis'}
+$('qc').onclick=function(e){if(done)return;var q=Q[i],b=e.target.closest('button');if(!b)return;var d=b.dataset;
+if(d.k!=null){var k=+d.k;if(q.m){var p=st.s.indexOf(k);if(p>-1)st.s.splice(p,1);else st.s.push(k)}else st.s=[k]}
+else if(d.w!=null)st.f=+d.w;
+else if(d.l!=null){var l=+d.l;delete st.p[l];st.l=l}
+else if(d.r!=null){if(st.l==null)return;var r=+d.r;for(var x in st.p)if(st.p[x]===r)delete st.p[x];st.p[st.l]=r;st.l=null}
+else if(d.x!=null)st.q.push(+d.x);
+else if(d.y!=null)st.q.splice(+d.y,1);
+draw()};
+$('chk').onclick=function(){if(!ready())return;res=check();done=true;draw();var f=$('fb');f.classList.toggle('bad',!res);f.classList.add('on');$('fbt').lastChild.textContent=res?'答对了！':'差一点，再记一下';$('fbp').textContent='解析：'+Q[i].e;$('xp').style.display=res?'':'none';$('nx').className=res?'btn ok':'btn';$('qp').style.width=((i+1)/Q.length*100)+'%';$('chk').style.display='none'};
+$('nx').onclick=function(){if(i>=Q.length-1){window.showS('result');return}i++;start()};
+function start(){st={s:[],f:null,p:{},l:null,q:[]};done=false;res=null;$('fb').classList.remove('on','bad');$('chk').style.display='';$('qp').style.width=(i/Q.length*100)+'%';draw()}
+window.startQ=function(k){i=k||0;start()};
+$('qt').onclick=function(e){var b=e.target.closest('button');if(!b)return;window.showS('quiz');window.startQ(+b.dataset.q)};
+/* filter sheet */
+var F={k:'all',s:'all'},NM={g1:'科学',g2:'数学',g3:'英语',doing:'进行中',new:'未开始'},ST=['doing','doing','new'];
+function applyF(){var n=0;document.querySelectorAll('.course').forEach(function(c,x){var ok=(F.k==='all'||c.dataset.k===F.k)&&(F.s==='all'||ST[x]===F.s);c.style.display=ok?'':'none';if(ok)n++});
+$('fapply').textContent='显示 '+n+' 门课程';var on=F.k!=='all'||F.s!=='all';$('fb0').classList.toggle('act',on);
+$('fch').innerHTML=on?[F.k,F.s].filter(function(v){return v!=='all'}).map(function(v){return '<span class="chip" style="padding:6px 12px">'+NM[v]+'</span>'}).join('')+'<button class="chip" style="color:var(--p);cursor:pointer" id="fclr">清除 ✕</button>':'';
+document.querySelectorAll('#fk .wd').forEach(function(b){b.classList.toggle('on',b.dataset.fk===F.k)});document.querySelectorAll('#fst .wd').forEach(function(b){b.classList.toggle('on',b.dataset.fs===F.s)})}
+$('fb0').onclick=function(){$('fs').classList.add('on')};
+$('fs').onclick=function(e){var b=e.target.closest('button');if(e.target===$('fs')||(b&&b.id==='fapply'))$('fs').classList.remove('on');if(!b)return;if(b.dataset.fk)F.k=b.dataset.fk;if(b.dataset.fs)F.s=b.dataset.fs;if(b.id==='frs'){F={k:'all',s:'all'}}applyF()};
+$('fch').onclick=function(e){if(e.target.id==='fclr'){F={k:'all',s:'all'};applyF()}};
+/* memory methods */
+var M={pal:{r:'推荐 · 并列内容适合放进房间',d:'根、茎、叶是三个并列部分，各放在一个位置，沿着路线走一遍就能回忆。',it:[['🚪','玄关','吸水后，先长出小根'],['🪴','书桌','根：固定并吸水'],['🛋️','沙发','茎：支撑并运水'],['🍳','厨房','叶：利用光制造食物']]},
+peg:{r:'可选 · 记顺序很好用',d:'用数字桩的形状画面挂住内容，1 到 4 号刚好对应 4 个条目。',it:[['🕯️','1 号 蜡烛','吸水后，先长出小根'],['🦢','2 号 天鹅','根：固定并吸水'],['👂','3 号 耳朵','茎：支撑并运水'],['⛵','4 号 帆船','叶：利用光制造食物']]},
+sto:{r:'可选 · 适合理解概念',d:'把 4 个条目串成一个小故事，每个画面都带出一个知识点。',it:[['🫘','画面 1','豆子喝饱水，伸出小根当脚'],['⚓','画面 2','小根像锚，抓住土壤吸水'],['🥤','画面 3','茎像吸管，把水送上去'],['👩‍🍳','画面 4','叶子在头顶开小厨房']]}};
+function mem(m){var x=M[m];$('rec').textContent=x.r;$('md').textContent=x.d;$('stn').innerHTML=x.it.map(function(a){return '<div class="stn"><div class="pic">'+a[0]+'</div><div><small>'+a[1]+'</small><b>'+a[2]+'</b></div></div>'}).join('');document.querySelectorAll('#seg button').forEach(function(b){b.classList.toggle('on',b.dataset.m===m)})}
+$('seg').onclick=function(e){var b=e.target.closest('button');if(b)mem(b.dataset.m)};
+mem('pal');applyF();
+})();
+</script>
+</body>
+</html>

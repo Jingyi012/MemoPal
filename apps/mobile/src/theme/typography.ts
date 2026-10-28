@@ -4,6 +4,7 @@ import {
   Nunito_600SemiBold,
   Nunito_700Bold,
   Nunito_800ExtraBold,
+  Nunito_900Black,
 } from '@expo-google-fonts/nunito';
 
 export const fontAssets = {
@@ -13,6 +14,7 @@ export const fontAssets = {
   Nunito_600SemiBold,
   Nunito_700Bold,
   Nunito_800ExtraBold,
+  Nunito_900Black,
 };
 
 export const typography = {

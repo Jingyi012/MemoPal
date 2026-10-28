@@ -1,7 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { EducationQuestionOption, MultipleSelectAnswer, MultipleSelectQuestion } from '@/features/education/types/question.types';
 import { Text, View } from 'react-native';
-import { useQuestionInputStyles } from './questionInputStyles';
+import { useCorrectAnswer, useQuestionHints, useQuestionInputStyles, useQuestionFeedback } from './questionInputStyles';
 
 export type MultipleSelectInputProps = Readonly<{
   question: MultipleSelectQuestion;
@@ -12,14 +12,20 @@ export type MultipleSelectInputProps = Readonly<{
 }>;
 
 export function MultipleSelectInput({ question, value, onChange, hint, disabled = false }: MultipleSelectInputProps) {
-  const { styles } = useQuestionInputStyles();
+  const { styles, theme } = useQuestionInputStyles();
+  const showHints = useQuestionHints();
+  const feedback = useQuestionFeedback();
+  const correctAnswer = useCorrectAnswer();
   return (
     <View style={styles.container}>
       <Text accessibilityRole="header" style={styles.prompt}>{question.prompt}</Text>
-      <Text style={styles.hint}>{hint}</Text>
+      {showHints ? <Text style={styles.hint}>{hint}</Text> : null}
       <View style={styles.options}>
-        {question.options.map((option: EducationQuestionOption) => {
+        {question.options.map((option: EducationQuestionOption, index) => {
           const selected = value.optionIds.includes(option.id);
+          const correct = correctAnswer?.type === 'multiple-select' ? !!correctAnswer.optionIds?.includes(option.id) : selected && feedback === true;
+          const incorrect = selected && correctAnswer?.type === 'multiple-select' && !correct;
+          const markerColor = correct ? theme.successText : incorrect ? theme.berryDeep : theme.violetDeep;
           return (
             <AnimatedPressable
               key={option.id}
@@ -31,10 +37,8 @@ export function MultipleSelectInput({ question, value, onChange, hint, disabled 
                 type: 'multiple-select',
                 optionIds: selected ? value.optionIds.filter((id) => id !== option.id) : [...value.optionIds, option.id],
               })}
-              style={[styles.option, selected && styles.optionSelected, disabled && styles.optionDisabled]}>
-              <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
-                {selected ? <Text style={styles.checkboxMark}>✓</Text> : null}
-              </View>
+              style={[styles.option, selected && styles.optionSelected, correct && styles.optionCorrect, incorrect && styles.optionIncorrect]}>
+              <View style={[styles.marker, (selected || correct || incorrect) && { backgroundColor: markerColor, borderColor: markerColor }]}><Text style={[styles.markerText, (selected || correct || incorrect) && { color: theme.onAccent }]}>{String.fromCharCode(65 + index)}</Text></View>
               <Text style={styles.optionLabel}>{option.label}</Text>
             </AnimatedPressable>
           );

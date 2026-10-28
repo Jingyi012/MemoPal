@@ -142,6 +142,9 @@ builder.Services.AddCors(options =>
 var adminBootstrapOptions = builder.Configuration.GetSection(AdminBootstrapOptions.SectionName).Get<AdminBootstrapOptions>() ?? new AdminBootstrapOptions();
 builder.Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(adminBootstrapOptions));
 builder.Services.AddScoped<AdminBootstrapper>();
+var seedEducationStarterCatalog = builder.Configuration.GetValue(
+    $"{EducationStarterCatalogOptions.SectionName}:Enabled", true);
+builder.Services.AddScoped<EducationStarterCatalogSeeder>();
 
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -173,6 +176,12 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 await app.ApplyDatabaseMigrationsAsync();
+
+if (seedEducationStarterCatalog)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await scope.ServiceProvider.GetRequiredService<EducationStarterCatalogSeeder>().SeedAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {

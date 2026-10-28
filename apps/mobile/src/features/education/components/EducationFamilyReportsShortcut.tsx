@@ -1,8 +1,7 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useEducationCopy } from '@/features/education/i18n';
 import { useEducationFamilyChildren } from '@/features/education/hooks/useEducationFamilyReports';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text } from 'react-native';
 

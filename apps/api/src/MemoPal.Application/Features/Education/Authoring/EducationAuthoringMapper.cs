@@ -92,6 +92,25 @@ internal static class EducationAuthoringMapper
             throw new ValidationAppException("Text questions may have at most 20 accepted answers, each 500 characters or fewer.");
         if ((request.AllowedNumericAnswers?.Count ?? 0) > 20)
             throw new ValidationAppException("Numeric questions may have at most 20 accepted answers.");
+        if (type == ObjectiveQuestionTypeCodes.FillBlank && options.Length > 0)
+        {
+            if (options.Length is < 2 or > 12 || options.Select(option => option.Id).Distinct(StringComparer.Ordinal).Count() != options.Length ||
+                options.Select(option => option.Label).Distinct(StringComparer.Ordinal).Count() != options.Length)
+                throw new ValidationAppException("A fill-in word bank requires 2–12 distinct options with unique IDs and labels.");
+            bool containsAcceptedAnswer;
+            try
+            {
+                // Reuse the scorer's trimming, case and numeric tolerance rules.
+                var grades = options.Select(option => ObjectiveQuestionScorer.Grade(definition,
+                    fillMode == FillBlankModeCodes.Number ? ObjectiveQuestionAnswerInput.Number(option.Label) : ObjectiveQuestionAnswerInput.Text(option.Label))).ToArray();
+                containsAcceptedAnswer = grades.Any(grade => grade.IsCorrect);
+            }
+            catch (ArgumentException)
+            {
+                throw new ValidationAppException("Word bank options must be valid values for the selected fill-in format.");
+            }
+            if (!containsAcceptedAnswer) throw new ValidationAppException("The word bank must include at least one accepted answer.");
+        }
         var correctIds = request.CorrectOptionIds ?? [];
         if (correctIds.Count > options.Length || correctIds.Any(string.IsNullOrWhiteSpace) || correctIds.Any(id => id.Length > 64))
             throw new ValidationAppException("Correct option IDs must be valid option IDs.");
@@ -119,6 +138,15 @@ internal static class EducationAuthoringMapper
         assessment.Id, assessment.CourseId, assessment.Title, assessment.Status, assessment.Version,
         assessment.PublishedAt, assessment.Questions.Where(q => !q.IsDeleted).OrderBy(q => q.Position).Select(ToQuestionDto).ToArray(),
         assessment.IsPublicPractice);
+
+    public static EducationQuestionRequest ToRequest(EducationQuestion question)
+    {
+        var dto = ToQuestionDto(question);
+        return new EducationQuestionRequest(null, dto.Prompt, dto.Type, dto.FillMode, dto.MaxScore, dto.ObjectiveId,
+            dto.Options, dto.CorrectOptionId, dto.CorrectBooleanAnswer, dto.AllowedTextAnswers, dto.TrimTextAnswers,
+            dto.IgnoreCase, dto.AllowedNumericAnswers, dto.NumericTolerance, dto.CorrectOptionIds,
+            dto.CorrectSequenceIds, dto.MatchingPairs, dto.GradingRubric, dto.Explanation);
+    }
 
     public static EducationStudentQuestionDto ToStudentDto(EducationQuestion question, bool includeExplanation = false)
     {

@@ -1,6 +1,5 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import { ArrowRight } from '@/core/icons';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import type { MyEducationAssignment } from '@/features/education/types/educationAssignment.types';
 import { useEducationCopy } from '@/features/education/i18n';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';

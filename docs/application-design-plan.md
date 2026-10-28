@@ -1,5 +1,7 @@
 # MemoPal full application design plan
 
+Product direction follow-up (2026-10-26): the [MemoPal 2.0 interactive learning plan](memopal-v2/product-redesign-plan.md) proposes a primary-school, multi-subject learning experience with varied activities, guided lessons and layered feedback. Its [official-source research](memopal-v2/learning-experience-research.md) records the product references. The new plan distinguishes implementation phases from current capabilities; this document remains the existing architecture baseline.
+
 Status: redesigned MVP foundation implemented; production hardening continues  
 Scope: monorepo, mobile app, backend domain/API, admin studio, lightweight client persistence, both memory techniques, and delivery plan
 Primary client: Expo SDK 54 / React Native 0.81  

@@ -1,13 +1,12 @@
+import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { CommonHeader } from '@/components/CommonHeader';
+import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
 import { useAuth } from '@/contexts/AuthProvider';
 import { EducationPracticeItemCard } from '@/features/education/components/EducationPracticeItemCard';
 import { useEducationPracticeItems } from '@/features/education/hooks/useEducationPracticeItems';
 import { useEducationCopy } from '@/features/education/i18n';
 import { educationPracticePreferences } from '@/features/education/services/educationPracticePreferences.service';
 import type { EducationPracticeFormatPreference, EducationPracticeQuestionType } from '@/features/education/types/educationPractice.types';
-import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
