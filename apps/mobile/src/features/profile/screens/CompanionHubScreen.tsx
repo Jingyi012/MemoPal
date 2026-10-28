@@ -303,7 +303,6 @@ export default function CompanionHubScreen() {
             <EnvironmentObject active={active && !panel} kind="starfish" index={2} popped={popped.includes(2)} onPress={() => { interruptIdle(); setPopped([2]); void Haptics.selectionAsync(); setTimeout(() => setPopped([]), 1100); }} />
             {isNight && <View pointerEvents="none" style={styles.nightGlow}><Ionicons name="sparkles" size={28} color={theme.sky} /></View>}
             <CompanionSwimmer active={active && !panel} reduceMotion={reduceMotion} slow={isNight} cue={cue} stage={level} size={actorSize}
-              swimPrototype={level === 3 ? 'x' : undefined}
               stablePresentation
               tankWidth={width} tankHeight={photoMode ? height - insets.bottom : stageHeight}
               label={t('habitatPet')} hint={t('habitatHugHint')} onPress={pet} onLongPress={hug} onPressOut={releaseHug} />

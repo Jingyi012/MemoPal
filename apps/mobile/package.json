@@ -8,7 +8,6 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "generate:momo-swim-lv3": "node scripts/generate-momo-lv3-swim.cjs",
     "test": "node --experimental-strip-types --test test/recall.test.mjs test/companion.test.mjs test/numberPegMovie.test.mjs test/ocr.test.mjs test/theme.test.mjs test/onboarding.test.mjs test/i18nInterpolation.test.mjs test/educationOrdering.test.mjs test/educationOrderingBuilder.test.mjs test/educationMatching.test.mjs test/educationPracticeSession.test.mjs test/educationPracticeGate.test.mjs test/educationGuidedLearningFlow.test.mjs test/educationAttemptAnswers.test.mjs test/educationAnswerFeedback.test.mjs test/educationAttemptWriteQueue.test.mjs test/educationHandwritingDraft.test.mjs test/educationHomeCourse.test.mjs test/educationAssignmentGroups.test.mjs test/educationClassroomInvitations.test.mjs test/educationShareSummary.test.mjs test/educationPracticePreference.test.mjs test/educationAuthoringPortal.test.mjs test/leaderboardMomentum.test.mjs test/leaderboardPodium.test.mjs test/leaderboardShareSummary.test.mjs test/progressShare.test.mjs test/safeAuthReturnTo.test.mjs test/safeReferralCode.test.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint"
@@ -79,7 +78,6 @@
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
-    "pngjs": "^7.0.0",
     "prettier-plugin-tailwindcss": "0.5.11",
     "tailwindcss": "3.4.17",
     "typescript": "~5.9.2"

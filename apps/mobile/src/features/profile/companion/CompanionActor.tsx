@@ -1,10 +1,8 @@
 import React, { memo, useCallback, useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useCompanionActive } from './useCompanionActive';
 import { ACTION_DURATION, type CompanionAction, type CompanionCue } from './behavior';
-import { MomoSwimPrototype, type MomoSwimMode } from './MomoSwimPrototype';
-import { MomoFaceExpressions } from './MomoFaceExpressions';
 import { momoGrowthScaleForLevel, momoPortraitForLevel, momoReactionForLevel, momoSwimWingForLevel } from '@/features/avatars/momoPortraits';
 
 type Pose = 'idle' | 'wing' | 'hello' | 'correct' | 'encourage' | 'think' | 'celebrate';
@@ -90,26 +88,17 @@ export type CompanionActorProps = {
   cue?: CompanionCue;
   label?: string;
   stage?: number;
-  swimPrototype?: MomoSwimMode;
-  swimActive?: boolean;
-  swimSlow?: boolean;
   stablePresentation?: boolean;
   stableReactions?: boolean;
-  faceReactions?: boolean;
   holdReaction?: boolean;
 };
 
-const ResidentSprites = memo(function ResidentSprites({ level, size, poseOpacity, onReady, swimMode, swimActive, swimCycleMs, stablePresentation, stableReactions, faceReactions }: {
+const ResidentSprites = memo(function ResidentSprites({ level, poseOpacity, onReady, stablePresentation, stableReactions }: {
   level: number;
-  size: number;
   poseOpacity: Record<SpritePose, Animated.Value>;
   onReady: (pose: SpritePose) => void;
-  swimMode?: MomoSwimMode;
-  swimActive: boolean;
-  swimCycleMs: number;
   stablePresentation: boolean;
   stableReactions: boolean;
-  faceReactions: boolean;
 }) {
   const sources = {
     idle: momoPortraitForLevel(level),
@@ -120,35 +109,20 @@ const ResidentSprites = memo(function ResidentSprites({ level, size, poseOpacity
     celebrate: momoReactionForLevel(level, 'celebrate'),
   };
   if (stablePresentation && !stableReactions) {
-    if (level === 3 && swimMode && faceReactions) {
-      return <View style={{ width: size, height: size }} pointerEvents="none">
-        <MomoSwimPrototype size={size} active={swimActive}
-          cycleMs={swimCycleMs} onReady={() => onReady('idle')} />
-        <MomoFaceExpressions size={size} opacity={poseOpacity} />
-      </View>;
-    }
-    return level === 3 && swimMode
-      ? <MomoSwimPrototype size={size} active={swimActive}
-          cycleMs={swimCycleMs} onReady={() => onReady('idle')} />
-      : <Animated.Image source={sources.idle} onLoad={() => onReady('idle')}
-          resizeMode="contain" resizeMethod="resize" style={styles.sprite} />;
+    return <Animated.Image source={sources.idle} onLoad={() => onReady('idle')}
+      resizeMode="contain" resizeMethod="resize" style={styles.sprite} />;
   }
-  return spritePoses.filter((pose) => !stableReactions || pose !== 'wing').map((pose) => pose === 'idle' && level === 3 && swimMode
-    ? <Animated.View key={pose} style={[styles.sprite, { opacity: poseOpacity[pose] }]}>
-        <MomoSwimPrototype size={size} active={swimActive} cycleMs={swimCycleMs}
-          onReady={() => onReady('idle')} />
-      </Animated.View>
-    : <Animated.Image key={pose} source={sources[pose]}
+  return spritePoses.filter((pose) => !stableReactions || pose !== 'wing').map((pose) =>
+    <Animated.Image key={pose} source={sources[pose]}
         onLoad={() => onReady(pose)} resizeMode="contain" resizeMethod="resize"
         style={[styles.sprite, { opacity: poseOpacity[pose] }]} />);
 });
 
 /** Pre-rendered shaded poses keep Momo's face consistent without a native GL surface. */
-export function CompanionActor({ size, cue, label, stage = 3, swimPrototype, swimActive = false, swimSlow = false, stablePresentation = false, stableReactions = false, faceReactions = false, holdReaction = false }: CompanionActorProps) {
+export function CompanionActor({ size, cue, label, stage = 3, stablePresentation = false, stableReactions = false, holdReaction = false }: CompanionActorProps) {
   const active = useCompanionActive();
   const reduceMotion = useReducedMotion();
   const idle = useRef(new Animated.Value(0)).current;
-  const wing = useRef(new Animated.Value(0)).current;
   const reaction = useRef(new Animated.Value(0)).current;
   const poseOpacity = useRef<Record<SpritePose, Animated.Value>>({
     idle: new Animated.Value(1), wing: new Animated.Value(0),
@@ -164,14 +138,8 @@ export function CompanionActor({ size, cue, label, stage = 3, swimPrototype, swi
   const level = Number.isFinite(stage) ? Math.max(1, Math.min(10, Math.floor(stage))) : 1;
 
   const showPose = useCallback((pose: Pose) => {
-    if (stablePresentation && !stableReactions && !faceReactions) return;
-    const next = (stableReactions || (swimPrototype && level === 3)) && pose === 'wing' ? 'idle' : spritePose(pose);
-    if (faceReactions) {
-      if (visible.current === next) return;
-      visible.current = next;
-      spritePoses.forEach((sprite) => poseOpacity[sprite].setValue(sprite === next ? 1 : 0));
-      return;
-    }
+    if (stablePresentation && !stableReactions) return;
+    const next = stableReactions && pose === 'wing' ? 'idle' : spritePose(pose);
     // Bundled game reaction layers are mounted together. Android does not
     // consistently deliver onLoad for a layer initially hidden at opacity 0.
     if (!stableReactions && !loaded.current.has(next)) { pending.current = next; return; }
@@ -189,7 +157,7 @@ export function CompanionActor({ size, cue, label, stage = 3, swimPrototype, swi
       });
       poseHandoff.current = null;
     }, stableReactions ? 20 : 40);
-  }, [poseOpacity, swimPrototype, level, stablePresentation, stableReactions, faceReactions]);
+  }, [poseOpacity, stablePresentation, stableReactions]);
 
   const onSpriteReady = useCallback((pose: SpritePose) => {
     loaded.current.add(pose);
@@ -208,30 +176,17 @@ export function CompanionActor({ size, cue, label, stage = 3, swimPrototype, swi
   useEffect(() => {
     idle.stopAnimation();
     idle.setValue(0);
-    wing.stopAnimation();
-    wing.setValue(0);
-    // The Lv3 swim atlas already animates body lift and wing compression in
-    // the same phase. Running the generic idle loop over it made the body
-    // bob on a second, unrelated clock, which reads as a doubled/jittering
-    // silhouette on Android.
-    if (!active || reduceMotion || swimPrototype) return;
+    if (!active || reduceMotion) return;
     const swim = Animated.loop(Animated.sequence([
       Animated.timing(idle, { toValue: 1, duration: 1250, useNativeDriver: true }),
       Animated.timing(idle, { toValue: 0, duration: 1350, useNativeDriver: true }),
     ]));
-    const wingMotion = Animated.loop(Animated.sequence([
-      Animated.timing(wing, { toValue: 1, duration: 680, useNativeDriver: true }),
-      Animated.timing(wing, { toValue: 0, duration: 680, useNativeDriver: true }),
-    ]));
     swim.start();
-    // The Lv3 atlas already contains a wing beat. A second unsynchronised
-    // squash loop made the two beats drift against each other.
-    if (!swimPrototype) wingMotion.start();
-    return () => { swim.stop(); wingMotion.stop(); };
-  }, [active, reduceMotion, idle, wing, swimPrototype]);
+    return () => swim.stop();
+  }, [active, reduceMotion, idle]);
 
   useEffect(() => {
-    if (!animateBody || action !== 'idle' || (stablePresentation && !faceReactions)) return;
+    if (!animateBody || action !== 'idle' || stablePresentation) return;
     let winkTimer: ReturnType<typeof setTimeout>;
     let resetTimer: ReturnType<typeof setTimeout>;
     const scheduleWink = () => {
@@ -242,14 +197,14 @@ export function CompanionActor({ size, cue, label, stage = 3, swimPrototype, swi
     };
     scheduleWink();
     return () => { clearTimeout(winkTimer); clearTimeout(resetTimer); };
-  }, [animateBody, action, level, showPose, stablePresentation, faceReactions]);
+  }, [animateBody, action, level, showPose, stablePresentation]);
 
   useEffect(() => {
     reaction.stopAnimation();
     reaction.setValue(0);
     if (action === 'idle') { showPose('idle'); return; }
     const frames = actionFrames[action] ?? [{ at: 0, pose: reactionPose[action] }];
-    showPose(stableReactions || faceReactions ? reactionPose[action] : animateBody ? frames[0].pose : reactionPose[action]);
+    showPose(stableReactions ? reactionPose[action] : animateBody ? frames[0].pose : reactionPose[action]);
     const frameTimers = animateBody && !stablePresentation ? frames.slice(1).map((frame) =>
       setTimeout(() => showPose(frame.pose), frame.at)) : [];
     if (animateBody) {
@@ -263,7 +218,7 @@ export function CompanionActor({ size, cue, label, stage = 3, swimPrototype, swi
       frameTimers.forEach(clearTimeout);
       reaction.stopAnimation();
     };
-  }, [action, animateBody, cue?.sequence, reaction, showPose, stablePresentation, stableReactions, faceReactions, holdReaction]);
+  }, [action, animateBody, cue?.sequence, reaction, showPose, stablePresentation, stableReactions, holdReaction]);
 
   const motion = actionMotion[action];
   return (
@@ -276,15 +231,10 @@ export function CompanionActor({ size, cue, label, stage = 3, swimPrototype, swi
       { rotate: reaction.interpolate({ inputRange: motionTimes, outputRange: motion.angle.map(value => `${value}deg`) }) },
       { scale: reaction.interpolate({ inputRange: motionTimes, outputRange: motion.scale }) },
       { rotate: idle.interpolate({ inputRange: [0, 1], outputRange: ['0deg', stablePresentation && animateBody ? '1.8deg' : '0deg'] }) },
-      { scaleX: wing.interpolate({ inputRange: [0, 1], outputRange: [1, stablePresentation && animateBody ? .98 : 1] }) },
-      { scaleY: wing.interpolate({ inputRange: [0, 1], outputRange: [1, animateBody ? stablePresentation ? .93 : .965 : 1] }) },
       { scale: momoGrowthScaleForLevel(level) },
     ] }}>
-      <ResidentSprites level={level} size={size} poseOpacity={poseOpacity} onReady={onSpriteReady}
-        swimMode={swimPrototype}
-        swimActive={swimActive && animateBody && ['idle', 'chase', 'peek', 'spin', 'yawn'].includes(action)}
-        swimCycleMs={action === 'chase' ? 1200 : swimSlow ? 1800 : 1500}
-        stablePresentation={stablePresentation} stableReactions={stableReactions} faceReactions={faceReactions} />
+      <ResidentSprites level={level} poseOpacity={poseOpacity} onReady={onSpriteReady}
+        stablePresentation={stablePresentation} stableReactions={stableReactions} />
     </Animated.View>
   );
 }
