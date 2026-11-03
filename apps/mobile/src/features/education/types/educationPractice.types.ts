@@ -31,6 +31,9 @@ export type EducationPublicCourseSummary = Readonly<{
   questionCount: number;
   isSaved: boolean;
   isMemoPalStarter: boolean;
+  subjectCode?: string | null;
+  learningStage?: string | null;
+  languageCode?: string | null;
 }>;
 
 export type EducationPublicAssessmentSummary = Readonly<{
@@ -42,6 +45,7 @@ export type EducationPublicAssessmentSummary = Readonly<{
 }>;
 
 export type EducationPublicCourseDetail = Readonly<Omit<EducationPublicCourseSummary, 'assessmentCount' | 'questionCount'> & {
+  units?: readonly Readonly<{ id: string; title: string; position: number; objectiveIds: readonly string[] }>[];
   assessments: readonly EducationPublicAssessmentSummary[];
   objectives: readonly Readonly<{
     id: string;
@@ -174,6 +178,7 @@ export type EducationClassroomLearningContent = Readonly<{
       contentVersion: number;
       reviewStatus: string;
       contentOrigin: string;
+      illustrationCode?: string | null;
     }>[];
   }>[];
 }>;

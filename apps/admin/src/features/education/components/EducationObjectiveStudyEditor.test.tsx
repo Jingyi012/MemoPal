@@ -68,11 +68,14 @@ describe('EducationObjectiveStudyEditor', () => {
   });
 
   it('uses the learner projection for preview and never renders author-only fields there', async () => {
+    setup({ rows: [item] });
     mocks.useLearnerStudyItems.mockReturnValue({ data: [{ id: 'learner-1', position: 1, kind: 'LanguageItem', primary: '春天', secondary: 'Spring', phonetic: 'chūntiān', extra: null, languageCode: 'zh-Hans', contentVersion: 1, reviewStatus: 'Unreviewed', contentOrigin: 'Original' }], isPending: false, isError: false });
-    setup({ rows: [item] }); fireEvent.click(screen.getByRole('button', { name: 'Learner preview' }));
-    expect(await screen.findByText('Spring')).toBeInTheDocument();
-    expect(within(screen.getByRole('dialog')).queryByText('private-key')).not.toBeInTheDocument();
-    expect(within(screen.getByRole('dialog')).queryByText('作者私有提示')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Learner preview' }));
+    const preview = within(await screen.findByRole('dialog'));
+    expect(preview.getByText('Spring')).toBeInTheDocument();
+    expect(preview.getByText('春天')).toBeInTheDocument();
+    expect(preview.queryByText('private-key')).not.toBeInTheDocument();
+    expect(preview.queryByText('作者私有提示')).not.toBeInTheDocument();
   });
 
   it('does not submit while an input method editor is composing', async () => {

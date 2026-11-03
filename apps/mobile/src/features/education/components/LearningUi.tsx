@@ -6,11 +6,13 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp, interpolate, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 
-export type LearningSubject = 'science' | 'math' | 'english' | 'other';
+import { learningSubjectFor, type LearningSubject } from '../utils/educationCourseAudience';
+export type { LearningSubject } from '../utils/educationCourseAudience';
 export type LearningTheme = { key: LearningSubject; color: string; dark: string; tint: string; line: string; gradient: readonly [string, string]; icon: 'flask' | 'calculator' | 'chatbubbles' | 'book' };
-export function learningThemeFor(title: string, palette: LearningPalette = learningPalettes.light): LearningTheme {
-  const key: LearningSubject = /science|科学|sains/i.test(title) ? 'science' : /math|数学|matematik/i.test(title) ? 'math' : /english|英语|英文/i.test(title) ? 'english' : 'other';
+export function learningThemeFor(title: string, palette: LearningPalette = learningPalettes.light, subjectCode?: string | null): LearningTheme {
+  const key = learningSubjectFor(title, subjectCode);
   const roles = {
+    chinese: { color: palette.berryDeep, dark: palette.memoryInk, gradient: palette.memory as [string, string], tint: palette.berryTint, line: palette.berryLine, icon: 'book' as const },
     science: { color: palette.successText, dark: palette.isDark ? palette.ink : '#073B25', gradient: palette.science as [string, string], tint: palette.mintTint, line: palette.mintLine, icon: 'flask' as const },
     math: { color: palette.isDark ? palette.sun : '#B85A12', dark: palette.isDark ? palette.ink : '#5A3300', gradient: palette.math as [string, string], tint: palette.sunTint, line: palette.sunLine, icon: 'calculator' as const },
     english: { color: palette.isDark ? palette.sky : '#405EAE', dark: palette.isDark ? palette.ink : '#203567', gradient: palette.english as [string, string], tint: palette.skyTint, line: palette.skyLine, icon: 'chatbubbles' as const },
@@ -22,13 +24,13 @@ export const LearningThemeContext = createContext<LearningTheme>(learningThemeFo
 export function useLearningTheme() {
   const inherited = useContext(LearningThemeContext);
   const { theme } = useLearningStyles();
-  const titles = { science: 'science', math: 'math', english: 'english', other: '' };
+  const titles = { chinese: 'chinese', science: 'science', math: 'math', english: 'english', other: '' };
   return learningThemeFor(titles[inherited.key], theme);
 }
 export function useLearningCopy() {
   const { language } = useTranslation('home');
   const zh = language === 'zh';
-  return { zh, all: zh ? '全部' : 'All', science: zh ? '科学' : 'Science', math: zh ? '数学' : 'Math', english: zh ? '英语' : 'English',
+  return { zh, chinese: zh ? '中文' : 'Chinese', all: zh ? '全部' : 'All', science: zh ? '科学' : 'Science', math: zh ? '数学' : 'Math', english: zh ? '英语' : 'English',
     hello: (name: string) => zh ? `你好，${name}！` : `Hi, ${name}!`, ready: zh ? '和沫沫一起，向前一步' : 'One little step with Momo',
     continue: zh ? '继续学习' : 'Continue learning', path: zh ? '学习路径' : 'Learning path', content: zh ? '学习内容' : 'Study', practice: zh ? '练习' : 'Practice', memory: zh ? '记忆练习' : 'Memory practice',
     recommended: zh ? '推荐' : 'Recommended', current: zh ? '从这里开始' : 'Start here', done: zh ? '已完成' : 'Complete', notStarted: zh ? '未开始' : 'Not started', underway: zh ? '进行中' : 'In progress',
@@ -69,7 +71,7 @@ export function LearningButton({ label, onPress, disabled, secondary = false, lo
   </AnimatedPressable>;
 }
 export function SubjectArtwork({ theme, size = 72 }: { theme: LearningTheme; size?: number }) {
-  return <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: size * .76 }}>{theme.key === 'science' ? '🌱' : theme.key === 'math' ? '🍕' : theme.key === 'english' ? '💬' : '📚'}</Text></View>;
+  return <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: size * .76 }}>{theme.key === 'chinese' ? '📖' : theme.key === 'science' ? '🌱' : theme.key === 'math' ? '🍕' : theme.key === 'english' ? '💬' : '📚'}</Text></View>;
 }
 export function LearningProgress({ value, total, color, height = 10 }: { value: number; total: number; color?: string; height?: number }) {
   const theme = useLearningTheme();

@@ -13,6 +13,12 @@ namespace MemoPal.Api.Controllers;
 [Route("v1/education")]
 public sealed class EducationAuthoringController(ISender sender) : ApiControllerBase(sender)
 {
+    [HttpPost("course-drafts/from-study-list")]
+    [RequestSizeLimit(131072)]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> CreateStudyCourseDraft([FromBody] CreateStudyCourseDraftRequest request, CancellationToken ct) =>
+        Ok(await Sender.Send(new CreateStudyCourseDraftCommand(GetUserIdOrThrow(), request), ct));
+
     [HttpGet("courses")]
     [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetCourses(CancellationToken ct) => Ok(await Sender.Send(new GetCoursesQuery(GetUserIdOrThrow(), IsAdmin()), ct));
@@ -26,6 +32,22 @@ public sealed class EducationAuthoringController(ISender sender) : ApiController
     public async Task<IActionResult> UpdateCourseTitle(string courseId, [FromBody] UpdateEducationCourseTitleRequest request,
         CancellationToken ct) => Ok(await Sender.Send(new UpdateEducationCourseTitleCommand(
             GetUserIdOrThrow(), courseId, request.Title, IsAdmin()), ct));
+
+    [HttpPut("courses/{courseId}/audience")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> UpdateCourseAudience(string courseId, [FromBody] UpdateEducationCourseAudienceRequest request,
+        CancellationToken ct) => Ok(await Sender.Send(new UpdateEducationCourseAudienceCommand(
+            GetUserIdOrThrow(), courseId, request, IsAdmin()), ct));
+
+    [HttpGet("courses/{courseId}/outline")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> GetCourseOutline(string courseId, CancellationToken ct) =>
+        Ok(await Sender.Send(new GetEducationCourseOutlineQuery(GetUserIdOrThrow(), courseId, IsAdmin()), ct));
+
+    [HttpPut("courses/{courseId}/outline")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> UpdateCourseOutline(string courseId, [FromBody] UpdateEducationCourseOutlineRequest request,
+        CancellationToken ct) => Ok(await Sender.Send(new UpdateEducationCourseOutlineCommand(GetUserIdOrThrow(), courseId, request, IsAdmin()), ct));
 
     [HttpGet("courses/{courseId}/classrooms")]
     [RestrictedLearner(RestrictedLearnerAccess.Deny)]

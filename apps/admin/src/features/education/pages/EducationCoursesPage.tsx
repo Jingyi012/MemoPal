@@ -1,4 +1,5 @@
-import { Card, Table, Tag } from 'antd';
+import { Card, Space, Table, Tag } from 'antd';
+import { EducationStudyCourseDraftButton } from '../components/EducationStudyCourseDraftButton';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../auth/AuthContext';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
@@ -13,7 +14,7 @@ export default function EducationCoursesPage() {
   const { t } = useEducationText();
   const data = useEducationCourses(user?.id ?? '');
   return <PortalPageContainer eyebrow="Learning workspace" title="Courses" description="Create learning materials for yourself, your class, or public independent practice." actions={
-    <EducationResourceCreateButton label="Create course" noun="Course" loading={data.createCourse.isPending} onSubmit={title => data.createCourse.mutate(title)} />
+    <Space wrap><EducationStudyCourseDraftButton /><EducationResourceCreateButton label="Create course" noun="Course" loading={data.createCourse.isPending} onSubmit={title => data.createCourse.mutate(title)} /></Space>
   }>
     <Card><QueryState query={data.courses} emptyText="Create your first course to get started.">{courses => <Table rowKey="id" dataSource={courses} pagination={{ pageSize: 10 }} columns={[
       { title: 'Course', dataIndex: 'title', render: (title: string, row) => <>{row.isPlatformCourse && <Tag color="purple">{t('platformCourse')}</Tag>} <Link to={adminPaths.educationCourse(row.id)}>{title}</Link></> },

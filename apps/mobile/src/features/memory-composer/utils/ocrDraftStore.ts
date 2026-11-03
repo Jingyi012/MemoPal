@@ -2,6 +2,7 @@ export type OcrDraft = {
   items: string[];
   title?: string;
   goalType?: string;
+  languageCode?: string;
 };
 
 const drafts = new Map<string, OcrDraft>();

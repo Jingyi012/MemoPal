@@ -3,6 +3,7 @@ using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Education.Attempts;
+using MemoPal.Application.Features.Education.Authoring;
 using MemoPal.Application.Features.Education.GuidedLearning.DTOs;
 using MemoPal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -52,6 +53,15 @@ public sealed class GetEducationGuidedCourseProgressHandler(IAppDbContext db)
             var questionProgress = progressSession?.Questions.Where(item => !item.IsDeleted).ToArray() ?? [];
             return EducationGuidedLearningMapper.ToLessonProgressDto(assessment, questions, objectives, progressSession, questionProgress);
         }).ToArray();
+
+        var units = await EducationCourseOutlineReader.Read(db, course.Id, ct);
+        var objectiveOrder = units.SelectMany(unit => unit.ObjectiveIds)
+            .Select((id, index) => (id, index)).ToDictionary(item => item.id, item => item.index, StringComparer.Ordinal);
+        // A lesson spanning several objectives follows the last prerequisite in the authored path.
+        // Stable ordering preserves publication order within a step and for legacy, ungrouped lessons.
+        lessons = lessons.OrderBy(lesson => lesson.Objectives
+            .Select(objective => objectiveOrder.GetValueOrDefault(objective.ObjectiveId, int.MaxValue))
+            .DefaultIfEmpty(int.MaxValue).Max()).ToArray();
 
         var next = lessons.FirstOrDefault(lesson => !lesson.IsComplete)?.AssessmentId
             ?? lessons.FirstOrDefault(lesson => lesson.LatestIncorrectQuestionCount > 0)?.AssessmentId;

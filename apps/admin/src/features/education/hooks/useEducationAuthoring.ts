@@ -2,7 +2,7 @@ import { App } from 'antd';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { educationAuthoringApi } from '../../../api/educationAuthoringApi';
 import { extractApiErrorMessage } from '../../../lib/errorMessage';
-import type { EducationQuestionRequest } from '../../../types/educationAuthoring';
+import type { EducationQuestionRequest, EducationCourseAudienceRequest } from '../../../types/educationAuthoring';
 import { useEducationText } from '../i18n/useEducationText';
 
 export const educationAuthoringKeys = {
@@ -34,7 +34,12 @@ export function useEducationCourses(userId: string) {
     meta: { suppressGlobalErrorToast: true },
     retry: false,
   });
-  return { courses, createCourse, updateCourseTitle, setCourseVisibility };
+  const updateCourseAudience = useMutation({
+    mutationFn: (input: { courseId: string; audience: EducationCourseAudienceRequest }) => educationAuthoringApi.updateCourseAudience(input.courseId, input.audience),
+    onSuccess: async () => { await client.invalidateQueries({ queryKey: educationAuthoringKeys.courses(userId) }); },
+    onError, meta: { suppressGlobalErrorToast: true }, retry: false,
+  });
+  return { courses, createCourse, updateCourseTitle, setCourseVisibility, updateCourseAudience };
 }
 
 export function useEducationCourse(userId: string, courseId: string) {

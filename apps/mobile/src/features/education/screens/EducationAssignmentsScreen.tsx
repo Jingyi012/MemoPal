@@ -9,6 +9,7 @@ import { EducationClassroomLearningList } from '@/features/education/components/
 import { EducationAccountIdCard } from '@/features/education/components/EducationAccountIdCard';
 import { EducationAssignmentPlayer } from '@/features/education/components/EducationAssignmentPlayer';
 import { EducationFamilyReportsShortcut } from '@/features/education/components/EducationFamilyReportsShortcut';
+import { EducationFamilyStudyPreparation } from '../components/EducationFamilyStudyPreparation';
 import { educationAttemptApi } from '@/features/education/api/educationAttempt.api';
 import { educationAssignmentApi } from '@/features/education/api/educationAssignment.api';
 import { useEducationCopy } from '@/features/education/i18n';
@@ -120,8 +121,8 @@ export default function EducationAssignmentsScreen() {
     <View style={styles.page}>
       <CommonHeader title={copy.title} backAction={() => router.back()} />
       <ScrollView contentContainerStyle={styles.content}>
-        {user?.id ? <EducationAccountIdCard accountId={user.id} /> : null}
-        <EducationClassroomInvitations
+        {!detailAssignmentId && user?.id ? <EducationAccountIdCard accountId={user.id} /> : null}
+        {!detailAssignmentId ? <EducationClassroomInvitations
           memberships={classroomInvitations.memberships.data ?? []}
           isLoading={classroomInvitations.memberships.isLoading}
           isError={classroomInvitations.memberships.isError}
@@ -132,7 +133,7 @@ export default function EducationAssignmentsScreen() {
           onAccept={(membershipId) => classroomInvitations.accept.mutate(membershipId)}
           onDecline={(membershipId) => classroomInvitations.decline.mutate(membershipId)}
           onRetry={() => { void classroomInvitations.memberships.refetch(); }}
-        />
+        /> : null}
         {!detailAssignmentId ? <EducationClassroomLearningList
           memberships={classroomInvitations.memberships.data ?? []}
           isLoading={classroomInvitations.memberships.isLoading}
@@ -263,6 +264,9 @@ export default function EducationAssignmentsScreen() {
           </View>
         ) : null}
         {leaderboardPreference.isError ? <Text accessibilityRole="alert" style={styles.error}>{copy.loadErrorBody}</Text> : null}
+        {selectedAssignment.scope === 'family' && isOpen ? <EducationFamilyStudyPreparation
+          key={`${user?.id}:${selectedAssignment.id}`} assignmentId={selectedAssignment.id}
+          disabled={isStarting || checkingSavedAttempt} /> : null}
         {isOpen ? (
           <AnimatedPressable accessibilityRole="button" accessibilityState={{ disabled: isStarting }} disabled={isStarting} onPress={onStart} style={[styles.action, isStarting && styles.disabledAction]}>
             <Text style={styles.actionText}>{startLabel}</Text>

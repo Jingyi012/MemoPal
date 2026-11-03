@@ -17,6 +17,94 @@ public sealed class EducationPublicLearningEndpointsTests(CustomWebApplicationFa
     : IClassFixture<CustomWebApplicationFactory>
 {
     [Fact]
+    public async Task Course_units_preserve_order_reject_cross_course_assignments_and_keep_unassigned_content()
+    {
+        using var author = factory.CreateClient();
+        using var stranger = factory.CreateClient();
+        await RegisterAsync(author);
+        await RegisterAsync(stranger);
+        var course = await DataAsync(await author.PostAsJsonAsync("/v1/education/courses", new { title = "Unit course" }));
+        var otherCourse = await DataAsync(await author.PostAsJsonAsync("/v1/education/courses", new { title = "Other course" }));
+        var id = course.GetProperty("id").GetString()!;
+        var otherId = otherCourse.GetProperty("id").GetString()!;
+        async Task<string> Objective(string courseId, string title) => (await DataAsync(await author.PostAsJsonAsync($"/v1/education/courses/{courseId}/objectives", new { title }))).GetProperty("id").GetString()!;
+        var a = await Objective(id, "First");
+        var b = await Objective(id, "Second");
+        var foreign = await Objective(otherId, "Foreign");
+        var endpoint = $"/v1/education/courses/{id}/outline";
+        var initial = await DataAsync(await author.GetAsync(endpoint));
+        Assert.Equal(0, initial.GetProperty("version").GetInt32());
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.GetAsync(endpoint)).StatusCode);
+        var create = new UpdateEducationCourseOutlineRequest(0, [new(null, "Explore", [b, a]), new(null, "Next", [])]);
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.PutAsJsonAsync(endpoint, create)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await author.PutAsJsonAsync(endpoint, new UpdateEducationCourseOutlineRequest(0, [new(null, "Invalid", [foreign])]))).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await author.PutAsJsonAsync(endpoint, new UpdateEducationCourseOutlineRequest(0, [new(null, "Duplicate", [a, a])]))).StatusCode);
+        var saved = await DataAsync(await author.PutAsJsonAsync(endpoint, create));
+        Assert.Equal(1, saved.GetProperty("version").GetInt32());
+        var units = saved.GetProperty("units");
+        Assert.Equal(new[] { b, a }, units[0].GetProperty("objectiveIds").EnumerateArray().Select(x => x.GetString()).ToArray());
+        var firstId = units[0].GetProperty("id").GetString()!;
+        var secondId = units[1].GetProperty("id").GetString()!;
+        Assert.Equal(HttpStatusCode.Conflict, (await author.PutAsJsonAsync(endpoint, create)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await author.PutAsJsonAsync($"/v1/education/courses/{otherId}/outline", new UpdateEducationCourseOutlineRequest(0, [new(firstId, "Stolen", [foreign])]))).StatusCode);
+        var reordered = await DataAsync(await author.PutAsJsonAsync(endpoint, new UpdateEducationCourseOutlineRequest(1, [new(secondId, "Next first", [a]), new(firstId, "Explore later", [b])])));
+        Assert.Equal(secondId, reordered.GetProperty("units")[0].GetProperty("id").GetString());
+        var laterLesson = await CreatePublishedAssessmentAsync(author, id, b);
+        var firstLesson = await CreatePublishedAssessmentAsync(author, id, a);
+        await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{id}/visibility", new { isPublic = true, notConfidentialExamContent = true }));
+        var detail = await DataAsync(await stranger.GetAsync($"/v1/education/public/courses/{id}"));
+        Assert.Equal("Next first", detail.GetProperty("units")[0].GetProperty("title").GetString());
+        var progress = await DataAsync(await stranger.GetAsync($"/v1/education/guided/courses/{id}/progress"));
+        Assert.Equal(firstLesson, progress.GetProperty("nextRecommendedAssessmentId").GetString());
+        Assert.Equal(new[] { firstLesson, laterLesson }, progress.GetProperty("lessons").EnumerateArray()
+            .Select(lesson => lesson.GetProperty("assessmentId").GetString()).ToArray());
+        var removed = await DataAsync(await author.PutAsJsonAsync(endpoint, new UpdateEducationCourseOutlineRequest(2, [])));
+        Assert.Empty(removed.GetProperty("units").EnumerateArray());
+        var legacyProgress = await DataAsync(await stranger.GetAsync($"/v1/education/guided/courses/{id}/progress"));
+        Assert.Equal(laterLesson, legacyProgress.GetProperty("nextRecommendedAssessmentId").GetString());
+        var retained = await DataAsync(await author.GetAsync($"/v1/education/courses/{id}/objectives"));
+        Assert.Equal(2, retained.GetArrayLength());
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.All(await db.EducationObjectives.Where(x => x.CourseId == id).ToListAsync(), objective => Assert.Null(objective.UnitId));
+        Assert.Equal(2, await db.EducationCourseUnits.IgnoreQueryFilters().CountAsync(x => x.CourseId == id && x.IsDeleted));
+    }
+
+    [Fact]
+    public async Task Course_audience_is_owned_validated_and_visible_in_public_catalog()
+    {
+        using var author = factory.CreateClient();
+        using var other = factory.CreateClient();
+        await RegisterAsync(author);
+        await RegisterAsync(other);
+        var course = await DataAsync(await author.PostAsJsonAsync("/v1/education/courses", new { title = "Audience metadata" }));
+        var id = course.GetProperty("id").GetString()!;
+        var audience = new { subjectCode = "science", learningStage = "early-primary", languageCode = "en" };
+        Assert.Equal(HttpStatusCode.NotFound, (await other.PutAsJsonAsync($"/v1/education/courses/{id}/audience", audience)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await author.PutAsJsonAsync($"/v1/education/courses/{id}/audience", new { subjectCode = "invented", learningStage = "early-primary", languageCode = "en" })).StatusCode);
+        var updated = await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{id}/audience", audience));
+        Assert.Equal("science", updated.GetProperty("subjectCode").GetString());
+        Assert.False(updated.GetProperty("isPlatformCourse").GetBoolean());
+        var renamed = await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{id}/title", new { title = "Audience metadata renamed" }));
+        Assert.Equal("early-primary", renamed.GetProperty("learningStage").GetString());
+        var objective = await DataAsync(await author.PostAsJsonAsync($"/v1/education/courses/{id}/objectives", new { title = "Cells" }));
+        await CreatePublishedAssessmentAsync(author, id, objective.GetProperty("id").GetString()!);
+        var published = await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{id}/visibility", new { isPublic = true, notConfidentialExamContent = true }));
+        Assert.Equal("en", published.GetProperty("languageCode").GetString());
+        var catalog = await DataAsync(await other.GetAsync("/v1/education/public/courses?search=Audience%20metadata"));
+        var found = catalog.EnumerateArray().Single(item => item.GetProperty("id").GetString() == id);
+        Assert.Equal("science", found.GetProperty("subjectCode").GetString());
+        Assert.Equal("early-primary", found.GetProperty("learningStage").GetString());
+        Assert.Equal("en", found.GetProperty("languageCode").GetString());
+        var detail = await DataAsync(await other.GetAsync($"/v1/education/public/courses/{id}"));
+        Assert.Equal("science", detail.GetProperty("subjectCode").GetString());
+        var owned = await DataAsync(await author.GetAsync("/v1/education/courses"));
+        Assert.Equal("early-primary", owned.EnumerateArray().Single(item => item.GetProperty("id").GetString() == id).GetProperty("learningStage").GetString());
+        var cleared = await DataAsync(await author.PutAsJsonAsync($"/v1/education/courses/{id}/audience", new { subjectCode = (string?)null, learningStage = (string?)null, languageCode = (string?)null }));
+        Assert.Equal(JsonValueKind.Null, cleared.GetProperty("subjectCode").ValueKind);
+    }
+
+    [Fact]
     public async Task Word_banks_round_trip_and_answer_keys_are_revealed_only_after_authorized_checks()
     {
         using var teacher = factory.CreateClient();

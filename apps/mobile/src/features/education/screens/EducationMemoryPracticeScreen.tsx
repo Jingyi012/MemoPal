@@ -33,10 +33,14 @@ export default function EducationMemoryPracticeScreen() {
   const methods = [...new Set(recommendations.map(item => item.memorySet.techniqueKey))];
   const activeMethod = selected?.memorySet.techniqueKey;
   const related = recommendations.filter(item => item.memorySet.techniqueKey === activeMethod);
-  const subjectTheme = learningThemeFor(course.data?.title ?? '', theme);
+  const subjectTheme = learningThemeFor(course.data?.title ?? '', theme, course.data?.subjectCode);
+  const returnToLearning = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace(`/community/education/${encodeURIComponent(courseId)}` as Href);
+  };
 
   return <View style={ls.page}>
-    <CommonHeader title={ui.memory} backAction={() => router.back()} />
+    <CommonHeader title={ui.memory} backAction={returnToLearning} />
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       {course.isLoading ? <LearningSkeleton /> : course.isError || !course.data ? <View style={ls.card}>
         <Text accessibilityRole="alert" style={ls.body}>{ui.zh ? '无法载入课程记忆练习。' : 'Could not load this course’s memory practice.'}</Text>
@@ -46,6 +50,7 @@ export default function EducationMemoryPracticeScreen() {
         <Text style={ls.body}>{ui.memoryNotReady}</Text>
       </View> : <>
         <LearningMemoryHero courseTitle={course.data.title} itemCount={memorySet.data?.items.length ?? null} />
+        <Text style={ls.small}>{ui.zh ? '这是可选的记忆小帮手。随时返回，继续刚才的学习。' : 'An optional memory helper. Return whenever you’re ready to keep learning.'}</Text>
         {methods.length > 1 ? <View style={styles.segment} accessibilityRole="tablist">
           {methods.map(method => {
             const active = method === activeMethod;
@@ -81,12 +86,13 @@ export default function EducationMemoryPracticeScreen() {
         </View> : null}
       </>}
     </ScrollView>
-    {selected ? <View style={[ls.dock, { paddingBottom: Math.max(16, insets.bottom) }]}>
-      <LearningButton disabled={!memorySet.data} label={ui.startMemory} onPress={() => {
+    <View style={[ls.dock, { paddingBottom: Math.max(16, insets.bottom), gap: 10 }]}>
+      {selected ? <LearningButton disabled={!memorySet.data} label={ui.startMemory} onPress={() => {
         if (memorySet.data?.existingCopyId) router.push(`/memory-details/${memorySet.data.existingCopyId}` as Href);
         else router.push(`/community/memory-sets/${selected.memorySet.id}` as Href);
-      }} />
-    </View> : null}
+      }} /> : null}
+      <LearningButton secondary={!!selected} label={ui.zh ? '返回课程，继续学习' : 'Return to learning'} onPress={returnToLearning} />
+    </View>
   </View>;
 }
 

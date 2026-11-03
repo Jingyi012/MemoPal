@@ -49,6 +49,6 @@ public sealed class SetEducationCourseVisibilityHandler(IAppDbContext db)
         course.SetPublic(q.IsPublic, DateTime.UtcNow);
         await db.SaveChangesAsync(ct);
         return ApiResponse<EducationCourseDto>.Ok(new(course.Id, course.Title, course.CreatedAt, course.IsPublic,
-            course.PubliclyPublishedAt, course.UserId == AuthoringValidation.SystemOwnerId));
+            course.PubliclyPublishedAt, course.UserId == AuthoringValidation.SystemOwnerId, course.SubjectCode, course.LearningStage, course.LanguageCode));
     }
 }

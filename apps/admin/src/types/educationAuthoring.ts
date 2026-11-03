@@ -11,6 +11,9 @@ export type EducationQuestionType =
 export type EducationFillMode = "text" | "number";
 
 export interface EducationCourseDto {
+  subjectCode?: string | null;
+  learningStage?: string | null;
+  languageCode?: string | null;
   id: string;
   title: string;
   createdAt: string;
@@ -18,6 +21,16 @@ export interface EducationCourseDto {
   publiclyPublishedAt: string | null;
   isPlatformCourse?: boolean;
 }
+
+export type EducationCourseAudienceRequest = {
+  subjectCode: string | null;
+  learningStage: string | null;
+  languageCode: string | null;
+};
+
+export type EducationCourseUnitDto = { id: string; title: string; position: number; objectiveIds: string[] };
+export type EducationCourseOutlineDto = { version: number; units: EducationCourseUnitDto[] };
+export type EducationCourseOutlineRequest = { expectedVersion: number; units: { id: string | null; title: string; objectiveIds: string[] }[] };
 export interface EducationObjectiveDto {
   id: string;
   courseId: string;
@@ -52,10 +65,22 @@ export interface EducationStudyItemImportResult {
   imported: boolean; created: number; updated: number; unchanged: number; rejectedRows: number;
   canImport: boolean; errors: EducationStudyItemImportError[];
 }
+export interface StudyCourseDraftRequest {
+  title: string;
+  languageCode: string;
+  entries: { text: string; meaning: string | null }[];
+}
+export interface StudyCourseDraftResult {
+  courseId: string;
+  studyItemCount: number;
+  practiceQuestionCount: number;
+  alreadyExists: boolean;
+}
 export interface EducationLearnerStudyItemDto {
   id: string; position: number; kind: EducationMemoryContentType; primary: string; secondary: string | null;
   phonetic: string | null; extra: string | null; languageCode: string | null; contentVersion: number;
   reviewStatus: EducationContentReviewStatus; contentOrigin: EducationContentOrigin;
+  illustrationCode?: string | null;
 }
 export interface EducationOptionDto {
   id: string;

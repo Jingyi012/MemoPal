@@ -40,14 +40,15 @@ public sealed class GetEducationClassroomLearningContentHandler(IAppDbContext db
             .Select(item => new
             {
                 item.Id, item.ObjectiveId, item.Position, item.Kind, item.Primary, item.Secondary,
-                item.Phonetic, item.Extra, item.LanguageCode, item.ContentVersion
+                item.Phonetic, item.Extra, item.LanguageCode, item.ContentVersion, item.MediaRef
             }).ToListAsync(ct);
         var itemsByObjective = studyItems.GroupBy(item => item.ObjectiveId)
             .ToDictionary(group => group.Key, group => (IReadOnlyList<EducationLearnerStudyItemDto>)group.Select(item =>
                 new EducationLearnerStudyItemDto(item.Id, item.Position, item.Kind.ToString(), item.Primary,
                     item.Secondary, item.Phonetic, item.Extra, item.LanguageCode, item.ContentVersion,
                     objectives.Single(objective => objective.Id == item.ObjectiveId).ReviewStatus.ToString(),
-                    objectives.Single(objective => objective.Id == item.ObjectiveId).ContentOrigin.ToString())).ToArray(),
+                    objectives.Single(objective => objective.Id == item.ObjectiveId).ContentOrigin.ToString(),
+                    EducationStudyIllustrations.FromMediaReference(item.MediaRef))).ToArray(),
                 StringComparer.Ordinal);
         var result = objectives.Select(item => new EducationClassroomObjectiveLearningContentDto(item.Id, item.Title,
             item.MemoryContentType.ToString(), item.LanguageCode, itemsByObjective.GetValueOrDefault(item.Id) ?? []))

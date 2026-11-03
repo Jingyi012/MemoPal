@@ -1,8 +1,20 @@
 import { apiClient } from '../lib/apiClient';
+import type { StudyCourseDraftRequest, StudyCourseDraftResult } from '../types/educationAuthoring';
+import type { EducationCourseAudienceRequest } from '../types/educationAuthoring';
+import type { EducationCourseOutlineDto, EducationCourseOutlineRequest } from '../types/educationAuthoring';
 import type { ApiResponse } from '../types/api';
 import type { EducationAssessmentDto, EducationCourseDto, EducationLearnerStudyItemDto, EducationObjectiveDto, EducationQuestionRequest, EducationStudyItemAuthorDto, EducationStudyItemImportResult, EducationStudyItemRequest } from '../types/educationAuthoring';
 
 export const educationAuthoringApi = {
+  async createStudyCourseDraft(input: StudyCourseDraftRequest) {
+    return (await apiClient.post<ApiResponse<StudyCourseDraftResult>>('/v1/education/course-drafts/from-study-list', input)).data.data;
+  },
+  async getCourseOutline(courseId: string) {
+    return (await apiClient.get<ApiResponse<EducationCourseOutlineDto>>(`/v1/education/courses/${courseId}/outline`)).data.data;
+  },
+  async updateCourseOutline(courseId: string, input: EducationCourseOutlineRequest) {
+    return (await apiClient.put<ApiResponse<EducationCourseOutlineDto>>(`/v1/education/courses/${courseId}/outline`, input)).data.data;
+  },
   async listRecommendableMemorySets() {
     const { data } = await apiClient.get<{ data: { id: string; title: string; techniqueKey: string; goalType: string }[]; pagination: { totalCount: number } }>('/v1/community/memory-sets', {
       params: { pageNumber: 1, pageSize: 50, sort: 'popular' },
@@ -10,6 +22,9 @@ export const educationAuthoringApi = {
     return data.data;
   },
   async listCourses() { return (await apiClient.get<ApiResponse<EducationCourseDto[]>>('/v1/education/courses')).data.data; },
+  async updateCourseAudience(courseId: string, input: EducationCourseAudienceRequest) {
+    return (await apiClient.put<ApiResponse<EducationCourseDto>>(`/v1/education/courses/${courseId}/audience`, input)).data.data;
+  },
   async createCourse(title: string) { return (await apiClient.post<ApiResponse<EducationCourseDto>>('/v1/education/courses', { title })).data.data; },
   async updateCourseTitle(courseId: string, title: string) {
     return (await apiClient.put<ApiResponse<EducationCourseDto>>(`/v1/education/courses/${courseId}/title`, { title })).data.data;

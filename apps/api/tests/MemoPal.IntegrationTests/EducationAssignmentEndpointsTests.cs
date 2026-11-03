@@ -3,6 +3,8 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using MemoPal.Domain.Entities;
+using MemoPal.Domain.Education;
+using MemoPal.Domain.Common;
 using MemoPal.IntegrationTests.Fixtures;
 using MemoPal.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -72,6 +74,61 @@ public sealed class EducationAssignmentEndpointsTests(CustomWebApplicationFactor
         };
         Assert.Equal(HttpStatusCode.NotFound,
             (await guardian.PostAsJsonAsync("/v1/education/assignments/family", unauthorizedRecipient)).StatusCode);
+
+        var studyUrl = $"/v1/education/assignments/{created.GetProperty("id").GetString()}/family-study-items";
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var objectiveId = await db.EducationQuestions.Where(x => x.AssessmentId == assessmentId).Select(x => x.ObjectiveId).FirstAsync();
+            var objective = await db.EducationObjectives.SingleAsync(x => x.Id == objectiveId);
+            var published = new EducationObjectiveStudyItem { ObjectiveId = objectiveId, StableKey = "published", Position = 1,
+                Kind = EducationMemoryContentType.ConceptUnderstanding, Primary = "Explore the cell", Hint = "private teacher hint", MediaRef = "media:private" };
+            published.SetPublished(true, "test-author", DateTime.UtcNow);
+            db.EducationObjectiveStudyItems.Add(published);
+            db.EducationObjectiveStudyItems.Add(new EducationObjectiveStudyItem { ObjectiveId = objectiveId, StableKey = "draft", Position = 2,
+                Kind = EducationMemoryContentType.ConceptUnderstanding, Primary = "Unpublished material" });
+            var unrelated = new EducationObjective { CourseId = objective.CourseId, Title = "Not assigned" };
+            db.EducationObjectives.Add(unrelated);
+            var unrelatedItem = new EducationObjectiveStudyItem { ObjectiveId = unrelated.Id, StableKey = "unrelated", Position = 1,
+                Kind = EducationMemoryContentType.ConceptUnderstanding, Primary = "Another lesson" };
+            unrelatedItem.SetPublished(true, "test-author", DateTime.UtcNow);
+            db.EducationObjectiveStudyItems.Add(unrelatedItem);
+            (await db.Users.SingleAsync(x => x.Id == studentId)).AccountMode = AccountMode.RestrictedLearner;
+            await db.SaveChangesAsync();
+        }
+        var study = await DataAsync(await student.GetAsync(studyUrl));
+        var studyItem = Assert.Single(Assert.Single(study.EnumerateArray()).GetProperty("studyItems").EnumerateArray());
+        Assert.Equal("Explore the cell", studyItem.GetProperty("primary").GetString());
+        Assert.False(studyItem.TryGetProperty("hint", out _));
+        Assert.False(studyItem.TryGetProperty("mediaRef", out _));
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.GetAsync(studyUrl)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await guardian.GetAsync(studyUrl)).StatusCode);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Assert.False(await db.EducationAssessmentAttempts.AnyAsync(x => x.StudentUserId == studentId));
+            (await db.EducationGuardianLinks.SingleAsync(x => x.Id == linkId)).Status = EducationRelationshipStatuses.Revoked;
+            await db.SaveChangesAsync();
+        }
+        Assert.Equal(HttpStatusCode.NotFound, (await student.GetAsync(studyUrl)).StatusCode);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            (await db.EducationGuardianLinks.SingleAsync(x => x.Id == linkId)).Status = EducationRelationshipStatuses.Active;
+            var recipient = await db.EducationAssignmentRecipients.SingleAsync(x => x.AssignmentId == created.GetProperty("id").GetString());
+            recipient.OpensAt = DateTime.UtcNow.AddDays(1);
+            await db.SaveChangesAsync();
+        }
+        Assert.Equal(HttpStatusCode.Conflict, (await student.GetAsync(studyUrl)).StatusCode);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var recipient = await db.EducationAssignmentRecipients.SingleAsync(x => x.AssignmentId == created.GetProperty("id").GetString());
+            recipient.OpensAt = DateTime.UtcNow.AddMinutes(-1);
+            await db.SaveChangesAsync();
+        }
+        await DataAsync(await student.PostAsync($"/v1/education/assignments/{created.GetProperty("id").GetString()}/attempts", null));
+        Assert.Equal(HttpStatusCode.Conflict, (await student.GetAsync(studyUrl)).StatusCode);
     }
 
     [Fact]

@@ -7,6 +7,7 @@ import { useEducationStudyItems, useLearnerStudyItems } from '../hooks/useEducat
 import { csvTemplate, importReasonTranslations, moveStudyItem, parseCsvText, unicodeCodePointLength, validateStudyItem } from '../utils/educationStudyItems';
 import { useEducationText } from '../i18n/useEducationText';
 import { useAuth } from '../../../auth/AuthContext';
+import { EducationStudyPreview } from './EducationStudyPreview';
 
 const contentTypes: EducationMemoryContentType[] = ['VocabularyPair', 'OrderedList', 'NumberDate', 'FormulaSymbols', 'CategoryMembership', 'VerbatimText', 'LabelDiagram', 'LanguageItem', 'ConceptUnderstanding', 'ReasoningProcedure', 'NotApplicable'];
 const typeText: Record<EducationMemoryContentType, { label: Parameters<ReturnType<typeof useEducationText>['t']>[0]; description: Parameters<ReturnType<typeof useEducationText>['t']>[0]; fit: Parameters<ReturnType<typeof useEducationText>['t']>[0] }> = {
@@ -210,14 +211,9 @@ export function StudyItemEditor({ courseId, objective, isPublic }: { courseId: s
       {isPublic && <Checkbox checked={confidentialChecked} onChange={event => setConfidentialChecked(event.target.checked)}>{t('confidential')}</Checkbox>}
     </Modal>
 
-    <Modal open={previewOpen} title={t('learnerPreviewTitle')} footer={null} onCancel={() => setPreviewOpen(false)}>
-      {learnerPreview.isPending ? <div role="status"><Spin /> {t('loading')}</div> : learnerPreview.isError ? <Typography.Text role="alert" type="danger">{t('loadError')}</Typography.Text> : learnerPreview.data?.length ? <Space direction="vertical" style={{ width: '100%' }}>
-        {learnerPreview.data.map(item => <Card size="small" key={item.id}>
-          <Tag>{t(educationMemoryTypeLabel(item.kind))}</Tag><Tag>{t(item.reviewStatus === 'TeacherReviewed' ? 'teacherReviewed' : 'unreviewed')}</Tag>
-          <Typography.Title level={5}>{item.primary}</Typography.Title><Typography.Paragraph>{item.secondary}</Typography.Paragraph>
-          <Typography.Text>{item.phonetic}</Typography.Text><Typography.Paragraph type="secondary">{item.extra}</Typography.Paragraph>
-        </Card>)}
-      </Space> : <Typography.Text type="secondary">{t('noPublished')}</Typography.Text>}
+    <Modal open={previewOpen} destroyOnHidden title={t('learnerPreviewTitle')} footer={null} onCancel={() => setPreviewOpen(false)}>
+      {learnerPreview.isPending ? <div role="status"><Spin /> {t('loading')}</div> : learnerPreview.isError ? <Typography.Text role="alert" type="danger">{t('loadError')}</Typography.Text> : learnerPreview.data?.length
+        ? <EducationStudyPreview items={learnerPreview.data} /> : <Typography.Text type="secondary">{t('noPublished')}</Typography.Text>}
     </Modal>
   </Card>;
 

@@ -65,6 +65,7 @@ public sealed class EducationStarterCatalogSeeder(AppDbContext db)
                     db.EducationCourses.Add(CreateCourse(definition, objectiveId, assessmentId));
                 }
 
+                await EducationStarterUnitCatalog.AddMissingAsync(db, cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
                 if (transaction is not null) await transaction.CommitAsync(cancellationToken);
             }

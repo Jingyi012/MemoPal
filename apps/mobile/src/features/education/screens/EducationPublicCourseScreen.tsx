@@ -3,7 +3,10 @@ import { LearningHeader as CommonHeader } from '@/features/education/components/
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useEducationCopy } from '@/features/education/i18n';
-import { LearningCoursePath } from '../components/LearningCoursePath';
+import { LearningCourseUnits } from '../components/LearningCourseUnits';
+import { LearningStudySession, type LearningReadingPosition } from '../components/LearningStudySession';
+import { useIsFocused } from '@react-navigation/native';
+import { studyObjectivesForLesson } from '../utils/educationObjectiveLesson';
 import { LearningMemoryCard } from '../components/LearningMemoryCard';
 import { LearningArrival, LearningButton, LearningProgress, LearningSkeleton, SubjectArtwork, LearningThemeContext, useLearningStyles, learningThemeFor, useLearningCopy } from '../components/LearningUi';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +31,9 @@ export default function EducationPublicCourseScreen() {
   const insets = useSafeAreaInsets();
   const [menuOpen, setMenuOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
+  const [studyPrelude, setStudyPrelude] = useState<{ assessmentId: string; objectiveIds: string[]; index: number } | null>(null);
+  const [reading, setReading] = useState<LearningReadingPosition>({ position: 0, finished: false });
+  const focused = useIsFocused();
   const { styles, theme } = useStyles();
   const router = useRouter();
   const course = useEducationPublicCourse(courseId);
@@ -63,8 +69,9 @@ export default function EducationPublicCourseScreen() {
 
   if (user?.accountMode === 'RestrictedLearner') return <Redirect href="/education/assignments" />;
 
-  const subjectTheme = learningThemeFor(course.data?.title ?? '', theme);
+  const subjectTheme = learningThemeFor(course.data?.title ?? '', theme, course.data?.subjectCode);
   const lessons = guidedProgress.data?.lessons ?? [];
+  const preludeObjective = course.data?.objectives.find(objective => objective.id === studyPrelude?.objectiveIds[studyPrelude.index]);
   const total = lessons.reduce((n, lesson) => n + lesson.questionCount, 0);
   const solved = lessons.reduce((n, lesson) => n + lesson.questionsSolved, 0);
   const nextId = guidedProgress.data?.nextRecommendedAssessmentId ?? course.data?.assessments[0]?.id;
@@ -98,7 +105,7 @@ export default function EducationPublicCourseScreen() {
             {saveCourse.isError ? <Text accessibilityRole="alert" style={styles.saveError}>{copy.savePublicCourseError}</Text> : null}
             <AnimatedPressable accessibilityState={{ expanded: noteOpen }} onPress={() => setNoteOpen(value => !value)} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={ls.small}>ⓘ {ui.note} {noteOpen ? '−' : '+'}</Text></AnimatedPressable>
             {noteOpen ? <View style={ls.card}><Text style={ls.body}>{copy.publicCoursePracticeNote}</Text>{course.data.isMemoPalStarter ? <Text style={ls.small}>{copy.starterCourseLanguageNote}</Text> : null}</View> : null}
-            <LearningCoursePath objectives={course.data.objectives} progress={guidedProgress.data} onMemory={id => router.push(`/community/education/${encodeURIComponent(courseId)}/memory?memorySetId=${encodeURIComponent(id)}` as Href)} onPractice={assessmentId => void openGuidedLesson(assessmentId)} />
+            <LearningCourseUnits course={course.data} progress={guidedProgress.data} onMemory={id => router.push(`/community/education/${encodeURIComponent(courseId)}/memory?memorySetId=${encodeURIComponent(id)}` as Href)} onPractice={(assessmentId, studiedObjectiveId) => void openGuidedLesson(assessmentId, false, studiedObjectiveId)} />
             {memoryRecommendation ? <LearningMemoryCard title={ui.zh ? '用记忆宫殿记住它' : 'Make it memorable'} description={memoryRecommendation.title} label={ui.zh ? '选择记忆法' : 'Choose a memory method'} onPress={() => router.push(`/community/education/${encodeURIComponent(courseId)}/memory?memorySetId=${encodeURIComponent(memoryRecommendation.id)}` as Href)} /> : null}
             {uncoveredAssessments.length ? <Text accessibilityRole="header" style={ls.heading}>{ui.lessons}</Text> : null}
             {guidedProgress.isError ? <AnimatedPressable onPress={() => void guidedProgress.refetch()} style={ls.card}><Text accessibilityRole="alert" style={ls.body}>{copy.guidedLessonLoadError} · {copy.retry}</Text></AnimatedPressable> : null}
@@ -114,6 +121,23 @@ export default function EducationPublicCourseScreen() {
           </>}
     </ScrollView>
     {nextId && course.data ? <View style={[ls.dock, { paddingBottom: Math.max(16, insets.bottom) }]}><LearningButton label={lessons.length > 0 && lessons.every(lesson => lesson.isComplete) ? copy.guidedLessonReview : ui.continue} loading={startGuided.isPending} onPress={() => void openGuidedLesson(nextId)} /></View> : null}
+    <Modal visible={focused && !!studyPrelude && !!preludeObjective} animationType={reduceMotion ? 'none' : 'slide'} onRequestClose={() => setStudyPrelude(null)}>
+      <View style={[ls.page, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        <View style={[ls.row, { padding: 18 }]}>
+          <Text accessibilityRole="header" style={[ls.heading, { flex: 1 }]}>{preludeObjective?.title}</Text>
+          <AnimatedPressable accessibilityRole="button" accessibilityLabel={ui.close} onPress={() => setStudyPrelude(null)} style={{ minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="close" size={26} color={theme.ink} /></AnimatedPressable>
+        </View>
+        {studyPrelude && preludeObjective ? <LearningStudySession key={preludeObjective.id} objective={preludeObjective}
+          reading={reading} onReadingChange={setReading}
+          practiceTitle={lessons.find(lesson => lesson.assessmentId === studyPrelude.assessmentId)?.assessmentTitle}
+          finishLabel={studyPrelude.index < studyPrelude.objectiveIds.length - 1 ? (ui.zh ? '学习下一个知识点' : 'Discover the next study point') : undefined}
+          onFinish={() => {
+            if (studyPrelude.index < studyPrelude.objectiveIds.length - 1) { setReading({ position: 0, finished: false }); setStudyPrelude({ ...studyPrelude, index: studyPrelude.index + 1 }); }
+            else { setStudyPrelude(null); void openGuidedLesson(studyPrelude.assessmentId, true); }
+          }}
+          onMemory={id => router.push(`/community/education/${encodeURIComponent(courseId)}/memory?memorySetId=${encodeURIComponent(id)}` as Href)} /> : null}
+      </View>
+    </Modal>
     <Modal transparent visible={menuOpen} animationType={reduceMotion ? 'none' : 'fade'} onRequestClose={() => setMenuOpen(false)}>
       <View style={{ flex: 1, backgroundColor: 'rgba(20,40,25,.3)', justifyContent: 'flex-end', padding: 20, paddingBottom: Math.max(20, insets.bottom) }}><View style={ls.card}>
         <LearningButton secondary label={copy.sharePublicCourse} onPress={shareCourse} />
@@ -169,9 +193,14 @@ export default function EducationPublicCourseScreen() {
     </ConfirmModal> : null}
   </View></LearningThemeContext.Provider>;
 
-  async function openGuidedLesson(assessmentId: string) {
+  async function openGuidedLesson(assessmentId: string, skipStudy = false, studiedObjectiveId?: string) {
     const userId = user?.id;
     if (!userId || startGuided.isPending || startInFlightRef.current) return;
+    const lesson = lessons.find(item => item.assessmentId === assessmentId);
+    if (!skipStudy && lesson && !lesson.isStarted) {
+      const objectiveIds = studyObjectivesForLesson(course.data?.objectives ?? [], lesson, studiedObjectiveId);
+      if (objectiveIds.length) { setReading({ position: 0, finished: false }); setStudyPrelude({ assessmentId, objectiveIds, index: 0 }); return; }
+    }
     startInFlightRef.current = true;
     const epoch = screenEpochRef.current;
     const identity = screenIdentityRef.current;

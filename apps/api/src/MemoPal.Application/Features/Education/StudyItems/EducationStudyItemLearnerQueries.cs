@@ -165,6 +165,6 @@ public sealed class GetLearnerObjectiveStudyItemsHandler(IAppDbContext db)
         return ApiResponse<IReadOnlyList<EducationLearnerStudyItemDto>>.Ok(rows.Select(item => new EducationLearnerStudyItemDto(
             item.Id, item.Position, item.Kind.ToString(), item.Primary, item.Secondary, item.Phonetic, item.Extra,
             item.LanguageCode ?? objective.LanguageCode, item.ContentVersion, objective.ReviewStatus.ToString(),
-            objective.ContentOrigin.ToString())).ToArray());
+            objective.ContentOrigin.ToString(), EducationStudyIllustrations.FromMediaReference(item.MediaRef))).ToArray());
     }
 }
