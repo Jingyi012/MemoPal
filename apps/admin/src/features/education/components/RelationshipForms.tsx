@@ -1,5 +1,6 @@
 import { Button, Form, Input, Modal, Select, Typography } from 'antd';
 import { useState } from 'react';
+import { useEducationText } from '../i18n/useEducationText';
 import type { CreateClassroomRequest, CreateGuardianLinkRequest, InviteClassroomMemberRequest } from '../../../types/educationRelationships';
 
 export function CreateClassroomButton({ onSubmit, loading }: { onSubmit: (value: CreateClassroomRequest) => void; loading: boolean }) {
@@ -24,6 +25,26 @@ export function InviteMemberForm({ onSubmit, loading }: { onSubmit: (value: Invi
   </>;
 }
 
-export function CreateGuardianLinkForm({ onSubmit, loading }: { onSubmit: (value: CreateGuardianLinkRequest) => void; loading: boolean }) {
-  return <Form layout="inline" onFinish={onSubmit}><Form.Item name="studentUserId" rules={[{ required: true, message: 'Enter the student’s MemoPal account ID.' }]}><Input placeholder="Student account ID" /></Form.Item><Button type="primary" htmlType="submit" loading={loading}>Request family link</Button><Typography.Text type="secondary" style={{ width: '100%' }}>The student must confirm, then an administrator verifies the relationship before any family data is shared.</Typography.Text></Form>;
+export function CreateGuardianLinkForm({ onSubmit, loading }: { onSubmit: (value: CreateGuardianLinkRequest) => Promise<unknown>; loading: boolean }) {
+  const { t } = useEducationText();
+  const [open, setOpen] = useState(false);
+  const [form] = Form.useForm<CreateGuardianLinkRequest>();
+  return <>
+    <Button type="primary" onClick={() => setOpen(true)}>{t('guardianRequest')}</Button>
+    <Modal title={t('guardianRequest')} open={open} footer={null} onCancel={() => !loading && setOpen(false)} destroyOnHidden>
+      <Typography.Paragraph type="secondary">{t('guardianCreateDescription')}</Typography.Paragraph>
+      <Form form={form} layout="vertical" onFinish={async values => {
+        try {
+          await onSubmit({ studentUserId: values.studentUserId.trim() });
+          form.resetFields();
+          setOpen(false);
+        } catch { /* The mutation shows the error; preserve input for retry. */ }
+      }}>
+        <Form.Item name="studentUserId" label={t('guardianStudentId')} rules={[{ required: true, whitespace: true }]}>
+          <Input autoComplete="off" disabled={loading} />
+        </Form.Item>
+        <Button type="primary" htmlType="submit" loading={loading}>{t('guardianRequest')}</Button>
+      </Form>
+    </Modal>
+  </>;
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { EducationCourseAudienceForm } from '../components/EducationCourseAudienceForm';
+import { EducationBackLink } from '../components/EducationBackLink';
 import { EducationCourseOutlineEditor } from '../components/EducationCourseOutlineEditor';
 import { Alert, Button, Card, Input, Modal, Popconfirm, Space, Table, Tabs, Tag, Typography } from 'antd';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -102,7 +103,8 @@ export default function EducationCoursePage() {
     </Space> }] : []),
   ];
 
-  return <PortalPageContainer className="education-course-page" eyebrow={t('courseEyebrow')} title={course?.title ?? t('courseEyebrow')} description={t('courseDescription')}>
+  return <PortalPageContainer className="education-course-page" eyebrow={t('courseEyebrow')} title={course?.title ?? t('courseEyebrow')} description={t('courseDescription')}
+    navigation={<EducationBackLink to={adminPaths.educationCourses}>{language === 'zh-Hans' ? '返回课程列表' : 'Back to courses'}</EducationBackLink>}>
     <Modal title={t('editTitle')} open={titleModalOpen} okText={t('saveTitle')} cancelText={t('cancel')} confirmLoading={courses.updateCourseTitle.isPending}
       okButtonProps={{ disabled: !title.trim() || title.trim() === course?.title }} onCancel={() => setTitleModalOpen(false)}
       onOk={async () => { await courses.updateCourseTitle.mutateAsync({ courseId, title: title.trim() }); setTitleModalOpen(false); }}>

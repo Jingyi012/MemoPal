@@ -67,6 +67,7 @@ public sealed class GetPagedReferralUsersQueryHandler
                     ReferrerUserId = g.Key,
                     SuccessfulReferrals = g.Count(),
                     RewardXp = g.Sum(x => x.InviterRewardXp),
+                    RewardAiCredits = g.Sum(x => x.InviterRewardAiCredits),
                     RewardPremiumDays = g.Sum(x => x.InviterRewardPremiumDays),
                     LastReferralAt = g.Max(x => x.RedeemedAt)
                 })
@@ -82,6 +83,7 @@ public sealed class GetPagedReferralUsersQueryHandler
                 {
                     ReferrerUserId = g.Key,
                     RewardXp = g.Sum(x => x.RewardXp),
+                    RewardAiCredits = g.Sum(x => x.RewardAiCredits),
                     RewardPremiumDays = g.Sum(x => x.RewardPremiumDays)
                 })
                 .ToListAsync(cancellationToken);
@@ -105,7 +107,8 @@ public sealed class GetPagedReferralUsersQueryHandler
                     Math.Max(0, (record?.RewardPremiumDays ?? 0) + (milestone?.RewardPremiumDays ?? 0)),
                     record?.LastReferralAt,
                     item.CreatedAt,
-                    item.UpdatedAt);
+                    item.UpdatedAt,
+                    (record?.RewardAiCredits ?? 0) + (milestone?.RewardAiCredits ?? 0));
             })
             .ToList();
 

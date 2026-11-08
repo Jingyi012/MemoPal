@@ -8,6 +8,7 @@ public sealed class ReferralMilestoneReward : AuditableBaseEntity
     public string MilestoneKey { get; set; } = string.Empty;
     public int ReferralsRequired { get; set; }
     public int RewardXp { get; set; }
+    public int RewardAiCredits { get; set; }
     public int RewardPremiumDays { get; set; }
     public DateTime AwardedAt { get; set; }
 }

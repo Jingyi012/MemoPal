@@ -1,0 +1,8 @@
+.education-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}

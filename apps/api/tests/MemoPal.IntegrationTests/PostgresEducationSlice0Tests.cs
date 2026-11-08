@@ -4,14 +4,88 @@ using MemoPal.Application.Features.Education.StudyItems;
 using MemoPal.Domain.Education;
 using MemoPal.Domain.Entities;
 using MemoPal.Infrastructure.Education;
+using MemoPal.Application.Features.Education.Authoring.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Data.Common;
 
 namespace MemoPal.IntegrationTests;
 
 public sealed class PostgresEducationSlice0Tests
 {
     private const string BeforeSlice0Migration = "20261018173404_AddLeaderboardCreditRewards";
+
+    [PostgresEducationFact]
+    public async Task Study_item_writes_work_with_Npgsql_retry_strategy()
+    {
+        var adminConnectionString = Environment.GetEnvironmentVariable("MEMOPAL_CREDIT_TEST_CONNECTION")!;
+        var databaseName = "memopal_study_retry_" + Guid.NewGuid().ToString("N");
+        await using var adminConnection = new NpgsqlConnection(adminConnectionString);
+        await adminConnection.OpenAsync();
+        await using (var create = new NpgsqlCommand($"CREATE DATABASE \"{databaseName}\"", adminConnection))
+            await create.ExecuteNonQueryAsync();
+        try
+        {
+            var connectionString = new NpgsqlConnectionStringBuilder(adminConnectionString) { Database = databaseName }.ConnectionString;
+            var failure = new PositionWriteFailureInterceptor();
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseNpgsql(connectionString, postgres => postgres.EnableRetryOnFailure())
+                .AddInterceptors(failure).Options;
+            await using (var seed = new AppDbContext(options))
+            {
+                await seed.Database.MigrateAsync();
+                seed.Users.Add(new User { Id = "author", Email = "author@example.test", DisplayName = "Author", PasswordHash = "test" });
+                seed.EducationCourses.Add(new() { Id = "course", UserId = "author", Title = "Retry course" });
+                seed.EducationObjectives.Add(new() { Id = "objective", CourseId = "course", Title = "Steps", MemoryContentType = EducationMemoryContentType.OrderedList });
+                for (var position = 1; position <= 3; position++)
+                    seed.EducationObjectiveStudyItems.Add(new() { Id = $"item-{position}", ObjectiveId = "objective",
+                        StableKey = $"key-{position}", Position = position, Primary = $"Step {position}", Kind = EducationMemoryContentType.OrderedList });
+                await seed.SaveChangesAsync();
+            }
+            await using var db = new AppDbContext(options);
+            var reordered = await new ReorderObjectiveStudyItemsHandler(db).Handle(
+                new("author", "course", "objective", ["item-3", "item-1", "item-2"]), default);
+            Assert.Equal(new[] { "item-3", "item-1", "item-2" }, reordered.Data!.Select(x => x.Id));
+            Assert.All(reordered.Data!, item => Assert.Equal(2, item.ContentVersion));
+            var imported = await new ImportObjectiveStudyItemsHandler(db).Handle(new("author", "course", "objective",
+            [
+                new EducationObjectiveStudyItemRequest("key-1", 1, "OrderedList", "Updated first", null, null, null, null, null, null),
+                new EducationObjectiveStudyItemRequest("key-3", 2, "OrderedList", "Updated second", null, null, null, null, null, null),
+                new EducationObjectiveStudyItemRequest("key-2", 3, "OrderedList", "Step 2", null, null, null, null, null, null)
+            ]), default);
+            Assert.True(imported.Data!.Imported);
+            await new DeleteObjectiveStudyItemHandler(db).Handle(new("author", "course", "objective", "item-3"), default);
+            db.ChangeTracker.Clear();
+            var remaining = await db.EducationObjectiveStudyItems.Where(x => !x.IsDeleted).OrderBy(x => x.Position).ToListAsync();
+            Assert.Equal(new[] { "item-1", "item-2" }, remaining.Select(x => x.Id));
+            Assert.Equal(new[] { 1, 2 }, remaining.Select(x => x.Position));
+            Assert.Equal("Updated first", remaining[0].Primary);
+            Assert.True(failure.Thrown, "The test must retry after a transient failure between the two position writes.");
+        }
+        finally
+        {
+            await using var drop = new NpgsqlCommand($"DROP DATABASE \"{databaseName}\" WITH (FORCE)", adminConnection);
+            await drop.ExecuteNonQueryAsync();
+        }
+    }
+
+    private sealed class PositionWriteFailureInterceptor : DbCommandInterceptor
+    {
+        private int writes;
+        public bool Thrown { get; private set; }
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command,
+            CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
+        {
+            if (command.CommandText.Contains("UPDATE \"EducationObjectiveStudyItems\"", StringComparison.Ordinal) && ++writes == 2)
+            {
+                Thrown = true;
+                throw new NpgsqlException("Test-only transient position write failure.", new IOException("Test connection failure."));
+            }
+            return base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
+        }
+    }
 
     [PostgresEducationFact]
     public async Task Course_classroom_query_orders_before_dto_projection_on_postgres()
@@ -25,7 +99,7 @@ public sealed class PostgresEducationSlice0Tests
         try
         {
             var connectionString = new NpgsqlConnectionStringBuilder(adminConnectionString) { Database = databaseName }.ConnectionString;
-            var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString).Options;
+            var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString, postgres => postgres.EnableRetryOnFailure()).Options;
             var userId = Guid.NewGuid().ToString("N");
             var courseId = Guid.NewGuid().ToString("N");
             await using (var seed = new AppDbContext(options))
@@ -77,7 +151,7 @@ public sealed class PostgresEducationSlice0Tests
         try
         {
             var connectionString = new NpgsqlConnectionStringBuilder(adminConnectionString) { Database = databaseName }.ConnectionString;
-            var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString).Options;
+            var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString, postgres => postgres.EnableRetryOnFailure()).Options;
             await using var db = new AppDbContext(options);
 
             await db.Database.MigrateAsync();
@@ -113,7 +187,7 @@ public sealed class PostgresEducationSlice0Tests
         try
         {
             var connectionString = new NpgsqlConnectionStringBuilder(adminConnectionString) { Database = databaseName }.ConnectionString;
-            var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString).Options;
+            var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString, postgres => postgres.EnableRetryOnFailure()).Options;
             var userId = Guid.NewGuid().ToString("N");
             var courseId = Guid.NewGuid().ToString("N");
             var objectiveId = Guid.NewGuid().ToString("N");

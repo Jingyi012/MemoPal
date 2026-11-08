@@ -106,18 +106,24 @@ public sealed class GetReferralSummaryQueryHandler
         var milestoneProgress = (config.Milestones ?? [])
             .OrderBy(x => x.SortOrder)
             .ThenBy(x => x.ReferralsRequired)
-            .Select(milestone => new ReferralMilestoneProgressDto(
-                milestone.Key,
-                milestone.Title,
-                milestone.ReferralsRequired,
-                currentReferrals,
-                milestone.RewardXp,
-                milestone.RewardPremiumDays,
-                milestone.RewardLabel,
-                milestone.SortOrder,
-                milestone.IsActive,
-                currentReferrals >= milestone.ReferralsRequired,
-                awardedMilestoneKeys.Contains(milestone.Key)))
+            .Select(milestone =>
+            {
+                var award = milestoneAwards.FirstOrDefault(x =>
+                    x.MilestoneKey.Equals(milestone.Key, StringComparison.OrdinalIgnoreCase));
+                return new ReferralMilestoneProgressDto(
+                    milestone.Key,
+                    milestone.Title,
+                    milestone.ReferralsRequired,
+                    currentReferrals,
+                    award?.RewardXp ?? milestone.RewardXp,
+                    award?.RewardPremiumDays ?? milestone.RewardPremiumDays,
+                    milestone.RewardLabel,
+                    milestone.SortOrder,
+                    milestone.IsActive,
+                    currentReferrals >= milestone.ReferralsRequired,
+                    awardedMilestoneKeys.Contains(milestone.Key),
+                    award?.RewardAiCredits ?? milestone.RewardAiCredits);
+            })
             .ToList();
 
         var referrals = referralRecords
@@ -132,7 +138,8 @@ public sealed class GetReferralSummaryQueryHandler
                     referee?.IsPremium ?? false,
                     record.RedeemedAt,
                     record.InviterRewardXp,
-                    record.InviterRewardPremiumDays);
+                    record.InviterRewardPremiumDays,
+                    record.InviterRewardAiCredits);
             })
             .ToList();
 
@@ -151,7 +158,8 @@ public sealed class GetReferralSummaryQueryHandler
             referredByDisplayName,
             config,
             milestoneProgress,
-            referrals);
+            referrals,
+            referralRecords.Sum(x => x.InviterRewardAiCredits) + milestoneAwards.Sum(x => x.RewardAiCredits));
 
         return ApiResponse<ReferralSummaryDto>.Ok(summary);
     }

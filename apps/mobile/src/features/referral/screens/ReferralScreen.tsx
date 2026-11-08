@@ -12,6 +12,7 @@ import type { ReferralSummary } from '@/features/referral/types/referral';
 import * as Clipboard from 'expo-clipboard';
 import * as ExpoLinking from 'expo-linking';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { Check, Copy, MessageCircle, Share2 } from '@/core/icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -33,6 +34,7 @@ import { StatBox } from '../components/StatBox';
 
 const ReferralScreen: React.FC = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { t } = useTranslation('referral');
   const { data: notifications = [] } = useNotifications();
   const { markAsRead } = useNotificationMutations();
@@ -90,7 +92,9 @@ const ReferralScreen: React.FC = () => {
 
     setRewardNotice(latestUnreadReferralNotice);
     setLastShownRewardNoticeId(latestUnreadReferralNotice.id);
-  }, [lastShownRewardNoticeId, notifications]);
+    void queryClient.invalidateQueries({ queryKey: ['ai-credits'] });
+    void loadSummary(true);
+  }, [lastShownRewardNoticeId, loadSummary, notifications, queryClient]);
 
   const onRefresh = useCallback(() => {
     void loadSummary(true);
@@ -170,6 +174,7 @@ const ReferralScreen: React.FC = () => {
     try {
       setRedeeming(true);
       const result = await referralApi.redeem(normalized);
+      await queryClient.invalidateQueries({ queryKey: ['ai-credits'] });
       setRedeemCode('');
       await syncEntitlementToLocal();
       await loadSummary(true);
@@ -182,7 +187,7 @@ const ReferralScreen: React.FC = () => {
       Toast.show({
         type: 'success',
         text1: 'Referral redeemed',
-        text2: `You earned ${result.inviteeAwardedXp} XP and ${result.inviteeAwardedPremiumDays} premium days.${milestoneBonus > 0 ? ' Your friend also unlocked milestone bonus rewards.' : ''}`,
+        text2: `${t('redeemSuccess', { credits: result.inviteeAwardedAiCredits, days: result.inviteeAwardedPremiumDays })}${milestoneBonus > 0 ? ' Your friend also unlocked milestone bonus rewards.' : ''}`,
       });
     } catch (error: any) {
       const message = error?.response?.data?.message || 'Failed to redeem referral code.';
@@ -250,6 +255,9 @@ const ReferralScreen: React.FC = () => {
           <Text className="text-center text-xs font-bold uppercase tracking-widest text-[#6B6A80]">
             Your Invite Code
           </Text>
+          <Text className="mt-3 text-center text-sm text-[#6B6A80]">
+            {t('baseCredits', { credits: summary.config.inviterRewardAiCredits, friendCredits: summary.config.inviteeRewardAiCredits })}
+          </Text>
           <TouchableOpacity
             onPress={handleCopy}
             className="my-4 flex-row items-center justify-center rounded-2xl border-2 border-dashed border-line-sky bg-tint-sky py-4">
@@ -285,8 +293,8 @@ const ReferralScreen: React.FC = () => {
           />
           <StatBox
             icon={<Text className="text-xl">✨</Text>}
-            value={summary.totalXpEarned}
-            label="Total XP Earned"
+            value={summary.totalAiCreditsEarned}
+            label={t('creditsEarned')}
           />
           <StatBox
             icon={<Text className="text-xl">👑</Text>}
@@ -301,13 +309,15 @@ const ReferralScreen: React.FC = () => {
             <Text className="ml-1 text-lg font-medium text-[#2B2A3D]">{t('milestones')}</Text>
           </View>
           {milestones.map((milestone, index) => {
-            const fallbackReward = `${milestone.rewardXp} XP + ${milestone.rewardPremiumDays} premium days`;
+            const fallbackReward = t('rewardSummary', { credits: milestone.rewardAiCredits, days: milestone.rewardPremiumDays });
             return (
               <MilestoneRow
                 key={milestone.key}
                 title={milestone.title}
                 refs={milestone.referralsRequired}
-                rewardLabel={milestone.rewardLabel || fallbackReward}
+                rewardLabel={milestone.isAwarded && (milestone.rewardXp ?? 0) > 0
+                  ? t('previousReward', { xp: milestone.rewardXp ?? 0, days: milestone.rewardPremiumDays })
+                  : milestone.rewardLabel || fallbackReward}
                 current={summary.successfulReferrals}
                 isAwarded={milestone.isAwarded}
                 isLast={index === milestones.length - 1}
@@ -333,7 +343,7 @@ const ReferralScreen: React.FC = () => {
                 Have a friend&apos;s code?
               </Text>
               <Text className="mt-1 text-sm text-[#6B6A80]">
-                Redeem once to receive instant XP and premium rewards.
+                {t('redeemHint')}
               </Text>
               <TextInput
                 autoCapitalize="characters"

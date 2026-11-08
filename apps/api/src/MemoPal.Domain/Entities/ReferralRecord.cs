@@ -9,7 +9,9 @@ public sealed class ReferralRecord : AuditableBaseEntity
     public string ReferralCode { get; set; } = string.Empty;
     public DateTime RedeemedAt { get; set; }
     public int InviterRewardXp { get; set; }
+    public int InviterRewardAiCredits { get; set; }
     public int InviterRewardPremiumDays { get; set; }
     public int InviteeRewardXp { get; set; }
+    public int InviteeRewardAiCredits { get; set; }
     public int InviteeRewardPremiumDays { get; set; }
 }

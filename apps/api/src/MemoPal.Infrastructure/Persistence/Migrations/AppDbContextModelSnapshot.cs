@@ -4067,6 +4067,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<int>("RewardAiCredits")
+                        .HasColumnType("integer");
+
                     b.Property<int>("RewardPremiumDays")
                         .HasColumnType("integer");
 
@@ -4153,10 +4156,16 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
 
+                    b.Property<int>("InviteeRewardAiCredits")
+                        .HasColumnType("integer");
+
                     b.Property<int>("InviteeRewardPremiumDays")
                         .HasColumnType("integer");
 
                     b.Property<int>("InviteeRewardXp")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("InviterRewardAiCredits")
                         .HasColumnType("integer");
 
                     b.Property<int>("InviterRewardPremiumDays")

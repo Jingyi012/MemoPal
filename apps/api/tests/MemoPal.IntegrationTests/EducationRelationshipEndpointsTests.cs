@@ -143,6 +143,8 @@ public sealed class EducationRelationshipEndpointsTests(CustomWebApplicationFact
         var pending = Assert.Single(queue.EnumerateArray());
         Assert.Equal(linkId, pending.GetProperty("id").GetString());
         Assert.True(pending.GetProperty("studentConfirmed").GetBoolean());
+        Assert.Equal("Education tester", pending.GetProperty("guardianDisplayName").GetString());
+        Assert.Equal("Education tester", pending.GetProperty("studentDisplayName").GetString());
         await DataAsync(await administrator.PostAsync($"/v1/education/guardian-links/{linkId}/verify", null));
         Assert.Empty((await DataAsync(await administrator.GetAsync("/v1/education/admin/guardian-links/pending-verification"))).EnumerateArray());
     }

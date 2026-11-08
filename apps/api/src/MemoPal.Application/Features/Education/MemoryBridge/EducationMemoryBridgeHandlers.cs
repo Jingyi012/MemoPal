@@ -87,7 +87,16 @@ public sealed record DeriveEducationMemorySetCommand(string UserId, string Objec
 public sealed class DeriveEducationMemorySetHandler(IAppDbContext db, IEducationMemoryBridgeLock bridgeLock)
     : IRequestHandler<DeriveEducationMemorySetCommand, ApiResponse<DeriveEducationMemorySetDto>>
 {
-    public async Task<ApiResponse<DeriveEducationMemorySetDto>> Handle(DeriveEducationMemorySetCommand q, CancellationToken ct)
+    public Task<ApiResponse<DeriveEducationMemorySetDto>> Handle(DeriveEducationMemorySetCommand q, CancellationToken ct) =>
+        db.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            // Re-read the entire unit of work after a transient failure; no staged
+            // positions or entities from a rolled-back attempt may be reused.
+            db.ClearTracking();
+            return await HandleAttempt(q, ct);
+        });
+
+    private async Task<ApiResponse<DeriveEducationMemorySetDto>> HandleAttempt(DeriveEducationMemorySetCommand q, CancellationToken ct)
     {
         var technique = EducationMemoryBridgeAccess.ValidateTechnique(q.TechniqueKey);
         using var requestLock = await bridgeLock.AcquireAsync($"derive:{q.UserId}:{q.ObjectiveId}:{technique}", ct);
@@ -193,7 +202,16 @@ public sealed record SyncEducationMemorySetCommand(string UserId, string Objecti
 public sealed class SyncEducationMemorySetHandler(IAppDbContext db, IEducationMemoryBridgeLock bridgeLock)
     : IRequestHandler<SyncEducationMemorySetCommand, ApiResponse<SyncEducationMemorySetDto>>
 {
-    public async Task<ApiResponse<SyncEducationMemorySetDto>> Handle(SyncEducationMemorySetCommand q, CancellationToken ct)
+    public Task<ApiResponse<SyncEducationMemorySetDto>> Handle(SyncEducationMemorySetCommand q, CancellationToken ct) =>
+        db.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            // Re-read the entire unit of work after a transient failure; no staged
+            // positions or entities from a rolled-back attempt may be reused.
+            db.ClearTracking();
+            return await HandleAttempt(q, ct);
+        });
+
+    private async Task<ApiResponse<SyncEducationMemorySetDto>> HandleAttempt(SyncEducationMemorySetCommand q, CancellationToken ct)
     {
         var technique = EducationMemoryBridgeAccess.ValidateTechnique(q.TechniqueKey);
         using var requestLock = await bridgeLock.AcquireAsync($"sync:{q.UserId}:{q.ObjectiveId}:{technique}", ct);
