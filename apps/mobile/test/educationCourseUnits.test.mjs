@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { groupCourseObjectives } from '../src/features/education/utils/educationCourseUnits.ts';
+import { getCrossObjectiveLessons, groupCourseObjectives } from '../src/features/education/utils/educationCourseUnits.ts';
+
+test('shared practice across units is listed once, while single-objective lessons stay in the path', () => {
+  const lessons = [
+    { assessmentId: 'lesson-a', objectives: [{ objectiveId: 'a' }] },
+    { assessmentId: 'challenge', objectives: [{ objectiveId: 'a' }, { objectiveId: 'b' }] },
+    { assessmentId: 'stale', objectives: [{ objectiveId: 'a' }, { objectiveId: 'missing' }] },
+    { assessmentId: 'duplicate', objectives: [{ objectiveId: 'a' }, { objectiveId: 'a' }] },
+  ];
+  assert.deepEqual(getCrossObjectiveLessons(lessons, ['a', 'b']).map(lesson => lesson.assessmentId), ['challenge']);
+  assert.deepEqual(getCrossObjectiveLessons(lessons, []), []);
+});
 
 test('unit and objective ordering follow author outline and preserve ungrouped material', () => {
   const result = groupCourseObjectives({ objectives: [{ id: 'a' }, { id: 'b' }, { id: 'c' }], units: [

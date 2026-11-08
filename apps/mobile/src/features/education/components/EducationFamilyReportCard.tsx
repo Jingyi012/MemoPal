@@ -16,8 +16,8 @@ export function EducationFamilyReportCard({ assignment }: { assignment: Educatio
   return (
     <View style={styles.card}>
       <View style={styles.heading}>
-        <Text accessibilityRole="header" style={styles.title}>{assignment.title}</Text>
         <Text style={styles.status}>{status}</Text>
+        <Text accessibilityRole="header" style={styles.title}>{assignment.title}</Text>
       </View>
       <Text style={styles.meta}>{copy.familyDue}: {dueAt}</Text>
       {assignment.resultPublished && assignment.score !== null && assignment.maxScore !== null ? (
@@ -36,10 +36,10 @@ export function EducationFamilyReportCard({ assignment }: { assignment: Educatio
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 1.5, gap: 7, padding: 14 },
-  heading: { alignItems: 'flex-start', flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
-  title: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 15, lineHeight: 21 },
-  status: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: 12 },
+  card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 24, borderWidth: 2, borderBottomWidth: 6, gap: 14, padding: 18 },
+  heading: { alignItems: 'flex-start', gap: 10 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, lineHeight: 26 },
+  status: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: 12, paddingVertical: 6, paddingHorizontal: 10, overflow: 'hidden', fontFamily: typography.bodyBold, fontSize: 12 },
   meta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
-  score: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  score: { color: theme.successText, backgroundColor: theme.mintTint, padding: 14, borderRadius: 16, fontFamily: typography.displayExtraBold, fontSize: 20, lineHeight: 28 },
 }));

@@ -1,4 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { LearningReadAloud } from '../LearningReadAloud';
 import type {
   EducationQuestionOption,
   SingleChoiceAnswer,
@@ -26,7 +27,10 @@ export function SingleChoiceInput({
 
   return (
     <View style={styles.container}>
-      <Text accessibilityRole="header" style={styles.prompt}>{question.prompt}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+        <Text accessibilityRole="header" style={[styles.prompt, { flex: 1 }]}>{question.prompt}</Text>
+        <LearningReadAloud key={question.id} text={question.prompt} language={/[\u3400-\u9fff]/u.test(question.prompt) ? 'zh-Hans' : 'en'} />
+      </View>
       <View style={styles.options} accessibilityRole="radiogroup">
         {question.options.map((option: EducationQuestionOption, index) => {
           const selected = value.optionId === option.id;

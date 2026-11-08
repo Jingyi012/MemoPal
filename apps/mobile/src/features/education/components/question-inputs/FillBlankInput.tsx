@@ -30,7 +30,7 @@ export function FillBlankInput({
       <View accessibilityRole="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 18 }}>
         {question.wordBank.map(option => {
           const selected = value.text === option.label;
-          return <AnimatedPressable key={option.id} accessibilityRole="radio" accessibilityLabel={option.label} accessibilityState={{ checked: selected, disabled: disabled || selected }} disabled={disabled || selected} onPress={() => onChange({ type: 'fill-blank', text: option.label })} style={{ maxWidth: '100%', minHeight: 48, paddingHorizontal: 18, paddingVertical: 11, borderWidth: 2, borderBottomWidth: selected ? 2 : 6, borderColor: theme.line, borderRadius: 16, backgroundColor: selected ? theme.violetTint : theme.paper }}><Text style={[styles.optionLabel, { flex: 0, opacity: selected ? 0 : 1 }]}>{option.label}</Text></AnimatedPressable>;
+          return <AnimatedPressable key={option.id} accessibilityRole="radio" accessibilityLabel={option.label} accessibilityState={{ checked: selected, disabled: disabled || selected }} disabled={disabled || selected} onPress={() => onChange({ type: 'fill-blank', text: option.label })} style={{ maxWidth: '100%', minHeight: 48, paddingHorizontal: 18, paddingVertical: 11, borderWidth: 2, borderBottomWidth: selected ? 2 : 6, borderColor: selected ? color : theme.line, borderRadius: 16, backgroundColor: selected ? feedback === false ? theme.berryTint : feedback === true ? theme.mintTint : theme.violetTint : theme.paper }}><Text style={[styles.optionLabel, { flex: 0, color: selected ? color : theme.ink }]}>{selected ? feedback === false ? '× ' : '✓ ' : ''}{option.label}</Text></AnimatedPressable>;
         })}
       </View>
     </View>;

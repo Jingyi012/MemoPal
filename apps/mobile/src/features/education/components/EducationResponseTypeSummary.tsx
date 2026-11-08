@@ -30,6 +30,6 @@ export function EducationResponseTypeSummary({ selectedResponse, openResponse }:
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  container: { backgroundColor: theme.canvas, borderRadius: 12, gap: 5, paddingHorizontal: 11, paddingVertical: 9 },
-  row: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
+  container: { gap: 10, paddingVertical: 8, borderTopWidth: 1, borderTopColor: theme.line },
+  row: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 22 },
 }));

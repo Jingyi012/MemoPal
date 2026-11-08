@@ -24,7 +24,7 @@ import { useAuth } from '@/contexts/AuthProvider';
 
 export default function EducationPublicCourseScreen() {
   const { courseId = '' } = useLocalSearchParams<{ courseId: string }>();
-  const { styles: ls } = useLearningStyles();
+  const { styles: ls, theme: palette } = useLearningStyles();
   const copy = useEducationCopy();
   const ui = useLearningCopy();
   const reduceMotion = useReducedMotion();
@@ -97,10 +97,10 @@ export default function EducationPublicCourseScreen() {
           </AnimatedPressable>
         </View>
           : <>
-            <LearningArrival><LinearGradient colors={subjectTheme.gradient} start={[0, 0]} end={[1, 1]} style={ls.courseHero}>
+            <LearningArrival><LinearGradient colors={palette.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={ls.courseHero}>
               <View style={{ position: 'absolute', right: 12, top: 10 }}><SubjectArtwork theme={subjectTheme} size={60} /></View>
-              <View style={{ paddingRight: 64, gap: 4 }}><Text numberOfLines={2} accessibilityRole="header" style={[ls.title, { color: subjectTheme.dark }]}>{course.data.title}</Text><Text style={[ls.small, { color: subjectTheme.dark }]}>{copy.publicCourseAuthor(course.data.authorDisplayName)} · {guidedProgress.isLoading ? '…' : guidedProgress.isError ? '—' : ui.correct(solved, total)}</Text></View>
-              <LearningProgress value={solved} total={total} color={subjectTheme.color} />
+              <View style={{ paddingRight: 64, gap: 4 }}><Text numberOfLines={2} accessibilityRole="header" style={[ls.title, { color: '#FFFFFF' }]}>{course.data.title}</Text><Text style={[ls.small, { color: '#FFFFFF' }]}>{copy.publicCourseAuthor(course.data.authorDisplayName)} · {guidedProgress.isLoading ? '…' : guidedProgress.isError ? '—' : ui.correct(solved, total)}</Text></View>
+              <LearningProgress value={solved} total={total} color="#FFFFFF" />
             </LinearGradient></LearningArrival>
             {saveCourse.isError ? <Text accessibilityRole="alert" style={styles.saveError}>{copy.savePublicCourseError}</Text> : null}
             <AnimatedPressable accessibilityState={{ expanded: noteOpen }} onPress={() => setNoteOpen(value => !value)} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={ls.small}>ⓘ {ui.note} {noteOpen ? '−' : '+'}</Text></AnimatedPressable>
@@ -124,11 +124,13 @@ export default function EducationPublicCourseScreen() {
     <Modal visible={focused && !!studyPrelude && !!preludeObjective} animationType={reduceMotion ? 'none' : 'slide'} onRequestClose={() => setStudyPrelude(null)}>
       <View style={[ls.page, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <View style={[ls.row, { padding: 18 }]}>
+          {reading.finished ? <AnimatedPressable accessibilityRole="button" accessibilityLabel={ui.close} onPress={() => setStudyPrelude(null)} style={{ height: 44, width: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: palette.line, backgroundColor: palette.paper, borderRadius: 14 }}><Ionicons name="close" size={24} color={palette.violetDeep} /></AnimatedPressable> : null}
           <Text accessibilityRole="header" style={[ls.heading, { flex: 1 }]}>{preludeObjective?.title}</Text>
-          <AnimatedPressable accessibilityRole="button" accessibilityLabel={ui.close} onPress={() => setStudyPrelude(null)} style={{ minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="close" size={26} color={theme.ink} /></AnimatedPressable>
+          {!reading.finished ? <AnimatedPressable accessibilityRole="button" accessibilityLabel={ui.close} onPress={() => setStudyPrelude(null)} style={{ minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="close" size={26} color={theme.ink} /></AnimatedPressable> : null}
         </View>
         {studyPrelude && preludeObjective ? <LearningStudySession key={preludeObjective.id} objective={preludeObjective}
           reading={reading} onReadingChange={setReading}
+          practiceQuestionCount={lessons.find(lesson => lesson.assessmentId === studyPrelude.assessmentId)?.questionCount}
           practiceTitle={lessons.find(lesson => lesson.assessmentId === studyPrelude.assessmentId)?.assessmentTitle}
           finishLabel={studyPrelude.index < studyPrelude.objectiveIds.length - 1 ? (ui.zh ? '学习下一个知识点' : 'Discover the next study point') : undefined}
           onFinish={() => {

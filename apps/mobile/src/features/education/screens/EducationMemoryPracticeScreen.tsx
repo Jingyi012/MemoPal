@@ -40,7 +40,7 @@ export default function EducationMemoryPracticeScreen() {
   };
 
   return <View style={ls.page}>
-    <CommonHeader title={ui.memory} backAction={returnToLearning} />
+    <CommonHeader showAiCredits={false} title={ui.memory} backAction={returnToLearning} />
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       {course.isLoading ? <LearningSkeleton /> : course.isError || !course.data ? <View style={ls.card}>
         <Text accessibilityRole="alert" style={ls.body}>{ui.zh ? '无法载入课程记忆练习。' : 'Could not load this course’s memory practice.'}</Text>
@@ -54,12 +54,12 @@ export default function EducationMemoryPracticeScreen() {
         {methods.length > 1 ? <View style={styles.segment} accessibilityRole="tablist">
           {methods.map(method => {
             const active = method === activeMethod;
-            const label = method === 'palace' ? ui.palace : ui.numberPeg;
+            const label = method === 'palace' ? (ui.zh ? '记忆宫殿' : 'Palace') : (ui.zh ? '数字挂钩' : 'Number Peg');
             return <AnimatedPressable key={method} accessibilityRole="tab" accessibilityState={{ selected: active }} onPress={() => {
               const next = recommendations.find(item => item.memorySet.techniqueKey === method);
               if (next) setSelectedId(next.memorySet.id);
             }} style={[styles.segmentButton, active && styles.segmentButtonActive]}>
-              <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{label}</Text>
+              <Ionicons name={method === 'palace' ? 'business-outline' : 'grid-outline'} size={21} color={active ? theme.violetDeep : theme.inkSoft} /><Text style={[styles.segmentText, active && styles.segmentTextActive]}>{label}</Text>
             </AnimatedPressable>;
           })}
         </View> : null}
@@ -99,7 +99,7 @@ export default function EducationMemoryPracticeScreen() {
 const useStyles = createThemedStyles(theme => StyleSheet.create({
   content: { gap: 15, padding: 16, paddingBottom: 28 },
   segment: { backgroundColor: theme.violetTint, borderRadius: 18, flexDirection: 'row', gap: 4, padding: 4 },
-  segmentButton: { alignItems: 'center', borderRadius: 14, flex: 1, justifyContent: 'center', minHeight: 46, paddingHorizontal: 5 },
+  segmentButton: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingVertical: 10, alignItems: 'center', borderRadius: 14, flex: 1, justifyContent: 'center', minHeight: 46, paddingHorizontal: 5 },
   segmentButtonActive: { backgroundColor: theme.paper, borderBottomColor: theme.line, borderBottomWidth: 4 },
   segmentText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   segmentTextActive: { color: theme.violetDeep },
@@ -107,10 +107,10 @@ const useStyles = createThemedStyles(theme => StyleSheet.create({
   recommendation: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 15, borderWidth: 1.5, gap: 2, maxWidth: '100%', minHeight: 54, paddingHorizontal: 12, paddingVertical: 8 },
   recommendationSelected: { backgroundColor: theme.violetTint, borderColor: theme.violetDeep },
   recommendationTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 19 },
-  recommendationMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 15 },
+  recommendationMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21 },
   recommendationIntro: { gap: 13 },
   recommendationHeader: { alignItems: 'center', flexDirection: 'row', gap: 9 },
-  recommendationBadge: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: .5 },
-  memoryDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 },
+  recommendationBadge: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 15, lineHeight: 23, letterSpacing: .3 },
+  memoryDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 15, lineHeight: 23 },
   itemList: { gap: 9 },
 }));

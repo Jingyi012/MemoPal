@@ -1,3 +1,5 @@
+import { LearningProgress } from './LearningUi';
+import { Ionicons } from '@expo/vector-icons';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { LearningAppButton as AppButton } from '@/features/education/components/LearningAppButton';
@@ -25,7 +27,7 @@ import {
 } from '@/features/education/utils/educationAttemptAnswers';
 import { enqueueEducationAttemptWrite } from '@/features/education/utils/educationAttemptWriteQueue';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Keyboard, StyleSheet, Text, View } from 'react-native';
 
 const TEXT_SAVE_DEBOUNCE_MS = 500;
 
@@ -45,7 +47,7 @@ type EducationAssignmentPlayerProps = Readonly<{
 export function EducationAssignmentPlayer({ attempt, classroomAssignment, initialPracticeType, onAttemptUpdated, onSketchWorkChange }: EducationAssignmentPlayerProps) {
   const copy = useEducationCopy();
   const { user } = useAuth();
-  const { styles } = useStyles();
+  const { styles, theme } = useStyles();
   const [answers, setAnswers] = useState<Record<string, EducationAnswer>>(() => answersForAttempt(attempt));
   const [questionIndex, setQuestionIndex] = useState(0);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -345,7 +347,7 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
     }
     return (
       <View style={styles.submitted}>
-        <Text accessibilityRole="header" style={styles.title}>{copy.submitted}</Text>
+        <Ionicons name="checkmark-circle-outline" size={44} color={theme.successText} /><Text accessibilityRole="header" style={styles.title}>{copy.submitted}</Text>
         <Text style={styles.body}>
           {attempt.resultPublished && attempt.score !== null && attempt.maxScore !== null
             ? copy.publishedScore(attempt.score, attempt.maxScore)
@@ -375,7 +377,7 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
 
   return (
     <View style={styles.player}>
-      <View style={styles.timerRow} accessibilityLiveRegion="polite">
+      <View style={styles.timerRow}>
         <Text style={[styles.timer, hasExpired && styles.error]}>
           {hasExpired ? copy.expired : copy.timeRemaining(Math.floor(secondsRemaining / 60), secondsRemaining % 60)}
         </Text>
@@ -386,7 +388,11 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
         ) : null}
       </View>
 
-      <QuestionCard questionIndex={questionIndex} totalQuestions={attempt.questions.length} errorText={saveState === 'error' ? copy.saveError : undefined}>
+      <View style={{ gap: 8 }}>
+        <Text style={styles.saveState}>{questionIndex + 1} / {attempt.questions.length}</Text>
+        <LearningProgress value={questionIndex + 1} total={attempt.questions.length} height={12} />
+      </View>
+      <QuestionCard key={question.id} variant="learning" questionIndex={questionIndex} totalQuestions={attempt.questions.length} errorText={saveState === 'error' ? copy.saveError : undefined}>
         <QuestionInput
           attemptId={attempt.id}
           identity={`${user?.id ?? 'anonymous'}:${attempt.id}`}
@@ -414,7 +420,7 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
           accessibilityRole="button"
           accessibilityState={{ disabled: questionIndex === 0 || isSubmitting || isRecording || hasUnsavedSketch || isSketchProcessing }}
           disabled={questionIndex === 0 || isSubmitting || isRecording || hasUnsavedSketch || isSketchProcessing}
-          onPress={() => setQuestionIndex((index) => Math.max(0, index - 1))}
+          onPress={() => { Keyboard.dismiss(); setQuestionIndex((index) => Math.max(0, index - 1)); }}
           style={[styles.secondaryAction, (questionIndex === 0 || isSubmitting || isRecording || hasUnsavedSketch || isSketchProcessing) && styles.disabledAction]}>
           <Text style={styles.secondaryActionText}>{copy.previous}</Text>
         </AnimatedPressable>
@@ -422,7 +428,7 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
           <AnimatedPressable
             accessibilityRole="button"
             disabled={isSubmitting || isRecording || hasUnsavedSketch || isSketchProcessing}
-            onPress={() => setQuestionIndex((index) => Math.min(attempt.questions.length - 1, index + 1))}
+            onPress={() => { Keyboard.dismiss(); setQuestionIndex((index) => Math.min(attempt.questions.length - 1, index + 1)); }}
             style={[styles.secondaryAction, (isSubmitting || isRecording || hasUnsavedSketch || isSketchProcessing) && styles.disabledAction]}>
             <Text style={styles.secondaryActionText}>{copy.next}</Text>
           </AnimatedPressable>
@@ -438,6 +444,7 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
         label={isSubmitting ? copy.submitting : submitError ? copy.retrySubmit : copy.submit}
         loading={isSubmitting}
         onPress={() => {
+          Keyboard.dismiss();
           if (hasExpired || submitError) void submitAttempt(hasExpired);
           else setConfirmSubmit(true);
         }}
@@ -449,7 +456,6 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
         description={copy.submitConfirmBody}
         confirmText={copy.submit}
         cancelText={copy.cancel}
-        destructive
         onConfirm={() => {
           setConfirmSubmit(false);
           void submitAttempt(false);
@@ -472,15 +478,15 @@ function remainingSeconds(expiresAt: string) {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   player: { gap: 12 },
-  timerRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 28 },
+  timerRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', minHeight: 28 },
   timer: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  saveState: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
-  submitted: { backgroundColor: theme.mintTint, borderColor: theme.mintLine, borderRadius: 18, borderWidth: 1.5, gap: 5, padding: 16 },
+  saveState: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21 },
+  submitted: { backgroundColor: theme.mintTint, borderColor: theme.mintLine, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, gap: 14, padding: 20 },
   title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 },
   body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
   error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19 },
-  navigation: { flexDirection: 'row', gap: 10, justifyContent: 'space-between' },
-  secondaryAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 13, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
+  navigation: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
+  secondaryAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 16, borderWidth: 2, borderBottomWidth: 4, justifyContent: 'center', minHeight: 48, paddingVertical: 10, paddingHorizontal: 15, maxWidth: '100%' },
   secondaryActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   disabledAction: { opacity: 0.55 },
 }));

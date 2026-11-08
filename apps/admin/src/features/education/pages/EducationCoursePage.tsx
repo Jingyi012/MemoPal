@@ -50,6 +50,9 @@ export default function EducationCoursePage() {
         { title: '', key: 'action', render: (_: unknown, row) => <Space wrap>
           <Link to={adminPaths.educationAssessment(row.id)}>{row.status === 'draft' ? t('editDraft') : t('view')}</Link>
           {row.status === 'published' && <>
+            {!course?.isPlatformCourse && <Link to={`${adminPaths.educationFamilyAssignments}?courseId=${encodeURIComponent(courseId)}&assessmentId=${encodeURIComponent(row.id)}`}>
+              {language === 'zh-Hans' ? '分配给孩子' : 'Assign to children'}
+            </Link>}
             <Popconfirm title={row.isPublicPractice ? t('hidePractice') : t('showPracticeConfirm')}
               description={!row.isPublicPractice ? t('showPracticeConfirm') : undefined}
               okText={row.isPublicPractice ? t('unpublish') : t('showPractice')} cancelText={t('cancel')}

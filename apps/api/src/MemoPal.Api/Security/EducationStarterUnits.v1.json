@@ -1806,19 +1806,22 @@
             "primary": "重复规律",
             "secondary": "找出反复出现的最小一组，可以帮助猜测后面的内容。",
             "phonetic": null,
-            "extra": "红、蓝、红、蓝：重复的是“红、蓝”。"
+            "extra": "红、蓝、红、蓝：重复的是“红、蓝”。",
+            "illustrationCode": "pattern-red-blue"
           },
           {
             "primary": "三个一组也可以重复",
             "secondary": "红、红、蓝、红、红、蓝：重复的是“红、红、蓝”。",
             "phonetic": null,
-            "extra": "不要只看相邻两个，要多检查几组。"
+            "extra": "不要只看相邻两个，要多检查几组。",
+            "illustrationCode": "pattern-red-red-blue"
           },
           {
             "primary": "用图形表示规律",
             "secondary": "圆、三角形、圆、三角形，按同样的顺序重复。",
             "phonetic": null,
-            "extra": "下一个应是圆。"
+            "extra": "下一个应是圆。",
+            "illustrationCode": "pattern-circle-triangle"
           }
         ]
       },

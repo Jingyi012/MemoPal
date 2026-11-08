@@ -8,7 +8,7 @@ import { defaultLearningPreferences, learningPreferenceChoices, type LearningPre
 import { courseAudienceLabels } from '../utils/educationCourseAudience';
 import { LearningButton, useLearningCopy, useLearningStyles } from './LearningUi';
 
-export function LearningPreferencesCard({ userId }: { userId: string }) {
+export function LearningPreferencesCard({ userId, compact = false }: { userId: string; compact?: boolean }) {
   const { query, save } = useEducationLearningPreferences(userId);
   const { styles: s, theme } = useLearningStyles();
   const ui = useLearningCopy();
@@ -24,11 +24,12 @@ export function LearningPreferencesCard({ userId }: { userId: string }) {
   return <>
     <AnimatedPressable accessibilityRole="button" disabled={query.isLoading} accessibilityState={{ expanded: open, disabled: query.isLoading }}
       onPress={() => { save.reset(); setDraft(query.data ?? defaultLearningPreferences); setOpen(true); }}
-      style={{ minHeight: 52, flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: 18, backgroundColor: theme.violetTint }}>
+      style={compact ? [s.card, { flex: 1, minHeight: 108, padding: 14, gap: 6, justifyContent: 'center' }] : { minHeight: 52, flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: 18, backgroundColor: theme.violetTint }}>
+      {compact ? <><Text style={[s.small, { color: theme.violetDeep, fontFamily: s.heading.fontFamily }]}>{ui.zh ? '学习偏好' : 'Preferences'}</Text><Text style={s.small}>{ui.zh ? '阶段、科目和语言' : 'Stage, subject, language'}</Text></> : <>
       <Ionicons name="compass-outline" size={24} color={theme.violetDeep} />
       <View style={{ flex: 1, gap: 3 }}><Text style={[s.small, { color: theme.violetDeep }]}>{title}</Text>
         <Text style={s.small}>{query.isLoading ? (ui.zh ? '正在读取偏好…' : 'Loading preferences…') : summary || (ui.zh ? '选阶段、科目和语言，让第一课更适合你' : 'Choose a stage, subject and language for your first lesson')}</Text></View>
-      <Ionicons name="chevron-forward" size={20} color={theme.violetDeep} />
+      <Ionicons name="chevron-forward" size={20} color={theme.violetDeep} /></>}
     </AnimatedPressable>
     <Modal transparent visible={open} animationType="none" onRequestClose={() => { if (!save.isPending) setOpen(false); }}>
       <View style={{ flex: 1, justifyContent: 'flex-end', paddingTop: insets.top + 20, backgroundColor: 'rgba(20,20,40,.4)' }}>

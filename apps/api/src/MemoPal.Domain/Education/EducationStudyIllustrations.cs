@@ -11,6 +11,9 @@ public static class EducationStudyIllustrations
         "media:learning-shape-circle" => "shape-circle",
         "media:learning-shape-triangle" => "shape-triangle",
         "media:learning-shape-square" => "shape-square",
+        "media:learning-pattern-red-blue" => "pattern-red-blue",
+        "media:learning-pattern-red-red-blue" => "pattern-red-red-blue",
+        "media:learning-pattern-circle-triangle" => "pattern-circle-triangle",
         _ => null,
     };
 }

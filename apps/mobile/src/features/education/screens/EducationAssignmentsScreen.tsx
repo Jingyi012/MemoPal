@@ -1,5 +1,8 @@
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { LinearGradient } from 'expo-linear-gradient';
+import { LearningButton } from '../components/LearningUi';
+import { getPendingEducationInvitations } from '../utils/classroomInvitations';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
 import { useAuth } from '@/contexts/AuthProvider';
@@ -24,7 +27,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useNavigation, usePreventRemove, type NavigationAction } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 export default function EducationAssignmentsScreen() {
   const { assignmentId, attemptId, practiceType } = useLocalSearchParams<{ assignmentId?: string; attemptId?: string; practiceType?: string }>();
@@ -44,12 +47,14 @@ export default function EducationAssignmentsScreen() {
   });
   const [checkingSavedAttempt, setCheckingSavedAttempt] = useState(Boolean(assignmentId && !attemptId));
   const [startError, setStartError] = useState(false);
+  const [connectionsOpen, setConnectionsOpen] = useState(false);
   const [hasUnsavedSketch, setHasUnsavedSketch] = useState(false);
   const [isSketchProcessing, setIsSketchProcessing] = useState(false);
   const [discardSketchVisible, setDiscardSketchVisible] = useState(false);
   const pendingNavigationAction = useRef<NavigationAction | null>(null);
   const allowSketchExitRef = useRef(false);
   const assignments = assignmentsQuery.data ?? [];
+  const pendingInvitations = getPendingEducationInvitations(classroomInvitations.memberships.data ?? []).length;
   const detailAssignmentId = assignmentId ?? attemptQuery.data?.assignmentId;
   const assignment = assignments.find((item) => item.id === detailAssignmentId);
   const handleSketchWorkChange = useCallback((hasWork: boolean, processing: boolean) => {
@@ -118,41 +123,23 @@ export default function EducationAssignmentsScreen() {
   };
 
   return (
-    <View style={styles.page}>
-      <CommonHeader title={copy.title} backAction={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.content}>
-        {!detailAssignmentId && user?.id ? <EducationAccountIdCard accountId={user.id} /> : null}
-        {!detailAssignmentId ? <EducationClassroomInvitations
-          memberships={classroomInvitations.memberships.data ?? []}
-          isLoading={classroomInvitations.memberships.isLoading}
-          isError={classroomInvitations.memberships.isError}
-          acceptingId={classroomInvitations.accept.isPending ? classroomInvitations.accept.variables : undefined}
-          acceptError={classroomInvitations.accept.isError}
-          decliningId={classroomInvitations.decline.isPending ? classroomInvitations.decline.variables : undefined}
-          declineError={classroomInvitations.decline.isError}
-          onAccept={(membershipId) => classroomInvitations.accept.mutate(membershipId)}
-          onDecline={(membershipId) => classroomInvitations.decline.mutate(membershipId)}
-          onRetry={() => { void classroomInvitations.memberships.refetch(); }}
-        /> : null}
-        {!detailAssignmentId ? <EducationClassroomLearningList
-          memberships={classroomInvitations.memberships.data ?? []}
-          isLoading={classroomInvitations.memberships.isLoading}
-          isError={classroomInvitations.memberships.isError}
-          onRetry={() => { void classroomInvitations.memberships.refetch(); }}
-        /> : null}
-        {!detailAssignmentId ? <EducationFamilyReportsShortcut /> : null}
+    <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <CommonHeader title={copy.title} showAiCredits={false} backAction={() => router.back()} />
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
         {!detailAssignmentId ? (
           <>
-            {user?.accountMode !== 'RestrictedLearner' ? <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/education/practice' as Href)} style={styles.action}>
-              <Text style={styles.actionText}>{copy.practiceBrowseTitle}</Text>
-            </AnimatedPressable> : null}
-            <EducationAssignmentsList
+            <EducationAssignmentsList workspace
               assignments={assignments}
               isLoading={assignmentsQuery.isLoading}
               isError={assignmentsQuery.isError}
               onRetry={() => { void assignmentsQuery.refetch(); }}
               onOpen={openAssignment}
             />
+            {user?.accountMode !== 'RestrictedLearner' ? assignmentsQuery.isSuccess && assignments.length === 0
+              ? <LearningButton label={copy.locale.startsWith('zh') ? '探索课程' : 'Explore courses'} onPress={() => router.push('/learn' as Href)} />
+              : <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/education/practice' as Href)} style={styles.secondaryAction}>
+                <Text style={[styles.actionText, { color: theme.violetDeep }]}>{copy.practiceBrowseTitle}</Text>
+              </AnimatedPressable> : null}
           </>
         ) : checkingSavedAttempt ? (
           <View style={styles.state}>
@@ -188,6 +175,36 @@ export default function EducationAssignmentsScreen() {
             onStart: () => { void handleStart(assignment); },
           })
         )}
+        {!detailAssignmentId ? <View style={{ gap: 14 }}>
+        <EducationClassroomLearningList
+          memberships={classroomInvitations.memberships.data ?? []}
+          isLoading={classroomInvitations.memberships.isLoading}
+          isError={classroomInvitations.memberships.isError}
+          onRetry={() => { void classroomInvitations.memberships.refetch(); }}
+        />
+        <EducationFamilyReportsShortcut />
+        </View> : null}
+        {!detailAssignmentId ? <View style={{ gap: 14 }}>
+          <AnimatedPressable accessibilityRole="button" accessibilityState={{ expanded: connectionsOpen }} onPress={() => setConnectionsOpen(value => !value)} style={styles.connectionToggle}>
+            <Text style={styles.preferenceTitle}>{copy.locale.startsWith('zh') ? '邀请与账户' : 'Invitations & account'}{pendingInvitations ? ` · ${pendingInvitations}` : ''}</Text>
+            <Text style={styles.body}>{connectionsOpen ? '−' : '+'}</Text>
+          </AnimatedPressable>
+          {connectionsOpen ? <View style={{ gap: 14 }}>
+        {user?.id ? <EducationAccountIdCard accountId={user.id} /> : null}
+        <EducationClassroomInvitations
+          memberships={classroomInvitations.memberships.data ?? []}
+          isLoading={classroomInvitations.memberships.isLoading}
+          isError={classroomInvitations.memberships.isError}
+          acceptingId={classroomInvitations.accept.isPending ? classroomInvitations.accept.variables : undefined}
+          acceptError={classroomInvitations.accept.isError}
+          decliningId={classroomInvitations.decline.isPending ? classroomInvitations.decline.variables : undefined}
+          declineError={classroomInvitations.decline.isError}
+          onAccept={(membershipId) => classroomInvitations.accept.mutate(membershipId)}
+          onDecline={(membershipId) => classroomInvitations.decline.mutate(membershipId)}
+          onRetry={() => { void classroomInvitations.memberships.refetch(); }}
+        />
+          </View> : null}
+        </View> : null}
       </ScrollView>
       <ConfirmModal visible={discardSketchVisible}
         title={isSketchProcessing ? copy.handwritingWaitTitle : copy.handwritingLeaveTitle}
@@ -202,7 +219,7 @@ export default function EducationAssignmentsScreen() {
           allowSketchExitRef.current = true;
           navigation.dispatch(action);
         }} />
-    </View>
+    </KeyboardAvoidingView>
   );
 
   function renderNotice({ title, body, action, onAction }: { title: string; body: string; action?: string; onAction?: () => void }) {
@@ -242,8 +259,11 @@ export default function EducationAssignmentsScreen() {
     const availability = getEducationAssignmentStatus(selectedAssignment);
     return (
       <View style={styles.detailCard}>
-        <Text accessibilityRole="header" style={styles.title}>{selectedAssignment.title}</Text>
-        <Text style={[styles.status, styles[availability]]}>{statusLabel}</Text>
+        <LinearGradient colors={theme.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={{ padding: 20, borderRadius: 22, gap: 12, marginBottom: 8 }}>
+          <Text style={[styles.body, { color: '#FFFFFF' }]}>{selectedAssignment.courseTitle ?? copy.title}</Text>
+          <Text accessibilityRole="header" style={[styles.title, { color: '#FFFFFF' }]}>{selectedAssignment.title}</Text>
+          <Text style={[styles.status, styles[availability]]}>{statusLabel}</Text>
+        </LinearGradient>
         <Text style={styles.body}>{copy.opensAt}: {formatDate(selectedAssignment.opensAt)}</Text>
         <Text style={styles.body}>{copy.dueAt}: {formatDate(selectedAssignment.dueAt)}</Text>
         <Text style={styles.body}>
@@ -268,9 +288,7 @@ export default function EducationAssignmentsScreen() {
           key={`${user?.id}:${selectedAssignment.id}`} assignmentId={selectedAssignment.id}
           disabled={isStarting || checkingSavedAttempt} /> : null}
         {isOpen ? (
-          <AnimatedPressable accessibilityRole="button" accessibilityState={{ disabled: isStarting }} disabled={isStarting} onPress={onStart} style={[styles.action, isStarting && styles.disabledAction]}>
-            <Text style={styles.actionText}>{startLabel}</Text>
-          </AnimatedPressable>
+          <LearningButton label={startLabel} disabled={isStarting} loading={isStarting} onPress={onStart} />
         ) : (
           <Text style={styles.body}>{copy.notOpen}</Text>
         )}
@@ -282,8 +300,10 @@ export default function EducationAssignmentsScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { backgroundColor: theme.canvas, flex: 1 },
-  content: { gap: 15, padding: 20, paddingBottom: 40 },
-  detailCard: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 20, borderWidth: 1.5, gap: 8, padding: 17 },
+  content: { gap: 18, padding: 16, paddingBottom: 40 },
+  connectionToggle: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 14, borderRadius: 18, backgroundColor: theme.violetTint, borderWidth: 1, borderColor: theme.line },
+  detailCard: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 26, borderWidth: 2, borderBottomWidth: 6, gap: 14, padding: 16 },
+  secondaryAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 18, borderWidth: 2, borderBottomWidth: 5, borderColor: theme.line, justifyContent: 'center', minHeight: 48, padding: 12 },
   preference: { alignItems: 'center', borderColor: theme.line, borderRadius: 12, borderWidth: 1, flexDirection: 'row', gap: 10, justifyContent: 'space-between', padding: 12 },
   preferenceCopy: { flex: 1, gap: 3 },
   preferenceTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },

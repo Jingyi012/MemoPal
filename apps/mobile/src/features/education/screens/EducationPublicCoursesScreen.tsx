@@ -1,4 +1,6 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { getLevelProgressMetrics } from '@/components/LevelXpProgressBar';
+import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
 import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
 import { useDebouncedValue } from '@/core/hooks/useDebouncedValue';
 import { useAuth } from '@/contexts/AuthProvider';
@@ -59,27 +61,33 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false }: {
   const total = current?.lessons.reduce((n, lesson) => n + lesson.questionCount, 0) ?? 0;
   const solved = current?.lessons.reduce((n, lesson) => n + lesson.questionsSolved, 0) ?? 0;
   return <View style={s.page}>
-    <CommonHeader title={primaryEntry ? copy.learnTitle : copy.publicCoursesTitle} hideBackButton={primaryEntry} backAction={primaryEntry ? undefined : () => router.back()} />
+    <CommonHeader showAiCredits={false} title={primaryEntry ? copy.learnTitle : copy.publicCoursesTitle} hideBackButton={primaryEntry} backAction={primaryEntry ? undefined : () => router.back()}
+      actions={[
+        { component: <AnimatedPressable accessibilityRole="button" accessibilityLabel={copy.publicSavedCourses} onPress={() => router.push('/community/education/saved' as Href)} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="bookmark-outline" size={24} color={palette.violetDeep} /></AnimatedPressable> },
+        { component: <AnimatedPressable accessibilityRole="button" accessibilityLabel={copy.publicPracticeHistory} onPress={() => router.push('/community/education/history' as Href)} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="time-outline" size={25} color={palette.violetDeep} /></AnimatedPressable> },
+      ]} />
     <FlatList data={data} keyExtractor={item => item.id} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled"
       refreshControl={<RefreshControl refreshing={courses.isRefetching} onRefresh={() => refresh.current()} />}
       ListHeaderComponent={<LearningArrival style={{ gap: 18 }}>
-        <View style={s.row}><View style={{ flex: 1, gap: 7 }}><Text style={s.title}>{ui.hello(profile.user?.displayName || user?.displayName || 'MemoPal')}</Text><Text style={s.body}>{ui.ready}</Text>
-          <View style={[s.row, { flexWrap: 'wrap' }]}>{profile.user?.stats ? <HomeStatChip label={`🔥 ${profile.user.stats.currentStreak} ${ui.zh ? '天' : 'days'}`} /> : null}{profile.user ? <HomeStatChip label={`✦ ${profile.user.totalXp} XP`} /> : null}</View>
-        </View><CompanionActor stage={profile.user?.level ?? 1} size={90} cue={{ action: 'hello', sequence: 0 }} /></View>
+        <View style={{ gap: 12 }}>
+          <View style={{ gap: 3 }}><Text style={[s.heading, { fontSize: 20 }]}>{ui.hello(profile.user?.displayName || user?.displayName || 'MemoPal')}</Text><Text style={s.small}>{ui.ready}</Text></View>
+          {profile.user ? <HomeLevelProgress totalXp={profile.user.totalXp} level={profile.user.level} /> : null}
+        </View>
         {current ? <LinearGradient colors={palette.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={{ borderRadius: 26, padding: 18, gap: 13, overflow: 'hidden' }}>
-          <View style={{ position: 'absolute', right: -5, bottom: -16, opacity: .16 }}><Ionicons name={theme.icon} size={112} color="#FFFFFF" /></View>
-          <View style={[s.row, { alignItems: 'flex-start' }]}><View style={{ flex: 1, gap: 7 }}><View style={{ alignSelf: 'flex-start', borderRadius: 99, paddingHorizontal: 11, paddingVertical: 5, backgroundColor: 'rgba(255,255,255,.1)' }}><Text style={{ color: '#FFFFFF', fontFamily: typography.bodyExtraBold, fontSize: 12 }}>{ui.continue}</Text></View><Text numberOfLines={2} style={[s.heading, { color: '#FFFFFF', fontSize: 21, lineHeight: 27 }]}>{current.courseTitle}</Text><Text style={[s.body, { color: '#FFFFFF' }]}>{ui.correct(solved, total)}</Text></View><LearningRing value={solved} total={total} theme={{ ...theme, line: 'rgba(255,255,255,.28)', color: palette.sun, dark: '#FFFFFF' }} /></View>
-          <View style={{ alignSelf: 'flex-start' }}><LearningButton tone="white" compact label={ui.continue} onPress={() => router.push(`/community/education/${current.courseId}` as Href)} /></View>
+          <View style={[s.row, { alignItems: 'flex-start' }]}><View style={{ flex: 1, gap: 7 }}><View style={{ alignSelf: 'flex-start', borderRadius: 99, paddingHorizontal: 11, paddingVertical: 5, backgroundColor: 'rgba(255,255,255,.1)' }}><Text style={{ color: '#FFFFFF', fontFamily: typography.bodyExtraBold, fontSize: 12 }}>{ui.continue}</Text></View><Text numberOfLines={3} style={[s.heading, { color: '#FFFFFF', fontSize: 21, lineHeight: 27 }]}>{current.courseTitle}</Text><Text style={[s.body, { color: '#FFFFFF' }]}>{ui.correct(solved, total)}</Text></View><LearningRing value={solved} total={total} theme={{ ...theme, line: 'rgba(255,255,255,.28)', color: '#FFD65C', dark: '#FFFFFF' }} /></View>
+          <View style={{ alignSelf: 'flex-start' }}><LearningButton tone="white" compact label={ui.zh ? '继续学习' : 'Continue'} onPress={() => router.push(`/community/education/${current.courseId}` as Href)} /></View>
         </LinearGradient> : null}
         {home.isError ? <AnimatedPressable onPress={() => void home.refetch()} style={s.card}><Text style={s.body}>{copy.guidedLessonLoadError} · {copy.retry}</Text></AnimatedPressable> : null}
         {firstCourse ? <LearningFirstLessonCard course={firstCourse} onPress={() => router.push(`/community/education/${firstCourse.id}` as Href)} /> : null}
         {firstCourse && recommendation.isFallback ? <Text style={s.small}>{ui.zh ? '暂时没有完全符合偏好的课程，先探索这节体验课吧。' : 'No course matches all your preferences yet. Explore this lesson while more content is prepared.'}</Text> : null}
-        {user?.id ? <LearningPreferencesCard key={user.id} userId={user.id} /> : null}
-        <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/education/assignments' as Href)} style={[s.card, { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: palette.mintTint, borderColor: palette.mintLine }]}>
-          <Ionicons name="school-outline" size={26} color={palette.successText} />
-          <View style={{ flex: 1, gap: 4 }}><Text style={s.heading}>{ui.zh ? '我的学习任务' : 'My learning tasks'}</Text><Text style={s.small}>{ui.zh ? '查看家长和老师安排的学习' : 'Learning from your family and teachers'}</Text></View>
-          <Ionicons name="chevron-forward" size={22} color={palette.successText} />
-        </AnimatedPressable>
+
+        <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: 10 }}>
+          {user?.id ? <LearningPreferencesCard key={user.id} userId={user.id} compact /> : null}
+          <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/education/assignments' as Href)} style={[s.card, { flex: 1, minWidth: 0, minHeight: 108, padding: 14, gap: 6, justifyContent: 'center', backgroundColor: palette.mintTint, borderColor: palette.mintLine }]}>
+            <Text style={[s.small, { color: palette.successText, fontFamily: typography.bodyExtraBold }]}>{ui.zh ? '我的任务' : 'My tasks'}</Text>
+            <Text style={s.small}>{ui.zh ? '来自家长和老师' : 'From family and teachers'}</Text>
+          </AnimatedPressable>
+        </View>
         <View style={[s.row, { gap: 9 }]}>
           <View style={[s.row, { flex: 1, borderWidth: 2, borderColor: palette.line, backgroundColor: palette.paper, borderRadius: 18, paddingHorizontal: 14, gap: 8 }]}>
             <Ionicons name="search" size={22} color={palette.inkSoft} /><TextInput accessibilityLabel={copy.publicCoursesSearch} placeholder={ui.zh ? '搜索课程或知识点' : 'Search courses or study points'} value={search} onChangeText={setSearch} placeholderTextColor={palette.inkSoft} style={[s.body, { flex: 1, minHeight: 52 }]} returnKeyType="search" />
@@ -93,7 +101,7 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false }: {
           {audience.language !== 'all' ? <FilterPill label={courseAudienceLabels({ languageCode: audience.language }, ui.zh)[0]} onRemove={() => setAudience({ ...audience, language: 'all' })} /> : null}
           <AnimatedPressable onPress={clearFilters} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 10 }}><Text style={[s.small, { color: palette.violetDeep }]}>{ui.clearFilters}</Text></AnimatedPressable>
         </View> : null}
-        <Text accessibilityRole="header" style={s.heading}>{copy.learnCoursesTitle}</Text>
+        <View style={[s.row, { justifyContent: 'space-between', flexWrap: 'wrap' }]}><Text accessibilityRole="header" style={s.heading}>{copy.learnCoursesTitle}</Text>{courses.isSuccess ? <Text style={s.small}>{ui.zh ? `${data.length} 门课程` : `${data.length} available`}</Text> : null}</View>
       </LearningArrival>}
       renderItem={({ item }) => <CourseCard course={item} onPress={() => router.push(`/community/education/${item.id}` as Href)} />}
       ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
@@ -108,7 +116,7 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false }: {
           <View style={{ flex: 1, gap: 4 }}><Text style={s.heading}>{ui.zh ? '需要一点记忆帮助？' : 'Need a little memory help?'}</Text><Text style={s.small}>{ui.zh ? '可选工具：用场景和联想帮助记忆' : 'Optional tools: remember with places and stories'}</Text></View>
           <Ionicons name="chevron-forward" size={20} color={palette.violetDeep} />
         </AnimatedPressable>
-        <View style={[s.row, { justifyContent: 'space-around', marginTop: 20 }]}>{[['/community/education/saved', copy.publicSavedCourses], ['/community/education/history', copy.publicPracticeHistory]].map(([path, label]) => <AnimatedPressable key={path} onPress={() => router.push(path as Href)} style={{ minHeight: 44, justifyContent: 'center', flex: 1 }}><Text style={s.small}>{label} →</Text></AnimatedPressable>)}</View></View>}
+      </View>}
     />
     <Modal transparent visible={filterOpen} animationType="slide" onRequestClose={() => setFilterOpen(false)}>
       <View style={{ flex: 1, backgroundColor: 'rgba(20,16,40,.45)', justifyContent: 'flex-end' }}>
@@ -141,9 +149,19 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false }: {
     </Modal>
   </View>;
 }
-function HomeStatChip({ label }: { label: string }) {
-  const { theme, styles } = useLearningStyles();
-  return <View style={{ backgroundColor: theme.paper, borderColor: theme.line, borderWidth: 2, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 3 }}><Text style={styles.small}>{label}</Text></View>;
+function HomeLevelProgress({ totalXp, level }: { totalXp: number; level: number }) {
+  const { styles: s, theme } = useLearningStyles();
+  const { zh } = useLearningCopy();
+  const query = useLevelByXp(totalXp, level);
+  const progress = query.levelInfo;
+  const metrics = progress ? getLevelProgressMetrics(progress.xpInCurrentLevel, progress.xpToNextLevel) : null;
+  return <View style={{ gap: 6 }}>
+    <View style={[s.row, { justifyContent: 'space-between', flexWrap: 'wrap' }]}>
+      <Text style={[s.small, { color: theme.violetDeep, fontFamily: typography.bodyExtraBold }]}>{zh ? '等级' : 'Level'} {progress?.currentLevel ?? level}</Text>
+      {progress ? <Text style={s.small}>{metrics?.isMaxLevel ? (zh ? '已达最高等级' : 'Max level') : `${zh ? '下一级' : 'Next'}: ${progress.currentLevel + 1}`}</Text> : null}
+    </View>
+    {metrics ? <LearningProgress value={metrics.progress} total={100} color={theme.violetDeep} height={8} /> : query.isError ? <AnimatedPressable accessibilityRole="button" onPress={() => void query.refetch()} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={s.small}>{zh ? '等级进度暂不可用，点击重试' : 'Level progress unavailable. Tap to retry.'}</Text></AnimatedPressable> : <View accessibilityLabel={zh ? '正在读取等级进度' : 'Loading level progress'} style={{ height: 8, borderRadius: 99, backgroundColor: theme.violetTint }} />}
+  </View>;
 }
 function FilterOption({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   const { styles: s, theme } = useLearningStyles();
@@ -162,20 +180,19 @@ function CourseCard({ course, onPress }: { course: EducationPublicCourseSummary;
   const total = lessons?.reduce((n, lesson) => n + lesson.questionCount, 0) ?? course.questionCount;
   const completed = !!lessons?.length && lessons.every(lesson => lesson.isComplete);
   const subjectLabel = theme.key === 'other' ? (ui.zh ? '课程' : 'Course') : ui[theme.key];
-  const coverColors = theme.gradient;
-  return <AnimatedPressable lively onPress={onPress} style={[s.card, { borderColor: palette.line, padding: 0, overflow: 'hidden', gap: 0 }]}>
-    <LinearGradient colors={coverColors as [string, string]} start={[0, 0]} end={[1, 1]} style={{ height: 104, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-      <View style={{ position: 'absolute', right: -25, top: -34, width: 112, height: 112, borderRadius: 56, backgroundColor: 'rgba(255,255,255,.24)' }} />
-      <View style={{ position: 'absolute', left: 12, top: 12, borderRadius: 99, paddingHorizontal: 11, paddingVertical: 5, backgroundColor: palette.paper }}><Text style={[s.small, { color: theme.dark }]}>{subjectLabel}</Text></View>
-      <SubjectArtwork theme={theme} size={68} />
-      <Ionicons name="chevron-forward-circle" size={30} color={theme.color} style={{ position: 'absolute', right: 12, top: 12 }} />
-    </LinearGradient>
-    <View style={{ paddingHorizontal: 14, paddingTop: 12, paddingBottom: 15, gap: 8 }}>
-      {course.isMemoPalStarter ? <Text style={[s.small, { color: palette.violetDeep }]}>{ui.zh ? '✦ MemoPal 体验课' : '✦ MemoPal starter'}</Text> : null}
-      <Text numberOfLines={2} style={s.heading}>{course.title}</Text>
-      {courseAudienceLabels(course, ui.zh).length ? <Text style={s.small}>{courseAudienceLabels(course, ui.zh).join(' · ')}</Text> : null}
-      <View style={[s.row, { flexWrap: 'wrap', gap: 6 }]}><Text style={s.small}>📚 {course.assessmentCount} {ui.zh ? '个练习' : 'lessons'}</Text><Text style={s.small}>·</Text><Text style={s.small}>❓ {course.questionCount} {ui.zh ? '题' : 'questions'}</Text><Text style={s.small}>·</Text><Text style={s.small}>⏱ {ui.time(course.questionCount).split('·')[1]?.trim()}</Text></View>
-      {progress.isLoading ? <Text style={s.small}>…</Text> : progress.isError ? <Text style={s.small}>—</Text> : <><LearningProgress value={solved} total={total} color={theme.color} /><View style={[s.row, { justifyContent: 'space-between' }]}><Text style={s.small}>{ui.correct(solved, total)}</Text><Text style={[s.small, { color: theme.dark }]}>{completed ? `✓ ${ui.done}` : lessons?.some(lesson => lesson.isStarted) ? ui.underway : ui.notStarted}</Text></View></>}
+  const artworkTheme = theme.key === 'math' && !palette.isDark ? { ...theme, tint: palette.peachTint, line: palette.peachLine, color: '#8C4B12' } : theme.key === 'science' ? { ...theme, tint: palette.mintTint, line: palette.mintLine, color: palette.successText } : theme;
+  return <AnimatedPressable accessibilityRole="button" accessibilityLabel={course.title} lively onPress={onPress} style={[s.card, { gap: 12 }]}>
+    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+      <SubjectArtwork theme={artworkTheme} size={58} />
+      <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+        <View style={{ alignSelf: 'flex-start', borderRadius: 99, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: artworkTheme.tint }}><Text style={[s.small, { color: artworkTheme.color }]}>{subjectLabel}</Text></View>
+        <Text numberOfLines={2} style={[s.heading, { fontSize: 17, lineHeight: 23 }]}>{course.title}</Text>
+        <Text style={s.small}>{[...courseAudienceLabels(course, ui.zh), `${course.assessmentCount} ${ui.zh ? '个练习' : 'lessons'}`, `${course.questionCount} ${ui.zh ? '题' : 'questions'}`, ui.time(course.questionCount).split('·')[1]?.trim()].filter(Boolean).join(' · ')}</Text>
+      </View>
     </View>
+    {progress.isLoading ? <Text style={s.small}>…</Text> : progress.isError ? <Text style={s.small}>{ui.zh ? '暂时无法读取进度，进入课程后重试' : 'Progress unavailable. Open the course to retry.'}</Text> : <>
+      <View style={[s.row, { gap: 10 }]}><View style={{ flex: 1 }}><LearningProgress value={solved} total={total} color={theme.color} /></View><Text style={[s.small, { color: theme.dark }]}>{completed ? `✓ ${ui.done}` : lessons?.some(lesson => lesson.isStarted) ? ui.underway : ui.notStarted}</Text></View>
+      <Text style={s.small}>{ui.correct(solved, total)}</Text>
+    </>}
   </AnimatedPressable>;
 }

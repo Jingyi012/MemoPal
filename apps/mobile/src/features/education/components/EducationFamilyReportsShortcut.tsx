@@ -3,22 +3,26 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { useEducationCopy } from '@/features/education/i18n';
 import { useEducationFamilyChildren } from '@/features/education/hooks/useEducationFamilyReports';
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 export function EducationFamilyReportsShortcut() {
   const copy = useEducationCopy();
   const router = useRouter();
   const children = useEducationFamilyChildren();
-  const { styles } = useStyles();
+  const { styles, theme } = useStyles();
   if (!children.data?.length) return null;
   return <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/education/family-reports')} style={styles.card}>
-    <Text style={styles.title}>{copy.familyReports}</Text>
-    <Text style={styles.body}>{copy.familyReportsDescription}</Text>
+    <View style={styles.icon}><Ionicons name="bar-chart-outline" size={28} color={theme.link} /></View>
+    <View style={{ flex: 1, gap: 7 }}><Text style={styles.title}>{copy.familyReports}</Text>
+    <Text style={styles.body}>{copy.familyReportsDescription}</Text></View>
+    <Ionicons name="chevron-forward" size={22} color={theme.link} />
   </AnimatedPressable>;
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: 16, borderWidth: 1.5, gap: 4, minHeight: 60, padding: 14 },
-  title: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17 },
+  card: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: 24, borderWidth: 2, borderBottomWidth: 6, flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 80, padding: 16 },
+  icon: { backgroundColor: theme.paper, padding: 12, borderRadius: 18 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, lineHeight: 25 },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20 },
 }));

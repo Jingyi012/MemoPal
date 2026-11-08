@@ -78,7 +78,7 @@ public sealed class EducationStarterCatalogEndpointsTests(StarterCatalogWebAppli
             .Select(item => item.GetProperty("illustrationCode").GetString()).Order().ToArray();
         string[] expectedIllustrations = suffix switch {
             "fractions" => ["fraction-half", "fraction-quarter", "fraction-three-quarters"],
-            "patterns" => ["shape-circle", "shape-square", "shape-triangle"],
+            "patterns" => ["shape-circle", "shape-square", "shape-triangle", "pattern-red-blue", "pattern-red-red-blue", "pattern-circle-triangle"],
             _ => []
         };
         Assert.Equal(expectedIllustrations.Order(), illustrations);

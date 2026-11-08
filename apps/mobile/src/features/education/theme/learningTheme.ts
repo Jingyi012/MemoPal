@@ -6,7 +6,7 @@ import { typography } from '@/theme/typography';
 export const learningPalettes = {
   light: {
     ...memopalThemes.light,
-    ink: '#251F3D', inkSoft: '#6F6790', inkMuted: '#827899',
+    ink: '#251F3D', inkSoft: '#59516F', inkMuted: '#706681',
     canvas: '#FBF8FF', paper: '#FFFFFF', line: '#E4DAFB',
     violetTint: '#F1ECFF', violetLine: '#E4DAFB', violetDeep: '#6B4FCF',
     // Slightly deeper ink than the mockup so small status labels pass AA.
@@ -16,10 +16,10 @@ export const learningPalettes = {
     disabled: '#D9D3E6', onAccent: '#FFFFFF',
     isDark: false, primaryShadow: '#4C35A3', successShadow: '#17613F',
     disabledShadow: '#C2BAD6', memoryInk: '#5E1030',
-    hero: ['#6B4FCF', '#B067C9'], memory: ['#FFD1DC', '#FF9DB5'],
-    science: ['#BDF0D3', '#4FB27C'], math: ['#FFE9A8', '#FFA24C'], english: ['#C9DEFF', '#7C9CFF'],
-    tools: ['#FFD76B', '#FFA24C'], challenge: ['#8FE6CF', '#4CC3B8'],
-    toolsInk: '#5A3300', challengeInk: '#05453F',
+    hero: ['#6B4FCF', '#9752B4'], memory: ['#FFD1DC', '#FF9DB5'],
+    science: ['#F1ECFF', '#F1ECFF'], math: ['#F1ECFF', '#F1ECFF'], english: ['#F1ECFF', '#F1ECFF'],
+    tools: ['#EDE7FF', '#DDD3FF'], challenge: ['#8FE6CF', '#4CC3B8'],
+    toolsInk: '#4C35A3', challengeInk: '#05453F',
   },
   dark: {
     ...memopalThemes.dark,
@@ -30,9 +30,9 @@ export const learningPalettes = {
     onAccent: '#251F3D', isDark: true, primaryShadow: '#7861B0', successShadow: '#28794F',
     disabledShadow: '#3D3351', memoryInk: '#FFE1EB',
     hero: ['#4E328D', '#723C83'], memory: ['#57283F', '#843A59'],
-    science: ['#204E3A', '#326C4E'], math: ['#65441E', '#84532C'], english: ['#283B66', '#415B8D'],
-    tools: ['#FFD76B', '#FFA24C'], challenge: ['#214C42', '#2B746B'],
-    toolsInk: '#5A3300', challengeInk: '#E0FFF8',
+    science: ['#372B50', '#372B50'], math: ['#372B50', '#372B50'], english: ['#372B50', '#372B50'],
+    tools: ['#EDE7FF', '#DDD3FF'], challenge: ['#214C42', '#2B746B'],
+    toolsInk: '#4C35A3', challengeInk: '#E0FFF8',
   },
 } satisfies Record<'light' | 'dark', MemoPalTheme & Record<string, unknown>>;
 

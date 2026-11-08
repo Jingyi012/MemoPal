@@ -11,9 +11,10 @@ import { LearningStudySession, type LearningReadingPosition } from './LearningSt
 import { chooseObjectiveLesson } from '../utils/educationObjectiveLesson';
 import { LearningArrival, LearningButton, useLearningStyles, useLearningCopy } from './LearningUi';
 
-export function LearningCoursePath({ objectives, progress, onMemory, onPractice, showHeading = true }: {
+export function LearningCoursePath({ objectives, progress, onMemory, onPractice, showHeading = true, sharedAssessmentIds = [] }: {
   objectives: EducationPublicCourseDetail['objectives']; progress?: EducationGuidedCourseProgress; onMemory: (id: string) => void; onPractice?: (assessmentId: string, studiedObjectiveId?: string) => void;
   showHeading?: boolean;
+  sharedAssessmentIds?: readonly string[];
 }) {
   const { styles: s, theme: palette } = useLearningStyles();
   const reduceMotion = useReducedMotion();
@@ -36,7 +37,7 @@ export function LearningCoursePath({ objectives, progress, onMemory, onPractice,
 
       return <LearningArrival key={objective.id} style={{ flexDirection: 'row', gap: 12 }}>
         <View style={{ width: 42, alignItems: 'center' }}>
-          <View style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 3, backgroundColor: done ? palette.successText : current ? palette.violetDeep : palette.disabled, borderColor: done ? palette.mintLine : palette.line, alignItems: 'center', justifyContent: 'center' }}><Text style={[s.heading, { color: palette.onAccent }]}>{done ? '✓' : index + 1}</Text></View>
+          <View style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 3, backgroundColor: done ? palette.successText : current ? palette.violetDeep : palette.disabled, borderColor: done ? palette.mintLine : palette.line, alignItems: 'center', justifyContent: 'center' }}><Text style={[s.heading, { color: done || current ? palette.onAccent : palette.inkSoft }]}>{done ? '✓' : index + 1}</Text></View>
           {index < objectives.length - 1 ? <View style={{ width: 6, backgroundColor: palette.line, flex: 1, minHeight: 30, marginTop: 6 }} /> : null}
         </View>
         <View style={[s.card, { flex: 1, minWidth: 0, marginBottom: 10 }]}>
@@ -52,7 +53,7 @@ export function LearningCoursePath({ objectives, progress, onMemory, onPractice,
             <View style={{ flex: 1 }}><LearningButton compact secondary label={ui.content} onPress={() => { setReading({ position: 0, finished: false }); setSelectedId(objective.id); }} /></View>
 
           </View>
-          {onPractice ? lessons?.map((lesson, lessonIndex) => <AnimatedPressable key={lesson.assessmentId} accessibilityRole="button" onPress={() => onPractice(lesson.assessmentId)} style={{ minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderWidth: 1.5, borderColor: palette.line, borderRadius: 16, backgroundColor: palette.violetTint }}>
+          {onPractice ? lessons?.filter(lesson => !sharedAssessmentIds.includes(lesson.assessmentId)).map((lesson, lessonIndex) => <AnimatedPressable key={lesson.assessmentId} accessibilityRole="button" onPress={() => onPractice(lesson.assessmentId)} style={{ minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, borderTopWidth: 1, borderColor: palette.line }}>
             <Ionicons name={lesson.isComplete ? 'checkmark-circle' : 'play-circle-outline'} size={24} color={lesson.isComplete ? palette.successText : palette.violetDeep} />
             <View style={{ flex: 1, gap: 3 }}><Text style={s.body}>{lessonIndex + 1}. {lesson.assessmentTitle}</Text><Text style={s.small}>{ui.correct(lesson.questionsSolved, lesson.questionCount)}</Text></View>
             <Ionicons name="chevron-forward" size={18} color={palette.violetDeep} />

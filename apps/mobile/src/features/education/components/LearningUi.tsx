@@ -5,20 +5,17 @@ import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp, interpolate, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 
 import { learningSubjectFor, type LearningSubject } from '../utils/educationCourseAudience';
 export type { LearningSubject } from '../utils/educationCourseAudience';
 export type LearningTheme = { key: LearningSubject; color: string; dark: string; tint: string; line: string; gradient: readonly [string, string]; icon: 'flask' | 'calculator' | 'chatbubbles' | 'book' };
 export function learningThemeFor(title: string, palette: LearningPalette = learningPalettes.light, subjectCode?: string | null): LearningTheme {
   const key = learningSubjectFor(title, subjectCode);
-  const roles = {
-    chinese: { color: palette.berryDeep, dark: palette.memoryInk, gradient: palette.memory as [string, string], tint: palette.berryTint, line: palette.berryLine, icon: 'book' as const },
-    science: { color: palette.successText, dark: palette.isDark ? palette.ink : '#073B25', gradient: palette.science as [string, string], tint: palette.mintTint, line: palette.mintLine, icon: 'flask' as const },
-    math: { color: palette.isDark ? palette.sun : '#B85A12', dark: palette.isDark ? palette.ink : '#5A3300', gradient: palette.math as [string, string], tint: palette.sunTint, line: palette.sunLine, icon: 'calculator' as const },
-    english: { color: palette.isDark ? palette.sky : '#405EAE', dark: palette.isDark ? palette.ink : '#203567', gradient: palette.english as [string, string], tint: palette.skyTint, line: palette.skyLine, icon: 'chatbubbles' as const },
-    other: { color: palette.violetDeep, dark: palette.ink, gradient: [palette.violetTint, palette.violetLine] as [string, string], tint: palette.violetTint, line: palette.violetLine, icon: 'book' as const },
-  };
-  return { key, ...roles[key] };
+  const icons = { chinese: 'book', science: 'flask', math: 'calculator', english: 'chatbubbles', other: 'book' } as const;
+  return { key, icon: icons[key], color: palette.violetDeep, dark: palette.ink,
+    tint: palette.violetTint, line: palette.violetLine,
+    gradient: [palette.violetTint, palette.violetTint] as [string, string] };
 }
 export const LearningThemeContext = createContext<LearningTheme>(learningThemeFor(''));
 export function useLearningTheme() {
@@ -62,16 +59,23 @@ export function LearningArrival({ children, style }: { children: ReactNode; styl
   return <Animated.View entering={reduce ? undefined : FadeInUp.duration(260)} style={style}>{children}</Animated.View>;
 }
 export function LearningButton({ label, onPress, disabled, secondary = false, loading = false, tone = 'primary', compact = false }: {
-  label: string; onPress: () => void; disabled?: boolean; secondary?: boolean; theme?: LearningTheme; loading?: boolean; tone?: 'primary' | 'success' | 'white'; compact?: boolean;
+  label: string; onPress: () => void; disabled?: boolean; secondary?: boolean; theme?: LearningTheme; loading?: boolean; tone?: 'primary' | 'success' | 'danger' | 'white'; compact?: boolean;
 }) {
   const { theme: palette, styles } = useLearningStyles();
   return <AnimatedPressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled: !!disabled || loading, busy: loading }} disabled={disabled || loading} onPress={onPress}
-    style={[styles.button, { minHeight: compact ? 48 : 54, paddingHorizontal: compact ? 11 : 20, backgroundColor: disabled ? palette.disabled : secondary || tone === 'white' ? palette.paper : tone === 'success' ? palette.successText : palette.violetDeep, borderColor: disabled ? palette.disabledShadow : secondary ? palette.line : tone === 'white' ? 'rgba(0,0,0,.18)' : tone === 'success' ? palette.successShadow : palette.primaryShadow }, secondary && { borderWidth: 2, borderBottomWidth: 6 }]}>
-    <Text style={[styles.buttonText, { fontSize: compact || secondary || tone === 'white' ? 14 : 16, color: disabled ? palette.inkSoft : secondary || tone === 'white' ? palette.violetDeep : palette.onAccent }]}>{loading ? '…' : label}</Text>
+    style={[styles.button, { minHeight: compact ? 48 : 54, paddingHorizontal: compact ? 11 : 20, backgroundColor: disabled ? palette.disabled : tone === 'white' ? '#F4EFFF' : secondary ? palette.paper : tone === 'success' ? palette.successText : tone === 'danger' ? palette.berryDeep : palette.violetDeep, borderColor: disabled ? palette.disabledShadow : secondary ? palette.line : tone === 'white' ? 'rgba(0,0,0,.18)' : tone === 'success' ? palette.successShadow : tone === 'danger' ? palette.berryDeep : palette.primaryShadow }, secondary && { borderWidth: 2, borderBottomWidth: 6 }]}>
+    <Text style={[styles.buttonText, { fontSize: compact || secondary || tone === 'white' ? 14 : 16, color: disabled ? palette.inkSoft : tone === 'white' ? '#4C35A3' : secondary ? palette.violetDeep : palette.onAccent }]}>{loading ? '…' : label}</Text>
   </AnimatedPressable>;
 }
 export function SubjectArtwork({ theme, size = 72 }: { theme: LearningTheme; size?: number }) {
-  return <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: size * .76 }}>{theme.key === 'chinese' ? '📖' : theme.key === 'science' ? '🌱' : theme.key === 'math' ? '🍕' : theme.key === 'english' ? '💬' : '📚'}</Text></View>;
+  return <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size, borderRadius: size * .3, backgroundColor: theme.tint, borderWidth: 2, borderColor: theme.line, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={theme.icon} size={size * .55} color={theme.color} /></View>;
+}
+export function LearningTextAction({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
+  const { theme, styles } = useLearningStyles();
+  return <AnimatedPressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
+    style={{ minHeight: 44, paddingVertical: 10, paddingHorizontal: 12, justifyContent: 'center', alignItems: 'center' }}>
+    <Text style={[styles.small, { textAlign: 'center', color: disabled ? theme.inkSoft : theme.violetDeep }]}>{label}</Text>
+  </AnimatedPressable>;
 }
 export function LearningProgress({ value, total, color, height = 10 }: { value: number; total: number; color?: string; height?: number }) {
   const theme = useLearningTheme();
@@ -139,11 +143,11 @@ export const useLearningStyles = createThemedStyles((theme) => StyleSheet.create
   resultStats: { flexDirection: 'row', gap: 8 },
   resultStat: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 2, flex: 1, justifyContent: 'center', minHeight: 78, paddingHorizontal: 4, paddingVertical: 8 },
   resultNumber: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 },
-  resultLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, textAlign: 'center' },
+  resultLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, textAlign: 'center' },
   title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 22, lineHeight: 28 },
-  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16, lineHeight: 22 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 20 },
-  small: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18 },
+  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, lineHeight: 25 },
+  body: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 15, lineHeight: 23 },
+  small: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   button: { minHeight: 54, borderRadius: 18, borderBottomWidth: 5, paddingHorizontal: 20, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
   buttonText: { fontFamily: typography.displayExtraBold, fontSize: 16, lineHeight: 23, textAlign: 'center' },

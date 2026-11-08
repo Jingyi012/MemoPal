@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Card, Flex, Progress, Tag, Typography, theme } from 'antd';
 import type { EducationLearnerStudyItemDto } from '../../../types/educationAuthoring';
 import { useEducationText } from '../i18n/useEducationText';
+import { EducationPatternPreview, studyPatterns } from './EducationPatternPreview';
 
 const fractions: Record<string, [number, number]> = {
   'fraction-half': [2, 1], 'fraction-quarter': [4, 1], 'fraction-three-quarters': [4, 3],
@@ -13,6 +14,7 @@ function Illustration({ code, zh }: { code?: string | null; zh: boolean }) {
   const [parts, shaded] = fraction ?? [0, 0];
   const initial = () => Array.from({ length: parts }, (_, i) => i < shaded);
   const [selected, setSelected] = useState(initial);
+  if (code && Object.hasOwn(studyPatterns, code)) return <EducationPatternPreview key={code} code={code as keyof typeof studyPatterns} zh={zh} />;
   if (fraction) return <Card size="small" style={{ borderRadius: 20 }}>
     <Typography.Title level={5}>{zh ? '动手涂一涂' : 'Colour the equal parts'}</Typography.Title>
     <Typography.Paragraph>{zh ? `一个整体，分成 ${parts} 个同样大的部分。点一点，改变涂色。` : `One whole, split into ${parts} equal parts. Tap to change the shading.`}</Typography.Paragraph>

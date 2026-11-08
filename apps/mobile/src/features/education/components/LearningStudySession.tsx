@@ -2,28 +2,30 @@ import { ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { CompanionLearningPresence } from '@/features/profile/companion/CompanionLearningPresence';
+import { CompanionActor } from '@/features/profile/companion/CompanionActor';
+import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { LearningReadAloud } from './LearningReadAloud';
 import { LearningStudyIllustration } from './LearningStudyIllustration';
 import type { EducationPublicCourseDetail } from '../types/educationPractice.types';
-import { LearningArrival, LearningButton, LearningProgress, useLearningCopy, useLearningStyles, useLearningTheme } from './LearningUi';
+import { LearningArrival, LearningButton, LearningProgress, useLearningCopy, useLearningStyles } from './LearningUi';
 
 type StudyObjective = EducationPublicCourseDetail['objectives'][number];
 export type LearningReadingPosition = { position: number; finished: boolean };
 
 /** Local page position is reading navigation, never a server mastery/score update. */
-export function LearningStudySession({ objective, onFinish, onMemory, practiceTitle, finishLabel, reading, onReadingChange }: {
+export function LearningStudySession({ objective, onFinish, onMemory, practiceTitle, practiceQuestionCount, finishLabel, reading, onReadingChange }: {
   objective: StudyObjective;
   onFinish: () => void;
   onMemory: (id: string) => void;
   practiceTitle?: string;
+  practiceQuestionCount?: number;
   finishLabel?: string;
   reading: LearningReadingPosition;
   onReadingChange: (reading: LearningReadingPosition) => void;
 }) {
   const { styles: s, theme: palette } = useLearningStyles();
-  const theme = useLearningTheme();
   const { zh } = useLearningCopy();
+  const { user } = useCurrentUser();
   const { position, finished } = reading;
   const items = [...objective.studyItems].sort((a, b) => a.position - b.position);
   const index = Math.min(position, Math.max(0, items.length - 1));
@@ -32,28 +34,36 @@ export function LearningStudySession({ objective, onFinish, onMemory, practiceTi
   const memory = objective.recommendedMemorySet;
   const summary = finished || !item;
   return <View style={{ flex: 1 }}>
-    <ScrollView key={summary ? 'summary' : item.id} contentContainerStyle={[s.content, { paddingTop: 4, gap: 18 }]}>
-      <View style={{ gap: 9 }}>
-        <Text style={s.small}>{zh ? '学一点，再试一试' : 'Discover a little. Then try it.'}</Text>
-        <LearningProgress value={finished ? items.length : index} total={items.length} />
-        <Text style={s.small}>{summary ? (zh ? '准备好试一试了吗？' : 'Ready to try it?') : `${zh ? '要点' : 'Idea'} ${index + 1} / ${items.length}`}</Text>
-      </View>
-      {summary ? <LearningArrival style={[s.card, { alignItems: 'center', gap: 16 }]}>
-        <CompanionLearningPresence state="thinking" />
-        <Text accessibilityRole="header" style={s.title}>{item ? (zh ? '现在轮到你啦！' : 'Your turn to try!') : (zh ? '学习内容正在准备' : 'Study content is on its way')}</Text>
-        <Text style={s.body}>{item ? (zh ? '刚刚看过的内容，能自己想起来吗？' : 'Can you recall what you just explored?') : (zh ? '先回到学习路径，看看可以做的练习。' : 'Return to the learning path to explore the available practice.')}</Text>
-        {practiceTitle ? <Text style={[s.small, { color: palette.violetDeep }]}>{practiceTitle}</Text> : null}
-        {items.length ? <AnimatedPressable accessibilityRole="button" onPress={() => onReadingChange({ position: 0, finished: false })} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={[s.small, { color: palette.violetDeep }]}>{zh ? '再看一遍学习卡片' : 'Look through the cards again'}</Text></AnimatedPressable> : null}
+    <ScrollView key={summary ? 'summary' : item.id} contentContainerStyle={[s.content, { paddingTop: 4, gap: 18, flexGrow: summary ? 1 : undefined }]}>
+      {summary ? <View style={{ gap: 8 }}>
+        <View style={{ flexDirection: 'row', gap: 6 }}>{[...items.map(entry => entry.id), 'practice'].map((key, step) => <View key={key} style={{ flex: 1, height: 8, borderRadius: 99, backgroundColor: step < items.length ? palette.violetDeep : palette.line }} />)}</View>
+        <View style={[s.row, { justifyContent: 'space-between', flexWrap: 'wrap' }]}><Text style={[s.small, { color: palette.violetDeep }]}>{items.length ? (zh ? '学习 · 已完成' : 'Study · Complete') : (zh ? '准备练习' : 'Practice ahead')}</Text><Text style={s.small}>{practiceQuestionCount !== undefined ? (zh ? `练习 · ${practiceQuestionCount} 题` : `Practice · ${practiceQuestionCount} questions`) : (zh ? '下一步 · 练习' : 'Next · Practice')}</Text></View>
+      </View> : <View style={[s.row, { gap: 10 }]}>
+        <View style={{ flex: 1 }}><LearningProgress value={index} total={items.length} /></View>
+        <Text style={s.small}>{`${index + 1} / ${items.length}`}</Text>
+      </View>}
+      {summary ? <LearningArrival style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16, paddingVertical: 28 }}>
+        <View style={{ alignItems: 'center', width: '100%', maxWidth: 320 }}>
+          <View style={{ alignSelf: 'flex-end', maxWidth: '85%', borderWidth: 1.5, borderColor: palette.line, backgroundColor: palette.paper, borderRadius: 16, borderBottomLeftRadius: 4, paddingHorizontal: 14, paddingVertical: 9 }}><Text style={[s.small, { color: palette.violetDeep }]}>{zh ? '慢慢想，我陪着你。' : 'Take your time. I’m right here.'}</Text></View>
+          <CompanionActor stage={user?.level ?? 1} size={160} cue={{ action: 'think', sequence: 0 }} />
+        </View>
+        <Text accessibilityRole="header" style={[s.title, { textAlign: 'center' }]}>{item ? (zh ? '现在轮到你啦！' : 'Your turn to try!') : (zh ? '学习内容正在准备' : 'Study content is on its way')}</Text>
+        <Text style={[s.body, { textAlign: 'center' }]}>{item ? (zh ? '刚刚看过的内容，能自己想起来吗？' : 'Can you recall what you just explored?') : (zh ? '先回到学习路径，看看可以做的练习。' : 'Return to the learning path to explore the available practice.')}</Text>
+        {practiceTitle ? <View style={[s.row, { flexWrap: 'wrap', justifyContent: 'center', gap: 8 }]}>
+          {(practiceQuestionCount !== undefined ? [zh ? `${practiceQuestionCount} 道题` : `${practiceQuestionCount} questions`, zh ? `约 ${Math.ceil(practiceQuestionCount * .75)} 分钟` : `About ${Math.ceil(practiceQuestionCount * .75)} min`, zh ? '轻松练习，不计分' : 'Relaxed practice · Ungraded'] : [zh ? '轻松练习，不计分' : 'Relaxed practice · Ungraded']).map(label => <View key={label} style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 99, backgroundColor: palette.violetTint }}><Text style={[s.small, { color: palette.violetDeep }]}>{label}</Text></View>)}
+        </View> : null}
       </LearningArrival> : <LearningArrival style={{ gap: 14 }}>
-        <LinearGradient colors={theme.gradient} start={[0, 0]} end={[1, 1]} style={{ padding: 24, borderRadius: 24, gap: 15, borderBottomWidth: 5, borderBottomColor: theme.line }}>
-          <View style={[s.row, { gap: 10 }]}><Ionicons name="bulb-outline" size={25} color={theme.dark} /><Text style={[s.small, { color: theme.dark }]}>{zh ? '一起发现' : 'LET’S DISCOVER'}</Text></View>
-          <Text accessibilityRole="header" style={[s.title, { color: theme.dark }]}>{item.primary}</Text>
-          {item.phonetic ? <Text style={[s.body, { color: theme.dark }]}>{item.phonetic}</Text> : null}
-          {item.languageCode ? <LearningReadAloud key={item.id} text={item.primary} language={item.languageCode} /> : null}
+        <LinearGradient colors={palette.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={{ padding: 20, borderRadius: 24, gap: 15, overflow: 'hidden' }}>
+          <View style={[s.row, { gap: 10, alignItems: 'flex-start' }]}>
+            <View style={[s.row, { flex: 1, minHeight: 44 }]}><Ionicons name="bulb-outline" size={25} color="#FFFFFF" /><Text style={[s.small, { color: '#FFFFFF', flex: 1 }]}>{zh ? '一起发现' : 'LET’S DISCOVER'}</Text></View>
+            {item.languageCode ? <LearningReadAloud key={item.id} text={item.primary} language={item.languageCode} /> : null}
+          </View>
+          <Text accessibilityRole="header" style={[s.title, { color: '#FFFFFF', fontSize: item.primary.length <= 4 ? 36 : 26, lineHeight: item.primary.length <= 4 ? 46 : 34 }]}>{item.primary}</Text>
+          {item.phonetic ? <Text style={[s.body, { color: '#FFFFFF' }]}>{item.phonetic}</Text> : null}
         </LinearGradient>
         <LearningStudyIllustration key={item.id} code={item.illustrationCode} />
-        {item.secondary && item.secondary.trim() !== item.primary.trim() ? <View style={s.card}><Text style={s.body}>{item.secondary}</Text></View> : null}
-        {item.extra && item.extra.trim() !== item.primary.trim() && item.extra.trim() !== item.secondary?.trim() ? <View style={[s.card, { backgroundColor: palette.violetTint }]}><Text style={[s.small, { color: palette.violetDeep }]}>{zh ? '再想一想' : 'A LITTLE MORE'}</Text><Text style={s.body}>{item.extra}</Text></View> : null}
+        {item.secondary && item.secondary.trim() !== item.primary.trim() ? <View style={{ paddingHorizontal: 4 }}><Text style={s.body}>{item.secondary}</Text></View> : null}
+        {item.extra && item.extra.trim() !== item.primary.trim() && item.extra.trim() !== item.secondary?.trim() ? <View style={{ gap: 6, padding: 16, borderRadius: 18, backgroundColor: palette.violetTint }}><Text style={[s.small, { color: palette.violetDeep }]}>{zh ? '再想一想' : 'A LITTLE MORE'}</Text><Text style={s.body}>{item.extra}</Text></View> : null}
       </LearningArrival>}
       {summary && memory ? <AnimatedPressable accessibilityRole="button" onPress={() => onMemory(memory.id)} style={[s.card, { flexDirection: 'row', alignItems: 'center', gap: 12 }]}>
         <Ionicons name="sparkles-outline" size={26} color={palette.violetDeep} />
@@ -61,10 +71,15 @@ export function LearningStudySession({ objective, onFinish, onMemory, practiceTi
         <Ionicons name="chevron-forward" size={20} color={palette.violetDeep} />
       </AnimatedPressable> : null}
     </ScrollView>
-    <View style={[s.dock, { gap: 10 }]}>
-      {!summary && index > 0 ? <AnimatedPressable accessibilityRole="button" onPress={() => onReadingChange({ position: index - 1, finished: false })} style={{ minHeight: 44, justifyContent: 'center', alignItems: 'center' }}><Text style={[s.small, { color: palette.violetDeep }]}>{zh ? '← 上一个要点' : '← Previous idea'}</Text></AnimatedPressable> : null}
-      <LearningButton label={summary ? finishLabel ?? (practiceTitle ? (zh ? '开始练习' : 'Start practice') : (zh ? '返回学习路径' : 'Back to the learning path')) : last ? (zh ? '看完了，试一试' : 'Ready to try') : (zh ? '下一个要点' : 'Next idea')}
-        onPress={() => { if (summary) onFinish(); else onReadingChange({ position: last ? index : index + 1, finished: last }); }} />
+    <View style={[s.dock, { flexDirection: summary ? 'column' : 'row', alignItems: 'stretch', gap: 12 }]}>
+      {summary && items.length ? <LearningButton secondary label={zh ? '再看一遍学习卡片' : 'Review the study cards'} onPress={() => onReadingChange({ position: 0, finished: false })} /> : null}
+      {!summary ? <View style={{ flex: 1, minWidth: 0 }}>
+        {index > 0 ? <LearningButton secondary label={zh ? '上一个要点' : 'Previous idea'} onPress={() => onReadingChange({ position: index - 1, finished: false })} /> : null}
+      </View> : null}
+      <View style={{ flex: summary ? undefined : 1, minWidth: 0 }}>
+        <LearningButton label={summary ? finishLabel ?? (practiceTitle ? (zh ? '开始练习' : 'Start practice') : (zh ? '返回学习路径' : 'Back to the learning path')) : last ? (zh ? '看完了，试一试' : 'Ready to try') : (zh ? '下一个要点' : 'Next idea')}
+          onPress={() => { if (summary) onFinish(); else onReadingChange({ position: last ? index : index + 1, finished: last }); }} />
+      </View>
     </View>
   </View>;
 }

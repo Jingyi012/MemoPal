@@ -35,12 +35,12 @@ export function EducationAccountIdCard({ accountId }: Readonly<{ accountId: stri
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: 16, borderWidth: 1.5, gap: 10, padding: 14 },
+  card: { backgroundColor: theme.violetTint, borderColor: theme.line, borderRadius: 22, borderWidth: 2, gap: 10, padding: 14 },
   content: { gap: 5 },
   title: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  accountId: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18 },
-  description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17 },
-  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 11, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
+  accountId: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
+  description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21 },
+  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 16, borderBottomWidth: 4, borderColor: theme.primaryShadow, paddingVertical: 10, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
   actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 17 },
+  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
 }));
