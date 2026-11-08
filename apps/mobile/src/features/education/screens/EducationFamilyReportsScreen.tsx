@@ -7,7 +7,7 @@ import { useEducationFamilyChildren, useEducationFamilyReport } from '@/features
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { LearningSkeleton, useLearningCopy } from '../components/LearningUi';
 
@@ -34,7 +34,7 @@ export default function EducationFamilyReportsScreen() {
         ) : (
           <>
             <LinearGradient colors={theme.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={styles.hero}>
-              <Ionicons name="heart-outline" size={30} color="#FFFFFF" />
+              <Ionicons name="heart-outline" size={30} color={theme.heroInk} />
               <Text style={styles.heroTitle}>{zh ? '看见每一点进步' : 'See every little step'}</Text>
               <Text style={styles.heroBody}>{copy.familyReportsDescription}</Text>
             </LinearGradient>
@@ -81,8 +81,8 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { backgroundColor: theme.canvas, flex: 1 },
   content: { gap: 18, padding: 16, paddingBottom: 36 },
   hero: { borderRadius: 26, padding: 22, gap: 12, borderBottomWidth: 6, borderColor: theme.primaryShadow },
-  heroTitle: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 24, lineHeight: 31 },
-  heroBody: { color: '#FFFFFF', fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
+  heroTitle: { color: theme.heroInk, fontFamily: typography.displayExtraBold, fontSize: 24, lineHeight: 31 },
+  heroBody: { color: theme.heroInk, fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
   description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
   childList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   childChip: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 2, borderBottomWidth: 4, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 10, maxWidth: '100%' },

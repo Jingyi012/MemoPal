@@ -1,5 +1,5 @@
 import { ScrollView, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CompanionActor } from '@/features/profile/companion/CompanionActor';
@@ -55,13 +55,13 @@ export function LearningStudySession({ objective, onFinish, onMemory, practiceTi
       </LearningArrival> : <LearningArrival style={{ gap: 14 }}>
         <LinearGradient colors={palette.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={{ padding: 20, borderRadius: 24, gap: 15, overflow: 'hidden' }}>
           <View style={[s.row, { gap: 10, alignItems: 'flex-start' }]}>
-            <View style={[s.row, { flex: 1, minHeight: 44 }]}><Ionicons name="bulb-outline" size={25} color="#FFFFFF" /><Text style={[s.small, { color: '#FFFFFF', flex: 1 }]}>{zh ? '一起发现' : 'LET’S DISCOVER'}</Text></View>
+            <View style={[s.row, { flex: 1, minHeight: 44 }]}><Ionicons name="bulb-outline" size={25} color={palette.heroInk} /><Text style={[s.small, { color: palette.heroInk, flex: 1 }]}>{zh ? '一起发现' : 'LET’S DISCOVER'}</Text></View>
             {item.languageCode ? <LearningReadAloud key={item.id} text={item.primary} language={item.languageCode} /> : null}
           </View>
-          <Text accessibilityRole="header" style={[s.title, { color: '#FFFFFF', fontSize: item.primary.length <= 4 ? 36 : 26, lineHeight: item.primary.length <= 4 ? 46 : 34 }]}>{item.primary}</Text>
-          {item.phonetic ? <Text style={[s.body, { color: '#FFFFFF' }]}>{item.phonetic}</Text> : null}
+          <Text accessibilityRole="header" style={[s.title, { color: palette.heroInk, fontSize: item.primary.length <= 4 ? 36 : 26, lineHeight: item.primary.length <= 4 ? 46 : 34 }]}>{item.primary}</Text>
+          {item.phonetic ? <Text style={[s.body, { color: palette.heroInk }]}>{item.phonetic}</Text> : null}
         </LinearGradient>
-        <LearningStudyIllustration key={item.id} code={item.illustrationCode} />
+        <LearningStudyIllustration key={item.id} code={item.illustrationCode} label={item.primary} />
         {item.secondary && item.secondary.trim() !== item.primary.trim() ? <View style={{ paddingHorizontal: 4 }}><Text style={s.body}>{item.secondary}</Text></View> : null}
         {item.extra && item.extra.trim() !== item.primary.trim() && item.extra.trim() !== item.secondary?.trim() ? <View style={{ gap: 6, padding: 16, borderRadius: 18, backgroundColor: palette.violetTint }}><Text style={[s.small, { color: palette.violetDeep }]}>{zh ? '再想一想' : 'A LITTLE MORE'}</Text><Text style={s.body}>{item.extra}</Text></View> : null}
       </LearningArrival>}

@@ -1,5 +1,5 @@
 import { LearningProgress } from './LearningUi';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { LearningAppButton as AppButton } from '@/features/education/components/LearningAppButton';

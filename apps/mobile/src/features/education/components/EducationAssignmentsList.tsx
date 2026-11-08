@@ -4,7 +4,7 @@ import { useEducationCopy } from '@/features/education/i18n';
 import { StyleSheet, Text, View } from 'react-native';
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LearningSkeleton, useLearningCopy } from './LearningUi';
 import { getEducationAssignmentStatus } from '../utils/educationAssignmentStatus';
 import { useAuth } from '@/contexts/AuthProvider';
@@ -48,7 +48,7 @@ export function EducationAssignmentsList({
     <View style={styles.section}>
       {workspace && (isLoading || isError || assignments.length > 0) ? <LinearGradient colors={theme.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={styles.hero}>
         <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-          <View style={styles.heroIcon}><Ionicons name="rocket-outline" size={30} color="#FFFFFF" /></View>
+          <View style={styles.heroIcon}><Ionicons name="rocket-outline" size={30} color={theme.heroInk} /></View>
           <View style={{ flex: 1, gap: 6 }}>
             <Text accessibilityRole="header" style={styles.heroTitle}>{zh ? '每次一小步' : 'One little step at a time'}</Text>
             <Text style={styles.heroBody}>{isLoading || isError ? (zh ? '和伙伴一起，探索今天的任务' : 'Explore your learning missions') : openCount ? (zh ? `${openCount} 个任务已开放，挑一个看看吧` : `${openCount} ${openCount === 1 ? 'assignment is' : 'assignments are'} open. Pick one to explore.`) : (zh ? '在这里找到家人和老师安排的学习' : 'Find learning from your family and teachers here')}</Text>
@@ -93,9 +93,9 @@ export function EducationAssignmentsList({
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   section: { gap: 9 },
   hero: { borderRadius: 26, padding: 20, marginBottom: 10, borderBottomWidth: 6, borderColor: theme.primaryShadow },
-  heroIcon: { width: 52, height: 52, borderRadius: 18, backgroundColor: '#FFFFFF22', alignItems: 'center', justifyContent: 'center' },
-  heroTitle: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 22, lineHeight: 29 },
-  heroBody: { color: '#FFFFFF', fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 20 },
+  heroIcon: { width: 52, height: 52, borderRadius: 18, backgroundColor: theme.heroOverlay, alignItems: 'center', justifyContent: 'center' },
+  heroTitle: { color: theme.heroInk, fontFamily: typography.displayExtraBold, fontSize: 22, lineHeight: 29 },
+  heroBody: { color: theme.heroInk, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 20 },
   chip: { borderRadius: 16, borderWidth: 2, borderBottomWidth: 4, borderColor: theme.line, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44, justifyContent: 'center' },
   chipText: { fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18 },
   empty: { alignItems: 'center', gap: 12, padding: 24, borderRadius: 24, borderWidth: 2, borderBottomWidth: 6, borderColor: theme.line, backgroundColor: theme.paper },

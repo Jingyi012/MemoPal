@@ -1,23 +1,18 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import Svg, { Circle, Polygon, Rect } from 'react-native-svg';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useLearningCopy, useLearningStyles, useLearningTheme } from './LearningUi';
-import { LearningPatternExplorer, learningPatterns } from './LearningPatternExplorer';
+import { LearningPatternExplorer } from './LearningPatternExplorer';
 
-const fractions: Record<string, { parts: number; shaded: number }> = {
-  'fraction-half': { parts: 2, shaded: 1 },
-  'fraction-quarter': { parts: 4, shaded: 1 },
-  'fraction-three-quarters': { parts: 4, shaded: 3 },
-};
+import { parseStudyIllustration, type StudyIllustration } from '../utils/studyIllustrations';
 
-export function LearningStudyIllustration({ code }: { code?: string | null }) {
-  if (!code) return null;
-  if (Object.hasOwn(learningPatterns, code)) return <LearningPatternExplorer key={code} code={code as keyof typeof learningPatterns} />;
-  const fraction = fractions[code];
-  if (fraction) return <FractionExplorer key={code} {...fraction} />;
-  if (code === 'shape-circle' || code === 'shape-triangle' || code === 'shape-square') return <ShapeIllustration key={code} code={code} />;
-  return null;
+export function LearningStudyIllustration({ code, label }: { code?: string | null; label?: string }) {
+  const illustration = parseStudyIllustration(code);
+  if (!illustration) return null;
+  if (illustration.kind === 'pattern') return <LearningPatternExplorer key={code} code={code!} />;
+  if (illustration.kind === 'fraction') return <FractionExplorer key={code} parts={illustration.parts} shaded={illustration.shaded} />;
+  return <ShapeIllustration key={code} illustration={illustration} label={label} />;
 }
 
 function FractionExplorer({ parts, shaded }: { parts: number; shaded: number }) {
@@ -30,7 +25,8 @@ function FractionExplorer({ parts, shaded }: { parts: number; shaded: number }) 
   return <View style={[s.card, { gap: 14, borderColor: subject.line, backgroundColor: theme.paper }]}>
     <Text accessibilityRole="header" style={s.heading}>{zh ? '动手涂一涂' : 'Colour the equal parts'}</Text>
     <Text style={s.small}>{zh ? `这一个整体分成 ${parts} 个同样大的部分。点一点，改变涂色。` : `One whole, split into ${parts} equal parts. Tap to change the shading.`}</Text>
-    <View style={{ flexDirection: 'row', borderRadius: 16, borderWidth: 2, borderColor: subject.color, overflow: 'hidden' }}>
+    <ScrollView horizontal nestedScrollEnabled contentContainerStyle={{ minWidth: '100%' }} style={{ width: '100%' }}>
+    <View style={{ minWidth: parts * 44, flex: 1, flexDirection: 'row', borderRadius: 16, borderWidth: 2, borderColor: subject.color, overflow: 'hidden' }}>
       {selected.map((active, index) => <AnimatedPressable key={index} accessibilityRole="checkbox" accessibilityState={{ checked: active }}
         accessibilityLabel={zh ? `第 ${index + 1} 等份` : `Equal part ${index + 1}`}
         onPress={() => setSelected(current => current.map((value, i) => i === index ? !value : value))}
@@ -38,6 +34,8 @@ function FractionExplorer({ parts, shaded }: { parts: number; shaded: number }) 
         <Text style={[s.heading, { color: active ? theme.onAccent : theme.inkSoft }]}>{active ? '✓' : '·'}</Text>
       </AnimatedPressable>)}
     </View>
+    </ScrollView>
+    {parts > 4 ? <Text style={s.small}>{zh ? '左右滑动查看所有等份' : 'Swipe sideways to see all parts'}</Text> : null}
     <Text accessibilityLiveRegion="polite" style={s.body}>{zh ? `你涂了 ${count}/${parts}：${parts} 等份中的 ${count} 份。` : `You shaded ${count}/${parts}: ${count} of ${parts} equal parts.`}</Text>
     <AnimatedPressable accessibilityRole="button" onPress={() => setSelected(initial())} style={{ minHeight: 44, justifyContent: 'center', alignItems: 'center' }}>
       <Text style={[s.small, { color: subject.color }]}>{zh ? `回到例子 ${shaded}/${parts}` : `Reset to ${shaded}/${parts}`}</Text>
@@ -45,27 +43,24 @@ function FractionExplorer({ parts, shaded }: { parts: number; shaded: number }) 
   </View>;
 }
 
-function ShapeIllustration({ code }: { code: string }) {
+function ShapeIllustration({ illustration, label }: { illustration: Extract<StudyIllustration, { kind: 'shape' }>; label?: string }) {
   const { styles: s, theme } = useLearningStyles();
   const subject = useLearningTheme();
   const { zh } = useLearningCopy();
   const [visited, setVisited] = useState<number[]>([]);
-  const corners: readonly (readonly [number, number])[] = code === 'shape-triangle' ? [[100, 26], [174, 164], [26, 164]]
-    : code === 'shape-square' ? [[42, 42], [158, 42], [158, 158], [42, 158]] : [];
+  const corners: readonly (readonly [number, number])[] = illustration.shape === 'triangle' ? [[100, 26], [174, 164], [26, 164]]
+    : illustration.shape === 'square' ? [[42, 42], [158, 42], [158, 158], [42, 158]] : Array.from({ length: illustration.sides }, (_, index) => { const angle = -Math.PI / 2 + index * 2 * Math.PI / illustration.sides; return [100 + 72 * Math.cos(angle), 100 + 72 * Math.sin(angle)] as const; });
   const complete = corners.length > 0 && visited.length === corners.length;
-  const label = code === 'shape-circle' ? (zh ? '圆：没有角' : 'Circle: no corners')
-    : code === 'shape-triangle' ? (zh ? '三角形：3 条直边，3 个角' : 'Triangle: 3 straight sides and 3 corners')
-      : (zh ? '正方形：4 条等长直边，4 个直角' : 'Square: 4 equal straight sides and 4 right angles');
   return <View style={[s.card, { alignItems: 'center', gap: 12, backgroundColor: theme.paper, borderColor: subject.line }]}>
-    <Text accessibilityRole="header" style={s.heading}>{zh ? '一起找找角' : 'Let’s explore the corners'}</Text>
+    <Text accessibilityRole="header" style={s.heading}>{zh ? '一起探索图示' : 'Explore the diagram'}</Text>
     <Text style={s.body}>{corners.length
       ? (zh ? '点一点图形上的圆点，数数有几个角。' : 'Tap the dots on the shape and count its corners.')
-      : (zh ? '沿着圆边看一圈：圆没有直边，也没有角。' : 'Follow the curved edge around: a circle has no straight sides or corners.')}</Text>
+      : (zh ? '探索图示，结合学习内容想一想。' : 'Explore the diagram alongside the study content.')}</Text>
     <View style={{ width: 200, height: 200 }}>
-      <View accessible accessibilityRole="image" accessibilityLabel={label}>
+      <View accessible accessibilityRole="image" accessibilityLabel={label ?? (zh ? '教学图示' : 'Teaching diagram')}>
         <Svg width={200} height={200} viewBox="0 0 200 200">
-          {code === 'shape-circle' ? <Circle cx={100} cy={100} r={72} fill={subject.tint} stroke={subject.color} strokeWidth={5} />
-            : code === 'shape-triangle' ? <Polygon points="100,26 174,164 26,164" fill={subject.tint} stroke={subject.color} strokeWidth={5} strokeLinejoin="round" />
+          {illustration.shape === 'circle' ? <Circle cx={100} cy={100} r={72} fill={subject.tint} stroke={subject.color} strokeWidth={5} />
+            : illustration.shape !== 'square' ? <Polygon points={corners.map(point => point.join(',')).join(' ')} fill={subject.tint} stroke={subject.color} strokeWidth={5} strokeLinejoin="round" />
               : <Rect x={42} y={42} width={116} height={116} fill={subject.tint} stroke={subject.color} strokeWidth={5} />}
         </Svg>
       </View>
@@ -84,9 +79,7 @@ function ShapeIllustration({ code }: { code: string }) {
         </AnimatedPressable>;
       })}
     </View>
-    <Text accessibilityLiveRegion="polite" style={[s.body, { color: theme.ink }]}>{complete ? `✓ ${label}` : corners.length
-      ? (zh ? `已经找到 ${visited.length} 个角` : `${visited.length} corners found`)
-      : label}</Text>
+    {corners.length > 0 ? <Text accessibilityLiveRegion="polite" style={[s.body, { color: theme.ink }]}>{complete ? '✓ ' : ''}{zh ? `已经找到 ${visited.length} 个角` : `${visited.length} corners found`}</Text> : null}
     {corners.length > 0 ? <AnimatedPressable accessibilityRole="button" disabled={!visited.length} accessibilityState={{ disabled: !visited.length }} onPress={() => setVisited([])} style={{ minHeight: 44, justifyContent: 'center' }}>
       <Text style={[s.small, { color: visited.length ? subject.color : theme.inkSoft }]}>{zh ? '再数一次' : 'Count again'}</Text>
     </AnimatedPressable> : null}

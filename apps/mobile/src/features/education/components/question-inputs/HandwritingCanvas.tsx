@@ -1,4 +1,4 @@
-import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
+import { createLearningStyles as createThemedStyles, learningTypography as typography, learningDocumentColors } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import type { EducationResponseAttachmentFile } from '@/features/education/types/question.types';
@@ -263,9 +263,9 @@ export function HandwritingCanvas({ identity, onUpload, onSaved, onWorkChange, l
         <GestureDetector gesture={gesture}>
           <View ref={captureViewRef} collapsable={false} style={styles.canvasTouch} onLayout={onCanvasLayout}>
             <Svg width="100%" height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" style={styles.svg}>
-              <Path d={`M0 0 H${WIDTH} V${HEIGHT} H0 Z`} fill="#FFFFFF" />
-              {grid ? Array.from({ length: Math.floor(WIDTH / GRID_STEP) + 1 }, (_, index) => <Line key={`v${index}`} x1={index * GRID_STEP} y1="0" x2={index * GRID_STEP} y2={HEIGHT} stroke="#E8EDF4" strokeWidth="0.7" />) : null}
-              {grid ? Array.from({ length: Math.floor(HEIGHT / GRID_STEP) + 1 }, (_, index) => <Line key={`h${index}`} x1="0" y1={index * GRID_STEP} x2={WIDTH} y2={index * GRID_STEP} stroke="#E8EDF4" strokeWidth="0.7" />) : null}
+              <Path d={`M0 0 H${WIDTH} V${HEIGHT} H0 Z`} fill={learningDocumentColors.paper} />
+              {grid ? Array.from({ length: Math.floor(WIDTH / GRID_STEP) + 1 }, (_, index) => <Line key={`v${index}`} x1={index * GRID_STEP} y1="0" x2={index * GRID_STEP} y2={HEIGHT} stroke={learningDocumentColors.grid} strokeWidth="0.7" />) : null}
+              {grid ? Array.from({ length: Math.floor(HEIGHT / GRID_STEP) + 1 }, (_, index) => <Line key={`h${index}`} x1="0" y1={index * GRID_STEP} x2={WIDTH} y2={index * GRID_STEP} stroke={learningDocumentColors.grid} strokeWidth="0.7" />) : null}
               {currentStrokes.map((stroke, index) => renderStroke(stroke, index))}
             </Svg>
           </View>
@@ -305,9 +305,9 @@ export function HandwritingCanvas({ identity, onUpload, onSaved, onWorkChange, l
 }
 
 function renderStroke(stroke: HandwritingStroke, index: number) {
-  if (stroke.length === 1) return <Circle key={`dot-${index}`} cx={stroke[0].x} cy={stroke[0].y} r="2.8" fill="#172033" />;
+  if (stroke.length === 1) return <Circle key={`dot-${index}`} cx={stroke[0].x} cy={stroke[0].y} r="2.8" fill={learningDocumentColors.ink} />;
   const path = stroke.map((point, pointIndex) => `${pointIndex === 0 ? 'M' : 'L'}${point.x},${point.y}`).join(' ');
-  return <Path key={`stroke-${index}`} d={path} fill="none" stroke="#172033" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />;
+  return <Path key={`stroke-${index}`} d={path} fill="none" stroke={learningDocumentColors.ink} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />;
 }
 
 function Action({ label, onPress, disabled, selected = false, primary = false }: { label: string; onPress: () => void; disabled: boolean; selected?: boolean; primary?: boolean }) {
@@ -320,8 +320,8 @@ function Action({ label, onPress, disabled, selected = false, primary = false }:
 
 const useStyles = createThemedStyles(theme => StyleSheet.create({
   canvasFrame: { alignSelf: 'stretch', borderColor: theme.line, borderRadius: 12, borderWidth: 1, overflow: 'hidden' },
-  canvasTouch: { backgroundColor: '#FFFFFF', height: HEIGHT, width: '100%' },
-  svg: { backgroundColor: '#FFFFFF' },
+  canvasTouch: { backgroundColor: learningDocumentColors.paper, height: HEIGHT, width: '100%' },
+  svg: { backgroundColor: learningDocumentColors.paper },
   controls: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   action: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 10, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingHorizontal: 12 },
   toggle: { alignSelf: 'flex-start' },
@@ -330,7 +330,7 @@ const useStyles = createThemedStyles(theme => StyleSheet.create({
   disabled: { opacity: 0.5 },
   actionText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
   primaryText: { color: theme.onAccent },
-  preview: { alignSelf: 'stretch', height: 180, backgroundColor: '#FFFFFF', borderRadius: 10 },
+  preview: { alignSelf: 'stretch', height: 180, backgroundColor: learningDocumentColors.paper, borderRadius: 10 },
 }));
 
 function invalidateEpoch(epochRef: { current: number }) {

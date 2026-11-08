@@ -5,7 +5,7 @@ import type { MyEducationAssignment } from '@/features/education/types/education
 import { useEducationCopy } from '@/features/education/i18n';
 import { getEducationAssignmentStatus } from '@/features/education/utils/educationAssignmentStatus';
 import { StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLearningCopy } from './LearningUi';
 
 type EducationAssignmentCardProps = Readonly<{

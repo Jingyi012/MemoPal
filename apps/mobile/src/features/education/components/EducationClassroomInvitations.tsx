@@ -4,7 +4,7 @@ import { useEducationCopy } from '@/features/education/i18n';
 import type { EducationClassroomMembership } from '@/features/education/types/educationRelationship.types';
 import { getPendingEducationInvitations } from '../utils/classroomInvitations';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 type EducationClassroomInvitationsProps = Readonly<{
   memberships: readonly EducationClassroomMembership[];

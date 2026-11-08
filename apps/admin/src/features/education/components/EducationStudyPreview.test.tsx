@@ -20,10 +20,20 @@ describe('EducationStudyPreview', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset to 1/2' }));
     expect(screen.getByText('You shaded 1/2')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    expect(screen.getByRole('img', { name: /Square: 4 equal/ })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'A square' })).toBeInTheDocument();
     expect(screen.queryByText('One half')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
     expect(screen.getByText('You shaded 1/2')).toBeInTheDocument();
   });
+});
+
+it('previews authored fraction parameters and polygons outside the starter examples',()=>{
+ localStorage.setItem('memopal.admin.language','en');
+ const custom=[{...items[0],illustrationCode:'fraction-3-7',primary:'Authored fraction'},{...items[1],illustrationCode:'shape-polygon-5',primary:'Authored polygon'}];
+ render(<AdminLanguageProvider><EducationStudyPreview items={custom} /></AdminLanguageProvider>);
+ expect(screen.getAllByRole('checkbox')).toHaveLength(7);
+ expect(screen.getByText('You shaded 3/7')).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Next'}));
+ expect(screen.getByRole('img',{name:'Authored polygon'}).querySelector('polygon')?.getAttribute('points')?.split(' ')).toHaveLength(5);
 });

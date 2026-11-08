@@ -1,3 +1,4 @@
+import { EducationObjectiveTitleEditor } from '../components/EducationObjectiveTitleEditor';
 import { Card, Result, Spin } from 'antd';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../../../auth/AuthContext';
@@ -28,6 +29,9 @@ export default function EducationObjectivePage() {
       const objective = objectives.find(item => item.id === objectiveId);
       if (!objective) return <Result status="404" title="404" subTitle={t('loadError')} />;
       return <>
+        <Card style={{ marginBottom: 20 }}>
+          <EducationObjectiveTitleEditor title={objective.title} loading={data.updateObjectiveTitle.isPending} onSave={async title => { await data.updateObjectiveTitle.mutateAsync({objectiveId: objective.id, title}); }} />
+        </Card>
         <Card title={`${objective.title} · ${t('memoryRecommendation')}`} style={{ marginBottom: 20 }}>
           <EducationObjectiveMemoryRecommendationEditor
             objectiveId={objective.id}

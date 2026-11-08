@@ -1,3 +1,4 @@
+import { LearningIconButton } from '../components/LearningIconButton';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -9,7 +10,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { studyObjectivesForLesson } from '../utils/educationObjectiveLesson';
 import { LearningMemoryCard } from '../components/LearningMemoryCard';
 import { LearningArrival, LearningButton, LearningProgress, LearningSkeleton, SubjectArtwork, LearningThemeContext, useLearningStyles, learningThemeFor, useLearningCopy } from '../components/LearningUi';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEducationGuidedCourseProgress, useEducationPublicCourse, useEducationPublicCourseSave, useReportEducationCourse, useStartOrResumeEducationGuidedSession } from '@/features/education/hooks/useEducationPracticeItems';
@@ -99,8 +100,8 @@ export default function EducationPublicCourseScreen() {
           : <>
             <LearningArrival><LinearGradient colors={palette.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={ls.courseHero}>
               <View style={{ position: 'absolute', right: 12, top: 10 }}><SubjectArtwork theme={subjectTheme} size={60} /></View>
-              <View style={{ paddingRight: 64, gap: 4 }}><Text numberOfLines={2} accessibilityRole="header" style={[ls.title, { color: '#FFFFFF' }]}>{course.data.title}</Text><Text style={[ls.small, { color: '#FFFFFF' }]}>{copy.publicCourseAuthor(course.data.authorDisplayName)} · {guidedProgress.isLoading ? '…' : guidedProgress.isError ? '—' : ui.correct(solved, total)}</Text></View>
-              <LearningProgress value={solved} total={total} color="#FFFFFF" />
+              <View style={{ paddingRight: 64, gap: 4 }}><Text numberOfLines={2} accessibilityRole="header" style={[ls.title, { color: palette.heroInk }]}>{course.data.title}</Text><Text style={[ls.small, { color: palette.heroInk }]}>{copy.publicCourseAuthor(course.data.authorDisplayName)} · {guidedProgress.isLoading ? '…' : guidedProgress.isError ? '—' : ui.correct(solved, total)}</Text></View>
+              <LearningProgress value={solved} total={total} color={palette.heroInk} />
             </LinearGradient></LearningArrival>
             {saveCourse.isError ? <Text accessibilityRole="alert" style={styles.saveError}>{copy.savePublicCourseError}</Text> : null}
             <AnimatedPressable accessibilityState={{ expanded: noteOpen }} onPress={() => setNoteOpen(value => !value)} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={ls.small}>ⓘ {ui.note} {noteOpen ? '−' : '+'}</Text></AnimatedPressable>
@@ -124,9 +125,9 @@ export default function EducationPublicCourseScreen() {
     <Modal visible={focused && !!studyPrelude && !!preludeObjective} animationType={reduceMotion ? 'none' : 'slide'} onRequestClose={() => setStudyPrelude(null)}>
       <View style={[ls.page, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <View style={[ls.row, { padding: 18 }]}>
-          {reading.finished ? <AnimatedPressable accessibilityRole="button" accessibilityLabel={ui.close} onPress={() => setStudyPrelude(null)} style={{ height: 44, width: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: palette.line, backgroundColor: palette.paper, borderRadius: 14 }}><Ionicons name="close" size={24} color={palette.violetDeep} /></AnimatedPressable> : null}
+          {reading.finished ? <LearningIconButton icon="close" label={ui.close} onPress={() => setStudyPrelude(null)} /> : null}
           <Text accessibilityRole="header" style={[ls.heading, { flex: 1 }]}>{preludeObjective?.title}</Text>
-          {!reading.finished ? <AnimatedPressable accessibilityRole="button" accessibilityLabel={ui.close} onPress={() => setStudyPrelude(null)} style={{ minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="close" size={26} color={theme.ink} /></AnimatedPressable> : null}
+          {!reading.finished ? <LearningIconButton variant="plain" icon="close" label={ui.close} onPress={() => setStudyPrelude(null)} /> : null}
         </View>
         {studyPrelude && preludeObjective ? <LearningStudySession key={preludeObjective.id} objective={preludeObjective}
           reading={reading} onReadingChange={setReading}
@@ -141,7 +142,7 @@ export default function EducationPublicCourseScreen() {
       </View>
     </Modal>
     <Modal transparent visible={menuOpen} animationType={reduceMotion ? 'none' : 'fade'} onRequestClose={() => setMenuOpen(false)}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(20,40,25,.3)', justifyContent: 'flex-end', padding: 20, paddingBottom: Math.max(20, insets.bottom) }}><View style={ls.card}>
+      <View style={{ flex: 1, backgroundColor: palette.scrim, justifyContent: 'flex-end', padding: 20, paddingBottom: Math.max(20, insets.bottom) }}><View style={ls.card}>
         <LearningButton secondary label={copy.sharePublicCourse} onPress={shareCourse} />
         <LearningButton secondary label={copy.reportPublicCourse} onPress={() => { setMenuOpen(false); setReportOpen(true); }} />
         <LearningButton secondary label={ui.close} onPress={() => setMenuOpen(false)} />

@@ -54,6 +54,11 @@ export function useEducationCourse(userId: string, courseId: string) {
   ]);
   const onError = (error: unknown) => message.error(extractApiErrorMessage(error, 'Could not complete the request. Please try again.'));
   const createObjective = useMutation({ mutationFn: (input: { title: string; recommendedMemorySetId?: string }) => educationAuthoringApi.createObjective(courseId, input.title, input.recommendedMemorySetId), onSuccess: async () => { await refresh(); message.success('Learning objective created.'); }, onError, meta: { suppressGlobalErrorToast: true }, retry: false });
+  const updateObjectiveTitle = useMutation({
+    mutationFn: ({ objectiveId, title }: { objectiveId: string; title: string }) => educationAuthoringApi.updateObjectiveTitle(courseId, objectiveId, title),
+    onSuccess: async () => { await refresh(); message.success('Learning objective updated.'); },
+    onError, meta: { suppressGlobalErrorToast: true }, retry: false,
+  });
   const setMemoryRecommendation = useMutation({
     mutationFn: (input: { objectiveId: string; recommendedMemorySetId: string | null }) =>
       educationAuthoringApi.setObjectiveMemoryRecommendation(courseId, input.objectiveId, input.recommendedMemorySetId),
@@ -77,7 +82,7 @@ export function useEducationCourse(userId: string, courseId: string) {
     },
     onError, meta: { suppressGlobalErrorToast: true }, retry: false,
   });
-  return { objectives, assessments, memorySets, createObjective, setMemoryRecommendation, createAssessment,
+  return { objectives, assessments, memorySets, createObjective, updateObjectiveTitle, setMemoryRecommendation, createAssessment,
     createRevisionDraft, setAssessmentPublicPractice };
 }
 

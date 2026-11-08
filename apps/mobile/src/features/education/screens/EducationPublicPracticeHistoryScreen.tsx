@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthProvider';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function EducationPublicPracticeHistoryScreen() {
   const copy = useEducationCopy();

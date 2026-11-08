@@ -14,6 +14,13 @@ public sealed class EducationStudyIllustrationsTests
     [InlineData("media:private-upload", null)]
     [InlineData("media:learning-fraction-half-extra", null)]
     [InlineData("https://example.test/private.png", null)]
+    [InlineData("media:learning-fraction-3-7", "fraction-3-7")]
+    [InlineData("media:learning-fraction-8-7", null)]
+    [InlineData("media:learning-fraction-1-13", null)]
+    [InlineData("media:learning-shape-polygon-5", "shape-polygon-5")]
+    [InlineData("media:learning-shape-polygon-30", null)]
+    [InlineData("media:learning-pattern-blue-square-red", "pattern-blue-square-red")]
+    [InlineData("media:learning-pattern-red-private", null)]
     [InlineData(null, null)]
     public void Only_explicit_public_diagrams_are_projected(string? reference, string? expected)
         => Assert.Equal(expected, EducationStudyIllustrations.FromMediaReference(reference));

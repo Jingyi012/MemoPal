@@ -3,7 +3,7 @@ import { useReducedMotion } from 'react-native-reanimated';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
 import { LearningThemeContext, LearningSkeleton, learningThemeFor } from '../components/LearningUi';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { EducationGuidedLearningPlayer } from '@/features/education/components/EducationGuidedLearningPlayer';
 import { EDUCATION_PRACTICE_KEYS, useEducationGuidedSession } from '@/features/education/hooks/useEducationPracticeItems';
 import { useEducationCopy } from '@/features/education/i18n';

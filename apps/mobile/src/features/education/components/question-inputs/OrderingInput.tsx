@@ -1,7 +1,7 @@
 import type { OrderingAnswer, OrderingQuestion } from '@/features/education/types/question.types';
 import { useQuestionHints, useQuestionInputStyles } from './questionInputStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 import { learningTypography as typography } from '@/features/education/theme/learningTheme';
 import { reorderEducationOptionIds } from '@/features/education/utils/reorderEducationOptionIds';

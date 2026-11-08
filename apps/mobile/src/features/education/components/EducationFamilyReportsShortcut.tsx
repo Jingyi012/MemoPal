@@ -4,7 +4,7 @@ import { useEducationCopy } from '@/features/education/i18n';
 import { useEducationFamilyChildren } from '@/features/education/hooks/useEducationFamilyReports';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export function EducationFamilyReportsShortcut() {
   const copy = useEducationCopy();

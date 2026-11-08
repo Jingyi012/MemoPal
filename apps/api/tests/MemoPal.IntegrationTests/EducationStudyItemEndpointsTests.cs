@@ -16,6 +16,42 @@ namespace MemoPal.IntegrationTests;
 public sealed class EducationStudyItemEndpointsTests(CustomWebApplicationFactory factory)
     : IClassFixture<CustomWebApplicationFactory>
 {
+    [Theory]
+    [InlineData("fraction-3-7")]
+    [InlineData("shape-polygon-5")]
+    [InlineData("pattern-blue-square-red-red")]
+    public async Task Authored_diagram_parameters_survive_edit_publish_and_safe_learner_projection(string code)
+    {
+        using var owner = factory.CreateClient();
+        using var learner = factory.CreateClient();
+        await RegisterAsync(owner);
+        await RegisterAsync(learner);
+        var courseId = await CreateCourseAsync(owner, "Configurable diagrams");
+        var objective = await DataAsync(await owner.PostAsJsonAsync($"/v1/education/courses/{courseId}/objectives", new { title = "Author-controlled point" }));
+        var objectiveId = objective.GetProperty("id").GetString()!;
+        var titleEndpoint = $"/v1/education/courses/{courseId}/objectives/{objectiveId}";
+        Assert.Equal(HttpStatusCode.NotFound, (await learner.PutAsJsonAsync(titleEndpoint, new { title = "Not my objective" })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await owner.PutAsJsonAsync(titleEndpoint, new { title = " " })).StatusCode);
+        var renamed = await DataAsync(await owner.PutAsJsonAsync(titleEndpoint, new { title = "Renamed teaching point" }));
+        Assert.Equal("Renamed teaching point", renamed.GetProperty("title").GetString());
+        var endpoint = $"/v1/education/courses/{courseId}/objectives/{objectiveId}/study-items";
+        var item = await DataAsync(await owner.PostAsJsonAsync(endpoint, new { position = 1, kind = "ConceptUnderstanding", primary = "Initial title", mediaRef = "media:learning-fraction-half" }));
+        var itemId = item.GetProperty("id").GetString()!;
+        var edited = await DataAsync(await owner.PutAsJsonAsync($"{endpoint}/{itemId}", new { position = 1, kind = "ConceptUnderstanding", primary = "Authored title", secondary = "Authored explanation", mediaRef = $"media:learning-{code}", hint = "Private author hint" }));
+        Assert.Equal($"media:learning-{code}", edited.GetProperty("mediaRef").GetString());
+        Assert.Equal(HttpStatusCode.BadRequest, (await owner.PostAsJsonAsync(endpoint, new { position = 2, kind = "ConceptUnderstanding", primary = "Invalid", mediaRef = "media:learning-fraction-8-7" })).StatusCode);
+        await CreatePublishedAssessmentAsync(owner, courseId, objectiveId);
+        await DataAsync(await owner.PutAsJsonAsync($"/v1/education/courses/{courseId}/visibility", new { isPublic = true, notConfidentialExamContent = true }));
+        await DataAsync(await owner.PostAsJsonAsync($"{endpoint}/{itemId}/publish", new { notConfidentialExamContent = true }));
+        var publicItems = await DataAsync(await learner.GetAsync($"/v1/education/public/objectives/{objectiveId}/study-items"));
+        var published = Assert.Single(publicItems.EnumerateArray());
+        Assert.Equal(code, published.GetProperty("illustrationCode").GetString());
+        Assert.Equal("Authored title", published.GetProperty("primary").GetString());
+        Assert.Equal("Authored explanation", published.GetProperty("secondary").GetString());
+        Assert.False(published.TryGetProperty("mediaRef", out _));
+        Assert.False(published.TryGetProperty("hint", out _));
+    }
+
     [Fact]
     public async Task Owner_can_manage_items_and_public_learner_gets_safe_read_projection()
     {

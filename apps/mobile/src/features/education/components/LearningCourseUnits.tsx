@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LearningCoursePath } from './LearningCoursePath';
 import { useLearningCopy, useLearningStyles, useLearningTheme } from './LearningUi';
 import { getCrossObjectiveLessons, groupCourseObjectives } from '../utils/educationCourseUnits';

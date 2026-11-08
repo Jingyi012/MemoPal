@@ -5,7 +5,7 @@ import { useCommunityMemorySet } from '@/features/memory-sets';
 import { CompanionLearningPresence } from '@/features/profile/companion/CompanionLearningPresence';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { LearningMemoryHero, LearningMemoryItem } from '../components/LearningMemoryContent';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Modal, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useEducationLearningPreferences } from '../hooks/useEducationLearningPreferences';
 import { defaultLearningPreferences, learningPreferenceChoices, type LearningPreferences } from '../utils/educationLearningPreferences';
@@ -32,7 +32,7 @@ export function LearningPreferencesCard({ userId, compact = false }: { userId: s
       <Ionicons name="chevron-forward" size={20} color={theme.violetDeep} /></>}
     </AnimatedPressable>
     <Modal transparent visible={open} animationType="none" onRequestClose={() => { if (!save.isPending) setOpen(false); }}>
-      <View style={{ flex: 1, justifyContent: 'flex-end', paddingTop: insets.top + 20, backgroundColor: 'rgba(20,20,40,.4)' }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end', paddingTop: insets.top + 20, backgroundColor: theme.scrim }}>
         <View style={{ maxHeight: '95%', backgroundColor: theme.paper, borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 20, paddingBottom: Math.max(20, insets.bottom), gap: 16 }}>
           <ScrollView contentContainerStyle={{ gap: 16 }}>
             <Text accessibilityRole="header" style={s.title}>{title}</Text>

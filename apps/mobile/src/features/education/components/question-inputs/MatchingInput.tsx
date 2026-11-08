@@ -3,6 +3,7 @@ import { useState } from 'react';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { StyleSheet, Text, View, useWindowDimensions, type LayoutRectangle } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { learningLayout } from '../../theme/learningTheme';
 import { useLearningCopy } from '../LearningUi';
 import { useCorrectAnswer, useQuestionFeedback, useQuestionInputStyles } from './questionInputStyles';
 import { assignEducationMatch } from '@/features/education/utils/assignEducationMatch';
@@ -34,8 +35,8 @@ export function MatchingInput({ question, value, onChange, labels, disabled = fa
   const active = question.options.find(option => option.id === activeLeftId);
   const pairColors = [
     { stroke: theme.violetDeep, tint: theme.violetTint },
-    { stroke: theme.isDark ? '#FFBC74' : '#C15B00', tint: theme.isDark ? '#493421' : '#FFF1DF' },
-    { stroke: theme.isDark ? '#71DCE8' : '#00849A', tint: theme.isDark ? '#203F48' : '#E3F5F7' },
+    { stroke: theme.pairOrange, tint: theme.pairOrangeTint },
+    { stroke: theme.pairCyan, tint: theme.pairCyanTint },
   ];
   const appearance = (index: number) => {
     const option = question.options[index];
@@ -121,7 +122,7 @@ const styles = StyleSheet.create({
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   columns: { flexDirection: 'row', gap: 38, position: 'relative' },
   column: { flex: 1, minWidth: 0, gap: 12 },
-  card: { borderRadius: 18, borderWidth: 1.5, borderBottomWidth: 4, justifyContent: 'center', minHeight: 82, paddingHorizontal: 10, paddingVertical: 14 },
+  card: { borderRadius: learningLayout.buttonRadius, borderWidth: learningLayout.borderWidth, borderBottomWidth: learningLayout.optionDepth, justifyContent: 'center', minHeight: 82, paddingHorizontal: 10, paddingVertical: 14 },
   word: { flex: 0, flexShrink: 1, fontSize: 16, lineHeight: 22, textAlign: 'center' },
   meaning: { flex: 0, flexShrink: 1, fontSize: 14, lineHeight: 20, textAlign: 'center' },
 });

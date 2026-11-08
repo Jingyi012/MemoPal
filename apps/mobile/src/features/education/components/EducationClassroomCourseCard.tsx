@@ -1,5 +1,5 @@
 import { Text, View, useWindowDimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { EducationClassroomCourse } from '../types/educationRelationship.types';
 import { useEducationCopy } from '../i18n';

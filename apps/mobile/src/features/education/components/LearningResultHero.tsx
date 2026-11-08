@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text, View } from 'react-native';
 import { CompanionActor } from '@/features/profile/companion/CompanionActor';
 import { useAuth } from '@/contexts/AuthProvider';

@@ -260,8 +260,8 @@ export default function EducationAssignmentsScreen() {
     return (
       <View style={styles.detailCard}>
         <LinearGradient colors={theme.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={{ padding: 20, borderRadius: 22, gap: 12, marginBottom: 8 }}>
-          <Text style={[styles.body, { color: '#FFFFFF' }]}>{selectedAssignment.courseTitle ?? copy.title}</Text>
-          <Text accessibilityRole="header" style={[styles.title, { color: '#FFFFFF' }]}>{selectedAssignment.title}</Text>
+          <Text style={[styles.body, { color: theme.heroInk }]}>{selectedAssignment.courseTitle ?? copy.title}</Text>
+          <Text accessibilityRole="header" style={[styles.title, { color: theme.heroInk }]}>{selectedAssignment.title}</Text>
           <Text style={[styles.status, styles[availability]]}>{statusLabel}</Text>
         </LinearGradient>
         <Text style={styles.body}>{copy.opensAt}: {formatDate(selectedAssignment.opensAt)}</Text>

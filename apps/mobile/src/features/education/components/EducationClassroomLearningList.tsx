@@ -9,7 +9,7 @@ import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { EducationClassroomCourseCard } from './EducationClassroomCourseCard';
 
 type Props = Readonly<{ memberships: readonly EducationClassroomMembership[]; isLoading: boolean; isError: boolean; onRetry: () => void }>;

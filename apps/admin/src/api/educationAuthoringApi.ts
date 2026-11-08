@@ -33,6 +33,7 @@ export const educationAuthoringApi = {
     return (await apiClient.put<ApiResponse<EducationCourseDto>>(`/v1/education/courses/${courseId}/visibility`, { isPublic })).data.data;
   },
   async listObjectives(courseId: string) { return (await apiClient.get<ApiResponse<EducationObjectiveDto[]>>(`/v1/education/courses/${courseId}/objectives`)).data.data; },
+  async updateObjectiveTitle(courseId: string, objectiveId: string, title: string) { return (await apiClient.put<ApiResponse<EducationObjectiveDto>>(`/v1/education/courses/${courseId}/objectives/${objectiveId}`, { title })).data.data; },
   async createObjective(courseId: string, title: string, recommendedMemorySetId?: string) { return (await apiClient.post<ApiResponse<EducationObjectiveDto>>(`/v1/education/courses/${courseId}/objectives`, { title, recommendedMemorySetId: recommendedMemorySetId || null })).data.data; },
   async setObjectiveMemoryRecommendation(courseId: string, objectiveId: string, recommendedMemorySetId: string | null) {
     return (await apiClient.put<ApiResponse<EducationObjectiveDto>>(

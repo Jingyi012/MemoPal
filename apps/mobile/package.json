@@ -8,9 +8,10 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "node --experimental-strip-types --test test/recall.test.mjs test/companion.test.mjs test/numberPegMovie.test.mjs test/ocr.test.mjs test/theme.test.mjs test/onboarding.test.mjs test/i18nInterpolation.test.mjs test/educationOrdering.test.mjs test/educationOrderingBuilder.test.mjs test/educationMatching.test.mjs test/educationPracticeSession.test.mjs test/educationPracticeGate.test.mjs test/educationGuidedLearningFlow.test.mjs test/educationAttemptAnswers.test.mjs test/educationAnswerFeedback.test.mjs test/educationAttemptWriteQueue.test.mjs test/educationHandwritingDraft.test.mjs test/educationHomeCourse.test.mjs test/educationObjectiveLesson.test.mjs test/educationCourseAudience.test.mjs test/educationLearningPreferences.test.mjs test/educationReadAloud.test.mjs test/educationCourseUnits.test.mjs test/educationStudyList.test.mjs test/educationAssignmentGroups.test.mjs test/educationClassroomInvitations.test.mjs test/educationShareSummary.test.mjs test/educationPracticePreference.test.mjs test/educationAuthoringPortal.test.mjs test/leaderboardMomentum.test.mjs test/leaderboardPodium.test.mjs test/leaderboardShareSummary.test.mjs test/progressShare.test.mjs test/safeAuthReturnTo.test.mjs test/safeReferralCode.test.mjs",
+    "test": "node --experimental-strip-types --test test/recall.test.mjs test/companion.test.mjs test/numberPegMovie.test.mjs test/ocr.test.mjs test/theme.test.mjs test/onboarding.test.mjs test/i18nInterpolation.test.mjs test/educationOrdering.test.mjs test/educationOrderingBuilder.test.mjs test/educationMatching.test.mjs test/educationPracticeSession.test.mjs test/educationPracticeGate.test.mjs test/educationGuidedLearningFlow.test.mjs test/educationAttemptAnswers.test.mjs test/educationAnswerFeedback.test.mjs test/educationAttemptWriteQueue.test.mjs test/educationHandwritingDraft.test.mjs test/educationHomeCourse.test.mjs test/educationObjectiveLesson.test.mjs test/educationCourseAudience.test.mjs test/educationLearningPreferences.test.mjs test/educationReadAloud.test.mjs test/educationCourseUnits.test.mjs test/educationStudyList.test.mjs test/educationStudyIllustrations.test.mjs test/educationAssignmentGroups.test.mjs test/educationClassroomInvitations.test.mjs test/educationShareSummary.test.mjs test/educationPracticePreference.test.mjs test/educationAuthoringPortal.test.mjs test/leaderboardMomentum.test.mjs test/leaderboardPodium.test.mjs test/leaderboardShareSummary.test.mjs test/progressShare.test.mjs test/safeAuthReturnTo.test.mjs test/safeReferralCode.test.mjs test/buildConfig.test.mjs",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "audit:assets": "node scripts/audit-assets.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/baloo-2": "^0.4.2",
@@ -23,7 +24,6 @@
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
-    "@rive-app/react-canvas": "^4.37.0",
     "@tanstack/query-async-storage-persister": "^5.102.2",
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-query-persist-client": "^5.102.2",
@@ -54,7 +54,6 @@
     "expo-speech": "~14.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
-    "expo-symbols": "~1.0.8",
     "expo-system-ui": "~6.0.9",
     "expo-web-browser": "~15.0.10",
     "lucide-react-native": "^0.562.0",
@@ -64,7 +63,6 @@
     "react-native": "0.81.5",
     "react-native-css-interop": "0.2.6",
     "react-native-gesture-handler": "~2.28.0",
-    "react-native-linear-gradient": "^2.8.3",
     "react-native-reanimated": "~4.1.6",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
@@ -76,6 +74,7 @@
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
+    "@rive-app/canvas": "^2.45.0",
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",

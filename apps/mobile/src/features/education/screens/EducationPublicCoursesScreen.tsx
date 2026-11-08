@@ -1,3 +1,4 @@
+import { LearningIconButton } from '../components/LearningIconButton';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { getLevelProgressMetrics } from '@/components/LevelXpProgressBar';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
@@ -16,7 +17,7 @@ import { LearningPreferencesCard } from '../components/LearningPreferencesCard';
 import type { EducationPublicCourseSummary } from '../types/educationPractice.types';
 import { CompanionActor } from '@/features/profile/companion/CompanionActor';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Href, Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -63,8 +64,8 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false }: {
   return <View style={s.page}>
     <CommonHeader showAiCredits={false} title={primaryEntry ? copy.learnTitle : copy.publicCoursesTitle} hideBackButton={primaryEntry} backAction={primaryEntry ? undefined : () => router.back()}
       actions={[
-        { component: <AnimatedPressable accessibilityRole="button" accessibilityLabel={copy.publicSavedCourses} onPress={() => router.push('/community/education/saved' as Href)} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="bookmark-outline" size={24} color={palette.violetDeep} /></AnimatedPressable> },
-        { component: <AnimatedPressable accessibilityRole="button" accessibilityLabel={copy.publicPracticeHistory} onPress={() => router.push('/community/education/history' as Href)} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="time-outline" size={25} color={palette.violetDeep} /></AnimatedPressable> },
+        { component: <LearningIconButton variant="plain" icon="bookmark-outline" label={copy.publicSavedCourses} onPress={() => router.push('/community/education/saved' as Href)} /> },
+        { component: <LearningIconButton variant="plain" icon="time-outline" label={copy.publicPracticeHistory} onPress={() => router.push('/community/education/history' as Href)} /> },
       ]} />
     <FlatList data={data} keyExtractor={item => item.id} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled"
       refreshControl={<RefreshControl refreshing={courses.isRefetching} onRefresh={() => refresh.current()} />}
@@ -74,7 +75,7 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false }: {
           {profile.user ? <HomeLevelProgress totalXp={profile.user.totalXp} level={profile.user.level} /> : null}
         </View>
         {current ? <LinearGradient colors={palette.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={{ borderRadius: 26, padding: 18, gap: 13, overflow: 'hidden' }}>
-          <View style={[s.row, { alignItems: 'flex-start' }]}><View style={{ flex: 1, gap: 7 }}><View style={{ alignSelf: 'flex-start', borderRadius: 99, paddingHorizontal: 11, paddingVertical: 5, backgroundColor: 'rgba(255,255,255,.1)' }}><Text style={{ color: '#FFFFFF', fontFamily: typography.bodyExtraBold, fontSize: 12 }}>{ui.continue}</Text></View><Text numberOfLines={3} style={[s.heading, { color: '#FFFFFF', fontSize: 21, lineHeight: 27 }]}>{current.courseTitle}</Text><Text style={[s.body, { color: '#FFFFFF' }]}>{ui.correct(solved, total)}</Text></View><LearningRing value={solved} total={total} theme={{ ...theme, line: 'rgba(255,255,255,.28)', color: '#FFD65C', dark: '#FFFFFF' }} /></View>
+          <View style={[s.row, { alignItems: 'flex-start' }]}><View style={{ flex: 1, gap: 7 }}><View style={{ alignSelf: 'flex-start', borderRadius: 99, paddingHorizontal: 11, paddingVertical: 5, backgroundColor: palette.heroOverlay }}><Text style={{ color: palette.heroInk, fontFamily: typography.bodyExtraBold, fontSize: 12 }}>{ui.continue}</Text></View><Text numberOfLines={3} style={[s.heading, { color: palette.heroInk, fontSize: 21, lineHeight: 27 }]}>{current.courseTitle}</Text><Text style={[s.body, { color: palette.heroInk }]}>{ui.correct(solved, total)}</Text></View><LearningRing value={solved} total={total} theme={{ ...theme, line: palette.heroTrack, color: palette.heroAccent, dark: palette.heroInk }} /></View>
           <View style={{ alignSelf: 'flex-start' }}><LearningButton tone="white" compact label={ui.zh ? '继续学习' : 'Continue'} onPress={() => router.push(`/community/education/${current.courseId}` as Href)} /></View>
         </LinearGradient> : null}
         {home.isError ? <AnimatedPressable onPress={() => void home.refetch()} style={s.card}><Text style={s.body}>{copy.guidedLessonLoadError} · {copy.retry}</Text></AnimatedPressable> : null}
@@ -119,7 +120,7 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false }: {
       </View>}
     />
     <Modal transparent visible={filterOpen} animationType="slide" onRequestClose={() => setFilterOpen(false)}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(20,16,40,.45)', justifyContent: 'flex-end' }}>
+      <View style={{ flex: 1, backgroundColor: palette.scrim, justifyContent: 'flex-end' }}>
         <Pressable accessibilityRole="button" accessibilityLabel={ui.close} onPress={() => setFilterOpen(false)} style={{ flex: 1 }} />
         <ScrollView style={{ maxHeight: '85%', backgroundColor: palette.paper, borderTopLeftRadius: 28, borderTopRightRadius: 28 }} contentContainerStyle={{ padding: 20, paddingBottom: Math.max(20, insets.bottom), gap: 12, borderWidth: 1, borderColor: palette.line }}>
           <View style={s.row}><Text accessibilityRole="header" style={[s.title, { flex: 1 }]}>{ui.filter}</Text><AnimatedPressable accessibilityLabel={ui.close} onPress={() => setFilterOpen(false)} style={{ minHeight: 44, width: 44, justifyContent: 'center', alignItems: 'center' }}><Ionicons name="close" size={23} color={palette.ink} /></AnimatedPressable></View>
@@ -180,7 +181,7 @@ function CourseCard({ course, onPress }: { course: EducationPublicCourseSummary;
   const total = lessons?.reduce((n, lesson) => n + lesson.questionCount, 0) ?? course.questionCount;
   const completed = !!lessons?.length && lessons.every(lesson => lesson.isComplete);
   const subjectLabel = theme.key === 'other' ? (ui.zh ? '课程' : 'Course') : ui[theme.key];
-  const artworkTheme = theme.key === 'math' && !palette.isDark ? { ...theme, tint: palette.peachTint, line: palette.peachLine, color: '#8C4B12' } : theme.key === 'science' ? { ...theme, tint: palette.mintTint, line: palette.mintLine, color: palette.successText } : theme;
+  const artworkTheme = theme.key === 'math' && !palette.isDark ? { ...theme, tint: palette.peachTint, line: palette.peachLine, color: palette.subjectMathInk } : theme.key === 'science' ? { ...theme, tint: palette.mintTint, line: palette.mintLine, color: palette.successText } : theme;
   return <AnimatedPressable accessibilityRole="button" accessibilityLabel={course.title} lively onPress={onPress} style={[s.card, { gap: 12 }]}>
     <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
       <SubjectArtwork theme={artworkTheme} size={58} />

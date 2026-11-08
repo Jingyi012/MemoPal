@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LearningButton, useLearningStyles } from './LearningUi';
 
 export function LearningMemoryCard({ title, description, label, onPress, disabled }: { title: string; description: string; label: string; onPress: () => void; disabled?: boolean }) {

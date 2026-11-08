@@ -1,6 +1,6 @@
 import { CompanionLearningPresence } from '@/features/profile/companion/CompanionLearningPresence';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useState } from 'react';
 import { useIsFocused } from '@react-navigation/native';

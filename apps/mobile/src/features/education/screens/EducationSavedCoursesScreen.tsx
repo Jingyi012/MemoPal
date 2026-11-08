@@ -7,7 +7,7 @@ import { useEducationSavedCourses } from '@/features/education/hooks/useEducatio
 import { useEducationCopy } from '@/features/education/i18n';
 import { Href, Redirect, useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthProvider';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 export default function EducationSavedCoursesScreen() {

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useLearningCopy, useLearningStyles } from './LearningUi';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const shownTips = new Set<string>();
 

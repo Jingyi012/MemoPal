@@ -1,17 +1,14 @@
 import { useState } from 'react';
 import { Button, Card, Flex, Typography, theme } from 'antd';
 
-export const studyPatterns = {
-  'pattern-red-blue': ['red', 'blue'],
-  'pattern-red-red-blue': ['red', 'red', 'blue'],
-  'pattern-circle-triangle': ['circle', 'triangle'],
-} as const;
+import { parseStudyIllustration } from '../utils/studyIllustrations';
 
-export function EducationPatternPreview({ code, zh }: { code: keyof typeof studyPatterns; zh: boolean }) {
+export function EducationPatternPreview({ code, zh }: { code: string; zh: boolean }) {
   const { token } = theme.useToken();
   const [groups, setGroups] = useState(2);
-  const pattern = studyPatterns[code];
-  const labels = { red: zh ? '红' : 'Red', blue: zh ? '蓝' : 'Blue', circle: zh ? '圆' : 'Circle', triangle: zh ? '三角形' : 'Triangle' };
+  const configuration = parseStudyIllustration(code);
+  const pattern = configuration?.kind === 'pattern' ? configuration.symbols : [];
+  const labels = { square: zh ? '方形' : 'Square', red: zh ? '红' : 'Red', blue: zh ? '蓝' : 'Blue', circle: zh ? '圆' : 'Circle', triangle: zh ? '三角形' : 'Triangle' };
   return <Card size="small" style={{ borderRadius: 20, background: token.colorPrimaryBg }}>
     <Typography.Title level={5}>{zh ? '找到重复的一组' : 'Find the repeating group'}</Typography.Title>
     <Typography.Paragraph>{zh ? '每个框里都是同样的一组，顺序也一样。' : 'Each box repeats the same group, in the same order.'}</Typography.Paragraph>
@@ -20,7 +17,7 @@ export function EducationPatternPreview({ code, zh }: { code: keyof typeof study
         <Typography.Text type="secondary">{zh ? `第 ${group + 1} 组` : `Group ${group + 1}`}</Typography.Text>
         <Flex wrap gap={10} style={{ marginTop: 8 }}>
           {pattern.map((symbol, index) => <div key={index} style={{ flex: '1 1 48px', textAlign: 'center' }}>
-            <div aria-hidden style={{ fontSize: 30, color: symbol === 'red' ? token.colorError : symbol === 'blue' ? token.colorInfo : token.colorPrimary }}>{symbol === 'triangle' ? '▲' : '●'}</div>
+            <div aria-hidden style={{ fontSize: 30, color: symbol === 'red' ? token.colorError : symbol === 'blue' ? token.colorInfo : token.colorPrimary }}>{symbol === 'triangle' ? '▲' : symbol === 'square' ? '■' : '●'}</div>
             <Typography.Text>{labels[symbol]}</Typography.Text>
           </div>)}
         </Flex>

@@ -1,4 +1,4 @@
-import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
+import { createLearningStyles as createThemedStyles, learningTypography as typography, learningLayout, learningTypeScale } from '@/features/education/theme/learningTheme';
 import { createContext, useContext } from 'react';
 import { StyleSheet } from 'react-native';
 import type { EducationAttemptAnswerDto } from '../../types/question.types';
@@ -19,8 +19,7 @@ export const useQuestionInputStyles = createThemedStyles((theme) =>
     prompt: {
       color: theme.ink,
       fontFamily: typography.bodyExtraBold,
-      fontSize: 23,
-      lineHeight: 31,
+      ...learningTypeScale.prompt,
     },
     hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18 },
     options: {
@@ -30,9 +29,9 @@ export const useQuestionInputStyles = createThemedStyles((theme) =>
       alignItems: 'center',
       backgroundColor: theme.paper,
       borderColor: theme.line,
-      borderRadius: 18,
-      borderWidth: 1.5,
-      borderBottomWidth: 4,
+      borderRadius: learningLayout.buttonRadius,
+      borderWidth: learningLayout.borderWidth,
+      borderBottomWidth: learningLayout.optionDepth,
       flexDirection: 'row',
       gap: 12,
       minHeight: 58,

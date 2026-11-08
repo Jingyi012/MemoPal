@@ -58,6 +58,12 @@ public sealed class EducationAuthoringController(ISender sender) : ApiController
     [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> GetObjectives(string courseId, CancellationToken ct) => Ok(await Sender.Send(new GetObjectivesQuery(GetUserIdOrThrow(), courseId, IsAdmin()), ct));
 
+    [HttpPut("courses/{courseId}/objectives/{objectiveId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> UpdateObjectiveTitle(string courseId, string objectiveId,
+        [FromBody] UpdateObjectiveTitleRequest request, CancellationToken ct) =>
+        Ok(await Sender.Send(new UpdateObjectiveTitleCommand(GetUserIdOrThrow(), courseId, objectiveId, request, IsAdmin()), ct));
+
     [HttpPut("courses/{courseId}/objectives/{objectiveId}/study-metadata")]
     [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> UpdateObjectiveStudyMetadata(string courseId, string objectiveId,

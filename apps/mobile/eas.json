@@ -22,12 +22,18 @@
     },
     "production": {
       "environment": "production",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      }
     },
     "production-apk": {
       "extends": "production",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "MEMOPAL_COMPACT_APK": "1"
       }
     },
     "ios-unsigned": {

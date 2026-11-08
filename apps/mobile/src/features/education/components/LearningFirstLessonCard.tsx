@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LearningButton, SubjectArtwork, learningThemeFor, useLearningCopy, useLearningStyles } from './LearningUi';
 import type { EducationPublicCourseSummary } from '../types/educationPractice.types';
 
@@ -14,13 +14,13 @@ export function LearningFirstLessonCard({ course, onPress }: {
   return <LinearGradient colors={theme.hero as [string, string]} start={[0, 0]} end={[1, 1]}
     style={{ borderRadius: 26, padding: 20, gap: 16, overflow: 'hidden' }}>
     <View style={{ gap: 8 }}>
-      <Text style={[s.small, { color: '#FFFFFF' }]}>{course.isMemoPalStarter
+      <Text style={[s.small, { color: theme.heroInk }]}>{course.isMemoPalStarter
         ? (zh ? '✦ MemoPal 体验课' : '✦ MemoPal starter lesson')
         : (zh ? '✦ 发现一节新课' : '✦ Discover a new lesson')}</Text>
       <View style={[s.row, { alignItems: 'flex-start' }]}>
         <View style={{ flex: 1, gap: 8 }}>
-          <Text accessibilityRole="header" style={[s.title, { color: '#FFFFFF' }]}>{zh ? '你的学习冒险，从这里开始' : 'Your learning adventure starts here'}</Text>
-          <Text style={[s.body, { color: '#FFFFFF' }]}>{course.title}</Text>
+          <Text accessibilityRole="header" style={[s.title, { color: theme.heroInk }]}>{zh ? '你的学习冒险，从这里开始' : 'Your learning adventure starts here'}</Text>
+          <Text style={[s.body, { color: theme.heroInk }]}>{course.title}</Text>
         </View>
         <SubjectArtwork theme={learningThemeFor(course.title, theme, course.subjectCode)} size={64} />
       </View>
@@ -31,8 +31,8 @@ export function LearningFirstLessonCard({ course, onPress }: {
         ['game-controller-outline', zh ? '练几题' : 'Try it'],
         ['star-outline', zh ? '看见进步' : 'Grow'],
       ].map(([icon, label]) => <View key={icon} style={[s.row, { gap: 5 }]}>
-        <Ionicons name={icon as 'book-outline'} size={17} color="#FFFFFF" />
-        <Text style={[s.small, { color: '#FFFFFF' }]}>{label}</Text>
+        <Ionicons name={icon as 'book-outline'} size={17} color={theme.heroInk} />
+        <Text style={[s.small, { color: theme.heroInk }]}>{label}</Text>
       </View>)}
     </View>
     <LearningButton tone="white" label={zh ? '探索第一节课' : 'Explore your first lesson'} onPress={onPress} />

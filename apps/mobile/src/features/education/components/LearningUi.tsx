@@ -1,11 +1,11 @@
-import { createLearningStyles as createThemedStyles, learningPalettes, type LearningPalette, learningTypography as typography } from '@/features/education/theme/learningTheme';
+import { createLearningStyles as createThemedStyles, learningPalettes, type LearningPalette, learningTypography as typography, learningLayout, learningTypeScale } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp, interpolate, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { learningSubjectFor, type LearningSubject } from '../utils/educationCourseAudience';
 export type { LearningSubject } from '../utils/educationCourseAudience';
@@ -63,8 +63,8 @@ export function LearningButton({ label, onPress, disabled, secondary = false, lo
 }) {
   const { theme: palette, styles } = useLearningStyles();
   return <AnimatedPressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled: !!disabled || loading, busy: loading }} disabled={disabled || loading} onPress={onPress}
-    style={[styles.button, { minHeight: compact ? 48 : 54, paddingHorizontal: compact ? 11 : 20, backgroundColor: disabled ? palette.disabled : tone === 'white' ? '#F4EFFF' : secondary ? palette.paper : tone === 'success' ? palette.successText : tone === 'danger' ? palette.berryDeep : palette.violetDeep, borderColor: disabled ? palette.disabledShadow : secondary ? palette.line : tone === 'white' ? 'rgba(0,0,0,.18)' : tone === 'success' ? palette.successShadow : tone === 'danger' ? palette.berryDeep : palette.primaryShadow }, secondary && { borderWidth: 2, borderBottomWidth: 6 }]}>
-    <Text style={[styles.buttonText, { fontSize: compact || secondary || tone === 'white' ? 14 : 16, color: disabled ? palette.inkSoft : tone === 'white' ? '#4C35A3' : secondary ? palette.violetDeep : palette.onAccent }]}>{loading ? '…' : label}</Text>
+    style={[styles.button, { minHeight: compact ? learningLayout.compactControlHeight : learningLayout.controlHeight, paddingHorizontal: compact ? 11 : 20, backgroundColor: disabled ? palette.disabled : tone === 'white' ? palette.heroSurface : secondary ? palette.paper : tone === 'success' ? palette.successText : tone === 'danger' ? palette.berryDeep : palette.violetDeep, borderColor: disabled ? palette.disabledShadow : secondary ? palette.line : tone === 'white' ? palette.heroSurfaceBorder : tone === 'success' ? palette.successShadow : tone === 'danger' ? palette.berryDeep : palette.primaryShadow }, secondary && { borderWidth: 2, borderBottomWidth: 6 }]}>
+    <Text style={[styles.buttonText, { fontSize: compact || secondary || tone === 'white' ? 14 : 16, color: disabled ? palette.inkSoft : tone === 'white' ? palette.heroSurfaceInk : secondary ? palette.violetDeep : palette.onAccent }]}>{loading ? '…' : label}</Text>
   </AnimatedPressable>;
 }
 export function SubjectArtwork({ theme, size = 72 }: { theme: LearningTheme; size?: number }) {
@@ -99,7 +99,7 @@ export function LearningConfetti({ visible, sequence }: { visible: boolean; sequ
   const { theme } = useLearningStyles();
   const reduceMotion = useReducedMotion();
   if (!visible || reduceMotion) return null;
-  const colors = [theme.sun, theme.grass, theme.violetDeep, theme.sky, theme.berry, '#FF9A62'];
+  const colors = [theme.sun, theme.grass, theme.violetDeep, theme.sky, theme.berry, theme.pairOrange];
   return <Animated.View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 5, overflow: 'hidden' }}>
     {Array.from({ length: 28 }, (_, index) => <ConfettiParticle key={`${sequence}-${index}`} index={index} sequence={sequence} color={colors[index % colors.length]!} />)}
   </Animated.View>;
@@ -133,26 +133,26 @@ export function LearningLoadingView({ description }: { description?: string }) {
   return <View style={[styles.content, { flex: 1 }]}><LearningSkeleton />{description ? <Text style={styles.body}>{description}</Text> : null}</View>;
 }
 export const useLearningStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas }, content: { padding: 16, gap: 14, paddingBottom: 24 },
-  card: { backgroundColor: theme.paper, borderRadius: 22, borderWidth: 2, borderBottomWidth: 6, borderColor: theme.line, padding: 14, gap: 10 },
+  page: { flex: 1, backgroundColor: theme.canvas }, content: { padding: learningLayout.pagePadding, gap: 14, paddingBottom: 24 },
+  card: { backgroundColor: theme.paper, borderRadius: learningLayout.cardRadius, borderWidth: 2, borderBottomWidth: learningLayout.cardDepth, borderColor: theme.line, padding: 14, gap: 10 },
   courseHero: { borderRadius: 26, padding: 16, gap: 14, overflow: 'hidden' },
   memoryCard: { borderRadius: 26, padding: 16, gap: 12, overflow: 'hidden' },
   resultHero: { alignItems: 'center', borderRadius: 30, gap: 8, minHeight: 245, justifyContent: 'center', overflow: 'hidden', padding: 22 },
-  resultTitle: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 26, lineHeight: 34, textAlign: 'center' },
-  resultSubtitle: { color: '#FFFFFF', maxWidth: 260, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, textAlign: 'center' },
+  resultTitle: { color: theme.heroInk, fontFamily: typography.displayExtraBold, fontSize: 26, lineHeight: 34, textAlign: 'center' },
+  resultSubtitle: { color: theme.heroInk, maxWidth: 260, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, textAlign: 'center' },
   resultStats: { flexDirection: 'row', gap: 8 },
   resultStat: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 2, flex: 1, justifyContent: 'center', minHeight: 78, paddingHorizontal: 4, paddingVertical: 8 },
   resultNumber: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 },
   resultLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, textAlign: 'center' },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 22, lineHeight: 28 },
-  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, lineHeight: 25 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 15, lineHeight: 23 },
-  small: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  button: { minHeight: 54, borderRadius: 18, borderBottomWidth: 5, paddingHorizontal: 20, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { fontFamily: typography.displayExtraBold, fontSize: 16, lineHeight: 23, textAlign: 'center' },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, ...learningTypeScale.title },
+  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, ...learningTypeScale.heading },
+  body: { color: theme.inkSoft, fontFamily: typography.bodyBold, ...learningTypeScale.body },
+  small: { color: theme.inkSoft, fontFamily: typography.bodyBold, ...learningTypeScale.caption },
+  row: { flexDirection: 'row', alignItems: 'center', gap: learningLayout.gap },
+  button: { minHeight: learningLayout.controlHeight, borderRadius: learningLayout.buttonRadius, borderBottomWidth: learningLayout.buttonDepth, paddingHorizontal: 20, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
+  buttonText: { fontFamily: typography.displayExtraBold, ...learningTypeScale.button, textAlign: 'center' },
   track: { height: 10, borderRadius: 10, backgroundColor: theme.violetTint, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 10 },
-  badge: { alignSelf: 'flex-start', borderRadius: 99, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: theme.violetTint },
-  dock: { backgroundColor: theme.canvas, padding: 16, gap: 10, flexShrink: 0 },
+  badge: { alignSelf: 'flex-start', borderRadius: learningLayout.pillRadius, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: theme.violetTint },
+  dock: { backgroundColor: theme.canvas, padding: learningLayout.pagePadding, gap: 10, flexShrink: 0 },
 }));

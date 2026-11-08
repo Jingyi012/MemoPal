@@ -1,6 +1,7 @@
 namespace MemoPal.Application.Features.Education.Authoring.DTOs;
 
 public sealed record CreateCourseRequest(string Title);
+public sealed record UpdateObjectiveTitleRequest(string Title);
 public sealed record CreateObjectiveRequest(string Title, string? RecommendedMemorySetId = null);
 public sealed record SetEducationObjectiveMemoryRecommendationRequest(string? RecommendedMemorySetId);
 public sealed record CreateAssessmentRequest(string Title);

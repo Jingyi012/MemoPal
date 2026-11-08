@@ -13,7 +13,7 @@ import {
 } from '@/features/auth/services/socialAuth.service';
 import { syncEntitlementToLocal } from '@/features/subscription/services/subscription.service';
 import { LoginMethods } from '@/features/auth/types/auth';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';

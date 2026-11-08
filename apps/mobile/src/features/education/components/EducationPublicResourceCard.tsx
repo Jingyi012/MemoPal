@@ -1,6 +1,6 @@
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { LucideIcon } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
 
