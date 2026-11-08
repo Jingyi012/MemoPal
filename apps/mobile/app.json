@@ -68,11 +68,12 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash.png",
-          "imageWidth": 260,
+          "image": "./assets/images/momo-splash.png",
+          "imageWidth": 220,
           "resizeMode": "contain",
-          "backgroundColor": "#FFFDF8",
+          "backgroundColor": "#FCFAFF",
           "dark": {
+            "image": "./assets/images/momo-splash.png",
             "backgroundColor": "#1E1A30"
           }
         }

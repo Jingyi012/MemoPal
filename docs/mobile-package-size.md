@@ -22,6 +22,16 @@
 - Enabled Android release R8 minification, resource shrinking and JS bundle
   compression through `expo-build-properties`.
 
+The later splash-screen update replaces the old brain illustration with
+`assets/images/momo-splash.png`, the existing Momo level-two greeting artwork.
+The native splash generator requires PNG (its installed Jimp pipeline rejects
+WebP); in-app portraits remain compressed WebP. Light/dark splash variants use
+the app canvas colors `#FCFAFF` / `#1E1A30`. The old brain splash is backed up at
+`C:/Users/jingy/AppData/Local/Temp/memopal-size-baseline/old-brain-splash.png`.
+The APK size table below records the earlier size-optimization build, before
+this splash replacement. Native splash changes require rebuilding and
+reinstalling the app; a Metro reload or OTA update cannot replace them.
+
 ## Build profiles
 
 ### Local Android verification
