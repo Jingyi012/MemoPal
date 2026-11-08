@@ -180,7 +180,7 @@ export default function ScanMemoryScreen() {
     const draftId = saveOcrDraft(mergedItems, {
       title: sourceDraft?.title,
       goalType: sourceDraft?.goalType,
-      languageCode: sourceDraft?.languageCode,
+      languageCode: sourceDraft?.languageCode, groupSize: sourceDraft?.groupSize, studyEditor: sourceDraft?.studyEditor,
     });
     const destination = firstParam(params.destination) === 'study' ? '/education/create-course' : '/create-memory';
     const route = `${destination}?ocrDraftId=${encodeURIComponent(draftId)}` as Href;
@@ -196,7 +196,7 @@ export default function ScanMemoryScreen() {
 
     if (firstParam(params.destination) === 'study') {
       const draftId = saveOcrDraft(sourceDraft?.items ?? [], {
-        title: sourceDraft?.title, languageCode: sourceDraft?.languageCode,
+        title: sourceDraft?.title, languageCode: sourceDraft?.languageCode, groupSize: sourceDraft?.groupSize, studyEditor: sourceDraft?.studyEditor,
       });
       setStudyExitRoute(`/education/create-course?ocrDraftId=${encodeURIComponent(draftId)}` as Href);
       return;
@@ -230,7 +230,7 @@ export default function ScanMemoryScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <CommonHeader
         showAiCredits={!studyDestination}
-        eyebrow={studyDestination ? (language === 'zh' ? '制作小课' : 'CREATE A LESSON') : t('scanEyebrow')}
+        eyebrow={studyDestination ? (language === 'zh' ? '创建学习内容' : 'CREATE STUDY CONTENT') : t('scanEyebrow')}
         title={studyDestination && phase === 'choose' ? (language === 'zh' ? '扫描学习资料' : 'Scan study material') : title}
         description={studyDestination && phase === 'choose' ? (language === 'zh' ? '拍下词表，确认识别结果后制作私人教学草稿。' : 'Scan a word list, check the recognised text, then create a private lesson draft.') : description}
         backAction={handleBack}
@@ -248,7 +248,7 @@ export default function ScanMemoryScreen() {
             onLibrary={() => void choosePhoto('library')}
             onRetry={() => imageUri && void runOcr(imageUri)}
             t={t}
-            description={studyDestination ? (language === 'zh' ? '识别照片上的词语，逐行确认后制作小课。' : 'Read the words from your photo, then check each line before creating your lesson.') : undefined}
+            description={studyDestination ? (language === 'zh' ? '识别照片上的词语，逐行确认后创建学习内容。' : 'Read the words from your photo, then check each line before creating your lesson.') : undefined}
           />
         ) : phase === 'processing' ? (
           <ProcessingState imageUri={imageUri} t={t} />

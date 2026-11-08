@@ -22,7 +22,7 @@ public sealed class GetEducationGuidedCourseProgressHandler(IAppDbContext db)
             query.CourseId, query.ClassroomId, ct);
         var assessments = await db.EducationAssessments.AsNoTracking().Include(item => item.Questions)
             .Where(item => item.CourseId == course.Id && !item.IsDeleted &&
-                item.Status == EducationAssessmentStatuses.Published && item.IsPublicPractice)
+                item.Status == EducationAssessmentStatuses.Published && (item.IsPublicPractice || course.UserId == query.UserId))
             .OrderBy(item => item.PublishedAt).ThenBy(item => item.Id).ToListAsync(ct);
         var objectiveIds = assessments.SelectMany(item => item.Questions)
             .Where(question => !question.IsDeleted && EducationPracticeQuestionTypes.IsSupported(question.Type))

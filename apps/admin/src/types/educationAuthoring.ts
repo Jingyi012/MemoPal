@@ -66,11 +66,16 @@ export interface EducationStudyItemImportResult {
   canImport: boolean; errors: EducationStudyItemImportError[];
 }
 export interface StudyCourseDraftRequest {
+  startLearning?: boolean;
+  sourceDraftId?: string;
+  groupSize?: number | null;
+  units?: { title: string; entries: { text: string; meaning: string | null }[] }[];
   title: string;
   languageCode: string;
-  entries: { text: string; meaning: string | null }[];
+  entries?: { text: string; meaning: string | null }[];
 }
 export interface StudyCourseDraftResult {
+  readyToLearn: boolean;
   courseId: string;
   studyItemCount: number;
   practiceQuestionCount: number;

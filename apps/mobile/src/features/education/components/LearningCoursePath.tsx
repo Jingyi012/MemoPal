@@ -11,10 +11,13 @@ import { LearningStudySession, type LearningReadingPosition } from './LearningSt
 import { chooseObjectiveLesson } from '../utils/educationObjectiveLesson';
 import { LearningArrival, LearningButton, useLearningStyles, useLearningCopy } from './LearningUi';
 
-export function LearningCoursePath({ objectives, progress, onMemory, onPractice, showHeading = true, sharedAssessmentIds = [] }: {
+export function LearningCoursePath({ objectives, progress, onMemory, onPractice, onStudy, currentObjectiveId, showItemPreview = false, showHeading = true, sharedAssessmentIds = [] }: {
   objectives: EducationPublicCourseDetail['objectives']; progress?: EducationGuidedCourseProgress; onMemory: (id: string) => void; onPractice?: (assessmentId: string, studiedObjectiveId?: string) => void;
   showHeading?: boolean;
   sharedAssessmentIds?: readonly string[];
+  onStudy?: (objectiveId: string) => void;
+  showItemPreview?: boolean;
+  currentObjectiveId?: string;
 }) {
   const { styles: s, theme: palette } = useLearningStyles();
   const reduceMotion = useReducedMotion();
@@ -32,7 +35,7 @@ export function LearningCoursePath({ objectives, progress, onMemory, onPractice,
       const done = !!lessons?.length && lessons.every(lesson => lesson.isComplete);
       const pending = !!lessons?.some(lesson => lesson.latestIncorrectQuestionCount > 0);
       const started = !!lessons?.some(lesson => lesson.isStarted);
-      const current = !done && (lessons?.some(lesson => lesson.assessmentId === progress?.nextRecommendedAssessmentId) || (!progress?.nextRecommendedAssessmentId && index === 0));
+      const current = !done && (currentObjectiveId ? objective.id === currentObjectiveId : lessons?.some(lesson => lesson.assessmentId === progress?.nextRecommendedAssessmentId) || (!progress?.nextRecommendedAssessmentId && index === 0));
       const summary = objective.studyItems.find(item => item.primary.trim() !== objective.title.trim());
 
       return <LearningArrival key={objective.id} style={{ flexDirection: 'row', gap: 12 }}>
@@ -42,7 +45,12 @@ export function LearningCoursePath({ objectives, progress, onMemory, onPractice,
         </View>
         <View style={[s.card, { flex: 1, minWidth: 0, marginBottom: 10 }]}>
           <Text accessibilityRole="header" style={s.heading}>{objective.title}</Text>
-          {summary ? <Text numberOfLines={2} style={s.body}>{summary.primary}</Text> : null}
+          {showItemPreview ? <View style={[s.row, { flexWrap: 'wrap', gap: 6 }]}>
+            {objective.studyItems.slice(0, 4).map(item => <View key={item.id} style={{ maxWidth: '100%', paddingHorizontal: 9, paddingVertical: 6, borderRadius: 10, backgroundColor: palette.violetTint }}>
+              <Text numberOfLines={1} style={[s.small, { color: palette.violetDeep }]}>{item.primary}</Text>
+            </View>)}
+            {objective.studyItems.length > 4 ? <Text style={s.small}>+{objective.studyItems.length - 4}</Text> : null}
+          </View> : summary ? <Text numberOfLines={2} style={s.body}>{summary.primary}</Text> : null}
           {current || done || pending ? <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
             {current ? <View style={{ backgroundColor: palette.violetTint, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4 }}><Text style={[s.small, { color: palette.violetDeep }]}>{started ? ui.underway : (ui.zh ? '从这里开始' : 'Start here')}</Text></View> : null}
             {done ? <View style={{ backgroundColor: palette.mintTint, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4 }}><Text style={[s.small, { color: palette.successText }]}>✓ {ui.done}</Text></View> : null}
@@ -50,7 +58,7 @@ export function LearningCoursePath({ objectives, progress, onMemory, onPractice,
 
           </View> : null}
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <View style={{ flex: 1 }}><LearningButton compact secondary label={ui.content} onPress={() => { setReading({ position: 0, finished: false }); setSelectedId(objective.id); }} /></View>
+            <View style={{ flex: 1 }}><LearningButton compact secondary label={ui.content} onPress={() => { if (onStudy) onStudy(objective.id); else { setReading({ position: 0, finished: false }); setSelectedId(objective.id); } }} /></View>
 
           </View>
           {onPractice ? lessons?.filter(lesson => !sharedAssessmentIds.includes(lesson.assessmentId)).map((lesson, lessonIndex) => <AnimatedPressable key={lesson.assessmentId} accessibilityRole="button" onPress={() => onPractice(lesson.assessmentId)} style={{ minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, borderTopWidth: 1, borderColor: palette.line }}>

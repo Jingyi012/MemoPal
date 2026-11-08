@@ -18,7 +18,8 @@ export function EducationStudyCourseDraftButton() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState(false);
-  const [form] = Form.useForm<{ title: string; languageCode: string; text: string }>();
+  const [form] = Form.useForm<{ title: string; languageCode: string; text: string; groupSize: number }>();
+  const groupSize = Form.useWatch('groupSize', form) ?? 0;
   const text = Form.useWatch('text', form) ?? '';
   const entries = parseStudyList(text);
   const mutation = useMutation({ mutationFn: educationAuthoringApi.createStudyCourseDraft, retry: false,
@@ -35,8 +36,8 @@ export function EducationStudyCourseDraftButton() {
     <Modal title={zh ? '把学习资料变成小课' : 'Create lessons from your material'} open={open} footer={null}
       closable={!mutation.isPending} maskClosable={!mutation.isPending} keyboard={!mutation.isPending}
       onCancel={() => { if (!mutation.isPending) setOpen(false); }}>
-      <Form form={form} layout="vertical" initialValues={{ languageCode: zh ? 'zh-Hans' : 'en' }}
-        onFinish={value => { if (!preview) { setPreview(true); return; } mutation.mutate({ title: value.title, languageCode: value.languageCode, entries }); }}>
+      <Form form={form} layout="vertical" initialValues={{ languageCode: zh ? 'zh-Hans' : 'en', groupSize: 0 }}
+        onFinish={value => { if (!preview) { setPreview(true); return; } mutation.mutate({ title: value.title, languageCode: value.languageCode, entries, groupSize: value.groupSize || null }); }}>
         <Form.Item name="title" label={zh ? '小课名称' : 'Course title'} rules={[{ required: true, whitespace: true }, { max: 200 }]}><Input disabled={mutation.isPending} /></Form.Item>
         <Form.Item name="languageCode" label={zh ? '内容语言' : 'Content language'} rules={[{ required: true }]}>
           <Select disabled={mutation.isPending} options={[{ value: 'zh-Hans', label: '简体中文' }, { value: 'zh-Hant', label: '繁體中文' }, { value: 'en', label: 'English' }, { value: 'ms', label: 'Bahasa Melayu' }]} />
@@ -50,9 +51,15 @@ export function EducationStudyCourseDraftButton() {
           } }]}>
           <Input.TextArea rows={6} disabled={mutation.isPending} onChange={() => setPreview(false)} placeholder={'school\t学校\npencil\t铅笔\nbook\t书'} />
         </Form.Item>
+        <Form.Item name="groupSize" label={zh ? '学习安排' : 'Study arrangement'}>
+          <Select disabled={mutation.isPending} onChange={() => setPreview(false)} options={[
+            { value: 0, label: zh ? '全部一起学（一个单元）' : 'Keep together (one unit)' },
+            ...Array.from({ length: 50 }, (_, index) => ({ value: index + 1, label: zh ? `每个单元 ${index + 1} 个词条` : `${index + 1} words per unit` })),
+          ]} />
+        </Form.Item>
         {preview && <Card size="small" style={{ borderRadius: 20, marginBottom: 16 }}>
           <Typography.Title level={5}>{zh ? '生成预览' : 'Draft preview'}</Typography.Title>
-          <Typography.Paragraph>{zh ? `${Math.ceil(entries.length / 5)} 节小课 · ${entries.length} 张教学卡片 · ${clueCount} 道文字回忆题` : `${Math.ceil(entries.length / 5)} lessons · ${entries.length} study cards · ${clueCount} written recall questions`}</Typography.Paragraph>
+          <Typography.Paragraph>{zh ? `${groupSize ? Math.ceil(entries.length / groupSize) : 1} 个单元 · ${entries.length} 张教学卡片 · ${clueCount} 道文字回忆题` : `${groupSize ? Math.ceil(entries.length / groupSize) : 1} units · ${entries.length} study cards · ${clueCount} written recall questions`}</Typography.Paragraph>
           <div style={{ maxHeight: 220, overflowY: 'auto', overflowWrap: 'anywhere' }}>{entries.map((entry, index) => <p key={index}><strong>{entry.text}</strong>{entry.meaning ? ` — ${entry.meaning}` : ''}</p>)}</div>
         </Card>}
         <Alert type="info" role="note" showIcon style={{ marginBottom: 16 }} message={zh ? '仅保存私人草稿，需检查后发布。相同词表与标题会打开原课程，不覆盖你的修改。' : 'Saved as a private draft for review. The same list and title reopens its original course without overwriting edits.'}

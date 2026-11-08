@@ -27,3 +27,38 @@
 学习内容卡片使用纯色主题标题栏和纸张色正文区。Admin 的 `primary`／`phonetic`／`secondary`／`extra` 在同一卡片内依次呈现；空字段及重复内容不产生空区块。互动图示位于卡片后，继续由 Admin 配置数据控制。首张卡片的下一步按钮全宽，后续卡片的上一步／下一步左右排列。
 
 `npm run check:mobile` 包含浅／深主题在卡片、配对、反馈、主视觉及按钮上的 WCAG AA 文字对比度检查。
+
+## 私人课程与卡片学习的统一布局
+
+- `LearningCourseHero` 由公开课程和私人课程共用；私人页复用
+  `LearningCourseUnits` / `LearningCoursePath`，显示单元、真实词语预览及底部主操作。
+  学习卡片与单元数量来自接口，有练习时才显示服务器答题进度。
+- `LearningStudySession` 使用完整高度的学习舞台、单元位置、沫沫提示和
+  `LearningStudyNavigator`。卡片导航只切换本地阅读位置，不写入掌握度或分数。
+- 简短的 `LanguageItem` 通过 `LearningWordCard` 居中显示词语、原有音标与释义。
+  有释义时可以展开／收起；没有释义时不生成假内容。朗读继续复用
+  `LearningReadAloud`，使用原有队列、离开停止和错误提示。
+- 长段说明和教学图示继续使用原有内容卡和互动图示。图示配置仍来自 Admin。
+  所有新界面使用学习主题颜色、原有字体与伙伴素材，没有新增图片或依赖。
+
+本次布局验证：手机端类型检查、Lint（仅原有 5 条警告）及 189 项测试通过；
+Android 生产资源导出通过。现有 Android 模拟器核对了私人课程概览、卡片阅读、
+单元内横向导航和左右翻页。首张导航卡片的裁切与内容／图示重复 key 已修正。
+
+## 我的学习内容：私人书架
+
+列表采用纯色紫色概览、沫沫伙伴、搜索、全部／可学习／草稿筛选和书本封面卡片。
+`PersonalStudyShelfCard` 与 `personalStudyLibraryStyles` 复用学习主题、字体和按压组件；
+没有增加图片或依赖。数量、语言及状态都来自私人课程接口，不生成学习进度。
+可以学习的内容进入私人课程，草稿继续原有编辑流程；空状态提供恢复筛选或添加内容。
+
+设计参考 [Quizlet 的学习资料组织方式](https://help.quizlet.com/hc/en-ca/articles/360030986151-Organizing-study-content-with-folders)
+及 [Duolingo 按学习目标选择练习的方式](https://blog.duolingo.com/guide-to-duolingo-practice-hub/)，
+在当前功能范围内应用资料浏览和明确行动的思路，没有引入文件夹或新的业务规则。
+
+学习首页的课程列表使用 `LearningCatalogCourseCard`：浅色学科封面显示图标、学科、
+作者和已有收藏状态；纸张色正文突出课程名、适用阶段和真实练习／题目数量。
+底部将服务器进度和单一课程入口放在一起；可显示探索、继续或再次练习，仍进入
+原有课程详情。进度加载或失败时保留入口，不显示虚假的未开始状态。
+卡片专属样式通过 `createLearningStyles` 管理，复用学科图标、进度条、字体和按压动画，
+不用渐变或新增图片。窄屏与长文本通过换行和弹性布局适配。

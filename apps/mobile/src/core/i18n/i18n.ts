@@ -481,6 +481,7 @@ export const translations = {
       daysAgo: 'd ago',
     },
     library: {
+      memoryTools: 'Memory tools',
       eyebrow: 'Library',
       title: 'Library',
       description: 'Your saved memories in one place',
@@ -2322,6 +2323,7 @@ export const translations = {
       daysAgo: '天前',
     },
     library: {
+      memoryTools: '记忆工具',
       eyebrow: '记忆库',
       title: '记忆库',
       description: '你的记忆都集中在这里',

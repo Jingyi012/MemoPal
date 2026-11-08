@@ -4,8 +4,13 @@ import type { EducationPublicCourseDetail } from '../types/educationPractice.typ
 import { learningLayout, learningTypeScale } from '../theme/learningTheme';
 import { LearningReadAloud } from './LearningReadAloud';
 import { useLearningCopy, useLearningStyles } from './LearningUi';
+import { LearningWordCard } from './LearningWordCard';
 
 type StudyItem = EducationPublicCourseDetail['objectives'][number]['studyItems'][number];
+
+export function isWordStudyCard(item: StudyItem) {
+  return item.kind === 'LanguageItem' && item.primary.trim().length <= 80 && !item.illustrationCode;
+}
 
 /** Keep one authored learning item together; diagrams remain a separate activity. */
 export function LearningStudyContentCard({ item }: { item: StudyItem }) {
@@ -16,6 +21,9 @@ export function LearningStudyContentCard({ item }: { item: StudyItem }) {
   const extra = item.extra?.trim();
   const showMeaning = !!secondary && secondary !== primary;
   const showExtra = !!extra && extra !== primary && extra !== secondary;
+
+  if (isWordStudyCard(item)) return <LearningWordCard key={item.id} primary={item.primary} secondary={item.secondary}
+    phonetic={item.phonetic} extra={item.extra} language={item.languageCode} />;
 
   return <View style={[s.card, { padding: 0, gap: 0, overflow: 'hidden' }]}>
     <View style={[s.row, {

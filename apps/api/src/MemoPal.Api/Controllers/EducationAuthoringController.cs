@@ -13,6 +13,16 @@ namespace MemoPal.Api.Controllers;
 [Route("v1/education")]
 public sealed class EducationAuthoringController(ISender sender) : ApiControllerBase(sender)
 {
+    [HttpGet("my-courses")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> GetPersonalCourses(CancellationToken ct) =>
+        Ok(await Sender.Send(new GetPersonalStudyCoursesQuery(GetUserIdOrThrow()), ct));
+
+    [HttpGet("my-courses/{courseId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> GetPersonalCourse(string courseId, CancellationToken ct) =>
+        Ok(await Sender.Send(new GetPersonalStudyCourseQuery(GetUserIdOrThrow(), courseId), ct));
+
     [HttpPost("course-drafts/from-study-list")]
     [RequestSizeLimit(131072)]
     [RestrictedLearner(RestrictedLearnerAccess.Deny)]

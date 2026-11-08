@@ -1,3 +1,4 @@
+import { ContentImportActions } from '../components/ContentImportActions';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -5,7 +6,7 @@ import type { MemoryGoalType } from '@/features/memory-sets';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, ClipboardList, Plus, ScanText } from '@/core/icons';
+import { ArrowLeft, ArrowRight, Plus } from '@/core/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { firstParam, parseBulkItems, parseComposerGoal, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
@@ -312,28 +313,24 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                   style={styles.addButton}
                 />
               </View>
-              <View style={styles.importActions}>
-                <AnimatedPressable
-                  accessibilityLabel={bulkMode ? t('hidePasteMany') : t('pasteManyAccessibility')}
-                  onPress={() => { setBulkMode((current) => !current); setMessage(null); }}
-                  style={[styles.importAction, bulkMode && styles.importActionSelected]}>
-                  <ClipboardList size={16} color={theme.violetDeep} strokeWidth={2.2} />
-                  <Text style={styles.importActionText}>{bulkMode ? t('addOne') : t('pasteMany')}</Text>
-                </AnimatedPressable>
-                <AnimatedPressable
-                  accessibilityLabel={t('scanFromPhotoAccessibility')}
-                  onPress={() => {
+              <ContentImportActions
+                paste={{
+                  label: bulkMode ? t('addOne') : t('pasteMany'),
+                  accessibilityLabel: bulkMode ? t('hidePasteMany') : t('pasteManyAccessibility'),
+                  onPress: () => { setBulkMode((current) => !current); setMessage(null); },
+                }}
+                scan={{
+                  label: t('scanFromPhoto'),
+                  accessibilityLabel: t('scanFromPhotoAccessibility'),
+                  onPress: () => {
                     const draftId = saveOcrDraft(itemValues, {
                       title: title.trim() || undefined,
                       goalType,
                     });
                     router.push(`/scan-memory?sourceDraftId=${encodeURIComponent(draftId)}` as Href);
-                  }}
-                  style={styles.importAction}>
-                  <ScanText size={16} color={theme.violetDeep} strokeWidth={2.2} />
-                  <Text style={styles.importActionText}>{t('scanFromPhoto')}</Text>
-                </AnimatedPressable>
-              </View>
+                  },
+                }}
+              />
               {bulkMode ? (
                 <View style={styles.bulkCard}>
                   <Text style={styles.bulkTitle}>{t('onePerLine')}</Text>
@@ -516,14 +513,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   cardTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 10 },
   cardBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 },
-  importActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  importActionContainer: { flex: 1, minWidth: 0 },
-  importAction: { flex: 1, minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 8 },
-  importActionSelected: { borderColor: theme.berry, backgroundColor: theme.berryTint },
-  importActionIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  pasteIcon: { backgroundColor: theme.berryTint },
-  scanIcon: { backgroundColor: theme.violetTint },
-  importActionText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, lineHeight: 15, flexShrink: 1, textAlign: 'center' },
   bulkCard: { borderRadius: 15, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 10, marginBottom: 10 },
   bulkTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginBottom: 7 },
   bulkInput: { minHeight: 105, paddingTop: 12, textAlignVertical: 'top', backgroundColor: theme.paper },

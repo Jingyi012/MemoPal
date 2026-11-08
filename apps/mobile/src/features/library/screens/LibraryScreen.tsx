@@ -21,7 +21,7 @@ import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Href, useRouter } from 'expo-router';
-import { Archive, Check, CircleHelp, Globe2, Layers, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from '@/core/icons';
+import { Archive, Check, CircleHelp, Globe2, Layers, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Sparkles, Trash2 } from '@/core/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -309,6 +309,10 @@ export default function LibraryScreen() {
         title={t('title')}
         description={t('description')}
         actions={[{ icon: CircleHelp, onPress: () => setReplayRequested(true), accessibilityLabel: tourT('guideEntry') }]}
+        additionalContent={<View style={{ alignItems: 'flex-start' }}>
+          <AppButton label={t('memoryTools')} icon={Sparkles} variant="secondary" size="compact"
+            onPress={() => router.push('/(tabs)/practice' as Href)} />
+        </View>}
         hideBackButton
       />
 

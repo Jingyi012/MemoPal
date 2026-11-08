@@ -9,9 +9,9 @@ import { LearningStudySession, type LearningReadingPosition } from '../component
 import { useIsFocused } from '@react-navigation/native';
 import { studyObjectivesForLesson } from '../utils/educationObjectiveLesson';
 import { LearningMemoryCard } from '../components/LearningMemoryCard';
-import { LearningArrival, LearningButton, LearningProgress, LearningSkeleton, SubjectArtwork, LearningThemeContext, useLearningStyles, learningThemeFor, useLearningCopy } from '../components/LearningUi';
+import { LearningArrival, LearningButton, LearningSkeleton, LearningThemeContext, useLearningStyles, learningThemeFor, useLearningCopy } from '../components/LearningUi';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { LearningCourseHero } from '../components/LearningCourseHero';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEducationGuidedCourseProgress, useEducationPublicCourse, useEducationPublicCourseSave, useReportEducationCourse, useStartOrResumeEducationGuidedSession } from '@/features/education/hooks/useEducationPracticeItems';
 import * as Linking from 'expo-linking';
@@ -98,11 +98,9 @@ export default function EducationPublicCourseScreen() {
           </AnimatedPressable>
         </View>
           : <>
-            <LearningArrival><LinearGradient colors={palette.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={ls.courseHero}>
-              <View style={{ position: 'absolute', right: 12, top: 10 }}><SubjectArtwork theme={subjectTheme} size={60} /></View>
-              <View style={{ paddingRight: 64, gap: 4 }}><Text numberOfLines={2} accessibilityRole="header" style={[ls.title, { color: palette.heroInk }]}>{course.data.title}</Text><Text style={[ls.small, { color: palette.heroInk }]}>{copy.publicCourseAuthor(course.data.authorDisplayName)} · {guidedProgress.isLoading ? '…' : guidedProgress.isError ? '—' : ui.correct(solved, total)}</Text></View>
-              <LearningProgress value={solved} total={total} color={palette.heroInk} />
-            </LinearGradient></LearningArrival>
+            <LearningArrival><LearningCourseHero title={course.data.title} theme={subjectTheme}
+              subtitle={`${copy.publicCourseAuthor(course.data.authorDisplayName)} · ${guidedProgress.isLoading ? '…' : guidedProgress.isError ? '—' : ui.correct(solved, total)}`}
+              progress={{ value: solved, total }} /></LearningArrival>
             {saveCourse.isError ? <Text accessibilityRole="alert" style={styles.saveError}>{copy.savePublicCourseError}</Text> : null}
             <AnimatedPressable accessibilityState={{ expanded: noteOpen }} onPress={() => setNoteOpen(value => !value)} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={ls.small}>ⓘ {ui.note} {noteOpen ? '−' : '+'}</Text></AnimatedPressable>
             {noteOpen ? <View style={ls.card}><Text style={ls.body}>{copy.publicCoursePracticeNote}</Text>{course.data.isMemoPalStarter ? <Text style={ls.small}>{copy.starterCourseLanguageNote}</Text> : null}</View> : null}
