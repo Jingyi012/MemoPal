@@ -1,8 +1,17 @@
 import api from '@/core/api/apiClient';
 import type { GeneralResponse } from '@/core/types/general';
 import type { MyEducationAssignment } from '@/features/education/types/educationAssignment.types';
+import type { EducationPublicCourseDetail } from '../types/educationPractice.types';
+
+export type FamilyAssignmentStudyObjective = Omit<EducationPublicCourseDetail['objectives'][number], 'recommendedMemorySet'>;
 
 export const educationAssignmentApi = {
+  async getFamilyStudyItems(assignmentId: string): Promise<FamilyAssignmentStudyObjective[]> {
+    const response = await api.get<GeneralResponse<FamilyAssignmentStudyObjective[]>>(
+      `/v1/education/assignments/${encodeURIComponent(assignmentId)}/family-study-items`);
+    if (!response.data.success || !response.data.data) throw new Error(response.data.message ?? 'Could not load study content.');
+    return response.data.data;
+  },
   async getMyAssignments(): Promise<MyEducationAssignment[]> {
     const response = await api.get<GeneralResponse<MyEducationAssignment[]>>(
       '/v1/education/my/assignments',

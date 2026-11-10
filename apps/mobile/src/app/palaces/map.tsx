@@ -7,7 +7,7 @@ export default function PalaceMapRoute() {
   const { enabled, isLoading } = useMemoryModuleAccess('palace');
 
   if (isLoading) return <LoadingView />;
-  if (!enabled) return <Redirect href={'/(tabs)/practice' as Href} />;
+  if (!enabled) return <Redirect href={'/memory-tools' as Href} />;
 
   return <PalaceMapScreen />;
 }

@@ -1,0 +1,2101 @@
+[
+  {
+    "id": "system-learn-campus-v1",
+    "title": "中文体验：我的校园",
+    "subject": "chinese",
+    "stage": "early-primary",
+    "language": "zh-Hans",
+    "unitTitle": "我的校园 · 认识身边的词",
+    "objectives": [
+      {
+        "key": "places",
+        "title": "校园里的地方",
+        "items": [
+          {
+            "primary": "学校",
+            "phonetic": "xué xiào",
+            "secondary": "我们一起上课、学习的地方。",
+            "extra": "读一读：我去学校。"
+          },
+          {
+            "primary": "门口",
+            "phonetic": "mén kǒu",
+            "secondary": "门旁边、进出的地方。",
+            "extra": "读一读：我们在门口见面。"
+          },
+          {
+            "primary": "操场",
+            "phonetic": "cāo chǎng",
+            "secondary": "学校里做操、跑步和活动的地方。",
+            "extra": "读一读：同学们在操场上跑步。"
+          }
+        ]
+      },
+      {
+        "key": "nature",
+        "title": "校园里的小发现",
+        "items": [
+          {
+            "primary": "太阳",
+            "phonetic": "tài yáng",
+            "secondary": "白天给我们带来光和温暖。",
+            "extra": "读一读：太阳出来了。不要直视太阳。"
+          },
+          {
+            "primary": "小鸟",
+            "phonetic": "xiǎo niǎo",
+            "secondary": "小鸟有羽毛，会发出叫声。",
+            "extra": "读一读：小鸟在树上。"
+          },
+          {
+            "primary": "花",
+            "phonetic": "huā",
+            "secondary": "有些花有鲜艳的颜色，有些花有香味。",
+            "extra": "读一读：我们看花，不随意摘花。"
+          }
+        ]
+      },
+      {
+        "key": "actions",
+        "title": "一起动一动",
+        "items": [
+          {
+            "primary": "走",
+            "phonetic": "zǒu",
+            "secondary": "两脚交替向前移动。",
+            "extra": "读一读：我们慢慢走。"
+          },
+          {
+            "primary": "跑",
+            "phonetic": "pǎo",
+            "secondary": "比走更快的移动动作。",
+            "extra": "读一读：我在操场上跑。"
+          },
+          {
+            "primary": "跳",
+            "phonetic": "tiào",
+            "secondary": "用力蹬地，让身体离开地面。",
+            "extra": "读一读：小朋友轻轻跳。注意周围空间。"
+          }
+        ]
+      }
+    ],
+    "lessons": [
+      {
+        "key": "lesson1",
+        "title": "第 1 课 · 找到校园里的地方",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "places",
+            "prompt": "同学们一起上课和学习的地方叫什么？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "学校"
+              },
+              {
+                "id": "B",
+                "label": "门口"
+              },
+              {
+                "id": "C",
+                "label": "操场"
+              }
+            ],
+            "correctOptionId": "A",
+            "explanation": "学校是大家一起上课、学习的地方。"
+          },
+          {
+            "id": null,
+            "objectiveId": "places",
+            "prompt": "给校园里的词找到合适的说明。",
+            "type": "matching",
+            "fillMode": null,
+            "maxScore": 1,
+            "matchingPairs": [
+              {
+                "left": {
+                  "id": "L1",
+                  "label": "门口"
+                },
+                "right": {
+                  "id": "R1",
+                  "label": "门旁边、进出的地方"
+                }
+              },
+              {
+                "left": {
+                  "id": "L2",
+                  "label": "操场"
+                },
+                "right": {
+                  "id": "R2",
+                  "label": "做操、跑步的地方"
+                }
+              }
+            ],
+            "explanation": "门口方便进出；操场适合做操和跑步。"
+          },
+          {
+            "id": null,
+            "objectiveId": "places",
+            "prompt": "写出词语：同学们在这里做操、跑步。这个地方叫____。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "操场"
+            ],
+            "trimTextAnswers": true,
+            "explanation": "做操和跑步的地方叫操场。"
+          }
+        ]
+      },
+      {
+        "key": "lesson2",
+        "title": "第 2 课 · 发现校园里的自然",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "nature",
+            "prompt": "哪个词指白天给我们带来光和温暖的天体？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "小鸟"
+              },
+              {
+                "id": "B",
+                "label": "太阳"
+              },
+              {
+                "id": "C",
+                "label": "花"
+              }
+            ],
+            "correctOptionId": "B",
+            "explanation": "太阳给我们带来光和温暖。不要直视太阳。"
+          },
+          {
+            "id": null,
+            "objectiveId": "nature",
+            "prompt": "选出刚刚学过、可以用来描述校园中自然事物的词。",
+            "type": "multiple-select",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "太阳"
+              },
+              {
+                "id": "B",
+                "label": "门口"
+              },
+              {
+                "id": "C",
+                "label": "小鸟"
+              },
+              {
+                "id": "D",
+                "label": "花"
+              }
+            ],
+            "correctOptionIds": [
+              "A",
+              "C",
+              "D"
+            ],
+            "explanation": "太阳、小鸟和花是这一课的自然事物；门口是一个位置。"
+          },
+          {
+            "id": null,
+            "objectiveId": "nature",
+            "prompt": "写出词语：有羽毛，在树上发出叫声的小动物，叫____。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "小鸟",
+              "鸟"
+            ],
+            "trimTextAnswers": true,
+            "explanation": "这里描述的是小鸟。"
+          }
+        ]
+      },
+      {
+        "key": "lesson3",
+        "title": "第 3 课 · 读懂动作",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "actions",
+            "prompt": "哪个字表示用力蹬地，让身体离开地面？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "走"
+              },
+              {
+                "id": "B",
+                "label": "跑"
+              },
+              {
+                "id": "C",
+                "label": "跳"
+              }
+            ],
+            "correctOptionId": "C",
+            "explanation": "跳是蹬地后身体离开地面的动作。"
+          },
+          {
+            "id": null,
+            "objectiveId": "actions",
+            "prompt": "把词语排成一句通顺的话。",
+            "type": "ordering",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "B",
+                "label": "在操场上"
+              },
+              {
+                "id": "A",
+                "label": "我"
+              },
+              {
+                "id": "C",
+                "label": "跑。"
+              }
+            ],
+            "correctSequenceIds": [
+              "A",
+              "B",
+              "C"
+            ],
+            "explanation": "句子是：我在操场上跑。"
+          },
+          {
+            "id": null,
+            "objectiveId": "actions",
+            "prompt": "写出动作字：我们在走廊里慢慢____，不要奔跑。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "走"
+            ],
+            "trimTextAnswers": true,
+            "explanation": "在走廊里慢慢走，更安全。"
+          }
+        ]
+      },
+      {
+        "key": "challenge",
+        "title": "校园小挑战 · 自己想一想",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "places",
+            "prompt": "小明和同学约好在进出教室的地方见面。他们可以说：我们在____见。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "门口",
+              "教室门口"
+            ],
+            "trimTextAnswers": true,
+            "explanation": "门口是进出的位置。这道题要把词语用在新的句子里。"
+          },
+          {
+            "id": null,
+            "objectiveId": "nature",
+            "prompt": "请写出这句话缺少的词：清晨，____从东方升起，带来光亮。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "太阳"
+            ],
+            "trimTextAnswers": true,
+            "explanation": "太阳从东方升起。"
+          },
+          {
+            "id": null,
+            "objectiveId": "actions",
+            "prompt": "小兔子蹬地，身体离开了地面。这是在做什么动作？写一个字。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "跳"
+            ],
+            "trimTextAnswers": true,
+            "explanation": "蹬地离开地面的动作是跳。"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "system-learn-daily-v1",
+    "title": "中文体验：我的生活",
+    "subject": "chinese",
+    "stage": "early-primary",
+    "language": "zh-Hans",
+    "unitTitle": "我的生活 · 把词语用起来",
+    "kind": "LanguageItem",
+    "objectives": [
+      {
+        "key": "things",
+        "title": "身边的物品",
+        "items": [
+          {
+            "primary": "书",
+            "secondary": "可以阅读、记录知识的物品。",
+            "phonetic": "shū",
+            "extra": "读一读：我看书。"
+          },
+          {
+            "primary": "杯子",
+            "secondary": "可以用来装水的物品。",
+            "phonetic": "bēi zi",
+            "extra": "读一读：杯子里有水。"
+          },
+          {
+            "primary": "书包",
+            "secondary": "装书和文具的包。",
+            "phonetic": "shū bāo",
+            "extra": "读一读：我整理书包。"
+          }
+        ]
+      },
+      {
+        "key": "routine",
+        "title": "每天的小行动",
+        "items": [
+          {
+            "primary": "洗手",
+            "secondary": "用水和清洁用品清洗双手。",
+            "phonetic": "xǐ shǒu",
+            "extra": "读一读：吃饭前先洗手。"
+          },
+          {
+            "primary": "吃饭",
+            "secondary": "进食饭菜。",
+            "phonetic": "chī fàn",
+            "extra": "读一读：我们一起吃饭。"
+          },
+          {
+            "primary": "睡觉",
+            "secondary": "让身体休息的一种方式。",
+            "phonetic": "shuì jiào",
+            "extra": "读一读：晚上按时睡觉。"
+          }
+        ]
+      },
+      {
+        "key": "polite",
+        "title": "友好地说话",
+        "items": [
+          {
+            "primary": "请",
+            "secondary": "请求别人做事时，可以用“请”让表达更礼貌。",
+            "phonetic": "qǐng",
+            "extra": "请帮我拿一本书。"
+          },
+          {
+            "primary": "谢谢",
+            "secondary": "别人帮助你时，用来表达感谢。",
+            "phonetic": "xiè xie",
+            "extra": "谢谢你帮我。"
+          },
+          {
+            "primary": "对不起",
+            "secondary": "做错事或给别人带来麻烦时，可以用来道歉。",
+            "phonetic": "duì bu qǐ",
+            "extra": "对不起，我碰掉了你的铅笔。"
+          }
+        ]
+      }
+    ],
+    "lessons": [
+      {
+        "key": "lesson1",
+        "title": "第 1课 · 身边的物品",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "things",
+            "prompt": "上学时，要把书和文具放进哪件物品？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "杯子"
+              },
+              {
+                "id": "B",
+                "label": "书包"
+              },
+              {
+                "id": "C",
+                "label": "书"
+              }
+            ],
+            "correctOptionId": "B",
+            "explanation": "书包可以装书和文具。"
+          },
+          {
+            "id": null,
+            "objectiveId": "things",
+            "prompt": "给物品找到用途。",
+            "type": "matching",
+            "fillMode": null,
+            "maxScore": 1,
+            "matchingPairs": [
+              {
+                "left": {
+                  "id": "L1",
+                  "label": "杯子"
+                },
+                "right": {
+                  "id": "R1",
+                  "label": "装水"
+                }
+              },
+              {
+                "left": {
+                  "id": "L2",
+                  "label": "书"
+                },
+                "right": {
+                  "id": "R2",
+                  "label": "阅读"
+                }
+              }
+            ],
+            "explanation": "杯子可以装水，书可以用来阅读。"
+          },
+          {
+            "id": null,
+            "objectiveId": "things",
+            "prompt": "写出物品名：装书和文具的包叫____。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "书包"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "“书”和“包”组成“书包”。"
+          }
+        ]
+      },
+      {
+        "key": "lesson2",
+        "title": "第 2课 · 每天的小行动",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "routine",
+            "prompt": "吃饭前，哪一个行动能帮助保持双手清洁？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "睡觉"
+              },
+              {
+                "id": "B",
+                "label": "洗手"
+              },
+              {
+                "id": "C",
+                "label": "看书"
+              }
+            ],
+            "correctOptionId": "B",
+            "explanation": "吃饭前先洗手。"
+          },
+          {
+            "id": null,
+            "objectiveId": "routine",
+            "prompt": "把词语排成一句话。",
+            "type": "ordering",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "P3",
+                "label": "再吃饭。"
+              },
+              {
+                "id": "P2",
+                "label": "先洗手，"
+              },
+              {
+                "id": "P1",
+                "label": "我"
+              }
+            ],
+            "correctSequenceIds": [
+              "P1",
+              "P2",
+              "P3"
+            ],
+            "explanation": "句子是：我先洗手，再吃饭。"
+          },
+          {
+            "id": null,
+            "objectiveId": "routine",
+            "prompt": "写出词语：晚上躺下休息，我们要____。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "睡觉"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "晚上睡觉，让身体休息。"
+          }
+        ]
+      },
+      {
+        "key": "lesson3",
+        "title": "第 3课 · 友好地说话",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "polite",
+            "prompt": "同学帮你捡起书，你可以说什么？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "谢谢"
+              },
+              {
+                "id": "B",
+                "label": "对不起"
+              },
+              {
+                "id": "C",
+                "label": "晚安"
+              }
+            ],
+            "correctOptionId": "A",
+            "explanation": "别人帮助你，可以说“谢谢”。"
+          },
+          {
+            "id": null,
+            "objectiveId": "polite",
+            "prompt": "选出适合情境的表达。",
+            "type": "matching",
+            "fillMode": null,
+            "maxScore": 1,
+            "matchingPairs": [
+              {
+                "left": {
+                  "id": "L1",
+                  "label": "请求别人帮助"
+                },
+                "right": {
+                  "id": "R1",
+                  "label": "请"
+                }
+              },
+              {
+                "left": {
+                  "id": "L2",
+                  "label": "不小心碰掉别人的东西"
+                },
+                "right": {
+                  "id": "R2",
+                  "label": "对不起"
+                }
+              }
+            ],
+            "explanation": "请求时可以用“请”；给别人添麻烦时可以说“对不起”。"
+          },
+          {
+            "id": null,
+            "objectiveId": "polite",
+            "prompt": "你请求同学帮忙拿书，可以说：“____帮我拿一下书。”",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "请"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "“请”让请求更礼貌。"
+          }
+        ]
+      },
+      {
+        "key": "challenge",
+        "title": "单元挑战 · 想一想，用一用",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "things",
+            "prompt": "妈妈把水倒进一个可以拿来喝水的容器。写出本单元学过的这个物品名。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "杯子"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "本单元学习的装水物品是杯子。"
+          },
+          {
+            "id": null,
+            "objectiveId": "routine",
+            "prompt": "你刚从外面回来准备吃饭。先清洁双手，这个行动叫什么？",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "洗手"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "先洗手，再吃饭。"
+          },
+          {
+            "id": null,
+            "objectiveId": "polite",
+            "prompt": "你不小心踩到了同学的脚，应该先说什么？",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "对不起"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "先道歉，也可以关心对方有没有受伤。"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "system-learn-school-things-v1",
+    "title": "English starter: School things",
+    "subject": "english",
+    "stage": "early-primary",
+    "language": "en",
+    "unitTitle": "School things · Meet your learning tools",
+    "kind": "LanguageItem",
+    "objectives": [
+      {
+        "key": "tools",
+        "title": "Pencil, pen and eraser",
+        "items": [
+          {
+            "primary": "pencil",
+            "secondary": "You can write or draw with a pencil.",
+            "phonetic": null,
+            "extra": "I draw with a pencil."
+          },
+          {
+            "primary": "pen",
+            "secondary": "A pen writes with ink.",
+            "phonetic": null,
+            "extra": "This is my pen."
+          },
+          {
+            "primary": "eraser",
+            "secondary": "An eraser can remove pencil marks.",
+            "phonetic": null,
+            "extra": "I use an eraser."
+          }
+        ]
+      },
+      {
+        "key": "desk",
+        "title": "Book, ruler and bag",
+        "items": [
+          {
+            "primary": "book",
+            "secondary": "A book has pages to read.",
+            "phonetic": null,
+            "extra": "I read a book."
+          },
+          {
+            "primary": "ruler",
+            "secondary": "A ruler helps you draw straight lines and measure length.",
+            "phonetic": null,
+            "extra": "I draw a line with a ruler."
+          },
+          {
+            "primary": "bag",
+            "secondary": "A bag can hold your school things.",
+            "phonetic": null,
+            "extra": "My book is in my bag."
+          }
+        ]
+      },
+      {
+        "key": "sentences",
+        "title": "Use the words",
+        "items": [
+          {
+            "primary": "This is my pencil.",
+            "secondary": "Use “This is my …” to introduce one thing that belongs to you.",
+            "phonetic": null,
+            "extra": "This is my bag."
+          },
+          {
+            "primary": "I have a book.",
+            "secondary": "Use “I have a …” to talk about one thing you have.",
+            "phonetic": null,
+            "extra": "I have a ruler."
+          },
+          {
+            "primary": "an eraser",
+            "secondary": "Use “an” before the vowel sound at the start of “eraser”.",
+            "phonetic": null,
+            "extra": "I have an eraser."
+          }
+        ]
+      }
+    ],
+    "lessons": [
+      {
+        "key": "lesson1",
+        "title": "Lesson 1 · Pencil, pen and eraser",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "tools",
+            "prompt": "Which tool can remove pencil marks?",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "pen"
+              },
+              {
+                "id": "B",
+                "label": "eraser"
+              },
+              {
+                "id": "C",
+                "label": "pencil"
+              }
+            ],
+            "correctOptionId": "B",
+            "explanation": "An eraser can remove pencil marks."
+          },
+          {
+            "id": null,
+            "objectiveId": "tools",
+            "prompt": "Match each word to its use.",
+            "type": "matching",
+            "fillMode": null,
+            "maxScore": 1,
+            "matchingPairs": [
+              {
+                "left": {
+                  "id": "L1",
+                  "label": "pen"
+                },
+                "right": {
+                  "id": "R1",
+                  "label": "writes with ink"
+                }
+              },
+              {
+                "left": {
+                  "id": "L2",
+                  "label": "pencil"
+                },
+                "right": {
+                  "id": "R2",
+                  "label": "makes marks that an eraser can remove"
+                }
+              }
+            ],
+            "explanation": "A pen uses ink. Pencil marks can be erased."
+          },
+          {
+            "id": null,
+            "objectiveId": "tools",
+            "prompt": "Write the word: I can remove a pencil mark with an ____.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "eraser"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "The word is eraser."
+          }
+        ]
+      },
+      {
+        "key": "lesson2",
+        "title": "Lesson 2 · Book, ruler and bag",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "desk",
+            "prompt": "Which tool helps you draw a straight line?",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "bag"
+              },
+              {
+                "id": "B",
+                "label": "book"
+              },
+              {
+                "id": "C",
+                "label": "ruler"
+              }
+            ],
+            "correctOptionId": "C",
+            "explanation": "A ruler helps you draw a straight line."
+          },
+          {
+            "id": null,
+            "objectiveId": "desk",
+            "prompt": "Match the school things.",
+            "type": "matching",
+            "fillMode": null,
+            "maxScore": 1,
+            "matchingPairs": [
+              {
+                "left": {
+                  "id": "L1",
+                  "label": "book"
+                },
+                "right": {
+                  "id": "R1",
+                  "label": "has pages to read"
+                }
+              },
+              {
+                "left": {
+                  "id": "L2",
+                  "label": "bag"
+                },
+                "right": {
+                  "id": "R2",
+                  "label": "holds school things"
+                }
+              }
+            ],
+            "explanation": "You read a book and carry things in a bag."
+          },
+          {
+            "id": null,
+            "objectiveId": "desk",
+            "prompt": "Write the word: My school things are inside my ____.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "bag"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "A bag holds your school things."
+          }
+        ]
+      },
+      {
+        "key": "lesson3",
+        "title": "Lesson 3 · Use the words",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "sentences",
+            "prompt": "Choose the correct sentence.",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "I have a eraser."
+              },
+              {
+                "id": "B",
+                "label": "I have an eraser."
+              },
+              {
+                "id": "C",
+                "label": "I has an eraser."
+              }
+            ],
+            "correctOptionId": "B",
+            "explanation": "Use “an” before the vowel sound in eraser, and “I have”."
+          },
+          {
+            "id": null,
+            "objectiveId": "sentences",
+            "prompt": "Build the sentence.",
+            "type": "ordering",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "P4",
+                "label": "pencil."
+              },
+              {
+                "id": "P3",
+                "label": "my"
+              },
+              {
+                "id": "P2",
+                "label": "is"
+              },
+              {
+                "id": "P1",
+                "label": "This"
+              }
+            ],
+            "correctSequenceIds": [
+              "P1",
+              "P2",
+              "P3",
+              "P4"
+            ],
+            "explanation": "This is my pencil."
+          },
+          {
+            "id": null,
+            "objectiveId": "sentences",
+            "prompt": "Complete with a or an: I have ____ book.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "a"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "Book starts with a consonant sound, so use a."
+          }
+        ]
+      },
+      {
+        "key": "challenge",
+        "title": "Unit challenge · Recall and apply",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "tools",
+            "prompt": "You want to remove a pencil mark. Name the tool you need.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "eraser"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "An eraser removes pencil marks."
+          },
+          {
+            "id": null,
+            "objectiveId": "desk",
+            "prompt": "You need a straight line for your drawing. Name the school tool that helps.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "ruler"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "A ruler helps with straight lines."
+          },
+          {
+            "id": null,
+            "objectiveId": "sentences",
+            "prompt": "Complete with a or an: This is ____ eraser.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "an"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "Eraser begins with a vowel sound."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "system-learn-actions-v1",
+    "title": "English starter: Everyday actions",
+    "subject": "english",
+    "stage": "early-primary",
+    "language": "en",
+    "unitTitle": "Everyday actions · Say what you do",
+    "kind": "LanguageItem",
+    "objectives": [
+      {
+        "key": "move",
+        "title": "Walk, run and jump",
+        "items": [
+          {
+            "primary": "walk",
+            "secondary": "Move on foot, one step at a time.",
+            "phonetic": null,
+            "extra": "I walk to the door."
+          },
+          {
+            "primary": "run",
+            "secondary": "Move faster than walking.",
+            "phonetic": null,
+            "extra": "I run in the playground."
+          },
+          {
+            "primary": "jump",
+            "secondary": "Push off the ground so your body leaves it.",
+            "phonetic": null,
+            "extra": "I jump over a small line."
+          }
+        ]
+      },
+      {
+        "key": "learn",
+        "title": "Read, write and draw",
+        "items": [
+          {
+            "primary": "read",
+            "secondary": "Look at words and understand their meaning.",
+            "phonetic": null,
+            "extra": "I read a book."
+          },
+          {
+            "primary": "write",
+            "secondary": "Make letters or words.",
+            "phonetic": null,
+            "extra": "I write my name."
+          },
+          {
+            "primary": "draw",
+            "secondary": "Make a picture with lines and shapes.",
+            "phonetic": null,
+            "extra": "I draw a flower."
+          }
+        ]
+      },
+      {
+        "key": "use",
+        "title": "Make an action sentence",
+        "items": [
+          {
+            "primary": "I can jump.",
+            "secondary": "Use “I can …” to say what you are able to do.",
+            "phonetic": null,
+            "extra": "I can run."
+          },
+          {
+            "primary": "I read a book.",
+            "secondary": "The action word tells us what someone does.",
+            "phonetic": null,
+            "extra": "I draw a bird."
+          },
+          {
+            "primary": "Please walk.",
+            "secondary": "“Please” makes an instruction more polite.",
+            "phonetic": null,
+            "extra": "Please walk in the classroom."
+          }
+        ]
+      }
+    ],
+    "lessons": [
+      {
+        "key": "lesson1",
+        "title": "Lesson 1 · Walk, run and jump",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "move",
+            "prompt": "Which action lifts your body off the ground?",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "walk"
+              },
+              {
+                "id": "B",
+                "label": "jump"
+              },
+              {
+                "id": "C",
+                "label": "read"
+              }
+            ],
+            "correctOptionId": "B",
+            "explanation": "When you jump, you push off the ground."
+          },
+          {
+            "id": null,
+            "objectiveId": "move",
+            "prompt": "Match the actions.",
+            "type": "matching",
+            "fillMode": null,
+            "maxScore": 1,
+            "matchingPairs": [
+              {
+                "left": {
+                  "id": "L1",
+                  "label": "walk"
+                },
+                "right": {
+                  "id": "R1",
+                  "label": "move one step at a time"
+                }
+              },
+              {
+                "left": {
+                  "id": "L2",
+                  "label": "run"
+                },
+                "right": {
+                  "id": "R2",
+                  "label": "move faster than walking"
+                }
+              }
+            ],
+            "explanation": "Walking is usually slower than running."
+          },
+          {
+            "id": null,
+            "objectiveId": "move",
+            "prompt": "Write the action: I push off the ground and ____.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "jump"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "The action is jump."
+          }
+        ]
+      },
+      {
+        "key": "lesson2",
+        "title": "Lesson 2 · Read, write and draw",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "learn",
+            "prompt": "You make a picture of a flower. What do you do?",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "read"
+              },
+              {
+                "id": "B",
+                "label": "run"
+              },
+              {
+                "id": "C",
+                "label": "draw"
+              }
+            ],
+            "correctOptionId": "C",
+            "explanation": "Draw means to make a picture."
+          },
+          {
+            "id": null,
+            "objectiveId": "learn",
+            "prompt": "Choose the action for each task.",
+            "type": "matching",
+            "fillMode": null,
+            "maxScore": 1,
+            "matchingPairs": [
+              {
+                "left": {
+                  "id": "L1",
+                  "label": "read"
+                },
+                "right": {
+                  "id": "R1",
+                  "label": "understand words in a book"
+                }
+              },
+              {
+                "left": {
+                  "id": "L2",
+                  "label": "write"
+                },
+                "right": {
+                  "id": "R2",
+                  "label": "make letters for your name"
+                }
+              }
+            ],
+            "explanation": "Read words in a book; write your name."
+          },
+          {
+            "id": null,
+            "objectiveId": "learn",
+            "prompt": "Complete the sentence: I ____ my name with a pencil.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "write"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "We write letters and words."
+          }
+        ]
+      },
+      {
+        "key": "lesson3",
+        "title": "Lesson 3 · Make an action sentence",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "use",
+            "prompt": "Which sentence describes an ability?",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "I can jump."
+              },
+              {
+                "id": "B",
+                "label": "This is a bag."
+              },
+              {
+                "id": "C",
+                "label": "The book is red."
+              }
+            ],
+            "correctOptionId": "A",
+            "explanation": "“I can jump” tells us what I am able to do."
+          },
+          {
+            "id": null,
+            "objectiveId": "use",
+            "prompt": "Put the words in order.",
+            "type": "ordering",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "P3",
+                "label": "draw."
+              },
+              {
+                "id": "P2",
+                "label": "can"
+              },
+              {
+                "id": "P1",
+                "label": "I"
+              }
+            ],
+            "correctSequenceIds": [
+              "P1",
+              "P2",
+              "P3"
+            ],
+            "explanation": "I can draw."
+          },
+          {
+            "id": null,
+            "objectiveId": "use",
+            "prompt": "Complete the polite instruction: ____ walk in the classroom.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "Please"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "Please makes the instruction more polite."
+          }
+        ]
+      },
+      {
+        "key": "challenge",
+        "title": "Unit challenge · Recall and apply",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "move",
+            "prompt": "You move on foot slowly along a hallway. Write the action word.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "walk"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "Walk means to move one step at a time."
+          },
+          {
+            "id": null,
+            "objectiveId": "learn",
+            "prompt": "You make a picture of your school. Complete: I ____ my school.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "draw"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "Draw means to make a picture."
+          },
+          {
+            "id": null,
+            "objectiveId": "use",
+            "prompt": "Write the missing word: I ____ read a book. Use the word that shows ability.",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "can"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "I can read a book."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "system-learn-fractions-v1",
+    "title": "数学体验：认识分数",
+    "subject": "math",
+    "stage": "early-primary",
+    "language": "zh-Hans",
+    "unitTitle": "认识分数 · 公平地分一分",
+    "kind": "ConceptUnderstanding",
+    "objectives": [
+      {
+        "key": "equal",
+        "title": "先学会平均分",
+        "items": [
+          {
+            "primary": "平均分：每份同样多或同样大",
+            "secondary": "把一个整体分成几份时，每份必须一样，才能用这些等份表示分数。",
+            "phonetic": null,
+            "extra": "把 6 颗豆子分成 2 组，每组 3 颗，是平均分。"
+          },
+          {
+            "primary": "两份不一定是两等份",
+            "secondary": "一块饼分成一大块和一小块，虽然有两块，但不是平均分。",
+            "phonetic": null,
+            "extra": "说“一半”之前，先检查两份是否一样大。"
+          },
+          {
+            "primary": "同一个整体",
+            "secondary": "比较分数大小之前，要知道它们说的是哪个整体。",
+            "phonetic": null,
+            "extra": "大饼的一半可能比小饼的一半大。"
+          }
+        ]
+      },
+      {
+        "key": "parts",
+        "title": "一半和四分之一",
+        "items": [
+          {
+            "primary": "1/2：二分之一",
+            "secondary": "把一个整体平均分成 2 份，其中的 1 份就是 1/2，也叫一半。",
+            "phonetic": null,
+            "extra": "分母 2 表示平均分成 2 份。",
+            "illustrationCode": "fraction-half"
+          },
+          {
+            "primary": "1/4：四分之一",
+            "secondary": "把一个整体平均分成 4 份，其中的 1 份就是 1/4。",
+            "phonetic": null,
+            "extra": "分子 1 表示取其中 1 份。",
+            "illustrationCode": "fraction-quarter"
+          },
+          {
+            "primary": "3/4：四分之三",
+            "secondary": "同一个整体平均分成 4 份，取其中 3 份，就是 3/4。",
+            "phonetic": null,
+            "extra": "还剩下 1/4。",
+            "illustrationCode": "fraction-three-quarters"
+          }
+        ]
+      },
+      {
+        "key": "compare",
+        "title": "比一比，用一用",
+        "items": [
+          {
+            "primary": "同样大的整体：1/2 = 2/4",
+            "secondary": "一半再分成两个同样大的部分，就得到两个四分之一。",
+            "phonetic": null,
+            "extra": "2 个 1/4 合起来是 1/2。"
+          },
+          {
+            "primary": "同样大的整体：1/2 大于 1/4",
+            "secondary": "平均分得越多，每一份越小。这里比较的分子都是 1。",
+            "phonetic": null,
+            "extra": "不要把这个规则套在所有分数比较上。"
+          },
+          {
+            "primary": "求一些物品的一半",
+            "secondary": "把物品平均分成 2 组，每组就是这些物品的一半。",
+            "phonetic": null,
+            "extra": "8 颗豆子的一半是 4 颗。"
+          }
+        ]
+      }
+    ],
+    "lessons": [
+      {
+        "key": "lesson1",
+        "title": "第 1课 · 先学会平均分",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "equal",
+            "prompt": "把 6 颗豆子分成两组，哪种是平均分？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "1 颗和 5 颗"
+              },
+              {
+                "id": "B",
+                "label": "2 颗和 4 颗"
+              },
+              {
+                "id": "C",
+                "label": "3 颗和 3 颗"
+              }
+            ],
+            "correctOptionId": "C",
+            "explanation": "平均分要求每组同样多。"
+          },
+          {
+            "id": null,
+            "objectiveId": "equal",
+            "prompt": "一块饼分成一大块和一小块。小块能叫这块饼的一半吗？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "能，只要分成两块"
+              },
+              {
+                "id": "B",
+                "label": "不能，两块不一样大"
+              },
+              {
+                "id": "C",
+                "label": "能，因为它小"
+              }
+            ],
+            "correctOptionId": "B",
+            "explanation": "一半要求把整体平均分成两份。"
+          },
+          {
+            "id": null,
+            "objectiveId": "equal",
+            "prompt": "把 8 颗豆子平均分成 2 组，每组几颗？",
+            "type": "fill-blank",
+            "fillMode": "number",
+            "maxScore": 1,
+            "allowedNumericAnswers": [
+              4
+            ],
+            "numericTolerance": 0,
+            "explanation": "8 ÷ 2 = 4。"
+          }
+        ]
+      },
+      {
+        "key": "lesson2",
+        "title": "第 2课 · 一半和四分之一",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "parts",
+            "prompt": "把一块饼平均分成 4 份，拿走 1 份，用哪个分数表示？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "1/2"
+              },
+              {
+                "id": "B",
+                "label": "1/4"
+              },
+              {
+                "id": "C",
+                "label": "3/4"
+              }
+            ],
+            "correctOptionId": "B",
+            "explanation": "分成 4 等份，取 1 份，是 1/4。"
+          },
+          {
+            "id": null,
+            "objectiveId": "parts",
+            "prompt": "给分数找到对应的描述。",
+            "type": "matching",
+            "fillMode": null,
+            "maxScore": 1,
+            "matchingPairs": [
+              {
+                "left": {
+                  "id": "L1",
+                  "label": "1/2"
+                },
+                "right": {
+                  "id": "R1",
+                  "label": "2 等份中的 1 份"
+                }
+              },
+              {
+                "left": {
+                  "id": "L2",
+                  "label": "3/4"
+                },
+                "right": {
+                  "id": "R2",
+                  "label": "4 等份中的 3 份"
+                }
+              }
+            ],
+            "explanation": "分母表示等分份数，分子表示取的份数。"
+          },
+          {
+            "id": null,
+            "objectiveId": "parts",
+            "prompt": "把一块饼平均分成 4 份，取了 3 份，还剩几份？",
+            "type": "fill-blank",
+            "fillMode": "number",
+            "maxScore": 1,
+            "allowedNumericAnswers": [
+              1
+            ],
+            "numericTolerance": 0,
+            "explanation": "4 份减去 3 份，还剩 1 份，即整个饼的 1/4。"
+          }
+        ]
+      },
+      {
+        "key": "lesson3",
+        "title": "第 3课 · 比一比，用一用",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "compare",
+            "prompt": "对于同样大的饼，哪个分数表示的部分更大？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "1/4"
+              },
+              {
+                "id": "B",
+                "label": "1/2"
+              },
+              {
+                "id": "C",
+                "label": "一样大"
+              }
+            ],
+            "correctOptionId": "B",
+            "explanation": "同样大的整体，一半比四分之一大。"
+          },
+          {
+            "id": null,
+            "objectiveId": "compare",
+            "prompt": "同样大的整体，2/4 和哪个分数一样大？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "1/2"
+              },
+              {
+                "id": "B",
+                "label": "1/4"
+              },
+              {
+                "id": "C",
+                "label": "3/4"
+              }
+            ],
+            "correctOptionId": "A",
+            "explanation": "两个四分之一合起来是一半。"
+          },
+          {
+            "id": null,
+            "objectiveId": "compare",
+            "prompt": "10 颗豆子的一半是几颗？",
+            "type": "fill-blank",
+            "fillMode": "number",
+            "maxScore": 1,
+            "allowedNumericAnswers": [
+              5
+            ],
+            "numericTolerance": 0,
+            "explanation": "10 ÷ 2 = 5。"
+          }
+        ]
+      },
+      {
+        "key": "challenge",
+        "title": "单元挑战 · 想一想，用一用",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "equal",
+            "prompt": "12 颗积木平均分给 2 位小朋友，每人得到几颗？",
+            "type": "fill-blank",
+            "fillMode": "number",
+            "maxScore": 1,
+            "allowedNumericAnswers": [
+              6
+            ],
+            "numericTolerance": 0,
+            "explanation": "12 ÷ 2 = 6，两人得到同样多。"
+          },
+          {
+            "id": null,
+            "objectiveId": "parts",
+            "prompt": "一张纸平均分成 4 份，涂色其中 3 份。用 a/b 的形式写出涂色部分的分数。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "3/4"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "平均分成 4 份，涂色 3 份，是 3/4。"
+          },
+          {
+            "id": null,
+            "objectiveId": "compare",
+            "prompt": "16 颗葡萄的一半是几颗？",
+            "type": "fill-blank",
+            "fillMode": "number",
+            "maxScore": 1,
+            "allowedNumericAnswers": [
+              8
+            ],
+            "numericTolerance": 0,
+            "explanation": "16 ÷ 2 = 8。"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "system-learn-patterns-v1",
+    "title": "数学体验：图形与规律",
+    "subject": "math",
+    "stage": "early-primary",
+    "language": "zh-Hans",
+    "unitTitle": "图形与规律 · 做一个小侦探",
+    "kind": "ReasoningProcedure",
+    "objectives": [
+      {
+        "key": "shapes",
+        "title": "认识平面图形",
+        "items": [
+          {
+            "primary": "圆",
+            "secondary": "圆的边界是弯曲的，没有角。",
+            "phonetic": null,
+            "extra": "钟面常见圆形，但物品和抽象图形不是完全相同的概念。",
+            "illustrationCode": "shape-circle"
+          },
+          {
+            "primary": "三角形",
+            "secondary": "三角形有 3 条直边、3 个角。",
+            "phonetic": null,
+            "extra": "转动三角形，边数和角数不会变。",
+            "illustrationCode": "shape-triangle"
+          },
+          {
+            "primary": "正方形",
+            "secondary": "正方形有 4 条一样长的直边、4 个直角。",
+            "phonetic": null,
+            "extra": "把正方形转一下，它仍是正方形。",
+            "illustrationCode": "shape-square"
+          }
+        ]
+      },
+      {
+        "key": "repeat",
+        "title": "找到重复的一组",
+        "items": [
+          {
+            "primary": "重复规律",
+            "secondary": "找出反复出现的最小一组，可以帮助猜测后面的内容。",
+            "phonetic": null,
+            "extra": "红、蓝、红、蓝：重复的是“红、蓝”。",
+            "illustrationCode": "pattern-red-blue"
+          },
+          {
+            "primary": "三个一组也可以重复",
+            "secondary": "红、红、蓝、红、红、蓝：重复的是“红、红、蓝”。",
+            "phonetic": null,
+            "extra": "不要只看相邻两个，要多检查几组。",
+            "illustrationCode": "pattern-red-red-blue"
+          },
+          {
+            "primary": "用图形表示规律",
+            "secondary": "圆、三角形、圆、三角形，按同样的顺序重复。",
+            "phonetic": null,
+            "extra": "下一个应是圆。",
+            "illustrationCode": "pattern-circle-triangle"
+          }
+        ]
+      },
+      {
+        "key": "grow",
+        "title": "数字也有规律",
+        "items": [
+          {
+            "primary": "每次加 1",
+            "secondary": "1、2、3、4，每个数都比前一个多 1。",
+            "phonetic": null,
+            "extra": "下一个数是 5。"
+          },
+          {
+            "primary": "每次加 2",
+            "secondary": "2、4、6、8，每个数都比前一个多 2。",
+            "phonetic": null,
+            "extra": "下一个数是 10。"
+          },
+          {
+            "primary": "先说明规则，再预测",
+            "secondary": "同一段数字可能有不同的延伸方式。题目说清楚规则后，我们按规则继续。",
+            "phonetic": null,
+            "extra": "按“每次加 2”从 3 开始：3、5、7、9。"
+          }
+        ]
+      }
+    ],
+    "lessons": [
+      {
+        "key": "lesson1",
+        "title": "第 1课 · 认识平面图形",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "shapes",
+            "prompt": "哪个平面图形有 3 条直边？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "圆"
+              },
+              {
+                "id": "B",
+                "label": "正方形"
+              },
+              {
+                "id": "C",
+                "label": "三角形"
+              }
+            ],
+            "correctOptionId": "C",
+            "explanation": "三角形有 3 条直边。"
+          },
+          {
+            "id": null,
+            "objectiveId": "shapes",
+            "prompt": "给图形找到特征。",
+            "type": "matching",
+            "fillMode": null,
+            "maxScore": 1,
+            "matchingPairs": [
+              {
+                "left": {
+                  "id": "L1",
+                  "label": "圆"
+                },
+                "right": {
+                  "id": "R1",
+                  "label": "没有角"
+                }
+              },
+              {
+                "left": {
+                  "id": "L2",
+                  "label": "正方形"
+                },
+                "right": {
+                  "id": "R2",
+                  "label": "4 条一样长的直边和 4 个直角"
+                }
+              }
+            ],
+            "explanation": "圆没有角；正方形有 4 条等长直边和 4 个直角。"
+          },
+          {
+            "id": null,
+            "objectiveId": "shapes",
+            "prompt": "一个三角形有几个角？",
+            "type": "fill-blank",
+            "fillMode": "number",
+            "maxScore": 1,
+            "allowedNumericAnswers": [
+              3
+            ],
+            "numericTolerance": 0,
+            "explanation": "三角形有 3 个角。"
+          }
+        ]
+      },
+      {
+        "key": "lesson2",
+        "title": "第 2课 · 找到重复的一组",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "repeat",
+            "prompt": "按“红、蓝”重复：红、蓝、红、蓝，下一项是什么？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "红"
+              },
+              {
+                "id": "B",
+                "label": "蓝"
+              },
+              {
+                "id": "C",
+                "label": "绿"
+              }
+            ],
+            "correctOptionId": "A",
+            "explanation": "一组是红、蓝，下一组从红开始。"
+          },
+          {
+            "id": null,
+            "objectiveId": "repeat",
+            "prompt": "按“圆、圆、三角形”重复：圆、圆、三角形、圆、圆，下一项是什么？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "圆"
+              },
+              {
+                "id": "B",
+                "label": "三角形"
+              },
+              {
+                "id": "C",
+                "label": "正方形"
+              }
+            ],
+            "correctOptionId": "B",
+            "explanation": "补全这一组的第三项：三角形。"
+          },
+          {
+            "id": null,
+            "objectiveId": "repeat",
+            "prompt": "按“红、蓝”重复：红、蓝、红、____。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "蓝"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "每组红后面是蓝。"
+          }
+        ]
+      },
+      {
+        "key": "lesson3",
+        "title": "第 3课 · 数字也有规律",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "grow",
+            "prompt": "按每次加 2 的规则：2、4、6，下一项是？",
+            "type": "single-choice",
+            "fillMode": null,
+            "maxScore": 1,
+            "options": [
+              {
+                "id": "A",
+                "label": "7"
+              },
+              {
+                "id": "B",
+                "label": "8"
+              },
+              {
+                "id": "C",
+                "label": "10"
+              }
+            ],
+            "correctOptionId": "B",
+            "explanation": "6 加 2 得 8。"
+          },
+          {
+            "id": null,
+            "objectiveId": "grow",
+            "prompt": "按每次加 1 的规则：4、5、6，下一项是多少？",
+            "type": "fill-blank",
+            "fillMode": "number",
+            "maxScore": 1,
+            "allowedNumericAnswers": [
+              7
+            ],
+            "numericTolerance": 0,
+            "explanation": "6 加 1 得 7。"
+          },
+          {
+            "id": null,
+            "objectiveId": "grow",
+            "prompt": "按每次加 2 的规则：3、5、7，下一项是多少？",
+            "type": "fill-blank",
+            "fillMode": "number",
+            "maxScore": 1,
+            "allowedNumericAnswers": [
+              9
+            ],
+            "numericTolerance": 0,
+            "explanation": "7 加 2 得 9。"
+          }
+        ]
+      },
+      {
+        "key": "challenge",
+        "title": "单元挑战 · 想一想，用一用",
+        "questions": [
+          {
+            "id": null,
+            "objectiveId": "shapes",
+            "prompt": "把一个有 3 条直边、3 个角的图形转过来，它仍然叫什么？",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "三角形"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "旋转不会改变三角形的边数和角数。"
+          },
+          {
+            "id": null,
+            "objectiveId": "repeat",
+            "prompt": "按“蓝、红、红”重复：蓝、红、红、蓝、红、____。",
+            "type": "fill-blank",
+            "fillMode": "text",
+            "maxScore": 1,
+            "allowedTextAnswers": [
+              "红"
+            ],
+            "trimTextAnswers": true,
+            "ignoreCase": true,
+            "explanation": "补齐蓝、红、红这一组，最后是红。"
+          },
+          {
+            "id": null,
+            "objectiveId": "grow",
+            "prompt": "按每次加 2 的规则：5、7、9，下一项是多少？",
+            "type": "fill-blank",
+            "fillMode": "number",
+            "maxScore": 1,
+            "allowedNumericAnswers": [
+              11
+            ],
+            "numericTolerance": 0,
+            "explanation": "9 加 2 得 11。"
+          }
+        ]
+      }
+    ]
+  }
+]

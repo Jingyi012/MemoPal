@@ -40,11 +40,11 @@ export function MemoryReviewTaskCard({ progress, onReview, onLearn, onBrowse }: 
 }
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: { gap: 2 },
-  rest: { backgroundColor: theme.violetTint, borderRadius: 12, padding: 12, gap: 4, marginBottom: 10 },
+  rest: { backgroundColor: theme.paper, borderRadius: 12, padding: 12, gap: 4, marginBottom: 10 },
   restTitle: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   actionFooter: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   flex: { flex: 1 },
   body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
-  primary: { minHeight: 58, borderRadius: 17 },
+  primary: { minHeight: 52, borderRadius: 16 },
   secondary: { alignSelf: 'flex-start' },
 }));

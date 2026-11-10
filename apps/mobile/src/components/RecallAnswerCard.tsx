@@ -2,7 +2,6 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { CompanionLearningPresence } from '@/features/profile/companion/CompanionLearningPresence';
 import { AppButton } from '@/components/ui/AppButton';
 import { createThemedStyles } from '@/theme/createThemedStyles';
-import { LinearGradient } from 'expo-linear-gradient';
 import { typography } from '@/theme/typography';
 import { Check, X } from '@/core/icons';
 import { useReducedMotion } from 'react-native-reanimated';
@@ -107,7 +106,7 @@ export function RecallAnswerCard({
 }: RecallAnswerCardProps) {
   const { styles, theme } = useStyles();
   const isPeg = tone === 'peg';
-  const accent = isPeg ? theme.berryDeep : theme.violetDeep;
+  const accent = theme.violetDeep;
   const reduceMotion = useReducedMotion();
   const confettiProgress = useRef(new Animated.Value(0)).current;
   const previousFeedback = useRef<RecallFeedback>(feedback);
@@ -169,15 +168,16 @@ export function RecallAnswerCard({
 
   return (
     <View style={[styles.card, !isPeg && styles.palaceCard]}>
-      <LinearGradient pointerEvents="none" colors={[isPeg ? theme.berryTint : theme.skyTint, theme.paper]} style={styles.sceneWash} />
-      <View pointerEvents="none" style={styles.sceneBubbleOne} />
-      <View pointerEvents="none" style={styles.sceneBubbleTwo} />
-      <CompanionLearningPresence state={feedback ?? 'thinking'} corner />
       {isPeg && feedback === 'correct'
         ? renderConfetti(PEG_CONFETTI_PIECES, styles.confettiLayer, styles.confettiPiece)
         : null}
-      {icon ? <View style={[styles.icon, isPeg ? styles.pegIcon : styles.palaceIcon]}>{icon}</View> : null}
-      <Text style={[styles.eyebrow, { color: accent }]}>{eyebrow}</Text>
+      <View style={styles.identityRow}>
+        <View style={styles.identityCopy}>
+          {icon ? <View style={[styles.icon, isPeg ? styles.pegIcon : styles.palaceIcon]}>{icon}</View> : null}
+          <Text style={[styles.eyebrow, { color: accent }]}>{eyebrow}</Text>
+        </View>
+        <View style={styles.companionSlot}><CompanionLearningPresence state={feedback ?? 'thinking'} corner /></View>
+      </View>
       <Text style={[styles.prompt, !isPeg && styles.palacePrompt]}>{prompt}</Text>
       {cue ? <View style={[styles.cue, !isPeg && styles.palaceCue]}>{cue}</View> : null}
       <View
@@ -256,10 +256,10 @@ export function RecallAnswerCard({
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { position: 'relative', borderRadius: 24, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 22, alignItems: 'center' },
-  sceneWash: { position: 'absolute', top: 0, left: 0, right: 0, height: 150, borderTopLeftRadius: 23, borderTopRightRadius: 23, opacity: .6 },
-  sceneBubbleOne: { position: 'absolute', top: 22, right: 114, width: 12, height: 12, borderWidth: 1.5, borderRadius: 6, borderColor: theme.skyLine, opacity: .8 },
-  sceneBubbleTwo: { position: 'absolute', top: 69, right: 8, width: 7, height: 7, borderWidth: 1, borderRadius: 4, borderColor: theme.violetLine, opacity: .7 },
+  card: { position: 'relative', borderRadius: 24, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, padding: 22, alignItems: 'center' },
+  identityRow: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8 },
+  identityCopy: { flex: 1, minWidth: 0, gap: 4 },
+  companionSlot: { width: 116, height: 110, position: 'relative' },
   palaceCard: {
     borderColor: theme.violetLine,
     borderWidth: 0,
@@ -269,11 +269,11 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   confettiLayer: { position: 'absolute', top: 14, left: 0, right: 0, height: 130, zIndex: 2, elevation: 2 },
   confettiPiece: { position: 'absolute', top: 18, left: '50%', borderRadius: 2 },
   icon: { width: 50, height: 50, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  pegIcon: { backgroundColor: theme.berryTint },
+  pegIcon: { backgroundColor: theme.violetTint },
   palaceIcon: { backgroundColor: theme.violetTint },
-  eyebrow: { fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
+  eyebrow: { fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18 },
   prompt: { color: theme.ink, fontFamily: typography.display, fontSize: 20, lineHeight: 28, textAlign: 'center', marginTop: 12, marginBottom: 18 },
-  palacePrompt: { fontSize: 21, lineHeight: 28, marginTop: 8, marginBottom: 20, maxWidth: '78%' },
+  palacePrompt: { fontSize: 21, lineHeight: 28, marginTop: 8, marginBottom: 20, width: '100%' },
   cue: { alignSelf: 'stretch', marginBottom: 18 },
   palaceCue: { marginBottom: 20 },
   palaceInput: { borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, fontSize: 15, letterSpacing: 0, textAlign: 'left', minHeight: 56, paddingHorizontal: 16 },

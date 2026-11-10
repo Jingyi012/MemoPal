@@ -30,7 +30,7 @@ export default function PalaceJourneysScreen() {
 
   return (
     <View style={styles.page}>
-      <CommonHeader title={t('yourJourneys')} backAction={() => router.back()} />
+      <CommonHeader showAiCredits={false} title={t('yourJourneys')} backAction={() => router.back()} />
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -72,7 +72,7 @@ function findJourneyScene(sceneId: string | null | undefined, scenes: PalaceScen
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 32, gap: 14 },
+  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 32, gap: 14 },
   subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, marginBottom: 2 },
   list: { gap: 10 },
   loading: { height: 120, overflow: 'hidden' },

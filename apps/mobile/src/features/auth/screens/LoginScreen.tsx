@@ -10,7 +10,7 @@ import {
   isGoogleLoginConfigured,
 } from '@/features/auth/services/socialAuth.service';
 import { LoginMethods } from '@/features/auth/types/auth';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';

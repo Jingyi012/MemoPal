@@ -29,6 +29,7 @@ export interface GuardianLinkDto {
   adminVerified: boolean;
   createdAt: string;
   guardianDisplayName?: string | null;
+  studentDisplayName?: string | null;
 }
 
 export interface CreateClassroomRequest {

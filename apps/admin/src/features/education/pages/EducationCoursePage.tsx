@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { EducationCourseAudienceForm } from '../components/EducationCourseAudienceForm';
+import { EducationBackLink } from '../components/EducationBackLink';
+import { EducationCourseOutlineEditor } from '../components/EducationCourseOutlineEditor';
 import { Alert, Button, Card, Input, Modal, Popconfirm, Space, Table, Tabs, Tag, Typography } from 'antd';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../auth/AuthContext';
@@ -15,7 +18,7 @@ export default function EducationCoursePage() {
   const { courseId = '' } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useEducationText();
+  const { t, language } = useEducationText();
   const courses = useEducationCourses(user?.id ?? '');
   const data = useEducationCourse(user?.id ?? '', courseId);
   const course = courses.courses.data?.find(item => item.id === courseId);
@@ -28,6 +31,7 @@ export default function EducationCoursePage() {
   useEffect(() => setTitle(course?.title ?? ''), [course?.title]);
 
   const sections = [
+    { key: 'outline', label: language === 'zh-Hans' ? '单元与路径' : 'Units & path', destroyOnHidden: false, children: data.objectives.isPending ? <Card loading /> : data.objectives.isError ? <Alert type="error" message={t('loadError')} action={<Button onClick={() => void data.objectives.refetch()}>{t('retry')}</Button>} /> : <EducationCourseOutlineEditor userId={user?.id ?? ''} courseId={courseId} objectives={data.objectives.data ?? []} /> },
     { key: 'objectives', label: t('objectives'), children: <Card className="education-course-objectives-card" title={t('objectives')} extra={<EducationResourceCreateButton label={t('addObjective')} noun={t('objectives')} loading={data.createObjective.isPending} memorySets={data.memorySets.data} onSubmit={(title, recommendedMemorySetId) => data.createObjective.mutate({ title, recommendedMemorySetId })} />}>
       <QueryState query={data.objectives} emptyText={t('objectiveEmpty')}>{rows => <Table rowKey="id" scroll={{ x: 'max-content' }} pagination={{ pageSize: 10 }} dataSource={rows} columns={[
         { title: t('objectives'), dataIndex: 'title', render: (title: string, row) => <Link to={adminPaths.educationObjective(courseId, row.id)}>{title}</Link> },
@@ -47,6 +51,9 @@ export default function EducationCoursePage() {
         { title: '', key: 'action', render: (_: unknown, row) => <Space wrap>
           <Link to={adminPaths.educationAssessment(row.id)}>{row.status === 'draft' ? t('editDraft') : t('view')}</Link>
           {row.status === 'published' && <>
+            {!course?.isPlatformCourse && <Link to={`${adminPaths.educationFamilyAssignments}?courseId=${encodeURIComponent(courseId)}&assessmentId=${encodeURIComponent(row.id)}`}>
+              {language === 'zh-Hans' ? '分配给孩子' : 'Assign to children'}
+            </Link>}
             <Popconfirm title={row.isPublicPractice ? t('hidePractice') : t('showPracticeConfirm')}
               description={!row.isPublicPractice ? t('showPracticeConfirm') : undefined}
               okText={row.isPublicPractice ? t('unpublish') : t('showPractice')} cancelText={t('cancel')}
@@ -76,6 +83,7 @@ export default function EducationCoursePage() {
       <Card title={t('editCourseTitle')} extra={<Button onClick={() => setTitleModalOpen(true)}>{t('editTitle')}</Button>}>
         <Typography.Text>{course.title}</Typography.Text>
       </Card>
+      <EducationCourseAudienceForm course={course} saving={courses.updateCourseAudience.isPending} onSave={audience => courses.updateCourseAudience.mutateAsync({ courseId, audience })} />
       <Card title={t('publicVisibility')}>
         <Typography.Paragraph type="secondary">{t('publicVisibilityDescription')}</Typography.Paragraph>
         <Space wrap>
@@ -95,7 +103,8 @@ export default function EducationCoursePage() {
     </Space> }] : []),
   ];
 
-  return <PortalPageContainer className="education-course-page" eyebrow={t('courseEyebrow')} title={course?.title ?? t('courseEyebrow')} description={t('courseDescription')}>
+  return <PortalPageContainer className="education-course-page" eyebrow={t('courseEyebrow')} title={course?.title ?? t('courseEyebrow')} description={t('courseDescription')}
+    navigation={<EducationBackLink to={adminPaths.educationCourses}>{language === 'zh-Hans' ? '返回课程列表' : 'Back to courses'}</EducationBackLink>}>
     <Modal title={t('editTitle')} open={titleModalOpen} okText={t('saveTitle')} cancelText={t('cancel')} confirmLoading={courses.updateCourseTitle.isPending}
       okButtonProps={{ disabled: !title.trim() || title.trim() === course?.title }} onCancel={() => setTitleModalOpen(false)}
       onOk={async () => { await courses.updateCourseTitle.mutateAsync({ courseId, title: title.trim() }); setTitleModalOpen(false); }}>

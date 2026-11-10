@@ -3,7 +3,7 @@ import type { EducationGuidedCourseProgress, EducationPublicCourseSummary } from
 export function chooseEducationHomeCourse(
   courses: readonly EducationPublicCourseSummary[],
   homeProgress: EducationGuidedCourseProgress | null,
-): Pick<EducationPublicCourseSummary, 'id' | 'title' | 'isMemoPalStarter'> | undefined {
+): Pick<EducationPublicCourseSummary, 'id' | 'title' | 'isMemoPalStarter' | 'subjectCode'> | undefined {
   // The server selects the user's latest eligible course. Progress for any other
   // catalog entry is unknown; treating it as unstarted can mislabel completed work.
   if (homeProgress) {

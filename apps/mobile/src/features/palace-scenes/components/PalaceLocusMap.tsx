@@ -1,6 +1,6 @@
 import { AppImage } from '@/components/AppImage';
 import type { PalaceLocus, PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Polyline } from 'react-native-svg';
@@ -24,6 +24,7 @@ export function PalaceLocusMap({
   onSelect,
   height,
 }: PalaceLocusMapProps) {
+  const { styles } = useStyles();
   const { language, t } = useTranslation('palace');
   return (
     <View style={[styles.canvas, height ? { height } : undefined]}>
@@ -64,13 +65,13 @@ export function PalaceLocusMap({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   canvas: {
     // Keep the canvas in the same 4:3 aspect ratio as authored Palace
     // scenes. This prevents `cover` from cropping the image away from the
     // percentage-based locus coordinates.
     aspectRatio: 4 / 3,
-    borderColor: '#DCD4FF',
+    borderColor: theme.violetLine,
     borderRadius: 20,
     borderWidth: 2,
     backgroundColor: '#F4EFE0',
@@ -133,4 +134,4 @@ const styles = StyleSheet.create({
     fontFamily: typography.bodyExtraBold,
     fontSize: 12,
   },
-});
+}));

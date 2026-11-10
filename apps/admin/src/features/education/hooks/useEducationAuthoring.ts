@@ -2,7 +2,7 @@ import { App } from 'antd';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { educationAuthoringApi } from '../../../api/educationAuthoringApi';
 import { extractApiErrorMessage } from '../../../lib/errorMessage';
-import type { EducationQuestionRequest } from '../../../types/educationAuthoring';
+import type { EducationQuestionRequest, EducationCourseAudienceRequest } from '../../../types/educationAuthoring';
 import { useEducationText } from '../i18n/useEducationText';
 
 export const educationAuthoringKeys = {
@@ -34,7 +34,12 @@ export function useEducationCourses(userId: string) {
     meta: { suppressGlobalErrorToast: true },
     retry: false,
   });
-  return { courses, createCourse, updateCourseTitle, setCourseVisibility };
+  const updateCourseAudience = useMutation({
+    mutationFn: (input: { courseId: string; audience: EducationCourseAudienceRequest }) => educationAuthoringApi.updateCourseAudience(input.courseId, input.audience),
+    onSuccess: async () => { await client.invalidateQueries({ queryKey: educationAuthoringKeys.courses(userId) }); },
+    onError, meta: { suppressGlobalErrorToast: true }, retry: false,
+  });
+  return { courses, createCourse, updateCourseTitle, setCourseVisibility, updateCourseAudience };
 }
 
 export function useEducationCourse(userId: string, courseId: string) {
@@ -49,6 +54,11 @@ export function useEducationCourse(userId: string, courseId: string) {
   ]);
   const onError = (error: unknown) => message.error(extractApiErrorMessage(error, 'Could not complete the request. Please try again.'));
   const createObjective = useMutation({ mutationFn: (input: { title: string; recommendedMemorySetId?: string }) => educationAuthoringApi.createObjective(courseId, input.title, input.recommendedMemorySetId), onSuccess: async () => { await refresh(); message.success('Learning objective created.'); }, onError, meta: { suppressGlobalErrorToast: true }, retry: false });
+  const updateObjectiveTitle = useMutation({
+    mutationFn: ({ objectiveId, title }: { objectiveId: string; title: string }) => educationAuthoringApi.updateObjectiveTitle(courseId, objectiveId, title),
+    onSuccess: async () => { await refresh(); message.success('Learning objective updated.'); },
+    onError, meta: { suppressGlobalErrorToast: true }, retry: false,
+  });
   const setMemoryRecommendation = useMutation({
     mutationFn: (input: { objectiveId: string; recommendedMemorySetId: string | null }) =>
       educationAuthoringApi.setObjectiveMemoryRecommendation(courseId, input.objectiveId, input.recommendedMemorySetId),
@@ -72,7 +82,7 @@ export function useEducationCourse(userId: string, courseId: string) {
     },
     onError, meta: { suppressGlobalErrorToast: true }, retry: false,
   });
-  return { objectives, assessments, memorySets, createObjective, setMemoryRecommendation, createAssessment,
+  return { objectives, assessments, memorySets, createObjective, updateObjectiveTitle, setMemoryRecommendation, createAssessment,
     createRevisionDraft, setAssessmentPublicPractice };
 }
 

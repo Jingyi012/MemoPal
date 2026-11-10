@@ -15,6 +15,101 @@ public sealed class EducationStarterCatalogEndpointsTests(StarterCatalogWebAppli
     : IClassFixture<StarterCatalogWebApplicationFactory>
 {
     [Fact]
+    public async Task Campus_starter_can_be_learned_in_order_without_uploading_material()
+    {
+        using var client = factory.CreateClient();
+        await RegisterAsync(client);
+        const string courseId = "system-learn-campus-v1";
+        using var detail = await DataAsync(await client.GetAsync($"/v1/education/public/courses/{courseId}"));
+        Assert.Equal("early-primary", detail.RootElement.GetProperty("learningStage").GetString());
+        Assert.Equal(3, detail.RootElement.GetProperty("units")[0].GetProperty("objectiveIds").GetArrayLength());
+        Assert.Equal(9, detail.RootElement.GetProperty("objectives").EnumerateArray().Sum(x => x.GetProperty("studyItems").GetArrayLength()));
+        object[][] answers = [
+            [new { type = "single-choice", optionId = "A" }, new { type = "matching", matches = new[] {
+                new { leftOptionId = "L1", matchTargetId = "R1" }, new { leftOptionId = "L2", matchTargetId = "R2" } } }, new { type = "text", textValue = "操场" }],
+            [new { type = "single-choice", optionId = "B" }, new { type = "multiple-select", optionIds = new[] { "A", "C", "D" } }, new { type = "text", textValue = "小鸟" }],
+            [new { type = "single-choice", optionId = "C" }, new { type = "ordering", orderedOptionIds = new[] { "A", "B", "C" } }, new { type = "text", textValue = "走" }],
+            [new { type = "text", textValue = "门口" }, new { type = "text", textValue = "太阳" }, new { type = "text", textValue = "跳" }]
+        ];
+        var ids = new[] { "lesson1", "lesson2", "lesson3", "challenge" };
+        for (var lessonIndex = 0; lessonIndex < ids.Length; lessonIndex++)
+        {
+            var assessmentId = $"{courseId}-{ids[lessonIndex]}";
+            using var progress = await DataAsync(await client.GetAsync($"/v1/education/guided/courses/{courseId}/progress"));
+            Assert.Equal(assessmentId, progress.RootElement.GetProperty("nextRecommendedAssessmentId").GetString());
+            using var session = await DataAsync(await client.PostAsync($"/v1/education/guided/courses/{courseId}/assessments/{assessmentId}/sessions", null));
+            var sessionId = session.RootElement.GetProperty("sessionId").GetString();
+            var version = session.RootElement.GetProperty("version").GetInt32();
+            var questions = session.RootElement.GetProperty("questions").EnumerateArray().ToArray();
+            Assert.Equal(3, questions.Length);
+            for (var index = 0; index < questions.Length; index++)
+            {
+                var questionId = questions[index].GetProperty("question").GetProperty("id").GetString();
+                using var check = await DataAsync(await client.PostAsJsonAsync($"/v1/education/guided/sessions/{sessionId}/questions/{questionId}/check",
+                    new { requestId = $"campus-{lessonIndex}-{index}", expectedVersion = version, answer = answers[lessonIndex][index] }));
+                Assert.True(check.RootElement.GetProperty("isCorrect").GetBoolean());
+                version = check.RootElement.GetProperty("sessionVersion").GetInt32();
+            }
+        }
+        using var completed = await DataAsync(await client.GetAsync($"/v1/education/guided/courses/{courseId}/progress"));
+        Assert.Equal(4, completed.RootElement.GetProperty("completedLessonCount").GetInt32());
+        Assert.Equal(JsonValueKind.Null, completed.RootElement.GetProperty("nextRecommendedAssessmentId").ValueKind);
+    }
+
+    [Theory]
+    [InlineData("daily", "chinese", "zh-Hans", "杯子", "洗手", "对不起", "text,text,text")]
+    [InlineData("school-things", "english", "en", "eraser", "ruler", "an", "text,text,text")]
+    [InlineData("actions", "english", "en", "walk", "draw", "can", "text,text,text")]
+    [InlineData("fractions", "math", "zh-Hans", "6", "3/4", "8", "number,text,number")]
+    [InlineData("patterns", "math", "zh-Hans", "三角形", "红", "11", "text,text,number")]
+    public async Task New_starter_units_expose_teaching_and_grade_their_unaided_challenges(
+        string suffix, string subject, string language, string answer1, string answer2, string answer3, string answerTypes)
+    {
+        using var client = factory.CreateClient();
+        await RegisterAsync(client);
+        var courseId = $"system-learn-{suffix}-v1";
+        using var detail = await DataAsync(await client.GetAsync($"/v1/education/public/courses/{courseId}"));
+        Assert.Equal(subject, detail.RootElement.GetProperty("subjectCode").GetString());
+        Assert.Equal(language, detail.RootElement.GetProperty("languageCode").GetString());
+        var studyItems = detail.RootElement.GetProperty("objectives").EnumerateArray()
+            .SelectMany(x => x.GetProperty("studyItems").EnumerateArray()).ToArray();
+        Assert.All(studyItems, item => Assert.False(item.TryGetProperty("mediaRef", out _)));
+        var illustrations = studyItems.Where(item => item.GetProperty("illustrationCode").ValueKind == JsonValueKind.String)
+            .Select(item => item.GetProperty("illustrationCode").GetString()).Order().ToArray();
+        string[] expectedIllustrations = suffix switch {
+            "fractions" => ["fraction-half", "fraction-quarter", "fraction-three-quarters"],
+            "patterns" => ["shape-circle", "shape-square", "shape-triangle", "pattern-red-blue", "pattern-red-red-blue", "pattern-circle-triangle"],
+            _ => []
+        };
+        Assert.Equal(expectedIllustrations.Order(), illustrations);
+        Assert.True(detail.RootElement.GetProperty("isMemoPalStarter").GetBoolean());
+        Assert.Equal(9, detail.RootElement.GetProperty("objectives").EnumerateArray().Sum(x => x.GetProperty("studyItems").GetArrayLength()));
+        using var progress = await DataAsync(await client.GetAsync($"/v1/education/guided/courses/{courseId}/progress"));
+        Assert.Equal($"{courseId}-lesson1", progress.RootElement.GetProperty("nextRecommendedAssessmentId").GetString());
+        Assert.Equal(new[] { "lesson1", "lesson2", "lesson3", "challenge" }.Select(x => $"{courseId}-{x}"),
+            progress.RootElement.GetProperty("lessons").EnumerateArray().Select(x => x.GetProperty("assessmentId").GetString()));
+        using var session = await DataAsync(await client.PostAsync($"/v1/education/guided/courses/{courseId}/assessments/{courseId}-challenge/sessions", null));
+        var sessionId = session.RootElement.GetProperty("sessionId").GetString();
+        var version = session.RootElement.GetProperty("version").GetInt32();
+        var questions = session.RootElement.GetProperty("questions").EnumerateArray().ToArray();
+        var answers = new[] { answer1, answer2, answer3 };
+        var types = answerTypes.Split(',');
+        Assert.Equal(3, questions.Length);
+        for (var index = 0; index < questions.Length; index++)
+        {
+            var question = questions[index].GetProperty("question");
+            Assert.Equal("fill-blank", question.GetProperty("type").GetString());
+            var answer = types[index] == "number"
+                ? new MemoPal.Application.Features.Education.Attempts.DTOs.EducationAttemptAnswerInputDto("number", NumericValue: answers[index])
+                : new MemoPal.Application.Features.Education.Attempts.DTOs.EducationAttemptAnswerInputDto("text", TextValue: answers[index]);
+            using var check = await DataAsync(await client.PostAsJsonAsync($"/v1/education/guided/sessions/{sessionId}/questions/{question.GetProperty("id").GetString()}/check",
+                new { requestId = $"unit-{suffix}-{index}", expectedVersion = version, answer }));
+            Assert.True(check.RootElement.GetProperty("isCorrect").GetBoolean());
+            version = check.RootElement.GetProperty("sessionVersion").GetInt32();
+        }
+    }
+
+    [Fact]
     public async Task DefaultStarterCatalogIsReadyForAnOrdinaryUserWithoutClassOrMemoryData()
     {
         using var client = factory.CreateClient();

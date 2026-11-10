@@ -15,7 +15,7 @@ import { InAppNotificationSync } from '@/features/notifications/services/inAppNo
 import { typography } from '@/theme/typography';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ArrowRight, Camera, ChevronRight, LogOut, Pencil } from '@/core/icons';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
@@ -45,6 +45,7 @@ export default function ProfileScreen() {
   const { language, t } = useTranslation('profile');
   const { t: onboardingT } = useTranslation('onboarding');
   const { t: languageT } = useTranslation('language');
+  const { t: referralT } = useTranslation('referral');
   const { logout } = useAuth();
   const updateProfileMutation = useUpdateProfile();
   const totalXp = Math.max(0, user?.totalXp ?? 0);
@@ -314,7 +315,7 @@ export default function ProfileScreen() {
 
         <AnimatedPressable
           accessibilityLabel={t('yourProgress')}
-          onPress={() => router.push('/achievements')}
+          onPress={() => router.push('/progress')}
           style={styles.progressCard}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeadingCopy}>
@@ -398,7 +399,26 @@ export default function ProfileScreen() {
           />
         </SettingsSection>
 
+        {user && user.accountMode !== 'RestrictedLearner' ? <SettingsSection title={language === 'zh' ? '账户与奖励' : 'Account & rewards'} accentColor={theme.violetDeep}>
+          <ProfileSettingsRow icon={<Ionicons name="sparkles-outline" size={21} color={theme.violetDeep} />} iconBackgroundColor={theme.violetTint}
+            title={language === 'zh' ? 'AI 点数' : 'AI credits'} onPress={() => router.push('/ai-credits')} last={false} />
+          <ProfileSettingsRow
+            icon={<Ionicons name="gift-outline" size={21} color={theme.violetDeep} />}
+            iconBackgroundColor={theme.violetTint}
+            title={referralT('invite')}
+            onPress={() => router.push('/referral')}
+            last
+          />
+        </SettingsSection> : null}
+
         <SettingsSection title={t('learning')} accentColor={theme.violetDeep}>
+          <ProfileSettingsRow
+            icon={<Ionicons name="stats-chart-outline" size={21} color={theme.violetDeep} />}
+            iconBackgroundColor={theme.violetTint}
+            title={language === 'zh' ? '学习记录与报告' : 'Learning history and reports'}
+            onPress={() => router.push('/progress')}
+            last={false}
+          />
           <ProfileSettingsRow
             icon={<Ionicons name="school" size={21} color={theme.violetDeep} />}
             iconBackgroundColor={theme.violetTint}

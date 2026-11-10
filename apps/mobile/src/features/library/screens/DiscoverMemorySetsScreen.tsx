@@ -1,8 +1,10 @@
+import { CommunityExploreHeader } from '../components/CommunityExploreHeader';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppImage } from '@/components/AppImage';
-import { CommonHeader } from '@/components/CommonHeader';
+import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
+import { LearningIconButton } from '@/features/education/components/LearningIconButton';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import LoadingView from '@/components/LoadingView';
 import { useDebouncedValue } from '@/core/hooks/useDebouncedValue';
@@ -11,9 +13,9 @@ import { useCommunityMemorySets, useSetCommunityMemorySetBookmark } from '@/feat
 import type { CommunityMemorySetFilters, CommunityMemorySetSummary } from '@/features/memory-sets';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { ArrowRight, Bookmark, BookOpen, Check, Pencil, Search, SlidersHorizontal, Sparkles, Trophy, X } from '@/core/icons';
+import { ArrowRight, Bookmark, BookOpen, Check, Pencil, Search, SlidersHorizontal, Sparkles, X } from '@/core/icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { forwardRef, useMemo, useRef, useState } from 'react';
+import { type ReactNode, forwardRef, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, Linking, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -21,9 +23,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getEducationAuthoringPortalUrl } from '@/features/education/utils/educationAuthoringPortal';
 import Toast from 'react-native-toast-message';
 
-export function DiscoverMemorySetsScreen() {
+export function DiscoverMemorySetsScreen({ workspaceNavigation }: { workspaceNavigation?: ReactNode } = {}) {
   const { styles, theme } = useStyles();
-  const { t } = useTranslation('library');
+  const { t, language } = useTranslation('library');
   const router = useRouter();
   const authoringPortalUrl = getEducationAuthoringPortalUrl();
   const { isOffline, canShowRequestErrors } = useNetworkStatus();
@@ -66,8 +68,10 @@ export function DiscoverMemorySetsScreen() {
     <View style={styles.page}>
       <CommonHeader
         eyebrow={t('discoverEyebrow')}
-        title={t('discoverTitle')}
-        description={t('discoverDescription')}
+        title={language === 'zh' ? '社区' : 'Community'}
+        description={undefined} additionalContent={workspaceNavigation}
+        showAiCredits={false}
+        actions={[{ component: <LearningIconButton variant="plain" icon="trophy-outline" label={t('communityLeaderboardShortcutTitle')} onPress={() => router.push('/community/leaderboard' as Href)} /> }]}
         hideBackButton
       />
       <FlatList
@@ -79,49 +83,7 @@ export function DiscoverMemorySetsScreen() {
         refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void query.refetch()} />}
         ListHeaderComponent={
           <View style={styles.headerContent}>
-            <LinearGradient colors={[theme.violetDeep, '#8069D6', '#B66EBA']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-              <View style={styles.heroCopy}>
-                <View style={styles.heroBadge}><Sparkles size={13} color={theme.onAccent} /><Text style={styles.heroBadgeText}>{t('communityHeroEyebrow')}</Text></View>
-                <Text style={styles.heroTitle}>{t('communityHeroTitle')}</Text>
-                <Text style={styles.heroDescription}>{t('communityHeroBody')}</Text>
-                <AppButton label={t('communityHeroAction')} variant="secondary" size="compact" trailingIcon={ArrowRight} onPress={() => setSort('featured')} style={styles.heroButton} />
-              </View>
-              <View style={styles.heroArt} accessibilityElementsHidden>
-                <View style={[styles.heroMemoryTile, styles.heroTileBack]}><Text style={styles.heroTileEmoji}>🏰</Text></View>
-                <View style={[styles.heroMemoryTile, styles.heroTileFront]}><Text style={styles.heroTileNumber}>1 · 2 · 3</Text><Text style={styles.heroTileEmoji}>🧠</Text></View>
-                <View style={styles.heroSparkle}><Sparkles size={15} color={theme.onAccent} /></View>
-              </View>
-            </LinearGradient>
-
-            <View style={styles.quickLinks}>
-              <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${t('communityLeaderboardShortcutTitle')}. ${t('communityLeaderboardShortcutBody')}`} onPress={() => router.push('/community/leaderboard' as Href)} style={[styles.quickLink, styles.quickLinkBoard]}>
-                <LinearGradient colors={['#FFE27A', '#FFAE4D']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.quickLinkGradient}>
-                  <Trophy size={78} color="rgba(43,42,61,0.10)" style={styles.quickLinkWatermark} />
-                  <View style={styles.quickLinkTop}>
-                    <View style={[styles.quickLinkIcon, styles.quickLinkIconBoard]}><Trophy size={20} color="#8C5A00" /></View>
-                    <View style={styles.quickLinkArrow}><ArrowRight size={15} color={theme.night} /></View>
-                  </View>
-                  <View style={styles.quickLinkCopy}><Text numberOfLines={1} style={styles.quickLinkTitle}>{t('communityLeaderboardShortcutTitle')}</Text><Text numberOfLines={1} style={styles.quickLinkBody}>{t('communityLeaderboardShortcutBody')}</Text></View>
-                </LinearGradient>
-              </AnimatedPressable>
-              <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${t('communityPracticeShortcutTitle')}. ${t('communityPracticeShortcutBody')}`} onPress={() => router.push('/community/education' as Href)} style={[styles.quickLink, styles.quickLinkLearning]}>
-                <LinearGradient colors={['#9DEBCB', '#5BCDD0']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.quickLinkGradient}>
-                  <BookOpen size={78} color="rgba(20,75,71,0.10)" style={styles.quickLinkWatermark} />
-                  <View style={styles.quickLinkTop}>
-                    <View style={[styles.quickLinkIcon, styles.quickLinkIconLearning]}><BookOpen size={20} color="#14645D" /></View>
-                    <View style={styles.quickLinkArrow}><ArrowRight size={15} color={theme.night} /></View>
-                  </View>
-                  <View style={styles.quickLinkCopy}><Text numberOfLines={1} style={styles.quickLinkTitle}>{t('communityPracticeShortcutTitle')}</Text><Text numberOfLines={1} style={styles.quickLinkBody}>{t('communityPracticeShortcutBody')}</Text></View>
-                </LinearGradient>
-              </AnimatedPressable>
-            </View>
-            {authoringPortalUrl ? <AnimatedPressable
-              accessibilityRole="link"
-              accessibilityLabel={`${t('educationAuthoringTitle')}. ${t('educationAuthoringBody')}`}
-              onPress={() => { void Linking.openURL(authoringPortalUrl).catch(() => Alert.alert(t('educationAuthoringUnavailableTitle'), t('educationAuthoringUnavailableBody'))); }}
-              style={styles.creatorLink}>
-              <Pencil size={15} color={theme.inkSoft} /><Text style={styles.creatorLinkText}>{t('educationAuthoringTitle')}</Text><ArrowRight size={14} color={theme.inkSoft} />
-            </AnimatedPressable> : null}
+            <CommunityExploreHeader />
 
             <View style={styles.searchBox}>
               <Search size={19} color={theme.inkSoft} />
@@ -170,7 +132,7 @@ export function DiscoverMemorySetsScreen() {
         }
         renderItem={({ item }) => <CommunityMemoryCard item={item} onPress={() => router.push(`/community/memory-sets/${item.id}` as Href)} onToggleBookmark={() => toggleBookmark(item)} bookmarkPending={bookmarkMutation.isPending} t={t} />}
         ListEmptyComponent={!isOffline && query.isLoading ? <View style={styles.loading}><LoadingView description={t('discoverLoading')} /></View> : canShowRequestErrors && query.isError ? <View style={styles.empty}><Text style={styles.emptyEmoji}>🫧</Text><Text style={styles.emptyTitle}>{t('discoverUnavailable')}</Text><Text style={styles.emptyBody}>{t('connectionRetry')}</Text><AppButton label={t('retry')} size="compact" onPress={() => void query.refetch()} style={styles.retry} /></View> : !isOffline ? <View style={styles.empty}><Text style={styles.emptyEmoji}>🌱</Text><Text style={styles.emptyTitle}>{t('discoverEmpty')}</Text><Text style={styles.emptyBody}>{t('discoverEmptyBody')}</Text></View> : null}
-        ListFooterComponent={!isOffline && query.hasNextPage ? <AppButton label={t('loadMore')} variant="secondary" size="compact" loading={query.isFetchingNextPage} disabled={query.isFetchingNextPage} trailingIcon={query.isFetchingNextPage ? undefined : ArrowRight} onPress={() => void query.fetchNextPage()} style={styles.loadMore} /> : <View style={styles.footerSpace} />}
+        ListFooterComponent={<View>{!isOffline && query.hasNextPage ? <AppButton label={t('loadMore')} variant="secondary" size="compact" loading={query.isFetchingNextPage} disabled={query.isFetchingNextPage} trailingIcon={query.isFetchingNextPage ? undefined : ArrowRight} onPress={() => void query.fetchNextPage()} style={styles.loadMore} /> : <View style={styles.footerSpace} />}{authoringPortalUrl ? <AnimatedPressable accessibilityRole="link" onPress={() => { void Linking.openURL(authoringPortalUrl).catch(() => Alert.alert(t('educationAuthoringUnavailableTitle'), t('educationAuthoringUnavailableBody'))); }} style={styles.creatorLink}><Pencil size={15} color={theme.inkSoft} /><Text style={styles.creatorLinkText}>{t('educationAuthoringTitle')}</Text><ArrowRight size={14} color={theme.inkSoft} /></AnimatedPressable> : null}</View>}
       />
       <DiscoverFiltersSheet
         ref={filtersSheetRef}
@@ -295,11 +257,11 @@ function CommunityMemoryCard({ item, onPress, onToggleBookmark, bookmarkPending,
           <View style={styles.cardMetaRow}>
             <View style={styles.authorAvatar}>{item.author.avatarUrl ? <AppImage imageUrl={item.author.avatarUrl} style={styles.authorAvatarImage} /> : <Text style={styles.authorInitial}>{item.author.displayName.slice(0, 1).toUpperCase()}</Text>}</View>
             <Text numberOfLines={1} style={styles.authorName}>{item.author.displayName}</Text>
-            <Text numberOfLines={1} style={styles.cardCopies}>{item.copyCount} {t('copies')}</Text>
+            {item.copyCount > 0 ? <Text numberOfLines={1} style={styles.cardCopies}>{item.copyCount} {t('copies')}</Text> : null}
           </View>
           <View style={styles.cardBottomRow}>
             <View style={styles.cardStats}><BookOpen size={13} color={theme.inkSoft} /><Text style={styles.cardItemCount}>{item.itemCount} {t('items')}</Text></View>
-            <View style={styles.openAction}><Text numberOfLines={1} style={styles.openActionText}>{t('communityOpenAction')}</Text><ArrowRight size={12} color={theme.violetDeep} /></View>
+
           </View>
         </View>
       </AnimatedPressable>
@@ -322,7 +284,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   hero: { alignItems: 'center', borderRadius: 24, flexDirection: 'row', gap: 4, minHeight: 188, overflow: 'hidden', paddingHorizontal: 16, paddingVertical: 14 },
   heroCopy: { flex: 1, gap: 9, zIndex: 1 },
   heroBadge: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.17)', borderRadius: 999, flexDirection: 'row', gap: 5, minHeight: 26, paddingHorizontal: 9 },
-  heroBadgeText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.5, textTransform: 'uppercase' },
+  heroBadgeText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.5, textTransform: 'uppercase' },
   heroTitle: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 22, lineHeight: 28, maxWidth: 230 },
   heroDescription: { color: 'rgba(255,255,255,0.86)', fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, maxWidth: 220 },
   heroButton: { alignSelf: 'flex-start', marginTop: 2 },
@@ -345,22 +307,22 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   quickLinkIconLearning: { backgroundColor: 'rgba(255,255,255,0.62)' },
   quickLinkCopy: { gap: 3, minWidth: 0, zIndex: 1 },
   quickLinkTitle: { color: theme.night, fontFamily: typography.displayExtraBold, fontSize: 13 },
-  quickLinkBody: { color: theme.night, fontFamily: typography.bodySemibold, fontSize: 10, opacity: 0.78 },
+  quickLinkBody: { color: theme.night, fontFamily: typography.bodySemibold, fontSize: 12, opacity: 0.78 },
   quickLinkArrow: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 999, height: 30, justifyContent: 'center', width: 30, zIndex: 1 },
   creatorLink: { alignItems: 'center', alignSelf: 'flex-start', flexDirection: 'row', gap: 6, minHeight: 44, paddingHorizontal: 4 },
-  creatorLinkText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  creatorLinkText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   searchBox: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 17, borderWidth: 1.5, flexDirection: 'row', minHeight: 54, paddingLeft: 14, paddingRight: 5 },
   searchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 14, marginHorizontal: 10, minHeight: 46 },
   searchAction: { alignItems: 'center', backgroundColor: theme.canvas, borderRadius: 13, height: 44, justifyContent: 'center', position: 'relative', width: 44 },
   savedSearchAction: { flexDirection: 'row', gap: 5, paddingHorizontal: 9, width: 'auto' },
-  savedSearchActionText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  savedSearchActionText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   savedSearchActionTextSelected: { color: theme.violetDeep },
   searchActionSelected: { backgroundColor: theme.violetTint },
   filterCount: { alignItems: 'center', backgroundColor: theme.berry, borderColor: theme.paper, borderRadius: 8, borderWidth: 1.5, height: 16, justifyContent: 'center', minWidth: 16, paddingHorizontal: 3, position: 'absolute', right: 1, top: 1 },
-  filterCountText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 8, lineHeight: 10 },
+  filterCountText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 10 },
   activeFiltersRow: { alignItems: 'center', flexDirection: 'row', gap: 6, marginTop: 1 },
   activeFiltersPill: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 999, borderWidth: 1, flex: 1, flexDirection: 'row', gap: 7, minHeight: 34, paddingHorizontal: 11 },
-  activeFiltersText: { color: theme.violetDeep, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  activeFiltersText: { color: theme.violetDeep, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   sortControl: { backgroundColor: theme.canvas, borderRadius: 16, flexDirection: 'row', gap: 4, marginTop: 8, padding: 4 },
   sortChip: { alignItems: 'center', borderRadius: 12, flex: 1, flexDirection: 'row', gap: 4, justifyContent: 'center', minHeight: 44, paddingHorizontal: 7 },
   sortChipSelected: { backgroundColor: theme.violetDeep },
@@ -383,43 +345,43 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   doneButton: { marginTop: 22 },
   headingRow: { alignItems: 'center', flexDirection: 'row', gap: 7, marginBottom: 2, marginTop: 3 },
   sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 },
-  sectionSubtitle: { color: theme.inkSoft, flex: 1, fontFamily: typography.bodySemibold, fontSize: 10 },
+  sectionSubtitle: { color: theme.inkSoft, flex: 1, fontFamily: typography.bodySemibold, fontSize: 12 },
   resultCount: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   cardContainer: { backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 20, borderWidth: 1, elevation: 2, overflow: 'hidden', position: 'relative' },
-  memoryCard: { alignItems: 'center', flexDirection: 'row', gap: 12, minHeight: 138, padding: 10 },
-  cardArtwork: { borderRadius: 15, flexShrink: 0, height: 118, overflow: 'hidden', position: 'relative', width: 92 },
+  memoryCard: { alignItems: 'center', flexDirection: 'row', gap: 12, minHeight: 148, padding: 14 },
+  cardArtwork: { borderRadius: 15, flexShrink: 0, height: 110, overflow: 'hidden', position: 'relative', width: 76 },
   coverImage: { height: '100%', width: '100%' },
   coverFallback: { alignItems: 'center', flex: 1, justifyContent: 'center', overflow: 'hidden' },
   coverWatermark: { position: 'absolute', right: -12, top: -10, transform: [{ rotate: '16deg' }] },
   coverTile: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.82)', borderColor: 'rgba(255,255,255,0.9)', borderRadius: 15, borderWidth: 1, height: 78, justifyContent: 'center', width: 62 },
   coverTileBack: { backgroundColor: 'rgba(255,255,255,0.38)', position: 'absolute', transform: [{ rotate: '12deg' }, { translateX: 9 }, { translateY: -2 }] },
-  coverNumber: { color: theme.berryDeep, fontFamily: typography.displayExtraBold, fontSize: 9, marginBottom: 2 },
+  coverNumber: { color: theme.berryDeep, fontFamily: typography.displayExtraBold, fontSize: 12, marginBottom: 2 },
   coverEmoji: { fontSize: 30 },
   coverTechniqueTag: { alignItems: 'center', borderRadius: 999, left: 7, paddingHorizontal: 8, paddingVertical: 5, position: 'absolute', top: 7 },
-  coverTechniqueText: { fontFamily: typography.bodyExtraBold, fontSize: 8 },
+  coverTechniqueText: { fontFamily: typography.bodyExtraBold, fontSize: 12 },
   palaceTagText: { color: theme.violetDeep },
   pegTagText: { color: theme.berryDeep },
   featuredTag: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 999, bottom: 7, flexDirection: 'row', gap: 3, left: 7, paddingHorizontal: 7, paddingVertical: 5, position: 'absolute' },
-  featuredTagText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 8 },
+  featuredTagText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   memoryCardCopy: { flex: 1, gap: 6, justifyContent: 'center', minWidth: 0, paddingVertical: 4 },
   palaceTag: { backgroundColor: 'rgba(255,255,255,0.9)' },
   pegTag: { backgroundColor: 'rgba(255,255,255,0.9)' },
   cardTitleRow: { paddingRight: 46 },
   cardGoalPill: { alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderRadius: 999, maxWidth: '100%', paddingHorizontal: 8, paddingVertical: 4 },
-  cardGoal: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9 },
-  cardTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14, lineHeight: 19 },
-  cardDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, lineHeight: 14 },
+  cardGoal: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  cardTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontWeight: '800', fontSize: 17, lineHeight: 23 },
+  cardDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
   cardMetaRow: { alignItems: 'center', flexDirection: 'row', gap: 6, minWidth: 0 },
   authorAvatar: { alignItems: 'center', backgroundColor: theme.skyTint, borderRadius: 9, height: 20, justifyContent: 'center', overflow: 'hidden', width: 20 },
   authorAvatarImage: { height: '100%', width: '100%' },
-  authorInitial: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9 },
-  authorName: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodySemibold, fontSize: 9 },
-  cardCopies: { color: theme.berryDeep, flexShrink: 0, fontFamily: typography.bodyExtraBold, fontSize: 8 },
-  cardBottomRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginTop: 1 },
+  authorInitial: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  authorName: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodySemibold, fontSize: 12 },
+  cardCopies: { color: theme.berryDeep, flexShrink: 0, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  cardBottomRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   cardStats: { alignItems: 'center', flexDirection: 'row', gap: 4 },
-  cardItemCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9 },
-  openAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 999, flexDirection: 'row', gap: 3, justifyContent: 'center', minHeight: 30, paddingHorizontal: 8 },
-  openActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 8 },
+  cardItemCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
+  openAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 999, flexDirection: 'row', gap: 3, justifyContent: 'center', minHeight: 44, paddingHorizontal: 10 },
+  openActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   bookmarkButton: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 14, borderWidth: 1, height: 44, justifyContent: 'center', position: 'absolute', right: 10, top: 10, width: 44 },
   bookmarkButtonSelected: { backgroundColor: theme.violetTint, borderColor: theme.violetLine },
   separator: { height: 1 }, loading: { height: 200, overflow: 'hidden' }, empty: { alignItems: 'center', paddingHorizontal: 25, paddingVertical: 64 }, emptyEmoji: { fontSize: 34 }, emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, marginTop: 11, textAlign: 'center' }, emptyBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' }, retry: { alignSelf: 'center', marginTop: 15 }, loadMore: { alignSelf: 'center', marginTop: 17 }, footerSpace: { height: 10 },

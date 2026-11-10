@@ -8,6 +8,6 @@ export default function MemoryReviewRoute() {
   const id = Array.isArray(params.memorySetId) ? params.memorySetId[0] : params.memorySetId;
   const value = Array.isArray(params.scope) ? params.scope[0] : params.scope;
   const scope = value === 'learn' || value === 'browse' ? value : 'due';
-  if (!id) return <Redirect href="/(tabs)/practice" />;
+  if (!id) return <Redirect href="/memory-tools" />;
   return <MemoryReviewSessionScreen key={`${id}:${scope}:${user?.id}`} memorySetId={id} scope={scope} />;
 }

@@ -18,7 +18,7 @@ function normalizeMilestones(items: ReferralMilestoneConfigDto[]): ReferralMiles
       title: item.title.trim(),
       rewardLabel: item.rewardLabel?.trim() || null,
       referralsRequired: Math.max(1, Number(item.referralsRequired) || 1),
-      rewardXp: Math.max(0, Number(item.rewardXp) || 0),
+      rewardAiCredits: Math.max(0, Number(item.rewardAiCredits) || 0),
       rewardPremiumDays: Math.max(0, Number(item.rewardPremiumDays) || 0),
       sortOrder: item.sortOrder > 0 ? item.sortOrder : index + 1,
     }))
@@ -105,7 +105,7 @@ export default function ReferralConfigPage() {
       title: values.title.trim(),
       rewardLabel: values.rewardLabel?.trim() || null,
       referralsRequired: Math.max(1, Number(values.referralsRequired) || 1),
-      rewardXp: Math.max(0, Number(values.rewardXp) || 0),
+      rewardAiCredits: Math.max(0, Number(values.rewardAiCredits) || 0),
       rewardPremiumDays: Math.max(0, Number(values.rewardPremiumDays) || 0),
       sortOrder: Math.max(1, Number(values.sortOrder) || 1),
     };
@@ -172,7 +172,7 @@ export default function ReferralConfigPage() {
 
               <Row gutter={12} style={{ marginTop: 12 }}>
                 <Col xs={24} md={12} lg={8}>
-                  <Form.Item name='inviterRewardXp' label='Inviter XP Per Referral' rules={[{ required: true }]}>
+                  <Form.Item name='inviterRewardAiCredits' label='Inviter AI credits Per Referral' rules={[{ required: true }]}>
                     <InputNumber style={{ width: '100%' }} min={0} placeholder='e.g. 80' />
                   </Form.Item>
                 </Col>
@@ -186,7 +186,7 @@ export default function ReferralConfigPage() {
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12} lg={8}>
-                  <Form.Item name='inviteeRewardXp' label='Invitee XP On Redeem' rules={[{ required: true }]}>
+                  <Form.Item name='inviteeRewardAiCredits' label='Invitee AI credits On Redeem' rules={[{ required: true }]}>
                     <InputNumber style={{ width: '100%' }} min={0} placeholder='e.g. 40' />
                   </Form.Item>
                 </Col>
@@ -232,7 +232,7 @@ export default function ReferralConfigPage() {
                 { title: 'Key', dataIndex: 'key', width: 170 },
                 { title: 'Title', dataIndex: 'title' },
                 { title: 'Referrals', dataIndex: 'referralsRequired', width: 96 },
-                { title: 'XP', dataIndex: 'rewardXp', width: 90 },
+                { title: 'AI credits', dataIndex: 'rewardAiCredits', width: 90 },
                 { title: 'Premium Days', dataIndex: 'rewardPremiumDays', width: 120 },
                 {
                   title: 'Reward Label',
@@ -280,7 +280,7 @@ export default function ReferralConfigPage() {
           key: '',
           title: '',
           referralsRequired: Math.max(1, sortedMilestones.length + 1),
-          rewardXp: 0,
+          rewardAiCredits: 0,
           rewardPremiumDays: 0,
           rewardLabel: '',
           isActive: true,
@@ -312,8 +312,8 @@ export default function ReferralConfigPage() {
           fieldProps={{ placeholder: 'e.g. 3' }}
         />
         <ProFormDigit
-          name='rewardXp'
-          label='Reward XP'
+          name='rewardAiCredits'
+          label='Reward AI credits'
           min={0}
           rules={[{ required: true }]}
           fieldProps={{ placeholder: 'e.g. 250' }}
@@ -328,7 +328,7 @@ export default function ReferralConfigPage() {
         <ProFormText
           name='rewardLabel'
           label='Reward Label'
-          fieldProps={{ placeholder: 'e.g. 250 XP + 7 Premium Days' }}
+          fieldProps={{ placeholder: 'e.g. 250 AI credits + 7 Premium Days' }}
         />
         <ProFormDigit
           name='sortOrder'
@@ -373,8 +373,8 @@ export default function ReferralConfigPage() {
           fieldProps={{ placeholder: 'e.g. 3' }}
         />
         <ProFormDigit
-          name='rewardXp'
-          label='Reward XP'
+          name='rewardAiCredits'
+          label='Reward AI credits'
           min={0}
           rules={[{ required: true }]}
           fieldProps={{ placeholder: 'e.g. 250' }}
@@ -389,7 +389,7 @@ export default function ReferralConfigPage() {
         <ProFormText
           name='rewardLabel'
           label='Reward Label'
-          fieldProps={{ placeholder: 'e.g. 250 XP + 7 Premium Days' }}
+          fieldProps={{ placeholder: 'e.g. 250 AI credits + 7 Premium Days' }}
         />
         <ProFormDigit
           name='sortOrder'

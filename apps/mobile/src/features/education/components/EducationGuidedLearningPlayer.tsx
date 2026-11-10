@@ -1,8 +1,8 @@
+import { LearningQuizHeader, LearningFeedbackDock } from './LearningQuizLayout';
 import { educationCorrectAnswerText } from '../utils/educationCorrectAnswer';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
-import { LearningArrival, LearningButton, LearningConfetti, LearningProgress, useLearningCopy, useLearningStyles } from './LearningUi';
+import { LearningArrival, LearningButton, LearningTextAction, LearningConfetti, useLearningCopy, useLearningStyles } from './LearningUi';
 import { LearningPracticeTip } from './LearningPracticeTip';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LearningAppButton as AppButton } from '@/features/education/components/LearningAppButton';
 import { QuestionCard, QuestionInput } from '@/features/education/components/question-inputs';
 import { createEmptyEducationAnswer } from '@/features/education/components/question-inputs/createEmptyEducationAnswer';
@@ -27,8 +27,6 @@ import { isEducationOrderingAnswerComplete } from '@/features/education/utils/ed
 import { useAuth } from '@/contexts/AuthProvider';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
 import { LearningFeedback } from './LearningFeedback';
-import AnimatedPressable from '@/components/AnimatedPressable';
-import { Ionicons } from '@expo/vector-icons';
 import { EducationGuidedLearningSummary } from '@/features/education/components/EducationGuidedLearningSummary';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
@@ -54,7 +52,6 @@ export function EducationGuidedLearningPlayer({ session, userId, classroomId, on
   const copy = useEducationCopy();
   const ui = useLearningCopy();
   const { styles: ls, theme } = useLearningStyles();
-  const insets = useSafeAreaInsets();
   const { styles } = useStyles();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -129,16 +126,11 @@ export function EducationGuidedLearningPlayer({ session, userId, classroomId, on
     <AppButton fullWidth label={copy.publicPracticeReturn} onPress={onExit} size="large" /></View>;
 
   return <View style={{ flex: 1, backgroundColor: theme.canvas }}>
-    <View style={[styles.quizHeader, { paddingTop: insets.top + 8 }]}>
-      <AnimatedPressable accessibilityRole="button" accessibilityLabel={copy.publicPracticeReturn} onPress={exit} style={styles.quizClose}><Ionicons name="close" size={24} color={theme.violetDeep} /></AnimatedPressable>
-      <View style={{ flex: 1 }}><LearningProgress value={currentPosition} total={questions.length} color={theme.grass} height={14} /></View>
-      <Text accessibilityLabel={ui.correct(session.questions.filter(item => item.progress.solved).length, questions.length)} style={styles.quizXp}>✦ {user?.totalXp ?? 0} XP</Text>
-    </View>
-    <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={[ls.content, { paddingTop: 12 }]}>
+    <LearningQuizHeader position={currentPosition} total={questions.length} exitLabel={copy.publicPracticeReturn} onExit={exit} />
+    <ScrollView key={questionId} style={{ flex: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={[ls.content, { paddingTop: 12 }]}>
       <LearningPracticeTip userId={userId} />
       <LearningArrival key={questionId} style={{ gap: 14 }}>
-        {activeQuestion.objectiveTitle ? <View style={styles.goal}><Ionicons name="locate" size={16} color={theme.violetDeep} /><Text style={[ls.small, { color: theme.violetDeep, flexShrink: 1 }]}>{activeQuestion.objectiveTitle}</Text></View> : null}
-        <Text style={ls.small}>{copy.questionTypeLabels[activeQuestion.type]} · {copy.practiceGuidance[activeQuestion.type]}</Text>
+        <Text style={[ls.small, { color: theme.violetDeep }]}>{[activeQuestion.objectiveTitle, copy.questionTypeLabels[activeQuestion.type]].filter(Boolean).join(' · ')}</Text>
         <QuestionCard variant="learning" questionIndex={questions.findIndex(item => item.id === questionId)} totalQuestions={questions.length}>
           <QuestionInput attemptId={`guided:${session.sessionId}`} question={activeQuestion} value={answer}
             onChange={setAnswer} labels={labels} feedback={result?.isCorrect} correctAnswer={result?.correctAnswer} showHints={false} orderingBuilder disabled={checking || syncPending || pendingCheckRef.current !== null || result !== null} />
@@ -146,7 +138,7 @@ export function EducationGuidedLearningPlayer({ session, userId, classroomId, on
       </LearningArrival>
     </ScrollView>
     {result?.isCorrect ? <LearningConfetti visible sequence={feedbackSequence} /> : null}
-    <View style={[ls.dock, styles.feedbackDock, { paddingBottom: Math.max(16, insets.bottom), backgroundColor: result ? result.isCorrect ? theme.mintTint : theme.berryTint : theme.canvas, borderColor: result ? result.isCorrect ? theme.mintLine : theme.berryLine : theme.line }]}>
+    <LearningFeedbackDock feedback={result?.isCorrect} embedded={false}>
       {result ? <LearningFeedback correct={result.isCorrect} title={result.isCorrect ? ui.feedbackCorrect : ui.feedbackWrong} explanation={result.explanation ?? activeQuestion.explanation} correctAnswerText={result.isCorrect ? null : educationCorrectAnswerText(activeQuestion, result.correctAnswer, labels)} sequence={feedbackSequence} /> : null}
       {checkError ? <Text accessibilityRole="alert" style={styles.error}>{copy.guidedLessonCheckError}</Text> : null}
       {showConflictNotice ? <Text accessibilityLiveRegion="polite" style={styles.notice}>{copy.guidedLessonChanged}</Text> : null}
@@ -155,10 +147,10 @@ export function EducationGuidedLearningPlayer({ session, userId, classroomId, on
         onPress={() => changedElsewhere ? void refreshSession(checkGateRef.current.focusEpoch) : void refreshAfterCheck(minimumVersionRef.current)} loading={syncPending} />
         : pendingCheckRef.current ? <LearningButton disabled={checking} label={checking ? copy.practiceChecking : copy.guidedLessonRetrySend} onPress={() => void retryPendingCheck()} loading={checking} />
           : result ? <View style={{ gap: 8 }}>
-            <LearningButton tone={result.isCorrect ? 'success' : 'primary'} disabled={checking} label={copy.practiceContinue} onPress={advance} />
-            {!result.isCorrect ? <LearningButton secondary disabled={checking} label={copy.practiceTryAgain} onPress={retryCurrent} /> : null}
+            <LearningButton tone={result.isCorrect ? 'success' : 'danger'} disabled={checking} label={copy.practiceContinue} onPress={advance} />
+            {!result.isCorrect ? <LearningTextAction disabled={checking} label={copy.practiceTryAgain} onPress={retryCurrent} /> : null}
           </View> : <LearningButton disabled={checking || changedElsewhere || isBlankResponse(activeQuestion, answer) || !answerReady(activeQuestion, answer)} label={checking ? copy.practiceChecking : copy.practiceCheck} loading={checking} onPress={() => void checkAnswer()} />}
-    </View>
+    </LearningFeedbackDock>
   </View>;
 
   function isActive(generation = checkGateRef.current.focusEpoch) {
@@ -415,11 +407,9 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     typeLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14, textTransform: 'capitalize' },
     guidance: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 },
     summary: { backgroundColor: theme.paper, borderColor: theme.mintLine, borderRadius: 14, borderWidth: 1.5, color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 21, padding: 14 },
-    quizHeader: { alignItems: 'center', flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingBottom: 12 },
-    quizClose: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 14, borderWidth: 2, height: 42, justifyContent: 'center', width: 42 },
-    quizXp: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, flexShrink: 0, textAlign: 'right' },
+
     goal: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderRadius: 99, flexDirection: 'row', gap: 6, minHeight: 34, paddingHorizontal: 12 },
-    feedbackDock: { borderTopLeftRadius: 26, borderTopRightRadius: 26, borderTopWidth: 0, gap: 10, paddingTop: 16 },
+
     feedbackContent: { alignItems: 'center', flexDirection: 'row', minHeight: 76, position: 'relative' },
     feedbackTitle: { fontFamily: typography.displayExtraBold, fontSize: 21, lineHeight: 28 },
     feedbackExplanation: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 },

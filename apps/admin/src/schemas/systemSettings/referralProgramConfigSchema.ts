@@ -2,18 +2,18 @@ export interface ReferralMilestone {
   key: string;
   title: string;
   referralsRequired: number;
-  rewardXp: number;
+  rewardAiCredits: number;
   rewardPremiumDays: number;
-  rewardLabel: string;
+  rewardLabel?: string | null;
   isActive: boolean;
   sortOrder: number;
 }
 
 export interface ReferralProgramConfig {
   isEnabled: boolean;
-  inviterRewardXp: number;
+  inviterRewardAiCredits: number;
   inviterRewardPremiumDays: number;
-  inviteeRewardXp: number;
+  inviteeRewardAiCredits: number;
   inviteeRewardPremiumDays: number;
   maxSuccessfulReferralsPerUser: number;
   milestones: ReferralMilestone[];
@@ -44,10 +44,10 @@ export const REFERRAL_MILESTONE_SCHEMA = {
       description: "Number of successful referrals to unlock",
       minimum: 1,
     },
-    rewardXp: {
+    rewardAiCredits: {
       type: "number",
-      title: "Reward XP",
-      description: "XP reward for reaching this milestone",
+      title: "Reward AI credits",
+      description: "AI credits reward for reaching this milestone",
       minimum: 0,
     },
     rewardPremiumDays: {
@@ -57,10 +57,9 @@ export const REFERRAL_MILESTONE_SCHEMA = {
       minimum: 0,
     },
     rewardLabel: {
-      type: "string",
+      type: ["string", "null"],
       title: "Reward Label",
       description: "Human-readable reward description",
-      minLength: 1,
       maxLength: 200,
     },
     isActive: {
@@ -80,9 +79,8 @@ export const REFERRAL_MILESTONE_SCHEMA = {
     "key",
     "title",
     "referralsRequired",
-    "rewardXp",
+    "rewardAiCredits",
     "rewardPremiumDays",
-    "rewardLabel",
     "isActive",
     "sortOrder",
   ],
@@ -100,10 +98,10 @@ export const REFERRAL_PROGRAM_CONFIG_SCHEMA = {
       description: "Whether the referral program is active",
       default: true,
     },
-    inviterRewardXp: {
+    inviterRewardAiCredits: {
       type: "number",
-      title: "Inviter Reward XP",
-      description: "XP reward for each successful referral (inviter)",
+      title: "Inviter Reward AI credits",
+      description: "AI credits reward for each successful referral (inviter)",
       minimum: 0,
       default: 80,
     },
@@ -114,10 +112,10 @@ export const REFERRAL_PROGRAM_CONFIG_SCHEMA = {
       minimum: 0,
       default: 3,
     },
-    inviteeRewardXp: {
+    inviteeRewardAiCredits: {
       type: "number",
-      title: "Invitee Reward XP",
-      description: "XP reward for signing up via referral (invitee)",
+      title: "Invitee Reward AI credits",
+      description: "AI credits reward for signing up via referral (invitee)",
       minimum: 0,
       default: 40,
     },
@@ -145,9 +143,9 @@ export const REFERRAL_PROGRAM_CONFIG_SCHEMA = {
   },
   required: [
     "isEnabled",
-    "inviterRewardXp",
+    "inviterRewardAiCredits",
     "inviterRewardPremiumDays",
-    "inviteeRewardXp",
+    "inviteeRewardAiCredits",
     "inviteeRewardPremiumDays",
     "maxSuccessfulReferralsPerUser",
     "milestones",
@@ -157,9 +155,9 @@ export const REFERRAL_PROGRAM_CONFIG_SCHEMA = {
 
 export const REFERRAL_PROGRAM_CONFIG_DEFAULT: ReferralProgramConfig = {
   isEnabled: true,
-  inviterRewardXp: 80,
+  inviterRewardAiCredits: 80,
   inviterRewardPremiumDays: 3,
-  inviteeRewardXp: 40,
+  inviteeRewardAiCredits: 40,
   inviteeRewardPremiumDays: 2,
   maxSuccessfulReferralsPerUser: 100,
   milestones: [
@@ -167,9 +165,9 @@ export const REFERRAL_PROGRAM_CONFIG_DEFAULT: ReferralProgramConfig = {
       key: "referral_1",
       title: "First Invite",
       referralsRequired: 1,
-      rewardXp: 100,
+      rewardAiCredits: 100,
       rewardPremiumDays: 3,
-      rewardLabel: "100 XP + 3 Premium Days",
+      rewardLabel: "100 AI credits + 3 Premium Days",
       isActive: true,
       sortOrder: 1,
     },
@@ -177,9 +175,9 @@ export const REFERRAL_PROGRAM_CONFIG_DEFAULT: ReferralProgramConfig = {
       key: "referral_3",
       title: "Community Starter",
       referralsRequired: 3,
-      rewardXp: 250,
+      rewardAiCredits: 250,
       rewardPremiumDays: 7,
-      rewardLabel: "250 XP + 7 Premium Days",
+      rewardLabel: "250 AI credits + 7 Premium Days",
       isActive: true,
       sortOrder: 2,
     },
@@ -187,9 +185,9 @@ export const REFERRAL_PROGRAM_CONFIG_DEFAULT: ReferralProgramConfig = {
       key: "referral_5",
       title: "Memory Ambassador",
       referralsRequired: 5,
-      rewardXp: 500,
+      rewardAiCredits: 500,
       rewardPremiumDays: 14,
-      rewardLabel: "500 XP + 14 Premium Days",
+      rewardLabel: "500 AI credits + 14 Premium Days",
       isActive: true,
       sortOrder: 3,
     },
@@ -197,9 +195,9 @@ export const REFERRAL_PROGRAM_CONFIG_DEFAULT: ReferralProgramConfig = {
       key: "referral_10",
       title: "Master Connector",
       referralsRequired: 10,
-      rewardXp: 1000,
+      rewardAiCredits: 1000,
       rewardPremiumDays: 30,
-      rewardLabel: "1000 XP + 30 Premium Days",
+      rewardLabel: "1000 AI credits + 30 Premium Days",
       isActive: true,
       sortOrder: 4,
     },

@@ -2,13 +2,14 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Camera, Check, Images, Plus, RefreshCcw, ScanText } from '@/core/icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
+import { usePreventRemove } from '@react-navigation/native';
 import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -44,9 +45,11 @@ const makeEditableItem = (item: OcrItem): EditableOcrItem => ({
 });
 
 export default function ScanMemoryScreen() {
+  const { styles } = useStyles();
   const router = useRouter();
-  const params = useLocalSearchParams<{ sourceDraftId?: string | string[] }>();
-  const { t } = useTranslation('memoryComposer');
+  const params = useLocalSearchParams<{ sourceDraftId?: string | string[]; destination?: string | string[] }>();
+  const { t, language } = useTranslation('memoryComposer');
+  const studyDestination = firstParam(params.destination) === 'study';
   const [phase, setPhase] = useState<ScanPhase>('choose');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [items, setItems] = useState<EditableOcrItem[]>([]);
@@ -54,10 +57,19 @@ export default function ScanMemoryScreen() {
   const [reviewMode, setReviewMode] = useState<'quick' | 'items'>('quick');
   const [message, setMessage] = useState<string | null>(null);
   const [sourceDraft, setSourceDraft] = useState<OcrDraft | null>(null);
+  const consumedSourceId = useRef<string | undefined>(undefined);
   const [isReordering, setIsReordering] = useState(false);
+  const [studyExitRoute, setStudyExitRoute] = useState<Href | null>(null);
+  usePreventRemove(studyDestination && !studyExitRoute, () => handleBack());
+  useEffect(() => {
+    if (studyExitRoute) router.replace(studyExitRoute);
+  }, [studyExitRoute, router]);
 
   useEffect(() => {
-    setSourceDraft(consumeOcrDraft(firstParam(params.sourceDraftId)));
+    const id = firstParam(params.sourceDraftId);
+    if (consumedSourceId.current === id) return;
+    consumedSourceId.current = id;
+    setSourceDraft(consumeOcrDraft(id));
   }, [params.sourceDraftId]);
 
   const runOcr = async (uri: string) => {
@@ -169,13 +181,25 @@ export default function ScanMemoryScreen() {
     const draftId = saveOcrDraft(mergedItems, {
       title: sourceDraft?.title,
       goalType: sourceDraft?.goalType,
+      languageCode: sourceDraft?.languageCode, groupSize: sourceDraft?.groupSize, studyEditor: sourceDraft?.studyEditor,
     });
-    router.replace(`/create-memory?ocrDraftId=${encodeURIComponent(draftId)}` as Href);
+    const destination = firstParam(params.destination) === 'study' ? '/education/create-course' : '/create-memory';
+    const route = `${destination}?ocrDraftId=${encodeURIComponent(draftId)}` as Href;
+    if (studyDestination) setStudyExitRoute(route);
+    else router.replace(route);
   };
 
   const handleBack = () => {
     if (phase === 'review') {
       setPhase('choose');
+      return;
+    }
+
+    if (firstParam(params.destination) === 'study') {
+      const draftId = saveOcrDraft(sourceDraft?.items ?? [], {
+        title: sourceDraft?.title, languageCode: sourceDraft?.languageCode, groupSize: sourceDraft?.groupSize, studyEditor: sourceDraft?.studyEditor,
+      });
+      setStudyExitRoute(`/education/create-course?ocrDraftId=${encodeURIComponent(draftId)}` as Href);
       return;
     }
 
@@ -206,9 +230,10 @@ export default function ScanMemoryScreen() {
       style={styles.page}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <CommonHeader
-        eyebrow={t('scanEyebrow')}
-        title={title}
-        description={description}
+        showAiCredits={!studyDestination}
+        eyebrow={studyDestination ? (language === 'zh' ? '创建学习内容' : 'CREATE STUDY CONTENT') : t('scanEyebrow')}
+        title={studyDestination && phase === 'choose' ? (language === 'zh' ? '扫描学习资料' : 'Scan study material') : title}
+        description={studyDestination && phase === 'choose' ? (language === 'zh' ? '拍下词表，确认识别结果后制作私人教学草稿。' : 'Scan a word list, check the recognised text, then create a private lesson draft.') : description}
         backAction={handleBack}
       />
       <ScrollView
@@ -224,6 +249,7 @@ export default function ScanMemoryScreen() {
             onLibrary={() => void choosePhoto('library')}
             onRetry={() => imageUri && void runOcr(imageUri)}
             t={t}
+            description={studyDestination ? (language === 'zh' ? '识别照片上的词语，逐行确认后创建学习内容。' : 'Read the words from your photo, then check each line before creating your lesson.') : undefined}
           />
         ) : phase === 'processing' ? (
           <ProcessingState imageUri={imageUri} t={t} />
@@ -272,6 +298,7 @@ function ChoosePhotoState({
   onLibrary,
   onRetry,
   t,
+  description,
 }: {
   imageUri: string | null;
   message: string | null;
@@ -279,7 +306,9 @@ function ChoosePhotoState({
   onLibrary: () => void;
   onRetry: () => void;
   t: Translation;
+  description?: string;
 }) {
+  const { styles, theme } = useStyles();
   return (
     <>
       <View style={styles.heroCard}>
@@ -287,7 +316,7 @@ function ChoosePhotoState({
           <ScanText size={27} color={theme.violetDeep} strokeWidth={2.2} />
         </View>
         <Text style={styles.heroTitle}>{t('scanCardTitle')}</Text>
-        <Text style={styles.heroBody}>{t('scanCardBody')}</Text>
+        <Text style={styles.heroBody}>{description ?? t('scanCardBody')}</Text>
         <View style={styles.tipRow}>
           <Text style={styles.tipEmoji}>💡</Text>
           <Text style={styles.tipText}>{t('scanTip')}</Text>
@@ -321,6 +350,7 @@ function ChoosePhotoState({
 }
 
 function ProcessingState({ imageUri, t }: { imageUri: string | null; t: Translation }) {
+  const { styles, theme } = useStyles();
   return (
     <View style={styles.processingCard}>
       {imageUri ? (
@@ -368,6 +398,7 @@ function ReviewState({
   onRetake: () => void;
   t: Translation;
 }) {
+  const { styles, theme } = useStyles();
   const visibleItemCount = reviewMode === 'quick'
     ? parseOcrReviewText(quickEditText).length
     : items.length;
@@ -470,6 +501,7 @@ function ReviewState({
 }
 
 function MessageCard({ message }: { message: string }) {
+  const { styles } = useStyles();
   return (
     <View style={styles.messageCard}>
       <Text style={styles.messageText}>{message}</Text>
@@ -477,7 +509,7 @@ function MessageCard({ message }: { message: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 48 },
   heroCard: {
@@ -669,4 +701,4 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   addItemText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-});
+}));

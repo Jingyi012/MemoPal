@@ -5,6 +5,8 @@ import type { MyEducationAssignment } from '@/features/education/types/education
 import { useEducationCopy } from '@/features/education/i18n';
 import { getEducationAssignmentStatus } from '@/features/education/utils/educationAssignmentStatus';
 import { StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useLearningCopy } from './LearningUi';
 
 type EducationAssignmentCardProps = Readonly<{
   assignment: MyEducationAssignment;
@@ -14,6 +16,7 @@ type EducationAssignmentCardProps = Readonly<{
 export function EducationAssignmentCard({ assignment, onPress }: EducationAssignmentCardProps) {
   const copy = useEducationCopy();
   const { styles, theme } = useStyles();
+  const { zh } = useLearningCopy();
   const opensAt = new Date(assignment.opensAt);
   const dueAt = new Date(assignment.dueAt);
   const statusKey = getEducationAssignmentStatus(assignment);
@@ -25,24 +28,33 @@ export function EducationAssignmentCard({ assignment, onPress }: EducationAssign
   return (
     <AnimatedPressable
       accessibilityRole="button"
-      accessibilityLabel={`${assignment.title}, ${status}`}
+      accessibilityLabel={`${assignment.title}, ${status}. ${statusKey === 'upcoming' ? copy.opensAt : copy.dueAt}: ${formatDate(statusKey === 'upcoming' ? opensAt : dueAt)}. ${assignment.timeLimitMinutes == null ? copy.noTimeLimit : copy.timeLimit(assignment.timeLimitMinutes)}`}
       accessibilityHint={copy.viewAssignment}
       onPress={onPress}
-      style={styles.card}>
+      style={[styles.card, { borderColor: statusKey === 'open' ? theme.mintLine : theme.line }]}>
       <View style={styles.copy}>
         <View style={styles.titleRow}>
-          <Text style={styles.title}>{assignment.title}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name={assignment.scope === 'family' ? 'home-outline' : 'school-outline'} size={17} color={theme.violetDeep} />
+            <Text style={styles.meta}>{assignment.scope === 'family' ? (zh ? '家人安排' : 'From family') : (zh ? '课堂任务' : 'From class')}</Text>
+          </View>
           <Text style={[styles.status, styles[statusKey]]}>
             {status}
           </Text>
         </View>
-        <Text style={styles.meta}>{copy.opensAt}: {formatDate(opensAt)}</Text>
-        <Text style={styles.meta}>{copy.dueAt}: {formatDate(dueAt)}</Text>
+        <Text style={styles.title}>{assignment.title}</Text>
+        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
+          <Ionicons name="calendar-outline" size={17} color={theme.inkSoft} />
+          <Text style={[styles.meta, { flex: 1 }]}>{statusKey === 'upcoming' ? copy.opensAt : copy.dueAt}: {formatDate(statusKey === 'upcoming' ? opensAt : dueAt)}</Text>
+        </View>
         <Text style={styles.meta}>
           {assignment.timeLimitMinutes == null ? copy.noTimeLimit : copy.timeLimit(assignment.timeLimitMinutes)}
         </Text>
+        <View style={[styles.footer, { backgroundColor: statusKey === 'open' ? theme.mintTint : theme.violetTint }]}>
+          <Text style={[styles.footerText, { color: statusKey === 'open' ? theme.successText : theme.violetDeep }]}>{copy.viewAssignment}</Text>
+          <ArrowRight size={18} color={statusKey === 'open' ? theme.successText : theme.violetDeep} />
+        </View>
       </View>
-      <ArrowRight size={18} color={theme.inkSoft} />
     </AnimatedPressable>
   );
 }
@@ -58,13 +70,15 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     minHeight: 64,
-    paddingHorizontal: 13,
-    paddingVertical: 11,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
-  copy: { flex: 1, gap: 3, minWidth: 0 },
-  titleRow: { alignItems: 'flex-start', flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
-  title: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 15, lineHeight: 21 },
-  status: { borderRadius: 999, fontFamily: typography.bodyExtraBold, fontSize: 11, overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 3 },
+  copy: { flex: 1, gap: 12, minWidth: 0 },
+  titleRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between' },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, lineHeight: 26 },
+  footer: { borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  footerText: { flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 13, lineHeight: 19 },
+  status: { borderRadius: 999, fontFamily: typography.bodyExtraBold, fontSize: 13, overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 3 },
   upcoming: { backgroundColor: theme.skyTint, color: theme.link },
   open: { backgroundColor: theme.mintTint, color: theme.successText },
   pastDue: { backgroundColor: theme.peachTint, color: theme.berryDeep },

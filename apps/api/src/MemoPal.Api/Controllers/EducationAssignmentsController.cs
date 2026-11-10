@@ -14,6 +14,11 @@ namespace MemoPal.Api.Controllers;
 [Route("v1/education")]
 public sealed class EducationAssignmentsController(ISender sender) : ApiControllerBase(sender)
 {
+    [HttpGet("assignments/{assignmentId}/family-study-items")]
+    [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
+    public async Task<IActionResult> GetFamilyStudyItems(string assignmentId, CancellationToken ct) =>
+        Ok(await Sender.Send(new GetFamilyAssignmentStudyItemsQuery(GetUserIdOrThrow(), assignmentId), ct));
+
     [HttpPost("classrooms/{classroomId}/assignments")]
     [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> CreateClassroomAssignment(string classroomId, [FromBody] CreateClassroomAssignmentRequest request, CancellationToken ct) =>

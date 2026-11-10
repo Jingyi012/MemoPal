@@ -1,6 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppearanceItemPreview, MemoryAvatar } from '@/components/MemoryAvatar';
 import LoadingView from '@/components/LoadingView';
+import { useReducedMotion } from 'react-native-reanimated';
 import { CommonHeader } from '@/components/CommonHeader';
 import { Camera, Check, Crown, Image as ImageIcon, Layers, LockKeyhole, Sparkles, Star, X } from '@/core/icons';
 import type { LucideIcon } from '@/core/icons';
@@ -72,12 +73,14 @@ export default function CompanionClosetScreen() {
   const [draft, setDraft] = useState<AppearanceDraft>(initialDraft);
   const [saving, setSaving] = useState(false);
   const floatValue = useRef(new Animated.Value(0)).current;
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     setDraft(initialDraft);
   }, [initialDraft]);
 
   useEffect(() => {
+    if (reduceMotion) { floatValue.setValue(0); return; }
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(floatValue, { toValue: 1, duration: 1700, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
@@ -86,7 +89,7 @@ export default function CompanionClosetScreen() {
     );
     animation.start();
     return () => animation.stop();
-  }, [floatValue]);
+  }, [floatValue, reduceMotion]);
 
   const previewAvatar = avatars.find((avatar) => avatar.id === draft.avatarId) ?? equippedAvatar;
   const previewPhoto = draft.source === 'photo' ? (draft.photoUri ?? user?.avatarUrl ?? null) : null;
@@ -150,7 +153,7 @@ export default function CompanionClosetScreen() {
     }
   };
 
-  if (userLoading || avatarsLoading || appearanceLoading) return <LoadingView />;
+  if (userLoading || avatarsLoading || appearanceLoading) return <View style={styles.page}><CommonHeader title={t('customizeAppearance')} backAction={() => router.back()} /><LoadingView /></View>;
 
   return (
     <View style={styles.page}>
@@ -231,7 +234,7 @@ export default function CompanionClosetScreen() {
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-        <AnimatedPressable disabled={!isDirty || saving} onPress={() => { void save(); }} style={[styles.saveButton, (!isDirty || saving) && styles.disabledButton]}>
+        <AnimatedPressable accessibilityRole="button" accessibilityState={{ disabled: !isDirty || saving }} disabled={!isDirty || saving} onPress={() => { void save(); }} style={[styles.saveButton, (!isDirty || saving) && styles.disabledButton]}>
           {saving ? <ActivityIndicator color={theme.onAccent} size="small" /> : <Check color={theme.onAccent} size={18} strokeWidth={3} />}
           <Text style={styles.saveButtonText}>{saving ? t('saving') : t('saveAppearance')}</Text>
         </AnimatedPressable>
@@ -274,6 +277,8 @@ function WardrobeCard({
     : { tint: theme.skyTint, line: theme.skyLine, color: theme.sky };
   return (
     <AnimatedPressable
+      accessibilityRole="button"
+      accessibilityState={{ selected, disabled: !unlocked }}
       accessibilityLabel={unlocked ? title : `${title}, ${labels.locked.replace('{level}', String(item?.requiredLevel ?? avatar?.requiredLevel ?? level))}`}
       containerStyle={styles.cardContainer}
       disabled={!unlocked}
@@ -297,7 +302,7 @@ function WardrobeCard({
 function NoneCard({ selected, label, equippedLabel, onPress }: { selected: boolean; label: string; equippedLabel: string; onPress: () => void }) {
   const { styles, theme } = useStyles();
   return (
-    <AnimatedPressable containerStyle={styles.cardContainer} onPress={onPress} style={[styles.wardrobeCard, styles.noneCard, selected && styles.wardrobeCardSelected]}>
+    <AnimatedPressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }} containerStyle={styles.cardContainer} onPress={onPress} style={[styles.wardrobeCard, styles.noneCard, selected && styles.wardrobeCardSelected]}>
       <View style={styles.noneVisual}><X color={theme.inkSoft} size={28} /></View>
       <Text numberOfLines={1} style={styles.cardTitle}>{label}</Text>
       <Text style={[styles.cardMeta, selected && styles.cardMetaUnlocked]}>{selected ? equippedLabel : label}</Text>
@@ -338,17 +343,17 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   heroStarTwo: { right: '19%', top: 118 },
   liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 9, paddingVertical: 5, marginLeft: 14, zIndex: 5 },
   liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: theme.grass },
-  liveBadgeText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
+  liveBadgeText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   heroAvatar: { marginTop: 3, zIndex: 3 },
   heroName: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 18, marginTop: 2, zIndex: 5 },
   tabs: { gap: 8, paddingVertical: 17, paddingRight: 4 },
-  tab: { minWidth: 88, minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 14, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 11 },
+  tab: { minWidth: 88, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 14, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 11 },
   tabActive: { borderColor: theme.violetDeep, backgroundColor: theme.violetDeep },
-  tabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  tabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   tabTextActive: { color: theme.onAccent },
   catalogHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginBottom: 10 },
   catalogTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15 },
-  catalogCount: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 9.5 },
+  catalogCount: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 0 },
   cardContainer: { width: '48.4%', marginBottom: 11 },
   wardrobeCard: { minHeight: 168, width: '100%', alignItems: 'center', justifyContent: 'center', position: 'relative', borderRadius: 21, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingVertical: 12, paddingHorizontal: 8, boxShadow: '0px 4px 0px rgba(105,80,204,0.05)' },
@@ -359,7 +364,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   cosmeticVisual: { overflow: 'hidden', borderWidth: 1 },
   cosmeticGlow: { position: 'absolute', width: 76, height: 76, borderRadius: 38, opacity: 0.13, top: -23, right: -18 },
   cardTitle: { maxWidth: '100%', color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 12, marginTop: 3 },
-  cardMeta: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 9.5, marginTop: 3 },
+  cardMeta: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 3 },
   cardMetaUnlocked: { color: theme.violetDeep },
   selectedMark: { position: 'absolute', top: 9, right: 9, width: 25, height: 25, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.violetDeep },
   lockMark: { position: 'absolute', top: 9, right: 9, width: 25, height: 25, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.line },
@@ -370,8 +375,8 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   photoPlaceholder: { width: 66, height: 66, alignItems: 'center', justifyContent: 'center', borderRadius: 23, backgroundColor: theme.violetTint },
   photoCopy: { flex: 1, minWidth: 0 },
   photoTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15 },
-  primaryAction: { minHeight: 42, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 13, backgroundColor: theme.violetDeep, paddingHorizontal: 13, marginTop: 12 },
-  primaryActionText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 11 },
+  primaryAction: { minHeight: 44, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 13, backgroundColor: theme.violetDeep, paddingHorizontal: 13, marginTop: 12 },
+  primaryActionText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 12 },
   footer: { borderTopWidth: 1.5, borderTopColor: theme.line, backgroundColor: theme.canvas, paddingHorizontal: 16, paddingTop: 10 },
   saveButton: { minHeight: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 15, backgroundColor: theme.violetDeep },
   saveButtonText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 13 },

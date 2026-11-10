@@ -17,6 +17,6 @@ public sealed class UpdateEducationCourseTitleHandler(IAppDbContext db)
         course.Title = AuthoringValidation.Title(command.Title, "Course");
         await db.SaveChangesAsync(ct);
         return ApiResponse<EducationCourseDto>.Ok(new(course.Id, course.Title, course.CreatedAt, course.IsPublic,
-            course.PubliclyPublishedAt, course.UserId == AuthoringValidation.SystemOwnerId));
+            course.PubliclyPublishedAt, course.UserId == AuthoringValidation.SystemOwnerId, course.SubjectCode, course.LearningStage, course.LanguageCode));
     }
 }

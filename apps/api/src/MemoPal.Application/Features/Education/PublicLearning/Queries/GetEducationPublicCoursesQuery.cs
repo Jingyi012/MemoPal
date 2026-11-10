@@ -31,7 +31,7 @@ public sealed class GetEducationPublicCoursesHandler(IAppDbContext db)
             .OrderByDescending(course => course.PubliclyPublishedAt)
             .ThenBy(course => course.Title)
             .Take(100)
-            .Select(course => new { course.Id, course.Title, course.UserId, PublishedAt = course.PubliclyPublishedAt!.Value })
+            .Select(course => new { course.Id, course.Title, course.UserId, course.SubjectCode, course.LearningStage, course.LanguageCode, PublishedAt = course.PubliclyPublishedAt!.Value })
             .ToListAsync(ct);
 
         if (courses.Count == 0)
@@ -61,7 +61,7 @@ public sealed class GetEducationPublicCoursesHandler(IAppDbContext db)
             .Select(course => new EducationPublicCourseSummaryDto(course.Id, course.Title,
                 course.UserId == "system" ? "MemoPal" : authors.GetValueOrDefault(course.UserId) ?? "MemoPal creator", course.PublishedAt,
                 assessmentCounts.GetValueOrDefault(course.Id), questionCounts.GetValueOrDefault(course.Id), savedCourseIds.Contains(course.Id),
-                course.UserId == "system"))
+                course.UserId == "system", course.SubjectCode, course.LearningStage, course.LanguageCode))
             .OrderByDescending(course => course.IsMemoPalStarter)
             .ThenByDescending(course => course.PublishedAt)
             .ThenBy(course => course.Title)

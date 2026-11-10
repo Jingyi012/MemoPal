@@ -7,6 +7,8 @@ const projectRoot = __dirname;
 
 // get default config
 const config = getDefaultConfig(projectRoot);
+// The diagram protocol is shared with Admin; Metro must watch its source outside this app.
+config.watchFolders = [...new Set([...(config.watchFolders ?? []), path.resolve(projectRoot, '../../shared')])];
 
 // set your alias
 config.resolver.extraNodeModules = {

@@ -1,6 +1,7 @@
 namespace MemoPal.Application.Features.Education.Authoring.DTOs;
 
 public sealed record CreateCourseRequest(string Title);
+public sealed record UpdateObjectiveTitleRequest(string Title);
 public sealed record CreateObjectiveRequest(string Title, string? RecommendedMemorySetId = null);
 public sealed record SetEducationObjectiveMemoryRecommendationRequest(string? RecommendedMemorySetId);
 public sealed record CreateAssessmentRequest(string Title);
@@ -19,7 +20,9 @@ public sealed record EducationQuestionRequest(
     string? Explanation = null);
 public sealed record EducationOptionRequest(string Id, string Label);
 public sealed record EducationMatchingPairRequest(EducationOptionRequest Left, EducationOptionRequest Right);
-public sealed record EducationCourseDto(string Id, string Title, DateTime CreatedAt, bool IsPublic = false, DateTime? PubliclyPublishedAt = null, bool IsPlatformCourse = false);
+public sealed record EducationCourseDto(string Id, string Title, DateTime CreatedAt, bool IsPublic = false, DateTime? PubliclyPublishedAt = null, bool IsPlatformCourse = false,
+    string? SubjectCode = null, string? LearningStage = null, string? LanguageCode = null);
+public sealed record UpdateEducationCourseAudienceRequest(string? SubjectCode, string? LearningStage, string? LanguageCode);
 public sealed record SetEducationCourseVisibilityRequest(bool IsPublic, bool NotConfidentialExamContent = false);
 public sealed record EducationObjectiveDto(string Id, string CourseId, string Title, DateTime CreatedAt, string? RecommendedMemorySetId = null,
     string MemoryContentType = "NotApplicable", string? LanguageCode = null, string? GradeCode = null,
@@ -79,7 +82,7 @@ public sealed record EducationLearnerObjectiveDto(string Id, string CourseId, st
 public sealed record EducationLearnerAssessmentSummaryDto(string Id, string Title, string Status, int Version);
 public sealed record EducationLearnerStudyItemDto(string Id, int Position, string Kind, string Primary,
     string? Secondary, string? Phonetic, string? Extra, string? LanguageCode, int ContentVersion,
-    string ReviewStatus, string ContentOrigin);
+    string ReviewStatus, string ContentOrigin, string? IllustrationCode = null);
 public sealed record EducationAssessmentDto(string Id, string CourseId, string Title, string Status, int Version, DateTime? PublishedAt, IReadOnlyList<EducationQuestionDto> Questions, bool IsPublicPractice = false);
 public sealed record EducationQuestionDto(
     string Id, string Prompt, string Type, string? FillMode, decimal MaxScore, string ObjectiveId,

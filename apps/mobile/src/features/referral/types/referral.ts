@@ -2,7 +2,7 @@ export interface ReferralProgramMilestoneConfig {
   key: string;
   title: string;
   referralsRequired: number;
-  rewardXp: number;
+  rewardAiCredits: number;
   rewardPremiumDays: number;
   rewardLabel?: string | null;
   isActive: boolean;
@@ -11,9 +11,9 @@ export interface ReferralProgramMilestoneConfig {
 
 export interface ReferralProgramConfig {
   isEnabled: boolean;
-  inviterRewardXp: number;
+  inviterRewardAiCredits: number;
   inviterRewardPremiumDays: number;
-  inviteeRewardXp: number;
+  inviteeRewardAiCredits: number;
   inviteeRewardPremiumDays: number;
   maxSuccessfulReferralsPerUser: number;
   milestones: ReferralProgramMilestoneConfig[];
@@ -26,16 +26,17 @@ export interface ReferralUser {
   email: string;
   isPremium: boolean;
   redeemedAt: string;
-  inviterRewardXp: number;
+  inviterRewardAiCredits: number;
   inviterRewardPremiumDays: number;
 }
 
 export interface ReferralMilestoneProgress {
+  rewardXp?: number;
   key: string;
   title: string;
   referralsRequired: number;
   currentReferrals: number;
-  rewardXp: number;
+  rewardAiCredits: number;
   rewardPremiumDays: number;
   rewardLabel?: string | null;
   sortOrder: number;
@@ -47,7 +48,7 @@ export interface ReferralMilestoneProgress {
 export interface ReferralSummary {
   referralCode: string;
   successfulReferrals: number;
-  totalXpEarned: number;
+  totalAiCreditsEarned: number;
   totalPremiumDaysEarned: number;
   hasRedeemedCode: boolean;
   referredByUserId?: string | null;
@@ -61,9 +62,9 @@ export interface RedeemReferralResult {
   referralId: string;
   referrerUserId: string;
   referrerDisplayName: string;
-  inviteeAwardedXp: number;
+  inviteeAwardedAiCredits: number;
   inviteeAwardedPremiumDays: number;
-  inviterAwardedXp: number;
+  inviterAwardedAiCredits: number;
   inviterAwardedPremiumDays: number;
   newlyAwardedMilestones: ReferralMilestoneProgress[];
 }

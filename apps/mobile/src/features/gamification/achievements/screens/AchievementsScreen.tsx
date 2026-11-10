@@ -17,7 +17,6 @@ import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { typography } from '@/theme/typography';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { ArrowRight, BookOpen, Check, History, Sparkles } from '@/core/icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -183,13 +182,13 @@ export default function AchievementsScreen() {
     <View
       style={[
         styles.page,
-        { backgroundColor: colorScheme === 'dark' ? activeTheme.canvas : '#FAF9FF' },
+        { backgroundColor: activeTheme.canvas },
       ]}>
       <CommonHeader
         eyebrow={t('eyebrow')}
         title={t('title')}
-        hideBackButton
-        showAiCredits
+        backAction={() => { if (router.canGoBack()) router.back(); else router.replace('/(tabs)/profile'); }}
+        showAiCredits={false}
         actions={[
           {
             icon: History,
@@ -265,7 +264,7 @@ export default function AchievementsScreen() {
         </View>
 
         {nextMilestone ? (
-          <NextWinCard milestone={nextMilestone} onPress={() => router.push('/(tabs)/practice')} />
+          <NextWinCard milestone={nextMilestone} onPress={() => router.push('/memory-tools')} />
         ) : null}
 
         <SectionHeading title={t('learningPaths')} subtitle={t('learningPathsSummary')} />
@@ -352,38 +351,29 @@ function NextWinCard({
   milestone: MilestoneProgress;
   onPress: () => void;
 }) {
-  const { styles } = useStyles();
+  const { styles, theme } = useStyles();
   const { t } = useTranslation('achievements');
   const copy = getMilestoneCopy(milestone, t);
   const actionText = getNextWinAction(milestone, copy.title, t);
   return (
-    <AnimatedPressable lively onPress={onPress} style={styles.nextWinCard}>
-      <LinearGradient
-        colors={['#FF9147', '#F05D86']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-      />
+    <AnimatedPressable accessibilityRole="button" accessibilityLabel={actionText} lively onPress={onPress} style={styles.nextWinCard}>
       <View style={styles.nextWinTopRow}>
         <View style={styles.nextWinIcon}>
-          <Sparkles color="#FFFFFF" size={19} />
+          <Sparkles color={theme.onAccent} size={19} />
         </View>
         <View style={styles.nextWinCopy}>
           <Text style={styles.nextWinEyebrow}>{t('nextWin')}</Text>
-          <Text numberOfLines={1} style={styles.nextWinTitle}>
+          <Text numberOfLines={2} style={styles.nextWinTitle}>
             {actionText}
           </Text>
         </View>
-        <ArrowRight color="#FFFFFF" size={18} />
+        <ArrowRight color={theme.onAccent} size={18} />
       </View>
       <View style={styles.nextWinProgressRow}>
         <View style={styles.nextWinTrack}>
           <View style={[styles.nextWinFill, { width: `${milestone.percent}%` }]} />
         </View>
         <Text style={styles.nextWinProgressText}>{milestone.percent}%</Text>
-        <View style={styles.practicePill}>
-          <Text style={styles.practiceNow}>{t('practiceNow')}</Text>
-        </View>
       </View>
     </AnimatedPressable>
   );
@@ -629,7 +619,7 @@ function milestoneEmoji(milestone: Milestone) {
 const useStyles = createThemedStyles((theme) =>
   StyleSheet.create({
     page: { flex: 1 },
-    content: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 40, gap: 16 },
+    content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40, gap: 16 },
     levelHeaderSpacing: { marginBottom: 0 },
     learningOverview: { gap: 9 },
     learningStats: { flexDirection: 'row', alignItems: 'stretch', gap: 9 },
@@ -640,13 +630,13 @@ const useStyles = createThemedStyles((theme) =>
       fontFamily: typography.displayExtraBold,
       fontSize: 16,
     },
-    snapshotMetricLabel: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: 8, textAlign: 'center' },
+    snapshotMetricLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, textAlign: 'center' },
     nextWinCard: {
       padding: 13,
       borderRadius: 20,
       borderWidth: 0,
       overflow: 'hidden',
-      boxShadow: '0px 6px 16px rgba(239,94,127,0.24)',
+      backgroundColor: theme.violetDeep,
     },
     nextWinTopRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     nextWinIcon: {
@@ -659,14 +649,14 @@ const useStyles = createThemedStyles((theme) =>
     },
     nextWinCopy: { flex: 1, minWidth: 0 },
     nextWinEyebrow: {
-      color: 'rgba(255,255,255,0.88)',
+      color: theme.onAccent,
       fontFamily: typography.bodyExtraBold,
-      fontSize: 9,
+      fontSize: 12,
       letterSpacing: 0.7,
       textTransform: 'uppercase',
     },
     nextWinTitle: {
-      color: '#FFFFFF',
+      color: theme.onAccent,
       fontFamily: typography.displayExtraBold,
       fontSize: 14,
       marginTop: 2,
@@ -679,14 +669,12 @@ const useStyles = createThemedStyles((theme) =>
       borderRadius: 999,
       backgroundColor: 'rgba(255,255,255,0.32)',
     },
-    nextWinFill: { height: '100%', borderRadius: 999, backgroundColor: '#FFFFFF' },
+    nextWinFill: { height: '100%', borderRadius: 999, backgroundColor: theme.onAccent },
     nextWinProgressText: {
-      color: '#FFFFFF',
+      color: theme.onAccent,
       fontFamily: typography.bodyExtraBold,
-      fontSize: 10,
+      fontSize: 12,
     },
-    practicePill: { borderRadius: 999, backgroundColor: '#FFFFFF', paddingHorizontal: 11, paddingVertical: 7 },
-    practiceNow: { color: '#D64A2A', fontFamily: typography.bodyExtraBold, fontSize: 10 },
     sectionHeader: {
       flexDirection: 'row',
       alignItems: 'flex-end',
@@ -700,7 +688,7 @@ const useStyles = createThemedStyles((theme) =>
     sectionBody: {
       color: theme.inkSoft,
       fontFamily: typography.bodyBold,
-      fontSize: 11,
+      fontSize: 12,
       marginTop: 2,
     },
     achievedPill: {
@@ -712,11 +700,11 @@ const useStyles = createThemedStyles((theme) =>
     achievedPillText: {
       color: theme.successText,
       fontFamily: typography.bodyExtraBold,
-      fontSize: 10,
+      fontSize: 12,
     },
     filterRow: { flexDirection: 'row', gap: 7, marginBottom: 11 },
     filterChip: {
-      minHeight: 36,
+      minHeight: 44,
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 999,
@@ -750,7 +738,7 @@ const useStyles = createThemedStyles((theme) =>
     milestoneGridStatus: {
       color: theme.violetDeep,
       fontFamily: typography.bodyExtraBold,
-      fontSize: 10,
+      fontSize: 12,
     },
     milestoneGridTitle: {
       color: theme.ink,
@@ -790,7 +778,7 @@ const useStyles = createThemedStyles((theme) =>
     emptyBody: {
       color: theme.inkSoft,
       fontFamily: typography.bodyBold,
-      fontSize: 11,
+      fontSize: 12,
       textAlign: 'center',
       marginTop: 4,
     },

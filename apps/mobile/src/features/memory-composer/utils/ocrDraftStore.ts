@@ -1,7 +1,11 @@
+import type { StudyEditorSnapshot } from '@/features/education/utils/educationDraftEditor';
 export type OcrDraft = {
   items: string[];
   title?: string;
   goalType?: string;
+  languageCode?: string;
+  groupSize?: number | null;
+  studyEditor?: StudyEditorSnapshot;
 };
 
 const drafts = new Map<string, OcrDraft>();

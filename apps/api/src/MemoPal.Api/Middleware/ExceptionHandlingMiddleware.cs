@@ -2,6 +2,7 @@ using MemoPal.Application.Common;
 using MemoPal.Application.Common.Exceptions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 
 namespace MemoPal.Api.Middleware;
 
@@ -46,6 +47,15 @@ public sealed class ExceptionHandlingMiddleware
                     ? [derivation.ReasonCode]
                     : null
             };
+            await context.Response.WriteAsync(JsonSerializer.Serialize(payload, SerializerOptions));
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // A concurrent outline save can also race a course title/visibility edit.
+            // Return a retryable conflict without exposing persistence details.
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+            context.Response.ContentType = "application/json";
+            var payload = new ApiResponse<object?> { Success = false, Message = "This content changed. Reload before saving.", Data = null };
             await context.Response.WriteAsync(JsonSerializer.Serialize(payload, SerializerOptions));
         }
         catch (Exception ex)

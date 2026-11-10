@@ -53,7 +53,7 @@ export default function ReferralUsersPage() {
               { title: 'Email', dataIndex: 'email' },
               { title: 'Referral Code', dataIndex: 'referralCode', width: 150 },
               { title: 'Referrals', dataIndex: 'successfulReferrals', width: 96, search: false },
-              { title: 'XP Awarded', dataIndex: 'totalXpAwarded', width: 100, search: false },
+              { title: 'XP Awarded', dataIndex: 'totalAiCreditsAwarded', width: 100, search: false },
               { title: 'Premium Days', dataIndex: 'totalPremiumDaysAwarded', width: 120, search: false },
               {
                 title: 'Last Referral',
@@ -124,9 +124,9 @@ export default function ReferralUsersPage() {
               { title: 'Code', dataIndex: 'referralCode', width: 130 },
               { title: 'Referrer', dataIndex: 'referrerDisplayName' },
               { title: 'Referee', dataIndex: 'refereeDisplayName' },
-              { title: 'Inviter XP', dataIndex: 'inviterRewardXp', width: 90, search: false },
+              { title: 'Inviter AI credits', dataIndex: 'inviterRewardAiCredits', width: 90, search: false },
               { title: 'Inviter Premium', dataIndex: 'inviterRewardPremiumDays', width: 120, search: false },
-              { title: 'Invitee XP', dataIndex: 'inviteeRewardXp', width: 90, search: false },
+              { title: 'Invitee AI credits', dataIndex: 'inviteeRewardAiCredits', width: 90, search: false },
               { title: 'Invitee Premium', dataIndex: 'inviteeRewardPremiumDays', width: 120, search: false },
               {
                 title: 'Redeemed At',

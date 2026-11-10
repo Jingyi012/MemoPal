@@ -21,7 +21,7 @@ export function useEducationFamilyAssignments(userId: string) {
       await client.invalidateQueries({ queryKey: educationFamilyKeys.assignments(userId) });
       message.success('Family practice assigned.');
     },
-    onError: error => message.error(extractApiErrorMessage(error, 'Could not create the family assignment.')),
+    onError: error => { message.error(extractApiErrorMessage(error, 'Could not create the family assignment.')); },
     meta: { suppressGlobalErrorToast: true }, retry: false,
   });
   return { children, assignments, createAssignment };

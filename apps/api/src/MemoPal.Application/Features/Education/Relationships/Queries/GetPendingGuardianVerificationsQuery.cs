@@ -20,6 +20,8 @@ public sealed class GetPendingGuardianVerificationsHandler(IAppDbContext db)
             .Select(x => new EducationGuardianLinkDto(x.Id, x.GuardianUserId, x.StudentUserId, x.Status,
                 x.StudentConfirmedAt != null, false, x.CreatedAt,
                 db.Users.Where(user => user.Id == x.GuardianUserId && !user.IsDeleted)
+                    .Select(user => user.DisplayName).FirstOrDefault(),
+                db.Users.Where(user => user.Id == x.StudentUserId && !user.IsDeleted)
                     .Select(user => user.DisplayName).FirstOrDefault()))
             .ToListAsync(ct);
         return ApiResponse<IReadOnlyList<EducationGuardianLinkDto>>.Ok(rows);

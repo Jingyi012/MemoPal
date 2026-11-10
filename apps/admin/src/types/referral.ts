@@ -2,7 +2,7 @@ export interface ReferralMilestoneConfigDto {
   key: string;
   title: string;
   referralsRequired: number;
-  rewardXp: number;
+  rewardAiCredits: number;
   rewardPremiumDays: number;
   rewardLabel?: string | null;
   isActive: boolean;
@@ -11,9 +11,9 @@ export interface ReferralMilestoneConfigDto {
 
 export interface ReferralProgramConfigDto {
   isEnabled: boolean;
-  inviterRewardXp: number;
+  inviterRewardAiCredits: number;
   inviterRewardPremiumDays: number;
-  inviteeRewardXp: number;
+  inviteeRewardAiCredits: number;
   inviteeRewardPremiumDays: number;
   maxSuccessfulReferralsPerUser: number;
   milestones: ReferralMilestoneConfigDto[];
@@ -25,7 +25,7 @@ export interface ReferralUserView {
   email: string;
   referralCode: string;
   successfulReferrals: number;
-  totalXpAwarded: number;
+  totalAiCreditsAwarded: number;
   totalPremiumDaysAwarded: number;
   lastReferralAt?: string | null;
   createdAt: string;
@@ -42,8 +42,8 @@ export interface ReferralRecordView {
   refereeDisplayName: string;
   refereeEmail: string;
   redeemedAt: string;
-  inviterRewardXp: number;
+  inviterRewardAiCredits: number;
   inviterRewardPremiumDays: number;
-  inviteeRewardXp: number;
+  inviteeRewardAiCredits: number;
   inviteeRewardPremiumDays: number;
 }

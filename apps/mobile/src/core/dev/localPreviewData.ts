@@ -32,7 +32,7 @@ export const LOCAL_PREVIEW_SCENES: PalaceScene[] = [
     name: 'The Memory Room',
     description: 'A warm study room with twelve clear furniture and décor landmarks.',
     imageUrl: '/assets/palace-scenes/11-study-room.png',
-    imageSource: require('../../../assets/palaces/11-study-room.png'),
+    imageSource: require('../../../assets/palaces/11-study-room.webp'),
     status: 'published',
     isTemplate: true,
     isPremium: false,

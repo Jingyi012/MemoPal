@@ -16,7 +16,7 @@ public sealed class GetCoursesQueryHandler(IAppDbContext db) : IRequestHandler<G
             .Where(course => (course.UserId == query.UserId || (query.IsAdmin && course.UserId == AuthoringValidation.SystemOwnerId)) && !course.IsDeleted)
             .OrderBy(course => course.Title)
             .Select(course => new EducationCourseDto(course.Id, course.Title, course.CreatedAt, course.IsPublic, course.PubliclyPublishedAt,
-                course.UserId == AuthoringValidation.SystemOwnerId))
+                course.UserId == AuthoringValidation.SystemOwnerId, course.SubjectCode, course.LearningStage, course.LanguageCode))
             .ToListAsync(ct);
         return ApiResponse<IReadOnlyList<EducationCourseDto>>.Ok(courses);
     }

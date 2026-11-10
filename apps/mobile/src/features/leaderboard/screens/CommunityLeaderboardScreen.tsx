@@ -73,7 +73,7 @@ export default function CommunityLeaderboardScreen() {
       onError: () => setConfirmJoin(false),
     });
   };
-  const goToPractice = () => router.push('/(tabs)/practice' as Href);
+  const goToPractice = () => router.push('/memory-tools' as Href);
   const scoreGuide = <View style={styles.scoreGuide}>
     <View style={styles.dailyCap}><Flame size={13} color={theme.sunDeep} /><Text style={styles.dailyCapText}>{t('leaderboardDailyCap', { points: boardTasks.reduce((sum, task) => sum + task.points, 0) })}</Text></View>
     <LeaderboardTaskChecklist tasks={todayTasks} compact />

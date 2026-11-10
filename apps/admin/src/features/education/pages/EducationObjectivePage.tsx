@@ -1,5 +1,7 @@
+import { EducationObjectiveTitleEditor } from '../components/EducationObjectiveTitleEditor';
 import { Card, Result, Spin } from 'antd';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { EducationBackLink } from '../components/EducationBackLink';
 import { useAuth } from '../../../auth/AuthContext';
 import { PortalPageContainer } from '../../../components/PortalPageContainer';
 import { adminPaths } from '../../../navigation/adminPaths';
@@ -22,12 +24,15 @@ export default function EducationObjectivePage() {
     eyebrow={course?.title ?? t('courseEyebrow')}
     title={t('objectivePageTitle')}
     description={t('objectivePageDescription')}
-    navigation={<p><Link to={adminPaths.educationCourse(courseId)}>← {t('backToCourse')}</Link></p>}
+    navigation={<EducationBackLink to={adminPaths.educationCourse(courseId)}>{t('backToCourse')}</EducationBackLink>}
   >
     <QueryState query={data.objectives} emptyText={t('objectiveEmpty')}>{objectives => {
       const objective = objectives.find(item => item.id === objectiveId);
       if (!objective) return <Result status="404" title="404" subTitle={t('loadError')} />;
       return <>
+        <Card style={{ marginBottom: 20 }}>
+          <EducationObjectiveTitleEditor title={objective.title} loading={data.updateObjectiveTitle.isPending} onSave={async title => { await data.updateObjectiveTitle.mutateAsync({objectiveId: objective.id, title}); }} />
+        </Card>
         <Card title={`${objective.title} · ${t('memoryRecommendation')}`} style={{ marginBottom: 20 }}>
           <EducationObjectiveMemoryRecommendationEditor
             objectiveId={objective.id}

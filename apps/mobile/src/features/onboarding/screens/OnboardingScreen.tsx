@@ -100,7 +100,7 @@ export function OnboardingScreen() {
             <Text style={styles.title}>{t('finishFirstRecall')}</Text>
             <Text style={styles.body}>{t('finishFirstRecallBody')}</Text>
             <AppButton fullWidth label={t('starterContinue')} onPress={() => resumeMemoryId && router.replace(guidedStarterSessionHref(resumeMemoryId))} size="large" style={styles.primary} trailingIcon={ArrowRight} />
-            <AppButton fullWidth label={t('starterGoToCourses')} onPress={() => router.replace('/(tabs)/learn' as Href)} size="large" />
+            <AppButton fullWidth label={t('starterGoToCourses')} onPress={() => router.replace('/discover' as Href)} size="large" />
             <AnimatedPressable accessibilityRole="button" onPress={() => setChooseAnother(true)} style={styles.textButton}>
               <Text style={styles.link}>{t('chooseAnotherLesson')}</Text>
             </AnimatedPressable>

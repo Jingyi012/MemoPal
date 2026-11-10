@@ -1,3 +1,4 @@
+import { EducationStudyIllustrationFields } from './EducationStudyIllustrationFields';
 import { useMemo, useRef, useState } from 'react';
 import { App, Button, Card, Checkbox, Descriptions, Divider, Form, Input, Modal, Select, Space, Spin, Table, Tag, Typography, Upload } from 'antd';
 import { ArrowDownOutlined, ArrowUpOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, EyeOutlined, ImportOutlined, PlusOutlined } from '@ant-design/icons';
@@ -7,6 +8,7 @@ import { useEducationStudyItems, useLearnerStudyItems } from '../hooks/useEducat
 import { csvTemplate, importReasonTranslations, moveStudyItem, parseCsvText, unicodeCodePointLength, validateStudyItem } from '../utils/educationStudyItems';
 import { useEducationText } from '../i18n/useEducationText';
 import { useAuth } from '../../../auth/AuthContext';
+import { EducationStudyPreview } from './EducationStudyPreview';
 
 const contentTypes: EducationMemoryContentType[] = ['VocabularyPair', 'OrderedList', 'NumberDate', 'FormulaSymbols', 'CategoryMembership', 'VerbatimText', 'LabelDiagram', 'LanguageItem', 'ConceptUnderstanding', 'ReasoningProcedure', 'NotApplicable'];
 const typeText: Record<EducationMemoryContentType, { label: Parameters<ReturnType<typeof useEducationText>['t']>[0]; description: Parameters<ReturnType<typeof useEducationText>['t']>[0]; fit: Parameters<ReturnType<typeof useEducationText>['t']>[0] }> = {
@@ -52,8 +54,8 @@ export function StudyItemEditor({ courseId, objective, isPublic }: { courseId: s
   const visibleError = (query: { isError: boolean }) => query.isError ? <Typography.Text role="alert" type="danger">{t('loadError')}</Typography.Text> : null;
 
   const resetForm = () => { setEditing(null); form.resetFields(); setIsComposing(false); composingRef.current = false; };
-  const beginCreate = () => { form.setFieldsValue({ stableKey: null, position: rows.length + 1, kind: selectedType, primary: '', secondary: '', phonetic: '', extra: '', hint: '', languageCode: objective.languageCode }); setEditing('new'); };
-  const beginEdit = (item: EducationStudyItemAuthorDto) => { form.setFieldsValue({ stableKey: item.stableKey, position: item.position, kind: item.kind, primary: item.primary, secondary: item.secondary, phonetic: item.phonetic, extra: item.extra, hint: item.hint, languageCode: item.languageCode }); setEditing(item.id); };
+  const beginCreate = () => { form.setFieldsValue({ stableKey: null, position: rows.length + 1, kind: selectedType, primary: '', secondary: '', phonetic: '', extra: '', hint: '', mediaRef: null, languageCode: objective.languageCode }); setEditing('new'); };
+  const beginEdit = (item: EducationStudyItemAuthorDto) => { form.setFieldsValue({ stableKey: item.stableKey, position: item.position, kind: item.kind, primary: item.primary, secondary: item.secondary, phonetic: item.phonetic, extra: item.extra, hint: item.hint, mediaRef: item.mediaRef, languageCode: item.languageCode }); setEditing(item.id); };
   const handleSave = async (value: EducationStudyItemRequest) => {
     if (composingRef.current) return;
     const errors = validateStudyItem(value);
@@ -210,14 +212,9 @@ export function StudyItemEditor({ courseId, objective, isPublic }: { courseId: s
       {isPublic && <Checkbox checked={confidentialChecked} onChange={event => setConfidentialChecked(event.target.checked)}>{t('confidential')}</Checkbox>}
     </Modal>
 
-    <Modal open={previewOpen} title={t('learnerPreviewTitle')} footer={null} onCancel={() => setPreviewOpen(false)}>
-      {learnerPreview.isPending ? <div role="status"><Spin /> {t('loading')}</div> : learnerPreview.isError ? <Typography.Text role="alert" type="danger">{t('loadError')}</Typography.Text> : learnerPreview.data?.length ? <Space direction="vertical" style={{ width: '100%' }}>
-        {learnerPreview.data.map(item => <Card size="small" key={item.id}>
-          <Tag>{t(educationMemoryTypeLabel(item.kind))}</Tag><Tag>{t(item.reviewStatus === 'TeacherReviewed' ? 'teacherReviewed' : 'unreviewed')}</Tag>
-          <Typography.Title level={5}>{item.primary}</Typography.Title><Typography.Paragraph>{item.secondary}</Typography.Paragraph>
-          <Typography.Text>{item.phonetic}</Typography.Text><Typography.Paragraph type="secondary">{item.extra}</Typography.Paragraph>
-        </Card>)}
-      </Space> : <Typography.Text type="secondary">{t('noPublished')}</Typography.Text>}
+    <Modal open={previewOpen} destroyOnHidden title={t('learnerPreviewTitle')} footer={null} onCancel={() => setPreviewOpen(false)}>
+      {learnerPreview.isPending ? <div role="status"><Spin /> {t('loading')}</div> : learnerPreview.isError ? <Typography.Text role="alert" type="danger">{t('loadError')}</Typography.Text> : learnerPreview.data?.length
+        ? <EducationStudyPreview items={learnerPreview.data} /> : <Typography.Text type="secondary">{t('noPublished')}</Typography.Text>}
     </Modal>
   </Card>;
 
@@ -240,6 +237,7 @@ export function StudyItemEditor({ courseId, objective, isPublic }: { courseId: s
         <Form.Item name="extra" label={t('extra')} rules={[codePointRule(300)]}><Input aria-label={t('extra')} placeholder={t('extraPlaceholder')} showCount={{ formatter: ({ value }) => t('chars', { count: unicodeCodePointLength(value), max: 300 }) }} {...compositionProps} /></Form.Item>
       </Space>
       <Form.Item name="hint" label={t('hint')} rules={[codePointRule(200)]}><Input aria-label={t('hint')} placeholder={t('hintPlaceholder')} showCount={{ formatter: ({ value }) => t('chars', { count: unicodeCodePointLength(value), max: 200 }) }} {...compositionProps} /></Form.Item>
+      <EducationStudyIllustrationFields />
       <Space><Button type="primary" htmlType="submit" loading={data.create.isPending || data.update.isPending} disabled={isComposing}>{t('save')}</Button><Button onClick={resetForm}>{t('cancel')}</Button>{itemBeingEdited && <Tag>{t(itemBeingEdited.status === 'Draft' ? 'draft' : 'published')}</Tag>}</Space>
     </Form>;
   }

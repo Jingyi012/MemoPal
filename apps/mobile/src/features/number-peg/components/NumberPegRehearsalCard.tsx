@@ -105,7 +105,7 @@ const useStyles = createThemedStyles((theme) =>
     headerRow: { alignItems: 'center', flexDirection: 'row', gap: 11 },
     icon: {
       alignItems: 'center',
-      backgroundColor: theme.berryTint,
+      backgroundColor: theme.violetTint,
       borderRadius: 13,
       height: 38,
       justifyContent: 'center',
@@ -114,7 +114,7 @@ const useStyles = createThemedStyles((theme) =>
     iconEmoji: { fontSize: 20 },
     headerCopy: { flex: 1 },
     eyebrow: {
-      color: theme.berryDeep,
+      color: theme.violetDeep,
       fontFamily: typography.bodyExtraBold,
       fontSize: 10,
       letterSpacing: 0.8,

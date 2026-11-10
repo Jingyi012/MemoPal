@@ -2,7 +2,7 @@ import { useAuth } from '@/contexts/AuthProvider';
 import { SpotlightTarget } from '@/features/onboarding/components/SpotlightTourProvider';
 import { practiceCreateHref } from '@/features/onboarding/utils/onboardingRoutes';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { CommonHeader } from '@/components/CommonHeader';
+import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { AppButton } from '@/components/ui/AppButton';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
@@ -37,7 +37,7 @@ const INTENT_TECHNIQUE: Record<IntentKey, TechniqueKey> = {
   places: 'palace',
 };
 
-export default function PracticeScreen() {
+export default function PracticeScreen({ nested = false }: { nested?: boolean }) {
   const { styles, theme } = useStyles();
   const router = useRouter();
   const scroll = useRef<ScrollView>(null);
@@ -100,8 +100,9 @@ export default function PracticeScreen() {
       <CommonHeader
         title={t('title')}
         description={t('headerSubtitle')}
-        hideBackButton
-        showAiCredits
+        hideBackButton={!nested}
+        backAction={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/library')}
+        showAiCredits={false}
       />
 
       <ScrollView ref={scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -199,10 +200,10 @@ export default function PracticeScreen() {
               const isPeg = module.key === 'number-peg';
               const key: TechniqueKey = isPeg ? 'number-peg' : 'palace';
               const recommended = recommendedTechnique === key && availableTechniques.has(key);
-              const cardInk = '#211A36';
+              const cardInk = activeTheme.ink;
               const gradientColors = isPeg
-                ? (['#FFE17D', '#FFC080', '#FF9EB6'] as const)
-                : (['#D3C7FF', '#C2AEFF', '#DCA9EC'] as const);
+                ? ([activeTheme.mintTint, activeTheme.mintTint] as const)
+                : ([activeTheme.violetTint, activeTheme.violetTint] as const);
               return (
                 <View key={module.key} style={styles.techniqueCardWrap}>
                   {recommended ? <View style={styles.recommendedBadge}><Text style={styles.recommendedText}>✦ {t('recommended')}</Text></View> : null}

@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, Pressable, StyleSheet } from 'react-native';
 import { CompanionActor } from './CompanionActor';
 import { ACTION_DURATION, type CompanionCue } from './behavior';
-import type { MomoSwimMode } from './MomoSwimPrototype';
 import { sampleSwimCurve } from './swimAnimation';
 
 type Props = {
@@ -19,15 +18,13 @@ type Props = {
   onLongPress?: () => void;
   onPressOut?: () => void;
   slow?: boolean;
-  swimPrototype?: MomoSwimMode;
   stablePresentation?: boolean;
-  faceReactions?: boolean;
 };
 
 const clamp = (value: number, limit: number) => Math.max(-limit, Math.min(limit, value));
 
 /** Momo chooses new destinations as it swims; there is no repeating route. */
-export function CompanionSwimmer({ active, reduceMotion, cue, stage, size, tankWidth, tankHeight, label, hint, onPress, onLongPress, onPressOut, slow = false, swimPrototype, stablePresentation = false, faceReactions = false }: Props) {
+export function CompanionSwimmer({ active, reduceMotion, cue, stage, size, tankWidth, tankHeight, label, hint, onPress, onLongPress, onPressOut, slow = false, stablePresentation = false }: Props) {
   const traveling = active && cue.action === 'idle';
   const position = useRef(new Animated.ValueXY()).current;
   const bank = useRef(new Animated.Value(0)).current;
@@ -151,8 +148,7 @@ export function CompanionSwimmer({ active, reduceMotion, cue, stage, size, tankW
       <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityHint={hint}
         onPress={onPress} onLongPress={onLongPress} onPressOut={onPressOut} delayLongPress={420} style={styles.tapTarget}>
         <CompanionActor size={size} cue={cue} stage={stage} label={label}
-          swimPrototype={swimPrototype} swimActive={active && !reduceMotion} swimSlow={slow}
-          stablePresentation={stablePresentation} faceReactions={faceReactions} />
+          stablePresentation={stablePresentation} />
       </Pressable>
     </Animated.View>
   );

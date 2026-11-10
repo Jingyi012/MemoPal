@@ -1,7 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { buildAllNumberPegItems, getUnlockedPegCount } from '@/features/number-peg/utils/numberPegMap';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
@@ -15,6 +15,7 @@ import { useTranslation } from '@/core/i18n/useTranslation';
 type Feedback = 'correct' | 'wrong' | null;
 
 export default function NumberPegFamiliarityScreen() {
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const { width: windowWidth } = useWindowDimensions();
   const { t } = useTranslation('numberPeg');
@@ -75,7 +76,7 @@ export default function NumberPegFamiliarityScreen() {
 
   return (
     <View style={styles.page}>
-      <CommonHeader
+      <CommonHeader showAiCredits={false}
         eyebrow={t('eyebrow')}
         title={t('anchors')}
         description={t('familiarityDescription')}
@@ -184,7 +185,7 @@ function nextChoiceSeed(seed: number): number {
   return (seed * 1664525 + 1013904223) >>> 0;
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 42 },
   rangeCard: { borderRadius: 23, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.paper, padding: 18 },
@@ -198,8 +199,8 @@ const styles = StyleSheet.create({
   rangeLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9, marginTop: 2 },
   rangeLabelSelected: { color: theme.violetDeep },
   rangeStartButton: { marginTop: 17 },
-  tipCard: { flexDirection: 'row', gap: 11, borderRadius: 18, borderWidth: 1.5, borderColor: '#FFE6A3', backgroundColor: '#FFF7E0', padding: 14 },
-  tipIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF0F4' },
+  tipCard: { flexDirection: 'row', gap: 11, borderRadius: 18, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 14 },
+  tipIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.violetTint },
   tipEmoji: { fontSize: 21 },
   tipTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   tipBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 3 },
@@ -209,19 +210,19 @@ const styles = StyleSheet.create({
   progressDone: { backgroundColor: theme.grass },
   progressCurrent: { backgroundColor: theme.violetDeep, transform: [{ scale: 1.25 }] },
   questionCard: { borderRadius: 22, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 20, alignItems: 'center', boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.08)' },
-  numberBadge: { width: 58, height: 58, borderRadius: 29, backgroundColor: theme.berry, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 3px 8px ${theme.berry}59` },
-  numberBadgeText: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 22 },
-  questionEyebrow: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.9, marginTop: 13 },
+  numberBadge: { width: 58, height: 58, borderRadius: 29, backgroundColor: theme.violetDeep, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 3px 8px ${theme.violetDeep}59` },
+  numberBadgeText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 22 },
+  questionEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.9, marginTop: 13 },
   questionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 18, lineHeight: 23, textAlign: 'center', marginTop: 6 },
   questionHint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 5 },
   choiceGrid: { width: '100%', flexDirection: 'row', gap: 8, marginTop: 18 },
   choiceWrap: { flex: 1, minWidth: 0 },
-  choiceCard: { width: '100%', minHeight: 110, borderRadius: 15, borderWidth: 2, borderColor: theme.line, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center', padding: 8, position: 'relative' },
-  choiceCorrect: { borderColor: theme.grass, backgroundColor: '#F1FBF5' },
-  choiceWrong: { borderColor: theme.berry, backgroundColor: '#FFF1F4' },
+  choiceCard: { width: '100%', minHeight: 110, borderRadius: 15, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center', padding: 8, position: 'relative' },
+  choiceCorrect: { borderColor: theme.grass, backgroundColor: theme.mintTint },
+  choiceWrong: { borderColor: theme.berry, backgroundColor: theme.berryTint },
   choiceEmoji: { fontSize: 37 },
   choiceName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 6 },
-  choiceResult: { position: 'absolute', right: 6, top: 6, width: 20, height: 20, borderRadius: 10, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  choiceResult: { position: 'absolute', right: 6, top: 6, width: 20, height: 20, borderRadius: 10, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
   feedbackRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 15 },
   feedbackText: { fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center' },
   feedbackCorrect: { color: theme.grass },
@@ -234,4 +235,4 @@ const styles = StyleSheet.create({
   completeScore: { color: theme.grass, fontFamily: typography.displayExtraBold, fontSize: 35, marginTop: 8 },
   completeBody: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 8 },
   secondaryButton: { alignSelf: 'center', marginTop: 9 },
-});
+}));

@@ -5,16 +5,7 @@ import { getCompanionStage, companionArtboard } from '../src/features/profile/co
 import { INITIAL_PEARL_QUEST, pearlQuestReducer as pearl, shuffledPearls } from '../src/features/profile/companion/pearlQuest.ts';
 import { chooseIdleBehavior, choosePetReaction, isTapEasterEgg, nextIdleDelay, timeOfDay } from '../src/features/profile/companion/playBehavior.ts';
 import { INITIAL_BUBBLE_GAME, bubbleGameReducer, createBubbleTarget, INITIAL_CORAL_GAME, coralGameReducer, createCoralPattern } from '../src/features/profile/companion/playGames.ts';
-import { sampleSwimCurve, swimAtlasFrameAtPhase } from '../src/features/profile/companion/swimAnimation.ts';
-
-test('swim atlas loops through the complete periodic swim cycle', () => {
-  assert.equal(swimAtlasFrameAtPhase(0), 0);
-  assert.equal(swimAtlasFrameAtPhase(.5), 32);
-  assert.equal(swimAtlasFrameAtPhase(.999), 63);
-  assert.equal(swimAtlasFrameAtPhase(1), 0);
-  assert.equal(swimAtlasFrameAtPhase(.999, 16), 15);
-  assert.equal(swimAtlasFrameAtPhase(.8, 1), 0);
-});
+import { sampleSwimCurve } from '../src/features/profile/companion/swimAnimation.ts';
 
 test('swim paths follow a smooth curve and retain the requested endpoints', () => {
   const points = sampleSwimCurve({ x: -20, y: 5 }, { x: 40, y: 25 }, 18, 8);

@@ -7,7 +7,7 @@ export default function NumberPegRoute() {
   const { enabled, isLoading } = useMemoryModuleAccess('number-peg');
 
   if (isLoading) return <LoadingView />;
-  if (!enabled) return <Redirect href={'/(tabs)/practice' as Href} />;
+  if (!enabled) return <Redirect href={'/memory-tools' as Href} />;
 
   return <NumberPegHomeScreen />;
 }

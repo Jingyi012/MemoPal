@@ -1,14 +1,3 @@
-/**
- * Maps a normalized playback phase onto the periodic 64-frame swim cycle.
- * The source frames are sampled from a full sine wave, so playback wraps forward.
- */
-export function swimAtlasFrameAtPhase(phase: number, frameCount = 64) {
-  'worklet';
-  if (frameCount <= 1) return 0;
-  const normalized = ((phase % 1) + 1) % 1;
-  return Math.floor(normalized * frameCount);
-}
-
 export type SwimPoint = { x: number; y: number };
 export type SwimBounds = { x: number; y: number };
 

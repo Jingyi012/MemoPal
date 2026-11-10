@@ -13,6 +13,7 @@ public sealed class ReferralMilestoneConfigDto
     public string Title { get; set; } = string.Empty;
     public int ReferralsRequired { get; set; } = 1;
     public int RewardXp { get; set; }
+    public int RewardAiCredits { get; set; }
     public int RewardPremiumDays { get; set; }
     public string? RewardLabel { get; set; }
     public bool IsActive { get; set; } = true;
@@ -22,9 +23,11 @@ public sealed class ReferralMilestoneConfigDto
 public sealed class ReferralProgramConfigDto
 {
     public bool IsEnabled { get; set; } = true;
-    public int InviterRewardXp { get; set; } = 80;
+    public int InviterRewardXp { get; set; }
+    public int InviterRewardAiCredits { get; set; } = 80;
     public int InviterRewardPremiumDays { get; set; } = 3;
-    public int InviteeRewardXp { get; set; } = 40;
+    public int InviteeRewardXp { get; set; }
+    public int InviteeRewardAiCredits { get; set; } = 40;
     public int InviteeRewardPremiumDays { get; set; } = 2;
     public int MaxSuccessfulReferralsPerUser { get; set; } = 100;
     public IReadOnlyList<ReferralMilestoneConfigDto> Milestones { get; set; } = [];
@@ -48,7 +51,8 @@ public sealed record ReferralInviteeDto(
     bool IsPremium,
     DateTime RedeemedAt,
     int InviterRewardXp,
-    int InviterRewardPremiumDays
+    int InviterRewardPremiumDays,
+    int InviterRewardAiCredits = 0
 );
 
 public sealed record ReferralMilestoneProgressDto(
@@ -62,7 +66,8 @@ public sealed record ReferralMilestoneProgressDto(
     int SortOrder,
     bool IsActive,
     bool IsReached,
-    bool IsAwarded
+    bool IsAwarded,
+    int RewardAiCredits = 0
 );
 
 public sealed record ReferralSummaryDto(
@@ -75,7 +80,8 @@ public sealed record ReferralSummaryDto(
     string? ReferredByDisplayName,
     ReferralProgramConfigDto Config,
     IReadOnlyList<ReferralMilestoneProgressDto> Milestones,
-    IReadOnlyList<ReferralInviteeDto> Referrals
+    IReadOnlyList<ReferralInviteeDto> Referrals,
+    int TotalAiCreditsEarned = 0
 );
 
 public sealed record RedeemReferralResultDto(
@@ -86,7 +92,9 @@ public sealed record RedeemReferralResultDto(
     int InviteeAwardedPremiumDays,
     int InviterAwardedXp,
     int InviterAwardedPremiumDays,
-    IReadOnlyList<ReferralMilestoneProgressDto> NewlyAwardedMilestones
+    IReadOnlyList<ReferralMilestoneProgressDto> NewlyAwardedMilestones,
+    int InviteeAwardedAiCredits = 0,
+    int InviterAwardedAiCredits = 0
 );
 
 public sealed record ReferralUserView(
@@ -99,7 +107,8 @@ public sealed record ReferralUserView(
     int TotalPremiumDaysAwarded,
     DateTime? LastReferralAt,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    int TotalAiCreditsAwarded = 0
 );
 
 public sealed record ReferralRecordView(
@@ -115,5 +124,7 @@ public sealed record ReferralRecordView(
     int InviterRewardXp,
     int InviterRewardPremiumDays,
     int InviteeRewardXp,
-    int InviteeRewardPremiumDays
+    int InviteeRewardPremiumDays,
+    int InviterRewardAiCredits = 0,
+    int InviteeRewardAiCredits = 0
 );

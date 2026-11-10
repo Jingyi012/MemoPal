@@ -23,6 +23,28 @@ public static class ReferralProgramConfigSerializer
         try
         {
             var config = JsonSerializer.Deserialize<ReferralProgramConfigDto>(rawValue, JsonOptions);
+            // Old settings contain XP amounts. Keep those historical records as XP;
+            // only future rewards switch to the same number of AI credits.
+            using var document = JsonDocument.Parse(rawValue);
+            if (config is not null)
+            {
+                var root = document.RootElement;
+                if (!HasProperty(root, "inviterRewardAiCredits") && HasProperty(root, "inviterRewardXp"))
+                    config.InviterRewardAiCredits = config.InviterRewardXp;
+                if (!HasProperty(root, "inviteeRewardAiCredits") && HasProperty(root, "inviteeRewardXp"))
+                    config.InviteeRewardAiCredits = config.InviteeRewardXp;
+                var milestones = root.EnumerateObject()
+                    .FirstOrDefault(x => x.Name.Equals("milestones", StringComparison.OrdinalIgnoreCase)).Value;
+                foreach (var milestone in config.Milestones ?? [])
+                {
+                    if (milestone is null || milestones.ValueKind != JsonValueKind.Array) continue;
+                    var legacy = milestones.EnumerateArray().Any(x => x.ValueKind == JsonValueKind.Object
+                        && x.EnumerateObject().Any(p => p.Name.Equals("key", StringComparison.OrdinalIgnoreCase)
+                            && p.Value.GetString() == milestone.Key)
+                        && !HasProperty(x, "rewardAiCredits"));
+                    if (legacy) milestone.RewardAiCredits = milestone.RewardXp;
+                }
+            }
             return Normalize(config ?? new ReferralProgramConfigDto());
         }
         catch (JsonException)
@@ -41,9 +63,11 @@ public static class ReferralProgramConfigSerializer
         var normalized = new ReferralProgramConfigDto
         {
             IsEnabled = config.IsEnabled,
-            InviterRewardXp = Math.Max(0, config.InviterRewardXp),
+            InviterRewardXp = 0,
+            InviterRewardAiCredits = Math.Clamp(config.InviterRewardAiCredits, 0, 1_000_000),
             InviterRewardPremiumDays = Math.Max(0, config.InviterRewardPremiumDays),
-            InviteeRewardXp = Math.Max(0, config.InviteeRewardXp),
+            InviteeRewardXp = 0,
+            InviteeRewardAiCredits = Math.Clamp(config.InviteeRewardAiCredits, 0, 1_000_000),
             InviteeRewardPremiumDays = Math.Max(0, config.InviteeRewardPremiumDays),
             MaxSuccessfulReferralsPerUser = Math.Max(0, config.MaxSuccessfulReferralsPerUser),
             Milestones = NormalizeMilestones(config.Milestones ?? [])
@@ -62,9 +86,9 @@ public static class ReferralProgramConfigSerializer
         return new ReferralProgramConfigDto
         {
             IsEnabled = true,
-            InviterRewardXp = 80,
+            InviterRewardAiCredits = 80,
             InviterRewardPremiumDays = 3,
-            InviteeRewardXp = 40,
+            InviteeRewardAiCredits = 40,
             InviteeRewardPremiumDays = 2,
             MaxSuccessfulReferralsPerUser = 100,
             Milestones =
@@ -74,9 +98,8 @@ public static class ReferralProgramConfigSerializer
                     Key = "referral_1",
                     Title = "First Invite",
                     ReferralsRequired = 1,
-                    RewardXp = 100,
+                    RewardAiCredits = 100,
                     RewardPremiumDays = 3,
-                    RewardLabel = "100 XP + 3 Premium Days",
                     IsActive = true,
                     SortOrder = 1
                 },
@@ -85,9 +108,8 @@ public static class ReferralProgramConfigSerializer
                     Key = "referral_3",
                     Title = "Community Starter",
                     ReferralsRequired = 3,
-                    RewardXp = 250,
+                    RewardAiCredits = 250,
                     RewardPremiumDays = 7,
-                    RewardLabel = "250 XP + 7 Premium Days",
                     IsActive = true,
                     SortOrder = 2
                 },
@@ -96,9 +118,8 @@ public static class ReferralProgramConfigSerializer
                     Key = "referral_5",
                     Title = "Memory Ambassador",
                     ReferralsRequired = 5,
-                    RewardXp = 500,
+                    RewardAiCredits = 500,
                     RewardPremiumDays = 14,
-                    RewardLabel = "500 XP + 14 Premium Days",
                     IsActive = true,
                     SortOrder = 3
                 },
@@ -107,9 +128,8 @@ public static class ReferralProgramConfigSerializer
                     Key = "referral_10",
                     Title = "Master Connector",
                     ReferralsRequired = 10,
-                    RewardXp = 1000,
+                    RewardAiCredits = 1000,
                     RewardPremiumDays = 30,
-                    RewardLabel = "1000 XP + 30 Premium Days",
                     IsActive = true,
                     SortOrder = 4
                 }
@@ -149,9 +169,12 @@ public static class ReferralProgramConfigSerializer
                 Key = key,
                 Title = title,
                 ReferralsRequired = referralsRequired,
-                RewardXp = Math.Max(0, item.RewardXp),
+                RewardXp = 0,
+                RewardAiCredits = Math.Clamp(item.RewardAiCredits, 0, 1_000_000),
                 RewardPremiumDays = Math.Max(0, item.RewardPremiumDays),
-                RewardLabel = string.IsNullOrWhiteSpace(item.RewardLabel) ? null : item.RewardLabel.Trim(),
+                RewardLabel = string.IsNullOrWhiteSpace(item.RewardLabel)
+                    || System.Text.RegularExpressions.Regex.IsMatch(item.RewardLabel, @"\bXP\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                    ? null : item.RewardLabel.Trim(),
                 IsActive = item.IsActive,
                 SortOrder = item.SortOrder > 0 ? item.SortOrder : sortOrder
             });
@@ -169,6 +192,10 @@ public static class ReferralProgramConfigSerializer
             })
             .ToList();
     }
+
+    private static bool HasProperty(JsonElement element, string name) =>
+        element.ValueKind == JsonValueKind.Object && element.EnumerateObject()
+            .Any(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
     private static string Slugify(string input)
     {
