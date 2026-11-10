@@ -42,17 +42,17 @@ export function NumberPegMemoryRow({ memorySet, dueCount, onPress }: { memorySet
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  row: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 80, padding: 11 },
-  countBadge: { alignItems: 'center', backgroundColor: theme.berryTint, borderRadius: 14, height: 48, justifyContent: 'center', minWidth: 48, paddingHorizontal: 5 },
-  countNumber: { color: theme.berryDeep, fontFamily: typography.displayExtraBold, fontSize: 17, lineHeight: 20 },
-  countUnit: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 9 },
+  row: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 80, padding: 11 },
+  countBadge: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 14, height: 48, justifyContent: 'center', minWidth: 48, paddingHorizontal: 5 },
+  countNumber: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 17, lineHeight: 20 },
+  countUnit: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   copy: { flex: 1, gap: 3, minWidth: 0 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 13 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontWeight: '800', fontSize: 16 },
   meta: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
-  status: { borderRadius: 999, fontFamily: typography.bodyExtraBold, fontSize: 9, overflow: 'hidden', paddingHorizontal: 7, paddingVertical: 3 },
+  status: { borderRadius: 999, fontFamily: typography.bodyExtraBold, fontSize: 12, overflow: 'hidden', paddingHorizontal: 7, paddingVertical: 3 },
   statusRecall: { backgroundColor: theme.violetTint, color: theme.violetDeep },
-  statusBuilding: { backgroundColor: theme.sunTint, color: theme.sunDeep },
-  dueLabel: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 9 },
+  statusBuilding: { backgroundColor: theme.sunTint, color: theme.onSun },
+  dueLabel: { color: theme.successText, fontFamily: typography.bodyBold, fontSize: 12 },
   progressTrack: { backgroundColor: theme.violetTint, borderRadius: 99, height: 4, marginTop: 3, overflow: 'hidden' },
   progressFill: { backgroundColor: theme.violetDeep, borderRadius: 99, height: '100%' },
 }));

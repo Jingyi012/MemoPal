@@ -258,6 +258,50 @@ public sealed class EducationStudyCourseDraftTests(CustomWebApplicationFactory f
         Assert.Equal(HttpStatusCode.Conflict, (await owner.PostAsJsonAsync(Route, new { title = "Replace ready", languageCode = "en", entries, sourceDraftId = editedId })).StatusCode);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Owner_can_delete_private_content_idempotently_without_exposing_or_erasing_its_children(bool ready)
+    {
+        using var owner = factory.CreateClient(); using var other = factory.CreateClient();
+        await Register(owner); await Register(other);
+        var created = await Data(await owner.PostAsJsonAsync(Route, new {
+            title = "Remove my spelling", languageCode = "en", startLearning = ready,
+            entries = new[] { new { text = "book", meaning = "书" } }
+        }));
+        var id = created.GetProperty("courseId").GetString()!;
+        var path = $"/v1/education/my-courses/{id}";
+        var detail = await Data(await owner.GetAsync(path));
+        var assessment = detail.GetProperty("units")[0].GetProperty("assessmentId").GetString();
+        Assert.Equal(HttpStatusCode.NotFound, (await other.DeleteAsync(path)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await owner.GetAsync(path)).StatusCode);
+        Assert.True((await Data(await owner.DeleteAsync(path))).GetBoolean());
+        Assert.True((await Data(await owner.DeleteAsync(path))).GetBoolean());
+        Assert.Equal(HttpStatusCode.NotFound, (await owner.GetAsync(path)).StatusCode);
+        var list = await Data(await owner.GetAsync("/v1/education/my-courses"));
+        Assert.DoesNotContain(list.EnumerateArray(), x => x.GetProperty("id").GetString() == id);
+        if (assessment is not null)
+            Assert.Equal(HttpStatusCode.NotFound, (await owner.PostAsync($"/v1/education/guided/courses/{id}/assessments/{assessment}/sessions", null)).StatusCode);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.True((await db.EducationCourses.IgnoreQueryFilters().SingleAsync(x => x.Id == id)).IsDeleted);
+        Assert.True(await db.EducationObjectives.AnyAsync(x => x.CourseId == id));
+        Assert.True(await db.EducationQuestions.AnyAsync(x => x.Assessment!.CourseId == id));
+    }
+
+    [Fact]
+    public async Task Personal_delete_does_not_remove_general_authored_courses_or_unknown_content()
+    {
+        using var owner = factory.CreateClient(); await Register(owner);
+        var created = await Data(await owner.PostAsJsonAsync("/v1/education/courses", new { title = "Author workspace" }));
+        var id = created.GetProperty("id").GetString()!;
+        Assert.Equal(HttpStatusCode.NotFound, (await owner.DeleteAsync($"/v1/education/my-courses/{id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await owner.DeleteAsync("/v1/education/my-courses/import-missing")).StatusCode);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.False((await db.EducationCourses.SingleAsync(x => x.Id == id)).IsDeleted);
+    }
+
     private static async Task<string> Register(HttpClient client)
     {
         var data = await Data(await client.PostAsJsonAsync("/auth/register", new { displayName = "Parent", email = $"draft-{Guid.NewGuid():N}@example.com", password = "password123" }));

@@ -477,8 +477,8 @@ export default function NumberPegComposerScreen() {
             onChangeText={setTitle}
             placeholder={t('namePlaceholder')}
             placeholderTextColor={theme.inkSoft}
-            selectionColor={theme.berryDeep}
-            cursorColor={theme.berryDeep}
+            selectionColor={theme.violetDeep}
+            cursorColor={theme.violetDeep}
             style={styles.input}
           />
           <Text style={[styles.heading, styles.formHeading]}>{t('whatFor')}</Text>
@@ -501,8 +501,8 @@ export default function NumberPegComposerScreen() {
             onSubmitEditing={addItem}
             placeholder={t('itemPlaceholder')}
             placeholderTextColor={theme.inkSoft}
-            selectionColor={theme.berryDeep}
-            cursorColor={theme.berryDeep}
+            selectionColor={theme.violetDeep}
+            cursorColor={theme.violetDeep}
             style={styles.input}
           />
           <AppButton label={t('addItem')} onPress={addItem} size="regular" trailingIcon={ArrowRight} variant="secondary" />
@@ -839,7 +839,7 @@ export default function NumberPegComposerScreen() {
                 accessibilityLiveRegion="polite"
                 accessibilityState={{ busy: true }}>
                 <View style={styles.generatingHeading}>
-                  <ActivityIndicator size="small" color={theme.berryDeep} />
+                  <ActivityIndicator size="small" color={theme.violetDeep} />
                   <Text style={styles.generatingTitle}>{copy.generating}</Text>
                 </View>
                 <Text style={styles.generatingHint}>
@@ -1144,7 +1144,7 @@ const useStyles = createThemedStyles((theme) =>
       gap: 9,
     },
     itemNumber: {
-      color: theme.berryDeep,
+      color: theme.violetDeep,
       fontFamily: typography.bodyExtraBold,
       fontSize: 12,
       width: 20,
@@ -1267,7 +1267,7 @@ const useStyles = createThemedStyles((theme) =>
       marginTop: 7,
       paddingHorizontal: 10,
     },
-    replayText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+    replayText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
     batchGenerateButton: {
       minHeight: 52,
       marginTop: 12,

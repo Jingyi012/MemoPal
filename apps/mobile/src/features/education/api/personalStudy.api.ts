@@ -16,3 +16,6 @@ export async function getPersonalStudyCourses() {
 export async function getPersonalStudyCourse(id: string) {
   return (await api.get<GeneralResponse<PersonalStudyCourse>>(`/v1/education/my-courses/${encodeURIComponent(id)}`)).data.data!;
 }
+export async function deletePersonalStudyCourse(id: string) {
+  await api.delete<GeneralResponse<boolean>>(`/v1/education/my-courses/${encodeURIComponent(id)}`);
+}

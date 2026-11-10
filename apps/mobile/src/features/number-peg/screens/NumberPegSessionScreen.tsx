@@ -206,7 +206,7 @@ export default function NumberPegSessionScreen({
   const leaveSession = () => {
     if (sessionScope) { router.replace({ pathname: '/memory-details/[memorySetId]', params: { memorySetId } }); return; }
     if (returnTo === 'practice') {
-      router.replace('/(tabs)/practice');
+      router.replace('/memory-tools');
       return;
     }
     if (returnTo === 'number-peg') {
@@ -948,13 +948,13 @@ const useStyles = createThemedStyles((theme) =>
       height: 32,
       borderRadius: 16,
       paddingHorizontal: 5,
-      backgroundColor: theme.berry,
+      backgroundColor: theme.violetDeep,
       borderWidth: 3,
       borderColor: theme.paper,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    sceneBadgeText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 13 },
+    sceneBadgeText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
     sceneVisual: {
       minHeight: 104,
       borderRadius: 16,
@@ -969,7 +969,7 @@ const useStyles = createThemedStyles((theme) =>
       padding: 12,
     },
     pegEmoji: { fontSize: 40 },
-    sceneArrow: { color: theme.berryDeep, fontFamily: typography.displayExtraBold, fontSize: 23 },
+    sceneArrow: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 23 },
     answerWord: {
       maxWidth: 145,
       color: theme.ink,
@@ -978,7 +978,7 @@ const useStyles = createThemedStyles((theme) =>
       textAlign: 'center',
     },
     pegName: {
-      color: theme.berryDeep,
+      color: theme.violetDeep,
       fontFamily: typography.bodyExtraBold,
       fontSize: 10,
       letterSpacing: 0.8,
@@ -1001,7 +1001,7 @@ const useStyles = createThemedStyles((theme) =>
       paddingHorizontal: 2,
     },
     recallProgressLabel: {
-      color: theme.berryDeep,
+      color: theme.violetDeep,
       fontFamily: typography.bodyExtraBold,
       fontSize: 10,
       letterSpacing: 1,

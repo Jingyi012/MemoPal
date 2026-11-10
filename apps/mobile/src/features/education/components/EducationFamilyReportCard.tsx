@@ -36,7 +36,7 @@ export function EducationFamilyReportCard({ assignment }: { assignment: Educatio
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 24, borderWidth: 2, borderBottomWidth: 6, gap: 14, padding: 18 },
+  card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 24, borderWidth: 1, borderBottomWidth: 2, gap: 14, padding: 18 },
   heading: { alignItems: 'flex-start', gap: 10 },
   title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, lineHeight: 26 },
   status: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: 12, paddingVertical: 6, paddingHorizontal: 10, overflow: 'hidden', fontFamily: typography.bodyBold, fontSize: 12 },

@@ -1,6 +1,5 @@
-import { AchievementsScreen } from '@/features/gamification';
-import React from 'react';
+import { Redirect } from 'expo-router';
 
 export default function AchievementsRoute() {
-  return <AchievementsScreen />;
+  return <Redirect href="/progress" />;
 }

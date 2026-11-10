@@ -2,7 +2,7 @@ import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Camera, Check, Images, Plus, RefreshCcw, ScanText } from '@/core/icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -45,6 +45,7 @@ const makeEditableItem = (item: OcrItem): EditableOcrItem => ({
 });
 
 export default function ScanMemoryScreen() {
+  const { styles } = useStyles();
   const router = useRouter();
   const params = useLocalSearchParams<{ sourceDraftId?: string | string[]; destination?: string | string[] }>();
   const { t, language } = useTranslation('memoryComposer');
@@ -307,6 +308,7 @@ function ChoosePhotoState({
   t: Translation;
   description?: string;
 }) {
+  const { styles, theme } = useStyles();
   return (
     <>
       <View style={styles.heroCard}>
@@ -348,6 +350,7 @@ function ChoosePhotoState({
 }
 
 function ProcessingState({ imageUri, t }: { imageUri: string | null; t: Translation }) {
+  const { styles, theme } = useStyles();
   return (
     <View style={styles.processingCard}>
       {imageUri ? (
@@ -395,6 +398,7 @@ function ReviewState({
   onRetake: () => void;
   t: Translation;
 }) {
+  const { styles, theme } = useStyles();
   const visibleItemCount = reviewMode === 'quick'
     ? parseOcrReviewText(quickEditText).length
     : items.length;
@@ -497,6 +501,7 @@ function ReviewState({
 }
 
 function MessageCard({ message }: { message: string }) {
+  const { styles } = useStyles();
   return (
     <View style={styles.messageCard}>
       <Text style={styles.messageText}>{message}</Text>
@@ -504,7 +509,7 @@ function MessageCard({ message }: { message: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 48 },
   heroCard: {
@@ -696,4 +701,4 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   addItemText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-});
+}));

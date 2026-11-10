@@ -23,6 +23,11 @@ public sealed class EducationAuthoringController(ISender sender) : ApiController
     public async Task<IActionResult> GetPersonalCourse(string courseId, CancellationToken ct) =>
         Ok(await Sender.Send(new GetPersonalStudyCourseQuery(GetUserIdOrThrow(), courseId), ct));
 
+    [HttpDelete("my-courses/{courseId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> DeletePersonalCourse(string courseId, CancellationToken ct) =>
+        Ok(await Sender.Send(new DeletePersonalStudyCourseCommand(GetUserIdOrThrow(), courseId), ct));
+
     [HttpPost("course-drafts/from-study-list")]
     [RequestSizeLimit(131072)]
     [RestrictedLearner(RestrictedLearnerAccess.Deny)]

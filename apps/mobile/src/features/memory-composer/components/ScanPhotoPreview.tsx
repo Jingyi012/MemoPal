@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 
 export function ScanPhotoPreview({
   imageUri,
@@ -19,6 +19,7 @@ export function ScanPhotoPreview({
   openLabel: string;
   closeLabel: string;
 }) {
+  const { styles } = useStyles();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -68,7 +69,7 @@ export function ScanPhotoPreview({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   thumbnailSlot: {
     width: '100%',
     height: 148,
@@ -112,4 +113,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(18, 17, 26, 0.76)',
   },
-});
+}));

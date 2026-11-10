@@ -17,7 +17,7 @@ export default function TabsLayout() {
   const { colorScheme } = useColorScheme();
   const theme = memopalThemes[colorScheme ?? 'light'];
   const { t } = useTranslation('navigation');
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const isLocalDevMode =
     String(process.env.EXPO_PUBLIC_LOCAL_DEV_MODE).trim().toLowerCase() === 'true';
 
@@ -58,35 +58,25 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => <TabIcon icon="home" focused={focused} />,
         }}
       />
-      <Tabs.Screen
-        name="learn"
-        options={{
-          title: t('learn'),
-          tabBarIcon: ({ focused }) => <TabIcon icon="library" focused={focused} />,
-        }}
-      />
+      <Tabs.Screen name="learn" options={{ title: t('learn'), tabBarIcon: ({ focused }) => <TabIcon icon="book" focused={focused} /> }} />
       <Tabs.Screen name="practice" options={{ href: null }} />
-      <Tabs.Screen
-        name="community"
-        options={{
-          title: t('community'),
-          tabBarIcon: ({ focused }) => <TabIcon icon="globe" focused={focused} />,
-        }}
-      />
       <Tabs.Screen
         name="library"
         options={{
-          title: t('library'),
+          href: user?.accountMode === 'RestrictedLearner' ? null : undefined,
+          title: t('memory'),
           tabBarIcon: ({ focused }) => <SpotlightTarget id="library" onActivate={() => router.navigate('/(tabs)/library')}><TabIcon icon="library" focused={focused} /></SpotlightTarget>,
         }}
       />
       <Tabs.Screen
-        name="achievements"
+        name="community"
         options={{
-          title: t('progress'),
-          tabBarIcon: ({ focused }) => <TabIcon icon="trending-up" focused={focused} />,
+          href: user?.accountMode === 'RestrictedLearner' ? null : undefined,
+          title: t('community'),
+          tabBarIcon: ({ focused }) => <TabIcon icon="globe" focused={focused} />,
         }}
       />
+      <Tabs.Screen name="achievements" options={{ href: null }} />
       <Tabs.Screen
         name="profile"
         options={{

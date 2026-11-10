@@ -315,7 +315,7 @@ export default function ProfileScreen() {
 
         <AnimatedPressable
           accessibilityLabel={t('yourProgress')}
-          onPress={() => router.push('/achievements')}
+          onPress={() => router.push('/progress')}
           style={styles.progressCard}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeadingCopy}>
@@ -399,7 +399,9 @@ export default function ProfileScreen() {
           />
         </SettingsSection>
 
-        {user && user.accountMode !== 'RestrictedLearner' ? <SettingsSection title={referralT('title')} accentColor={theme.violetDeep}>
+        {user && user.accountMode !== 'RestrictedLearner' ? <SettingsSection title={language === 'zh' ? '账户与奖励' : 'Account & rewards'} accentColor={theme.violetDeep}>
+          <ProfileSettingsRow icon={<Ionicons name="sparkles-outline" size={21} color={theme.violetDeep} />} iconBackgroundColor={theme.violetTint}
+            title={language === 'zh' ? 'AI 点数' : 'AI credits'} onPress={() => router.push('/ai-credits')} last={false} />
           <ProfileSettingsRow
             icon={<Ionicons name="gift-outline" size={21} color={theme.violetDeep} />}
             iconBackgroundColor={theme.violetTint}
@@ -410,6 +412,13 @@ export default function ProfileScreen() {
         </SettingsSection> : null}
 
         <SettingsSection title={t('learning')} accentColor={theme.violetDeep}>
+          <ProfileSettingsRow
+            icon={<Ionicons name="stats-chart-outline" size={21} color={theme.violetDeep} />}
+            iconBackgroundColor={theme.violetTint}
+            title={language === 'zh' ? '学习记录与报告' : 'Learning history and reports'}
+            onPress={() => router.push('/progress')}
+            last={false}
+          />
           <ProfileSettingsRow
             icon={<Ionicons name="school" size={21} color={theme.violetDeep} />}
             iconBackgroundColor={theme.violetTint}

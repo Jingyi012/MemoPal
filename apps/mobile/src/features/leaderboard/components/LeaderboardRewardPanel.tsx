@@ -1,5 +1,7 @@
+import { HeaderIconButton } from '@/components/ui/HeaderIconButton';
+import { AppBottomSheet } from '@/components/AppBottomSheet';
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ArrowRight, CheckCircle2, Clock3, Coins, Sparkles, X } from '@/core/icons';
 import { translations } from '@/core/i18n/i18n';
@@ -88,24 +90,13 @@ export function LeaderboardRewardPanel({
       lastUpdatedAt={lastUpdatedAt}
       onOpenWallet={() => router.push('/ai-credits')} /> : null}
 
-    <Modal
-      transparent
-      visible={rulesOpen}
-      animationType="slide"
-      accessibilityViewIsModal
-      onRequestClose={() => setRulesOpen(false)}>
-      <View style={styles.modalRoot}>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('leaderboardRewardsCloseRules')} onPress={() => setRulesOpen(false)} style={styles.modalBackdrop} />
-        <View style={styles.rulesSheet}>
-          <View style={styles.sheetHandle} />
+    <AppBottomSheet height={560} visible={rulesOpen} onClose={() => setRulesOpen(false)}>
           <View style={styles.sheetHeader}>
             <View style={styles.sheetTitleGroup}>
               <View style={styles.sheetIcon}><Coins size={18} color={theme.sunDeep} /></View>
               <Text style={styles.sheetTitle}>{t('leaderboardRewardsRulesTitle')}</Text>
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel={t('leaderboardRewardsCloseRules')} onPress={() => setRulesOpen(false)} style={styles.closeButton}>
-              <X size={19} color={theme.inkSoft} />
-            </Pressable>
+            <HeaderIconButton accessibilityLabel={t('leaderboardRewardsCloseRules')} onPress={() => setRulesOpen(false)} icon={X} />
           </View>
           <ScrollView contentContainerStyle={styles.rulesContent} showsVerticalScrollIndicator={false}>
             <Text style={styles.rulesIntro}>{t('leaderboardRewardsEligibility', {
@@ -119,9 +110,7 @@ export function LeaderboardRewardPanel({
             <Text style={styles.rulesFootnote}>{t('leaderboardRewardsPayoutAutomatic')}</Text>
             <Text style={styles.rulesFootnote}>{t('leaderboardRewardsEstimateDisclaimer')}</Text>
           </ScrollView>
-        </View>
-      </View>
-    </Modal>
+    </AppBottomSheet>
   </>;
 }
 
@@ -272,7 +261,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   sheetTitleGroup: { alignItems: 'center', flex: 1, flexDirection: 'row', gap: 9 },
   sheetIcon: { alignItems: 'center', backgroundColor: theme.sunTint, borderRadius: 12, height: 36, justifyContent: 'center', width: 36 },
   sheetTitle: { color: theme.ink, flex: 1, fontFamily: typography.displayExtraBold, fontSize: 16 },
-  closeButton: { alignItems: 'center', backgroundColor: theme.canvas, borderRadius: 12, height: 44, justifyContent: 'center', width: 44 },
   rulesContent: { gap: 8, paddingBottom: 8 },
   rulesIntro: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, paddingBottom: 3 },
   tierRow: { alignItems: 'center', backgroundColor: theme.sunTint, borderColor: theme.sunLine, borderRadius: 12, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', minHeight: 43, paddingHorizontal: 12 },

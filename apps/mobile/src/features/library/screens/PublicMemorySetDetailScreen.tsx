@@ -1,3 +1,6 @@
+import { ActionMenuSheet } from '@/components/ActionMenuSheet';
+import { ScreenActionDock } from '@/components/ScreenActionDock';
+import { HeaderIconButton } from '@/components/ui/HeaderIconButton';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { AppButton } from '@/components/ui/AppButton';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -13,7 +16,7 @@ import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegE
 import { AppImage } from '@/components/AppImage';
 import { Href, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
-import { Bookmark, Copy, Flag, RefreshCcw, Share2, Star } from '@/core/icons';
+import { MoreHorizontal, Bookmark, Copy, Flag, RefreshCcw, Share2, Star } from '@/core/icons';
 import { useState } from 'react';
 import Toast from 'react-native-toast-message';
 import { ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -38,6 +41,7 @@ export function PublicMemorySetDetailScreen({ memorySetId }: { memorySetId: stri
   const [reportReason, setReportReason] = useState('inappropriate');
   const [reportDetails, setReportDetails] = useState('');
   const [sharing, setSharing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   if (!isOffline && query.isLoading) return <LoadingView description={t('discoverLoading')} />;
   if (!query.data) return <View style={styles.page}><CommonHeader eyebrow={t('discoverEyebrow')} title={canShowRequestErrors ? t('discoverUnavailable') : t('discoverEyebrow')} backAction={() => router.back()} />{canShowRequestErrors ? <View style={styles.error}><Text style={styles.emptyEmoji}>🫧</Text><Text style={styles.emptyTitle}>{t('discoverUnavailable')}</Text><Text style={styles.emptyBody}>{t('connectionRetry')}</Text><AppButton icon={RefreshCcw} label={t('retry')} onPress={() => void query.refetch()} size="compact" style={styles.retry} variant="secondary" /></View> : null}</View>;
@@ -54,6 +58,10 @@ export function PublicMemorySetDetailScreen({ memorySetId }: { memorySetId: stri
       onError: (error) => Toast.show({ type: 'error', text1: t('copyError'), text2: getNumberPegErrorMessage(error, t('copyError')) }),
     });
   };
+  const toggleBookmark = () => bookmarkMutation.mutate({ memorySetId: memorySet.id, isBookmarked: !memorySet.isBookmarked }, {
+    onSuccess: () => Toast.show({ type: 'success', text1: t(memorySet.isBookmarked ? 'communityBookmarkRemoved' : 'communityBookmarked') }),
+    onError: () => Toast.show({ type: 'error', text1: t('communityBookmarkError') }),
+  });
   const shareMemorySet = async () => {
     if (sharing) return;
     setSharing(true);
@@ -68,7 +76,10 @@ export function PublicMemorySetDetailScreen({ memorySetId }: { memorySetId: stri
   };
 
   return <View style={styles.page}>
-    <CommonHeader eyebrow={t('publicMemory')} title={t('details')} backAction={() => router.back()} />
+    <CommonHeader showAiCredits={false} title={t('details')} backAction={() => router.back()} actions={[
+      { component: <HeaderIconButton icon={Bookmark} accessibilityLabel={t(memorySet.isBookmarked ? 'communityBookmarkRemoveAction' : 'communityBookmarkAction')} onPress={toggleBookmark} selected={memorySet.isBookmarked} disabled={bookmarkMutation.isPending} /> },
+      { component: <HeaderIconButton icon={MoreHorizontal} accessibilityLabel={t('openActions')} onPress={() => setMenuOpen(true)} /> },
+    ]} />
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <HeroCard memorySet={memorySet} t={t} />
       <View style={styles.ownerCard}>
@@ -78,18 +89,6 @@ export function PublicMemorySetDetailScreen({ memorySetId }: { memorySetId: stri
       </View>
       <View style={styles.stats}><Stat label={t('items')} value={String(memorySet.itemCount)} /><Stat label={t('copies')} value={String(memorySet.copyCount)} /><Stat label={t('helpfulCount')} value={String(memorySet.helpfulCount)} /><Stat label={t('goalLabel')} value={goalLabel(memorySet.goalType, t)} /></View>
       {memorySet.description ? <Text style={styles.description}>{memorySet.description}</Text> : null}
-      <AnimatedPressable
-        accessibilityRole="button"
-        accessibilityState={{ selected: memorySet.isBookmarked, disabled: bookmarkMutation.isPending }}
-        disabled={bookmarkMutation.isPending}
-        onPress={() => bookmarkMutation.mutate({ memorySetId: memorySet.id, isBookmarked: !memorySet.isBookmarked }, {
-          onSuccess: () => Toast.show({ type: 'success', text1: t(memorySet.isBookmarked ? 'communityBookmarkRemoved' : 'communityBookmarked') }),
-          onError: () => Toast.show({ type: 'error', text1: t('communityBookmarkError') }),
-        })}
-        style={[styles.helpfulButton, memorySet.isBookmarked && styles.helpfulButtonSelected]}>
-        <Bookmark size={17} color={memorySet.isBookmarked ? theme.violetDeep : theme.inkSoft} fill={memorySet.isBookmarked ? theme.violet : 'none'} />
-        <Text style={[styles.helpfulText, memorySet.isBookmarked && styles.helpfulTextSelected]}>{t(memorySet.isBookmarked ? 'communityBookmarkRemoveAction' : 'communityBookmarkAction')}</Text>
-      </AnimatedPressable>
       {!isAuthor ? <AnimatedPressable
         accessibilityRole="button"
         accessibilityState={{ selected: memorySet.isHelpful, disabled: helpfulMutation.isPending }}
@@ -101,12 +100,14 @@ export function PublicMemorySetDetailScreen({ memorySetId }: { memorySetId: stri
         <Star size={17} color={memorySet.isHelpful ? theme.violetDeep : theme.inkSoft} fill={memorySet.isHelpful ? theme.violet : 'none'} />
         <Text style={[styles.helpfulText, memorySet.isHelpful && styles.helpfulTextSelected]}>{t(memorySet.isHelpful ? 'removeHelpful' : 'markHelpful')}</Text>
       </AnimatedPressable> : null}
-      <AppButton disabled={sharing} icon={Share2} label={t('shareCommunityMemory')} onPress={() => void shareMemorySet()} size="regular" style={styles.shareButton} variant="secondary" />
       <Text style={[styles.sectionTitle, { color: activeTheme.ink }]}>{t('previewItems')}</Text>
       <View style={styles.items}>{memorySet.items.map((item) => <View key={item.id} style={styles.itemRow}><View style={styles.itemNumber}><Text style={styles.itemNumberText}>{item.position}</Text></View><View style={styles.itemCopy}><Text style={styles.itemPrompt}>{localizeItemPrompt(item.prompt, item.position, memoryDetailsT)}</Text><Text numberOfLines={2} style={styles.itemAnswer}>{item.answer}</Text></View></View>)}</View>
-      <AppButton disabled={copyMutation.isPending} fullWidth icon={Copy} label={copyMutation.isPending ? t('copying') : memorySet.existingCopyId ? t('openOwnCopy') : t('copyToLibrary')} loading={copyMutation.isPending} onPress={() => memorySet.existingCopyId ? router.push(`/memory-details/${memorySet.existingCopyId}` as Href) : setConfirmCopy(true)} size="large" style={styles.copyButton} />
-      {!isAuthor ? <AnimatedPressable style={styles.reportButton} onPress={() => setConfirmReport(true)}><Flag size={15} color={theme.inkSoft} /><Text style={styles.reportText}>{t('reportMemory')}</Text></AnimatedPressable> : null}
     </ScrollView>
+    <ScreenActionDock><AppButton disabled={copyMutation.isPending} fullWidth icon={Copy} label={copyMutation.isPending ? t('copying') : memorySet.existingCopyId ? t('openOwnCopy') : t('copyToLibrary')} loading={copyMutation.isPending} onPress={() => memorySet.existingCopyId ? router.push(`/memory-details/${memorySet.existingCopyId}` as Href) : setConfirmCopy(true)} size="large" /></ScreenActionDock>
+    <ActionMenuSheet visible={menuOpen} title={memorySet.title} onClose={() => setMenuOpen(false)} actions={[
+      { label: t('shareCommunityMemory'), icon: Share2, disabled: sharing, onPress: () => void shareMemorySet() },
+      ...(!isAuthor ? [{ label: t('reportMemory'), icon: Flag, onPress: () => setConfirmReport(true) }] : []),
+    ]} />
     <ConfirmModal visible={confirmCopy} icon={<Copy size={27} color={theme.violetDeep} />} title={t('copyTitle')} subject={memorySet.title} description={t('copyDescription')} confirmText={t('copyToLibrary')} cancelText={t('cancel')} isLoading={copyMutation.isPending} onConfirm={copy} onCancel={() => setConfirmCopy(false)} />
     <ConfirmModal visible={confirmReport} icon={<Flag size={27} color={theme.berryDeep} />} title={t('reportTitle')} subject={memorySet.title} description={t('reportDescription')} confirmText={t('reportConfirm')} cancelText={t('cancel')} isLoading={reportMutation.isPending} onConfirm={() => { reportMutation.mutate({ memorySetId: memorySet.id, reason: reportReason, details: reportDetails.trim() || undefined }, { onSuccess: () => { setConfirmReport(false); setReportDetails(''); Toast.show({ type: 'success', text1: t('reportThanks') }); }, onError: () => Toast.show({ type: 'error', text1: t('reportError') }) }); }} onCancel={() => setConfirmReport(false)}>
       <View style={styles.reportReasons}>
@@ -167,10 +168,10 @@ function localizeItemPrompt(prompt: string, position: number, t: (key: any) => s
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { backgroundColor: 'transparent', flex: 1 }, content: { padding: 16, paddingBottom: 40 },
-  hero: { alignItems: 'center', borderRadius: 24, borderWidth: 1.5, justifyContent: 'center', minHeight: 200, overflow: 'hidden', padding: 22 }, heroPalace: { backgroundColor: theme.violetTint, borderColor: theme.violetLine }, heroPeg: { backgroundColor: theme.berryTint, borderColor: theme.berryLine }, heroEmoji: { fontSize: 40 }, heroBackground: { ...StyleSheet.absoluteFillObject, borderRadius: 22, overflow: 'hidden' }, heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(24, 20, 38, 0.52)', borderRadius: 22 }, heroContent: { alignItems: 'center', width: '100%' }, heroTechnique: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 1, marginTop: 9 }, heroTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 24, marginTop: 5, textAlign: 'center' }, heroMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, marginTop: 7 }, heroTextOnImage: { color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }, heroMetaOnImage: { color: 'rgba(255,255,255,0.86)' },
-  ownerCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 17, borderWidth: 1.5, flexDirection: 'row', marginTop: 13, padding: 12 }, avatar: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 21, height: 42, justifyContent: 'center', overflow: 'hidden', width: 42 }, avatarImage: { height: 42, width: 42 }, avatarText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 17 }, ownerCopy: { flex: 1, marginLeft: 10 }, ownerLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 9, textTransform: 'uppercase' }, ownerName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, marginTop: 2 }, publicLabel: { backgroundColor: theme.mintTint, borderRadius: 999, color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 9, paddingHorizontal: 8, paddingVertical: 4 },
-  stats: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 17, borderWidth: 1.5, flexDirection: 'row', justifyContent: 'space-around', marginTop: 10, paddingVertical: 12 }, stat: { alignItems: 'center', flex: 1 }, statValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 }, statLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9, marginTop: 2 }, description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20, marginTop: 16 }, sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, marginBottom: 10, marginTop: 23 }, items: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1.5, paddingHorizontal: 13 }, itemRow: { alignItems: 'center', borderBottomColor: theme.line, borderBottomWidth: 1, flexDirection: 'row', minHeight: 66 }, itemNumber: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 15, height: 30, justifyContent: 'center', width: 30 }, itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 }, itemCopy: { flex: 1, marginLeft: 11 }, itemPrompt: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 }, itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 3 },
+  page: { backgroundColor: 'transparent', flex: 1 }, content: { padding: 16, paddingBottom: 24 },
+  hero: { alignItems: 'center', borderRadius: 24, borderWidth: 1.5, justifyContent: 'center', minHeight: 200, overflow: 'hidden', padding: 22 }, heroPalace: { backgroundColor: theme.violetTint, borderColor: theme.violetLine }, heroPeg: { backgroundColor: theme.berryTint, borderColor: theme.berryLine }, heroEmoji: { fontSize: 40 }, heroBackground: { ...StyleSheet.absoluteFillObject, borderRadius: 22, overflow: 'hidden' }, heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(24, 20, 38, 0.52)', borderRadius: 22 }, heroContent: { alignItems: 'center', width: '100%' }, heroTechnique: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 1, marginTop: 9 }, heroTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 24, marginTop: 5, textAlign: 'center' }, heroMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, marginTop: 7 }, heroTextOnImage: { color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }, heroMetaOnImage: { color: 'rgba(255,255,255,0.86)' },
+  ownerCard: { alignItems: 'center', flexDirection: 'row', marginTop: 16, paddingVertical: 8 }, avatar: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 21, height: 42, justifyContent: 'center', overflow: 'hidden', width: 42 }, avatarImage: { height: 42, width: 42 }, avatarText: { color: theme.onSun, fontFamily: typography.displayExtraBold, fontSize: 17 }, ownerCopy: { flex: 1, marginLeft: 10 }, ownerLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, textTransform: 'uppercase' }, ownerName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, marginTop: 2 }, publicLabel: { backgroundColor: theme.mintTint, borderRadius: 999, color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 12, paddingHorizontal: 8, paddingVertical: 4 },
+  stats: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10, paddingVertical: 12 }, stat: { alignItems: 'center', flex: 1 }, statValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 }, statLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, marginTop: 2 }, description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20, marginTop: 16 }, sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, marginBottom: 10, marginTop: 23 }, items: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1.5, paddingHorizontal: 13 }, itemRow: { alignItems: 'center', borderBottomColor: theme.line, borderBottomWidth: 1, flexDirection: 'row', minHeight: 66 }, itemNumber: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 15, height: 30, justifyContent: 'center', width: 30 }, itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 }, itemCopy: { flex: 1, marginLeft: 11 }, itemPrompt: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 }, itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 3 },
   helpfulButton: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 13, borderWidth: 1.5, flexDirection: 'row', gap: 7, justifyContent: 'center', marginTop: 14, minHeight: 46, paddingHorizontal: 14 }, helpfulButtonSelected: { backgroundColor: theme.violetTint, borderColor: theme.violetLine }, helpfulText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 }, helpfulTextSelected: { color: theme.violetDeep },
   shareButton: { alignSelf: 'flex-start', marginTop: 10 },
   reportReasons: { alignSelf: 'stretch', gap: 7, marginTop: 14 }, reportReason: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 12, borderWidth: 1, minHeight: 40, justifyContent: 'center', paddingHorizontal: 10 }, reportReasonSelected: { backgroundColor: theme.berryTint, borderColor: theme.berryLine }, reportReasonText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 }, reportReasonTextSelected: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold }, reportDetailsInput: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 12, borderWidth: 1, color: theme.ink, fontSize: 13, minHeight: 74, padding: 10, textAlignVertical: 'top' },

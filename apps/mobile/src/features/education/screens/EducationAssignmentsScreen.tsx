@@ -1,3 +1,4 @@
+import { EducationGuardianRequests } from '../components/EducationGuardianRequests';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,7 +19,7 @@ import { educationAssignmentApi } from '@/features/education/api/educationAssign
 import { useEducationCopy } from '@/features/education/i18n';
 import { useEducationAssessmentAttempt, EDUCATION_ATTEMPT_KEYS } from '@/features/education/hooks/useEducationAssessmentAttempt';
 import { useMyEducationAssignments } from '@/features/education/hooks/useMyEducationAssignments';
-import { useEducationClassroomInvitations } from '@/features/education/hooks/useEducationClassroomInvitations';
+import { useEducationGuardianRequests, useEducationClassroomInvitations } from '@/features/education/hooks/useEducationClassroomInvitations';
 import { educationAttemptSession } from '@/features/education/services/educationAttemptSession.service';
 import type { EducationAssessmentAttempt } from '@/features/education/types/question.types';
 import type { MyEducationAssignment } from '@/features/education/types/educationAssignment.types';
@@ -30,7 +31,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 export default function EducationAssignmentsScreen() {
-  const { assignmentId, attemptId, practiceType } = useLocalSearchParams<{ assignmentId?: string; attemptId?: string; practiceType?: string }>();
+  const { assignmentId, attemptId, practiceType, connections } = useLocalSearchParams<{ assignmentId?: string; attemptId?: string; practiceType?: string; connections?: string }>();
   const router = useRouter();
   const navigation = useNavigation();
   const queryClient = useQueryClient();
@@ -39,6 +40,7 @@ export default function EducationAssignmentsScreen() {
   const { styles, theme } = useStyles();
   const assignmentsQuery = useMyEducationAssignments();
   const classroomInvitations = useEducationClassroomInvitations();
+  const guardians = useEducationGuardianRequests();
   const attemptQuery = useEducationAssessmentAttempt(attemptId);
   const startAttempt = useMutation({ mutationFn: educationAttemptApi.start, retry: false });
   const leaderboardPreference = useMutation({
@@ -47,14 +49,14 @@ export default function EducationAssignmentsScreen() {
   });
   const [checkingSavedAttempt, setCheckingSavedAttempt] = useState(Boolean(assignmentId && !attemptId));
   const [startError, setStartError] = useState(false);
-  const [connectionsOpen, setConnectionsOpen] = useState(false);
+  const [connectionsOpen, setConnectionsOpen] = useState(connections === '1');
   const [hasUnsavedSketch, setHasUnsavedSketch] = useState(false);
   const [isSketchProcessing, setIsSketchProcessing] = useState(false);
   const [discardSketchVisible, setDiscardSketchVisible] = useState(false);
   const pendingNavigationAction = useRef<NavigationAction | null>(null);
   const allowSketchExitRef = useRef(false);
   const assignments = assignmentsQuery.data ?? [];
-  const pendingInvitations = getPendingEducationInvitations(classroomInvitations.memberships.data ?? []).length;
+  const pendingInvitations = getPendingEducationInvitations(classroomInvitations.memberships.data ?? []).length + (guardians.guardianLinks.data ?? []).filter(link => link.status !== 'revoked' && (!link.studentConfirmed || !link.adminVerified)).length;
   const detailAssignmentId = assignmentId ?? attemptQuery.data?.assignmentId;
   const assignment = assignments.find((item) => item.id === detailAssignmentId);
   const handleSketchWorkChange = useCallback((hasWork: boolean, processing: boolean) => {
@@ -136,7 +138,7 @@ export default function EducationAssignmentsScreen() {
               onOpen={openAssignment}
             />
             {user?.accountMode !== 'RestrictedLearner' ? assignmentsQuery.isSuccess && assignments.length === 0
-              ? <LearningButton label={copy.locale.startsWith('zh') ? '探索课程' : 'Explore courses'} onPress={() => router.push('/learn' as Href)} />
+              ? <LearningButton label={copy.locale.startsWith('zh') ? '探索课程' : 'Explore courses'} onPress={() => router.navigate('/discover' as Href)} />
               : <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/education/practice' as Href)} style={styles.secondaryAction}>
                 <Text style={[styles.actionText, { color: theme.violetDeep }]}>{copy.practiceBrowseTitle}</Text>
               </AnimatedPressable> : null}
@@ -203,6 +205,10 @@ export default function EducationAssignmentsScreen() {
           onDecline={(membershipId) => classroomInvitations.decline.mutate(membershipId)}
           onRetry={() => { void classroomInvitations.memberships.refetch(); }}
         />
+        <EducationGuardianRequests links={guardians.guardianLinks.data ?? []} userId={user?.id ?? ''} isLoading={guardians.guardianLinks.isLoading} isError={guardians.guardianLinks.isError}
+          confirmingId={guardians.confirm.isPending ? guardians.confirm.variables : undefined} confirmError={guardians.confirm.isError}
+          decliningId={guardians.decline.isPending ? guardians.decline.variables : undefined} declineError={guardians.decline.isError}
+          onConfirm={id => guardians.confirm.mutate(id)} onDecline={id => guardians.decline.mutate(id)} onRetry={() => { void guardians.guardianLinks.refetch(); }} />
           </View> : null}
         </View> : null}
       </ScrollView>

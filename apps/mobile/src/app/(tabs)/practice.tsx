@@ -1,5 +1,5 @@
-import { PracticeScreen } from '@/features/memory-hub';
+import { Redirect } from 'expo-router';
 
 export default function PracticeRoute() {
-  return <PracticeScreen />;
+  return <Redirect href="/memory-tools" />;
 }

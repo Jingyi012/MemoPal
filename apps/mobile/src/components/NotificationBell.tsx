@@ -2,6 +2,7 @@ import { useUnreadNotifications } from '@/features/notifications/hooks/useNotifi
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { HeaderIconButton } from './ui/HeaderIconButton';
+import { Bell } from '@/core/icons';
 
 export function NotificationBell() {
   const router = useRouter();
@@ -9,10 +10,9 @@ export function NotificationBell() {
 
   return (
     <HeaderIconButton
+      icon={Bell}
       onPress={() => router.push('/notifications')}
       accessibilityLabel="View notifications">
-      <Text style={{ fontSize: 21 }}>🔔</Text>
-
       {unreadCount > 0 && (
         <View className="absolute -right-1 -top-1 h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-red-500">
           <Text className="text-[10px] font-bold text-white">

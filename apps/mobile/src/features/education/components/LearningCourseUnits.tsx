@@ -26,7 +26,7 @@ export function LearningCourseUnits({ course, progress, onMemory, onPractice, on
       {compactUnits ? <View style={[s.row, { justifyContent: 'space-between', flexWrap: 'wrap' }]}>
         <Text style={[s.small, { color: palette.violetDeep }]}>{zh ? `单元 ${index + 1}` : `UNIT ${index + 1}`}</Text>
         <Text style={s.small}>{zh ? `${group.objectives.reduce((n, item) => n + item.studyItems.length, 0)} 张卡片` : `${group.objectives.reduce((n, item) => n + item.studyItems.length, 0)} cards`}</Text>
-      </View> : group.title ? <View style={{ backgroundColor: theme.tint, padding: 18, borderRadius: 22, gap: 6 }}>
+      </View> : group.title ? <View style={{ backgroundColor: palette.paper, borderWidth: 1, borderColor: palette.line, padding: 18, borderRadius: 22, gap: 6 }}>
         <Text style={[s.small, { color: theme.dark }]}>{zh ? `单元 ${index + 1}` : `UNIT ${index + 1}`}</Text>
         <Text accessibilityRole="header" style={[s.heading, { color: theme.dark }]}>{group.title}</Text>
         <Text style={[s.small, { color: theme.dark }]}>{zh ? `${group.objectives.length} 个知识点 · 一步步探索` : `${group.objectives.length} study points · One step at a time`}</Text>

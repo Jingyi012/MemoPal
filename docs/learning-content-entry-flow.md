@@ -135,3 +135,68 @@ Admin build and lint also passed. The normal high-concurrency test run had four
 `--maxWorkers=2 --testTimeout=15000`. No repository test-timeout setting was
 changed. Focused owner/draft tests were rerun after excluding deleted objectives
 from private readiness/count calculations and all ten passed.
+
+## Unified learning library
+
+The learning header now has one library entry (`/education/my-courses`). Its
+search and All / Created / Saved / Drafts filters combine owner-created private
+sets with existing saved public courses. Old saved-course routes open the same
+screen with Saved selected. Saving and starting a personal set also links back
+to this library. Cards explicitly identify creations versus saved materials;
+their learning and draft-edit routes remain unchanged.
+
+Each card has a separate 44pt removal action outside the learning press target.
+Created sets use a confirmed Delete action; saved courses use confirmed Remove
+bookmark. Pending operations disable confirmation, failures retain the item and
+offer retry, and success invalidates the relevant user-scoped queries.
+
+`DELETE /v1/education/my-courses/{courseId}` is restricted to the authenticated
+owner's imported private courses (including drafts). It soft-deletes the parent,
+is idempotent for that owner, and excludes the content through existing course
+read policies. It does not erase historical learning records or expose a generic
+course-delete permission. Public courses, general authoring courses and other
+users' content cannot be deleted through this endpoint. No migration is needed.
+
+## Daily learning and unified navigation (2026-11-09)
+
+The default tab is now Learn, a daily action screen rather than the public
+catalog. The visible standard-account tabs are Learn / Library / Discover / Me.
+The former Learn deep link redirects to the new default; Progress remains
+available through clearly named history/report links on Learn and Me, and has a
+back action. Restricted learners use the existing assignment workspace and do
+not see Library or Discover tabs. Family/classroom preparation and invitations
+remain reachable through My tasks.
+
+Learn chooses one main action from actual activity, the server's current public
+course, an open task, due memory review, ready personal content, saved courses,
+existing memory practice, a draft, or an initial course recommendation. Available
+personal materials are visible directly below. Public discovery has its own tab,
+and the new-user recommendation does not replace failed personal-data loads.
+The page retains notifications, creating content, tasks, due reviews, and reports.
+
+Library integrates Courses and Memory practice through one text-labelled section
+switch. Existing memory folders, archive, Palace, Number Peg and tool routes are
+preserved. Courses retains source/draft filters, search, list/two-column views,
+delete/unsave confirmations. A title opens details; the card action starts study
+directly. View all and post-save navigation select Courses explicitly, even when
+the last-used library section was Memory practice. Discover similarly offers
+Courses and Community memory, preserving the existing public memory discovery.
+
+`useLearningActivity` stores only source/IDs, reading position, completion of the
+reading step and a local interaction timestamp in user-scoped AsyncStorage.
+Writes are serialized to preserve rapid page changes. It records actual study
+actions, not simple course browsing or saving a bookmark. Private-course
+`start=1` restores the saved unit/card; public-course `resume=1` uses the existing
+server-recommended lesson and session, showing authored study content before a
+new lesson when required. Scores, ownership, due dates and classroom progress
+remain server-authoritative. Local reading bookmarks are device-specific, not
+cross-device progress sync. Failed position saves are reported in private study;
+unavailable materials are not presented as a valid resume target.
+
+Validation: 196 mobile tests, TypeScript and lint passed (five existing warnings).
+Android production export passed. At 390px Expo Web verified the four navigation
+entries, direct public resume to the existing unanswered question, private
+reading 1/7 → 2/7 → home → Continue → 2/7, unified course/memory library switching
+and public-course discovery. No answers were submitted during this navigation
+check. Native emulator remained disconnected from Metro with its old screen;
+native Android and iOS interactive validation of this revision is outstanding.

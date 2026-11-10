@@ -1,4 +1,4 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
+import { LearningLibraryCardSurface } from '@/features/education/components/LearningLibraryCard';
 import { CommonHeader } from '@/components/CommonHeader';
 import { MemoryLearningCard } from '@/components/MemoryLearningCard';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
@@ -10,7 +10,7 @@ import {
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { ChevronRight, RefreshCcw, Search, Sparkles } from '@/core/icons';
+import { RefreshCcw, Search } from '@/core/icons';
 import { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useMemoryCollections } from '@/features/predefined-memory-lessons/hooks/useMemoryCollections';
@@ -83,6 +83,7 @@ export default function PredefinedLessonsScreen({ embedded = false }: { embedded
         <View style={styles.search}>
           <Search size={18} color={theme.inkSoft} />
           <TextInput
+            accessibilityLabel={t('searchCollections')}
             value={search}
             onChangeText={setSearch}
             placeholder={t('searchCollections')}
@@ -105,7 +106,7 @@ export default function PredefinedLessonsScreen({ embedded = false }: { embedded
           <View style={styles.grid}>
             {columns.map((column, columnIndex) => (
               <View key={columnIndex} style={styles.gridColumn}>
-                {column.map((entry, index) => {
+                {column.map((entry) => {
                   if (entry.kind === 'lesson') {
                     const { lesson } = entry;
                     const title = language === 'zh' ? lesson.titleZh : lesson.titleEn;
@@ -123,39 +124,12 @@ export default function PredefinedLessonsScreen({ embedded = false }: { embedded
                   const description = language === 'zh'
                     ? collection.descriptionZh
                     : collection.descriptionEn;
-                  const tone = (index * 2 + columnIndex) % 4;
-                  return (
-                    <AnimatedPressable
-                      lively
-                      key={collection.id}
-                      accessibilityLabel={`${name}, ${collection.lessons.length} ${collection.lessons.length === 1 ? t('course') : t('courses')}`}
-                      accessibilityRole="button"
-                      onPress={() => router.push(`/lessons/${collection.id}?collection=1` as Href)}
-                      style={[
-                        styles.collectionCard,
-                        tone === 0 && styles.collectionCardViolet,
-                        tone === 1 && styles.collectionCardBerry,
-                        tone === 2 && styles.collectionCardSky,
-                        tone === 3 && styles.collectionCardSun,
-                      ]}>
-                      <View style={styles.artworkRow}>
-                        <View style={styles.emojiHalo}>
-                          <Text style={styles.emoji}>{collection.emoji}</Text>
-                        </View>
-                        <View style={styles.enterButton}>
-                          <ChevronRight size={18} color={theme.violetDeep} />
-                        </View>
-                      </View>
-                      <Text style={styles.collectionTitle}>{name}</Text>
-                      <Text numberOfLines={3} style={styles.collectionDescription}>{description}</Text>
-                      <View style={styles.collectionMeta}>
-                        <Sparkles size={13} color={theme.berryDeep} />
-                        <Text style={styles.collectionMetaText}>
-                          {collection.lessons.length} {collection.lessons.length === 1 ? t('course') : t('courses')} · {collection.itemCount} {t('items')}
-                        </Text>
-                      </View>
-                    </AnimatedPressable>
-                  );
+                  return <LearningLibraryCardSurface key={collection.id} grid title={name} source={language === 'zh' ? '记忆合集' : 'Memory collection'}
+                    description={description} metadata={`${collection.lessons.length} ${collection.lessons.length === 1 ? t('course') : t('courses')} · ${collection.itemCount} ${t('items')}`}
+                    mark="" action="" removeLabel=""
+                    onPress={() => router.push(`/lessons/${collection.id}?collection=1` as Href)}
+                    coverArtwork={<View style={styles.artwork}><Text style={styles.emoji}>{collection.emoji}</Text></View>} />;
+
                 })}
               </View>
             ))}
@@ -175,20 +149,8 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   searchInput: { flex: 1, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
   grid: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   gridColumn: { flex: 1, gap: 12 },
-  collectionCard: { width: '100%', minHeight: 205, borderRadius: 26, borderWidth: 1.5, padding: 14, shadowColor: theme.violetDeep, shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 2 },
-  collectionCardViolet: { backgroundColor: theme.violetTint, borderColor: theme.violetLine },
-  collectionCardBerry: { backgroundColor: theme.berryTint, borderColor: theme.berryLine },
-  collectionCardSky: { backgroundColor: theme.skyTint, borderColor: theme.skyLine },
-  collectionCardSun: { backgroundColor: theme.sunTint, borderColor: theme.sunLine },
-  lessonCard: { backgroundColor: theme.paper, borderColor: theme.line },
-  artworkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  emojiHalo: { width: 58, height: 58, borderRadius: 21, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-3deg' }] },
+  artwork: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   emoji: { fontSize: 31 },
-  enterButton: { width: 34, height: 34, borderRadius: 17, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
-  collectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17, lineHeight: 22, marginTop: 15 },
-  collectionDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11.5, lineHeight: 17, marginTop: 5 },
-  collectionMeta: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 14 },
-  collectionMetaText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
   stateCard: { minHeight: 120, borderRadius: 22, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center', padding: 20 },
   stateText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
 }));

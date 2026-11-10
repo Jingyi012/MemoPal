@@ -1,1 +1,2 @@
-export { default } from '@/features/education/screens/EducationPublicCoursesScreen';
+import { Redirect } from 'expo-router';
+export default function LegacyCourseCatalogRoute() { return <Redirect href="/discover" />; }

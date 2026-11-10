@@ -23,22 +23,21 @@ export function LearningCatalogCourseCard({ course, onPress }: { course: Educati
   const action = completed ? (ui.zh ? '再次练习' : 'Practise again') : started ? ui.continue : (ui.zh ? '探索课程' : 'Explore course');
   const subjectLabel = subject.key === 'other' ? (ui.zh ? '课程' : 'Course') : ui[subject.key];
   return <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${course.title} · ${action}`} lively onPress={onPress} style={s.card}>
-    <View style={[s.cover, { backgroundColor: artwork.tint }]}>
+    <View style={s.cover}>
       <SubjectArtwork theme={artwork} size={52} />
       <View style={s.coverCopy}>
         <Text style={[s.subject, { color: artwork.color }]}>{subjectLabel}</Text>
-        <Text numberOfLines={1} style={s.author}>{course.authorDisplayName}</Text>
+        <Text numberOfLines={2} style={s.title}>{course.title}</Text>
       </View>
       {course.isSaved ? <Ionicons accessibilityLabel={ui.zh ? '已收藏' : 'Saved'} name="bookmark" size={20} color={artwork.color} /> : null}
     </View>
     <View style={s.body}>
-      <Text numberOfLines={3} style={s.title}>{course.title}</Text>
-      {courseAudienceLabels(course, ui.zh).length ? <Text style={s.meta}>{courseAudienceLabels(course, ui.zh).join(' · ')}</Text> : null}
+      <Text style={s.meta}>{[course.authorDisplayName, ...courseAudienceLabels(course, ui.zh)].join(' · ')}</Text>
       <View style={s.details}>
         <View style={s.detail}><Ionicons name="layers-outline" size={14} color={palette.inkSoft} /><Text style={s.meta}>{course.assessmentCount} {ui.zh ? '个练习' : 'practices'}</Text></View>
         <View style={s.detail}><Ionicons name="help-circle-outline" size={14} color={palette.inkSoft} /><Text style={s.meta}>{course.questionCount} {ui.zh ? '题' : 'questions'}</Text></View>
       </View>
-      <View style={s.footer}>
+      {started || completed || progress.isError ? <View style={s.footer}>
         <View style={s.progress}>
           {progress.isLoading ? <Text style={s.meta}>{ui.zh ? '正在读取进度…' : 'Loading progress…'}</Text>
             : progress.isError ? <Text style={s.meta}>{ui.zh ? '进入课程查看进度' : 'Open to check progress'}</Text>
@@ -47,20 +46,20 @@ export function LearningCatalogCourseCard({ course, onPress }: { course: Educati
                 <LearningProgress value={solved} total={total} color={completed ? palette.successText : palette.violetDeep} height={7} />
               </>}
         </View>
-        <View style={s.action}><Text style={s.actionText}>{action}</Text><Ionicons name="arrow-forward" size={17} color={palette.violetDeep} /></View>
-      </View>
+
+      </View> : null}
     </View>
   </AnimatedPressable>;
 }
 
 const useCatalogCardStyles = createLearningStyles(t => StyleSheet.create({
-  card: { backgroundColor: t.paper, borderColor: t.line, borderWidth: 1.5, borderBottomWidth: 5, borderRadius: 23 },
-  cover: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderTopLeftRadius: 21, borderTopRightRadius: 21 },
+  card: { backgroundColor: t.paper, borderColor: t.line, borderWidth: 1, borderRadius: 20 },
+  cover: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderTopLeftRadius: 19, borderTopRightRadius: 19 },
   coverCopy: { flex: 1, minWidth: 0, gap: 4 },
   subject: { fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 20 },
   author: { fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, color: t.inkSoft },
   body: { padding: 16, gap: 9 },
-  title: { fontFamily: typography.displayExtraBold, fontSize: 19, lineHeight: 26, color: t.ink },
+  title: { fontFamily: typography.displayExtraBold, fontWeight: '800', fontSize: 18, lineHeight: 25, color: t.ink },
   meta: { fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, color: t.inkSoft },
   details: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   detail: { flexDirection: 'row', alignItems: 'center', gap: 5 },

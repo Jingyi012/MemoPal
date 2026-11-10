@@ -41,7 +41,7 @@ export const learningColors = {
 export const learningLayout = {
   pagePadding: 16, gap: 12, sectionGap: 18,
   cardRadius: 22, buttonRadius: 18, iconRadius: 14, pillRadius: 99,
-  borderWidth: 1.5, cardDepth: 6, buttonDepth: 5, optionDepth: 4, touchTarget: 44, controlHeight: 54, compactControlHeight: 48,
+  borderWidth: 1.5, cardDepth: 2, buttonDepth: 2, optionDepth: 4, touchTarget: 44, controlHeight: 54, compactControlHeight: 48,
 } as const;
 
 export const learningTypeScale = {

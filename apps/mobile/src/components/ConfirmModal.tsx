@@ -88,7 +88,7 @@ export function ConfirmModal({
                 <AppButton
                   label={cancelText}
                   variant="secondary"
-                  size="large"
+                  size="regular"
                   disabled={isLoading}
                   onPress={close}
                   style={styles.buttonSlot}
@@ -96,7 +96,7 @@ export function ConfirmModal({
                 <AppButton
                   label={confirmText}
                   variant={destructive ? 'destructive' : 'primary'}
-                  size="large"
+                  size="regular"
                   loading={isLoading}
                   onPress={onConfirm}
                   style={styles.buttonSlot}
@@ -130,7 +130,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     width: '100%',
   },
   dialogContent: { alignItems: 'center', padding: 22 },
-  buttonSlot: { flexGrow: 1, flexBasis: 120 },
+  buttonSlot: { flexGrow: 1, flexBasis: 110, minHeight: 48 },
   icon: {
     alignItems: 'center',
     backgroundColor: theme.berryTint,

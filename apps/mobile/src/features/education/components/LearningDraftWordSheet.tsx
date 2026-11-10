@@ -1,6 +1,7 @@
+import { AppSheetTextInput } from '@/components/AppSheetTextInput';
 import { forwardRef } from 'react';
 import { Text, View } from 'react-native';
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -22,9 +23,9 @@ export const LearningDraftWordSheet = forwardRef<BottomSheetModal, {
       {word ? <>
         <Text accessibilityRole="header" style={s.title}>{zh ? '编辑词语' : 'Edit word'}</Text>
         <Text style={s.small}>{zh ? '修改词语' : 'Word'}</Text>
-        <BottomSheetTextInput accessibilityLabel={zh ? '修改词语' : 'Edit word text'} value={word.text} onChangeText={text => onChange({ ...word, text })} maxLength={500} style={s.input} selectionColor={theme.violetDeep} />
+        <AppSheetTextInput accessibilityLabel={zh ? '修改词语' : 'Edit word text'} value={word.text} onChangeText={text => onChange({ ...word, text })} maxLength={500} style={s.input} selectionColor={theme.violetDeep} />
         <Text style={s.small}>{zh ? '释义（选填）' : 'Meaning (optional)'}</Text>
-        <BottomSheetTextInput accessibilityLabel={zh ? '词语释义' : 'Word meaning'} value={word.meaning} onChangeText={meaning => onChange({ ...word, meaning })} maxLength={500} style={s.input} selectionColor={theme.violetDeep} />
+        <AppSheetTextInput accessibilityLabel={zh ? '词语释义' : 'Word meaning'} value={word.meaning} onChangeText={meaning => onChange({ ...word, meaning })} maxLength={500} style={s.input} selectionColor={theme.violetDeep} />
         <Text style={s.small}>{zh ? '移动到' : 'Move to'}</Text>
         <View style={[s.row, { flexWrap: 'wrap' }]}>{units.map((unit, index) => <AnimatedPressable key={unit.id} accessibilityRole="radio" accessibilityState={{ checked: word.unitId === unit.id }}
           onPress={() => onChange({ ...word, unitId: unit.id })} style={[s.chip, word.unitId === unit.id && s.selectedChip]}>

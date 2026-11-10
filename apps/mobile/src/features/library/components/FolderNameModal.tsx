@@ -1,14 +1,17 @@
+import { AppSheetTextInput } from '@/components/AppSheetTextInput';
 import { AppButton } from '@/components/ui/AppButton';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { AppBottomSheet } from '@/components/AppBottomSheet';
 import { useEffect, useState } from 'react';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemoryFolderCreateRequest } from '../types/memoryFolder.types';
 
 export function FolderNameModal({ visible, initialName, initialEmoji, initialDescription, isLoading, onCancel, onSubmit }: { visible: boolean; initialName?: string; initialEmoji?: string; initialDescription?: string; isLoading?: boolean; onCancel: () => void; onSubmit: (collection: MemoryFolderCreateRequest) => void }) {
   const { styles, theme } = useStyles();
-  const { t } = useTranslation('library');
+  const { t, language } = useTranslation('library');
   const [name, setName] = useState(initialName ?? '');
   const [emoji, setEmoji] = useState(initialEmoji ?? '📚');
   const [description, setDescription] = useState(initialDescription ?? '');
@@ -23,39 +26,31 @@ export function FolderNameModal({ visible, initialName, initialEmoji, initialDes
     if (value) onSubmit({ name: value, emoji: emoji.trim() || '📚', description: description.trim() });
   };
   const close = () => onCancel();
-  return <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalRoot}>
-      <Pressable style={styles.backdrop} onPress={close} />
-      <View style={styles.sheet}>
-        <ScrollView contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled">
+  return <AppBottomSheet visible={visible} onClose={close} height={530}>
+        <BottomSheetScrollView contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled">
           <View style={styles.dialog}>
-          <Text style={styles.title}>{initialName ? t('editCollection') : t('newFolder')}</Text>
+          <Text accessibilityRole="header" style={styles.title}>{initialName ? t('editCollection') : t('newFolder')}</Text>
           <Text style={styles.body}>{t('folderNamePrompt')}</Text>
-          <TextInput autoFocus value={name} onChangeText={setName} editable={!isLoading} maxLength={80} placeholder={t('folderNamePlaceholder')} placeholderTextColor={theme.inkSoft} style={styles.input} accessibilityLabel={t('folderNamePrompt')} returnKeyType="next" />
+          <AppSheetTextInput autoFocus value={name} onChangeText={setName} editable={!isLoading} maxLength={80} placeholder={t('folderNamePlaceholder')} placeholderTextColor={theme.inkSoft} style={styles.input} accessibilityLabel={t('folderNamePrompt')} returnKeyType="next" />
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>{t('collectionEmoji')}</Text>
-            <TextInput value={emoji} onChangeText={setEmoji} editable={!isLoading} maxLength={16} placeholder={t('collectionEmojiPlaceholder')} placeholderTextColor={theme.inkSoft} style={styles.emojiInput} accessibilityLabel={t('collectionEmoji')} />
+            <AppSheetTextInput value={emoji} onChangeText={setEmoji} editable={!isLoading} maxLength={16} placeholder={t('collectionEmojiPlaceholder')} placeholderTextColor={theme.inkSoft} style={styles.emojiInput} accessibilityLabel={t('collectionEmoji')} />
           </View>
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>{t('collectionDescription')}</Text>
-            <TextInput value={description} onChangeText={setDescription} editable={!isLoading} maxLength={500} multiline numberOfLines={3} textAlignVertical="top" placeholder={t('collectionDescriptionPlaceholder')} placeholderTextColor={theme.inkSoft} style={[styles.input, styles.descriptionInput]} accessibilityLabel={t('collectionDescription')} />
+            <AppSheetTextInput value={description} onChangeText={setDescription} editable={!isLoading} maxLength={500} multiline numberOfLines={3} textAlignVertical="top" placeholder={t('collectionDescriptionPlaceholder')} placeholderTextColor={theme.inkSoft} style={[styles.input, styles.descriptionInput]} accessibilityLabel={t('collectionDescription')} />
           </View>
           <View style={styles.actions}>
             <AppButton label={t('cancel')} variant="secondary" size="regular" disabled={isLoading} pressOnIn onPress={close} style={styles.actionContainer} />
-            <AppButton label={initialName ? t('save') : t('create')} variant="primary" size="regular" disabled={!name.trim()} loading={Boolean(isLoading)} pressOnIn onPress={submit} style={styles.actionContainer} />
+            <AppButton label={initialName ? t('save') : language === 'zh' ? '创建合集' : 'Create collection'} variant="primary" size="regular" disabled={!name.trim()} loading={Boolean(isLoading)} pressOnIn onPress={submit} style={styles.actionContainer} />
           </View>
           </View>
-        </ScrollView>
-      </View>
-    </KeyboardAvoidingView>
-  </Modal>;
+        </BottomSheetScrollView>
+  </AppBottomSheet>;
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  modalRoot: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(22, 20, 35, 0.42)' },
-  sheet: { maxHeight: '90%', backgroundColor: theme.paper, borderTopLeftRadius: 30, borderTopRightRadius: 30, overflow: 'hidden' },
-  sheetContent: { paddingBottom: 24, paddingHorizontal: 20, paddingTop: 8 },
+  sheetContent: { paddingBottom: 20, paddingTop: 8 },
   dialog: { backgroundColor: theme.paper, width: '100%' },
   title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 21, textAlign: 'center' },
   body: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, marginTop: 9, textAlign: 'center' },

@@ -8,7 +8,7 @@ import { defaultLearningPreferences, learningPreferenceChoices, type LearningPre
 import { courseAudienceLabels } from '../utils/educationCourseAudience';
 import { LearningButton, useLearningCopy, useLearningStyles } from './LearningUi';
 
-export function LearningPreferencesCard({ userId, compact = false }: { userId: string; compact?: boolean }) {
+export function LearningPreferencesCard({ userId, compact = false, inline = false }: { userId: string; compact?: boolean; inline?: boolean }) {
   const { query, save } = useEducationLearningPreferences(userId);
   const { styles: s, theme } = useLearningStyles();
   const ui = useLearningCopy();
@@ -24,8 +24,8 @@ export function LearningPreferencesCard({ userId, compact = false }: { userId: s
   return <>
     <AnimatedPressable accessibilityRole="button" disabled={query.isLoading} accessibilityState={{ expanded: open, disabled: query.isLoading }}
       onPress={() => { save.reset(); setDraft(query.data ?? defaultLearningPreferences); setOpen(true); }}
-      style={compact ? [s.card, { flex: 1, minHeight: 108, padding: 14, gap: 6, justifyContent: 'center' }] : { minHeight: 52, flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: 18, backgroundColor: theme.violetTint }}>
-      {compact ? <><Text style={[s.small, { color: theme.violetDeep, fontFamily: s.heading.fontFamily }]}>{ui.zh ? '学习偏好' : 'Preferences'}</Text><Text style={s.small}>{ui.zh ? '阶段、科目和语言' : 'Stage, subject, language'}</Text></> : <>
+      style={inline ? { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 } : compact ? [s.card, { flex: 1, minHeight: 108, padding: 14, gap: 6, justifyContent: 'center' }] : { minHeight: 52, flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: 18, backgroundColor: theme.violetTint }}>
+      {inline ? <><Ionicons name="options-outline" size={18} color={theme.violetDeep} /><Text style={[s.small, { color: theme.violetDeep }]}>{ui.zh ? '学习偏好' : 'Learning preferences'}</Text><Text numberOfLines={1} style={[s.small, { flex: 1 }]}>{summary}</Text><Ionicons name="chevron-forward" size={16} color={theme.violetDeep} /></> : compact ? <><Text style={[s.small, { color: theme.violetDeep, fontFamily: s.heading.fontFamily }]}>{ui.zh ? '学习偏好' : 'Preferences'}</Text><Text style={s.small}>{ui.zh ? '阶段、科目和语言' : 'Stage, subject, language'}</Text></> : <>
       <Ionicons name="compass-outline" size={24} color={theme.violetDeep} />
       <View style={{ flex: 1, gap: 3 }}><Text style={[s.small, { color: theme.violetDeep }]}>{title}</Text>
         <Text style={s.small}>{query.isLoading ? (ui.zh ? '正在读取偏好…' : 'Loading preferences…') : summary || (ui.zh ? '选阶段、科目和语言，让第一课更适合你' : 'Choose a stage, subject and language for your first lesson')}</Text></View>

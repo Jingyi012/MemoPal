@@ -45,12 +45,16 @@
 Android 生产资源导出通过。现有 Android 模拟器核对了私人课程概览、卡片阅读、
 单元内横向导航和左右翻页。首张导航卡片的裁切与内容／图示重复 key 已修正。
 
-## 我的学习内容：私人书架
+## 我的学习资料：统一书架
 
-列表采用纯色紫色概览、沫沫伙伴、搜索、全部／可学习／草稿筛选和书本封面卡片。
-`PersonalStudyShelfCard` 与 `personalStudyLibraryStyles` 复用学习主题、字体和按压组件；
-没有增加图片或依赖。数量、语言及状态都来自私人课程接口，不生成学习进度。
-可以学习的内容进入私人课程，草稿继续原有编辑流程；空状态提供恢复筛选或添加内容。
+列表采用纯色紫色概览、沫沫伙伴、搜索、全部／我创建的／已收藏／草稿筛选。
+`LearningLibraryCard` 与 `personalStudyLibraryStyles` 复用学习主题、字体和按压组件；
+没有增加图片或依赖。数量、语言及状态来自私人课程和收藏接口，不生成学习进度。
+可以学习的自建内容进入私人课程，草稿继续编辑，收藏课程进入公开学习路径。
+每张卡片有独立的移除按钮，自建内容删除和取消收藏分别说明，确认后才提交。
+空状态提供恢复筛选、添加内容或探索课程。旧收藏链接进入同一书架的已收藏筛选。
+自建与收藏使用同一白底书本卡片。书架右侧切换列表／双列卡片；双列按实际容器宽度均分，
+奇数末项保持单格宽度。两种模式共用来源、状态、进度及删除确认，切换保留筛选和搜索。
 
 设计参考 [Quizlet 的学习资料组织方式](https://help.quizlet.com/hc/en-ca/articles/360030986151-Organizing-study-content-with-folders)
 及 [Duolingo 按学习目标选择练习的方式](https://blog.duolingo.com/guide-to-duolingo-practice-hub/)，
@@ -62,3 +66,34 @@ Android 生产资源导出通过。现有 Android 模拟器核对了私人课程
 原有课程详情。进度加载或失败时保留入口，不显示虚假的未开始状态。
 卡片专属样式通过 `createLearningStyles` 管理，复用学科图标、进度条、字体和按压动画，
 不用渐变或新增图片。窄屏与长文本通过换行和弹性布局适配。
+
+## 浏览与筛选层级（2026-11-09）
+
+资料库和发现页统一使用 `LearningHeader` 与 `LearningWorkspaceActions`。
+工具是页头带文字的紧凑入口；新建菜单明确提供学习内容、记忆练习两条路径。
+原记忆库独占一行的工具按钮和资料库内重复悬浮新增按钮已移除。
+
+`LearningWorkspaceNavigation` 改为当前分类下拉，复用 `LearningChoiceMenu` 的底部
+选择面板；课程／记忆不再以两个大按钮常驻。课程来源和记忆法／归档筛选也使用
+同一面板，按钮持续显示当前筛选。列表／双列视图由一个 44pt 图标切换。
+学习偏好在发现页使用 `LearningPreferencesCard inline`，保留配置功能并缩短入口高度。
+
+`LearningLibraryCardSurface` 为课程和 `MemoryLibraryItemCard` 共用的卡片主体：
+封面、标题、来源、状态、底部动作和管理按钮使用同一布局与主题。记忆资料仍显示
+真实到期时间、归档／草稿状态与原宫殿照片，管理菜单继续调用原有操作。
+合集使用紧凑列表呈现，避免大封面把学习资料推到首屏以下。
+中文标题补充明确字重，避免西文字体回退后失去标题层级。
+
+设计参考 [Spotify 资料库排序和筛选说明](https://support.spotify.com/al/article/sort-and-filter/)
+中对搜索、分类、排序及列表／网格操作的分工；这是 MemoPal 的布局取舍，未照搬其界面。
+本轮移动端 196 项测试、类型检查和 lint 通过（原有 5 条警告），Android 资源导出通过。
+在 390px Expo Web 核对了分类选择、记忆类型筛选、统一卡片和新建菜单。
+
+
+### Browse layout refinement (2026-11-09)
+
+- The library Tools action pushes `/memory-tools` on the root stack. This reuses `PracticeScreen` with a back button and no tab navigator; direct entry falls back to Library. The legacy practice route remains available.
+- Library surfaces use a quiet single border, consistent typography, distinct content and start actions, and compact status text. Two-column covers use theme tints and retain independent management controls.
+- Collection creation belongs beside the collection heading, with a fallback when no collections exist.
+- Discover focuses on search and results. Its header exposes the leaderboard; creation remains in Library. Preferences remain accessible inside course filters. Community promotional blocks and the duplicate course shortcut were removed; authoring remains in the footer.
+- Verified the tools/back path, category switching and list/grid layouts in a 390px Expo Web preview. Native device interaction remains unverified.

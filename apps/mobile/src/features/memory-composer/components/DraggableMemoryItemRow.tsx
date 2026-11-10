@@ -1,5 +1,5 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import * as Haptics from 'expo-haptics';
 import { GripVertical, Trash2 } from '@/core/icons';
@@ -59,6 +59,7 @@ export function DraggableMemoryItemRow({
   onMove: (from: number, to: number) => void;
   onDragStateChange: (dragging: boolean) => void;
 }) {
+  const { styles, theme } = useStyles();
   const position = useContext(ReorderContext);
   const translateY = useSharedValue(0);
   const baseOffsetY = useSharedValue(0);
@@ -212,7 +213,7 @@ export function DraggableMemoryItemRow({
         value={item.value}
         onChangeText={onChange}
         placeholder={placeholder}
-        placeholderTextColor="#AAA7B5"
+        placeholderTextColor={theme.inkSoft}
         maxLength={500}
         selectionColor={theme.violetDeep}
         cursorColor={theme.violetDeep}
@@ -241,7 +242,7 @@ export function DraggableMemoryItemRow({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   itemRow: {
     minHeight: 53,
     flexDirection: 'row',
@@ -255,7 +256,7 @@ const styles = StyleSheet.create({
     paddingRight: 4,
     zIndex: 0,
   },
-  itemRowNeedsReview: { borderColor: '#FFD06A', backgroundColor: '#FFF9E9' },
+  itemRowNeedsReview: { borderColor: theme.sunLine, backgroundColor: theme.sunTint },
   itemRowDragging: {
     zIndex: 10,
     elevation: 4,
@@ -286,4 +287,4 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   removeButton: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
-});
+}));

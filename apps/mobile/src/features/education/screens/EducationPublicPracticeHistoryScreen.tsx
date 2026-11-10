@@ -62,7 +62,7 @@ export default function EducationPublicPracticeHistoryScreen() {
             <Ionicons name="footsteps-outline" size={44} color={theme.violetDeep} />
             <Text accessibilityRole="header" style={styles.emptyTitle}>{copy.locale.startsWith('zh') ? '从第一小步开始' : 'Start with one small step'}</Text>
             <Text style={styles.body}>{copy.publicPracticeHistoryEmpty}</Text>
-            <LearningButton label={copy.locale.startsWith('zh') ? '探索课程' : 'Explore courses'} onPress={() => router.push('/learn' as Href)} />
+            <LearningButton label={copy.locale.startsWith('zh') ? '探索课程' : 'Explore courses'} onPress={() => router.navigate('/discover' as Href)} />
           </View>}
           renderItem={({ item }) => {
             const date = new Date(item.lastAnsweredAtUtc);

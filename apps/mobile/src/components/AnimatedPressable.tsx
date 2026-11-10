@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, PressableProps, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { cssInterop } from 'nativewind';
 import Animated, {
@@ -18,6 +18,7 @@ interface AnimatedPressableProps extends PressableProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   containerStyle?: StyleProp<ViewStyle>;
+  pressedStyle?: StyleProp<ViewStyle>;
   className?: string;
   /** Trigger the action on touch-down for controls that must work above the keyboard. */
   pressOnIn?: boolean;
@@ -29,6 +30,7 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   children,
   style,
   containerStyle,
+  pressedStyle,
   onPress,
   pressOnIn = false,
   lively = false,
@@ -36,6 +38,7 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   accessibilityRole = 'button',
   ...rest
 }) => {
+  const [pressed, setPressed] = useState(false);
   const scale = useSharedValue(1);
   const reduceMotion = useReducedMotion();
   const arrival = useSharedValue(lively && !reduceMotion ? 0 : 1);
@@ -63,6 +66,26 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
       Object.assign(wrapperLayout, { [key]: pressableLayout[key] });
     }
   }
+  // Flex belongs to the animated wrapper in the parent's layout. Applying it
+  // again to the inner pressable treats a row's flexBasis as a column height.
+  const innerStyle = { ...pressableLayout };
+  delete innerStyle.flex;
+  delete innerStyle.flexGrow;
+  delete innerStyle.flexShrink;
+  delete innerStyle.flexBasis;
+  // A relative dimension is resolved by the outer slot once. Reapplying e.g.
+  // 48.5% inside it would shrink a two-column card to a quarter of the row.
+  for (const key of ['width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight'] as const) {
+    const value = innerStyle[key];
+    if (typeof value === 'string' && value.endsWith('%') && wrapperLayout[key] === value) {
+      Object.assign(innerStyle, { [key]: '100%' });
+    }
+  }
+  // Fill an allocated card/button slot without reusing a percentage flexBasis
+  // as the inner column's height. This also keeps paired grid cards equal.
+  if ((wrapperLayout.flex ?? 0) > 0 || (wrapperLayout.flexGrow ?? 0) > 0) {
+    innerStyle.flexGrow = 1;
+  }
   const firePress = (event: Parameters<NonNullable<PressableProps['onPress']>>[0]) => {
     onPress?.(event);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -74,12 +97,16 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
         {...rest}
         {...classNameProps}
         accessibilityRole={accessibilityRole}
-        style={style}
+        style={[innerStyle, pressed && pressedStyle]}
         onPressIn={(e) => {
+          if (pressedStyle) setPressed(true);
+          rest.onPressIn?.(e);
           if (!reduceMotion) scale.value = withSpring(0.96, { stiffness: 300 });
           if (pressOnIn) firePress(e);
         }}
-        onPressOut={() => {
+        onPressOut={(e) => {
+          if (pressedStyle) setPressed(false);
+          rest.onPressOut?.(e);
           if (!reduceMotion) scale.value = withSpring(1);
         }}
         onPress={(e) => {

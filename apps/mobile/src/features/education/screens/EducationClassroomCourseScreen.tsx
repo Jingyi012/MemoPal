@@ -84,7 +84,7 @@ export default function EducationClassroomCourseScreen() {
           <AnimatedPressable accessibilityRole="button" onPress={() => void progress.refetch()} style={styles.action}><Text style={styles.actionText}>{copy.retry}</Text></AnimatedPressable>
         </View>
           : <>
-            <LearningArrival style={[ls.card, { backgroundColor: subject.tint, borderColor: subject.line }]}><View style={ls.row}><SubjectArtwork theme={subject} /><View style={{ flex: 1, gap: 6 }}><Text numberOfLines={1} style={ls.title}>{progress.data.courseTitle}</Text><Text style={ls.body}>{ui.correct(solved, total)}</Text></View></View><LearningProgress value={solved} total={total} /></LearningArrival>
+            <LearningArrival style={ls.card}><View style={ls.row}><SubjectArtwork theme={subject} /><View style={{ flex: 1, gap: 6 }}><Text numberOfLines={1} style={ls.title}>{progress.data.courseTitle}</Text><Text style={ls.body}>{ui.correct(solved, total)}</Text></View></View><LearningProgress value={solved} total={total} /></LearningArrival>
             <Text accessibilityRole="header" style={styles.sectionTitle}>{copy.classroomLearningLessons}</Text>
             {lessons.length === 0 ? <Text style={styles.body}>{copy.classroomLearningNoLessons}</Text> : lessons.map(lesson => {
               const active = selected?.assessmentId === lesson.assessmentId;

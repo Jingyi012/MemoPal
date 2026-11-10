@@ -3,9 +3,9 @@ import { createLearningStyles, learningTypography as type } from '../theme/learn
 
 export const useDraftStyles = createLearningStyles(t => StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 24, gap: 14 },
-  card: { backgroundColor: t.paper, borderRadius: 20, borderColor: t.line, borderWidth: 1.5, borderBottomWidth: 4, padding: 14, gap: 12 },
+  card: { backgroundColor: t.paper, borderRadius: 20, borderColor: t.line, borderWidth: 1, padding: 14, gap: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { color: t.ink, fontFamily: type.displayExtraBold, fontSize: 21, lineHeight: 28 },
+  title: { color: t.ink, fontFamily: type.displayExtraBold, fontWeight: '800', fontSize: 21, lineHeight: 28 },
   heading: { color: t.ink, fontFamily: type.bodyExtraBold, fontSize: 16, lineHeight: 23 },
   body: { color: t.ink, fontFamily: type.bodyBold, fontSize: 14, lineHeight: 21 },
   small: { color: t.inkSoft, fontFamily: type.bodySemibold, fontSize: 12, lineHeight: 18 },

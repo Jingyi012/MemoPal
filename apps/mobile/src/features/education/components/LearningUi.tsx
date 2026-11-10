@@ -63,7 +63,7 @@ export function LearningButton({ label, onPress, disabled, secondary = false, lo
 }) {
   const { theme: palette, styles } = useLearningStyles();
   return <AnimatedPressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled: !!disabled || loading, busy: loading }} disabled={disabled || loading} onPress={onPress}
-    style={[styles.button, { minHeight: compact ? learningLayout.compactControlHeight : learningLayout.controlHeight, paddingHorizontal: compact ? 11 : 20, backgroundColor: disabled ? palette.disabled : tone === 'white' ? palette.heroSurface : secondary ? palette.paper : tone === 'success' ? palette.successText : tone === 'danger' ? palette.berryDeep : palette.violetDeep, borderColor: disabled ? palette.disabledShadow : secondary ? palette.line : tone === 'white' ? palette.heroSurfaceBorder : tone === 'success' ? palette.successShadow : tone === 'danger' ? palette.berryDeep : palette.primaryShadow }, secondary && { borderWidth: 2, borderBottomWidth: 6 }]}>
+    style={[styles.button, { minHeight: compact ? learningLayout.compactControlHeight : learningLayout.controlHeight, paddingHorizontal: compact ? 11 : 20, backgroundColor: disabled ? palette.disabled : tone === 'white' ? palette.heroSurface : secondary ? palette.paper : tone === 'success' ? palette.successText : tone === 'danger' ? palette.berryDeep : palette.violetDeep, borderColor: disabled ? palette.disabledShadow : secondary ? palette.line : tone === 'white' ? palette.heroSurfaceBorder : tone === 'success' ? palette.successShadow : tone === 'danger' ? palette.berryDeep : palette.primaryShadow }, secondary && { borderWidth: 1, borderBottomWidth: 1 }]}>
     <Text style={[styles.buttonText, { fontSize: compact || secondary || tone === 'white' ? 14 : 16, color: disabled ? palette.inkSoft : tone === 'white' ? palette.heroSurfaceInk : secondary ? palette.violetDeep : palette.onAccent }]}>{loading ? '…' : label}</Text>
   </AnimatedPressable>;
 }
@@ -134,7 +134,7 @@ export function LearningLoadingView({ description }: { description?: string }) {
 }
 export const useLearningStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas }, content: { padding: learningLayout.pagePadding, gap: 14, paddingBottom: 24 },
-  card: { backgroundColor: theme.paper, borderRadius: learningLayout.cardRadius, borderWidth: 2, borderBottomWidth: learningLayout.cardDepth, borderColor: theme.line, padding: 14, gap: 10 },
+  card: { backgroundColor: theme.paper, borderRadius: learningLayout.cardRadius, borderWidth: 1, borderColor: theme.line, padding: 14, gap: 10 },
   courseHero: { borderRadius: 26, padding: 16, gap: 14, overflow: 'hidden' },
   memoryCard: { borderRadius: 26, padding: 16, gap: 12, overflow: 'hidden' },
   resultHero: { alignItems: 'center', borderRadius: 30, gap: 8, minHeight: 245, justifyContent: 'center', overflow: 'hidden', padding: 22 },

@@ -1,6 +1,1 @@
-import { HomeScreen } from '@/features/home';
-import React from 'react';
-
-export default function Home() {
-  return <HomeScreen />;
-}
+export { default } from '@/features/education/screens/LearningDashboardScreen';

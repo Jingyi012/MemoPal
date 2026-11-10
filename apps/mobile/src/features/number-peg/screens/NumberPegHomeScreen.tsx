@@ -56,7 +56,7 @@ export default function NumberPegHomeScreen() {
 
   return (
     <View style={styles.page}>
-      <CommonHeader
+      <CommonHeader showAiCredits={false}
         eyebrow={t('eyebrow')}
         title={t('title')}
         description={t('description')}
@@ -177,13 +177,13 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  sectionEyebrow: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 1.1 },
+  sectionEyebrow: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 1.1 },
   sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, marginTop: 3 },
   sectionHeadingCopy: { flex: 1, paddingRight: 10 },
   seeAllButton: { minHeight: 38, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: theme.violetTint, borderWidth: 1, borderColor: theme.violetLine, paddingLeft: 11, paddingRight: 7 },
   seeAllText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   viewAllButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 999, borderWidth: 1, flexDirection: 'row', gap: 1, minHeight: 40, paddingLeft: 11, paddingRight: 7 },
-  viewAllButtonText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
+  viewAllButtonText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   memoryPreviewList: { gap: 8 },
   anchorCard: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 22, borderWidth: 1.5, gap: 14, padding: 15, shadowColor: theme.ink, shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
   anchorSummary: { alignItems: 'center', flexDirection: 'row', gap: 12 },
@@ -191,10 +191,10 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   ringLabel: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 13, position: 'absolute' },
   anchorSummaryCopy: { flex: 1, gap: 3 },
   anchorSummaryTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 },
-  anchorSummaryBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, lineHeight: 15 },
+  anchorSummaryBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 15 },
   anchorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   anchorTile: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 14, flexBasis: '31%', flexGrow: 1, gap: 2, minHeight: 77, paddingHorizontal: 5, paddingVertical: 7, position: 'relative' },
-  anchorNumber: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9, left: 7, position: 'absolute', top: 5 },
+  anchorNumber: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, left: 7, position: 'absolute', top: 5 },
   anchorEmoji: { fontSize: 25, lineHeight: 30, marginTop: 3 },
   anchorName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 9.5, maxWidth: '100%' },
   moreAnchorsTile: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.violetLine, borderRadius: 14, borderStyle: 'dashed', borderWidth: 1.5, flexBasis: '31%', flexGrow: 1, justifyContent: 'center', minHeight: 77, paddingHorizontal: 5 },

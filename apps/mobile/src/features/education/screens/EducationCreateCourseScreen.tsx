@@ -170,7 +170,7 @@ function CourseDraftEditor() {
         <Text style={s.title}>{mutation.data.readyToLearn ? (zh ? '学习内容已保存' : 'Study content saved') : (zh ? '草稿已暂存' : 'Draft saved')}</Text>
         <Text style={s.small}>{zh ? `${units.length} 个单元 · ${mutation.data.studyItemCount} 张卡片 · 仅自己可见` : `${units.length} units · ${mutation.data.studyItemCount} cards · Private`}</Text>
         {mutation.data.readyToLearn ? <LearningButton label={zh ? '开始学习' : 'Start learning'} onPress={() => router.replace(`/education/my-courses/${mutation.data.courseId}?start=1` as Href)} /> : <LearningButton label={zh ? '继续编辑' : 'Keep editing'} onPress={() => { mutation.reset(); setStep(1); }} />}
-        <LearningButton secondary label={zh ? '我的学习内容' : 'My study content'} onPress={() => router.replace('/education/my-courses' as Href)} />
+        <LearningButton secondary label={zh ? '我的学习资料' : 'My learning library'} onPress={() => router.replace('/(tabs)/learn' as Href)} />
       </View> : <>
         <View style={[s.row, { justifyContent: 'space-between', marginBottom: 8 }]}>
           {(zh ? ['基本信息', '添加词语', '预览'] : ['Basics', 'Add words', 'Preview']).map((label, index) => <View key={label} style={[s.row, { flex: 1, gap: 4 }]}>

@@ -1,3 +1,5 @@
+import { ActionMenuSheet } from '@/components/ActionMenuSheet';
+import { useLearningActivity } from '../hooks/useLearningActivity';
 import { LearningIconButton } from '../components/LearningIconButton';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
@@ -16,16 +18,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEducationGuidedCourseProgress, useEducationPublicCourse, useEducationPublicCourseSave, useReportEducationCourse, useStartOrResumeEducationGuidedSession } from '@/features/education/hooks/useEducationPracticeItems';
 import * as Linking from 'expo-linking';
 import { Stack, Href, Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { Flag } from '@/core/icons';
+import { Share2, Flag } from '@/core/icons';
 import { Modal, Share, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useReducedMotion } from 'react-native-reanimated';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthProvider';
 
 export default function EducationPublicCourseScreen() {
-  const { courseId = '' } = useLocalSearchParams<{ courseId: string }>();
-  const { styles: ls, theme: palette } = useLearningStyles();
+  const { courseId = '', resume } = useLocalSearchParams<{ courseId: string; resume?: string }>();
+  const { styles: ls } = useLearningStyles();
   const copy = useEducationCopy();
   const ui = useLearningCopy();
   const reduceMotion = useReducedMotion();
@@ -43,6 +45,19 @@ export default function EducationPublicCourseScreen() {
   const guidedProgress = useEducationGuidedCourseProgress(courseId);
   const startGuided = useStartOrResumeEducationGuidedSession();
   const { user } = useAuth();
+  const activity = useLearningActivity();
+  const autoResumed = useRef('');
+  const resumeAction = useRef<(() => void) | null>(null);
+  resumeAction.current = () => {
+    const id = guidedProgress.data?.nextRecommendedAssessmentId ?? course.data?.assessments[0]?.id;
+    if (id) void openGuidedLesson(id);
+  };
+  useEffect(() => {
+    const identity = `${user?.id}:${courseId}`;
+    if (resume !== '1' || user?.accountMode === 'RestrictedLearner' || !course.data || !guidedProgress.isSuccess || activity.isLoading || !focused || autoResumed.current === identity) return;
+    autoResumed.current = identity;
+    resumeAction.current?.();
+  }, [resume, user?.id, user?.accountMode, courseId, course.data, guidedProgress.isSuccess, activity.isLoading, focused]);
   const userIdRef = useRef(user?.id);
   const courseRefreshRef = useRef(course.refetch);
   const progressRefreshRef = useRef(guidedProgress.refetch);
@@ -128,24 +143,24 @@ export default function EducationPublicCourseScreen() {
           {!reading.finished ? <LearningIconButton variant="plain" icon="close" label={ui.close} onPress={() => setStudyPrelude(null)} /> : null}
         </View>
         {studyPrelude && preludeObjective ? <LearningStudySession key={preludeObjective.id} objective={preludeObjective}
-          reading={reading} onReadingChange={setReading}
+          reading={reading} onReadingChange={value => { setReading(value); activity.touch({ source: 'public', courseId, sectionId: preludeObjective.id, lessonId: studyPrelude.assessmentId, position: value.position, finished: value.finished }); }}
           practiceQuestionCount={lessons.find(lesson => lesson.assessmentId === studyPrelude.assessmentId)?.questionCount}
           practiceTitle={lessons.find(lesson => lesson.assessmentId === studyPrelude.assessmentId)?.assessmentTitle}
           finishLabel={studyPrelude.index < studyPrelude.objectiveIds.length - 1 ? (ui.zh ? '学习下一个知识点' : 'Discover the next study point') : undefined}
           onFinish={() => {
-            if (studyPrelude.index < studyPrelude.objectiveIds.length - 1) { setReading({ position: 0, finished: false }); setStudyPrelude({ ...studyPrelude, index: studyPrelude.index + 1 }); }
+            if (studyPrelude.index < studyPrelude.objectiveIds.length - 1) {
+              activity.touch({ source: 'public', courseId, lessonId: studyPrelude.assessmentId, sectionId: studyPrelude.objectiveIds[studyPrelude.index + 1], position: 0, finished: false });
+              setReading({ position: 0, finished: false }); setStudyPrelude({ ...studyPrelude, index: studyPrelude.index + 1 });
+            }
             else { setStudyPrelude(null); void openGuidedLesson(studyPrelude.assessmentId, true); }
           }}
           onMemory={id => router.push(`/community/education/${encodeURIComponent(courseId)}/memory?memorySetId=${encodeURIComponent(id)}` as Href)} /> : null}
       </View>
     </Modal>
-    <Modal transparent visible={menuOpen} animationType={reduceMotion ? 'none' : 'fade'} onRequestClose={() => setMenuOpen(false)}>
-      <View style={{ flex: 1, backgroundColor: palette.scrim, justifyContent: 'flex-end', padding: 20, paddingBottom: Math.max(20, insets.bottom) }}><View style={ls.card}>
-        <LearningButton secondary label={copy.sharePublicCourse} onPress={shareCourse} />
-        <LearningButton secondary label={copy.reportPublicCourse} onPress={() => { setMenuOpen(false); setReportOpen(true); }} />
-        <LearningButton secondary label={ui.close} onPress={() => setMenuOpen(false)} />
-      </View></View>
-    </Modal>
+    <ActionMenuSheet visible={menuOpen} title={course.data?.title ?? ui.more} onClose={() => setMenuOpen(false)} actions={[
+      { label: copy.sharePublicCourse, icon: Share2, onPress: shareCourse },
+      { label: copy.reportPublicCourse, icon: Flag, onPress: () => setReportOpen(true) },
+    ]} />
     {course.data ? <ConfirmModal
       visible={reportOpen}
       icon={<Flag size={25} color={theme.berryDeep} />}
@@ -197,10 +212,18 @@ export default function EducationPublicCourseScreen() {
   async function openGuidedLesson(assessmentId: string, skipStudy = false, studiedObjectiveId?: string) {
     const userId = user?.id;
     if (!userId || startGuided.isPending || startInFlightRef.current) return;
+    activity.touch({ source: 'public', courseId });
     const lesson = lessons.find(item => item.assessmentId === assessmentId);
     if (!skipStudy && lesson && !lesson.isStarted) {
       const objectiveIds = studyObjectivesForLesson(course.data?.objectives ?? [], lesson, studiedObjectiveId);
-      if (objectiveIds.length) { setReading({ position: 0, finished: false }); setStudyPrelude({ assessmentId, objectiveIds, index: 0 }); return; }
+      if (objectiveIds.length) {
+        const last = activity.data?.find(item => item.source === 'public' && item.courseId === courseId && item.lessonId === assessmentId);
+        const index = Math.max(0, objectiveIds.indexOf(last?.sectionId ?? ''));
+        const objective = course.data?.objectives.find(item => item.id === objectiveIds[index]);
+        setReading({ position: Math.min(last?.position ?? 0, Math.max(0, (objective?.studyItems.length ?? 1) - 1)), finished: last?.finished ?? false });
+        activity.touch({ source: 'public', courseId, sectionId: objectiveIds[index], lessonId: assessmentId, position: Math.min(last?.position ?? 0, Math.max(0, (objective?.studyItems.length ?? 1) - 1)), finished: last?.finished ?? false });
+        setStudyPrelude({ assessmentId, objectiveIds, index }); return;
+      }
     }
     startInFlightRef.current = true;
     const epoch = screenEpochRef.current;

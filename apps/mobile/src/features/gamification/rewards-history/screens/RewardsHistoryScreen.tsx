@@ -1,5 +1,6 @@
 import { createThemedStyles } from '@/theme/createThemedStyles';
-import AnimatedPressable from '@/components/AnimatedPressable';
+import { LearningChoiceMenu } from '@/features/education/components/LearningChoiceMenu';
+import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -16,9 +17,10 @@ type TimelineEntry = { id: string; type: Exclude<RewardFilter, 'all'>; title: st
 export default function RewardsHistoryScreen() {
   const { styles } = useStyles();
   const router = useRouter();
-  const { t } = useTranslation('rewards');
-  const { events: xpEvents, isLoading: isLoadingXp } = useXpEvents({ recentDays: 30 });
-  const { milestones, isLoading: isLoadingMilestones } = useMilestones();
+  const { t, language } = useTranslation('rewards');
+  const zh = language === 'zh';
+  const { events: xpEvents, isLoading: isLoadingXp, isError: xpError, refetch: refetchXp } = useXpEvents({ recentDays: 30 });
+  const { milestones, isLoading: isLoadingMilestones, isError: milestonesError, refetch: refetchMilestones } = useMilestones();
   const [filter, setFilter] = useState<RewardFilter>('all');
 
   const timeline = useMemo<TimelineEntry[]>(() => {
@@ -51,7 +53,8 @@ export default function RewardsHistoryScreen() {
     return [...result.entries()];
   }, [filtered, t]);
 
-  if (isLoadingXp || isLoadingMilestones) return <LoadingView />;
+  const loading = isLoadingXp || isLoadingMilestones;
+  const hasError = (filter !== 'milestone' && xpError) || (filter !== 'xp' && milestonesError);
   const filters: { key: RewardFilter; label: string }[] = [
     { key: 'all', label: t('all') }, { key: 'xp', label: 'XP' }, { key: 'milestone', label: t('milestones') },
   ];
@@ -60,15 +63,13 @@ export default function RewardsHistoryScreen() {
     <View style={styles.page}>
       <CommonHeader title={t('title')} description={t('description')} backAction={() => router.back()} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.filterRow}>
-          {filters.map((item) => (
-            <AnimatedPressable key={item.key} accessibilityRole="button" onPress={() => setFilter(item.key)} style={[styles.filter, filter === item.key && styles.filterActive]}>
-              <Text style={[styles.filterText, filter === item.key && styles.filterTextActive]}>{item.label}</Text>
-            </AnimatedPressable>
-          ))}
-        </View>
-        <Text style={styles.windowNote}>{t('latestThirtyDays')}</Text>
-        {groups.length === 0 ? (
+        <LearningChoiceMenu value={filter} onChange={value => setFilter(value as RewardFilter)}
+          title={zh ? '奖励类型' : 'Reward type'} options={filters.map(item => ({ value: item.key, label: item.label }))} />
+        <Text style={styles.windowNote}>{zh ? 'XP：最近 30 天 · 里程碑：全部已达成' : 'XP: last 30 days · Milestones: all achieved'}</Text>
+        {hasError ? <View style={styles.notice}><ModuleNoticeCard title={zh ? '部分记录暂时无法加载' : 'Some rewards could not load'}
+          body={zh ? '已加载的记录仍会保留，重试即可更新。' : 'Loaded rewards remain available. Retry to update the history.'}
+          actionLabel={zh ? '重试' : 'Retry'} onAction={() => Promise.all([refetchXp(), refetchMilestones()])} /></View> : null}
+        {loading ? <LoadingView /> : !hasError && groups.length === 0 ? (
           <View style={styles.emptyCard}>
             <Text style={styles.emptyEmoji}>🌱</Text><Text style={styles.emptyTitle}>{t('emptyTitle')}</Text><Text style={styles.emptyBody}>{t('emptyBody')}</Text>
           </View>
@@ -103,12 +104,11 @@ function dayLabel(iso: string, todayLabel: string, yesterdayLabel: string) {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 48 }, filterRow: { flexDirection: 'row', gap: 8 },
-  filter: { minHeight: 38, borderRadius: 999, backgroundColor: theme.peachTint, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' }, filterActive: { backgroundColor: theme.violetDeep },
-  filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11.5 }, filterTextActive: { color: theme.onAccent}, windowNote: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 9 },
-  group: { marginTop: 20 }, day: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }, list: { gap: 9 },
-  rewardCard: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 17, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 12 },
+  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 48 }, notice: { marginTop: 16 },
+  windowNote: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, marginTop: 4 },
+  group: { marginTop: 20 }, day: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 13, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }, list: { gap: 9 },
+  rewardCard: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 17, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, padding: 12 },
   icon: { width: 40, height: 40, borderRadius: 13, backgroundColor: theme.skyTint, alignItems: 'center', justifyContent: 'center' }, milestoneIcon: { backgroundColor: theme.sunTint }, emoji: { fontSize: 19 }, copy: { flex: 1, minWidth: 0 },
-  rewardTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5 }, rewardSubtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 2 }, time: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: 9.5, marginTop: 4 }, points: { color: theme.successText, fontFamily: typography.displayExtraBold, fontSize: 11.5 },
-  emptyCard: { alignItems: 'center', marginTop: 24, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 24 }, emptyEmoji: { fontSize: 28 }, emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 8 }, emptyBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, textAlign: 'center', marginTop: 4 },
+  rewardTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, lineHeight: 21 }, rewardSubtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, marginTop: 3 }, time: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: 12, marginTop: 4 }, points: { color: theme.successText, fontFamily: typography.displayExtraBold, fontSize: 13 },
+  emptyCard: { alignItems: 'center', marginTop: 24, borderRadius: 18, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, padding: 24 }, emptyEmoji: { fontSize: 28 }, emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 8 }, emptyBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 4 },
 }));
