@@ -1,4 +1,4 @@
-import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
+import { createLearningStyles as createThemedStyles, learningTypography as typography, learningLayout, learningTypeScale } from '@/features/education/theme/learningTheme';
 import { createContext, useContext } from 'react';
 import { StyleSheet } from 'react-native';
 import type { EducationAttemptAnswerDto } from '../../types/question.types';
@@ -19,8 +19,7 @@ export const useQuestionInputStyles = createThemedStyles((theme) =>
     prompt: {
       color: theme.ink,
       fontFamily: typography.bodyExtraBold,
-      fontSize: 23,
-      lineHeight: 31,
+      ...learningTypeScale.prompt,
     },
     hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18 },
     options: {
@@ -30,23 +29,23 @@ export const useQuestionInputStyles = createThemedStyles((theme) =>
       alignItems: 'center',
       backgroundColor: theme.paper,
       borderColor: theme.line,
-      borderRadius: 20,
-      borderWidth: 2,
-      borderBottomWidth: 5,
+      borderRadius: learningLayout.buttonRadius,
+      borderWidth: learningLayout.borderWidth,
+      borderBottomWidth: learningLayout.optionDepth,
       flexDirection: 'row',
       gap: 12,
-      minHeight: 60,
+      minHeight: 58,
       paddingHorizontal: 14,
-      paddingVertical: 15,
+      paddingVertical: 12,
     },
     optionSelected: {
       backgroundColor: theme.violetTint,
       borderColor: theme.violetDeep,
       transform: [{ translateY: -2 }],
     },
-    optionCorrect: { backgroundColor: theme.mintTint, borderColor: theme.successText, borderBottomColor: theme.mintLine },
-    optionIncorrect: { backgroundColor: theme.berryTint, borderColor: theme.berryDeep, borderBottomColor: theme.berryLine },
-    marker: { alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 10, borderWidth: 2, borderColor: theme.line },
+    optionCorrect: { backgroundColor: theme.mintTint, borderColor: theme.successText, borderBottomColor: theme.successText },
+    optionIncorrect: { backgroundColor: theme.berryTint, borderColor: theme.berryDeep, borderBottomColor: theme.berryDeep },
+    marker: { alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 10, backgroundColor: theme.violetTint, borderWidth: 0, borderColor: theme.line },
     markerSelected: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
     markerText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
     // Keep the chosen answer readable after submission. The native disabled
@@ -98,7 +97,7 @@ export const useQuestionInputStyles = createThemedStyles((theme) =>
       color: theme.ink,
       fontFamily: typography.bodySemibold,
       fontSize: 17,
-      minHeight: 60,
+      minHeight: 58,
       paddingHorizontal: 14,
       paddingVertical: 10,
     },

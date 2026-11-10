@@ -6,7 +6,7 @@ import { useHelpFaqConfig } from '@/features/support/hooks/useHelpFaqConfig';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
@@ -56,10 +56,10 @@ export default function Support() {
   };
 
   return (
-    <View style={styles.page}>
-      <CommonHeader title={t('title')} description={undefined} backAction={() => router.back()} />
+    <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <CommonHeader title={t('title')} showAiCredits={false} backAction={() => router.back()} />
 
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
             <Text style={styles.heroEmoji}>💬</Text>
@@ -71,6 +71,7 @@ export default function Support() {
         </View>
 
         <TextInput
+          accessibilityLabel={t('subject')}
           value={subject}
           onChangeText={setSubject}
           placeholder={t('subject')}
@@ -79,6 +80,7 @@ export default function Support() {
         />
 
         <TextInput
+          accessibilityLabel={t('describeIssue')}
           value={message}
           onChangeText={setMessage}
           placeholder={t('describeIssue')}
@@ -90,21 +92,21 @@ export default function Support() {
         />
 
         <AppButton disabled={!supportEnabled} fullWidth label={supportButtonTitle} onPress={handleSend} size="large" />
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const useStyles = createThemedStyles((theme) =>
   StyleSheet.create({
     page: { backgroundColor: theme.canvas, flex: 1 },
-    content: { gap: 14, padding: 20 },
+    content: { gap: 16, padding: 16, paddingBottom: 32 },
     hero: {
       alignItems: 'center',
-      backgroundColor: theme.violetTint,
-      borderColor: theme.violetLine,
+      backgroundColor: theme.paper,
+      borderColor: theme.line,
       borderRadius: 24,
-      borderWidth: 1.5,
+      borderWidth: 1,
       padding: 20,
     },
     heroIcon: {

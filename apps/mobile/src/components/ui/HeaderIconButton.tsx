@@ -9,26 +9,25 @@ type Props = {
   accessibilityLabel: string;
   onPress?: () => void;
   children?: ReactNode;
+  disabled?: boolean;
+  selected?: boolean;
 };
 
-export function HeaderIconButton({ icon: Icon, accessibilityLabel, onPress, children }: Props) {
+export function HeaderIconButton({ icon: Icon, accessibilityLabel, onPress, children, disabled = false, selected = false }: Props) {
   const { theme, styles } = useStyles();
   return (
-    <AnimatedPressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} onPress={onPress} style={styles.button}>
-      {Icon ? <Icon size={21} strokeWidth={2.2} color={theme.violetDeep} /> : null}
+    <AnimatedPressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ disabled, selected }} disabled={disabled} onPress={onPress} pressedStyle={{ backgroundColor: theme.controlPressed }} style={[styles.button, disabled && { opacity: 0.45 }]}>
+      {Icon ? <Icon size={21} strokeWidth={2.2} color={theme.violetDeep} fill={selected ? theme.violetDeep : 'none'} /> : null}
       {children}
     </AnimatedPressable>
   );
 }
 
-const useStyles = createThemedStyles((theme) => StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   button: {
     width: 44,
     height: 44,
     borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: theme.violetLine,
-    backgroundColor: theme.violetTint,
     alignItems: 'center',
     justifyContent: 'center',
   },

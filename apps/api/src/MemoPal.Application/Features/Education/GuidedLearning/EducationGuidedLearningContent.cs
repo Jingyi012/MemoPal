@@ -22,7 +22,7 @@ internal static class EducationGuidedLearningContentReader
         var course = await ReadCourseAsync(db, userId, courseId, classroomId, ct);
         var assessment = await db.EducationAssessments.AsNoTracking().Include(item => item.Questions)
             .FirstOrDefaultAsync(item => item.Id == assessmentId && item.CourseId == course.Id &&
-                !item.IsDeleted && item.Status == EducationAssessmentStatuses.Published && item.IsPublicPractice, ct)
+                !item.IsDeleted && item.Status == EducationAssessmentStatuses.Published && (item.IsPublicPractice || course.UserId == userId), ct)
             ?? throw new NotFoundAppException("Public guided lesson not found.");
 
         var candidates = assessment.Questions
@@ -46,7 +46,7 @@ internal static class EducationGuidedLearningContentReader
         if (classroomId is not null)
             return await EducationClassroomGuidedLearningAccess.RequireCourseAsync(db, userId, classroomId, courseId, ct);
         return await db.EducationCourses.AsNoTracking().FirstOrDefaultAsync(item =>
-            item.Id == courseId && item.IsPublic && !item.IsModerationHidden && !item.IsDeleted && item.PubliclyPublishedAt != null, ct)
+            item.Id == courseId && !item.IsModerationHidden && !item.IsDeleted && ((item.IsPublic && item.PubliclyPublishedAt != null) || item.UserId == userId), ct)
             ?? throw new NotFoundAppException("Public course not found.");
     }
 

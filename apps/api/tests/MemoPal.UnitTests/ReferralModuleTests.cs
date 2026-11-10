@@ -3,6 +3,7 @@ using MemoPal.Application.Common.Settings;
 using MemoPal.Application.Features.Referrals.Commands;
 using MemoPal.Application.Features.Referrals.DTOs;
 using MemoPal.Application.Features.Referrals.Queries;
+using MemoPal.Application.Features.Referrals;
 using MemoPal.Domain.Common;
 using MemoPal.Domain.Entities;
 using MemoPal.Infrastructure.Persistence;
@@ -56,8 +57,16 @@ public sealed class ReferralModuleTests
 
         Assert.True(response.Success);
         Assert.NotNull(response.Data);
-        Assert.True(response.Data!.InviterAwardedXp > 0);
-        Assert.True(response.Data.InviteeAwardedXp > 0);
+        Assert.Equal(0, response.Data!.InviterAwardedXp);
+        Assert.Equal(0, response.Data.InviteeAwardedXp);
+        Assert.Equal(180, response.Data.InviterAwardedAiCredits);
+        Assert.Equal(40, response.Data.InviteeAwardedAiCredits);
+        Assert.Empty(await db.XpEvents.ToListAsync());
+        Assert.Equal(0, referrer.TotalXp);
+        Assert.Equal(0, invitee.TotalXp);
+        Assert.Equal(180, await db.AiCreditGrants.Where(x => x.UserId == referrer.Id).SumAsync(x => x.Remaining));
+        Assert.Equal(40, await db.AiCreditGrants.Where(x => x.UserId == invitee.Id).SumAsync(x => x.Remaining));
+        Assert.Equal(3, await db.AiCreditEntries.CountAsync(x => x.Kind == "referral-reward"));
 
         var referralRecord = await db.ReferralRecords.SingleAsync(x => x.RefereeUserId == invitee.Id);
         Assert.Equal(referrer.Id, referralRecord.ReferrerUserId);
@@ -79,11 +88,75 @@ public sealed class ReferralModuleTests
         Assert.Single(referrerNotifications);
         Assert.Equal("referral", referrerNotifications[0].Type);
         Assert.Equal(referralRecord.Id, referrerNotifications[0].ReferenceId);
+        Assert.Contains("180 AI credits", referrerNotifications[0].Body);
+        Assert.DoesNotContain("XP", referrerNotifications[0].Body);
 
         await Assert.ThrowsAsync<ValidationAppException>(() =>
             handler.Handle(
                 new RedeemReferralCodeCommand(invitee.Id, new RedeemReferralRequest { Code = "REF12345" }),
                 default));
+        Assert.Equal(3, await db.AiCreditGrants.CountAsync());
+        Assert.Equal(3, await db.AiCreditEntries.CountAsync());
+
+        var summary = (await new GetReferralSummaryQueryHandler(db).Handle(new(referrer.Id), default)).Data!;
+        Assert.Equal(180, summary.TotalAiCreditsEarned);
+        Assert.Equal(0, summary.TotalXpEarned);
+    }
+
+    [Fact]
+    public void LegacySettings_ConvertFutureRewardsOneForOne_AndExplicitZeroCreditsStayZero()
+    {
+        var legacy = ReferralProgramConfigSerializer.ParseOrDefault("""
+            {"inviterRewardXp":31,"inviteeRewardXp":17,"milestones":[
+              {"key":"custom","title":"Custom","referralsRequired":2,"rewardXp":9,"rewardLabel":"9 XP"}
+            ]}
+            """);
+        Assert.Equal(31, legacy.InviterRewardAiCredits);
+        Assert.Equal(17, legacy.InviteeRewardAiCredits);
+        Assert.Equal(0, legacy.InviterRewardXp);
+        Assert.Equal(9, legacy.Milestones.Single().RewardAiCredits);
+        Assert.Null(legacy.Milestones.Single().RewardLabel);
+        var updated = ReferralProgramConfigSerializer.ParseOrDefault("""
+            {"inviterRewardXp":80,"inviterRewardAiCredits":0,"inviteeRewardAiCredits":-5,
+             "milestones":[{"key":"custom","rewardXp":100,"rewardAiCredits":0}]}
+            """);
+        Assert.Equal(0, updated.InviterRewardAiCredits);
+        Assert.Equal(0, updated.InviteeRewardAiCredits);
+        Assert.Equal(0, updated.Milestones.Single().RewardAiCredits);
+        Assert.Equal(0, updated.Milestones.Single().RewardXp);
+    }
+
+    [Fact]
+    public async Task ReferralCapAndMilestoneHistory_DoNotGrantCreditsTwiceOrConvertPastXp()
+    {
+        await using var db = CreateDbContext();
+        var referrer = CreateUser("ref", "ref@example.test", "Referrer");
+        var first = CreateUser("first", "first@example.test", "First");
+        var second = CreateUser("second", "second@example.test", "Second");
+        referrer.TotalXp = 123;
+        db.Users.AddRange(referrer, first, second);
+        db.ReferralProfiles.Add(new() { Id = "profile", UserId = referrer.Id, ReferralCode = "CODE1234" });
+        db.ReferralMilestoneRewards.Add(new() { Id = "old-award", ReferrerUserId = referrer.Id,
+            MilestoneKey = "referral_1", ReferralsRequired = 1, RewardXp = 100, AwardedAt = DateTime.UtcNow });
+        var config = ReferralProgramConfigSerializer.GetDefault();
+        config.MaxSuccessfulReferralsPerUser = 1;
+        db.SystemSettings.Add(new() { Id = "config", Key = SystemSettingKeys.GrowthReferralProgramConfig,
+            Value = ReferralProgramConfigSerializer.Serialize(config) });
+        await db.SaveChangesAsync();
+        var handler = new RedeemReferralCodeCommandHandler(db);
+        var one = (await handler.Handle(new(first.Id, new() { Code = "CODE1234" }), default)).Data!;
+        var two = (await handler.Handle(new(second.Id, new() { Code = "CODE1234" }), default)).Data!;
+        Assert.Equal(80, one.InviterAwardedAiCredits);
+        Assert.Equal(0, two.InviterAwardedAiCredits);
+        Assert.Equal(40, two.InviteeAwardedAiCredits);
+        Assert.Empty(two.NewlyAwardedMilestones);
+        Assert.Equal(123, referrer.TotalXp);
+        Assert.Single(await db.ReferralMilestoneRewards.ToListAsync());
+        var summary = (await new GetReferralSummaryQueryHandler(db).Handle(new(referrer.Id), default)).Data!;
+        Assert.Equal(80, summary.TotalAiCreditsEarned);
+        Assert.Equal(100, summary.TotalXpEarned);
+        Assert.Equal(0, summary.Milestones.Single(x => x.Key == "referral_1").RewardAiCredits);
+        Assert.Equal(100, summary.Milestones.Single(x => x.Key == "referral_1").RewardXp);
     }
 
     [Fact]

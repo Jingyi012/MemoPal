@@ -1,6 +1,6 @@
 import { CommonHeader } from '@/components/CommonHeader';
 import { NumberPegItemCard } from '@/features/number-peg/components/NumberPegItemCard';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
 import { buildAllNumberPegItems, getUnlockedPegCount, MAX_NUMBER_PEGS } from '@/features/number-peg/utils/numberPegMap';
 import { useRouter } from 'expo-router';
@@ -12,6 +12,7 @@ import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
 export default function NumberPegMapScreen() {
+  const { styles } = useStyles();
   const router = useRouter();
   const { t } = useTranslation('numberPeg');
   const { user } = useCurrentUser();
@@ -21,7 +22,7 @@ export default function NumberPegMapScreen() {
 
   return (
     <View style={styles.page}>
-      <CommonHeader
+      <CommonHeader showAiCredits={false}
         eyebrow={t('eyebrow')}
         title={t('pegUnlocks')}
         description={t('levelDescription')}
@@ -75,11 +76,11 @@ export default function NumberPegMapScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 40 },
-  summaryCard: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 18, borderWidth: 2, borderColor: '#FFD9E2', backgroundColor: '#FFF0F4', padding: 13 },
-  summaryIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white' },
+  summaryCard: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 18, borderWidth: 2, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 13 },
+  summaryIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
   summaryEmoji: { fontSize: 22 },
   summaryCopy: { flex: 1 },
   summaryTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 14 },
@@ -89,9 +90,9 @@ const styles = StyleSheet.create({
   headingRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 25, marginBottom: 12 },
   eyebrow: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
   heading: { color: theme.ink, fontFamily: typography.display, fontSize: 18, marginTop: 3 },
-  lockPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, backgroundColor: '#F3F0FF', paddingHorizontal: 9, paddingVertical: 6 },
+  lockPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, backgroundColor: theme.violetTint, paddingHorizontal: 9, paddingVertical: 6 },
   lockEmoji: { fontSize: 12 },
-  lockPillText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  lockPillText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 9 },
   startButton: { marginTop: 20 },
-});
+}));

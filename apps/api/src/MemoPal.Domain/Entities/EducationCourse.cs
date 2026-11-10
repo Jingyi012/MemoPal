@@ -6,6 +6,10 @@ public sealed class EducationCourse : AuditableBaseEntity
 {
     public string UserId { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
+    public string? SubjectCode { get; set; }
+    public string? LearningStage { get; set; }
+    public string? LanguageCode { get; set; }
+    public int OutlineVersion { get; set; }
     public bool IsPublic { get; private set; }
     public DateTime? PubliclyPublishedAt { get; private set; }
     public string? NotConfidentialExamContentConfirmedByUserId { get; private set; }

@@ -50,10 +50,10 @@ export function ModuleNoticeCard({
 const createStyles = (theme: MemoPalTheme) => StyleSheet.create({
   card: {
     alignItems: 'center',
-    backgroundColor: theme.sunTint,
-    borderColor: theme.sunLine,
+    backgroundColor: theme.paper,
+    borderColor: theme.line,
     borderRadius: 26,
-    borderWidth: 2,
+    borderWidth: 1,
     padding: 24,
   },
   icon: {

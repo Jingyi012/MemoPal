@@ -7,9 +7,9 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 
 const PODIUM_ARTWORK = {
-  1: require('../../../../assets/images/leaderboard/podium-mascot-gold.png'),
-  2: require('../../../../assets/images/leaderboard/podium-mascot-silver.png'),
-  3: require('../../../../assets/images/leaderboard/podium-mascot-bronze.png'),
+  1: require('../../../../assets/images/leaderboard/podium-mascot-gold.webp'),
+  2: require('../../../../assets/images/leaderboard/podium-mascot-silver.webp'),
+  3: require('../../../../assets/images/leaderboard/podium-mascot-bronze.webp'),
 } as const;
 
 const PODIUM_LAYOUT = {

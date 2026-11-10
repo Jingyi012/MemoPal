@@ -6,7 +6,7 @@ import { useReducedMotion } from 'react-native-reanimated';
 export function CompanionReefBackdrop() {
   return <View pointerEvents="none" style={StyleSheet.absoluteFillObject}
     accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-    <Image source={require('../../../../assets/images/momo-reef-background.png')}
+    <Image source={require('../../../../assets/images/momo-reef-background.webp')}
       resizeMode="cover" style={styles.backdropImage} />
   </View>;
 }

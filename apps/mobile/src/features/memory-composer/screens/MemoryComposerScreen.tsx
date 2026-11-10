@@ -1,3 +1,6 @@
+import { AppBottomSheet } from '@/components/AppBottomSheet';
+import { HeaderIconButton } from '@/components/ui/HeaderIconButton';
+import { ContentImportActions } from '../components/ContentImportActions';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -5,7 +8,7 @@ import type { MemoryGoalType } from '@/features/memory-sets';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, ClipboardList, Plus, ScanText } from '@/core/icons';
+import { ArrowLeft, ArrowRight, Plus, CircleHelp } from '@/core/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { firstParam, parseBulkItems, parseComposerGoal, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
@@ -41,6 +44,7 @@ type MemoryComposerProps = {
 
 export default function MemoryComposerScreen({ initialTechnique, initialSceneId }: MemoryComposerProps = {}) {
   const { styles, theme } = useStyles();
+  const [helpOpen, setHelpOpen] = useState(false);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -56,7 +60,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
     description?: string | string[];
     predefinedLessonId?: string | string[];
   }>();
-  const { t } = useTranslation('memoryComposer');
+  const { t, language } = useTranslation('memoryComposer');
   const initialItems = useMemo(() => parseComposerItems(params.items), [params.items]);
   const sceneId = initialSceneId ?? firstParam(params.sceneId);
   const origin: ComposerOrigin = initialTechnique === 'palace' ? 'palace' : 'global';
@@ -222,7 +226,8 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
       <CommonHeader
         eyebrow={initialTechnique ? t(initialTechnique === 'palace' ? 'memoryPalaceName' : 'numberPegName') : t('eyebrow')}
         title={step === 'content' ? t('addContent') : t('pickTechnique')}
-        description={step === 'content' ? t('contentDescription') : t('techniqueDescription')}
+        showAiCredits={false}
+        titleAccessory={<HeaderIconButton icon={CircleHelp} accessibilityLabel={language === 'zh' ? '操作说明' : 'How this works'} onPress={() => { Keyboard.dismiss(); setHelpOpen(true); }} />}
         backAction={handleBack}
       />
 
@@ -312,28 +317,24 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
                   style={styles.addButton}
                 />
               </View>
-              <View style={styles.importActions}>
-                <AnimatedPressable
-                  accessibilityLabel={bulkMode ? t('hidePasteMany') : t('pasteManyAccessibility')}
-                  onPress={() => { setBulkMode((current) => !current); setMessage(null); }}
-                  style={[styles.importAction, bulkMode && styles.importActionSelected]}>
-                  <ClipboardList size={16} color={theme.violetDeep} strokeWidth={2.2} />
-                  <Text style={styles.importActionText}>{bulkMode ? t('addOne') : t('pasteMany')}</Text>
-                </AnimatedPressable>
-                <AnimatedPressable
-                  accessibilityLabel={t('scanFromPhotoAccessibility')}
-                  onPress={() => {
+              <ContentImportActions
+                paste={{
+                  label: bulkMode ? t('addOne') : t('pasteMany'),
+                  accessibilityLabel: bulkMode ? t('hidePasteMany') : t('pasteManyAccessibility'),
+                  onPress: () => { setBulkMode((current) => !current); setMessage(null); },
+                }}
+                scan={{
+                  label: t('scanFromPhoto'),
+                  accessibilityLabel: t('scanFromPhotoAccessibility'),
+                  onPress: () => {
                     const draftId = saveOcrDraft(itemValues, {
                       title: title.trim() || undefined,
                       goalType,
                     });
                     router.push(`/scan-memory?sourceDraftId=${encodeURIComponent(draftId)}` as Href);
-                  }}
-                  style={styles.importAction}>
-                  <ScanText size={16} color={theme.violetDeep} strokeWidth={2.2} />
-                  <Text style={styles.importActionText}>{t('scanFromPhoto')}</Text>
-                </AnimatedPressable>
-              </View>
+                  },
+                }}
+              />
               {bulkMode ? (
                 <View style={styles.bulkCard}>
                   <Text style={styles.bulkTitle}>{t('onePerLine')}</Text>
@@ -444,6 +445,12 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
           />
         </View>
       ) : null}
+      <AppBottomSheet visible={helpOpen} onClose={() => setHelpOpen(false)}>
+        <Text style={styles.sectionTitle}>{language === 'zh' ? '把内容变成记忆' : 'Make your content memorable'}</Text>
+        <Text style={styles.sectionSubtitle}>{language === 'zh' ? '1. 输入、粘贴或扫描想记住的内容。' : '1. Type, paste or scan what you want to remember.'}</Text>
+        <Text style={styles.sectionSubtitle}>{language === 'zh' ? '2. 选择记忆宫殿或数字挂钩，建立自己的联想。' : '2. Choose a palace or number pegs and create your associations.'}</Text>
+        <Text style={styles.sectionSubtitle}>{language === 'zh' ? '3. 保存后开始练习，并按复习提醒巩固。' : '3. Save, practise and return for scheduled reviews.'}</Text>
+      </AppBottomSheet>
     </KeyboardAvoidingView>
   );
 }
@@ -471,12 +478,10 @@ function TechniqueCard({ technique, recommended, onPress }: { technique: Techniq
         </View>
       </View>
       <View style={[styles.descriptionBox, isPeg ? styles.pegDescriptionBox : styles.palaceDescriptionBox]}>
-        <Text style={styles.descriptionLabel}>{t('whyItFits')}</Text>
         <Text style={[styles.techniqueDescription, isPeg ? styles.pegDescription : styles.palaceDescription]}>
           {isPeg ? t('numberPegDescription') : t('memoryPalaceDescription')}
         </Text>
       </View>
-      <View style={styles.bestForHeader}><Text style={styles.bestForLabel}>{t('bestFor')}</Text></View>
       <View style={styles.bestForRow}>
         {bestFor.map((label) => (
           <Text key={label} style={[styles.bestFor, isPeg ? styles.pegBestFor : styles.palaceBestFor]}>{label}</Text>
@@ -508,7 +513,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   section: { gap: 10 },
   sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16, lineHeight: 21 },
-  sectionSubtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 15, marginTop: 2 },
+  sectionSubtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21, marginTop: 2 },
   countPill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: theme.violetTint },
   countText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
   cardIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.berryTint },
@@ -516,14 +521,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   cardTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 10 },
   cardBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
   label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 },
-  importActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  importActionContainer: { flex: 1, minWidth: 0 },
-  importAction: { flex: 1, minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 999, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 8 },
-  importActionSelected: { borderColor: theme.berry, backgroundColor: theme.berryTint },
-  importActionIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  pasteIcon: { backgroundColor: theme.berryTint },
-  scanIcon: { backgroundColor: theme.violetTint },
-  importActionText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, lineHeight: 15, flexShrink: 1, textAlign: 'center' },
   bulkCard: { borderRadius: 15, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 10, marginBottom: 10 },
   bulkTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginBottom: 7 },
   bulkInput: { minHeight: 105, paddingTop: 12, textAlignVertical: 'top', backgroundColor: theme.paper },
@@ -550,12 +547,12 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   recommendationEmoji: { fontSize: 27 },
   recommendationTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   recommendationBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17, marginTop: 3 },
-  techniqueCard: { position: 'relative', borderWidth: 1.5, borderColor: theme.line, borderRadius: 22, backgroundColor: theme.paper, padding: 16, marginBottom: 13, shadowColor: theme.ink, shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  techniqueCard: { position: 'relative', borderWidth: 1.5, borderColor: theme.line, borderRadius: 22, backgroundColor: theme.paper, padding: 16, marginBottom: 0 },
   techniqueCardPeg: { borderColor: theme.berryLine, backgroundColor: theme.berryTint },
   techniqueCardPalace: { borderColor: theme.violetLine, backgroundColor: theme.violetTint },
   techniqueCardRecommended: { borderColor: theme.sunDeep, borderWidth: 2.5 },
   ribbon: { position: 'absolute', right: 13, top: -11, borderRadius: 999, backgroundColor: theme.sun, paddingHorizontal: 10, paddingVertical: 4, boxShadow: '0px 2px 4px rgba(43, 42, 61, 0.15)' },
-  ribbonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.4 },
+  ribbonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.4 },
   techniqueHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 },
   techniqueIcon: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },
   pegIcon: { backgroundColor: theme.paper, borderColor: theme.berryLine },
@@ -570,12 +567,12 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   descriptionBox: { borderRadius: 14, borderWidth: 1, paddingHorizontal: 11, paddingVertical: 9, marginTop: 14 },
   pegDescriptionBox: { backgroundColor: theme.paper, borderColor: theme.berryLine },
   palaceDescriptionBox: { backgroundColor: theme.paper, borderColor: theme.violetLine },
-  descriptionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.7, textTransform: 'uppercase', marginBottom: 3 },
+  descriptionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.7, textTransform: 'uppercase', marginBottom: 3 },
   techniqueDescription: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17 },
   pegDescription: { color: theme.berryDeep },
   palaceDescription: { color: theme.violetDeep },
   bestForHeader: { marginTop: 11 },
-  bestForLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 9, letterSpacing: 0.7, textTransform: 'uppercase' },
+  bestForLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.7, textTransform: 'uppercase' },
   bestForRow: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
   bestFor: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodyBold, fontSize: 10.5, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
   pegBestFor: { color: theme.berryDeep, borderColor: theme.berryLine },

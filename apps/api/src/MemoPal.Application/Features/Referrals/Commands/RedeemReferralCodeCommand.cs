@@ -75,9 +75,9 @@ public sealed class RedeemReferralCodeCommandHandler
         var canReceiveBaseReferrerReward = config.MaxSuccessfulReferralsPerUser <= 0
             || successfulReferrals < config.MaxSuccessfulReferralsPerUser;
 
-        var inviterRewardXp = canReceiveBaseReferrerReward ? Math.Max(0, config.InviterRewardXp) : 0;
+        var inviterRewardAiCredits = canReceiveBaseReferrerReward ? config.InviterRewardAiCredits : 0;
         var inviterRewardPremiumDays = canReceiveBaseReferrerReward ? Math.Max(0, config.InviterRewardPremiumDays) : 0;
-        var inviteeRewardXp = Math.Max(0, config.InviteeRewardXp);
+        var inviteeRewardAiCredits = config.InviteeRewardAiCredits;
         var inviteeRewardPremiumDays = Math.Max(0, config.InviteeRewardPremiumDays);
 
         var referralRecord = new ReferralRecord
@@ -87,9 +87,9 @@ public sealed class RedeemReferralCodeCommandHandler
             RefereeUserId = invitee.Id,
             ReferralCode = code,
             RedeemedAt = now,
-            InviterRewardXp = inviterRewardXp,
+            InviterRewardAiCredits = inviterRewardAiCredits,
             InviterRewardPremiumDays = inviterRewardPremiumDays,
-            InviteeRewardXp = inviteeRewardXp,
+            InviteeRewardAiCredits = inviteeRewardAiCredits,
             InviteeRewardPremiumDays = inviteeRewardPremiumDays,
             CreatedAt = now,
             UpdatedAt = now,
@@ -101,29 +101,8 @@ public sealed class RedeemReferralCodeCommandHandler
         invitee.ReferredByUserId = referrer.Id;
         invitee.UpdatedAt = now;
 
-        if (inviterRewardXp > 0)
-        {
-            await ApplyXpRewardAsync(
-                referrer,
-                inviterRewardXp,
-                ReferralXpSourceTypes.InviterReward,
-                referralRecord.Id,
-                $"referral:inviter:{referralRecord.Id}",
-                now,
-                cancellationToken);
-        }
-
-        if (inviteeRewardXp > 0)
-        {
-            await ApplyXpRewardAsync(
-                invitee,
-                inviteeRewardXp,
-                ReferralXpSourceTypes.InviteeReward,
-                referralRecord.Id,
-                $"referral:invitee:{referralRecord.Id}",
-                now,
-                cancellationToken);
-        }
+        StageCreditReward(referrer.Id, inviterRewardAiCredits, $"referral:inviter:{referralRecord.Id}");
+        StageCreditReward(invitee.Id, inviteeRewardAiCredits, $"referral:invitee:{referralRecord.Id}");
 
         if (inviterRewardPremiumDays > 0)
         {
@@ -152,10 +131,10 @@ public sealed class RedeemReferralCodeCommandHandler
             now,
             cancellationToken);
 
-        var totalInviterAwardXp = inviterRewardXp + milestoneAwards.Sum(x => x.RewardXp);
+        var totalInviterAwardAiCredits = inviterRewardAiCredits + milestoneAwards.Sum(x => x.RewardAiCredits);
         var totalInviterAwardPremiumDays = inviterRewardPremiumDays + milestoneAwards.Sum(x => x.RewardPremiumDays);
 
-        var rewardSummary = BuildRewardSummary(totalInviterAwardXp, totalInviterAwardPremiumDays);
+        var rewardSummary = BuildRewardSummary(totalInviterAwardAiCredits, totalInviterAwardPremiumDays);
         _db.Notifications.Add(new Notification
         {
             Id = Guid.NewGuid().ToString("N"),
@@ -178,11 +157,13 @@ public sealed class RedeemReferralCodeCommandHandler
             referralRecord.Id,
             referrer.Id,
             referrer.DisplayName,
-            inviteeRewardXp,
+            0,
             inviteeRewardPremiumDays,
-            totalInviterAwardXp,
+            0,
             totalInviterAwardPremiumDays,
-            milestoneAwards);
+            milestoneAwards,
+            inviteeRewardAiCredits,
+            totalInviterAwardAiCredits);
 
         return ApiResponse<RedeemReferralResultDto>.Ok(response);
     }
@@ -232,7 +213,7 @@ public sealed class RedeemReferralCodeCommandHandler
                 ReferrerUserId = referrer.Id,
                 MilestoneKey = milestone.Key,
                 ReferralsRequired = milestone.ReferralsRequired,
-                RewardXp = Math.Max(0, milestone.RewardXp),
+                RewardAiCredits = milestone.RewardAiCredits,
                 RewardPremiumDays = Math.Max(0, milestone.RewardPremiumDays),
                 AwardedAt = now,
                 CreatedAt = now,
@@ -243,17 +224,8 @@ public sealed class RedeemReferralCodeCommandHandler
             _db.ReferralMilestoneRewards.Add(reward);
             awardedKeySet.Add(milestone.Key);
 
-            if (reward.RewardXp > 0)
-            {
-                await ApplyXpRewardAsync(
-                    referrer,
-                    reward.RewardXp,
-                    ReferralXpSourceTypes.MilestoneReward,
-                    milestone.Key,
-                    $"referral:milestone:{referrer.Id}:{milestone.Key}",
-                    now,
-                    cancellationToken);
-            }
+            StageCreditReward(referrer.Id, reward.RewardAiCredits,
+                $"referral:milestone:{referrer.Id}:{milestone.Key}");
 
             if (reward.RewardPremiumDays > 0)
             {
@@ -276,51 +248,37 @@ public sealed class RedeemReferralCodeCommandHandler
                 milestone.SortOrder,
                 milestone.IsActive,
                 true,
-                true));
+                true,
+                reward.RewardAiCredits));
         }
 
         return awarded;
     }
 
-    private async Task ApplyXpRewardAsync(
-        User user,
-        int xpAmount,
-        string sourceType,
-        string sourceId,
-        string clientEventId,
-        DateTime now,
-        CancellationToken cancellationToken)
+    private void StageCreditReward(string userId, int amount, string reference)
     {
-        if (xpAmount <= 0)
-        {
-            return;
-        }
-
-        var alreadyApplied = await _db.XpEvents
-            .AsNoTracking()
-            .AnyAsync(x => x.UserId == user.Id && x.ClientEventId == clientEventId && !x.IsDeleted, cancellationToken);
-        if (alreadyApplied)
-        {
-            return;
-        }
-
-        var eventEntity = new XpEvent
+        if (amount <= 0) return;
+        // One SaveChanges commits the redemption, milestone, wallet grant and ledger
+        // together. The existing wallet service opens its own transaction and clears
+        // tracking, so it must not be called in the middle of this unit of work.
+        // Unique redemption/milestone/reference indexes prevent a second award.
+        _db.AiCreditGrants.Add(new AiCreditGrant
         {
             Id = Guid.NewGuid().ToString("N"),
-            UserId = user.Id,
-            SourceType = sourceType,
-            SourceId = sourceId,
-            XpAmount = xpAmount,
-            ClientEventId = clientEventId,
-            CreatedAt = now,
-            UpdatedAt = now,
-            IsDeleted = false
-        };
-        _db.XpEvents.Add(eventEntity);
-
-        user.TotalXp = Math.Max(0, user.TotalXp + xpAmount);
-        user.Level = await ResolveLevelAsync(user.TotalXp, cancellationToken);
-        user.UpdatedAt = now;
+            UserId = userId,
+            Reference = reference,
+            Source = "referral",
+            Amount = amount,
+            Remaining = amount
+        });
+        _db.AiCreditEntries.Add(new AiCreditEntry
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            UserId = userId,
+            Reference = reference,
+            Kind = "referral-reward",
+            Amount = amount
+        });
     }
 
     private async Task GrantPremiumDaysAsync(
@@ -379,17 +337,12 @@ public sealed class RedeemReferralCodeCommandHandler
         user.UpdatedAt = now;
     }
 
-    private async Task<int> ResolveLevelAsync(int totalXp, CancellationToken cancellationToken)
-    {
-        return await _db.ResolveLevelByXpAsync(totalXp, cancellationToken);
-    }
-
-    private static string BuildRewardSummary(int awardedXp, int awardedPremiumDays)
+    private static string BuildRewardSummary(int awardedAiCredits, int awardedPremiumDays)
     {
         var rewards = new List<string>();
-        if (awardedXp > 0)
+        if (awardedAiCredits > 0)
         {
-            rewards.Add($"{awardedXp} XP");
+            rewards.Add($"{awardedAiCredits} AI credits");
         }
 
         if (awardedPremiumDays > 0)

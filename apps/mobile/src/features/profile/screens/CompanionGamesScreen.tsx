@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { HeaderIconButton } from '@/components/ui/HeaderIconButton';
+import { ChevronLeft } from '@/core/icons';
+import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
@@ -24,6 +26,7 @@ type Game = BestGame | 'pearl';
 
 export default function CompanionGamesScreen() {
   const { styles, theme } = useStyles();
+  const { colorScheme } = useColorScheme();
   const { height: windowHeight } = useWindowDimensions();
   const { t } = useTranslation('companionGames');
   const router = useRouter();
@@ -58,15 +61,13 @@ export default function CompanionGamesScreen() {
   const select = (next: Game) => { setGame(next); react('hello'); };
 
   return <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-    <StatusBar style="dark" />
+    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     <CompanionReefBackdrop />
     <LinearGradient colors={[theme.skyTint, theme.violetTint]}
       style={[styles.tint, game !== null && styles.playTint]} pointerEvents="none" />
     <CompanionReefBubbles active={active} light maxCount={15} />
     <View style={styles.header}>
-      <Pressable accessibilityRole="button" accessibilityLabel={t('back')} onPress={back} style={styles.back}>
-        <Ionicons name="chevron-back" size={24} color={theme.violetDeep} />
-      </Pressable>
+      <HeaderIconButton accessibilityLabel={t('back')} onPress={back} icon={ChevronLeft} />
       <Text numberOfLines={1} style={styles.headerTitle}>{game ? t(game) : t('title')}</Text>
       <View style={styles.headerSpacer} />
     </View>
@@ -133,10 +134,8 @@ const useStyles = createThemedStyles(theme => StyleSheet.create({
   tint: { ...StyleSheet.absoluteFillObject, opacity: .48 },
   playTint: { opacity: .14 },
   header: { height: 62, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  back: { width: 48, height: 48, borderRadius: 24, backgroundColor: theme.paper,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.violetLine },
-  headerSpacer: { width: 48 },
-  headerTitle: { flex: 1, textAlign: 'center', color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 25 },
+  headerSpacer: { width: 44 },
+  headerTitle: { flex: 1, textAlign: 'center', color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 },
   playground: { flex: 1, minHeight: 420, position: 'relative' },
   funNote: { position: 'absolute', top: 8, alignSelf: 'center', color: theme.violetDeep,
     backgroundColor: theme.paper, borderRadius: 20, overflow: 'hidden', paddingHorizontal: 14, paddingVertical: 6,
@@ -157,5 +156,5 @@ const useStyles = createThemedStyles(theme => StyleSheet.create({
     width: 132, textAlign: 'center', marginTop: -8 },
   bestBadge: { color: theme.violetDeep, backgroundColor: theme.sunTint, borderRadius: 12,
     overflow: 'hidden', paddingHorizontal: 9, paddingVertical: 2,
-    fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 3 },
+    fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 3 },
 }));

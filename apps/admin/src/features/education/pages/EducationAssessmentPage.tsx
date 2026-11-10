@@ -1,4 +1,4 @@
-import { App, Alert, Button, Card, Checkbox, Form, Space, Tag } from 'antd';
+import { Alert, Button, Card, Checkbox, Form, Modal, Space, Tag } from 'antd';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../../auth/AuthContext';
@@ -7,14 +7,16 @@ import { QueryState } from '../components/QueryState';
 import { EducationQuestionEditor, type AssessmentFormValue } from '../components/EducationQuestionEditor';
 import { useEducationAssessment, useEducationCourse } from '../hooks/useEducationAuthoring';
 import { useEducationText } from '../i18n/useEducationText';
+import { EducationBackLink } from '../components/EducationBackLink';
+import { adminPaths } from '../../../navigation/adminPaths';
 
 export default function EducationAssessmentPage() {
   const { assessmentId = '' } = useParams();
   const { user } = useAuth();
-  const { modal } = App.useApp();
   const { t } = useEducationText();
   const [form] = Form.useForm<AssessmentFormValue>();
   const [publicPractice, setPublicPractice] = useState(false);
+  const [publicationOpen, setPublicationOpen] = useState(false);
   const data = useEducationAssessment(user?.id ?? '', assessmentId);
   const assessment = data.assessment.data;
   const courseData = useEducationCourse(user?.id ?? '', assessment?.courseId ?? '');
@@ -33,19 +35,26 @@ export default function EducationAssessmentPage() {
     });
   }, [assessment, form]);
 
-  return <PortalPageContainer eyebrow="Assessment" title={assessment?.title ?? 'Assessment'} description="Build an assessment with reusable objective question types." actions={assessment?.status === 'draft' ? <Button type="primary" loading={data.publish.isPending} disabled={!assessment.questions.length} onClick={() => modal.confirm({
-    title: 'Publish this assessment?',
-    content: <Space direction="vertical">
+  return <PortalPageContainer eyebrow="Assessment" title={assessment?.title ?? 'Assessment'} description="Build an assessment with reusable objective question types."
+    navigation={<EducationBackLink to={assessment ? adminPaths.educationCourse(assessment.courseId) : adminPaths.educationCourses}>{t('backToCourse')}</EducationBackLink>}
+    actions={assessment?.status === 'draft' ? <Button type="primary" loading={data.publish.isPending} disabled={!assessment.questions.length} onClick={() => { setPublicPractice(false); setPublicationOpen(true); }}>Publish</Button> : assessment && <Tag color="green">Published v{assessment.version}</Tag>}>
+    <Modal title="Publish this assessment?" open={publicationOpen} okText="Publish" confirmLoading={data.publish.isPending}
+      onCancel={() => !data.publish.isPending && setPublicationOpen(false)} onOk={async () => {
+        if (!assessment) return;
+        try {
+          await data.publish.mutateAsync({ version: assessment.version, isPublicPractice: publicPractice });
+          setPublicationOpen(false);
+        } catch { /* The mutation displays the error; keep the selected publication choice. */ }
+      }}>
+      <Space direction="vertical">
       <span>Published question content is frozen. Future changes require a new assessment version.</span>
-      <Checkbox checked={publicPractice} onChange={event => setPublicPractice(event.target.checked)}>
+      <Checkbox checked={publicPractice} disabled={data.publish.isPending} onChange={event => setPublicPractice(event.target.checked)}>
         Include objective questions in public self-practice
       </Checkbox>
       {publicPractice && <Alert type="warning" showIcon message="Public questions are not confidential and must not be used for secure exams." />}
       <Alert type="info" showIcon message={t('guidedPracticeAssessmentHelp')} />
-    </Space>,
-    okText: 'Publish',
-    onOk: () => data.publish.mutateAsync({ version: assessment.version, isPublicPractice: publicPractice }),
-  })}>Publish</Button> : assessment && <Tag color="green">Published v{assessment.version}</Tag>}>
+      </Space>
+    </Modal>
     <QueryState query={data.assessment}>
       {loaded => <>
         {loaded.status === 'published' && <Alert type="info" showIcon message={loaded.isPublicPractice

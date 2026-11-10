@@ -1,7 +1,8 @@
 import { CommonHeader } from '@/components/CommonHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import LoadingView from '@/components/LoadingView';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { useColorScheme } from 'nativewind';
+import { memopalThemes, type MemoPalTheme } from '@/theme/memopalTheme';
 import { NotificationType } from '@/enums/notificationType';
 import { useNotificationMutations, useNotifications } from '@/features/notifications/hooks/useNotifications';
 import { Notification } from '@/features/notifications/types/notification';
@@ -23,7 +24,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
-const TYPE_CONFIG = {
+const getTypeConfig = (theme: MemoPalTheme) => ({
   [NotificationType.XP]: { icon: Zap, color: theme.sunDeep, bgColor: 'bg-tint-sun' },
   [NotificationType.LEVEL_UP]: {
     icon: TrendingUp,
@@ -39,7 +40,7 @@ const TYPE_CONFIG = {
     bgColor: 'bg-tint-mint',
   },
   [NotificationType.SYSTEM]: { icon: Settings, color: theme.sky, bgColor: 'bg-tint-sky' },
-};
+});
 
 type NotificationListRow =
   | {
@@ -55,6 +56,8 @@ type NotificationListRow =
     };
 
 const NotificationScreen = () => {
+  const { colorScheme } = useColorScheme();
+  const TYPE_CONFIG = getTypeConfig(memopalThemes[colorScheme ?? 'light']);
   const router = useRouter();
   const { t } = useTranslation('notifications');
   const { data: notifications = [], isLoading, refetch, isRefetching } = useNotifications();
@@ -330,7 +333,7 @@ const NotificationScreen = () => {
     if (item.type === 'header') {
       return (
         <View className="px-4 pb-2 pt-3">
-          <Text className="text-xs font-semibold uppercase tracking-wide text-[#6B6A80]">
+          <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
             {item.title} ({item.count})
           </Text>
         </View>
@@ -355,14 +358,14 @@ const NotificationScreen = () => {
             isSelectionMode && isSelected
               ? 'border-red-200 bg-red-50'
               : notification.isRead
-              ? 'border-2 border-[#E5DFFF] bg-white'
+              ? 'border-2 border-line bg-surface'
                 : 'border-2 border-line-violet bg-tint-violet'
           }`}>
           {isSelectionMode && (
             <View className="mr-3 mt-2">
               <View
                 className={`h-5 w-5 items-center justify-center rounded-md border ${
-                    isSelected ? 'border-[#E8527A] bg-[#E8527A]' : 'border-[#D8D4C9] bg-white'
+                    isSelected ? 'border-[#E8527A] bg-[#E8527A]' : 'border-[#D8D4C9] bg-surface'
                 }`}>
                 {isSelected && <Check size={12} color="white" />}
               </View>
@@ -379,17 +382,17 @@ const NotificationScreen = () => {
                 <Text
                   numberOfLines={1}
                   className={`flex-1 text-base ${
-                    notification.isRead ? 'font-medium text-[#6B6A80]' : 'font-bold text-[#2B2A3D]'
+                    notification.isRead ? 'font-medium text-ink-soft' : 'font-bold text-ink'
                   }`}>
                   {notification.title}
                 </Text>
                 {!isSelectionMode && !notification.isRead && (
                   <View className="ml-2 rounded-full bg-tint-violet px-2 py-0.5">
-                    <Text className="text-[10px] font-bold text-[#7A68E0]">NEW</Text>
+                    <Text className="text-[10px] font-bold text-primary">NEW</Text>
                   </View>
                 )}
               </View>
-              <Text className="text-xs text-[#9A97A7]">
+              <Text className="text-xs text-ink-soft">
                 {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
               </Text>
             </View>
@@ -397,7 +400,7 @@ const NotificationScreen = () => {
             <Text
               numberOfLines={2}
               className={`mt-1 text-sm leading-5 ${
-                notification.isRead ? 'text-[#9A97A7]' : 'text-[#6B6A80]'
+                notification.isRead ? 'text-ink-soft' : 'text-ink-soft'
               }`}>
               {notification.body}
             </Text>
@@ -406,7 +409,7 @@ const NotificationScreen = () => {
               <View className="flex-row items-center">
                 {notification.referenceType && (
                   <View className="rounded-md bg-tint-peach px-2 py-0.5">
-                    <Text className="text-[10px] font-bold uppercase text-[#6B6A80]">
+                    <Text className="text-[10px] font-bold uppercase text-ink-soft">
                       {notification.referenceType}
                     </Text>
                   </View>
@@ -428,7 +431,7 @@ const NotificationScreen = () => {
   if (isLoading) return <LoadingView />;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-surface">
       <CommonHeader
         title={t('title')}
         description={
@@ -454,14 +457,14 @@ const NotificationScreen = () => {
       />
 
       {isSelectionMode && (
-        <View className="mb-2 border-b-2 border-[#E5DFFF] bg-white px-4 py-3">
+        <View className="mb-2 border-b-2 border-line bg-surface px-4 py-3">
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={clearSelectionMode} activeOpacity={0.7}>
-              <Text className="font-semibold text-[#6B6A80]">Cancel</Text>
+              <Text className="font-semibold text-ink-soft">Cancel</Text>
             </TouchableOpacity>
-            <Text className="text-sm font-medium text-[#6B6A80]">{selectedCount} selected</Text>
+            <Text className="text-sm font-medium text-ink-soft">{selectedCount} selected</Text>
             <TouchableOpacity onPress={toggleSelectAll} activeOpacity={0.7}>
-              <Text className="font-semibold text-[#7A68E0]">
+              <Text className="font-semibold text-primary">
                 {isAllSelected ? 'Unselect All' : 'Select All'}
               </Text>
             </TouchableOpacity>
@@ -481,8 +484,8 @@ const NotificationScreen = () => {
             <View className="h-20 w-20 items-center justify-center rounded-full bg-tint-sky">
               <Bell size={40} color="#4FC0E8" />
             </View>
-            <Text className="mt-4 text-xl font-bold text-[#2B2A3D]">No notifications</Text>
-            <Text className="mt-2 text-center text-[#6B6A80]">
+            <Text className="mt-4 text-xl font-bold text-ink">No notifications</Text>
+            <Text className="mt-2 text-center text-ink-soft">
               We&apos;ll notify you when something important happens.
             </Text>
           </View>
@@ -490,7 +493,7 @@ const NotificationScreen = () => {
       />
 
       {isSelectionMode && (
-        <View className="border-t-2 border-[#E5DFFF] bg-white px-4 pb-5 pt-3">
+        <View className="border-t-2 border-line bg-surface px-4 pb-5 pt-3">
           <TouchableOpacity
             activeOpacity={0.8}
             disabled={selectedCount === 0 || isRemoving}
@@ -501,7 +504,7 @@ const NotificationScreen = () => {
             {isRemoving ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
-              <Text className={`font-semibold ${selectedCount === 0 || isRemoving ? 'text-[#9A97A7]' : 'text-white'}`}>
+              <Text className={`font-semibold ${selectedCount === 0 || isRemoving ? 'text-ink-soft' : 'text-white'}`}>
                 {selectedCount > 0 ? `Remove (${selectedCount})` : 'Select notifications to remove'}
               </Text>
             )}
@@ -519,7 +522,7 @@ const NotificationScreen = () => {
               activeOpacity={0.8}
               disabled={isUndoing}
               onPress={() => void handleUndoRemove()}
-              className="ml-3 rounded-lg bg-white/20 px-3 py-1">
+              className="ml-3 rounded-lg bg-surface/20 px-3 py-1">
               {isUndoing ? (
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : (

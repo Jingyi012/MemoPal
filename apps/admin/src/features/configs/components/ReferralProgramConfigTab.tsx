@@ -2,7 +2,9 @@ import React from "react";
 import { Tabs, Space, Alert } from "antd";
 import AdvancedJsonEditor from "../../../components/AdvancedJsonEditor";
 import ConfigEditorForm from "../../../components/ConfigEditorForm";
-import { useConfigEditor } from "../../../hooks/useConfigEditor";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { adminReferralsApi } from '../../../api/adminReferralsApi';
+import type { ReferralProgramConfigDto } from '../../../types/referral';
 import {
   REFERRAL_PROGRAM_CONFIG_DEFAULT,
   REFERRAL_PROGRAM_CONFIG_SCHEMA,
@@ -13,14 +15,22 @@ import {
  * Allows admins to configure referral rewards, tiers, and program settings
  */
 export const ReferralProgramConfigTab: React.FC = () => {
-  const { config, isLoading, error, saveConfig } =
-    useConfigEditor({
-      configKey: "growth.referral.program_config",
-      defaultValue: REFERRAL_PROGRAM_CONFIG_DEFAULT as unknown as Record<
-        string,
-        unknown
-      >,
-    });
+  const client = useQueryClient();
+  const query = useQuery({ queryKey: ['admin-referral-config'], queryFn: adminReferralsApi.getConfig });
+  const save = useMutation({ mutationFn: adminReferralsApi.updateConfig,
+    onSuccess: (value) => client.setQueryData(['admin-referral-config'], value) });
+  const isLoading = query.isLoading || save.isPending;
+  const error = query.error?.message ?? save.error?.message;
+  // The dedicated endpoint normalizes old XP settings once, on the server.
+  // The JSON editor only exposes the currently editable credit fields.
+  const value = query.data ?? REFERRAL_PROGRAM_CONFIG_DEFAULT;
+  const config = {
+    ...Object.fromEntries(Object.entries(value).filter(([key]) => key in REFERRAL_PROGRAM_CONFIG_SCHEMA.properties)),
+    milestones: value.milestones.map(item => Object.fromEntries(Object.entries(item)
+      .filter(([key]) => key in REFERRAL_PROGRAM_CONFIG_SCHEMA.properties.milestones.items.properties))),
+  };
+
+  const saveConfig = (data: Record<string, unknown>) => save.mutateAsync(data as unknown as ReferralProgramConfigDto);
 
   const handleFormSubmit = async (data: Record<string, unknown>) => {
     await saveConfig(data);

@@ -1,4 +1,4 @@
-import AnimatedPressable from '@/components/AnimatedPressable';
+import { LearningChoiceMenu } from '@/features/education/components/LearningChoiceMenu';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
@@ -37,23 +37,15 @@ export default function NumberPegMemoriesScreen() {
 
   return (
     <View style={styles.page}>
-      <CommonHeader title={t('memoryListTitle')} backAction={() => router.back()} />
+      <CommonHeader showAiCredits={false} title={t('memoryListTitle')} backAction={() => router.back()} />
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={memorySets.isRefetching || dueReviews.isRefetching} onRefresh={refresh} />}>
         <Text style={styles.subtitle}>{t('memoryListSubtitle', { count: sets.length })}</Text>
-        <View style={styles.filterRail}>
-          {(['all', 'recall', 'building'] as MemoryFilter[]).map((key) => {
-            const selected = filter === key;
-            const label = key === 'all' ? t('filterAll') : key === 'recall' ? t('filterRecall') : t('filterBuilding');
-            return (
-              <AnimatedPressable key={key} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => setFilter(key)} style={[styles.filterChip, selected && styles.filterChipSelected]}>
-                <Text style={[styles.filterText, selected && styles.filterTextSelected]}>{label}</Text>
-              </AnimatedPressable>
-            );
-          })}
-        </View>
+        <LearningChoiceMenu value={filter} onChange={value => setFilter(value as MemoryFilter)} title={t('memoryListTitle')} options={[
+          { value: 'all', label: t('filterAll') }, { value: 'recall', label: t('filterRecall') }, { value: 'building', label: t('filterBuilding') },
+        ]} />
         {!isOffline && memorySets.isLoading ? (
           <View style={styles.loading}><LoadingView description={t('loading')} /></View>
         ) : canShowRequestErrors && memorySets.isError ? (
@@ -79,7 +71,7 @@ export default function NumberPegMemoriesScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { gap: 13, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 36 },
+  content: { gap: 13, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 36 },
   subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
   filterRail: { flexDirection: 'row', gap: 8 },
   filterChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 999, borderWidth: 1.5, justifyContent: 'center', minHeight: 40, paddingHorizontal: 14 },

@@ -75,7 +75,9 @@ public sealed class GetPagedReferralRecordsQueryHandler
                 x.Record.InviterRewardXp,
                 x.Record.InviterRewardPremiumDays,
                 x.Record.InviteeRewardXp,
-                x.Record.InviteeRewardPremiumDays))
+                x.Record.InviteeRewardPremiumDays,
+                x.Record.InviterRewardAiCredits,
+                x.Record.InviteeRewardAiCredits))
             .ToListAsync(cancellationToken);
 
         return PaginatedResponse<ReferralRecordView>.Ok(data, pageNumber, pageSize, totalCount);

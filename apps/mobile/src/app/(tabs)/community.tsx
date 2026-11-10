@@ -1,5 +1,1 @@
-import { DiscoverMemorySetsScreen } from '@/features/library';
-
-export default function CommunityRoute() {
-  return <DiscoverMemorySetsScreen />;
-}
+export { default } from '@/features/education/screens/LearningDiscoverScreen';

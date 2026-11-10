@@ -1,5 +1,6 @@
+import { HeaderIconButton } from '@/components/ui/HeaderIconButton';
 import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
@@ -166,6 +167,7 @@ export default function CompanionHubScreen() {
   useEffect(() => {
     panelOpen.value = withTiming(panel ? 1 : 0, { duration: reduceMotion ? 0 : 260 });
   }, [panel, panelOpen, reduceMotion]);
+  const scrimStyle = useAnimatedStyle(() => ({ opacity: 0.54 * panelOpen.value }));
   const drawerStyle = useAnimatedStyle(() => ({ opacity: panelOpen.value,
     transform: [{ translateY: 150 * (1 - panelOpen.value) }] }));
   const burstStyle = useAnimatedStyle(() => ({ opacity: 1 - burstMotion.value,
@@ -273,6 +275,7 @@ export default function CompanionHubScreen() {
 
   return <SafeAreaView style={[styles.safe, { backgroundColor: palette(period)[2] }]} edges={['bottom']}>
     <StatusBar style={companion.data ? 'light' : 'dark'} translucent backgroundColor="transparent" />
+    {!companion.data ? <View style={[styles.topBar, { top: insets.top }]}><HeaderIconButton accessibilityLabel={t('habitatBack')} onPress={() => router.back()}><Ionicons name="chevron-back" size={23} color={theme.violetDeep} /></HeaderIconButton></View> : null}
     <LinearGradient colors={palette(basePeriod)} style={styles.background}>
       {!companion.data && companion.isLoading ? <View style={styles.state}><ActivityIndicator color={theme.violetDeep} /><Text style={styles.stateText}>{t('habitatLoading')}</Text></View>
         : !companion.data ? <View style={styles.state}>
@@ -288,9 +291,9 @@ export default function CompanionHubScreen() {
             <LinearGradient pointerEvents="none" colors={[theme.nightDeep, 'transparent']}
               style={[styles.headerShade, { height: insets.top + 105 }]} />
             {!photoMode && <View style={[styles.topBar, { top: insets.top }]}>
-              <Pressable accessibilityRole="button" accessibilityLabel={t('habitatBack')} onPress={() => router.back()} style={styles.roundButton}>
-                <Ionicons name="chevron-back" size={23} color={theme.violetDeep} />
-              </Pressable>
+              <HeaderIconButton accessibilityLabel={t('habitatBack')} onPress={() => router.back()}>
+                <Ionicons name="chevron-back" size={23} color="#FFFFFF" />
+              </HeaderIconButton>
               <View pointerEvents="none" style={styles.titleSlot}>
                 <Text style={styles.title} numberOfLines={1}>{t('habitatTitle')}</Text>
               </View>
@@ -344,11 +347,12 @@ export default function CompanionHubScreen() {
             <DrawerHandle label={t('habitatGrowth')} open={panel !== null} onDark
               onChange={(opened) => setPanel(opened ? 'growth' : null)} />
           </View>}
-          {!photoMode && panel && <Pressable accessibilityRole="button" accessibilityLabel={t('habitatClosePanel')}
-            onPress={() => setPanel(null)} style={styles.drawerScrim} />}
-          {!photoMode && <Animated.View pointerEvents={panel ? 'auto' : 'none'} style={[styles.drawer, drawerStyle]}>
-              <DrawerHandle label={panel ? t('habitatClosePanel') : t('habitatGrowth')} open={panel !== null}
-                onChange={(opened) => setPanel(opened ? 'growth' : null)} />
+          {!photoMode && <Animated.View pointerEvents={panel ? 'auto' : 'none'} aria-hidden={!panel} accessibilityElementsHidden={!panel} importantForAccessibility={panel ? 'auto' : 'no-hide-descendants'} style={[styles.drawerScrim, scrimStyle]}>
+            {panel ? <Pressable accessibilityRole="button" accessibilityLabel={t('habitatClosePanel')} onPress={() => setPanel(null)} style={StyleSheet.absoluteFill} /> : null}
+          </Animated.View>}
+          {!photoMode && <Animated.View pointerEvents={panel ? 'auto' : 'none'} aria-hidden={!panel} accessibilityElementsHidden={!panel} importantForAccessibility={panel ? 'auto' : 'no-hide-descendants'} style={[styles.drawer, drawerStyle]}>
+              {panel ? <DrawerHandle label={t('habitatClosePanel')} open
+                onChange={(opened) => setPanel(opened ? 'growth' : null)} /> : null}
               {panel === 'play' ? <View style={styles.drawerRow}>
                 <RoundAction icon="heart-outline" label={t('habitatHug')} onPress={() => playAction('hug', null, 'heart')} />
                 <RoundAction icon="hand-left-outline" label={t('habitatPet')} onPress={pet} />
@@ -488,7 +492,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   objectPress: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   splash: { ...StyleSheet.absoluteFillObject }, splashDot: { position: 'absolute', width: 5, height: 5, borderRadius: 3, backgroundColor: theme.sky },
   controls: { flex: 1, minHeight: 180, justifyContent: 'flex-end', paddingTop: 8, paddingHorizontal: 17, paddingBottom: 80 },
-  drawerScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: theme.nightDeep, opacity: .54, zIndex: 8 },
+  drawerScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: theme.nightDeep, zIndex: 8 },
   drawer: { position: 'absolute', left: 17, right: 17, bottom: 80, height: 138, overflow: 'hidden', justifyContent: 'flex-start', borderRadius: 22, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.violetLine, zIndex: 9 },
   drawerRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
   handleArea: { height: 44, alignItems: 'center', justifyContent: 'center' }, handleTouch: { width: 64, height: 44, alignItems: 'center', justifyContent: 'center' }, handle: { width: 46, height: 6, borderRadius: 3 },

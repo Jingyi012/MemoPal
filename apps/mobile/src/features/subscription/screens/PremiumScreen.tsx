@@ -1,11 +1,12 @@
 import { systemSettingsApi } from '@/core/settings/api/systemSettings';
 import { ActionSheet } from '@/components/ActionSheet';
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { HeaderIconButton } from '@/components/ui/HeaderIconButton';
 import { AppButton } from '@/components/ui/AppButton';
 import { BaseCard } from '@/components/BaseCard';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
-import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import {
@@ -36,6 +37,8 @@ const PremiumScreen: React.FC = () => {
   const zh = language === 'zh';
   const { colorScheme } = useColorScheme();
   const activeTheme = memopalThemes[colorScheme ?? 'light'];
+  const theme = activeTheme;
+  const { styles } = useStyles();
   const { user, isLoading: isUserLoading, refetch: refetchUser } = useCurrentUser();
   const { userState, updateState } = useUserState();
   const insets = useSafeAreaInsets();
@@ -143,12 +146,7 @@ const PremiumScreen: React.FC = () => {
       </View>
       <View style={styles.topBarActions}>
       <AiCreditCoinButton />
-      <AnimatedPressable
-        accessibilityLabel="Close premium page"
-        onPress={() => router.back()}
-        style={[styles.closeButton, { backgroundColor: activeTheme.sand }]}>
-        <X size={19} color={activeTheme.inkSoft} />
-      </AnimatedPressable>
+      <HeaderIconButton accessibilityLabel="Close premium page" onPress={() => router.back()} icon={X} />
       </View>
     </View>
   );
@@ -355,12 +353,11 @@ const PremiumScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   topBarActions: { flexDirection: 'row', alignItems: 'center', gap: 8 }, topBar: { minHeight: 64, paddingHorizontal: 16, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: theme.canvas, borderBottomWidth: 1, borderBottomColor: theme.line },
   topBarPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, borderWidth: 1.3, borderColor: theme.berryLine, backgroundColor: theme.berryTint, paddingHorizontal: 10, paddingVertical: 5 },
   topBarLabel: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase' },
-  closeButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.sand },
   scrollContent: { paddingBottom: 36 },
   errorBanner: { marginHorizontal: 16, marginTop: 12, borderRadius: 16, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, paddingHorizontal: 14, paddingVertical: 11 },
   errorTitle: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
@@ -425,7 +422,7 @@ const styles = StyleSheet.create({
   unavailableTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 16, lineHeight: 22, textAlign: 'center' },
   unavailableBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 7, marginBottom: 18 },
   retryButton: { alignSelf: 'center' },
-});
+}));
 
 export default PremiumScreen;
 

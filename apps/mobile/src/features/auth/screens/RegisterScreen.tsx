@@ -3,7 +3,8 @@ import { AuthField } from '../components/AuthField';
 import { authApi } from '@/features/auth/api/auth';
 import { referralApi } from '@/features/referral/api/referral';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { useColorScheme } from 'nativewind';
+import { memopalThemes } from '@/theme/memopalTheme';
 import { useAuth } from '@/contexts/AuthProvider';
 import {
   getFacebookAccessToken,
@@ -13,7 +14,7 @@ import {
 } from '@/features/auth/services/socialAuth.service';
 import { syncEntitlementToLocal } from '@/features/subscription/services/subscription.service';
 import { LoginMethods } from '@/features/auth/types/auth';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
@@ -31,6 +32,8 @@ const DEFAULT_LOGIN_METHODS: LoginMethods = {
 };
 
 export default function Register() {
+  const { colorScheme } = useColorScheme();
+  const theme = memopalThemes[colorScheme ?? 'light'];
   const router = useRouter();
   const { returnTo: returnToParam, referralCode: referralCodeParam } = useLocalSearchParams<{ returnTo?: string | string[]; referralCode?: string | string[] }>();
   const returnTo = getSafeAuthReturnTo(Array.isArray(returnToParam) ? returnToParam[0] : returnToParam);

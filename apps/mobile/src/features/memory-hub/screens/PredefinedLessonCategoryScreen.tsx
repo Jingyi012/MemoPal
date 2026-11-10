@@ -105,6 +105,7 @@ export default function PredefinedLessonCategoryScreen() {
         <View style={styles.search}>
           <Search size={18} color={theme.inkSoft} />
           <TextInput
+            accessibilityLabel={t('searchCourses')}
             value={search}
             onChangeText={setSearch}
             placeholder={t('searchCourses')}
@@ -172,7 +173,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   downloadButton: { alignSelf: 'stretch' },
   content: { padding: 16, paddingBottom: 36, gap: 16 },
-  collectionHero: { minHeight: 112, borderRadius: 26, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  collectionHero: { minHeight: 112, borderRadius: 26, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
   heroArtwork: { width: 76, height: 76, borderRadius: 27, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-3deg' }] },
   heroSparkle: { position: 'absolute', right: -7, top: -7, width: 28, height: 28, borderRadius: 14, backgroundColor: theme.berryTint, alignItems: 'center', justifyContent: 'center' },
   heroEmoji: { fontSize: 39 },

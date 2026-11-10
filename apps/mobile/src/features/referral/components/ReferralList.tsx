@@ -28,9 +28,9 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
     <BaseCard className="mb-8 rounded-3xl p-2">
       <View className="flex-row p-3">
         <Text className="text-xl">👥</Text>
-        <Text className="ml-1 text-lg font-medium text-[#2B2A3D]">Referral Friends</Text>
+        <Text className="ml-1 text-lg font-medium text-ink">Referral Friends</Text>
       </View>
-      <Text className="px-3 pb-2 text-xs text-[#6B6A80]">
+      <Text className="px-3 pb-2 text-xs text-ink-soft">
         Showing {visibleReferrals.length} of {referrals.length}
       </Text>
 
@@ -42,25 +42,25 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
           <View
             key={user.referralId}
             className={`flex-row items-center justify-between p-3 ${
-              !isLast ? 'border-b border-[#E5DFFF]' : ''
+              !isLast ? 'border-b border-line' : ''
             }`}>
             <View className="flex-row items-center">
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-[#EAF7FC]">
-                <Text className="font-bold text-[#7A68E0]">
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-tint-sky">
+                <Text className="font-bold text-primary">
                   {user.displayName.charAt(0).toUpperCase()}
                 </Text>
               </View>
               <View className="ml-3">
-                <Text className="font-medium text-[#2B2A3D]">{user.displayName}</Text>
-                <Text className="text-xs text-[#9A97A7]">{new Date(user.redeemedAt).toLocaleDateString()}</Text>
+                <Text className="font-medium text-ink">{user.displayName}</Text>
+                <Text className="text-xs text-ink-soft">{new Date(user.redeemedAt).toLocaleDateString()}</Text>
               </View>
             </View>
 
             <View
-          className={`rounded-full px-2 py-1 ${isPremium ? 'bg-[#FFF7DD]' : 'bg-[#EAF8F1]'}`}>
+          className={`rounded-full px-2 py-1 ${isPremium ? 'bg-tint-sun' : 'bg-tint-mint'}`}>
               <Text
                 className={`text-xs font-bold uppercase ${
-                  isPremium ? 'text-[#F2A900]' : 'text-[#6B6A80]'
+                  isPremium ? 'text-ink' : 'text-ink-soft'
                 }`}>
                 {isPremium ? 'premium' : 'active'}
               </Text>
@@ -72,8 +72,8 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
       {hasMore ? (
         <TouchableOpacity
           onPress={() => setVisibleCount((prev) => Math.min(prev + pageSize, referrals.length))}
-          className="m-3 items-center rounded-xl bg-[#FFF3E6] px-4 py-3">
-          <Text className="text-sm font-semibold text-[#6B6A80]">Load More</Text>
+          className="m-3 items-center rounded-xl bg-tint-peach px-4 py-3">
+          <Text className="text-sm font-semibold text-ink-soft">Load More</Text>
         </TouchableOpacity>
       ) : null}
     </BaseCard>

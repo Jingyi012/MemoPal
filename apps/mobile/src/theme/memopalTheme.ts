@@ -7,6 +7,7 @@ export type MemoPalTheme = Readonly<{
   link: string;
   successText: string;
   disabled: string;
+  controlPressed: string;
   paper: string;
   canvas: string;
   line: string;
@@ -44,6 +45,7 @@ const lightTheme: MemoPalTheme = {
   link: '#24718D',
   successText: '#267A55',
   disabled: '#D8D4E2',
+  controlPressed: '#ECECEF',
   paper: '#FFFFFF',
   canvas: '#FCFAFF',
   line: '#E9DFF0',
@@ -81,6 +83,7 @@ const darkTheme: MemoPalTheme = {
   link: '#6DD2F2',
   successText: '#75D8A6',
   disabled: '#51496F',
+  controlPressed: '#403B4D',
   paper: '#2B2641',
   canvas: '#1E1A30',
   line: '#51496F',

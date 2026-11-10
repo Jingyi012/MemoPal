@@ -4,6 +4,7 @@ using MemoPal.Application.Common.Exceptions;
 using MemoPal.Application.Common.Interfaces;
 using MemoPal.Application.Features.Education.PublicLearning.DTOs;
 using MemoPal.Application.Features.Education.Authoring.DTOs;
+using MemoPal.Application.Features.Education.Authoring;
 using MemoPal.Domain.Education;
 using MemoPal.Domain.Entities;
 using MemoPal.Application.Features.CommunityMemorySets.Queries;
@@ -21,7 +22,7 @@ public sealed class GetEducationPublicCourseHandler(IAppDbContext db)
     {
         var course = await db.EducationCourses.AsNoTracking()
             .Where(item => item.Id == q.CourseId && item.IsPublic && !item.IsModerationHidden && !item.IsDeleted && item.PubliclyPublishedAt != null)
-            .Select(item => new { item.Id, item.Title, item.UserId, PublishedAt = item.PubliclyPublishedAt!.Value })
+            .Select(item => new { item.Id, item.Title, item.UserId, item.SubjectCode, item.LearningStage, item.LanguageCode, PublishedAt = item.PubliclyPublishedAt!.Value })
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundAppException("Public course not found.");
 
@@ -65,14 +66,15 @@ public sealed class GetEducationPublicCourseHandler(IAppDbContext db)
             .Select(item => new
             {
                 item.Id, item.ObjectiveId, item.Position, item.Kind, item.Primary, item.Secondary,
-                item.Phonetic, item.Extra, item.LanguageCode, item.ContentVersion
+                item.Phonetic, item.Extra, item.LanguageCode, item.ContentVersion, item.MediaRef
             }).ToListAsync(ct);
         var itemsByObjective = studyItems.GroupBy(item => item.ObjectiveId).ToDictionary(group => group.Key,
             group => (IReadOnlyList<EducationLearnerStudyItemDto>)group.Select(item => new EducationLearnerStudyItemDto(
                 item.Id, item.Position, item.Kind.ToString(), item.Primary, item.Secondary, item.Phonetic, item.Extra,
                 item.LanguageCode, item.ContentVersion,
                 objectives.Single(objective => objective.Id == item.ObjectiveId).ReviewStatus.ToString(),
-                objectives.Single(objective => objective.Id == item.ObjectiveId).ContentOrigin.ToString())).ToArray(),
+                objectives.Single(objective => objective.Id == item.ObjectiveId).ContentOrigin.ToString(),
+                EducationStudyIllustrations.FromMediaReference(item.MediaRef))).ToArray(),
             StringComparer.Ordinal);
         var recommendedIds = objectives.Where(objective => objective.RecommendedMemorySetId != null)
             .Select(objective => objective.RecommendedMemorySetId!).Distinct().ToArray();
@@ -91,6 +93,7 @@ public sealed class GetEducationPublicCourseHandler(IAppDbContext db)
                 objective.Id, objective.Title,
                 objective.RecommendedMemorySetId is { } id ? recommended.GetValueOrDefault(id) : null,
                 itemsByObjective.GetValueOrDefault(objective.Id) ?? [])).ToArray(), isSaved,
-            course.UserId == "system"));
+            course.UserId == "system", course.SubjectCode, course.LearningStage, course.LanguageCode,
+            await EducationCourseOutlineReader.Read(db, course.Id, ct)));
     }
 }

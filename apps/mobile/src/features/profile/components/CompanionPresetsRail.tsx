@@ -1,4 +1,10 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
+import { ActionMenuSheet } from '@/components/ActionMenuSheet';
+import { AppBottomSheet } from '@/components/AppBottomSheet';
+import { AppSheetTextInput } from '@/components/AppSheetTextInput';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { LearningIconButton } from '@/features/education/components/LearningIconButton';
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Check, LockKeyhole, Plus, Trash2 } from '@/core/icons';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { AppearanceDefinition } from '@/features/appearance/types/appearance';
@@ -7,8 +13,7 @@ import { useCompanionPresets, useCreateCompanionPreset, useDeleteCompanionPreset
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CompanionCharacterArtwork, isApprovedCompanionLayer, isCompanionCompatible } from './CompanionCharacterArtwork';
 
 const PRESET_LIMIT = 5;
@@ -36,13 +41,15 @@ type Props = {
 export function CompanionPresetsRail({ avatarId, companionKey, characterImageUrl, draft, savedLook, isDirty, items, level, canSave, onPreview, onEquipped }: Props) {
   const { styles, theme } = useStyles();
   const { t } = useTranslation('companion');
-  const reduceMotion = useReducedMotion();
   const presets = useCompanionPresets();
   const createPreset = useCreateCompanionPreset();
   const equipPreset = useEquipCompanionPreset();
   const deletePreset = useDeleteCompanionPreset();
   const [nameModalVisible, setNameModalVisible] = useState(false);
   const [name, setName] = useState('');
+  const [actionPreset, setActionPreset] = useState<CompanionPreset | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CompanionPreset | null>(null);
+  const [replaceTarget, setReplaceTarget] = useState<CompanionPreset | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<CompanionPreset | null>(null);
   const [failedDeletePreset, setFailedDeletePreset] = useState<CompanionPreset | null>(null);
   const [previewNotice, setPreviewNotice] = useState<string | null>(null);
@@ -88,29 +95,10 @@ export function CompanionPresetsRail({ avatarId, companionKey, characterImageUrl
       void applyPreset(preset);
       return;
     }
-    const withdrawn = unavailableCount(preset.look);
-    const locked = lockedCount(preset.look);
-    Alert.alert(
-      t('wardrobeReplacePreviewTitle'),
-      t('wardrobeReplacePreviewBody'),
-      [
-        { text: t('wardrobeKeepEditing'), style: 'cancel' },
-        { text: withdrawn || locked ? t('wardrobePreviewOnly') : t('wardrobeEquipLook'), onPress: () => { void applyPreset(preset); } },
-      ],
-    );
+    setReplaceTarget(preset);
   };
 
-  const requestDelete = (preset: CompanionPreset) => Alert.alert(
-    t('wardrobeDeleteTitle', { name: preset.name }),
-    t('wardrobeDeleteBody'),
-    [
-      { text: t('wardrobeCancel'), style: 'cancel' },
-      { text: t('wardrobeDelete'), style: 'destructive', onPress: () => {
-        setFailedDeletePreset(preset);
-        deletePreset.mutate(preset.id, { onSuccess: () => setFailedDeletePreset(null) });
-      } },
-    ],
-  );
+  const requestDelete = (preset: CompanionPreset) => setDeleteTarget(preset);
 
   const submitPreset = async () => {
     if (!trimmedName || trimmedName.length > 30 || presetItems.length >= PRESET_LIMIT || createPreset.isPending) return;
@@ -145,12 +133,12 @@ export function CompanionPresetsRail({ avatarId, companionKey, characterImageUrl
                 const isSelected = selectedPreset?.id === preset.id;
                 const isEquipped = LOOK_SLOTS.every(({ slot }) => preset.look[slot] === savedLook[slot]);
                 return <View key={preset.id} style={[styles.presetCard, isSelected && styles.presetCardSelected]}>
-                  <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${preset.name}${unavailable || locked ? t('wardrobeUnavailablePresetAccessibility') : t('wardrobeEquipPresetAccessibility')}`} accessibilityHint={t('wardrobeUnsavedPresetHint')} accessibilityState={{ disabled: equipPreset.isPending }} disabled={equipPreset.isPending} onPress={() => requestPreset(preset)} style={styles.presetMain}>
+                  <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${preset.name}${unavailable || locked ? t('wardrobeUnavailablePresetAccessibility') : t('wardrobeEquipPresetAccessibility')}`} accessibilityHint={t('wardrobeUnsavedPresetHint')} accessibilityState={{ disabled: equipPreset.isPending }} disabled={equipPreset.isPending} onPress={() => requestPreset(preset)} onLongPress={() => setActionPreset(preset)} delayLongPress={400} style={styles.presetMain}>
                   <View style={styles.previewWrap}><CompanionCharacterArtwork look={preset.look} items={items} companionKey={companionKey} characterImageUrl={characterImageUrl} size={88} accessibilityLabel={t('wardrobePresetPreview', { name: preset.name })} />{unavailable || locked ? <View style={styles.lockBadge}><LockKeyhole size={13} color={theme.onAccent} /></View> : isEquipped ? <View style={styles.checkBadge}><Check size={13} color={theme.onAccent} /></View> : null}</View>
                     <Text numberOfLines={1} style={styles.presetName}>{preset.name}</Text>
                     <Text numberOfLines={1} style={[styles.presetStatus, Boolean(unavailable || locked) && styles.presetStatusWarning]}>{unavailable ? t('wardrobeUnavailableCount', { count: unavailable }) : locked ? t('wardrobeLockedCount', { count: locked }) : isEquipped ? t('wardrobeEquipped') : isSelected ? t('wardrobePreviewing') : t('wardrobeTapToEquip')}</Text>
                   </AnimatedPressable>
-                  <AnimatedPressable accessibilityRole="button" accessibilityLabel={t('wardrobeDeleteOutfitAccessibility', { name: preset.name })} accessibilityState={{ disabled: deletePreset.isPending }} disabled={deletePreset.isPending} onPress={() => requestDelete(preset)} style={styles.deleteButton}><Trash2 size={15} color={theme.berryDeep} /></AnimatedPressable>
+                  <View style={styles.deleteButton}><LearningIconButton icon="ellipsis-horizontal" label={`${t('wardrobeSavedOutfits')} · ${preset.name}`} disabled={deletePreset.isPending} onPress={() => setActionPreset(preset)} /></View>
                 </View>;
               })}
             </ScrollView>}
@@ -159,12 +147,28 @@ export function CompanionPresetsRail({ avatarId, companionKey, characterImageUrl
       {equipPreset.isError && selectedPreset ? <View style={styles.actionError}><Text style={styles.errorText}>{t('wardrobeEquipFailed')}</Text><AnimatedPressable onPress={() => { void applyPreset(selectedPreset); }} style={styles.retry}><Text style={styles.retryText}>{t('wardrobeRetryEquip')}</Text></AnimatedPressable></View> : null}
       {deletePreset.isError && failedDeletePreset ? <View style={styles.actionError}><Text style={styles.errorText}>{t('wardrobeDeleteFailed')}</Text><AnimatedPressable onPress={() => requestDelete(failedDeletePreset)} style={styles.retry}><Text style={styles.retryText}>{t('wardrobeRetryDelete')}</Text></AnimatedPressable></View> : null}
 
-      <Modal visible={nameModalVisible} transparent animationType={reduceMotion ? 'none' : 'fade'} onRequestClose={() => setNameModalVisible(false)}>
-        <View style={styles.modalScrim}>
-          <View style={styles.modalCard}>
+      <ActionMenuSheet visible={Boolean(actionPreset)} title={actionPreset?.name ?? ''} onClose={() => setActionPreset(null)}
+        actions={[{ label: t('wardrobeDelete'), icon: Trash2, destructive: true, disabled: deletePreset.isPending,
+          onPress: () => { if (actionPreset) requestDelete(actionPreset); } }]} />
+      <ConfirmModal visible={Boolean(deleteTarget)} title={t('wardrobeDeleteTitle', { name: deleteTarget?.name ?? '' })}
+        description={t('wardrobeDeleteBody')} confirmText={t('wardrobeDelete')} cancelText={t('wardrobeCancel')} destructive
+        onCancel={() => setDeleteTarget(null)} onConfirm={() => {
+          if (!deleteTarget) return;
+          setFailedDeletePreset(deleteTarget);
+          deletePreset.mutate(deleteTarget.id, { onSuccess: () => setFailedDeletePreset(null) });
+          setDeleteTarget(null);
+        }} />
+      <ConfirmModal visible={Boolean(replaceTarget)} title={t('wardrobeReplacePreviewTitle')} description={t('wardrobeReplacePreviewBody')}
+        confirmText={replaceTarget && (unavailableCount(replaceTarget.look) || lockedCount(replaceTarget.look)) ? t('wardrobePreviewOnly') : t('wardrobeEquipLook')}
+        cancelText={t('wardrobeKeepEditing')} onCancel={() => setReplaceTarget(null)} onConfirm={() => {
+          if (replaceTarget) void applyPreset(replaceTarget);
+          setReplaceTarget(null);
+        }} />
+      <AppBottomSheet visible={nameModalVisible} height={390} onClose={() => setNameModalVisible(false)}>
+        <BottomSheetScrollView keyboardShouldPersistTaps="handled">
             <Text style={styles.modalTitle}>{t('wardrobeNameOutfitTitle')}</Text>
             <Text style={styles.modalHint}>{t('wardrobeNameOutfitHint')}</Text>
-            <TextInput
+            <AppSheetTextInput
               accessibilityLabel={t('wardrobeOutfitName')}
               accessibilityHint={t('wardrobeNameInputHint')}
               value={name}
@@ -182,17 +186,16 @@ export function CompanionPresetsRail({ avatarId, companionKey, characterImageUrl
               <AnimatedPressable accessibilityRole="button" onPress={() => { setNameModalVisible(false); setName(''); createPreset.reset(); }} style={styles.cancelButton}><Text style={styles.cancelText}>{t('wardrobeCancel')}</Text></AnimatedPressable>
               <AnimatedPressable accessibilityRole="button" accessibilityState={{ disabled: !trimmedName || createPreset.isPending }} disabled={!trimmedName || createPreset.isPending} onPress={() => { void submitPreset(); }} style={[styles.confirmButton, (!trimmedName || createPreset.isPending) && styles.disabled]}>{createPreset.isPending ? <ActivityIndicator color={theme.onAccent} /> : <Check size={17} color={theme.onAccent} />}<Text style={styles.confirmText}>{t('wardrobeSave')}</Text></AnimatedPressable>
             </View>
-          </View>
-        </View>
-      </Modal>
+        </BottomSheetScrollView>
+      </AppBottomSheet>
     </View>
   );
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   section: { paddingVertical: 2 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, headerCopy: { flexDirection: 'row', alignItems: 'center', gap: 8 }, title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 }, count: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, paddingHorizontal: 7, paddingVertical: 4, overflow: 'hidden', borderRadius: 10, backgroundColor: theme.violetTint },
-  addButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 11, borderRadius: 13, backgroundColor: theme.violetDeep }, addText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 10 }, disabled: { opacity: 0.45 }, limitText: { color: theme.inkMuted, fontFamily: typography.body, fontSize: 10, marginTop: 7 },
-  loading: { minHeight: 56, alignItems: 'center', justifyContent: 'center', gap: 8 }, helper: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 11, lineHeight: 16 }, emptyHint: { minHeight: 46, flexDirection: 'row', alignItems: 'center', gap: 9, marginTop: 6, paddingHorizontal: 10, borderRadius: 13, backgroundColor: theme.canvas }, emptyHintIcon: { width: 27, height: 27, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: theme.violetTint }, emptyHintText: { flex: 1, color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 }, stateCard: { minHeight: 56, justifyContent: 'center', alignItems: 'flex-start', gap: 5, marginTop: 8, padding: 10, borderRadius: 14, backgroundColor: theme.canvas }, retry: { minHeight: 40, alignSelf: 'flex-start', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, borderRadius: 12, backgroundColor: theme.violetDeep }, retryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 10 }, rail: { gap: 9, paddingTop: 8, paddingBottom: 2 }, presetCard: { width: 128, minHeight: 166, padding: 7, borderRadius: 16, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.canvas, position: 'relative' }, presetCardSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint }, presetMain: { minHeight: 150, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 2 }, previewWrap: { width: 96, height: 96, alignItems: 'center', justifyContent: 'center', borderRadius: 15, backgroundColor: theme.paper }, presetName: { maxWidth: '100%', color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 5 }, presetStatus: { color: theme.grass, fontFamily: typography.bodyBold, fontSize: 9, marginTop: 3 }, presetStatusWarning: { color: theme.berryDeep }, lockBadge: { position: 'absolute', right: 3, top: 3, width: 24, height: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: theme.berryDeep }, checkBadge: { position: 'absolute', right: 3, top: 3, width: 24, height: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: theme.violetDeep }, deleteButton: { position: 'absolute', top: 5, right: 5, zIndex: 2, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: theme.berryTint }, previewNotice: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 10, lineHeight: 15, marginTop: 8 }, actionError: { marginTop: 8, padding: 10, borderRadius: 13, backgroundColor: theme.berryTint, gap: 6 }, errorText: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 10, lineHeight: 15 },
-  modalScrim: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: 'rgba(20,16,40,0.56)' }, modalCard: { padding: 18, borderRadius: 22, backgroundColor: theme.paper }, modalTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 }, modalHint: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 11, lineHeight: 16, marginTop: 6 }, nameInput: { minHeight: 48, marginTop: 15, paddingHorizontal: 12, borderRadius: 13, borderWidth: 1, borderColor: theme.line, color: theme.ink, fontFamily: typography.body, fontSize: 14, backgroundColor: theme.canvas }, characterCount: { alignSelf: 'flex-end', color: theme.inkMuted, fontFamily: typography.body, fontSize: 10, marginTop: 5 }, modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 9, marginTop: 15 }, cancelButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 15, borderRadius: 13, backgroundColor: theme.canvas }, cancelText: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 12 }, confirmButton: { minHeight: 44, minWidth: 90, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 14, borderRadius: 13, backgroundColor: theme.violetDeep }, confirmText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, headerCopy: { flexDirection: 'row', alignItems: 'center', gap: 8 }, title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 }, count: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, paddingHorizontal: 7, paddingVertical: 4, overflow: 'hidden', borderRadius: 10, backgroundColor: theme.violetTint },
+  addButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 11, borderRadius: 13, backgroundColor: theme.violetDeep }, addText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 }, disabled: { opacity: 0.45 }, limitText: { color: theme.inkMuted, fontFamily: typography.body, fontSize: 12, marginTop: 7 },
+  loading: { minHeight: 56, alignItems: 'center', justifyContent: 'center', gap: 8 }, helper: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 12, lineHeight: 18 }, emptyHint: { minHeight: 46, flexDirection: 'row', alignItems: 'center', gap: 9, marginTop: 6, paddingHorizontal: 10, borderRadius: 13, backgroundColor: theme.canvas }, emptyHintIcon: { width: 27, height: 27, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: theme.violetTint }, emptyHintText: { flex: 1, color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 }, stateCard: { minHeight: 56, justifyContent: 'center', alignItems: 'flex-start', gap: 5, marginTop: 8, padding: 10, borderRadius: 14, backgroundColor: theme.canvas }, retry: { minHeight: 44, alignSelf: 'flex-start', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, borderRadius: 12, backgroundColor: theme.violetDeep }, retryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 }, rail: { gap: 9, paddingTop: 8, paddingBottom: 2 }, presetCard: { width: 128, minHeight: 166, padding: 7, borderRadius: 16, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.canvas, position: 'relative' }, presetCardSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint }, presetMain: { minHeight: 150, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 2 }, previewWrap: { width: 96, height: 96, alignItems: 'center', justifyContent: 'center', borderRadius: 15, backgroundColor: theme.paper }, presetName: { maxWidth: '100%', color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 5 }, presetStatus: { color: theme.grass, fontFamily: typography.bodyBold, fontSize: 12, marginTop: 3 }, presetStatusWarning: { color: theme.berryDeep }, lockBadge: { position: 'absolute', right: 3, top: 3, width: 24, height: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: theme.berryDeep }, checkBadge: { position: 'absolute', right: 3, top: 3, width: 24, height: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: theme.violetDeep }, deleteButton: { position: 'absolute', top: 5, right: 5, zIndex: 2, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 13 }, previewNotice: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, marginTop: 8 }, actionError: { marginTop: 8, padding: 10, borderRadius: 13, backgroundColor: theme.berryTint, gap: 6 }, errorText: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18 },
+  modalTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 }, modalHint: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 12, lineHeight: 18, marginTop: 6 }, nameInput: { minHeight: 48, marginTop: 15, paddingHorizontal: 12, borderRadius: 13, borderWidth: 1, borderColor: theme.line, color: theme.ink, fontFamily: typography.body, fontSize: 14, backgroundColor: theme.canvas }, characterCount: { alignSelf: 'flex-end', color: theme.inkMuted, fontFamily: typography.body, fontSize: 12, marginTop: 5 }, modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 9, marginTop: 15 }, cancelButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 15, borderRadius: 13, backgroundColor: theme.canvas }, cancelText: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 12 }, confirmButton: { minHeight: 44, minWidth: 90, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 14, borderRadius: 13, backgroundColor: theme.violetDeep }, confirmText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
 }));

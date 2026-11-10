@@ -20,6 +20,7 @@ interface Actions {
 
 interface HeaderProps {
   title: string;
+  titleAccessory?: ReactNode;
   description?: ReactNode;
   /** @deprecated Kept temporarily for call-site compatibility; page headers no longer render eyebrow labels. */
   eyebrow?: string;
@@ -32,7 +33,7 @@ interface HeaderProps {
   backAction?: () => void;
   showNotification?: boolean;
   showHomeButton?: boolean;
-  /** Show the compact AI credit wallet affordance in the header. */
+  /** Opt in only where credits support the current action; the wallet is in Me. */
   showAiCredits?: boolean;
   /** Use a shorter header for focused practice sessions. */
   compact?: boolean;
@@ -42,6 +43,7 @@ interface HeaderProps {
 
 export const CommonHeader: React.FC<HeaderProps> = ({
   title,
+  titleAccessory,
   description = '',
   actions = [],
   additionalContent,
@@ -50,7 +52,7 @@ export const CommonHeader: React.FC<HeaderProps> = ({
   backAction,
   showNotification = false,
   showHomeButton = false,
-  showAiCredits = true,
+  showAiCredits = false,
   compact = false,
   backgroundMode = 'solid',
 }) => {
@@ -87,17 +89,19 @@ export const CommonHeader: React.FC<HeaderProps> = ({
               />
             )
           ) : (
-            ''
+            null
           )}
 
           {/* Title + description */}
           <View style={styles.titleBlock}>
-            <Text
-              style={[styles.title, compact && styles.compactTitle, { color: activeTheme.ink }]}
-              numberOfLines={compact ? 1 : 2}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Text accessibilityRole="header"
+              style={[styles.title, { fontSize: hideBackButton ? 26 : 18 }, compact && styles.compactTitle, { color: activeTheme.ink }]}
+              numberOfLines={1}>
               {title}
             </Text>
-            {description && (
+            {titleAccessory}</View>
+            {!!description && (
               <Text
                 style={[
                   styles.description,
@@ -149,8 +153,8 @@ const styles = {
     borderBottomColor: theme.line,
   },
   headerInner: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
   },
   compactHeaderInner: {
     paddingHorizontal: 14,
@@ -168,10 +172,13 @@ const styles = {
   },
   titleBlock: {
     flex: 1,
+    minWidth: 0,
   },
   title: {
     color: theme.ink,
-    fontSize: 25,
+    fontSize: 26,
+    flexShrink: 1,
+    fontWeight: '800' as const,
     fontFamily: typography.displayExtraBold,
     letterSpacing: -0.2,
   },
@@ -191,7 +198,7 @@ const styles = {
   },
   actions: {
     flexDirection: 'row' as const,
-    gap: 7,
+    gap: 4,
   },
   additionalContent: {
     marginTop: 10,

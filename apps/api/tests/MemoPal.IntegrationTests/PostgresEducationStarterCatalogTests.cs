@@ -39,9 +39,9 @@ public sealed class PostgresEducationStarterCatalogTests
             await using (var context = new AppDbContext(options))
             {
                 context.Users.Add(new User { Id = userId, Email = $"{userId}@example.test", DisplayName = "Starter learner", PasswordHash = "test" });
-                Assert.Equal(3, await context.EducationCourses.CountAsync());
-                Assert.Equal(18, await context.EducationQuestions.CountAsync());
-                Assert.Equal(18, await context.EducationQuestions.CountAsync(question => context.EducationAssessments.Any(assessment =>
+                Assert.Equal(9, await context.EducationCourses.CountAsync());
+                Assert.Equal(90, await context.EducationQuestions.CountAsync());
+                Assert.Equal(90, await context.EducationQuestions.CountAsync(question => context.EducationAssessments.Any(assessment =>
                     assessment.Id == question.AssessmentId && assessment.Status == EducationAssessmentStatuses.Published && assessment.IsPublicPractice)));
                 await context.SaveChangesAsync();
             }

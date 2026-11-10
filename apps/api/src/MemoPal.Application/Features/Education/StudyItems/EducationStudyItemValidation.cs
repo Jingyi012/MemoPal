@@ -61,6 +61,9 @@ public static partial class EducationStudyItemValidation
         var mediaRef = Optional(request.MediaRef, 140, "MediaRef");
         if (mediaRef is not null && !MediaRefRegex().IsMatch(mediaRef))
             throw new ValidationAppException("MediaRef must use media:<opaque-id> format.");
+        if (mediaRef is not null && mediaRef.StartsWith("media:learning-", StringComparison.Ordinal) &&
+            EducationStudyIllustrations.FromMediaReference(mediaRef) is null)
+            throw new ValidationAppException("MediaRef contains an unsupported teaching diagram or invalid parameters.");
         var language = Language(request.LanguageCode, "LanguageCode");
         if (request.Position < 1 || request.Position > 100) throw new ValidationAppException("Position must be between 1 and 100.");
         return new(stableKey, request.Position, kind.ToString(), primary, secondary, phonetic, extra, hint, mediaRef, language);

@@ -1,8 +1,12 @@
+import { MemorySpaces } from '../components/MemorySpaces';
 import { useAuth } from '@/contexts/AuthProvider';
 import { SpotlightTarget, usePageTour } from '@/features/onboarding/components/SpotlightTourProvider';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { CommonHeader } from '@/components/CommonHeader';
+import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
+import { LearningChoiceMenu } from '@/features/education/components/LearningChoiceMenu';
+import { LearningWorkspaceActions } from '@/features/education/components/LearningWorkspaceActions';
+import { LearningIconButton } from '@/features/education/components/LearningIconButton';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
 import { AppButton } from '@/components/ui/AppButton';
@@ -11,7 +15,7 @@ import { useInfiniteMemorySets, useMemorySetMutations } from '@/features/memory-
 import { useMemoryFolderMutations, useMemoryFolders } from '../hooks/useMemoryFolders';
 import type { MemoryFolder, MemoryFolderCreateRequest } from '../types/memoryFolder.types';
 import type { MemorySet, MemoryTechniqueKey } from '@/features/memory-sets';
-import { MemorySetCard } from '@/components/MemorySetCard';
+import { MemoryLibraryItemCard } from '../components/MemoryLibraryItemCard';
 import { usePalaceScenes } from '@/features/palace-scenes';
 import { useDueMemoryReviews, useUpcomingMemoryReviews } from '@/features/practice-attempts';
 import type { DueMemoryReview } from '@/features/practice-attempts';
@@ -21,8 +25,8 @@ import { typography } from '@/theme/typography';
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Href, useRouter } from 'expo-router';
-import { Archive, Check, CircleHelp, Globe2, Layers, LayoutGrid, List as ListIcon, LockKeyhole, Plus, RefreshCcw, Trash2 } from '@/core/icons';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Globe2, LockKeyhole, Plus, RefreshCcw, Trash2 } from '@/core/icons';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
@@ -44,7 +48,7 @@ const filters: { key: LibraryFilter }[] = [
   { key: 'archived' },
 ];
 
-export default function LibraryScreen() {
+export default function LibraryScreen({ workspaceNavigation, memoryEntry = false }: { workspaceNavigation?: ReactNode; memoryEntry?: boolean } = {}) {
   const { styles, theme } = useStyles();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -54,7 +58,7 @@ export default function LibraryScreen() {
   const { t: tourT } = useTranslation('onboarding');
   const revealTop = () => scroll.current?.scrollTo({ y: 0, animated: false });
   const createMemory = () => router.push('/create-memory' as Href);
-  const { t } = useTranslation('library');
+  const { t, language } = useTranslation('library');
   const { userState, updateState } = useUserState();
   const [filter, setFilter] = useState<LibraryFilter>('all');
   const pagedMemorySets = useInfiniteMemorySets(filter === 'archived' ? undefined : { unfiled: true });
@@ -137,25 +141,23 @@ export default function LibraryScreen() {
     void updateState({ ui: { ...userState.ui, libraryViewMode: mode } });
   };
 
-  const renderFolderCard = (folder: MemoryFolder, index: number, variant: LibraryViewMode) => (
+  const renderFolderCard = (folder: MemoryFolder, variant: LibraryViewMode) => (
     <MemoryFolderCard
       key={`folder-${folder.id}`}
       folder={folder}
       variant={variant}
-      tone={index}
       onOpen={() => router.push(`/memory-folders/${folder.id}` as Href)}
       onLongPress={() => showCollectionActions(folder)}
     />
   );
 
   const renderMemorySetCard = (memorySet: MemorySet, variant: LibraryViewMode) => (
-    <MemorySetCard
+    <MemoryLibraryItemCard
       key={memorySet.id}
       memorySet={memorySet}
       reviewAt={reviewByMemorySetId.get(memorySet.id)?.dueAt}
       onOpen={() => openSet(router, memorySet)}
       onActions={() => showActions(memorySet)}
-      variant={variant}
       layout={variant === 'card' ? 'grid' : 'row'}
       coverImageUrl={getPalaceScene(memorySet, palaceSceneById)?.imageUrl}
       coverImageSource={getPalaceScene(memorySet, palaceSceneById)?.imageSource}
@@ -306,9 +308,12 @@ export default function LibraryScreen() {
     <View style={styles.page}>
       <CommonHeader
         eyebrow={t('eyebrow')}
-        title={t('title')}
-        description={t('description')}
-        actions={[{ icon: CircleHelp, onPress: () => setReplayRequested(true), accessibilityLabel: tourT('guideEntry') }]}
+        title={memoryEntry ? (language === 'zh' ? '记忆' : 'Memory') : workspaceNavigation ? (language === 'zh' ? '资料库' : 'Library') : t('title')}
+        description={workspaceNavigation || memoryEntry ? undefined : t('description')}
+        showAiCredits={false}
+        actions={[{ component: <LearningWorkspaceActions /> }]}
+        titleAccessory={memoryEntry ? <LearningIconButton icon="help-circle-outline" variant="plain" label={language === 'zh' ? '了解记忆方法' : 'About memory methods'} onPress={() => router.push('/memory-tools')} /> : undefined}
+        additionalContent={workspaceNavigation}
         hideBackButton
       />
 
@@ -322,60 +327,17 @@ export default function LibraryScreen() {
             onRefresh={() => { void Promise.allSettled([pagedMemorySets.refetch(), foldersQuery.refetch(), palaceScenes.refetch(), dueReviews.refetch(), upcomingReviews.refetch()]); }}
           />
         }>
+        {memoryEntry ? <MemorySpaces /> : null}
         <SpotlightTarget id="libraryFilter" onReveal={revealTop}>
-          <ScrollView
-            horizontal
-            contentContainerStyle={styles.filterRow}
-            showsHorizontalScrollIndicator={false}>
-            {filters.map((item) => {
-              const selected = item.key === filter;
-              return (
-                <AnimatedPressable
-                  key={item.key}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  onPress={() => setFilter(item.key)}
-                  style={[styles.filterChip, selected && styles.filterChipSelected]}>
-                  {selected && item.key !== 'archived' ? <Check size={14} color={theme.violetDeep} /> : null}
-                  {item.key === 'archived' ? <Archive size={14} color={selected ? theme.violetDeep : theme.inkSoft} /> : null}
-                  <Text style={[styles.filterText, selected && styles.filterTextSelected]}>
-                    {item.key === 'all' ? t('all') : item.key === 'palace' ? t('palaces') : item.key === 'number-peg' ? t('numberPeg') : t('archived')}
-                  </Text>
-                </AnimatedPressable>
-              );
-            })}
-          </ScrollView>
-        </SpotlightTarget>
-        <View style={styles.viewToolbar}>
-          {filter !== 'archived' ? <AppButton
-            label={t('newFolder')}
-            variant="secondary"
-            size="compact"
-            icon={Layers}
-            onPress={() => setFolderNameModal({})}
-          /> : <View style={styles.toolbarSpacer} />}
-          <View accessibilityLabel={t('viewMode')} style={styles.viewToggle}>
-            <AnimatedPressable
-              accessibilityRole="button"
-              accessibilityLabel={t('cardView')}
-              accessibilityState={{ selected: viewMode === 'card' }}
-              hitSlop={4}
-              onPress={() => changeViewMode('card')}
-              style={[styles.viewOption, viewMode === 'card' && styles.viewOptionSelected]}>
-              <LayoutGrid size={16} color={theme.violetDeep} />
-            </AnimatedPressable>
-            <AnimatedPressable
-              accessibilityRole="button"
-              accessibilityLabel={t('listView')}
-              accessibilityState={{ selected: viewMode === 'list' }}
-              hitSlop={4}
-              onPress={() => changeViewMode('list')}
-              style={[styles.viewOption, viewMode === 'list' && styles.viewOptionSelected]}>
-              <ListIcon size={16} color={theme.violetDeep} />
-            </AnimatedPressable>
+          <View style={styles.viewToolbar}>
+            <LearningChoiceMenu value={filter} onChange={value => setFilter(value as LibraryFilter)} title={language === 'zh' ? '筛选记忆练习' : 'Filter memory practice'} options={filters.map(item => ({ value: item.key,
+              label: item.key === 'all' ? t('all') : item.key === 'palace' ? t('palaces') : item.key === 'number-peg' ? t('numberPeg') : t('archived') }))} />
+            <View style={{ flex: 1 }} />
+            <LearningIconButton variant="plain" icon={viewMode === 'card' ? 'list-outline' : 'grid-outline'} label={viewMode === 'card' ? t('listView') : t('cardView')} onPress={() => changeViewMode(viewMode === 'card' ? 'list' : 'card')} />
           </View>
-        </View>
+        </SpotlightTarget>
 
+        {!folders.length && filter !== 'archived' ? <AnimatedPressable accessibilityRole="button" onPress={() => setFolderNameModal({})} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={styles.filterText}>＋ {t('newFolder')}</Text></AnimatedPressable> : null}
         {explorerHasError ? (
           <View style={styles.noticeCard}>
             <Text style={styles.noticeTitle}>{t('unavailable')}</Text>
@@ -403,20 +365,11 @@ export default function LibraryScreen() {
                     <Text style={styles.sectionTitle}>{t('folders')}</Text>
                     <View style={styles.sectionCount}><Text style={styles.sectionCountText}>{folders.length}</Text></View>
                   </View>
+                  <AnimatedPressable accessibilityRole="button" onPress={() => setFolderNameModal({})} style={{ minHeight: 44, paddingHorizontal: 8, justifyContent: 'center' }}><Text style={styles.filterText}>＋ {t('newFolder')}</Text></AnimatedPressable>
                 </View>
-                {viewMode === 'card' ? (
-                  <View style={styles.cardGrid}>
-                    {folders.map((folder, index) => (
-                      <View key={`folder-cell-${folder.id}`} style={styles.cardGridCell}>
-                        {renderFolderCard(folder, index, 'card')}
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <View style={[styles.cardList, styles.listCardList]}>
-                    {folders.map((folder, index) => renderFolderCard(folder, index, 'list'))}
-                  </View>
-                )}
+                <View style={viewMode === 'card' ? styles.cardGrid : [styles.cardList, styles.listCardList]}>
+                  {folders.map(folder => <View key={folder.id} style={viewMode === 'card' ? styles.cardGridCell : undefined}>{renderFolderCard(folder, viewMode)}</View>)}
+                </View>
               </View>
             ) : null}
             {visibleSets.length ? (
@@ -471,8 +424,9 @@ export default function LibraryScreen() {
             style={styles.loadMoreButton}
           />
         ) : pagedMemorySets.isFetchingNextPage ? <Text style={styles.loadMoreText}>{t('loading')}</Text> : null}
+        <AnimatedPressable accessibilityRole="button" onPress={() => setReplayRequested(true)} style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'center' }}><Text style={styles.noticeBody}>{tourT('guideEntry')}</Text></AnimatedPressable>
       </ScrollView>
-      {showCreateFab ? (
+      {!workspaceNavigation && !memoryEntry && showCreateFab ? (
         <View style={[styles.createFabAnchor, { bottom: Math.max(16, insets.bottom + 10) }]}>
           <SpotlightTarget id="libraryStarter" onReveal={revealTop} onActivate={createMemory}>
             <AppButton
@@ -608,7 +562,7 @@ function hasPrivateAssets(
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
-  content: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 128 },
+  content: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 32 },
   createFabAnchor: { alignItems: 'center', height: 60, justifyContent: 'center', position: 'absolute', right: 18, width: 60, zIndex: 5 },
   createFab: { alignItems: 'center', borderRadius: 30, elevation: 6, height: 60, justifyContent: 'center', shadowColor: theme.ink, shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 60 },
   filterRow: { alignItems: 'center', flexDirection: 'row', gap: 7, paddingVertical: 12 },

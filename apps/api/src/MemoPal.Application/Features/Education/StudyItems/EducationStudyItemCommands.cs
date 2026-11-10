@@ -114,7 +114,16 @@ public sealed record ImportObjectiveStudyItemsCommand(string UserId, string Cour
 public sealed class ImportObjectiveStudyItemsHandler(IAppDbContext db)
     : IRequestHandler<ImportObjectiveStudyItemsCommand, ApiResponse<EducationStudyItemImportResult>>
 {
-    public async Task<ApiResponse<EducationStudyItemImportResult>> Handle(ImportObjectiveStudyItemsCommand q, CancellationToken ct)
+    public Task<ApiResponse<EducationStudyItemImportResult>> Handle(ImportObjectiveStudyItemsCommand q, CancellationToken ct) =>
+        db.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            // Re-read the entire unit of work after a transient failure; no staged
+            // positions or entities from a rolled-back attempt may be reused.
+            db.ClearTracking();
+            return await HandleAttempt(q, ct);
+        });
+
+    private async Task<ApiResponse<EducationStudyItemImportResult>> HandleAttempt(ImportObjectiveStudyItemsCommand q, CancellationToken ct)
     {
         await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct, q.IsAdmin);
         if (q.ContentLength is > EducationStudyItemImportPlanner.MaxFileBytes ||
@@ -217,7 +226,16 @@ public sealed record DeleteObjectiveStudyItemCommand(string UserId, string Cours
 public sealed class DeleteObjectiveStudyItemHandler(IAppDbContext db)
     : IRequestHandler<DeleteObjectiveStudyItemCommand, ApiResponse<bool>>
 {
-    public async Task<ApiResponse<bool>> Handle(DeleteObjectiveStudyItemCommand q, CancellationToken ct)
+    public Task<ApiResponse<bool>> Handle(DeleteObjectiveStudyItemCommand q, CancellationToken ct) =>
+        db.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            // Re-read the entire unit of work after a transient failure; no staged
+            // positions or entities from a rolled-back attempt may be reused.
+            db.ClearTracking();
+            return await HandleAttempt(q, ct);
+        });
+
+    private async Task<ApiResponse<bool>> HandleAttempt(DeleteObjectiveStudyItemCommand q, CancellationToken ct)
     {
         await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct, q.IsAdmin);
         var item = await db.EducationObjectiveStudyItems.FirstOrDefaultAsync(x => x.Id == q.ItemId && x.ObjectiveId == q.ObjectiveId && !x.IsDeleted, ct)
@@ -248,7 +266,16 @@ public sealed record ReorderObjectiveStudyItemsCommand(string UserId, string Cou
 public sealed class ReorderObjectiveStudyItemsHandler(IAppDbContext db)
     : IRequestHandler<ReorderObjectiveStudyItemsCommand, ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>>
 {
-    public async Task<ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>> Handle(ReorderObjectiveStudyItemsCommand q, CancellationToken ct)
+    public Task<ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>> Handle(ReorderObjectiveStudyItemsCommand q, CancellationToken ct) =>
+        db.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            // Re-read the entire unit of work after a transient failure; no staged
+            // positions or entities from a rolled-back attempt may be reused.
+            db.ClearTracking();
+            return await HandleAttempt(q, ct);
+        });
+
+    private async Task<ApiResponse<IReadOnlyList<EducationObjectiveStudyItemAuthorDto>>> HandleAttempt(ReorderObjectiveStudyItemsCommand q, CancellationToken ct)
     {
         await UpdateObjectiveStudyMetadataHandler.OwnedObjective(db, q.UserId, q.CourseId, q.ObjectiveId, ct, q.IsAdmin);
         var rows = await db.EducationObjectiveStudyItems.Where(x => x.ObjectiveId == q.ObjectiveId && !x.IsDeleted).ToListAsync(ct);

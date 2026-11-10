@@ -10,7 +10,7 @@ import { BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
 import React, { useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 type Props = {
   avatar: AvatarDefinition | null;

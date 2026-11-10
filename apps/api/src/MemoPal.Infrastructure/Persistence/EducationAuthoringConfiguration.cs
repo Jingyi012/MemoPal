@@ -12,6 +12,10 @@ public sealed class EducationAuthoringConfiguration : IEntityTypeConfiguration<E
         b.HasKey(x => x.Id);
         b.Property(x => x.UserId).HasMaxLength(64).IsRequired();
         b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+        b.Property(x => x.SubjectCode).HasMaxLength(32);
+        b.Property(x => x.LearningStage).HasMaxLength(32);
+        b.Property(x => x.LanguageCode).HasMaxLength(16);
+        b.Property(x => x.OutlineVersion).IsConcurrencyToken();
         b.Property(x => x.IsPublic).HasDefaultValue(false).IsRequired();
         b.Property(x => x.IsModerationHidden).HasDefaultValue(false).IsRequired();
         b.Property(x => x.ModerationHiddenReason).HasMaxLength(500);
@@ -25,6 +29,9 @@ public sealed class EducationAuthoringConfiguration : IEntityTypeConfiguration<E
     public void Configure(EntityTypeBuilder<EducationObjective> b)
     {
         b.HasKey(x => x.Id);
+        b.Property(x => x.UnitId).HasMaxLength(64);
+        b.HasOne<EducationCourseUnit>().WithMany().HasForeignKey(x => new { x.CourseId, x.UnitId })
+            .HasPrincipalKey(x => new { x.CourseId, x.Id }).OnDelete(DeleteBehavior.Restrict);
         b.Property(x => x.CourseId).HasMaxLength(64).IsRequired();
         b.Property(x => x.Title).HasMaxLength(200).IsRequired();
         b.Property(x => x.RecommendedMemorySetId).HasMaxLength(64);

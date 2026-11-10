@@ -10,10 +10,12 @@ export interface UserState {
     tutorialPromptDismissed: boolean;
     tutorialViewedAt?: string | null;
     libraryViewMode: 'card' | 'list';
+    librarySection?: 'courses' | 'memory';
   };
 
   preferences: {
     reviewTime: string;
+    dailyMemoryGoal?: 1 | 3 | 5;
     theme: AppTheme;
     language: AppLanguage;
     soundEnabled: boolean;

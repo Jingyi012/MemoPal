@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { useColorScheme } from 'nativewind';
 import type { ComponentProps } from 'react';

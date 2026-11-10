@@ -1,6 +1,6 @@
 import { AppButton } from '@/components/ui/AppButton';
 import type { PalaceLocus } from '@/features/palace-scenes/types/palaceScene.types';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { ChevronLeft, ChevronRight, RotateCcw } from '@/core/icons';
 import { StyleSheet, Text, View } from 'react-native';
@@ -24,6 +24,7 @@ export function PalaceFocusCard({
   onNext,
   isLast = false,
 }: PalaceFocusCardProps) {
+  const { styles } = useStyles();
   const { language, t } = useTranslation('palace');
   const localizedLocusName = getPalaceLocusName(locus, language);
 
@@ -65,10 +66,10 @@ export function PalaceFocusCard({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: {
     backgroundColor: theme.paper,
-    borderColor: '#DCD4FF',
+    borderColor: theme.violetLine,
     borderRadius: 22,
     borderWidth: 1.5,
     marginBottom: 12,
@@ -95,4 +96,4 @@ const styles = StyleSheet.create({
   previousButton: { borderRadius: 15, height: 46, width: 46 },
   nextButton: { flex: 1, minHeight: 46 },
   disabledButton: { opacity: 0.35 },
-});
+}));

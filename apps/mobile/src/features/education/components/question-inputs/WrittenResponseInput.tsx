@@ -26,6 +26,6 @@ export function WrittenResponseInput({ question, value, onChange, hint, placehol
       textAlignVertical="top"
       value={value.text}
     />
-    <Text accessibilityLiveRegion="polite" style={{ alignSelf: 'flex-end', color: theme.inkSoft, fontSize: 11 }}>{value.text.length} / 12000</Text>
+    <Text accessibilityLiveRegion="polite" style={{ alignSelf: 'flex-end', color: theme.inkSoft, fontSize: 13 }}>{value.text.length} / 12000</Text>
   </View>;
 }

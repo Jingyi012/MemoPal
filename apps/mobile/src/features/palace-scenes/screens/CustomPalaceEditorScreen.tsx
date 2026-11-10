@@ -13,7 +13,7 @@ import {
   writeCustomPalaceDraft,
 } from '@/features/palace-scenes/services/customPalaceDraft';
 import type { PalaceLocusInput } from '@/features/palace-scenes/types/palaceScene.types';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { firstParam } from '@/features/memory-composer/utils/composerParams';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
@@ -40,6 +40,7 @@ import {
 type CanvasSize = { width: number; height: number };
 
 export default function CustomPalaceEditorScreen() {
+  const { styles, theme } = useStyles();
   const { t } = useTranslation('palace');
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -307,7 +308,7 @@ export default function CustomPalaceEditorScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.page}>
-      <CommonHeader
+      <CommonHeader showAiCredits={false}
         eyebrow={t('custom')}
         title={sceneId ? t('tune') : t('makePlace')}
         description={t('description')}
@@ -583,6 +584,7 @@ function DraggableLocusMarker({
   onDragEnd: (index: number) => void;
   scrollGesture: ReturnType<typeof Gesture.Native>;
 }) {
+  const { styles } = useStyles();
   const callbacks = useRef({ onDragStart, onDrag, onDragEnd });
   callbacks.current = { onDragStart, onDrag, onDragEnd };
   const dragGesture = useMemo(() => Gesture.Pan()
@@ -609,7 +611,7 @@ function DraggableLocusMarker({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 16, paddingBottom: 44 },
   contentWithDock: { paddingBottom: 126 },
@@ -656,8 +658,8 @@ const styles = StyleSheet.create({
     marginTop: 14,
     borderRadius: 19,
     borderWidth: 1.5,
-    borderColor: '#FFE6A3',
-    backgroundColor: '#FFF7E0',
+    borderColor: theme.sunLine,
+    backgroundColor: theme.sunTint,
     padding: 15,
     alignItems: 'center',
   },
@@ -857,7 +859,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: '#FFD2DC',
-    backgroundColor: '#FFF0F4',
+    backgroundColor: theme.berryTint,
     padding: 12,
   },
   messageText: {
@@ -868,4 +870,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   bottomDock: { backgroundColor: theme.canvas, borderTopColor: theme.line, borderTopWidth: 1, paddingHorizontal: 16, paddingTop: 10 },
-});
+}));

@@ -57,7 +57,7 @@ export default function EducationPracticeScreen() {
 
   return (
     <View style={styles.page}>
-      <CommonHeader title={copy.practiceBrowseTitle} backAction={() => router.back()} />
+      <CommonHeader showAiCredits={false} title={copy.practiceBrowseTitle} backAction={() => router.back()} />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.body}>{copy.practiceBrowseBody}</Text>
         <Text accessibilityRole="header" style={styles.sectionTitle}>{copy.practiceFormatPrompt}</Text>
@@ -105,13 +105,13 @@ export default function EducationPracticeScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { backgroundColor: theme.canvas, flex: 1 },
-  content: { gap: 13, padding: 20, paddingBottom: 40 },
+  content: { gap: 16, padding: 16, paddingBottom: 40 },
   body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
   sectionTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
   formats: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  formatChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 999, borderWidth: 1, justifyContent: 'center', minHeight: 40, paddingHorizontal: 13 },
+  formatChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 999, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingVertical: 10, paddingHorizontal: 13 },
   selectedFormat: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
-  formatText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
+  formatText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
   selectedFormatText: { color: theme.onAccent },
   state: { alignItems: 'center', flexDirection: 'row', gap: 10, minHeight: 60 },
   empty: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 14, borderWidth: 1, color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20, padding: 14 },

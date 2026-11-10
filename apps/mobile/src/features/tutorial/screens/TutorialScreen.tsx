@@ -146,7 +146,7 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
         <View className="mb-6 mt-2 flex-row items-center">
           <TouchableOpacity
             onPress={onBack}
-            className="h-10 w-10 items-center justify-center rounded-full bg-white/20">
+            className="h-10 w-10 items-center justify-center rounded-full bg-surface/20">
             <ChevronLeft size={24} color="white" />
           </TouchableOpacity>
           <Text className="ml-4 text-lg font-bold text-white">{t('title')}</Text>
@@ -158,17 +158,17 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
               key={index}
               className={`h-2 rounded-full ${
                 index === currentStep
-                  ? 'w-8 bg-white'
+                  ? 'w-8 bg-surface'
                   : index < currentStep
-                    ? 'w-2 bg-white/60'
-                    : 'w-2 bg-white/30'
+                    ? 'w-2 bg-surface/60'
+                    : 'w-2 bg-surface/30'
               }`}
             />
           ))}
         </View>
 
         <View className="mb-4 items-center">
-          <View className="h-24 w-24 items-center justify-center rounded-full bg-white" style={{ boxShadow: '0px 4px 14px rgba(43, 42, 61, 0.18)' }}>
+          <View className="h-24 w-24 items-center justify-center rounded-full bg-surface" style={{ boxShadow: '0px 4px 14px rgba(43, 42, 61, 0.18)' }}>
             <Text className="text-5xl">{step.icon}</Text>
           </View>
         </View>
@@ -183,8 +183,8 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
         showsVerticalScrollIndicator={false}
         style={animatedContentStyle}>
         <View className="space-y-6 pb-10">
-          <BaseCard className="border-2 border-[#E5DFFF] bg-white" radius="3xl" padding="lg" shadow="sm">
-            <Text className="text-base leading-6 text-[#6B6A80]">{localizedStep.content}</Text>
+          <BaseCard className="border-2 border-line bg-surface" radius="3xl" padding="lg" shadow="sm">
+            <Text className="text-base leading-6 text-ink-soft">{localizedStep.content}</Text>
           </BaseCard>
 
           <BaseCard
@@ -192,12 +192,12 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
             radius="3xl"
             padding="lg"
             shadow="none">
-            <View className="mr-4 h-10 w-10 items-center justify-center rounded-full bg-white" style={{ boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.08)' }}>
+            <View className="mr-4 h-10 w-10 items-center justify-center rounded-full bg-surface" style={{ boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.08)' }}>
               <Text className="text-lg">i</Text>
             </View>
             <View className="flex-1">
-              <Text className="mb-1 font-bold text-[#7A68E0]">{t('example')}</Text>
-              <Text className="text-sm leading-5 text-[#6B6A80]">{localizedStep.example}</Text>
+              <Text className="mb-1 font-bold text-primary">{t('example')}</Text>
+              <Text className="text-sm leading-5 text-ink-soft">{localizedStep.example}</Text>
             </View>
           </BaseCard>
 
@@ -228,8 +228,8 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
               padding="lg"
               shadow="none">
               <Text className="mb-2 font-bold text-[#F2A900]">Forgetting Curve</Text>
-              <Text className="text-sm text-[#6B6A80]">- After 24h: 70% forgotten</Text>
-              <Text className="text-sm text-[#6B6A80]">- After 7 days: 90% forgotten</Text>
+              <Text className="text-sm text-ink-soft">- After 24h: 70% forgotten</Text>
+              <Text className="text-sm text-ink-soft">- After 7 days: 90% forgotten</Text>
             </BaseCard>
           )}
         </View>

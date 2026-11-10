@@ -64,3 +64,15 @@ test('reorders scanned words without mutating the original list', () => {
   assert.deepEqual(reorderItems(original, 1, 3), ['first', 'third', 'fourth', 'second']);
   assert.deepEqual(original, ['first', 'second', 'third', 'fourth']);
 });
+
+test('scan hand-off preserves a custom study grouping for the returning editor', () => {
+  const id = saveOcrDraft(['school', 'book'], { title: 'Spelling', languageCode: 'en', groupSize: 3 });
+  assert.deepEqual(consumeOcrDraft(id), { items: ['school', 'book'], title: 'Spelling', languageCode: 'en', groupSize: 3 });
+});
+
+test('study scan recovery keeps named units, target and unfinished input intact', () => {
+  const studyEditor = { units: [{ id: 'u1', title: 'Directions', words: [{ id: 'w1', text: 'North', meaning: '北' }] }], targetUnitId: 'u1', inputs: { u1: 'South' }, mode: 'scan' };
+  const id = saveOcrDraft(['East'], { title: 'Earth', languageCode: 'en', studyEditor });
+  assert.deepEqual(consumeOcrDraft(id), { items: ['East'], title: 'Earth', languageCode: 'en', studyEditor });
+  assert.equal(consumeOcrDraft(id), null);
+});

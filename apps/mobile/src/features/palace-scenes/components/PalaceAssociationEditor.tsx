@@ -1,7 +1,7 @@
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { SceneEditorCard } from '@/features/memory-composer/components/SceneEditorCard';
 import type { PalaceLocus } from '@/features/palace-scenes/types/palaceScene.types';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
+import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -41,6 +41,7 @@ export function PalaceAssociationEditor({
   isGeneratingAny = false,
   isGeneratingCurrent = false,
 }: PalaceAssociationEditorProps) {
+  const { styles, theme } = useStyles();
   const { language, t } = useTranslation('palace');
   const { t: memoryT } = useTranslation('memoryComposer');
   const hasItems = items.length > 0;
@@ -242,7 +243,7 @@ export function PalaceAssociationEditor({
             disabled={safeIndex === 0}
             onPress={() => onSelectIndex(Math.max(0, safeIndex - 1))}
             style={[styles.navigationButton, safeIndex === 0 && styles.navigationButtonDisabled]}>
-            <ArrowLeft size={16} color={safeIndex === 0 ? '#B8B3C5' : theme.violetDeep} />
+            <ArrowLeft size={16} color={safeIndex === 0 ? theme.inkMuted : theme.violetDeep} />
             <Text style={[styles.navigationText, safeIndex === 0 && styles.navigationTextDisabled]}>
               {t('previousPlacement')}
             </Text>
@@ -258,7 +259,7 @@ export function PalaceAssociationEditor({
             <Text style={[styles.navigationText, styles.nextNavigationText, safeIndex === items.length - 1 && styles.navigationTextDisabled]}>
               {safeIndex === items.length - 1 ? t('finishPlacements') : t('nextLocus')}
             </Text>
-            <ArrowRight size={16} color={safeIndex === items.length - 1 ? '#B8B3C5' : 'white'} />
+            <ArrowRight size={16} color={safeIndex === items.length - 1 ? theme.inkMuted : theme.onAccent} />
           </AnimatedPressable>
         </View>
       </View>
@@ -266,43 +267,43 @@ export function PalaceAssociationEditor({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((theme) => StyleSheet.create({
   section: { marginTop: 12 },
   headingRow: { alignItems: 'center', flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
   headingCopy: { flex: 1 },
   title: { color: theme.ink, fontFamily: typography.display, fontSize: 17 },
-  compactGenerateButton: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#DCD4FF', borderRadius: 11, borderWidth: 1.5, flexDirection: 'row', gap: 5, justifyContent: 'center', maxWidth: 142, minHeight: 32, paddingHorizontal: 8 },
+  compactGenerateButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 11, borderWidth: 1.5, flexDirection: 'row', gap: 5, justifyContent: 'center', maxWidth: 142, minHeight: 44, paddingHorizontal: 8 },
   generateButtonDisabled: { opacity: 0.62 },
-  compactGenerateText: { color: theme.violetDeep, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 15, marginTop: 4, marginBottom: 5 },
+  compactGenerateText: { color: theme.violetDeep, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, marginTop: 4, marginBottom: 5 },
   progressPill: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 999, justifyContent: 'center', minHeight: 30, paddingHorizontal: 9 },
   progressText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
-  progressTrack: { backgroundColor: '#E8E2F6', borderRadius: 999, height: 5, marginBottom: 8, overflow: 'hidden' },
+  progressTrack: { backgroundColor: theme.line, borderRadius: 999, height: 5, marginBottom: 8, overflow: 'hidden' },
   progressFill: { backgroundColor: theme.violet, borderRadius: 999, height: '100%' },
-  generationMessage: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9.5, lineHeight: 13, marginBottom: 4, textAlign: 'center' },
-  regenerateButton: { alignItems: 'center', backgroundColor: '#F7F5FF', borderColor: '#DCD4FF', borderRadius: 10, borderWidth: 1, height: 30, justifyContent: 'center', width: 30 },
+  generationMessage: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 13, marginBottom: 4, textAlign: 'center' },
+  regenerateButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 10, borderWidth: 1, height: 44, justifyContent: 'center', width: 44 },
   regenerateButtonDisabled: { opacity: 0.62 },
   cardStack: { position: 'relative' },
-  deckLayer: { backgroundColor: '#F3F0FF', borderColor: '#DCD4FF', borderRadius: 20, borderWidth: 1.5, left: 0, position: 'absolute', right: 0 },
+  deckLayer: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 20, borderWidth: 1.5, left: 0, position: 'absolute', right: 0 },
   deckLayerBack: { bottom: 11, left: 10, right: 10, top: 13, opacity: 0.65 },
   deckPreview: { left: 0, position: 'absolute', right: 0, top: 4, zIndex: 1 },
   deckPreviewNext: { zIndex: 1 },
   deckPreviewPrevious: { zIndex: 1 },
   swipeCard: { zIndex: 2 },
   locationVisual: { alignItems: 'center', flexDirection: 'row', gap: 8, width: '100%' },
-  locationIcon: { alignItems: 'center', backgroundColor: '#EAE4FF', borderRadius: 11, height: 32, justifyContent: 'center', width: 32 },
+  locationIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 11, height: 32, justifyContent: 'center', width: 32 },
   locationCopy: { flex: 1, minWidth: 0 },
   locationLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5 },
   locationName: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold },
-  locationDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9.5, lineHeight: 14, marginTop: 2 },
+  locationDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 2 },
   swipeHint: { alignItems: 'center', flexDirection: 'row', gap: 5, justifyContent: 'center', marginBottom: 8, marginTop: 4 },
-  swipeHintText: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: 10 },
+  swipeHintText: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: 12 },
   navigationRow: { flexDirection: 'row', gap: 9, marginTop: 2 },
   navigationSlot: { flex: 1, minWidth: 0 },
-  navigationButton: { alignItems: 'center', backgroundColor: '#F3F0FF', borderColor: '#DCD4FF', borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 6, justifyContent: 'center', minHeight: 46, paddingHorizontal: 10, width: '100%' },
+  navigationButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 6, justifyContent: 'center', minHeight: 46, paddingHorizontal: 10, width: '100%' },
   nextNavigationButton: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
-  navigationButtonDisabled: { backgroundColor: '#F5F2FA', borderColor: '#E6E1EF', opacity: 0.9 },
-  navigationText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  nextNavigationText: { color: 'white' },
-  navigationTextDisabled: { color: '#B8B3C5' },
-});
+  navigationButtonDisabled: { backgroundColor: theme.canvas, borderColor: theme.line, opacity: 0.9 },
+  navigationText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  nextNavigationText: { color: theme.onAccent },
+  navigationTextDisabled: { color: theme.inkMuted },
+}));

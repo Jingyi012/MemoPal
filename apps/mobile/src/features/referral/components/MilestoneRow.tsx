@@ -13,16 +13,16 @@ export const MilestoneRow: React.FC<Props> = ({ title, refs, rewardLabel, curren
   const isCompleted = current >= refs;
   return (
     <View
-      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-[#E5DFFF]' : ''}`}>
-      <View className="flex-row items-center">
+      className={`flex-row items-center justify-between p-4 ${!isLast ? 'border-b border-line' : ''}`}>
+      <View className="flex-1 flex-row items-center">
         <View
-              className={`mr-4 h-9 w-9 items-center justify-center rounded-full ${isCompleted ? 'bg-[#F1FBF5]' : 'bg-[#F3F0FF]'}`}>
+              className={`mr-4 h-9 w-9 items-center justify-center rounded-full ${isCompleted ? 'bg-tint-mint' : 'bg-tint-violet'}`}>
           <Text className="text-base">{isAwarded ? '✓' : '🔒'}</Text>
         </View>
-        <View>
-          <Text className={`text-sm font-bold ${isCompleted ? 'text-[#2B2A3D]' : 'text-[#9A97A7]'}`}>{title}</Text>
-          <Text className="text-xs text-[#6B6A80]">{rewardLabel}</Text>
-          <Text className="text-xs text-[#9A97A7]">{refs} Friends required</Text>
+        <View className="flex-1">
+          <Text className={`text-sm font-bold ${isCompleted ? 'text-ink' : 'text-ink-soft'}`}>{title}</Text>
+          <Text className="text-xs text-ink-soft">{rewardLabel}</Text>
+          <Text className="text-xs text-ink-soft">{refs} Friends required</Text>
         </View>
       </View>
       {isAwarded && <Text className="text-lg">👑</Text>}

@@ -5,7 +5,8 @@ namespace MemoPal.Application.Features.Education.PublicLearning.DTOs;
 
 public sealed record EducationPublicCourseSummaryDto(
     string Id, string Title, string AuthorDisplayName, DateTime PublishedAt, int AssessmentCount, int QuestionCount,
-    bool IsSaved = false, bool IsMemoPalStarter = false);
+    bool IsSaved = false, bool IsMemoPalStarter = false,
+    string? SubjectCode = null, string? LearningStage = null, string? LanguageCode = null);
 
 public sealed record EducationPublicAssessmentSummaryDto(
     string Id, string Title, DateTime PublishedAt, int QuestionCount, IReadOnlyList<string> QuestionTypes);
@@ -14,7 +15,9 @@ public sealed record EducationPublicCourseDetailDto(
     string Id, string Title, string AuthorDisplayName, DateTime PublishedAt,
     IReadOnlyList<EducationPublicAssessmentSummaryDto> Assessments,
     IReadOnlyList<EducationPublicObjectiveDto> Objectives,
-    bool IsSaved = false, bool IsMemoPalStarter = false);
+    bool IsSaved = false, bool IsMemoPalStarter = false,
+    string? SubjectCode = null, string? LearningStage = null, string? LanguageCode = null,
+    IReadOnlyList<EducationCourseUnitDto>? Units = null);
 
 public sealed record EducationPublicCourseSaveDto(string CourseId, bool IsSaved);
 

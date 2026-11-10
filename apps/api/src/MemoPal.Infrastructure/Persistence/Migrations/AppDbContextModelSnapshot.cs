@@ -1534,6 +1534,14 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<string>("LanguageCode")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("LearningStage")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<DateTime?>("ModerationHiddenAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -1548,8 +1556,16 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<int>("OutlineVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("PubliclyPublishedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SubjectCode")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -1649,6 +1665,53 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.HasIndex("CourseId", "Status", "CreatedAt");
 
                     b.ToTable("EducationCourseReports");
+                });
+
+            modelBuilder.Entity("MemoPal.Domain.Entities.EducationCourseUnit", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId", "IsDeleted", "Position");
+
+                    b.ToTable("EducationCourseUnits");
                 });
 
             modelBuilder.Entity("MemoPal.Domain.Entities.EducationDerivedItemMap", b =>
@@ -2165,6 +2228,13 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("UnitId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("UnitPosition")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2174,6 +2244,8 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("RecommendedMemorySetId");
+
+                    b.HasIndex("CourseId", "UnitId");
 
                     b.HasIndex("CourseId", "IsDeleted", "Title");
 
@@ -3995,6 +4067,9 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<int>("RewardAiCredits")
+                        .HasColumnType("integer");
+
                     b.Property<int>("RewardPremiumDays")
                         .HasColumnType("integer");
 
@@ -4081,10 +4156,16 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
 
+                    b.Property<int>("InviteeRewardAiCredits")
+                        .HasColumnType("integer");
+
                     b.Property<int>("InviteeRewardPremiumDays")
                         .HasColumnType("integer");
 
                     b.Property<int>("InviteeRewardXp")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("InviterRewardAiCredits")
                         .HasColumnType("integer");
 
                     b.Property<int>("InviterRewardPremiumDays")
@@ -4989,6 +5070,15 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MemoPal.Domain.Entities.EducationCourseUnit", b =>
+                {
+                    b.HasOne("MemoPal.Domain.Entities.EducationCourse", null)
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MemoPal.Domain.Entities.EducationDerivedItemMap", b =>
                 {
                     b.HasOne("MemoPal.Domain.Entities.EducationObjectiveDerivedMemorySet", null)
@@ -5083,6 +5173,12 @@ namespace MemoPal.Infrastructure.Persistence.Migrations
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("MemoPal.Domain.Entities.EducationCourseUnit", null)
+                        .WithMany()
+                        .HasForeignKey("CourseId", "UnitId")
+                        .HasPrincipalKey("CourseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Course");
                 });

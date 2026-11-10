@@ -74,6 +74,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<EducationClassroomCourse> EducationClassroomCourses => Set<EducationClassroomCourse>();
     public DbSet<EducationGuardianLink> EducationGuardianLinks => Set<EducationGuardianLink>();
     public DbSet<EducationCourse> EducationCourses => Set<EducationCourse>();
+    public DbSet<EducationCourseUnit> EducationCourseUnits => Set<EducationCourseUnit>();
     public DbSet<EducationObjective> EducationObjectives => Set<EducationObjective>();
     public DbSet<EducationObjectiveStudyItem> EducationObjectiveStudyItems => Set<EducationObjectiveStudyItem>();
     public DbSet<EducationObjectiveDerivedMemorySet> EducationObjectiveDerivedMemorySets => Set<EducationObjectiveDerivedMemorySet>();
@@ -97,6 +98,7 @@ public class AppDbContext : DbContext, IAppDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new AccountModeConfiguration());
+        modelBuilder.ApplyConfiguration(new EducationCourseUnitConfiguration());
         modelBuilder.ApplyConfiguration(new EducationObjectiveDerivedMemorySetConfiguration());
         modelBuilder.ApplyConfiguration(new EducationDerivedItemMapConfiguration());
         modelBuilder.ApplyConfiguration(new EducationGuidedLearningSessionConfiguration());

@@ -57,6 +57,7 @@ public interface IAppDbContext
     DbSet<EducationClassroomCourse> EducationClassroomCourses { get; }
     DbSet<EducationGuardianLink> EducationGuardianLinks { get; }
     DbSet<EducationCourse> EducationCourses { get; }
+    DbSet<EducationCourseUnit> EducationCourseUnits { get; }
     DbSet<EducationObjective> EducationObjectives { get; }
     DbSet<EducationObjectiveStudyItem> EducationObjectiveStudyItems { get; }
     DbSet<EducationObjectiveDerivedMemorySet> EducationObjectiveDerivedMemorySets { get; }

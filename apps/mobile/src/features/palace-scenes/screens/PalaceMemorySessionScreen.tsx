@@ -12,7 +12,6 @@ import { List, MapPin } from '@/core/icons';
 import { useMemorySet, type MemorySet } from '@/features/memory-sets';
 import { useSoundEffects } from '@/core/audio/useSoundEffects';
 import { createThemedStyles } from '@/theme/createThemedStyles';
-import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { usePalaceScene } from '@/features/palace-scenes/hooks/usePalaceScenes';
 import {
@@ -57,7 +56,7 @@ export default function PalaceMemorySessionScreen({
   startInRecall?: boolean;
   returnTo?: 'practice' | 'palaces';
 }) {
-  const { styles } = useStyles();
+  const { styles, theme } = useStyles();
   const router = useRouter();
   const { language, t } = useTranslation('palace');
   const { t: reviewText } = useTranslation('review');
@@ -151,7 +150,7 @@ export default function PalaceMemorySessionScreen({
   const leaveSession = () => {
     if (sessionScope) { router.replace({ pathname: '/memory-details/[memorySetId]', params: { memorySetId } }); return; }
     if (returnTo === 'practice') {
-      router.replace('/(tabs)/practice');
+      router.replace('/memory-tools');
       return;
     }
     if (returnTo === 'palaces') {
