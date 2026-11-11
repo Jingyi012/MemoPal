@@ -8,6 +8,7 @@ COPY apps/mobile/package.json apps/mobile/package.json
 RUN npm ci --workspace=memopal-admin --include-workspace-root=false
 
 COPY apps/admin apps/admin
+COPY shared shared
 
 ARG VITE_API_BASE_URL
 ARG VITE_MEDIA_BASE_URL

@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "apps/admin/**"
+      - "shared/**"
       - "deploy/**"
       - ".github/workflows/deploy-admin.yml"
   workflow_dispatch:
