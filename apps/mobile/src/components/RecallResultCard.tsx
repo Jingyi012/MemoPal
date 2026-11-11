@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { CompanionLearningPresence } from '@/features/profile/companion/CompanionLearningPresence';
 import { LevelUpModal } from '@/components/LevelUpModal';
@@ -7,7 +9,7 @@ import { Check, Home, RefreshCcw } from '@/core/icons';
 import { AppButton } from '@/components/ui/AppButton';
 import React from 'react';
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type RecallResultCardProps = {
   tone: 'peg' | 'palace';
@@ -122,32 +124,32 @@ export function RecallResultCard({
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { flex: 1, minHeight: 390, borderRadius: 25, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, padding: 24, alignItems: 'center', justifyContent: 'center' },
+  card: { flex: 1, minHeight: 390, borderRadius: 25, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, padding: appSpacing.xxl, alignItems: 'center', justifyContent: 'center' },
   heroRow: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', minHeight: 132 },
   companionSlot: { position: 'relative', width: 116, height: 120 },
-  palaceCard: { minHeight: 360, borderColor: theme.violetLine, borderRadius: 23, paddingHorizontal: 20, paddingVertical: 24, justifyContent: 'flex-start' },
-  palaceHero: { alignItems: 'center', marginBottom: 4 },
-  palaceCheck: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.mintTint, marginBottom: 12 },
-  emoji: { fontSize: 54 },
-  title: { color: theme.ink, fontFamily: typography.display, fontSize: 22, marginTop: 12, textAlign: 'center' },
-  palaceTitle: { fontSize: 25, marginTop: 6 },
-  palaceBody: { marginTop: 8, marginBottom: 4, maxWidth: 290 },
-  resultRow: { width: '100%', flexDirection: 'row', alignItems: 'stretch', marginTop: 18, borderRadius: 18, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, paddingVertical: 13 },
-  palaceResultRow: { marginTop: 18, borderWidth: 0, borderRadius: 18, backgroundColor: theme.paper, padding: 14, minHeight: 96 },
-  resultStat: { flex: 1, alignItems: 'center', paddingHorizontal: 8 },
-  palaceRecallStat: { borderRadius: 12 },
-  palacePracticeStat: { borderRadius: 12 },
+  palaceCard: { minHeight: 360, borderColor: theme.violetLine, borderRadius: 23, paddingHorizontal: appSpacing.xl, paddingVertical: appSpacing.xxl, justifyContent: 'flex-start' },
+  palaceHero: { alignItems: 'center', marginBottom: appSpacing.xs },
+  palaceCheck: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.mintTint, marginBottom: appSpacing.md },
+  emoji: { fontSize: appArtworkSizes.hero },
+  title: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.prompt.fontSize, marginTop: appSpacing.md, textAlign: 'center' },
+  palaceTitle: { fontSize: appTextStyles.pageTitle.fontSize, marginTop: 6 },
+  palaceBody: { marginTop: appSpacing.sm, marginBottom: appSpacing.xs, maxWidth: 290 },
+  resultRow: { width: '100%', flexDirection: 'row', alignItems: 'stretch', marginTop: 18, borderRadius: appRadii.card, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, paddingVertical: 13 },
+  palaceResultRow: { marginTop: 18, borderWidth: 0, borderRadius: appRadii.card, backgroundColor: theme.paper, padding: 14, minHeight: 96 },
+  resultStat: { flex: 1, alignItems: 'center', paddingHorizontal: appSpacing.sm },
+  palaceRecallStat: { borderRadius: appRadii.control },
+  palacePracticeStat: { borderRadius: appRadii.control },
   resultDivider: { width: 2, backgroundColor: theme.line },
   palaceResultDivider: { width: 1, backgroundColor: theme.violetLine },
-  recalledValue: { color: theme.successText, fontFamily: typography.displayExtraBold, fontSize: 28 },
-  practiceValue: { color: theme.berryDeep, fontFamily: typography.displayExtraBold, fontSize: 28 },
-  resultLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 2, textAlign: 'center' },
-  palaceResultLabel: { maxWidth: 120, lineHeight: 18, fontSize: 12 },
-  body: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 14, marginBottom: 12 },
-  xpPill: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 999, backgroundColor: theme.sunTint, borderWidth: 2, borderColor: theme.sunLine, paddingHorizontal: 14, paddingVertical: 8, marginBottom: 14 },
-  palaceXpPill: { marginTop: 14, marginBottom: 12, borderWidth: 0, backgroundColor: theme.mintTint },
-  xpText: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15 },
-  levelText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.8 },
+  recalledValue: { color: theme.successText, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.pageTitle.fontSize },
+  practiceValue: { color: theme.berryDeep, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.pageTitle.fontSize },
+  resultLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, marginTop: 2, textAlign: 'center' },
+  palaceResultLabel: { maxWidth: 120, lineHeight: appTextStyles.caption.lineHeight, fontSize: appTextStyles.caption.fontSize },
+  body: { color: theme.inkSoft, fontFamily: typography.body, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, textAlign: 'center', marginTop: 14, marginBottom: appSpacing.md },
+  xpPill: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.sm, borderRadius: appRadii.pill, backgroundColor: theme.sunTint, borderWidth: 2, borderColor: theme.sunLine, paddingHorizontal: 14, paddingVertical: appSpacing.sm, marginBottom: 14 },
+  palaceXpPill: { marginTop: 14, marginBottom: appSpacing.md, borderWidth: 0, backgroundColor: theme.mintTint },
+  xpText: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.body.fontSize },
+  levelText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.8 },
   actionWrap: { alignSelf: 'stretch' },
-  secondaryActionWrap: { marginTop: 12 },
+  secondaryActionWrap: { marginTop: appSpacing.md },
 }));

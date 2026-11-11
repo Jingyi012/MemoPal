@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { createThemedStyles } from '@/theme/createThemedStyles';
+import { appLayout, appRadii } from '@/theme/designSystem';
 
 type Props = {
   icon?: LucideIcon;
@@ -25,9 +26,9 @@ export function HeaderIconButton({ icon: Icon, accessibilityLabel, onPress, chil
 
 const useStyles = createThemedStyles(() => StyleSheet.create({
   button: {
-    width: 44,
-    height: 44,
-    borderRadius: 16,
+    width: appLayout.touchTarget,
+    height: appLayout.touchTarget,
+    borderRadius: appRadii.control,
     alignItems: 'center',
     justifyContent: 'center',
   },

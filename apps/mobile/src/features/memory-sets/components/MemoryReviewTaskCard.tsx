@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { AppButton } from '@/components/ui/AppButton';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemoryReviewProgress } from '@/features/practice-attempts';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export function MemoryReviewTaskCard({ progress, onReview, onLearn, onBrowse }: {
   progress: MemoryReviewProgress; onReview: () => void; onLearn: () => void; onBrowse: () => void;
@@ -40,11 +42,11 @@ export function MemoryReviewTaskCard({ progress, onReview, onLearn, onBrowse }: 
 }
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: { gap: 2 },
-  rest: { backgroundColor: theme.paper, borderRadius: 12, padding: 12, gap: 4, marginBottom: 10 },
-  restTitle: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  actionFooter: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  rest: { backgroundColor: theme.paper, borderRadius: appRadii.control, padding: appSpacing.md, gap: appSpacing.xs, marginBottom: 10 },
+  restTitle: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  actionFooter: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.md },
   flex: { flex: 1 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
-  primary: { minHeight: 52, borderRadius: 16 },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  primary: { minHeight: 52, borderRadius: appRadii.control },
   secondary: { alignSelf: 'flex-start' },
 }));

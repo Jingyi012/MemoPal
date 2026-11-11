@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Check, ChevronRight } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export type PalaceOrderedItem = {
   id: string;
@@ -65,22 +67,22 @@ export function PalaceOrderedList({ items, activeIndex, onSelect }: PalaceOrdere
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  section: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 20, borderWidth: 1, padding: 14 },
+  section: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 1, padding: 14 },
   headingRow: { alignItems: 'center', flexDirection: 'row', gap: 10 },
-  headingIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 13, height: 38, justifyContent: 'center', width: 38 },
-  headingEmoji: { fontSize: 18 },
+  headingIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.control, height: 38, justifyContent: 'center', width: 38 },
+  headingEmoji: { fontSize: appArtworkSizes.tiny },
   headingCopy: { flex: 1 },
-  eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.8 },
-  title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 16, marginTop: 2 },
-  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 17, marginTop: 9 },
-  list: { gap: 8, marginTop: 12 },
-  row: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 15, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 68, paddingHorizontal: 10, paddingVertical: 9 },
+  eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.8 },
+  title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.cardTitle.fontSize, marginTop: 2 },
+  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 9 },
+  list: { gap: appSpacing.sm, marginTop: appSpacing.md },
+  row: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1.5, flexDirection: 'row', gap: 10, minHeight: 68, paddingHorizontal: 10, paddingVertical: 9 },
   rowActive: { backgroundColor: theme.violetTint, borderColor: theme.violetDeep },
-  number: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 15, height: 30, justifyContent: 'center', width: 30 },
+  number: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.control, height: 30, justifyContent: 'center', width: 30 },
   numberActive: { backgroundColor: theme.sun },
-  numberText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  numberText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   rowCopy: { flex: 1 },
-  locus: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase' },
-  answer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, marginTop: 3 },
-  association: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 15, marginTop: 2 },
+  locus: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.6, textTransform: 'uppercase' },
+  answer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, marginTop: 3 },
+  association: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 2 },
 }));

@@ -1,5 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { StyleSheet, View, type TextInputProps } from 'react-native';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 
@@ -20,7 +23,7 @@ export function AuthField({ label, onFocus, onBlur, style, ...props }: TextInput
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   field: { gap: 6 },
-  label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  input: { minHeight: 54, borderRadius: 16, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, color: theme.ink, paddingHorizontal: 16, paddingVertical: 13, fontFamily: typography.body, fontSize: 15 },
+  label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  input: { minHeight: 54, borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, color: theme.ink, paddingHorizontal: appSpacing.lg, paddingVertical: 13, fontFamily: typography.body, fontSize: appTextStyles.body.fontSize },
   focused: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint },
 }));

@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import type { XpEventRecord } from '@/features/gamification/shared/api/xpEvent';
 import { typography } from '@/theme/typography';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
 type WeeklyActivityCardProps = {
@@ -98,28 +100,28 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: {
     backgroundColor: theme.paper,
     borderColor: theme.line,
-    borderRadius: 24,
+    borderRadius: appRadii.hero,
     borderWidth: 2,
     marginTop: 14,
     padding: 18,
   },
-  heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 },
-  unit: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, fontFamily: typography.bodyBold, fontSize: 10 },
+  heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: appSpacing.sm, marginBottom: appSpacing.sm },
+  unit: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: 8, paddingHorizontal: appSpacing.sm, paddingVertical: appSpacing.xs, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
   title: {
     color: theme.inkSoft,
     fontFamily: typography.displayExtraBold,
-    fontSize: 14,
+    fontSize: appTextStyles.label.fontSize,
     letterSpacing: 0.3,
     textTransform: 'uppercase',
   },
   barChart: {
     alignItems: 'flex-end',
     flexDirection: 'row',
-    gap: 8,
+    gap: appSpacing.sm,
     height: 132,
     paddingBottom: 2,
     paddingHorizontal: 2,
-    paddingTop: 8,
+    paddingTop: appSpacing.sm,
   },
   barColumn: {
     alignItems: 'center',
@@ -129,7 +131,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     justifyContent: 'flex-end',
   },
   barPlot: { flex: 1, minHeight: 0, width: '100%', borderRadius: 8, backgroundColor: theme.violetTint, justifyContent: 'flex-end', overflow: 'hidden' },
-  barValue: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  barValue: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   bar: { borderRadius: 6, width: '100%' },
-  barLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
+  barLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
 }));

@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles } from '@/theme/designSystem';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Text } from 'react-native';
+
 
 export function QuoteCard({ todayQuote }: { todayQuote: string }) {
   return (
@@ -15,7 +17,7 @@ export function QuoteCard({ todayQuote }: { todayQuote: string }) {
       <Text
         style={{
           color: '#6B6A80',
-          fontSize: 14,
+          fontSize: appTextStyles.label.fontSize,
           fontStyle: 'italic',
           textAlign: 'center',
         }}>

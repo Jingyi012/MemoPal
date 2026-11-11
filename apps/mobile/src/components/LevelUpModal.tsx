@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { typography } from '@/theme/typography';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
@@ -7,7 +9,7 @@ import { CompanionActor } from '@/features/profile/companion/CompanionActor';
 import { getCompanionStage } from '@/features/profile/companion/growth';
 import { AppButton } from '@/components/ui/AppButton';
 import React, { useState } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, View } from 'react-native';
 
 type LevelUpModalProps = {
   level: number;
@@ -63,19 +65,19 @@ export function LevelUpModal({ level, visible, onClose }: LevelUpModalProps) {
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(30,26,48,0.64)', padding: 24 },
-  dialog: { width: '100%', maxWidth: 360, overflow: 'hidden', borderRadius: 26, backgroundColor: theme.paper, boxShadow: '0px 18px 40px rgba(30,26,48,0.35)' },
+  backdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(30,26,48,0.64)', padding: appSpacing.xxl },
+  dialog: { width: '100%', maxWidth: 360, overflow: 'hidden', borderRadius: appRadii.hero, backgroundColor: theme.paper, boxShadow: '0px 18px 40px rgba(30,26,48,0.35)' },
   hero: { minHeight: 216, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 22 },
   sparkleOne: { position: 'absolute', top: 31, left: 48, transform: [{ rotate: '-18deg' }] },
   sparkleTwo: { position: 'absolute', top: 55, right: 52, transform: [{ rotate: '20deg' }] },
-  growth: { color: '#FFE4B9', fontFamily: typography.bodyBold, fontSize: 12, textAlign: 'center', marginTop: 10 },
-  eyebrow: { color: '#FFC93C', fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1.1, textTransform: 'uppercase' },
-  title: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 27, marginTop: 3 },
-  level: { color: '#D7D2EE', fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 3 },
-  body: { alignItems: 'center', padding: 20 },
-  bodyText: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: 12.5, lineHeight: 18, textAlign: 'center' },
-  rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 14, borderRadius: 999, backgroundColor: theme.mintTint, paddingHorizontal: 12, paddingVertical: 8 },
+  growth: { color: '#FFE4B9', fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, textAlign: 'center', marginTop: 10 },
+  eyebrow: { color: '#FFC93C', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 1.1, textTransform: 'uppercase' },
+  title: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: appTextStyles.pageTitle.fontSize, marginTop: 3 },
+  level: { color: '#D7D2EE', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize, marginTop: 3 },
+  body: { alignItems: 'center', padding: appSpacing.xl },
+  bodyText: { color: '#6B6A80', fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, textAlign: 'center' },
+  rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 14, borderRadius: appRadii.pill, backgroundColor: theme.mintTint, paddingHorizontal: appSpacing.md, paddingVertical: appSpacing.sm },
   rewardIcon: { width: 21, height: 21, alignItems: 'center', justifyContent: 'center', borderRadius: 11, backgroundColor: '#DDF5E9' },
-  rewardText: { color: '#267A55', fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  rewardText: { color: '#267A55', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   button: { marginTop: 18 },
 });

@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import { useEducationAssignmentLeaderboard } from '@/features/education/hooks/useEducationAssignmentLeaderboard';
 import { useEducationCopy } from '@/features/education/i18n';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 type EducationAssignmentLeaderboardProps = Readonly<{
   assignmentId: string;
@@ -46,11 +48,11 @@ export function EducationAssignmentLeaderboard({ assignmentId, resultsPublishedA
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: 16, borderWidth: 1.5, gap: 6, padding: 14 },
-  title: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  rank: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 22 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18 },
-  entries: { borderTopColor: theme.skyLine, borderTopWidth: 1, gap: 5, marginTop: 5, paddingTop: 8 },
-  entry: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
+  card: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: appRadii.control, borderWidth: 1.5, gap: 6, padding: 14 },
+  title: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  rank: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  entries: { borderTopColor: theme.skyLine, borderTopWidth: 1, gap: 5, marginTop: 5, paddingTop: appSpacing.sm },
+  entry: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize },
   myEntry: { color: theme.ink, fontFamily: typography.bodyExtraBold },
 }));

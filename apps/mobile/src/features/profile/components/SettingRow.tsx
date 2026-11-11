@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ChevronRight } from '@/core/icons';
 import { ReactNode, useState } from 'react';
-import { Switch, Text, View } from 'react-native';
+import { Switch, View } from 'react-native';
 
 interface Props {
   icon: ReactNode;
@@ -34,8 +36,8 @@ export const SettingsRow: React.FC<Props> = ({
       <View className="flex-row items-center gap-3">
         {icon}
         <View>
-          <Text className="font-semibold text-[#2B2A3D]">{title}</Text>
-          {subtitle && <Text className="text-xs text-[#6B6A80]">{subtitle}</Text>}
+          <Text className="text-[#2B2A3D]" style={{ fontFamily: fontFamilies.bodySemibold }}>{title}</Text>
+          {subtitle && <Text className="text-[#6B6A80]" style={appTextStyles.caption}>{subtitle}</Text>}
         </View>
       </View>
 

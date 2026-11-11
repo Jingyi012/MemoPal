@@ -1,7 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing, appTextStyles } from '@/theme/designSystem';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
-import { typography } from '@/theme/typography';
 import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
 
 /** Web-only tab bar: React Navigation's default bar still forwards deprecated pointerEvents props. */
@@ -55,6 +56,6 @@ export function WebTabBar({ state, descriptors, navigation }: BottomTabBarProps)
 
 const styles = StyleSheet.create({
   bar: { borderTopLeftRadius: 24, borderTopRightRadius: 24, minHeight: 72, flexDirection: 'row', alignItems: 'stretch', justifyContent: 'space-around', backgroundColor: theme.paper, borderTopWidth: 1, borderTopColor: theme.line, boxShadow: '0px -2px 8px rgba(43, 42, 61, 0.08)' },
-  item: { minWidth: 0, minHeight: 72, flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingHorizontal: 4 },
-  label: { fontSize: 10, fontFamily: typography.bodyExtraBold, textAlign: 'center' },
+  item: { minWidth: 0, minHeight: 72, flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingHorizontal: appSpacing.xs },
+  label: { ...appTextStyles.tabLabel, textAlign: 'center' },
 });

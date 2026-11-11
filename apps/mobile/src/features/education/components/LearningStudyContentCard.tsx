@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import type { EducationPublicCourseDetail } from '../types/educationPractice.types';
 import { learningLayout, learningTypeScale } from '../theme/learningTheme';
 import { LearningReadAloud } from './LearningReadAloud';
@@ -37,21 +39,21 @@ export function LearningStudyContentCard({ item }: { item: StudyItem }) {
       {item.languageCode ? <LearningReadAloud key={item.id} text={item.primary} language={item.languageCode} /> : null}
     </View>
 
-    <View style={{ padding: 20, gap: 18 }}>
-      <View style={{ gap: 8 }}>
+    <View style={{ padding: appSpacing.xl, gap: 18 }}>
+      <View style={{ gap: appSpacing.sm }}>
         <Text accessibilityRole="header" style={[
           s.title, learningTypeScale.prompt,
-          primary.length <= 4 && { fontSize: 36, lineHeight: 46 },
+          primary.length <= 4 && { fontSize: appTextStyles.phrase.fontSize, lineHeight: appTextStyles.phrase.lineHeight },
         ]}>{item.primary}</Text>
         {item.phonetic ? <Text style={[s.body, { color: theme.violetDeep }]}>{item.phonetic}</Text> : null}
       </View>
 
-      {showMeaning ? <View style={{ borderTopWidth: 1, borderTopColor: theme.line, paddingTop: 16, gap: 6 }}>
+      {showMeaning ? <View style={{ borderTopWidth: 1, borderTopColor: theme.line, paddingTop: appSpacing.lg, gap: 6 }}>
         <Text style={[s.small, { color: theme.violetDeep }]}>{zh ? '释义与说明' : 'MEANING & NOTES'}</Text>
         <Text style={[s.body, { color: theme.ink }]}>{item.secondary}</Text>
       </View> : null}
 
-      {showExtra ? <View style={{ borderRadius: 16, backgroundColor: theme.violetTint, padding: 14, gap: 6 }}>
+      {showExtra ? <View style={{ borderRadius: appRadii.control, backgroundColor: theme.violetTint, padding: 14, gap: 6 }}>
         <Text style={[s.small, { color: theme.violetDeep }]}>{zh ? '再想一想' : 'A LITTLE MORE'}</Text>
         <Text style={s.body}>{item.extra}</Text>
       </View> : null}

@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useEducationCopy } from '@/features/education/i18n';
 import type { EducationGuardianLink } from '@/features/education/types/educationRelationship.types';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 
 type EducationGuardianRequestsProps = Readonly<{
   links: readonly EducationGuardianLink[];
@@ -118,19 +120,19 @@ export function EducationGuardianRequests({
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   section: { gap: 9 },
-  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 },
-  subheading: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, marginTop: 5 },
-  card: { backgroundColor: theme.paper, borderColor: theme.skyLine, borderRadius: 16, borderWidth: 1.5, gap: 5, padding: 14 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18 },
-  name: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.cardTitle.fontSize },
+  subheading: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, marginTop: 5 },
+  card: { backgroundColor: theme.paper, borderColor: theme.skyLine, borderRadius: appRadii.control, borderWidth: 1.5, gap: 5, padding: 14 },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  name: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
   loading: { alignItems: 'center', flexDirection: 'row', gap: 9, minHeight: 42 },
-  status: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 18 },
-  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 14, borderWidth: 1, gap: 7, padding: 12 },
+  status: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: appRadii.control, borderWidth: 1, gap: 7, padding: appSpacing.md },
   action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 11, justifyContent: 'center', marginTop: 5, minHeight: 44, paddingHorizontal: 14 },
-  actions: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  actions: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm },
+  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   decline: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.paper, borderColor: theme.berryLine, borderRadius: 11, borderWidth: 1, justifyContent: 'center', marginTop: 5, minHeight: 44, paddingHorizontal: 14 },
-  declineText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  declineText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   disabled: { opacity: 0.55 },
-  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 18 },
+  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
 }));

@@ -1,4 +1,6 @@
-import { Text, View } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing } from '@/theme/designSystem';
+import { View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { LearningProgress, SubjectArtwork, useLearningStyles, type LearningTheme } from './LearningUi';
 
@@ -10,7 +12,7 @@ export function LearningCourseHero({ title, subtitle, theme, caption, progress }
   const { styles: s, theme: palette } = useLearningStyles();
   return <LinearGradient colors={palette.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={s.courseHero}>
     <View style={{ position: 'absolute', right: 12, top: 10 }}><SubjectArtwork theme={theme} size={60} /></View>
-    <View style={{ paddingRight: 64, gap: 8 }}>
+    <View style={{ paddingRight: 64, gap: appSpacing.sm }}>
       <Text numberOfLines={2} accessibilityRole="header" style={[s.title, { color: palette.heroInk }]}>{title}</Text>
       <Text style={[s.small, { color: palette.heroInk }]}>{subtitle}</Text>
     </View>

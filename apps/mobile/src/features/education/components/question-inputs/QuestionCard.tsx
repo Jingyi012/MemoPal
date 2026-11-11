@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export type QuestionCardProps = Readonly<{
   questionIndex: number;
@@ -16,22 +18,22 @@ const useStyles = createThemedStyles((theme) =>
       alignSelf: 'stretch',
       backgroundColor: theme.paper,
       borderColor: theme.line,
-      borderRadius: 20,
+      borderRadius: appRadii.card,
       borderWidth: 1,
-      gap: 16,
-      padding: 16,
+      gap: appSpacing.lg,
+      padding: appSpacing.lg,
     },
-    learningCard: { alignSelf: 'stretch', gap: 16 },
+    learningCard: { alignSelf: 'stretch', gap: appSpacing.lg },
     position: {
       color: theme.inkSoft,
       fontFamily: typography.bodyExtraBold,
-      fontSize: 14,
+      fontSize: appTextStyles.label.fontSize,
     },
     error: {
       color: theme.berryDeep,
       fontFamily: typography.bodyBold,
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: appTextStyles.label.fontSize,
+      lineHeight: appTextStyles.label.lineHeight,
     },
   }),
 );

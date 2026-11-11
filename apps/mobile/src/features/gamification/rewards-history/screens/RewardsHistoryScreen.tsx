@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { LearningChoiceMenu } from '@/features/education/components/LearningChoiceMenu';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
@@ -9,7 +11,7 @@ import { useXpEvents } from '@/features/gamification/shared/hooks/useXpEvents';
 import { typography } from '@/theme/typography';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 type RewardFilter = 'all' | 'xp' | 'milestone';
 type TimelineEntry = { id: string; type: Exclude<RewardFilter, 'all'>; title: string; subtitle?: string; points?: number; occurredAt: string };
@@ -104,11 +106,11 @@ function dayLabel(iso: string, todayLabel: string, yesterdayLabel: string) {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 48 }, notice: { marginTop: 16 },
-  windowNote: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, marginTop: 4 },
-  group: { marginTop: 20 }, day: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 13, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }, list: { gap: 9 },
-  rewardCard: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 17, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, padding: 12 },
-  icon: { width: 40, height: 40, borderRadius: 13, backgroundColor: theme.skyTint, alignItems: 'center', justifyContent: 'center' }, milestoneIcon: { backgroundColor: theme.sunTint }, emoji: { fontSize: 19 }, copy: { flex: 1, minWidth: 0 },
-  rewardTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, lineHeight: 21 }, rewardSubtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, marginTop: 3 }, time: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: 12, marginTop: 4 }, points: { color: theme.successText, fontFamily: typography.displayExtraBold, fontSize: 13 },
-  emptyCard: { alignItems: 'center', marginTop: 24, borderRadius: 18, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, padding: 24 }, emptyEmoji: { fontSize: 28 }, emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14, marginTop: 8 }, emptyBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 4 },
+  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: appSpacing.lg, paddingBottom: 48 }, notice: { marginTop: appSpacing.lg },
+  windowNote: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: appSpacing.xs },
+  group: { marginTop: appSpacing.xl }, day: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.small.fontSize, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: appSpacing.sm }, list: { gap: 9 },
+  rewardCard: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: appRadii.control, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, padding: appSpacing.md },
+  icon: { width: 40, height: 40, borderRadius: appRadii.control, backgroundColor: theme.skyTint, alignItems: 'center', justifyContent: 'center' }, milestoneIcon: { backgroundColor: theme.sunTint }, emoji: { fontSize: appArtworkSizes.tiny }, copy: { flex: 1, minWidth: 0 },
+  rewardTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize, lineHeight: appTextStyles.body.lineHeight }, rewardSubtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, marginTop: 3 }, time: { color: theme.inkMuted, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginTop: appSpacing.xs }, points: { color: theme.successText, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.small.fontSize },
+  emptyCard: { alignItems: 'center', marginTop: appSpacing.xxl, borderRadius: appRadii.card, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, padding: appSpacing.xxl }, emptyEmoji: { fontSize: appArtworkSizes.small }, emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.label.fontSize, marginTop: appSpacing.sm }, emptyBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, textAlign: 'center', marginTop: appSpacing.xs },
 }));

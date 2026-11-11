@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { cn } from '@/utils/cn';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import AnimatedPressable from './AnimatedPressable';
 
 interface Props {
@@ -23,11 +25,11 @@ export const PremiumUpdateCard: React.FC<Props> = ({ className }) => {
         }}
         className="p-4">
         <View className="flex-row items-center gap-3">
-          <Text className="text-2xl">👑</Text>
+          <Text style={{ fontSize: appArtworkSizes.medium, lineHeight: appArtworkSizes.medium + 4 }}>👑</Text>
 
           <View className="flex-1">
-            <Text className="font-semibold text-[#2B2A3D]">Upgrade to Premium</Text>
-            <Text className="text-sm text-[#6B6A80]">Unlock unlimited palaces & features</Text>
+            <Text className="text-[#2B2A3D]" style={{ fontFamily: fontFamilies.bodySemibold }}>Upgrade to Premium</Text>
+            <Text className="text-[#6B6A80]" style={appTextStyles.label}>Unlock unlimited palaces & features</Text>
           </View>
         </View>
       </LinearGradient>

@@ -7,6 +7,12 @@ const projectRoot = __dirname;
 
 // get default config
 const config = getDefaultConfig(projectRoot);
+// Use the recursive Watchman backend instead of one fs.watch per directory on
+// Windows. Large workspace trees can otherwise exhaust local file handles.
+if (process.platform === 'win32') {
+  config.resolver.useWatchman = true;
+  config.maxWorkers = Math.min(config.maxWorkers, 2);
+}
 // The diagram protocol is shared with Admin; Metro must watch its source outside this app.
 config.watchFolders = [...new Set([...(config.watchFolders ?? []), path.resolve(projectRoot, '../../shared')])];
 

@@ -1,10 +1,12 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { ChevronRight, CircleHelp, Flame, Sparkles } from '@/core/icons';
 import { useSpotlightTour } from '@/features/onboarding/components/SpotlightTourProvider';
 import { User } from '@/features/profile/types/users';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { MemoryAvatar } from '@/components/MemoryAvatar';
 import { useRouter } from 'expo-router';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { memopalThemes } from '@/theme/memopalTheme';
@@ -111,7 +113,7 @@ export function HomeHeader({ userData }: HomeHeaderProps) {
 const styles = {
   header: {
     paddingHorizontal: 18,
-    paddingTop: 8,
+    paddingTop: appSpacing.sm,
     paddingBottom: 6,
   },
   identityRow: {
@@ -119,21 +121,21 @@ const styles = {
     alignItems: 'center' as const,
     gap: 10,
   },
-  avatarRing: { width: 48, height: 48, borderRadius: 24, alignItems: 'center' as const, justifyContent: 'center' as const, position: 'relative' as const },
+  avatarRing: { width: 48, height: 48, borderRadius: appRadii.hero, alignItems: 'center' as const, justifyContent: 'center' as const, position: 'relative' as const },
   avatarProgress: { position: 'absolute' as const, left: -2, top: -2 },
-  avatarInner: { width: 40, height: 40, borderRadius: 20, alignItems: 'center' as const, justifyContent: 'center' as const, backgroundColor: '#EEE8FF' },
-  levelBadge: { position: 'absolute' as const, right: -6, bottom: -5, borderRadius: 10, borderWidth: 2, borderColor: '#FFFFFF', paddingHorizontal: 5, paddingVertical: 1, fontFamily: typography.bodyExtraBold, fontSize: 8 },
+  avatarInner: { width: 40, height: 40, borderRadius: appRadii.card, alignItems: 'center' as const, justifyContent: 'center' as const, backgroundColor: '#EEE8FF' },
+  levelBadge: { position: 'absolute' as const, right: -6, bottom: -5, borderRadius: 10, borderWidth: 2, borderColor: '#FFFFFF', paddingHorizontal: 5, paddingVertical: 1, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   greetingCopy: { flex: 1, minWidth: 0 },
-  greetingTitle: { fontFamily: typography.displayExtraBold, fontSize: 18 },
-  statusRail: { height: 58, flexDirection: 'row' as const, alignItems: 'center' as const, borderWidth: 1.5, borderRadius: 18, marginTop: 12, overflow: 'hidden' as const },
+  greetingTitle: { fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
+  statusRail: { height: 58, flexDirection: 'row' as const, alignItems: 'center' as const, borderWidth: 1.5, borderRadius: appRadii.card, marginTop: appSpacing.md, overflow: 'hidden' as const },
   statusCell: { flex: 1, minWidth: 0, height: '100%' as const, flexDirection: 'row' as const, alignItems: 'center' as const, justifyContent: 'center' as const, gap: 9, paddingHorizontal: 10 },
   statusDivider: { width: 1, height: 32 },
   statusIcon: { width: 30, height: 30, borderRadius: 11, alignItems: 'center' as const, justifyContent: 'center' as const },
-  statusLabel: { fontFamily: typography.bodyBold, fontSize: 9.5, marginTop: 1 },
+  statusLabel: { fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginTop: 1 },
   creditIcon: { width: 30, height: 30, borderRadius: 11, alignItems: 'center' as const, justifyContent: 'center' as const },
   statusCopy: { minWidth: 0 },
-  creditValue: { fontFamily: typography.displayExtraBold, fontSize: 14, lineHeight: 16 },
-  helpButton: { width: 44, height: 44, borderRadius: 16, borderWidth: 1.5, alignItems: 'center' as const, justifyContent: 'center' as const },
+  creditValue: { fontFamily: typography.displayExtraBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  helpButton: { width: 44, height: 44, borderRadius: appRadii.control, borderWidth: 1.5, alignItems: 'center' as const, justifyContent: 'center' as const },
 };
 
 function compactCreditCount(value: number) {

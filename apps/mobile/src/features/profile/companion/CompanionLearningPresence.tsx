@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useReducedMotion } from 'react-native-reanimated';
@@ -210,42 +212,42 @@ const useStyles = createThemedStyles((t) =>
       flexDirection: 'row',
       alignItems: 'center',
       alignSelf: 'stretch',
-      gap: 8,
-      paddingVertical: 4,
+      gap: appSpacing.sm,
+      paddingVertical: appSpacing.xs,
     },
     home: {
       overflow: 'hidden',
       backgroundColor: t.violetTint,
       borderColor: t.violetLine,
       borderWidth: 1,
-      borderRadius: 22,
-      padding: 12,
+      borderRadius: appRadii.card,
+      padding: appSpacing.md,
     },
     miniGlow: { position: 'absolute', left: -18, top: -30, width: 130, height: 130, borderRadius: 65, backgroundColor: t.paper, opacity: .47 },
     miniBubbleOne: { position: 'absolute', right: 28, top: 14, width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: t.skyLine, opacity: .8 },
     miniBubbleTwo: { position: 'absolute', right: 55, bottom: 11, width: 8, height: 8, borderRadius: 4, borderWidth: 1.5, borderColor: t.violetLine, opacity: .75 },
-    words: { flex: 1, gap: 4 },
+    words: { flex: 1, gap: appSpacing.xs },
     corner: { position: 'absolute', top: -10, right: 4, width: 116, height: 108, alignItems: 'center', justifyContent: 'center', zIndex: 3, elevation: 3 },
     cornerGlow: { position: 'absolute', top: 25, right: 10, width: 92, height: 65, borderRadius: 45, backgroundColor: t.violetTint, opacity: .82 },
     cornerGlowCorrect: { backgroundColor: t.mintTint },
     cornerGlowWrong: { backgroundColor: t.berryTint },
     celebration: { position: 'absolute', top: 3, right: 1, width: 100, height: 106, zIndex: 3 },
     celebrationTouch: { width: 100, height: 100, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: t.sunLine, borderRadius: 28, overflow: 'hidden', transform: [{ rotate: '6deg' }] },
-    celebrationBubble: { position: 'absolute', top: 94, right: 5, minWidth: 78, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 7, borderWidth: 1, borderColor: t.sunLine, borderRadius: 14, backgroundColor: t.sunTint, zIndex: 2 },
-    celebrationBubbleText: { color: t.ink, fontSize: 11, fontWeight: '800' },
-    celebrationSparkleTop: { position: 'absolute', top: -3, right: 20, color: t.sunDeep, fontSize: 18, zIndex: 2 },
-    celebrationSparkleSide: { position: 'absolute', top: 49, right: 1, color: t.violetDeep, fontSize: 17, zIndex: 2 },
-    celebrationShadow: { position: 'absolute', bottom: 9, right: 18, width: 55, height: 5, borderRadius: 20, backgroundColor: t.line },
+    celebrationBubble: { position: 'absolute', top: 94, right: 5, minWidth: 78, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: appSpacing.xs, paddingHorizontal: 9, paddingVertical: 7, borderWidth: 1, borderColor: t.sunLine, borderRadius: appRadii.control, backgroundColor: t.sunTint, zIndex: 2 },
+    celebrationBubbleText: { ...appTextStyles.captionStrong, color: t.ink },
+    celebrationSparkleTop: { position: 'absolute', top: -3, right: 20, color: t.sunDeep, fontSize: appTextStyles.sectionTitle.fontSize, zIndex: 2 },
+    celebrationSparkleSide: { position: 'absolute', top: 49, right: 1, color: t.violetDeep, fontSize: appTextStyles.sectionTitle.fontSize, zIndex: 2 },
+    celebrationShadow: { position: 'absolute', bottom: 9, right: 18, width: 55, height: 5, borderRadius: appRadii.card, backgroundColor: t.line },
     cornerTouch: { width: 100, height: 100, alignItems: 'center', justifyContent: 'center' },
     cornerBubbleOne: { position: 'absolute', top: 14, left: 7, width: 13, height: 13, borderRadius: 7, borderWidth: 2, borderColor: t.skyLine, backgroundColor: t.skyTint },
     cornerBubbleTwo: { position: 'absolute', top: 34, right: 3, width: 8, height: 8, borderRadius: 4, borderWidth: 1.5, borderColor: t.violetLine, backgroundColor: t.paper },
     reactionMark: { position: 'absolute', top: 7, right: 6, transform: [{ rotate: '15deg' }] },
-    cornerMessage: { position: 'absolute', right: 1, bottom: -8, minWidth: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, paddingHorizontal: 7, paddingVertical: 4, borderRadius: 12, borderWidth: 1, backgroundColor: t.paper },
+    cornerMessage: { position: 'absolute', right: 1, bottom: -8, minWidth: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, paddingHorizontal: 7, paddingVertical: appSpacing.xs, borderRadius: appRadii.control, borderWidth: 1, backgroundColor: t.paper },
     cornerMessageCorrect: { borderColor: t.mintLine },
     cornerMessageWrong: { borderColor: t.berryLine },
-    cornerMessageText: { fontSize: 10, fontWeight: '800' },
-    name: { color: t.ink, fontSize: 14, fontWeight: '700' },
-    message: { color: t.inkSoft, fontSize: 13, lineHeight: 20 },
-    link: { color: t.violetDeep, fontSize: 12, fontWeight: '700' },
+    cornerMessageText: appTextStyles.captionStrong,
+    name: { ...appTextStyles.labelStrong, color: t.ink },
+    message: { color: t.inkSoft, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+    link: { ...appTextStyles.captionStrong, color: t.violetDeep },
   })
 );

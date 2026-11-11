@@ -1,3 +1,6 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput, type AppTextInputRef } from '@/components/ui/AppTextInput';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { AppBottomSheet } from '@/components/AppBottomSheet';
 import { HeaderIconButton } from '@/components/ui/HeaderIconButton';
 import { ContentImportActions } from '../components/ContentImportActions';
@@ -10,7 +13,7 @@ import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Plus, CircleHelp } from '@/core/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { firstParam, parseBulkItems, parseComposerGoal, parseComposerItems, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import { consumeOcrDraft, saveOcrDraft } from '@/features/memory-composer/utils/ocrDraftStore';
 import { buildTechniqueRoute, recommendTechnique, type ComposerOrigin, type TechniqueChoice } from '@/features/memory-composer/utils/techniqueRecommendation';
@@ -75,12 +78,12 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [isReordering, setIsReordering] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  const focusedInputRef = useRef<TextInput | null>(null);
+  const focusedInputRef = useRef<AppTextInputRef | null>(null);
   const scrollOffsetRef = useRef(0);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const titleInputRef = useRef<TextInput>(null);
-  const bulkInputRef = useRef<TextInput>(null);
-  const newItemInputRef = useRef<TextInput>(null);
+  const titleInputRef = useRef<AppTextInputRef>(null);
+  const bulkInputRef = useRef<AppTextInputRef>(null);
+  const newItemInputRef = useRef<AppTextInputRef>(null);
 
   useEffect(() => {
     const draft = consumeOcrDraft(firstParam(params.ocrDraftId));
@@ -133,7 +136,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
     }, 80);
   }, []);
 
-  const handleInputFocus = useCallback((input: TextInput | null) => {
+  const handleInputFocus = useCallback((input: AppTextInputRef | null) => {
     focusedInputRef.current = input;
     keepFocusedInputVisible();
   }, [keepFocusedInputVisible]);
@@ -240,7 +243,7 @@ export default function MemoryComposerScreen({ initialTechnique, initialSceneId 
         onScroll={(event) => { scrollOffsetRef.current = event.nativeEvent.contentOffset.y; }}
         scrollEventThrottle={16}
         style={styles.scrollView}
-        contentContainerStyle={[styles.content, keyboardInset > 0 && { paddingBottom: 24 }]}>
+        contentContainerStyle={[styles.content, keyboardInset > 0 && { paddingBottom: appSpacing.xxl }]}>
         <View style={styles.progressRow}>
           <View style={styles.progressStep}>
             <View style={[styles.progressDot, step === 'content' && styles.progressDotActive]}>
@@ -499,84 +502,84 @@ function MessageCard({ message }: { message: string }) {
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   scrollView: { flex: 1 },
-  content: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 124, gap: 18 },
+  content: { paddingHorizontal: appSpacing.lg, paddingTop: appSpacing.xs, paddingBottom: 124, gap: 18 },
   progressRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 1 },
   progressStep: { alignItems: 'center', gap: 5 },
-  progressDot: { width: 26, height: 26, borderRadius: 13, backgroundColor: theme.line, alignItems: 'center', justifyContent: 'center' },
+  progressDot: { width: 26, height: 26, borderRadius: appRadii.control, backgroundColor: theme.line, alignItems: 'center', justifyContent: 'center' },
   progressDotActive: { backgroundColor: theme.violetDeep },
-  progressNumber: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  progressNumber: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   progressNumberActive: { color: theme.paper },
-  progressLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
+  progressLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
   progressLabelActive: { color: theme.violetDeep },
-  progressLine: { flex: 1, height: 2, backgroundColor: theme.line, marginHorizontal: 12, marginBottom: 16 },
+  progressLine: { flex: 1, height: 2, backgroundColor: theme.line, marginHorizontal: appSpacing.md, marginBottom: appSpacing.lg },
   progressLineActive: { backgroundColor: theme.violetDeep },
   section: { gap: 10 },
   sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16, lineHeight: 21 },
-  sectionSubtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21, marginTop: 2 },
-  countPill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: theme.violetTint },
-  countText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  cardIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.berryTint },
-  cardIconEmoji: { fontSize: 21 },
-  cardTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 17, marginTop: 10 },
-  cardBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
-  label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 },
-  bulkCard: { borderRadius: 15, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 10, marginBottom: 10 },
-  bulkTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginBottom: 7 },
-  bulkInput: { minHeight: 105, paddingTop: 12, textAlignVertical: 'top', backgroundColor: theme.paper },
-  bulkButton: { alignSelf: 'stretch', marginTop: 8 },
-  optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
-  input: { minHeight: 49, borderRadius: 12, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 12, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
-  goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  goalChip: { flexBasis: '48%', flexGrow: 1, minHeight: 58, borderRadius: 15, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 9 },
+  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight },
+  sectionSubtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight, marginTop: 2 },
+  countPill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: appRadii.pill, backgroundColor: theme.violetTint },
+  countText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  cardIcon: { width: 38, height: 38, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.berryTint },
+  cardIconEmoji: { fontSize: appArtworkSizes.tiny },
+  cardTitle: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.sectionTitle.fontSize, marginTop: 10 },
+  cardBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: appSpacing.xs },
+  label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize, marginTop: 18, marginBottom: appSpacing.sm },
+  bulkCard: { borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 10, marginBottom: 10 },
+  bulkTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, marginBottom: 7 },
+  bulkInput: { minHeight: 105, paddingTop: appSpacing.md, textAlignVertical: 'top', backgroundColor: theme.paper },
+  bulkButton: { alignSelf: 'stretch', marginTop: appSpacing.sm },
+  optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  input: { minHeight: 49, borderRadius: appRadii.control, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: appSpacing.md, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize },
+  goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm },
+  goalChip: { flexBasis: '48%', flexGrow: 1, minHeight: 58, borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: appSpacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 9 },
   goalChipSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint },
-  goalEmoji: { fontSize: 22 },
-  goalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12.5 },
+  goalEmoji: { fontSize: appArtworkSizes.small },
+  goalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
   goalLabelSelected: { color: theme.ink },
-  addRow: { flexDirection: 'row', gap: 8 },
+  addRow: { flexDirection: 'row', gap: appSpacing.sm },
   addInput: { flex: 1 },
-  addButton: { width: 52, height: 52, minHeight: 52, paddingHorizontal: 0, borderRadius: 15 },
-  chipRow: { gap: 8 },
-  emptyItems: { minHeight: 76, alignItems: 'center', justifyContent: 'center', borderRadius: 15, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.line, backgroundColor: theme.paper },
-  emptyItemsText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, textAlign: 'center', paddingHorizontal: 16 },
-  hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: 12 },
-  bottomDock: { paddingHorizontal: 16, paddingTop: 12, backgroundColor: theme.canvas, borderTopWidth: 1, borderTopColor: theme.line },
-  messageCard: { marginTop: 13, borderRadius: 13, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 11 },
-  messageText: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 17, textAlign: 'center' },
-  recommendationBanner: { flexDirection: 'row', gap: 11, borderRadius: 18, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 14, marginBottom: 16 },
-  recommendationEmoji: { fontSize: 27 },
-  recommendationTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  recommendationBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17, marginTop: 3 },
-  techniqueCard: { position: 'relative', borderWidth: 1.5, borderColor: theme.line, borderRadius: 22, backgroundColor: theme.paper, padding: 16, marginBottom: 0 },
+  addButton: { width: 52, height: 52, minHeight: 52, paddingHorizontal: 0, borderRadius: appRadii.control },
+  chipRow: { gap: appSpacing.sm },
+  emptyItems: { minHeight: 76, alignItems: 'center', justifyContent: 'center', borderRadius: appRadii.control, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.line, backgroundColor: theme.paper },
+  emptyItemsText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, textAlign: 'center', paddingHorizontal: appSpacing.lg },
+  hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, textAlign: 'center', marginTop: appSpacing.md },
+  bottomDock: { paddingHorizontal: appSpacing.lg, paddingTop: appSpacing.md, backgroundColor: theme.canvas, borderTopWidth: 1, borderTopColor: theme.line },
+  messageCard: { marginTop: 13, borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 11 },
+  messageText: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, textAlign: 'center' },
+  recommendationBanner: { flexDirection: 'row', gap: 11, borderRadius: appRadii.card, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 14, marginBottom: appSpacing.lg },
+  recommendationEmoji: { fontSize: appArtworkSizes.small },
+  recommendationTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  recommendationBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 3 },
+  techniqueCard: { position: 'relative', borderWidth: 1.5, borderColor: theme.line, borderRadius: appRadii.card, backgroundColor: theme.paper, padding: appSpacing.lg, marginBottom: 0 },
   techniqueCardPeg: { borderColor: theme.berryLine, backgroundColor: theme.berryTint },
   techniqueCardPalace: { borderColor: theme.violetLine, backgroundColor: theme.violetTint },
   techniqueCardRecommended: { borderColor: theme.sunDeep, borderWidth: 2.5 },
-  ribbon: { position: 'absolute', right: 13, top: -11, borderRadius: 999, backgroundColor: theme.sun, paddingHorizontal: 10, paddingVertical: 4, boxShadow: '0px 2px 4px rgba(43, 42, 61, 0.15)' },
-  ribbonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.4 },
+  ribbon: { position: 'absolute', right: 13, top: -11, borderRadius: appRadii.pill, backgroundColor: theme.sun, paddingHorizontal: 10, paddingVertical: appSpacing.xs, boxShadow: '0px 2px 4px rgba(43, 42, 61, 0.15)' },
+  ribbonText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.4 },
   techniqueHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 },
-  techniqueIcon: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },
+  techniqueIcon: { width: 56, height: 56, borderRadius: appRadii.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },
   pegIcon: { backgroundColor: theme.paper, borderColor: theme.berryLine },
   palaceIcon: { backgroundColor: theme.paper, borderColor: theme.violetLine },
-  techniqueIconEmoji: { fontSize: 27 },
+  techniqueIconEmoji: { fontSize: appArtworkSizes.small },
   techniqueMeta: { flex: 1, minWidth: 0, paddingTop: 2 },
-  techniqueName: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17, lineHeight: 22 },
-  techniqueTag: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, lineHeight: 16, marginTop: 3, opacity: 0.7 },
-  techniqueArrow: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  techniqueName: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight },
+  techniqueTag: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 3, opacity: 0.7 },
+  techniqueArrow: { width: 34, height: 34, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center' },
   pegArrow: { backgroundColor: theme.berryTint },
   palaceArrow: { backgroundColor: theme.violetTint },
-  descriptionBox: { borderRadius: 14, borderWidth: 1, paddingHorizontal: 11, paddingVertical: 9, marginTop: 14 },
+  descriptionBox: { borderRadius: appRadii.control, borderWidth: 1, paddingHorizontal: 11, paddingVertical: 9, marginTop: 14 },
   pegDescriptionBox: { backgroundColor: theme.paper, borderColor: theme.berryLine },
   palaceDescriptionBox: { backgroundColor: theme.paper, borderColor: theme.violetLine },
-  descriptionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.7, textTransform: 'uppercase', marginBottom: 3 },
-  techniqueDescription: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17 },
+  descriptionLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.7, textTransform: 'uppercase', marginBottom: 3 },
+  techniqueDescription: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
   pegDescription: { color: theme.berryDeep },
   palaceDescription: { color: theme.violetDeep },
   bestForHeader: { marginTop: 11 },
-  bestForLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.7, textTransform: 'uppercase' },
+  bestForLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.7, textTransform: 'uppercase' },
   bestForRow: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
-  bestFor: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodyBold, fontSize: 10.5, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
+  bestFor: { color: theme.inkSoft, flexShrink: 1, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, borderRadius: appRadii.pill, paddingHorizontal: 9, paddingVertical: appSpacing.xs },
   pegBestFor: { color: theme.berryDeep, borderColor: theme.berryLine },
   palaceBestFor: { color: theme.violetDeep, borderColor: theme.violetLine },
   changeButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 2 },
-  changeButtonText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
+  changeButtonText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
 }));

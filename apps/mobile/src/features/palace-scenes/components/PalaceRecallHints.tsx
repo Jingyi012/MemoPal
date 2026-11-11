@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { ChevronDown, ChevronUp, Lightbulb } from '@/core/icons';
@@ -5,7 +7,7 @@ import type { MemoryItem, PalaceBinding } from '@/features/memory-sets';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export const PALACE_MAX_HINTS = 2;
 
@@ -80,16 +82,16 @@ export function PalaceRecallHints({ item, binding, hintCount, feedback, disabled
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   container: { alignSelf: 'stretch' },
-  trigger: { minHeight: 44, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8, paddingHorizontal: 0 },
+  trigger: { minHeight: 44, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: appSpacing.sm, paddingHorizontal: 0 },
   triggerIcon: { width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.sunTint },
-  triggerText: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: 12 },
+  triggerText: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
   disabled: { opacity: 0.5 },
-  content: { borderRadius: 14, borderWidth: 1, borderLeftWidth: 3, borderColor: theme.line, borderLeftColor: theme.sunDeep, backgroundColor: theme.paper, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 10, gap: 8 },
-  contentHeader: { minHeight: 20, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  label: { flex: 1, color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11, letterSpacing: 0.15 },
-  body: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21 },
-  answerRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.line, marginTop: 6, paddingTop: 12, gap: 4 },
-  answer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 18, lineHeight: 25 },
+  content: { borderRadius: appRadii.control, borderWidth: 1, borderLeftWidth: 3, borderColor: theme.line, borderLeftColor: theme.sunDeep, backgroundColor: theme.paper, paddingHorizontal: 14, paddingTop: appSpacing.md, paddingBottom: 10, gap: appSpacing.sm },
+  contentHeader: { minHeight: 20, flexDirection: 'row', alignItems: 'center', gap: appSpacing.sm },
+  label: { flex: 1, color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.15 },
+  body: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  answerRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.line, marginTop: 6, paddingTop: appSpacing.md, gap: appSpacing.xs },
+  answer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight },
   revealButton: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
-  revealText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  revealText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
 }));

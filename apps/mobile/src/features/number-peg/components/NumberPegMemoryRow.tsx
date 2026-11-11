@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { MemorySet } from '@/features/memory-sets';
@@ -5,7 +7,7 @@ import { useMemoryReviewProgress } from '@/features/practice-attempts';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { ChevronRight } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export function NumberPegMemoryRow({ memorySet, dueCount, onPress }: { memorySet: MemorySet; dueCount: number; onPress: () => void }) {
   const { styles, theme } = useStyles();
@@ -42,17 +44,17 @@ export function NumberPegMemoryRow({ memorySet, dueCount, onPress }: { memorySet
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  row: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 80, padding: 11 },
-  countBadge: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 14, height: 48, justifyContent: 'center', minWidth: 48, paddingHorizontal: 5 },
-  countNumber: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 17, lineHeight: 20 },
-  countUnit: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  row: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 80, padding: 11 },
+  countBadge: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.control, height: 48, justifyContent: 'center', minWidth: 48, paddingHorizontal: 5 },
+  countNumber: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight },
+  countUnit: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   copy: { flex: 1, gap: 3, minWidth: 0 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontWeight: '800', fontSize: 16 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.cardTitle.fontSize },
   meta: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
-  status: { borderRadius: 999, fontFamily: typography.bodyExtraBold, fontSize: 12, overflow: 'hidden', paddingHorizontal: 7, paddingVertical: 3 },
+  status: { borderRadius: appRadii.pill, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, overflow: 'hidden', paddingHorizontal: 7, paddingVertical: 3 },
   statusRecall: { backgroundColor: theme.violetTint, color: theme.violetDeep },
   statusBuilding: { backgroundColor: theme.sunTint, color: theme.onSun },
-  dueLabel: { color: theme.successText, fontFamily: typography.bodyBold, fontSize: 12 },
-  progressTrack: { backgroundColor: theme.violetTint, borderRadius: 99, height: 4, marginTop: 3, overflow: 'hidden' },
-  progressFill: { backgroundColor: theme.violetDeep, borderRadius: 99, height: '100%' },
+  dueLabel: { color: theme.successText, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  progressTrack: { backgroundColor: theme.violetTint, borderRadius: appRadii.pill, height: 4, marginTop: 3, overflow: 'hidden' },
+  progressFill: { backgroundColor: theme.violetDeep, borderRadius: appRadii.pill, height: '100%' },
 }));

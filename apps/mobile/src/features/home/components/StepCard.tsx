@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appTextStyles } from '@/theme/designSystem';
 import { BaseCard } from '@/components/BaseCard';
 import { Step } from '@/core/types/application';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 interface StepCardProps {
   step: Step;
@@ -30,7 +32,7 @@ export const StepCard: React.FC<StepCardProps> = ({ step }) => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
-              borderRadius: 24,
+              borderRadius: appRadii.hero,
             }}>
             <Text className="text-white">{step.id}</Text>
           </LinearGradient>
@@ -42,12 +44,12 @@ export const StepCard: React.FC<StepCardProps> = ({ step }) => {
             className={`mb-1 ${isLocked ? 'text-ink-muted' : 'text-ink'} flex-row items-center`}>
             {step.title}
             {isLocked && (
-              <Text className="ml-2 rounded-full bg-tint-sky px-2 py-0.5 text-xs text-ink-soft">
+              <Text className="ml-2 rounded-full bg-tint-sky px-2 py-0.5 text-ink-soft" style={appTextStyles.caption}>
                 Locked
               </Text>
             )}
           </Text>
-          <Text className="mb-2 text-sm text-ink-soft">
+          <Text className="mb-2 text-ink-soft" style={appTextStyles.label}>
             {step.description}
           </Text>
 
@@ -60,7 +62,7 @@ export const StepCard: React.FC<StepCardProps> = ({ step }) => {
                   style={{ width: `${progressPercent}%` }}
                 />
               </View>
-              <Text className="text-xs text-ink-soft">
+              <Text className="text-ink-soft" style={appTextStyles.caption}>
                 {step.progress.current}/{step.progress.total}
               </Text>
             </View>

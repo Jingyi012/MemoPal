@@ -7,7 +7,7 @@
     "apps/admin"
   ],
   "scripts": {
-    "dev:mobile": "npm run start --workspace=memopal",
+    "dev:mobile": "npm run start --workspace=memopal --",
     "android": "npm run android --workspace=memopal",
     "dev:admin": "npm run dev --workspace=memopal-admin",
     "check": "npm run check:mobile && npm run check:admin",

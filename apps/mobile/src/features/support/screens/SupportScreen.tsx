@@ -1,3 +1,6 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
 import { createThemedStyles } from '@/theme/createThemedStyles';
@@ -6,7 +9,7 @@ import { useHelpFaqConfig } from '@/features/support/hooks/useHelpFaqConfig';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
@@ -100,49 +103,49 @@ export default function Support() {
 const useStyles = createThemedStyles((theme) =>
   StyleSheet.create({
     page: { backgroundColor: theme.canvas, flex: 1 },
-    content: { gap: 16, padding: 16, paddingBottom: 32 },
+    content: { gap: appSpacing.lg, padding: appSpacing.lg, paddingBottom: appSpacing.section },
     hero: {
       alignItems: 'center',
       backgroundColor: theme.paper,
       borderColor: theme.line,
-      borderRadius: 24,
+      borderRadius: appRadii.hero,
       borderWidth: 1,
-      padding: 20,
+      padding: appSpacing.xl,
     },
     heroIcon: {
       alignItems: 'center',
       backgroundColor: theme.paper,
-      borderRadius: 22,
+      borderRadius: appRadii.card,
       height: 64,
       justifyContent: 'center',
       width: 64,
     },
-    heroEmoji: { fontSize: 34 },
+    heroEmoji: { fontSize: appArtworkSizes.medium },
     heroTitle: {
       color: theme.ink,
       fontFamily: typography.displayExtraBold,
-      fontSize: 20,
+      fontSize: appTextStyles.screenTitle.fontSize,
       marginTop: 10,
     },
     heroBody: {
       color: theme.inkSoft,
       fontFamily: typography.bodySemibold,
-      fontSize: 12,
-      lineHeight: 18,
+      fontSize: appTextStyles.caption.fontSize,
+      lineHeight: appTextStyles.caption.lineHeight,
       marginTop: 5,
       textAlign: 'center',
     },
     input: {
       backgroundColor: theme.paper,
       borderColor: theme.line,
-      borderRadius: 16,
+      borderRadius: appRadii.control,
       borderWidth: 1.5,
       color: theme.ink,
       fontFamily: typography.bodySemibold,
-      fontSize: 14,
+      fontSize: appTextStyles.label.fontSize,
       minHeight: 52,
       paddingHorizontal: 14,
     },
-    messageInput: { minHeight: 140, paddingBottom: 12, paddingTop: 12, textAlignVertical: 'top' },
+    messageInput: { minHeight: 140, paddingBottom: appSpacing.md, paddingTop: appSpacing.md, textAlignVertical: 'top' },
   })
 );

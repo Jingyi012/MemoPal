@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing, appTextStyles } from '@/theme/designSystem';
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import { typography } from '@/theme/typography';
 
 interface Props {
@@ -57,7 +59,7 @@ export const SegmentedProgressBar: React.FC<Props> = ({ total, current, label })
 };
 
 const styles = StyleSheet.create({
-  wrapper: { width: '100%', marginTop: 8 },
+  wrapper: { width: '100%', marginTop: appSpacing.sm },
   track: {
     height: 8,
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -83,18 +85,18 @@ const styles = StyleSheet.create({
   labelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
+    marginTop: appSpacing.sm,
     alignItems: 'center',
   },
   stepCount: {
     color: 'rgba(255,255,255,0.6)',
     fontFamily: typography.bodyExtraBold,
-    fontSize: 10,
+    fontSize: appTextStyles.caption.fontSize,
     letterSpacing: 1,
   },
   labelText: {
     color: 'white',
     fontFamily: typography.bodySemibold,
-    fontSize: 14,
+    fontSize: appTextStyles.label.fontSize,
   },
 });

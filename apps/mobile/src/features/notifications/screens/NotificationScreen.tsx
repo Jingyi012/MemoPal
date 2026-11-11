@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { CommonHeader } from '@/components/CommonHeader';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import LoadingView from '@/components/LoadingView';
@@ -21,7 +23,7 @@ import {
   Zap,
 } from '@/core/icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 const getTypeConfig = (theme: MemoPalTheme) => ({
@@ -333,7 +335,7 @@ const NotificationScreen = () => {
     if (item.type === 'header') {
       return (
         <View className="px-4 pb-2 pt-3">
-          <Text className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
+          <Text className="uppercase tracking-wide text-ink-soft" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodySemibold }]}>
             {item.title} ({item.count})
           </Text>
         </View>
@@ -388,11 +390,11 @@ const NotificationScreen = () => {
                 </Text>
                 {!isSelectionMode && !notification.isRead && (
                   <View className="ml-2 rounded-full bg-tint-violet px-2 py-0.5">
-                    <Text className="text-[10px] font-bold text-primary">NEW</Text>
+                    <Text className="text-primary" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodyBold }]}>NEW</Text>
                   </View>
                 )}
               </View>
-              <Text className="text-xs text-ink-soft">
+              <Text className="text-ink-soft" style={appTextStyles.caption}>
                 {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
               </Text>
             </View>
@@ -409,7 +411,7 @@ const NotificationScreen = () => {
               <View className="flex-row items-center">
                 {notification.referenceType && (
                   <View className="rounded-md bg-tint-peach px-2 py-0.5">
-                    <Text className="text-[10px] font-bold uppercase text-ink-soft">
+                    <Text className="uppercase text-ink-soft" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodyBold }]}>
                       {notification.referenceType}
                     </Text>
                   </View>
@@ -460,11 +462,11 @@ const NotificationScreen = () => {
         <View className="mb-2 border-b-2 border-line bg-surface px-4 py-3">
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={clearSelectionMode} activeOpacity={0.7}>
-              <Text className="font-semibold text-ink-soft">Cancel</Text>
+              <Text className="text-ink-soft" style={{ fontFamily: fontFamilies.bodySemibold }}>Cancel</Text>
             </TouchableOpacity>
-            <Text className="text-sm font-medium text-ink-soft">{selectedCount} selected</Text>
+            <Text className="text-ink-soft" style={[appTextStyles.label, { fontFamily: fontFamilies.bodySemibold }]}>{selectedCount} selected</Text>
             <TouchableOpacity onPress={toggleSelectAll} activeOpacity={0.7}>
-              <Text className="font-semibold text-primary">
+              <Text className="text-primary" style={{ fontFamily: fontFamilies.bodySemibold }}>
                 {isAllSelected ? 'Unselect All' : 'Select All'}
               </Text>
             </TouchableOpacity>
@@ -484,7 +486,7 @@ const NotificationScreen = () => {
             <View className="h-20 w-20 items-center justify-center rounded-full bg-tint-sky">
               <Bell size={40} color="#4FC0E8" />
             </View>
-            <Text className="mt-4 text-xl font-bold text-ink">No notifications</Text>
+            <Text className="mt-4 text-ink" style={[appTextStyles.screenTitle, { fontFamily: fontFamilies.bodyBold }]}>No notifications</Text>
             <Text className="mt-2 text-center text-ink-soft">
               We&apos;ll notify you when something important happens.
             </Text>
@@ -515,7 +517,7 @@ const NotificationScreen = () => {
       {!isSelectionMode && undoPayload && (
         <View className="absolute bottom-5 left-4 right-4 rounded-2xl bg-[#2B2A3D] px-4 py-3">
           <View className="flex-row items-center justify-between">
-            <Text className="flex-1 text-sm font-medium text-white">
+            <Text className="flex-1 text-white" style={[appTextStyles.label, { fontFamily: fontFamilies.bodySemibold }]}>
               {undoPayload.count} notification{undoPayload.count > 1 ? 's' : ''} removed
             </Text>
             <TouchableOpacity
@@ -526,7 +528,7 @@ const NotificationScreen = () => {
               {isUndoing ? (
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : (
-                <Text className="font-semibold text-white">Undo</Text>
+                <Text className="text-white" style={{ fontFamily: fontFamilies.bodySemibold }}>Undo</Text>
               )}
             </TouchableOpacity>
           </View>

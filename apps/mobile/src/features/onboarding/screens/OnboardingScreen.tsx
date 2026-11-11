@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -11,7 +13,7 @@ import { typography } from '@/theme/typography';
 import { Href, Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight, Check, Clock3, Sparkles } from '@/core/icons';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOnboardingMutations } from '../hooks/useOnboardingMutations';
 import { getStarterLessons, localizeStarterLesson, starterMemoryParams } from '../utils/starterMemory';
@@ -211,46 +213,46 @@ export function OnboardingScreen() {
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 18, paddingTop: 14, paddingBottom: 28 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 22, lineHeight: 29 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20 },
-  eyebrow: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase' },
-  guideStrip: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 18, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 13, marginBottom: 14 },
-  guideIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize, lineHeight: appTextStyles.prompt.lineHeight },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  eyebrow: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 1, textTransform: 'uppercase' },
+  guideStrip: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: appRadii.card, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 13, marginBottom: 14 },
+  guideIcon: { width: 40, height: 40, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
   guideCopy: { flex: 1 },
-  guideTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13.5 },
-  guideBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, marginTop: 2 },
-  categories: { gap: 8, paddingBottom: 14 },
-  chip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 22, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper },
+  guideTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  guideBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 2 },
+  categories: { gap: appSpacing.sm, paddingBottom: 14 },
+  chip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, borderRadius: appRadii.card, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper },
   selectedChip: { backgroundColor: theme.violetTint, borderColor: theme.violetDeep },
-  chipText: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 12 },
+  chipText: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
   lessons: { gap: 11 },
-  lesson: { padding: 13, borderRadius: 20, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper },
+  lesson: { padding: 13, borderRadius: appRadii.card, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper },
   selectedLesson: { borderColor: theme.violetLine, backgroundColor: theme.violetTint },
   lessonTopRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
-  lessonIcon: { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.peachTint },
+  lessonIcon: { width: 48, height: 48, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.peachTint },
   selectedLessonIcon: { backgroundColor: theme.paper },
-  emoji: { fontSize: 25 },
+  emoji: { fontSize: appArtworkSizes.small },
   lessonCopy: { flex: 1 },
-  lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
+  lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize },
   lessonMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 5 },
-  meta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5 },
+  meta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
   metaDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: theme.inkMuted, marginHorizontal: 2 },
-  radio: { width: 23, height: 23, borderRadius: 12, borderWidth: 1.5, borderColor: theme.line, alignItems: 'center', justifyContent: 'center' },
+  radio: { width: 23, height: 23, borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.line, alignItems: 'center', justifyContent: 'center' },
   selectedRadio: { borderColor: theme.violetDeep, backgroundColor: theme.violetDeep },
-  lessonDetails: { borderTopWidth: 1, borderTopColor: theme.violetLine, marginTop: 13, paddingTop: 12 },
-  lessonDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11.5, lineHeight: 17 },
+  lessonDetails: { borderTopWidth: 1, borderTopColor: theme.violetLine, marginTop: 13, paddingTop: appSpacing.md },
+  lessonDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
   itemChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 11 },
   itemChip: { maxWidth: '100%', minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 9, borderRadius: 10, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.violetLine },
-  itemChipText: { maxWidth: 210, color: theme.ink, fontFamily: typography.bodyBold, fontSize: 11 },
-  preview: { padding: 16, borderRadius: 18, backgroundColor: theme.paper, marginTop: 10, gap: 12 },
-  resumeCard: { alignItems: 'flex-start', padding: 20, borderRadius: 24, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, gap: 8 },
-  resumeIcon: { width: 54, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper, marginBottom: 4 },
-  resumeEmoji: { fontSize: 29 },
-  position: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  state: { color: theme.inkSoft, marginVertical: 24, textAlign: 'center' },
-  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, marginTop: 12 },
-  footer: { paddingHorizontal: 18, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.line, backgroundColor: theme.canvas },
+  itemChipText: { maxWidth: 210, color: theme.ink, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  preview: { padding: appSpacing.lg, borderRadius: appRadii.card, backgroundColor: theme.paper, marginTop: 10, gap: appSpacing.md },
+  resumeCard: { alignItems: 'flex-start', padding: appSpacing.xl, borderRadius: appRadii.hero, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, gap: appSpacing.sm },
+  resumeIcon: { width: 54, height: 54, borderRadius: appRadii.card, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper, marginBottom: appSpacing.xs },
+  resumeEmoji: { fontSize: appArtworkSizes.medium },
+  position: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  state: { color: theme.inkSoft, marginVertical: appSpacing.xxl, textAlign: 'center' },
+  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, marginTop: appSpacing.md },
+  footer: { paddingHorizontal: 18, paddingTop: appSpacing.md, borderTopWidth: 1, borderTopColor: theme.line, backgroundColor: theme.canvas },
   primary: { alignSelf: 'stretch' },
   textButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  link: { color: theme.link, fontFamily: typography.bodyBold, fontSize: 12 },
+  link: { color: theme.link, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
 }));

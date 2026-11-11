@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { BaseCard } from '@/components/BaseCard';
 import { cn } from '@/utils/cn';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 interface Props {
   className?: string;
@@ -23,12 +25,12 @@ const RetentionRow = ({
       'flex-row items-center justify-between py-2',
       !isLast && 'border-b border-[#E5DFFF]'
     )}>
-    <Text className="font-medium text-[#6B6A80]">{label}</Text>
+    <Text className="text-[#6B6A80]" style={{ fontFamily: fontFamilies.bodySemibold }}>{label}</Text>
     <View className="flex-row items-center">
       <View className="mr-3 h-1.5 w-16 overflow-hidden rounded-full bg-line">
         <View className={cn('h-full rounded-full', colorClass)} style={{ width: percentage }} />
       </View>
-      <Text className="w-8 text-xs font-bold text-[#2B2A3D]">{percentage}</Text>
+      <Text className="w-8 text-[#2B2A3D]" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodyBold }]}>{percentage}</Text>
     </View>
   </View>
 );
@@ -46,11 +48,11 @@ export const ForgettingCurveCard: React.FC<Props> = ({ className }) => {
       {/* Header with Icon Badge */}
       <View className="mb-5 flex-row items-center">
         <View className="mr-3 rounded-xl bg-tint-sky p-2">
-          <Text style={{ fontSize: 16 }}>🧠</Text>
+          <Text style={{ fontSize: appTextStyles.cardTitle.fontSize }}>🧠</Text>
         </View>
         <View>
-          <Text className="text-lg font-bold text-[#2B2A3D]">Retention Power</Text>
-          <Text className="text-xs font-semibold uppercase tracking-wider text-[#6B6A80]">
+          <Text className="text-[#2B2A3D]" style={[appTextStyles.sectionTitle, { fontFamily: fontFamilies.bodyBold }]}>Retention Power</Text>
+          <Text className="uppercase tracking-wider text-[#6B6A80]" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodySemibold }]}>
             The Forgetting Curve
           </Text>
         </View>
@@ -67,8 +69,8 @@ export const ForgettingCurveCard: React.FC<Props> = ({ className }) => {
       {/* Footer Insight */}
       <View className="mt-5 flex-row items-start rounded-xl border-2 border-line-sun bg-tint-sun p-3">
         <Text className="mr-2 text-[#F2A900]">💡</Text>
-        <Text className="flex-1 text-[13px] font-medium leading-4 text-[#6B6A80]">
-          Reviews act as <Text className="font-bold">anchors</Text>. Each session resets the curve,
+        <Text className="flex-1 leading-4 text-[#6B6A80]" style={[appTextStyles.small, { fontFamily: fontFamilies.bodySemibold }]}>
+          Reviews act as <Text style={{ fontFamily: fontFamilies.bodyBold }}>anchors</Text>. Each session resets the curve,
           keeping your memories permanent.
         </Text>
       </View>

@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { BookOpen, Heart, Sparkles } from '@/core/icons';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -5,7 +7,7 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import React, { forwardRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -46,18 +48,18 @@ const CompanionHelpSheet = forwardRef<BottomSheetModal>((_, ref) => {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   sheet: { backgroundColor: theme.paper, borderRadius: 28 },
-  content: { paddingHorizontal: 22, paddingTop: 12, gap: 18 },
-  heading: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headingIcon: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center', borderRadius: 17, backgroundColor: theme.violetTint },
+  content: { paddingHorizontal: 22, paddingTop: appSpacing.md, gap: 18 },
+  heading: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.md },
+  headingIcon: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center', borderRadius: appRadii.control, backgroundColor: theme.violetTint },
   headingCopy: { flex: 1 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 },
-  subtitle: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 11, lineHeight: 16, marginTop: 3 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.body, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 3 },
   list: { gap: 7 },
-  row: { minHeight: 59, flexDirection: 'row', alignItems: 'center', gap: 11, paddingHorizontal: 10, borderRadius: 16, backgroundColor: theme.canvas },
-  rowIcon: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: theme.paper },
+  row: { minHeight: 59, flexDirection: 'row', alignItems: 'center', gap: 11, paddingHorizontal: 10, borderRadius: appRadii.control, backgroundColor: theme.canvas },
+  rowIcon: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: appRadii.control, backgroundColor: theme.paper },
   rowCopy: { flex: 1 },
-  rowTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  rowDetail: { color: theme.inkMuted, fontFamily: typography.body, fontSize: 10, marginTop: 2 },
+  rowTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  rowDetail: { color: theme.inkMuted, fontFamily: typography.body, fontSize: appTextStyles.caption.fontSize, marginTop: 2 },
 }));
 
 CompanionHelpSheet.displayName = 'CompanionHelpSheet';

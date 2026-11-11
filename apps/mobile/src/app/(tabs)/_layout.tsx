@@ -1,3 +1,4 @@
+import { appTextStyles } from '@/theme/designSystem';
 import { SpotlightTarget } from '@/features/onboarding/components/SpotlightTourProvider';
 import { HapticTab } from '@/components/ui/haptic-tab';
 import { WebTabBar } from '@/components/WebTabBar';
@@ -7,7 +8,6 @@ import { memopalThemes } from '@/theme/memopalTheme';
 import { Redirect, Tabs, useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { TabIcon } from '@/components/ui/TabIcon';
-import { typography } from '@/theme/typography';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -36,7 +36,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: theme.violetDeep,
         tabBarInactiveTintColor: theme.inkSoft,
         headerShown: false,
-        tabBarLabelStyle: { fontFamily: typography.bodyExtraBold, fontSize: 10 },
+        tabBarLabelStyle: appTextStyles.tabLabel,
         tabBarItemStyle: { paddingTop: 6, paddingBottom: 3 },
         tabBarButton: HapticTab,
         tabBarStyle: {

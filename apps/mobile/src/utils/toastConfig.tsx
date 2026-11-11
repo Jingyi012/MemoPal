@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { Colors } from '@/constants/colors';
 import { AlertCircle, CheckCircle2, Info, type LucideIcon } from '@/core/icons';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { typography } from '@/theme/typography';
 import { ToastConfig } from 'react-native-toast-message';
 
@@ -92,23 +94,23 @@ const styles = StyleSheet.create({
     width: '92%',
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 18,
+    borderRadius: appRadii.card,
     borderWidth: 1,
     backgroundColor: Colors.white,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingVertical: appSpacing.md,
+    paddingHorizontal: appSpacing.md,
     boxShadow: '0px 4px 12px rgba(15, 23, 42, 0.12)',
   },
   accent: {
     width: 4,
     alignSelf: 'stretch',
-    borderRadius: 999,
+    borderRadius: appRadii.pill,
     marginRight: 10,
   },
   iconChip: {
     width: 34,
     height: 34,
-    borderRadius: 999,
+    borderRadius: appRadii.pill,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -119,13 +121,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: typography.bodyBold,
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: appTextStyles.body.fontSize,
+    lineHeight: appTextStyles.body.lineHeight,
   },
   message: {
     fontFamily: typography.bodySemibold,
     marginTop: 2,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: appTextStyles.small.fontSize,
+    lineHeight: appTextStyles.small.lineHeight,
   },
 });

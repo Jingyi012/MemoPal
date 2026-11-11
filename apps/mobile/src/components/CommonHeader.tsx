@@ -1,12 +1,13 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appLayout, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { ChevronLeft, LucideIcon } from '@/core/icons';
 import React, { ReactNode } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeaderIconButton } from './ui/HeaderIconButton';
 import HomeButton from './HomeButton';
 import { NotificationBell } from './NotificationBell';
 import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
-import { typography } from '@/theme/typography';
 import { useColorScheme } from 'nativewind';
 import { useRouter } from 'expo-router';
 import { AiCreditCoinButton } from '@/features/ai-credits/components/AiCreditBalanceLink';
@@ -94,9 +95,9 @@ export const CommonHeader: React.FC<HeaderProps> = ({
 
           {/* Title + description */}
           <View style={styles.titleBlock}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: appSpacing.xs }}>
             <Text accessibilityRole="header"
-              style={[styles.title, { fontSize: hideBackButton ? 26 : 18 }, compact && styles.compactTitle, { color: activeTheme.ink }]}
+              style={[styles.title, hideBackButton ? appTextStyles.pageTitle : appTextStyles.screenTitle, compact && appTextStyles.compactTitle, { color: activeTheme.ink }]}
               numberOfLines={1}>
               {title}
             </Text>
@@ -153,22 +154,22 @@ const styles = {
     borderBottomColor: theme.line,
   },
   headerInner: {
-    paddingHorizontal: 16,
-    paddingBottom: 14,
+    paddingHorizontal: appLayout.pagePadding,
+    paddingBottom: appSpacing.md,
   },
   compactHeaderInner: {
-    paddingHorizontal: 14,
-    paddingBottom: 7,
+    paddingHorizontal: appLayout.pagePadding,
+    paddingBottom: appSpacing.sm,
   },
   row: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 10,
-    minHeight: 44,
+    minHeight: appLayout.touchTarget,
   },
   compactRow: {
-    gap: 8,
-    minHeight: 36,
+    gap: appSpacing.sm,
+    minHeight: appLayout.touchTarget,
   },
   titleBlock: {
     flex: 1,
@@ -176,29 +177,23 @@ const styles = {
   },
   title: {
     color: theme.ink,
-    fontSize: 26,
+    ...appTextStyles.pageTitle,
     flexShrink: 1,
-    fontWeight: '800' as const,
-    fontFamily: typography.displayExtraBold,
     letterSpacing: -0.2,
   },
-  compactTitle: {
-    fontSize: 16,
-    letterSpacing: -0.1,
-  },
+  compactTitle: { letterSpacing: -0.1 },
   description: {
     color: theme.inkSoft,
-    fontSize: 13,
-    fontFamily: typography.bodyBold,
+    ...appTextStyles.label,
     marginTop: 2,
   },
   compactDescription: {
-    fontSize: 10,
+    ...appTextStyles.label,
     marginTop: 0,
   },
   actions: {
     flexDirection: 'row' as const,
-    gap: 4,
+    gap: appSpacing.xs,
   },
   additionalContent: {
     marginTop: 10,

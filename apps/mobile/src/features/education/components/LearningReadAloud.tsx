@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii } from '@/theme/designSystem';
 import { useEffect, useRef, useState } from 'react';
-import { AppState, Text, View } from 'react-native';
+import { AppState, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { LearningIconButton } from './LearningIconButton';
 import { educationReadAloud } from '../services/educationReadAloud.service';
@@ -27,6 +29,6 @@ export function LearningReadAloud({ text, language }: { text: string; language: 
         if (playing) { setState('idle'); return; }
         cancel.current = educationReadAloud.play(text, language, setState);
       }} />
-    {state === 'error' ? <Text accessibilityRole="alert" style={[s.small, { color: theme.ink, backgroundColor: theme.paper, borderRadius: 12, padding: 10, maxWidth: 220 }]}>{zh ? '暂时无法朗读，请检查设备语音设置后重试。' : 'Reading is unavailable. Check your device’s speech settings and retry.'}</Text> : null}
+    {state === 'error' ? <Text accessibilityRole="alert" style={[s.small, { color: theme.ink, backgroundColor: theme.paper, borderRadius: appRadii.control, padding: 10, maxWidth: 220 }]}>{zh ? '暂时无法朗读，请检查设备语音设置后重试。' : 'Reading is unavailable. Check your device’s speech settings and retry.'}</Text> : null}
   </View>;
 }

@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing } from '@/theme/designSystem';
 import { useState } from 'react';
-import { Modal, ScrollView, Text, View } from 'react-native';
+import { Modal, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -24,7 +26,7 @@ export function LearningPreferencesCard({ userId, compact = false, inline = fals
   return <>
     <AnimatedPressable accessibilityRole="button" disabled={query.isLoading} accessibilityState={{ expanded: open, disabled: query.isLoading }}
       onPress={() => { save.reset(); setDraft(query.data ?? defaultLearningPreferences); setOpen(true); }}
-      style={inline ? { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 } : compact ? [s.card, { flex: 1, minHeight: 108, padding: 14, gap: 6, justifyContent: 'center' }] : { minHeight: 52, flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: 18, backgroundColor: theme.violetTint }}>
+      style={inline ? { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: appSpacing.sm, paddingHorizontal: appSpacing.xs } : compact ? [s.card, { flex: 1, minHeight: 108, padding: 14, gap: 6, justifyContent: 'center' }] : { minHeight: 52, flexDirection: 'row', gap: 10, alignItems: 'center', padding: appSpacing.md, borderRadius: appRadii.card, backgroundColor: theme.violetTint }}>
       {inline ? <><Ionicons name="options-outline" size={18} color={theme.violetDeep} /><Text style={[s.small, { color: theme.violetDeep }]}>{ui.zh ? '学习偏好' : 'Learning preferences'}</Text><Text numberOfLines={1} style={[s.small, { flex: 1 }]}>{summary}</Text><Ionicons name="chevron-forward" size={16} color={theme.violetDeep} /></> : compact ? <><Text style={[s.small, { color: theme.violetDeep, fontFamily: s.heading.fontFamily }]}>{ui.zh ? '学习偏好' : 'Preferences'}</Text><Text style={s.small}>{ui.zh ? '阶段、科目和语言' : 'Stage, subject, language'}</Text></> : <>
       <Ionicons name="compass-outline" size={24} color={theme.violetDeep} />
       <View style={{ flex: 1, gap: 3 }}><Text style={[s.small, { color: theme.violetDeep }]}>{title}</Text>
@@ -33,15 +35,15 @@ export function LearningPreferencesCard({ userId, compact = false, inline = fals
     </AnimatedPressable>
     <Modal transparent visible={open} animationType="none" onRequestClose={() => { if (!save.isPending) setOpen(false); }}>
       <View style={{ flex: 1, justifyContent: 'flex-end', paddingTop: insets.top + 20, backgroundColor: theme.scrim }}>
-        <View style={{ maxHeight: '95%', backgroundColor: theme.paper, borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 20, paddingBottom: Math.max(20, insets.bottom), gap: 16 }}>
-          <ScrollView contentContainerStyle={{ gap: 16 }}>
+        <View style={{ maxHeight: '95%', backgroundColor: theme.paper, borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: appSpacing.xl, paddingBottom: Math.max(20, insets.bottom), gap: appSpacing.lg }}>
+          <ScrollView contentContainerStyle={{ gap: appSpacing.lg }}>
             <Text accessibilityRole="header" style={s.title}>{title}</Text>
             <Text style={s.body}>{ui.zh ? '只影响推荐，不限制你能学什么。偏好保存在这台设备，随时可以更改。' : 'Personalize recommendations without limiting what you can learn. Saved on this device and changeable anytime.'}</Text>
             {query.isError ? <LearningButton secondary label={ui.zh ? '无法读取偏好，重试' : 'Could not load preferences. Retry'} onPress={() => void query.refetch()} /> : null}
-            {(Object.keys(learningPreferenceChoices) as (keyof LearningPreferences)[]).map(field => <View key={field} style={{ gap: 8 }}>
+            {(Object.keys(learningPreferenceChoices) as (keyof LearningPreferences)[]).map(field => <View key={field} style={{ gap: appSpacing.sm }}>
               <Text accessibilityRole="header" style={s.heading}>{field === 'subject' ? (ui.zh ? '想学什么？' : 'What interests you?') : field === 'stage' ? (ui.zh ? '学习阶段' : 'Learning stage') : (ui.zh ? '内容语言' : 'Content language')}</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{learningPreferenceChoices[field].map(value => <AnimatedPressable key={value} accessibilityRole="button" accessibilityState={{ selected: draft[field] === value }} disabled={save.isPending}
-                onPress={() => setDraft({ ...draft, [field]: value })} style={{ minHeight: 44, justifyContent: 'center', borderRadius: 99, paddingHorizontal: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: draft[field] === value ? theme.violetDeep : theme.paper }}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm }}>{learningPreferenceChoices[field].map(value => <AnimatedPressable key={value} accessibilityRole="button" accessibilityState={{ selected: draft[field] === value }} disabled={save.isPending}
+                onPress={() => setDraft({ ...draft, [field]: value })} style={{ minHeight: 44, justifyContent: 'center', borderRadius: appRadii.pill, paddingHorizontal: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: draft[field] === value ? theme.violetDeep : theme.paper }}>
                 <Text style={[s.small, { color: draft[field] === value ? theme.onAccent : theme.ink }]}>{label(field, value)}</Text>
               </AnimatedPressable>)}</View>
             </View>)}

@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { BookOpen, ChevronRight, RefreshCw } from '@/core/icons';
@@ -7,7 +9,7 @@ import { chooseEducationHomeCourse } from '@/features/education/utils/educationH
 import { useEducationCopy } from '@/features/education/i18n';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export function EducationHomeLearningCard() {
   const { styles, theme } = useStyles();
@@ -86,19 +88,19 @@ function LearningAction({ label, onPress }: { label: string; onPress: () => void
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  section: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 20, borderWidth: 1.5, gap: 9, padding: 14 },
+  section: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.card, borderWidth: 1.5, gap: 9, padding: 14 },
   headingRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 },
-  courseCard: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 15, borderWidth: 1, gap: 8, padding: 12 },
-  courseTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 16, lineHeight: 22 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 },
-  status: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 15, borderWidth: 1, gap: 8, padding: 12 },
-  errorRow: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  retry: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 11, flexDirection: 'row', gap: 6, justifyContent: 'center', minHeight: 44, paddingHorizontal: 12 },
+  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
+  courseCard: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, gap: appSpacing.sm, padding: appSpacing.md },
+  courseTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.cardTitle.fontSize, lineHeight: appTextStyles.cardTitle.lineHeight },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  status: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, gap: appSpacing.sm, padding: appSpacing.md },
+  errorRow: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.sm },
+  retry: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 11, flexDirection: 'row', gap: 6, justifyContent: 'center', minHeight: 44, paddingHorizontal: appSpacing.md },
   retryIcon: { alignItems: 'center', height: 44, justifyContent: 'center', width: 44 },
-  retryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  action: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 13, justifyContent: 'center', minHeight: 46, paddingHorizontal: 14 },
-  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  browse: { alignItems: 'center', alignSelf: 'flex-start', flexDirection: 'row', gap: 3, minHeight: 44, paddingHorizontal: 4 },
-  browseText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  retryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  action: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, justifyContent: 'center', minHeight: 46, paddingHorizontal: 14 },
+  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  browse: { alignItems: 'center', alignSelf: 'flex-start', flexDirection: 'row', gap: 3, minHeight: 44, paddingHorizontal: appSpacing.xs },
+  browseText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
 }));

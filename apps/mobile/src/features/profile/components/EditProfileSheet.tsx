@@ -1,3 +1,6 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
@@ -6,7 +9,7 @@ import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Check, LockKeyhole, Mail, Pencil } from '@/core/icons';
 import React, { forwardRef, useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -117,27 +120,27 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 22, paddingTop: 18 },
   header: { alignItems: 'center', flexDirection: 'row', gap: 13, marginBottom: 25 },
-  headerIcon: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 18, height: 52, justifyContent: 'center', width: 52, boxShadow: '0px 5px 12px rgba(103, 80, 200, 0.22)' },
+  headerIcon: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: appRadii.card, height: 52, justifyContent: 'center', width: 52, boxShadow: '0px 5px 12px rgba(103, 80, 200, 0.22)' },
   headerCopy: { flex: 1 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 22 },
-  subtitle: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 12, marginTop: 4 },
-  formCard: { padding: 16, borderRadius: 20, backgroundColor: theme.violetTint },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.body, fontSize: appTextStyles.caption.fontSize, marginTop: appSpacing.xs },
+  formCard: { padding: appSpacing.lg, borderRadius: appRadii.card, backgroundColor: theme.violetTint },
   nameLabelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 9 },
-  fieldLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  characterCount: { color: theme.inkMuted, fontFamily: typography.bodySemibold, fontSize: 11 },
-  inputWrap: { justifyContent: 'center', minHeight: 54, paddingHorizontal: 14, borderWidth: 1.5, borderColor: theme.violetLine, borderRadius: 14, backgroundColor: theme.paper },
-  input: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 15, paddingVertical: 0 },
-  emailCard: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14, paddingHorizontal: 14, borderWidth: 1, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.paper },
-  emailIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: theme.violetTint },
+  fieldLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  characterCount: { color: theme.inkMuted, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize },
+  inputWrap: { justifyContent: 'center', minHeight: 54, paddingHorizontal: 14, borderWidth: 1.5, borderColor: theme.violetLine, borderRadius: appRadii.control, backgroundColor: theme.paper },
+  input: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: appTextStyles.body.fontSize, paddingVertical: 0 },
+  emailCard: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: appSpacing.md, marginTop: 14, paddingHorizontal: 14, borderWidth: 1, borderColor: theme.line, borderRadius: appRadii.card, backgroundColor: theme.paper },
+  emailIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: appRadii.control, backgroundColor: theme.violetTint },
   emailCopy: { flex: 1 },
-  emailLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
-  emailValue: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 13, marginTop: 4 },
+  emailLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  emailValue: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, marginTop: appSpacing.xs },
   lockBadge: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: theme.sand },
-  helper: { color: theme.inkMuted, fontFamily: typography.body, fontSize: 10.5, lineHeight: 15, marginTop: 7, marginLeft: 4 },
-  footer: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 22, paddingTop: 4, paddingBottom: 5 },
+  helper: { color: theme.inkMuted, fontFamily: typography.body, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 7, marginLeft: appSpacing.xs },
+  footer: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.md, marginTop: 22, paddingTop: appSpacing.xs, paddingBottom: 5 },
   cancelButton: { alignItems: 'center', justifyContent: 'center', minHeight: 54, paddingHorizontal: 18 },
-  cancelText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  saveButton: { flex: 1, alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 16, boxShadow: '0px 4px 0px #4D37A8', flexDirection: 'row', gap: 8, justifyContent: 'center', minHeight: 54 },
-  saveText: { color: theme.paper, fontFamily: typography.displayExtraBold, fontSize: 14 },
+  cancelText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  saveButton: { flex: 1, alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, boxShadow: '0px 4px 0px #4D37A8', flexDirection: 'row', gap: appSpacing.sm, justifyContent: 'center', minHeight: 54 },
+  saveText: { color: theme.paper, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.label.fontSize },
   disabledButton: { opacity: 0.5 },
 }));

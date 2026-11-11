@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
@@ -7,7 +9,7 @@ import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { LearningMemoryHero, LearningMemoryItem } from '../components/LearningMemoryContent';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEducationPublicCourse } from '../hooks/useEducationPracticeItems';
 import { LearningButton, LearningSkeleton, learningThemeFor, useLearningStyles, useLearningCopy } from '../components/LearningUi';
@@ -74,7 +76,7 @@ export default function EducationMemoryPracticeScreen() {
             <Text style={styles.recommendationBadge}>{ui.zh ? '课程推荐' : 'COURSE RECOMMENDATION'}</Text>
             <Text style={styles.recommendationTitle}>{selected.objectiveTitle}</Text>
           </View></View>
-          {memorySet.isLoading ? <LearningSkeleton /> : memorySet.isError || !memorySet.data ? <View style={{ gap: 8 }}><Text accessibilityRole="alert" style={ls.body}>{ui.zh ? '无法载入记忆内容。' : 'Could not load memory items.'}</Text><LearningButton secondary label={ui.zh ? '重试' : 'Retry'} onPress={() => void memorySet.refetch()} /></View> : <>
+          {memorySet.isLoading ? <LearningSkeleton /> : memorySet.isError || !memorySet.data ? <View style={{ gap: appSpacing.sm }}><Text accessibilityRole="alert" style={ls.body}>{ui.zh ? '无法载入记忆内容。' : 'Could not load memory items.'}</Text><LearningButton secondary label={ui.zh ? '重试' : 'Retry'} onPress={() => void memorySet.refetch()} /></View> : <>
             <Text style={styles.memoryDescription}>{memorySet.data.description || selected.memorySet.description || ui.memoryBody}</Text>
             <View style={styles.itemList}>{memorySet.data.items.map((item, index) => {
               const palaceHint = memorySet.data.techniquePlan?.palaceBindings.find(binding => binding.memoryItemId === item.id)?.associationText;
@@ -97,20 +99,20 @@ export default function EducationMemoryPracticeScreen() {
 }
 
 const useStyles = createThemedStyles(theme => StyleSheet.create({
-  content: { gap: 15, padding: 16, paddingBottom: 28 },
-  segment: { backgroundColor: theme.violetTint, borderRadius: 18, flexDirection: 'row', gap: 4, padding: 4 },
-  segmentButton: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingVertical: 10, alignItems: 'center', borderRadius: 14, flex: 1, justifyContent: 'center', minHeight: 46, paddingHorizontal: 5 },
+  content: { gap: 15, padding: appSpacing.lg, paddingBottom: 28 },
+  segment: { backgroundColor: theme.violetTint, borderRadius: appRadii.card, flexDirection: 'row', gap: appSpacing.xs, padding: appSpacing.xs },
+  segmentButton: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingVertical: 10, alignItems: 'center', borderRadius: appRadii.control, flex: 1, justifyContent: 'center', minHeight: 46, paddingHorizontal: 5 },
   segmentButtonActive: { backgroundColor: theme.paper, borderBottomColor: theme.line, borderBottomWidth: 4 },
-  segmentText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  segmentText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   segmentTextActive: { color: theme.violetDeep },
-  recommendationList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  recommendation: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 15, borderWidth: 1.5, gap: 2, maxWidth: '100%', minHeight: 54, paddingHorizontal: 12, paddingVertical: 8 },
+  recommendationList: { flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm },
+  recommendation: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1.5, gap: 2, maxWidth: '100%', minHeight: 54, paddingHorizontal: appSpacing.md, paddingVertical: appSpacing.sm },
   recommendationSelected: { backgroundColor: theme.violetTint, borderColor: theme.violetDeep },
-  recommendationTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 19 },
-  recommendationMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21 },
+  recommendationTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  recommendationMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
   recommendationIntro: { gap: 13 },
   recommendationHeader: { alignItems: 'center', flexDirection: 'row', gap: 9 },
-  recommendationBadge: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 15, lineHeight: 23, letterSpacing: .3 },
-  memoryDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 15, lineHeight: 23 },
+  recommendationBadge: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize, lineHeight: appTextStyles.body.lineHeight, letterSpacing: .3 },
+  memoryDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.body.fontSize, lineHeight: appTextStyles.body.lineHeight },
   itemList: { gap: 9 },
 }));

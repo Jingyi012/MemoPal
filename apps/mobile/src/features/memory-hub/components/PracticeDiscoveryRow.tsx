@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { typography } from '@/theme/typography';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 export type PracticeDiscoveryItem = {
   key: string;
@@ -68,16 +70,16 @@ export function PracticeDiscoveryRow({
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   section: { marginTop: 22 },
   headingRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  title: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13, letterSpacing: 0.4, marginBottom: 0, textTransform: 'uppercase' },
-  action: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 11.5 },
-  list: { gap: 9, paddingRight: 12, paddingTop: 9, paddingBottom: 4 },
+  title: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize, letterSpacing: 0.4, marginBottom: 0, textTransform: 'uppercase' },
+  action: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  list: { gap: 9, paddingRight: appSpacing.md, paddingTop: 9, paddingBottom: appSpacing.xs },
   card: { position: 'relative', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 2, borderColor: theme.line },
-  pegCard: { width: 52, height: 52, borderRadius: 16, backgroundColor: theme.paper },
-  palaceCard: { width: 96, height: 64, borderRadius: 14, backgroundColor: '#BCAAF1', alignItems: 'stretch', justifyContent: 'flex-end' },
+  pegCard: { width: 52, height: 52, borderRadius: appRadii.control, backgroundColor: theme.paper },
+  palaceCard: { width: 96, height: 64, borderRadius: appRadii.control, backgroundColor: '#BCAAF1', alignItems: 'stretch', justifyContent: 'flex-end' },
   image: { height: '100%', width: '100%' },
-  emoji: { fontSize: 22 },
+  emoji: { fontSize: appArtworkSizes.small },
   palaceNameOverlay: { position: 'absolute', left: 6, right: 6, bottom: 5 },
-  palaceName: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 10, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
-  empty: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 2, padding: 14 },
-  emptyText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
+  palaceName: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: appTextStyles.caption.fontSize, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
+  empty: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 2, padding: 14 },
+  emptyText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize },
 }));

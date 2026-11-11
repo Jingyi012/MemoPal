@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing } from '@/theme/designSystem';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useEffect, useRef, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { Redirect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation, usePreventRemove, type NavigationAction } from '@react-navigation/native';
@@ -172,8 +174,8 @@ function CourseDraftEditor() {
         {mutation.data.readyToLearn ? <LearningButton label={zh ? '开始学习' : 'Start learning'} onPress={() => router.replace(`/education/my-courses/${mutation.data.courseId}?start=1` as Href)} /> : <LearningButton label={zh ? '继续编辑' : 'Keep editing'} onPress={() => { mutation.reset(); setStep(1); }} />}
         <LearningButton secondary label={zh ? '我的学习资料' : 'My learning library'} onPress={() => router.replace('/(tabs)/learn' as Href)} />
       </View> : <>
-        <View style={[s.row, { justifyContent: 'space-between', marginBottom: 8 }]}>
-          {(zh ? ['基本信息', '添加词语', '预览'] : ['Basics', 'Add words', 'Preview']).map((label, index) => <View key={label} style={[s.row, { flex: 1, gap: 4 }]}>
+        <View style={[s.row, { justifyContent: 'space-between', marginBottom: appSpacing.sm }]}>
+          {(zh ? ['基本信息', '添加词语', '预览'] : ['Basics', 'Add words', 'Preview']).map((label, index) => <View key={label} style={[s.row, { flex: 1, gap: appSpacing.xs }]}>
             <Text style={[s.badge, index <= step && { backgroundColor: theme.violetDeep, color: theme.onAccent }]}>{index < step ? '✓' : index + 1}</Text>
             <Text style={[s.small, { flexShrink: 1 }, index === step && { color: theme.violetDeep }]}>{label}</Text>
             {index < 2 ? <View style={{ flex: 1, height: 2, backgroundColor: index < step ? theme.violetDeep : theme.line }} /> : null}
@@ -198,7 +200,7 @@ function CourseDraftEditor() {
       {notice ? <Text accessibilityRole="alert" style={s.error}>{notice}</Text> : null}
       {mutation.isError ? <Text accessibilityRole="alert" style={s.error}>{educationDraftSaveError(mutation.error, zh)}</Text> : null}
     </ScrollView>
-    {!mutation.data ? <View style={[common.dock, { paddingBottom: Math.max(12, insets.bottom), gap: 8 }]}>
+    {!mutation.data ? <View style={[common.dock, { paddingBottom: Math.max(12, insets.bottom), gap: appSpacing.sm }]}>
       {step > 0 ? <Text style={[s.small, { textAlign: 'center' }]}>{zh ? `${total} 个词 · ${units.length} 个单元` : `${total} words · ${units.length} units`}</Text> : <Text style={[s.small, { textAlign: 'center' }]}>{zh ? '下一步开始添加词语' : 'Next, add your words'}</Text>}
       {step === 2 ? <AnimatedPressable accessibilityRole="button" disabled={mutation.isPending || !draftUnitsReady(units)}
         onPress={() => save(false)} style={{ minHeight: 44, justifyContent: 'center', alignItems: 'center' }}><Text style={s.small}>{zh ? '暂存草稿，稍后再学' : 'Save a draft for later'}</Text></AnimatedPressable> : null}

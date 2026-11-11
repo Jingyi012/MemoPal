@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { memopalThemes } from '@/theme/memopalTheme';
@@ -9,7 +11,7 @@ import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Router } from 'expo-router';
 import { ChevronRight } from '@/core/icons';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import Animated, {
   useAnimatedStyle,
@@ -146,29 +148,29 @@ const AccordionItem = ({
 
 const createStyles = (theme: typeof memopalThemes.light) => StyleSheet.create({
   sheetBackground: { backgroundColor: theme.paper, borderRadius: 30 },
-  header: { alignItems: 'center', flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingTop: 12 },
-  headerIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 18, borderWidth: 1.5, height: 52, justifyContent: 'center', width: 52 },
-  headerEmoji: { fontSize: 27 },
+  header: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.md, paddingHorizontal: appSpacing.xl, paddingTop: appSpacing.md },
+  headerIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.card, borderWidth: 1.5, height: 52, justifyContent: 'center', width: 52 },
+  headerEmoji: { fontSize: appArtworkSizes.small },
   headerCopy: { flex: 1 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 22 },
-  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16, marginTop: 3 },
-  content: { paddingBottom: 24, paddingHorizontal: 20, paddingTop: 18 },
-  sectionLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1, marginBottom: 9, textTransform: 'uppercase' },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 3 },
+  content: { paddingBottom: appSpacing.xxl, paddingHorizontal: appSpacing.xl, paddingTop: 18 },
+  sectionLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 1, marginBottom: 9, textTransform: 'uppercase' },
   accordion: { marginBottom: 9, overflow: 'hidden' },
-  questionButton: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1.5, flexDirection: 'row', justifyContent: 'space-between', minHeight: 62, paddingHorizontal: 12, paddingVertical: 11 },
-  questionIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 12, height: 34, justifyContent: 'center', width: 34 },
-  questionNumber: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 13 },
-  question: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 13, paddingRight: 12 },
-  answerWrap: { backgroundColor: theme.violetTint, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, marginHorizontal: 8, paddingHorizontal: 14, paddingVertical: 12 },
+  questionButton: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 1.5, flexDirection: 'row', justifyContent: 'space-between', minHeight: 62, paddingHorizontal: appSpacing.md, paddingVertical: 11 },
+  questionIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.control, height: 34, justifyContent: 'center', width: 34 },
+  questionNumber: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.small.fontSize },
+  question: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize, paddingRight: appSpacing.md },
+  answerWrap: { backgroundColor: theme.violetTint, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, marginHorizontal: appSpacing.sm, paddingHorizontal: 14, paddingVertical: appSpacing.md },
   answerRule: { backgroundColor: theme.violetLine, height: 2, marginBottom: 9, width: 24 },
-  answer: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 19 },
-  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, marginBottom: 11, marginTop: 17 },
-  contactCard: { alignItems: 'center', backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: 20, borderWidth: 1.5, flexDirection: 'row', gap: 12, marginBottom: 10, padding: 15 },
-  contactIcon: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: 14, height: 42, justifyContent: 'center', width: 42 },
-  contactEmoji: { fontSize: 21 },
+  answer: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, marginBottom: 11, marginTop: 17 },
+  contactCard: { alignItems: 'center', backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: appRadii.card, borderWidth: 1.5, flexDirection: 'row', gap: appSpacing.md, marginBottom: 10, padding: 15 },
+  contactIcon: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: appRadii.control, height: 42, justifyContent: 'center', width: 42 },
+  contactEmoji: { fontSize: appArtworkSizes.tiny },
   contactCopy: { flex: 1 },
-  contactTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  contactSubtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, marginTop: 3 },
+  contactTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  contactSubtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, marginTop: 3 },
 });
 
 export default HelpSheet;

@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
@@ -6,7 +8,7 @@ import { EducationFamilyReportCard } from '@/features/education/components/Educa
 import { useEducationFamilyChildren, useEducationFamilyReport } from '@/features/education/hooks/useEducationFamilyReports';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { LearningSkeleton, useLearningCopy } from '../components/LearningUi';
@@ -79,23 +81,23 @@ function RetryButton({ label, onPress }: { label: string; onPress: () => void })
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { backgroundColor: theme.canvas, flex: 1 },
-  content: { gap: 18, padding: 16, paddingBottom: 36 },
-  hero: { borderRadius: 26, padding: 22, gap: 12, borderBottomWidth: 2, borderColor: theme.primaryShadow },
-  heroTitle: { color: theme.heroInk, fontFamily: typography.displayExtraBold, fontSize: 24, lineHeight: 31 },
-  heroBody: { color: theme.heroInk, fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
-  description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
-  childList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  childChip: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1, borderBottomWidth: 2, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 10, maxWidth: '100%' },
+  content: { gap: 18, padding: appSpacing.lg, paddingBottom: 36 },
+  hero: { borderRadius: appRadii.hero, padding: 22, gap: appSpacing.md, borderBottomWidth: 2, borderColor: theme.primaryShadow },
+  heroTitle: { color: theme.heroInk, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.stat.fontSize, lineHeight: appTextStyles.stat.lineHeight },
+  heroBody: { color: theme.heroInk, fontFamily: typography.bodyBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  childList: { flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm },
+  childChip: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 1, borderBottomWidth: 2, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: appSpacing.sm, justifyContent: 'center', paddingHorizontal: appSpacing.md, paddingVertical: 10, maxWidth: '100%' },
   childChipSelected: { backgroundColor: theme.violetTint, borderColor: theme.violetLine },
-  childName: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 14, flexShrink: 1 },
+  childName: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.label.fontSize, flexShrink: 1 },
   childNameSelected: { color: theme.violetDeep },
   summary: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  summaryItem: { backgroundColor: theme.paper, borderColor: theme.line, borderWidth: 1, borderBottomWidth: 2, borderRadius: 22, padding: 16, gap: 8, flexBasis: '45%', flexGrow: 1 },
-  summaryValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 28, lineHeight: 36 },
-  summaryText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19 },
+  summaryItem: { backgroundColor: theme.paper, borderColor: theme.line, borderWidth: 1, borderBottomWidth: 2, borderRadius: appRadii.card, padding: appSpacing.lg, gap: appSpacing.sm, flexBasis: '45%', flexGrow: 1 },
+  summaryValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.pageTitle.fontSize, lineHeight: appTextStyles.pageTitle.lineHeight },
+  summaryText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
   state: { alignItems: 'center', flexDirection: 'row', gap: 9, minHeight: 50 },
-  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 15, borderWidth: 1.5, gap: 7, padding: 14 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
+  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: appRadii.control, borderWidth: 1.5, gap: 7, padding: 14 },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
   retry: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderRadius: 11, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
-  retryText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  retryText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
 }));

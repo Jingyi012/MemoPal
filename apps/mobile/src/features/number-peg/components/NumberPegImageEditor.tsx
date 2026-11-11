@@ -1,3 +1,4 @@
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { CreditText as Text } from '@/features/ai-credits/components/CreditText';
@@ -183,23 +184,23 @@ export function NumberPegImageEditor({
 
 const useStyles = createThemedStyles((theme) =>
   StyleSheet.create({
-    container: { gap: 8, marginTop: 14, marginBottom: 2 },
+    container: { gap: appSpacing.sm, marginTop: 14, marginBottom: 2 },
     primaryAction: {
       minHeight: 44,
-      borderRadius: 12,
+      borderRadius: appRadii.control,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 12,
+      paddingHorizontal: appSpacing.md,
       backgroundColor: theme.violetDeep,
     },
-    primaryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+    primaryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
     secondaryAction: { minHeight: 40, alignItems: 'center', justifyContent: 'center' },
-    secondaryText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+    secondaryText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
     visualizeBlock: {
       gap: 9,
       marginTop: 5,
-      padding: 12,
-      borderRadius: 14,
+      padding: appSpacing.md,
+      borderRadius: appRadii.control,
       backgroundColor: theme.paper,
       borderWidth: 1.5,
       borderColor: theme.violetLine,
@@ -214,12 +215,12 @@ const useStyles = createThemedStyles((theme) =>
       backgroundColor: theme.violetTint,
     },
     visualizeCopy: { flex: 1, minWidth: 0 },
-    visualizeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+    visualizeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
     visualizeHint: {
       color: theme.inkSoft,
       fontFamily: typography.bodySemibold,
-      fontSize: 10,
-      lineHeight: 15,
+      fontSize: appTextStyles.caption.fontSize,
+      lineHeight: appTextStyles.caption.lineHeight,
       marginTop: 1,
     },
   })

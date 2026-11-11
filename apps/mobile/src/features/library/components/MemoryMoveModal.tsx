@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import type { MemorySet } from '@/features/memory-sets';
@@ -6,7 +8,7 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Check, Layers, Inbox } from '@/core/icons';
 import type { ReactNode } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 import type { MemoryFolder } from '../types/memoryFolder.types';
 
 type MemoryMoveModalProps = {
@@ -67,15 +69,15 @@ function MoveOption({ label, icon, selected = false, disabled, onPress }: { labe
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  backdrop: { alignItems: 'center', backgroundColor: 'rgba(30, 26, 48, 0.58)', flex: 1, justifyContent: 'center', padding: 24 },
-  dialog: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 24, borderWidth: 1, maxWidth: 380, padding: 20, width: '100%' },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 21, textAlign: 'center' },
-  subject: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, marginTop: 5, textAlign: 'center' },
-  scroll: { marginTop: 16, maxHeight: 360 },
-  options: { gap: 8 },
-  option: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 14, borderWidth: 1, flexDirection: 'row', minHeight: 52, paddingHorizontal: 12 },
+  backdrop: { alignItems: 'center', backgroundColor: 'rgba(30, 26, 48, 0.58)', flex: 1, justifyContent: 'center', padding: appSpacing.xxl },
+  dialog: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.hero, borderWidth: 1, maxWidth: 380, padding: appSpacing.xl, width: '100%' },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize, textAlign: 'center' },
+  subject: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginTop: 5, textAlign: 'center' },
+  scroll: { marginTop: appSpacing.lg, maxHeight: 360 },
+  options: { gap: appSpacing.sm },
+  option: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, flexDirection: 'row', minHeight: 52, paddingHorizontal: appSpacing.md },
   optionIcon: { alignItems: 'center', width: 32 },
-  optionText: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 14, marginHorizontal: 8 },
+  optionText: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, marginHorizontal: appSpacing.sm },
   cancel: { marginTop: 14 },
   disabled: { opacity: 0.55 },
 }));

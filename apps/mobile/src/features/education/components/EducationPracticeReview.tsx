@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { LearningQuizHeader, LearningFeedbackDock } from './LearningQuizLayout';
 import { educationCorrectAnswerText } from '../utils/educationCorrectAnswer';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
@@ -20,7 +22,7 @@ import { useSoundEffects } from '@/core/audio/useSoundEffects';
 import * as Haptics from 'expo-haptics';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, ScrollView, StyleSheet, View } from 'react-native';
 
 export type PracticeQuestion = Exclude<EducationAttemptQuestion, { type: 'written-response' | 'photo-response' | 'voice-response' }>;
 
@@ -96,13 +98,13 @@ function EducationPracticeReviewSession({ attemptId, sessionIdentity = '', quest
   const hasChecked = session.progress[question.id]?.solved ?? false;
 
   const Content = embedded ? View : ScrollView;
-  return <View style={embedded ? { gap: 12 } : { flex: 1, backgroundColor: theme.canvas }}>
+  return <View style={embedded ? { gap: appSpacing.md } : { flex: 1, backgroundColor: theme.canvas }}>
     {embedded
-      ? <View style={{ padding: 16, gap: 8 }}><LearningProgress value={index + 1} total={activeQuestions.length} color={theme.grass} height={10} /><Text style={ls.small}>{copy.practiceProgress(index + 1, activeQuestions.length, getPendingEducationPracticeQuestionCount(session))}</Text></View>
+      ? <View style={{ padding: appSpacing.lg, gap: appSpacing.sm }}><LearningProgress value={index + 1} total={activeQuestions.length} color={theme.grass} height={10} /><Text style={ls.small}>{copy.practiceProgress(index + 1, activeQuestions.length, getPendingEducationPracticeQuestionCount(session))}</Text></View>
       : <LearningQuizHeader position={index + 1} total={activeQuestions.length} exitLabel={exitLabel ?? copy.practiceReturn} onExit={exitPractice} />}
     <Content key={question.id} {...(embedded ? { style: { gap: 14 } } : { style: { flex: 1 }, contentContainerStyle: ls.content, keyboardShouldPersistTaps: 'handled' as const })}>
       <LearningPracticeTip userId={sessionIdentity || attemptId} />
-      <LearningArrival key={question.id} style={{ gap: 12 }}>
+      <LearningArrival key={question.id} style={{ gap: appSpacing.md }}>
         <Text style={[ls.small, { color: theme.violetDeep }]}>{[question.objectiveTitle, copy.questionTypeLabels[question.type]].filter(Boolean).join(' · ')}</Text>
         <QuestionCard variant={embedded ? 'default' : 'learning'} questionIndex={index} totalQuestions={activeQuestions.length}>
           <QuestionInput attemptId={attemptId} orderingBuilder question={question} value={answer} onChange={next => setAnswers(current => ({ ...current, [question.id]: next }))} labels={labels} feedback={result?.isCorrect} correctAnswer={result?.correctAnswer} showHints={false} disabled={checking || result !== null} />
@@ -113,7 +115,7 @@ function EducationPracticeReviewSession({ attemptId, sessionIdentity = '', quest
     <LearningFeedbackDock feedback={result?.isCorrect} embedded={embedded}>
       {result ? <LearningFeedback correct={result.isCorrect} title={result.isCorrect ? ui.feedbackCorrect : ui.feedbackWrong} explanation={result.explanation ?? question.explanation} correctAnswerText={result.isCorrect ? null : educationCorrectAnswerText(question, result.correctAnswer, labels)} sequence={feedbackSequence} /> : null}
       {error ? <Text accessibilityRole="alert" style={styles.error}>{copy.practiceCheckError}</Text> : null}
-      {hasChecked ? <LearningButton tone={result ? result.isCorrect ? 'success' : 'danger' : 'primary'} label={index === activeQuestions.length - 1 ? copy.practiceFinish : copy.next} onPress={advance} /> : result ? <View style={{ gap: 8 }}><LearningButton tone={result.isCorrect ? 'success' : 'danger'} disabled={checking} label={copy.practiceContinue} onPress={advance} /><LearningTextAction disabled={checking} label={copy.practiceTryAgain} onPress={retryCurrent} /></View>
+      {hasChecked ? <LearningButton tone={result ? result.isCorrect ? 'success' : 'danger' : 'primary'} label={index === activeQuestions.length - 1 ? copy.practiceFinish : copy.next} onPress={advance} /> : result ? <View style={{ gap: appSpacing.sm }}><LearningButton tone={result.isCorrect ? 'success' : 'danger'} disabled={checking} label={copy.practiceContinue} onPress={advance} /><LearningTextAction disabled={checking} label={copy.practiceTryAgain} onPress={retryCurrent} /></View>
         : <LearningButton disabled={isBlankResponse(question, answer) || !isPracticeAnswerReady(question, answer)} label={checking ? copy.practiceChecking : copy.practiceCheck} loading={checking} onPress={() => void checkAnswer()} />}
       {embedded ? <AppButton label={exitLabel ?? copy.practiceReturn} onPress={exitPractice} variant="tertiary" /> : null}
     </LearningFeedbackDock>
@@ -199,29 +201,29 @@ function EducationPracticeReviewSession({ attemptId, sessionIdentity = '', quest
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  panel: { backgroundColor: theme.mintTint, borderColor: theme.mintLine, borderRadius: 18, borderWidth: 1.5, gap: 12, padding: 16 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 },
-  objective: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 17 },
-  feedback: { fontFamily: typography.bodyExtraBold, fontSize: 15 },
-  feedbackPanel: { alignItems: 'center', borderRadius: 16, borderWidth: 2, flexDirection: 'row', gap: 10, minHeight: 58, paddingHorizontal: 14, paddingVertical: 10 },
+  panel: { backgroundColor: theme.mintTint, borderColor: theme.mintLine, borderRadius: appRadii.card, borderWidth: 1.5, gap: appSpacing.md, padding: appSpacing.lg },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  objective: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  feedback: { fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize },
+  feedbackPanel: { alignItems: 'center', borderRadius: appRadii.control, borderWidth: 2, flexDirection: 'row', gap: 10, minHeight: 58, paddingHorizontal: 14, paddingVertical: 10 },
   feedbackCorrect: { backgroundColor: theme.mintTint, borderColor: theme.successText },
   feedbackIncorrect: { backgroundColor: theme.paper, borderColor: theme.berryDeep },
-  feedbackIcon: { backgroundColor: theme.paper, borderRadius: 18, color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 19, height: 36, lineHeight: 36, overflow: 'hidden', textAlign: 'center', width: 36 },
-  explanation: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 },
+  feedbackIcon: { backgroundColor: theme.paper, borderRadius: appRadii.card, color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.screenTitle.fontSize, height: 36, lineHeight: appTextStyles.screenTitle.lineHeight, overflow: 'hidden', textAlign: 'center', width: 36 },
+  explanation: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
   correct: { color: theme.successText },
   incorrect: { color: theme.berryDeep },
-  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 13 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm },
   rowAction: { flex: 1 },
   progressTrack: { backgroundColor: theme.mintLine, borderRadius: 8, height: 10, overflow: 'hidden' },
   progressFill: { backgroundColor: theme.violetDeep, borderRadius: 8, height: '100%' },
-  progressLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
-  typeLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14, textTransform: 'capitalize' },
-  guidance: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 },
-  summary: { backgroundColor: theme.paper, borderColor: theme.mintLine, borderRadius: 14, borderWidth: 1.5, color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 21, padding: 14 },
+  progressLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  typeLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, textTransform: 'capitalize' },
+  guidance: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  summary: { backgroundColor: theme.paper, borderColor: theme.mintLine, borderRadius: appRadii.control, borderWidth: 1.5, color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight, padding: 14 },
 
   feedbackContent: { alignItems: 'center', flexDirection: 'row', minHeight: 76, position: 'relative' },
-  feedbackTitle: { fontFamily: typography.displayExtraBold, fontSize: 21, lineHeight: 28 },
-  feedbackExplanation: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 },
+  feedbackTitle: { fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize, lineHeight: appTextStyles.prompt.lineHeight },
+  feedbackExplanation: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
 }));

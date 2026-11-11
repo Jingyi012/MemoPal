@@ -1,10 +1,12 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { AppButton } from '@/components/ui/AppButton';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { ArrowRight } from '@/core/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type TechniqueHeroCardProps = {
   tone: 'peg' | 'palace';
@@ -50,15 +52,15 @@ export function TechniqueHeroCard({
 }
 
 const styles = StyleSheet.create({
-  hero: { borderRadius: 26, padding: 20, overflow: 'hidden' },
+  hero: { borderRadius: appRadii.hero, padding: appSpacing.xl, overflow: 'hidden' },
   heroGlow: { position: 'absolute', width: 190, height: 190, borderRadius: 95, right: -60, top: -75 },
   pegGlow: { backgroundColor: 'rgba(255, 201, 60, 0.18)' },
   palaceGlow: { backgroundColor: 'rgba(184, 173, 255, 0.2)' },
-  heroIcon: { width: 52, height: 52, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
+  heroIcon: { width: 52, height: 52, borderRadius: appRadii.card, alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
   pegIcon: { backgroundColor: theme.sun },
   palaceIcon: { backgroundColor: '#B9B1FF' },
-  heroEyebrow: { color: '#E3DFFF', fontFamily: typography.bodyExtraBold, fontSize: 11, letterSpacing: 1.1 },
-  heroTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: 25, marginTop: 6 },
-  heroBody: { color: '#E8E5F4', fontFamily: typography.body, fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 320 },
-  primaryButton: { marginTop: 20, alignSelf: 'stretch' },
+  heroEyebrow: { color: '#E3DFFF', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 1.1 },
+  heroTitle: { color: 'white', fontFamily: typography.displayExtraBold, fontSize: appTextStyles.pageTitle.fontSize, marginTop: 6 },
+  heroBody: { color: '#E8E5F4', fontFamily: typography.body, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight, marginTop: 9, maxWidth: 320 },
+  primaryButton: { marginTop: appSpacing.xl, alignSelf: 'stretch' },
 });

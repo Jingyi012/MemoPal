@@ -1,13 +1,12 @@
 import { useColorScheme } from 'nativewind';
-import { memopalThemes } from '@/theme/memopalTheme';
 import { learningColors } from './learningTokens';
 import { typography } from '@/theme/typography';
 export { learningLayout, learningTypeScale, learningDocumentColors } from './learningTokens';
 
-export const learningPalettes = { light: { ...memopalThemes.light, ...learningColors.light }, dark: { ...memopalThemes.dark, ...learningColors.dark } };
+export const learningPalettes = learningColors;
 export type LearningPalette = typeof learningPalettes.light | typeof learningPalettes.dark;
 
-export const learningTypography = { ...typography, display: 'Nunito_900Black', displayExtraBold: 'Nunito_900Black' };
+export const learningTypography = typography;
 
 export function createLearningStyles<T>(create: (palette: LearningPalette) => T) {
   const variants = { light: { theme: learningPalettes.light, styles: create(learningPalettes.light) }, dark: { theme: learningPalettes.dark, styles: create(learningPalettes.dark) } };

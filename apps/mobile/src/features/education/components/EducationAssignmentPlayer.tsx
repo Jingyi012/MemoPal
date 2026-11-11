@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { LearningProgress } from './LearningUi';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
@@ -27,7 +29,7 @@ import {
 } from '@/features/education/utils/educationAttemptAnswers';
 import { enqueueEducationAttemptWrite } from '@/features/education/utils/educationAttemptWriteQueue';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Keyboard, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, StyleSheet, View } from 'react-native';
 
 const TEXT_SAVE_DEBOUNCE_MS = 500;
 
@@ -388,7 +390,7 @@ export function EducationAssignmentPlayer({ attempt, classroomAssignment, initia
         ) : null}
       </View>
 
-      <View style={{ gap: 8 }}>
+      <View style={{ gap: appSpacing.sm }}>
         <Text style={styles.saveState}>{questionIndex + 1} / {attempt.questions.length}</Text>
         <LearningProgress value={questionIndex + 1} total={attempt.questions.length} height={12} />
       </View>
@@ -477,16 +479,16 @@ function remainingSeconds(expiresAt: string) {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  player: { gap: 12 },
-  timerRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', minHeight: 28 },
-  timer: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  saveState: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21 },
-  submitted: { backgroundColor: theme.mintTint, borderColor: theme.mintLine, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, gap: 14, padding: 20 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
-  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19 },
+  player: { gap: appSpacing.md },
+  timerRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm, justifyContent: 'space-between', minHeight: 28 },
+  timer: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  saveState: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  submitted: { backgroundColor: theme.mintTint, borderColor: theme.mintLine, borderRadius: appRadii.hero, borderWidth: 2, borderBottomWidth: 5, gap: 14, padding: appSpacing.xl },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
   navigation: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
-  secondaryAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 16, borderWidth: 2, borderBottomWidth: 4, justifyContent: 'center', minHeight: 48, paddingVertical: 10, paddingHorizontal: 15, maxWidth: '100%' },
-  secondaryActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  secondaryAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.control, borderWidth: 2, borderBottomWidth: 4, justifyContent: 'center', minHeight: 48, paddingVertical: 10, paddingHorizontal: 15, maxWidth: '100%' },
+  secondaryActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   disabledAction: { opacity: 0.55 },
 }));

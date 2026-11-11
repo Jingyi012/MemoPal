@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { useEffect, useReducer, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { createThemedStyles } from '@/theme/createThemedStyles';
@@ -159,17 +161,17 @@ export function CompanionPearlQuest({ onReact, cue, stage = 1, onSolved, onBack 
 }
 
 const useStyles = createThemedStyles(theme => StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: 12, paddingBottom: 12 },
-  hud: { height: 52, flexDirection: 'row', justifyContent: 'space-between', gap: 8, paddingVertical: 4 },
+  root: { flex: 1, paddingHorizontal: appSpacing.md, paddingBottom: appSpacing.md },
+  hud: { height: 52, flexDirection: 'row', justifyContent: 'space-between', gap: appSpacing.sm, paddingVertical: appSpacing.xs },
   hudSpacer: { height: 52 },
   hudValue: { minWidth: 100, minHeight: 44, paddingHorizontal: 13, textAlign: 'center', textAlignVertical: 'center',
-    overflow: 'hidden', backgroundColor: theme.paper, color: theme.violetDeep, borderRadius: 18,
-    fontFamily: typography.displayExtraBold, fontSize: 16 },
+    overflow: 'hidden', backgroundColor: theme.paper, color: theme.violetDeep, borderRadius: appRadii.card,
+    fontFamily: typography.displayExtraBold, fontSize: appTextStyles.cardTitle.fontSize },
   arena: { flex: 1, minHeight: 300, overflow: 'hidden', borderRadius: 30, borderWidth: 2,
     borderColor: theme.skyLine },
-  orb: { position: 'absolute', width: 52, height: 52, borderRadius: 26, borderWidth: 2,
+  orb: { position: 'absolute', width: 52, height: 52, borderRadius: appRadii.hero, borderWidth: 2,
     borderColor: theme.paper, backgroundColor: theme.skyTint, opacity: .4 },
-  orbOne: { top: '27%', left: '9%' }, orbTwo: { top: '43%', right: '10%', width: 28, height: 28, borderRadius: 14 },
+  orbOne: { top: '27%', left: '9%' }, orbTwo: { top: '43%', right: '10%', width: 28, height: 28, borderRadius: appRadii.control },
   progress: { position: 'absolute', top: '39%', alignSelf: 'center', flexDirection: 'row', gap: 7 },
   progressDot: { height: 7, flex: 1, borderRadius: 4, backgroundColor: theme.paper, opacity: .62 },
   progressDotDone: { backgroundColor: theme.sun, opacity: 1 },
@@ -177,10 +179,10 @@ const useStyles = createThemedStyles(theme => StyleSheet.create({
     flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
   shell: { alignItems: 'center', justifyContent: 'center', borderRadius: 23, borderWidth: 2,
     boxShadow: '0px 5px 10px rgba(49,50,85,0.16)' },
-  shellFace: { borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  shellSymbol: { fontSize: 27, fontWeight: '800' },
+  shellFace: { borderRadius: appRadii.card, alignItems: 'center', justifyContent: 'center' },
+  shellSymbol: { fontSize: appArtworkSizes.small },
   matched: { borderWidth: 3 },
   pressed: { transform: [{ scale: .93 }] },
-  actions: { minHeight: 62, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, paddingTop: 8 },
+  actions: { minHeight: 62, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, paddingTop: appSpacing.sm },
   actionsSpacer: { height: 62 },
 }));

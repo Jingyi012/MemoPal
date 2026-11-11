@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { PremiumSubscriptionConfig } from '@/features/subscription/types/premiumSubscriptionConfig';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { X } from '@/core/icons';
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 
 type Ref = BottomSheetModal;
 type TermsConfig = PremiumSubscriptionConfig['terms'];
@@ -23,7 +25,7 @@ const TermsAndConditionSheet = forwardRef<Ref, TermsAndConditionSheetProps>(({ t
     <CustomBottomSheetModal ref={bottomSheetRef} snapPoints={['95%']} enableDynamicSizing={false}>
       <View className="flex-1 px-6 pb-8 pt-2">
         <View className="mb-6 flex-row items-center justify-between">
-          <Text className="text-2xl font-bold text-[#2B2A3D]">{terms.title}</Text>
+          <Text className="text-[#2B2A3D]" style={[appTextStyles.pageTitle, { fontFamily: fontFamilies.bodyBold }]}>{terms.title}</Text>
           <TouchableOpacity onPress={handleDismissTerms} className="rounded-full bg-tint-peach p-2">
             <X size={20} color="#6B6A80" />
           </TouchableOpacity>
@@ -45,7 +47,7 @@ const TermsAndConditionSheet = forwardRef<Ref, TermsAndConditionSheetProps>(({ t
         <TouchableOpacity
           onPress={handleDismissTerms}
           className="mt-4 rounded-xl bg-primary py-4">
-          <Text className="text-center font-bold text-white">{terms.closeButtonLabel}</Text>
+          <Text className="text-center text-white" style={{ fontFamily: fontFamilies.bodyBold }}>{terms.closeButtonLabel}</Text>
         </TouchableOpacity>
       </View>
     </CustomBottomSheetModal>
@@ -57,11 +59,11 @@ TermsAndConditionSheet.displayName = 'TermsAndConditionSheet';
 const TermSection = ({ number, title, body }: { number: string; title: string; body: string }) => (
   <View className="flex-row gap-3">
     <View className="h-6 w-6 items-center justify-center rounded-full bg-tint-sun">
-      <Text className="text-xs font-bold text-[#F2A900]">{number}</Text>
+      <Text className="text-[#F2A900]" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodyBold }]}>{number}</Text>
     </View>
     <View className="flex-1">
-      <Text className="mb-1 font-bold text-[#2B2A3D]">{title}</Text>
-      <Text className="text-sm leading-5 text-[#6B6A80]">{body}</Text>
+      <Text className="mb-1 text-[#2B2A3D]" style={{ fontFamily: fontFamilies.bodyBold }}>{title}</Text>
+      <Text className="leading-5 text-[#6B6A80]" style={appTextStyles.label}>{body}</Text>
     </View>
   </View>
 );

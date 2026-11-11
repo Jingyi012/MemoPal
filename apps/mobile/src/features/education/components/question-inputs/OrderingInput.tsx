@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import type { OrderingAnswer, OrderingQuestion } from '@/features/education/types/question.types';
 import { useQuestionHints, useQuestionInputStyles } from './questionInputStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { learningTypography as typography } from '@/features/education/theme/learningTheme';
 import { reorderEducationOptionIds } from '@/features/education/utils/reorderEducationOptionIds';
 import { addEducationOrderingOption, removeEducationOrderingOption } from '@/features/education/utils/educationOrderingBuilder';
@@ -43,14 +45,14 @@ export function OrderingInput({ question, value, onChange, labels, buildFromWord
   if (buildFromWordBank) return <View style={inputStyles.container}>
     <Text accessibilityRole="header" style={inputStyles.prompt}>{question.prompt}</Text>
     {showHints ? <Text style={inputStyles.hint}>{labels.hint}</Text> : null}
-    <View accessibilityLabel={labels.yourOrder} style={{ minHeight: 104, borderTopWidth: 2, borderBottomWidth: 2, borderColor: theme.line, paddingVertical: 12, gap: 8 }}>
+    <View accessibilityLabel={labels.yourOrder} style={{ minHeight: 104, borderTopWidth: 2, borderBottomWidth: 2, borderColor: theme.line, paddingVertical: appSpacing.md, gap: appSpacing.sm }}>
       <Text style={inputStyles.hint}>{labels.yourOrder}</Text>
-      {items.map((item, index) => <AnimatedPressable key={item.id} accessibilityLabel={`${labels.removeWord}: ${item.label}, ${index + 1}`} disabled={disabled} onPress={() => remove(item.id)} style={{ minHeight: 48, borderRadius: 16, borderWidth: 2, borderBottomWidth: 6, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 16, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 10 }}><Text style={[inputStyles.optionLabel, { flex: 0, color: theme.violetDeep }]}>{index + 1}</Text><Text style={[inputStyles.optionLabel, { flexShrink: 1 }]}>{item.label}</Text><Ionicons name="close-circle-outline" size={20} color={theme.violetDeep} /></AnimatedPressable>)}
+      {items.map((item, index) => <AnimatedPressable key={item.id} accessibilityLabel={`${labels.removeWord}: ${item.label}, ${index + 1}`} disabled={disabled} onPress={() => remove(item.id)} style={{ minHeight: 48, borderRadius: appRadii.control, borderWidth: 2, borderBottomWidth: 6, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: appSpacing.lg, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 10 }}><Text style={[inputStyles.optionLabel, { flex: 0, color: theme.violetDeep }]}>{index + 1}</Text><Text style={[inputStyles.optionLabel, { flexShrink: 1 }]}>{item.label}</Text><Ionicons name="close-circle-outline" size={20} color={theme.violetDeep} /></AnimatedPressable>)}
     </View>
     <View accessibilityLabel={labels.wordBank(wordBank.length)} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
       {question.options.map(item => {
         const used = selectedIds.has(item.id);
-        return <AnimatedPressable key={item.id} accessibilityLabel={`${labels.addWord}: ${item.label}`} accessibilityState={{ disabled: disabled || used }} disabled={disabled || used} onPress={() => append(item.id)} style={{ maxWidth: '100%', minHeight: 48, borderRadius: 16, borderWidth: 2, borderBottomWidth: used ? 2 : 6, borderColor: theme.line, backgroundColor: used ? theme.violetTint : theme.paper, paddingVertical: 11, paddingHorizontal: 18 }}><Text style={[inputStyles.optionLabel, { flex: 0, flexShrink: 1, color: used ? theme.inkSoft : theme.ink }]}>{used ? '✓ ' : ''}{item.label}</Text></AnimatedPressable>;
+        return <AnimatedPressable key={item.id} accessibilityLabel={`${labels.addWord}: ${item.label}`} accessibilityState={{ disabled: disabled || used }} disabled={disabled || used} onPress={() => append(item.id)} style={{ maxWidth: '100%', minHeight: 48, borderRadius: appRadii.control, borderWidth: 2, borderBottomWidth: used ? 2 : 6, borderColor: theme.line, backgroundColor: used ? theme.violetTint : theme.paper, paddingVertical: 11, paddingHorizontal: 18 }}><Text style={[inputStyles.optionLabel, { flex: 0, flexShrink: 1, color: used ? theme.inkSoft : theme.ink }]}>{used ? '✓ ' : ''}{item.label}</Text></AnimatedPressable>;
       })}
     </View>
   </View>;
@@ -67,7 +69,7 @@ export function OrderingInput({ question, value, onChange, labels, buildFromWord
 }
 
 const styles = StyleSheet.create({
-  row: { alignItems: 'center', flexDirection: 'row', gap: 8, borderRadius: 16, borderWidth: 2, borderBottomWidth: 6, padding: 12 },
-  control: { alignItems: 'center', borderRadius: 12, height: 44, justifyContent: 'center', width: 44 },
-  controlText: { fontFamily: typography.bodyExtraBold, fontSize: 22, lineHeight: 26 },
+  row: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.sm, borderRadius: appRadii.control, borderWidth: 2, borderBottomWidth: 6, padding: appSpacing.md },
+  control: { alignItems: 'center', borderRadius: appRadii.control, height: 44, justifyContent: 'center', width: 44 },
+  controlText: { fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.prompt.fontSize, lineHeight: appTextStyles.prompt.lineHeight },
 });

@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
@@ -7,7 +9,7 @@ import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { Archive, ArchiveRestore, Copy, Layers, Globe2, LockKeyhole, Trash2 } from '@/core/icons';
 import { forwardRef, type ReactNode } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type MemoryActionsSheetProps = {
@@ -124,27 +126,27 @@ function ActionRow({
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   sheetBackground: { backgroundColor: theme.paper, borderRadius: 30 },
-  content: { paddingHorizontal: 20, paddingTop: 12 },
+  content: { paddingHorizontal: appSpacing.xl, paddingTop: appSpacing.md },
   title: {
     color: theme.ink,
     fontFamily: typography.displayExtraBold,
-    fontSize: 20,
+    fontSize: appTextStyles.screenTitle.fontSize,
   },
   description: {
     color: theme.inkSoft,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: appTextStyles.small.fontSize,
+    lineHeight: appTextStyles.small.lineHeight,
     marginTop: 5,
   },
   actions: {
     backgroundColor: theme.canvas,
     borderColor: theme.line,
-    borderRadius: 20,
+    borderRadius: appRadii.card,
     borderWidth: 1.5,
     gap: 3,
     marginTop: 18,
     overflow: 'hidden',
-    padding: 4,
+    padding: appSpacing.xs,
   },
   actionRow: {
     alignItems: 'center',
@@ -152,11 +154,11 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     flexDirection: 'row',
     minHeight: 64,
     paddingHorizontal: 14,
-    borderRadius: 15,
+    borderRadius: appRadii.control,
   },
   actionIcon: {
     alignItems: 'center',
-    borderRadius: 13,
+    borderRadius: appRadii.control,
     height: 40,
     justifyContent: 'center',
     width: 40,
@@ -164,18 +166,18 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   actionLabel: {
     color: theme.ink,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 15,
-    marginLeft: 12,
+    fontSize: appTextStyles.body.fontSize,
+    marginLeft: appSpacing.md,
   },
   destructiveLabel: { color: theme.berryDeep },
   disabled: { opacity: 0.55 },
   busyRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 8,
+    gap: appSpacing.sm,
     justifyContent: 'center',
     minHeight: 36,
     paddingTop: 10,
   },
-  busyText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
+  busyText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
 }));

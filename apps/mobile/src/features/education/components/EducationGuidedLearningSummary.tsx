@@ -1,3 +1,4 @@
+import { AppText as Text } from '@/components/ui/AppText';
 import { LearningResultHero } from './LearningResultHero';
 import { LearningMemoryCard } from './LearningMemoryCard';
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser';
@@ -7,7 +8,7 @@ import { createEducationGuidedPlaylist } from '../utils/educationGuidedLearningF
 import { useEducationPublicCourse } from '../hooks/useEducationPracticeItems';
 import { LearningButton, useLearningCopy, useLearningStyles } from './LearningUi';
 import { Href, useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = Readonly<{ session: EducationGuidedLearningSession; classroomId?: string; onExit: () => void; onPractice: (ids: readonly string[]) => void; disabled: boolean; loading: boolean; onRetry: () => void }>;

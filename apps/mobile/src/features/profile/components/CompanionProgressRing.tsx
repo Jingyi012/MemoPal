@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appTextStyles } from '@/theme/designSystem';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
@@ -21,6 +23,6 @@ export function CompanionProgressRing({ progress, level, label }: { progress: nu
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  wrap: { width: 48, height: 48, justifyContent: 'center', alignItems: 'center', borderRadius: 24, backgroundColor: theme.paper },
-  level: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11, textAlign: 'center', width: 36 },
+  wrap: { width: 48, height: 48, justifyContent: 'center', alignItems: 'center', borderRadius: appRadii.hero, backgroundColor: theme.paper },
+  level: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, textAlign: 'center', width: 36 },
 }));

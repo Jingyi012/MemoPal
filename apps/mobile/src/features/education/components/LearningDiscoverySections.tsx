@@ -1,4 +1,6 @@
-import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing, appTextStyles } from '@/theme/designSystem';
+import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Href, useRouter } from 'expo-router';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { createLearningStyles, learningTypography as type } from '../theme/learningTheme';
@@ -19,12 +21,12 @@ export function LearningDiscoverySections({ courses, recommended, fallback }: { 
     </View> : null}
     {recent.length > 1 ? <View style={s.section}><Text accessibilityRole="header" style={s.heading}>{zh ? '最近上架' : 'Recently published'}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.rail}>
-        {recent.map(course => <AnimatedPressable key={course.id} accessibilityLabel={course.title} onPress={() => open(course.id)} style={{ width: Math.min(280, width - 72), gap: 8 }}><LearningCourseCover course={course} compact /><Text numberOfLines={1} style={s.meta}>{course.authorDisplayName} · {course.questionCount} {zh ? '题' : 'questions'}</Text></AnimatedPressable>)}
+        {recent.map(course => <AnimatedPressable key={course.id} accessibilityLabel={course.title} onPress={() => open(course.id)} style={{ width: Math.min(280, width - 72), gap: appSpacing.sm }}><LearningCourseCover course={course} compact /><Text numberOfLines={1} style={s.meta}>{course.authorDisplayName} · {course.questionCount} {zh ? '题' : 'questions'}</Text></AnimatedPressable>)}
       </ScrollView>
     </View> : null}
   </View>;
 }
 const useStyles = createLearningStyles(t => StyleSheet.create({
-  sections: { gap: 24 }, section: { gap: 12 }, heading: { color: t.ink, fontFamily: type.displayExtraBold, fontWeight: '800', fontSize: 19, lineHeight: 26 },
-  feature: { gap: 10 }, meta: { color: t.inkSoft, fontFamily: type.bodySemibold, fontSize: 12, lineHeight: 18 }, rail: { gap: 12, paddingBottom: 4 },
+  sections: { gap: appSpacing.xxl }, section: { gap: appSpacing.md }, heading: { color: t.ink, fontFamily: type.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize, lineHeight: appTextStyles.screenTitle.lineHeight },
+  feature: { gap: 10 }, meta: { color: t.inkSoft, fontFamily: type.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight }, rail: { gap: appSpacing.md, paddingBottom: appSpacing.xs },
 }));

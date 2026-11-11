@@ -1,10 +1,12 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { learningTypography as typography, createLearningStyles as createThemedStyles } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ArrowRight } from '@/core/icons';
 import type { MyEducationAssignment } from '@/features/education/types/educationAssignment.types';
 import { useEducationCopy } from '@/features/education/i18n';
 import { getEducationAssignmentStatus } from '@/features/education/utils/educationAssignmentStatus';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLearningCopy } from './LearningUi';
 
@@ -43,7 +45,7 @@ export function EducationAssignmentCard({ assignment, onPress }: EducationAssign
           </Text>
         </View>
         <Text style={styles.title}>{assignment.title}</Text>
-        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
+        <View style={{ flexDirection: 'row', gap: appSpacing.sm, alignItems: 'flex-start' }}>
           <Ionicons name="calendar-outline" size={17} color={theme.inkSoft} />
           <Text style={[styles.meta, { flex: 1 }]}>{statusKey === 'upcoming' ? copy.opensAt : copy.dueAt}: {formatDate(statusKey === 'upcoming' ? opensAt : dueAt)}</Text>
         </View>
@@ -64,23 +66,23 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.paper,
     borderColor: theme.line,
-    borderRadius: 22,
+    borderRadius: appRadii.card,
     borderWidth: 2,
     borderBottomWidth: 6,
     flexDirection: 'row',
-    gap: 12,
+    gap: appSpacing.md,
     minHeight: 64,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: appSpacing.lg,
+    paddingVertical: appSpacing.lg,
   },
-  copy: { flex: 1, gap: 12, minWidth: 0 },
-  titleRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between' },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, lineHeight: 26 },
-  footer: { borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  footerText: { flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 13, lineHeight: 19 },
-  status: { borderRadius: 999, fontFamily: typography.bodyExtraBold, fontSize: 13, overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 3 },
+  copy: { flex: 1, gap: appSpacing.md, minWidth: 0 },
+  titleRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm, justifyContent: 'space-between' },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize, lineHeight: appTextStyles.screenTitle.lineHeight },
+  footer: { borderRadius: appRadii.control, paddingHorizontal: appSpacing.md, paddingVertical: 10, minHeight: 44, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: appSpacing.sm },
+  footerText: { flex: 1, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  status: { borderRadius: appRadii.pill, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize, overflow: 'hidden', paddingHorizontal: appSpacing.sm, paddingVertical: 3 },
   upcoming: { backgroundColor: theme.skyTint, color: theme.link },
   open: { backgroundColor: theme.mintTint, color: theme.successText },
   pastDue: { backgroundColor: theme.peachTint, color: theme.berryDeep },
-  meta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17 },
+  meta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
 }));

@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
+import { StyleSheet, View } from 'react-native';
 import { createLearningStyles, learningTypography as type } from '../theme/learningTheme';
 import { SubjectArtwork, learningThemeFor, useLearningCopy } from './LearningUi';
 import type { EducationPublicCourseSummary } from '../types/educationPractice.types';
@@ -17,11 +19,11 @@ export function LearningCourseCover({ course, compact = false }: { course: Educa
   </View>;
 }
 const useStyles = createLearningStyles(t => StyleSheet.create({
-  cover: { backgroundColor: t.paper, borderWidth: 1, borderColor: t.line, minHeight: 164, borderRadius: 20, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 8, overflow: 'hidden' },
-  compact: { minHeight: 142, padding: 14, borderRadius: 18 },
+  cover: { backgroundColor: t.paper, borderWidth: 1, borderColor: t.line, minHeight: 164, borderRadius: appRadii.card, padding: 18, flexDirection: 'row', alignItems: 'center', gap: appSpacing.sm, overflow: 'hidden' },
+  compact: { minHeight: 142, padding: 14, borderRadius: appRadii.card },
   copy: { flex: 1, minWidth: 0, gap: 10, zIndex: 1 },
-  label: { fontFamily: type.bodyExtraBold, fontSize: 12 },
-  title: { color: t.ink, fontFamily: type.displayExtraBold, fontWeight: '800', fontSize: 23, lineHeight: 30 },
-  compactTitle: { fontSize: 17, lineHeight: 24 }, art: { alignSelf: 'flex-end', paddingBottom: 8 },
+  label: { fontFamily: type.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  title: { color: t.ink, fontFamily: type.displayExtraBold, fontSize: appTextStyles.stat.fontSize, lineHeight: appTextStyles.stat.lineHeight },
+  compactTitle: { fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight }, art: { alignSelf: 'flex-end', paddingBottom: appSpacing.sm },
   orbit: { position: 'absolute', width: 160, height: 160, borderRadius: 80, borderWidth: 1, opacity: 0.14, right: -40, top: -48 },
 }));

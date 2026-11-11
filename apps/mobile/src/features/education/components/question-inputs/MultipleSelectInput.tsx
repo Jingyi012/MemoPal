@@ -1,6 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { EducationQuestionOption, MultipleSelectAnswer, MultipleSelectQuestion } from '@/features/education/types/question.types';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useCorrectAnswer, useQuestionHints, useQuestionInputStyles, useQuestionFeedback } from './questionInputStyles';
 
 export type MultipleSelectInputProps = Readonly<{

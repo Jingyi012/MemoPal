@@ -1,13 +1,15 @@
 # 学习模块 UI 复用入口
 
 学习模块使用手机现有的浅色／深色设置，不单独维护 theme provider。
+全局样式以 [Mobile shared styles](mobile-design-system.md) 为准；学习模块不再维护另一套字号、字体、基础颜色或按钮实现。
 
 | 调整内容 | 维护位置 |
 | --- | --- |
-| 语义颜色、配对色、主视觉、浮层遮罩 | `apps/mobile/src/features/education/theme/learningTokens.ts` 的 `learningColors` |
-| 常用间距、圆角、点击区域、边框厚度 | 同文件 `learningLayout` |
-| 字号及行高 | 同文件 `learningTypeScale` |
-| 字体及主题样式工厂 | `theme/learningTheme.ts` 的 `learningTypography`、`createLearningStyles` |
+| 基础语义颜色 | `apps/mobile/src/theme/memopalTheme.ts` |
+| 配对色、主视觉、浮层遮罩 | `apps/mobile/src/features/education/theme/learningTokens.ts` 的 `learningColors` |
+| 常用间距、圆角、点击区域、边框厚度 | `apps/mobile/src/theme/designSystem.ts`；`learningLayout` 为兼容别名 |
+| 字体、字号及行高 | 同文件 `appTextStyles`、`fontFamilies`；`learningTypeScale` / `learningTypography` 为兼容别名 |
+| 主题样式工厂 | `theme/learningTheme.ts` 的 `createLearningStyles` |
 | 通用卡片、正文、标题、底部区样式 | `components/LearningUi.tsx` 的 `useLearningStyles` |
 | 主／次／成功／错误按钮、进度条和入场动画 | `LearningButton`、`LearningProgress`、`LearningArrival` |
 | 44pt 图标按钮 | `components/LearningIconButton.tsx`；plain／outlined 两种外观，已用于导航、首页快捷入口和朗读 |

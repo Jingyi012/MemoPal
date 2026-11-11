@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { memopalThemes } from '@/theme/memopalTheme';
 import {
   BottomSheetBackdrop,
@@ -6,7 +8,7 @@ import {
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import React, { useCallback, useEffect, useRef } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import AnimatedPressable from './AnimatedPressable';
 import { useColorScheme } from 'nativewind';
 
@@ -66,7 +68,7 @@ export const AlertMessage: React.FC<AlertMessageProps> = ({
               <Icon size={32} color={variant === 'destructive' ? theme.berryDeep : theme.violetDeep} />
             </View>
           )}
-          <Text className="text-center text-xl font-bold" style={{ color: theme.ink }}>{title}</Text>
+          <Text className="text-center" style={[appTextStyles.screenTitle, { fontFamily: fontFamilies.bodyBold }, { color: theme.ink }]}>{title}</Text>
           {description && (
             <Text className="mt-2 px-4 text-center leading-5" style={{ color: theme.inkSoft }}>{description}</Text>
           )}
@@ -77,7 +79,7 @@ export const AlertMessage: React.FC<AlertMessageProps> = ({
           className={`${
             variant === 'destructive' ? 'bg-[#E8527A]' : 'bg-[#7A68E0]'
           } h-14 items-center justify-center rounded-2xl`}>
-          <Text className="text-lg font-bold text-white">{okLabel}</Text>
+          <Text className="text-white" style={[appTextStyles.sectionTitle, { fontFamily: fontFamilies.bodyBold }]}>{okLabel}</Text>
         </AnimatedPressable>
       </BottomSheetView>
     </BottomSheetModal>

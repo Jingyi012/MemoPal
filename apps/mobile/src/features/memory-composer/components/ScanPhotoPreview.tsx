@@ -1,3 +1,4 @@
+import { appRadii, appSpacing } from '@/theme/designSystem';
 import { Image } from 'expo-image';
 import { Maximize2, X } from '@/core/icons';
 import { useState } from 'react';
@@ -81,7 +82,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     width: '100%',
     height: 140,
     flexShrink: 0,
-    borderRadius: 16,
+    borderRadius: appRadii.control,
     borderWidth: 1.5,
     borderColor: theme.line,
     backgroundColor: theme.sand,
@@ -96,7 +97,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     height: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 999,
+    borderRadius: appRadii.pill,
     backgroundColor: 'rgba(18, 17, 26, 0.78)',
   },
   modalPage: {
@@ -104,11 +105,11 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     backgroundColor: '#09090C',
   },
   fullImage: { flex: 1, width: '100%' },
-  modalToolbar: { alignItems: 'flex-end', paddingHorizontal: 16, paddingVertical: 8 },
+  modalToolbar: { alignItems: 'flex-end', paddingHorizontal: appSpacing.lg, paddingVertical: appSpacing.sm },
   closeButton: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: appRadii.hero,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(18, 17, 26, 0.76)',

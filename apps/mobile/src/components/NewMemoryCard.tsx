@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { ChevronRight, Plus, Sparkles } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type NewMemoryCardProps = {
   title: string;
@@ -37,11 +39,11 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.violetTint,
     borderColor: theme.violetLine,
-    borderRadius: 24,
+    borderRadius: appRadii.hero,
     borderWidth: 1.5,
     boxShadow: '0px 6px 16px rgba(43, 42, 61, 0.06)',
     flexDirection: 'row',
-    gap: 12,
+    gap: appSpacing.md,
     minHeight: 98,
     overflow: 'hidden',
     paddingHorizontal: 15,
@@ -52,7 +54,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   icon: {
     alignItems: 'center',
     backgroundColor: theme.violetDeep,
-    borderRadius: 18,
+    borderRadius: appRadii.card,
     height: 50,
     justifyContent: 'center',
     width: 50,
@@ -60,7 +62,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   },
   sparkle: { position: 'absolute', right: -2, top: -4, width: 21, height: 21, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
   copy: { flex: 1, minWidth: 0 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 16, marginTop: 3 },
-  arrow: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 17, height: 34, justifyContent: 'center', width: 34 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
+  body: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 3 },
+  arrow: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, height: 34, justifyContent: 'center', width: 34 },
 }));

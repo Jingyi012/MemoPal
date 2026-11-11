@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appTextStyles } from '@/theme/designSystem';
 import { AppImage } from '@/components/AppImage';
 import type { PalaceLocus, PalaceScene } from '@/features/palace-scenes/types/palaceScene.types';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Polyline } from 'react-native-svg';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
@@ -72,7 +74,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     // percentage-based locus coordinates.
     aspectRatio: 4 / 3,
     borderColor: theme.violetLine,
-    borderRadius: 20,
+    borderRadius: appRadii.card,
     borderWidth: 2,
     backgroundColor: '#F4EFE0',
     overflow: 'hidden',
@@ -84,7 +86,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     bottom: 14,
     left: 14,
     borderColor: '#CDBD8A',
-    borderRadius: 14,
+    borderRadius: appRadii.control,
     borderWidth: 2,
     borderStyle: 'dashed',
   },
@@ -103,7 +105,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#9B8CFF',
     borderColor: 'white',
-    borderRadius: 16,
+    borderRadius: appRadii.control,
     borderWidth: 3,
     height: 34,
     justifyContent: 'center',
@@ -132,6 +134,6 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   markerText: {
     color: 'white',
     fontFamily: typography.bodyExtraBold,
-    fontSize: 12,
+    fontSize: appTextStyles.caption.fontSize,
   },
 }));

@@ -1,7 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { ReactNode } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
@@ -95,31 +98,31 @@ export function SceneEditorCard({
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: 20, padding: 14, marginBottom: 16 },
-  compactCard: { borderRadius: 18, marginBottom: 12, padding: 13 },
+  card: { backgroundColor: theme.paper, borderWidth: 2, borderColor: theme.line, borderRadius: appRadii.card, padding: 14, marginBottom: appSpacing.lg },
+  compactCard: { borderRadius: appRadii.card, marginBottom: appSpacing.md, padding: 13 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerActions: { alignItems: 'center', flexDirection: 'row', gap: 6 },
-  badge: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: theme.paper },
+  badge: { width: 32, height: 32, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: theme.paper },
   pegBadge: { backgroundColor: theme.berry },
   palaceBadge: { backgroundColor: theme.violet },
-  badgeText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  badgeText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   headerCopy: { flex: 1 },
-  anchor: { fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 0.8 },
+  anchor: { fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.8 },
   pegText: { color: theme.berryDeep },
   palaceText: { color: theme.violetDeep },
-  itemLabel: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 13, marginTop: 2 },
-  progress: { borderRadius: 999, fontFamily: typography.bodyExtraBold, fontSize: 10, paddingHorizontal: 8, paddingVertical: 5 },
+  itemLabel: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, marginTop: 2 },
+  progress: { borderRadius: appRadii.pill, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, paddingHorizontal: appSpacing.sm, paddingVertical: 5 },
   pegProgress: { color: theme.berryDeep, backgroundColor: theme.berryTint },
   palaceProgress: { color: theme.violetDeep, backgroundColor: theme.violetTint },
-  visual: { minHeight: 86, borderRadius: 15, marginTop: 12, alignItems: 'center', justifyContent: 'center', padding: 10 },
-  compactVisual: { minHeight: 68, marginTop: 10, padding: 8 },
+  visual: { minHeight: 86, borderRadius: appRadii.control, marginTop: appSpacing.md, alignItems: 'center', justifyContent: 'center', padding: 10 },
+  compactVisual: { minHeight: 68, marginTop: 10, padding: appSpacing.sm },
   pegVisual: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.sunLine, backgroundColor: theme.sunTint, flexDirection: 'row', gap: 9 },
   palaceVisual: { borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint },
-  inputLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 12 },
-  compactInputLabel: { fontSize: 12, marginTop: 10 },
-  input: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19, minHeight: 74, textAlignVertical: 'top', marginTop: 6, borderRadius: 13, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 11 },
-  compactInput: { fontSize: 13, lineHeight: 19, minHeight: 66, marginTop: 5, padding: 10 },
-  action: { marginTop: 9, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', minHeight: 44, borderRadius: 12, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint },
-  actionText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  actionEmoji: { fontSize: 16 },
+  inputLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, marginTop: appSpacing.md },
+  compactInputLabel: { fontSize: appTextStyles.caption.fontSize, marginTop: 10 },
+  input: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, minHeight: 74, textAlignVertical: 'top', marginTop: 6, borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 11 },
+  compactInput: { fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, minHeight: 66, marginTop: 5, padding: 10 },
+  action: { marginTop: 9, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', minHeight: 44, borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.berryLine, backgroundColor: theme.berryTint },
+  actionText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  actionEmoji: { fontSize: appTextStyles.cardTitle.fontSize },
 }));

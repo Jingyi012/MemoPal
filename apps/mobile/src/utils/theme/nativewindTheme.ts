@@ -1,5 +1,6 @@
 import { vars } from 'nativewind';
 import { memopalThemes, type MemoPalTheme } from '@/theme/memopalTheme';
+import { appFontWeightValues, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 
 export type ThemeMode = keyof typeof memopalThemes;
 
@@ -40,7 +41,7 @@ const toNativewindPalette = (theme: MemoPalTheme) => ({
   cardBorder: theme.line,
 });
 
-// NativeWind adapter only. All actual color values live in memopalTheme.ts.
+// Adapters only: color and presentation values stay in the central theme files.
 const nativewindPalettes = {
   light: toNativewindPalette(memopalThemes.light),
   dark: toNativewindPalette(memopalThemes.dark),
@@ -56,6 +57,20 @@ const createVars = (mode: ThemeMode) => {
     // Convert camelCase to kebab-case for CSS
     const cssKey = `--color-${key.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}`;
     transformed[cssKey] = value;
+  });
+
+  Object.entries(appTextStyles).forEach(([role, style]) => {
+    transformed[`--type-${role}-size`] = `${style.fontSize}px`;
+    transformed[`--type-${role}-line`] = `${style.lineHeight}px`;
+  });
+  Object.entries(appFontWeightValues).forEach(([role, value]) => {
+    transformed[`--weight-${role}`] = value;
+  });
+  Object.entries(appRadii).forEach(([role, value]) => {
+    transformed[`--radius-${role}`] = `${value}px`;
+  });
+  Object.entries(appSpacing).forEach(([role, value]) => {
+    transformed[`--space-${role}`] = `${value}px`;
   });
 
   return vars(transformed);

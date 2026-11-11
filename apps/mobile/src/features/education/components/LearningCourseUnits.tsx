@@ -1,4 +1,6 @@
-import { Text, View } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing } from '@/theme/designSystem';
+import { View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LearningCoursePath } from './LearningCoursePath';
@@ -26,14 +28,14 @@ export function LearningCourseUnits({ course, progress, onMemory, onPractice, on
       {compactUnits ? <View style={[s.row, { justifyContent: 'space-between', flexWrap: 'wrap' }]}>
         <Text style={[s.small, { color: palette.violetDeep }]}>{zh ? `单元 ${index + 1}` : `UNIT ${index + 1}`}</Text>
         <Text style={s.small}>{zh ? `${group.objectives.reduce((n, item) => n + item.studyItems.length, 0)} 张卡片` : `${group.objectives.reduce((n, item) => n + item.studyItems.length, 0)} cards`}</Text>
-      </View> : group.title ? <View style={{ backgroundColor: palette.paper, borderWidth: 1, borderColor: palette.line, padding: 18, borderRadius: 22, gap: 6 }}>
+      </View> : group.title ? <View style={{ backgroundColor: palette.paper, borderWidth: 1, borderColor: palette.line, padding: 18, borderRadius: appRadii.card, gap: 6 }}>
         <Text style={[s.small, { color: theme.dark }]}>{zh ? `单元 ${index + 1}` : `UNIT ${index + 1}`}</Text>
         <Text accessibilityRole="header" style={[s.heading, { color: theme.dark }]}>{group.title}</Text>
         <Text style={[s.small, { color: theme.dark }]}>{zh ? `${group.objectives.length} 个知识点 · 一步步探索` : `${group.objectives.length} study points · One step at a time`}</Text>
       </View> : groups.length > 1 ? <Text accessibilityRole="header" style={s.heading}>{zh ? '更多学习内容' : 'More to discover'}</Text> : null}
       <LearningCoursePath objectives={group.objectives} progress={progress} onMemory={onMemory} onPractice={onPractice} onStudy={onStudy} currentObjectiveId={currentObjectiveId} showItemPreview={compactUnits} sharedAssessmentIds={sharedLessons.map(lesson => lesson.assessmentId)} showHeading={false} />
     </View>)}
-    {sharedLessons.length ? <View style={{ gap: 12 }}>
+    {sharedLessons.length ? <View style={{ gap: appSpacing.md }}>
       <Text accessibilityRole="header" style={s.heading}>{zh ? '综合练习' : 'Put it together'}</Text>
       <Text style={s.body}>{zh ? '把学过的知识点一起用一用。' : 'Bring the ideas you have explored together.'}</Text>
       {sharedLessons.map(lesson => <AnimatedPressable key={lesson.assessmentId} accessibilityRole="button" onPress={() => onPractice(lesson.assessmentId)} style={[s.card, { gap: 10 }]}>

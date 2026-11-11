@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useEducationCopy } from '@/features/education/i18n';
 import { buildEducationPracticeHistoryShareSummary } from '@/features/education/utils/educationShareSummary';
 import { Share2 } from 'lucide-react-native';
-import { Share, StyleSheet, Text, View } from 'react-native';
+import { Share, StyleSheet, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 type EducationPracticeHistoryShareButtonProps = Readonly<{ recentQuestionCount: number }>;
@@ -32,7 +34,7 @@ export function EducationPracticeHistoryShareButton({ recentQuestionCount }: Edu
 }
 
 const useStyles = createThemedStyles(theme => StyleSheet.create({
-  button: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 13, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
-  content: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  label: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  button: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.control, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
+  content: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.sm },
+  label: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
 }));

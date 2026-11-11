@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -14,7 +16,7 @@ import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
 import { Camera, ChevronRight, MapPin } from '@/core/icons';
 import { useMemo } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function PalaceHomeScreen() {
   const { styles, theme } = useStyles();
@@ -136,28 +138,28 @@ function findJourneyScene(memorySet: MemorySet, scenes: PalaceScene[]) {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 32, gap: 14 },
+  content: { paddingHorizontal: appSpacing.lg, paddingTop: appSpacing.sm, paddingBottom: appSpacing.section, gap: 14 },
   featuredWrap: { marginTop: 2 },
-  sectionHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, minHeight: 32 },
-  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17 },
-  sectionCount: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: 999, fontFamily: typography.bodyExtraBold, fontSize: 12, overflow: 'hidden', paddingHorizontal: 10, paddingVertical: 5 },
+  sectionHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginTop: appSpacing.sm, minHeight: 32 },
+  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
+  sectionCount: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: appRadii.pill, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, overflow: 'hidden', paddingHorizontal: 10, paddingVertical: 5 },
   journeyList: { gap: 9 },
   viewAllJourneys: { alignItems: 'center', alignSelf: 'flex-start', flexDirection: 'row', minHeight: 44, paddingHorizontal: 6 },
-  viewAllText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  emptyJourney: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1, flexDirection: 'row', gap: 11, minHeight: 72, padding: 12 },
-  emptyJourneyIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 14, height: 42, justifyContent: 'center', width: 42 },
+  viewAllText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  emptyJourney: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 1, flexDirection: 'row', gap: 11, minHeight: 72, padding: appSpacing.md },
+  emptyJourneyIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.control, height: 42, justifyContent: 'center', width: 42 },
   emptyJourneyCopy: { flex: 1, gap: 3 },
-  emptyJourneyTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  emptyJourneyBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 15 },
+  emptyJourneyTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  emptyJourneyBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
   createOptions: { flexDirection: 'row', gap: 11 },
   createOptionWrap: { flex: 1, position: 'relative' },
-  createOption: { borderColor: theme.violetLine, borderRadius: 18, borderWidth: 1.5, flex: 1, minHeight: 136, padding: 12 },
+  createOption: { borderColor: theme.violetLine, borderRadius: appRadii.card, borderWidth: 1.5, flex: 1, minHeight: 136, padding: appSpacing.md },
   personalOption: { backgroundColor: theme.paper },
   libraryOption: { backgroundColor: theme.paper },
-  optionIcon: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: 13, height: 38, justifyContent: 'center', marginBottom: 8, width: 38 },
-  optionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 12 },
-  optionBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 14, marginTop: 4 },
-  bestBadge: { backgroundColor: theme.sun, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4, position: 'absolute', right: 8, top: -9, zIndex: 1 },
-  bestBadgeText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 9 },
+  optionIcon: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: appRadii.control, height: 38, justifyContent: 'center', marginBottom: appSpacing.sm, width: 38 },
+  optionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.caption.fontSize },
+  optionBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: appSpacing.xs },
+  bestBadge: { backgroundColor: theme.sun, borderRadius: appRadii.pill, paddingHorizontal: appSpacing.sm, paddingVertical: appSpacing.xs, position: 'absolute', right: 8, top: -9, zIndex: 1 },
+  bestBadgeText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   loadingCard: { height: 100, overflow: 'hidden' },
 }));

@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import { useReducedMotion } from 'react-native-reanimated';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -10,7 +12,7 @@ import { useEducationCopy } from '@/features/education/i18n';
 import { useAuth } from '@/contexts/AuthProvider';
 import { Stack, Href, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 export default function EducationClassroomCourseScreen() {
   const { classroomId = '', courseId = '' } = useLocalSearchParams<{ classroomId: string; courseId: string }>();
@@ -110,23 +112,23 @@ export default function EducationClassroomCourseScreen() {
 
 const useStyles = createThemedStyles(theme => StyleSheet.create({
   page: { backgroundColor: theme.canvas, flex: 1 },
-  content: { gap: 12, padding: 18, paddingBottom: 36 },
+  content: { gap: appSpacing.md, padding: 18, paddingBottom: 36 },
   state: { minHeight: 120, justifyContent: 'center', overflow: 'hidden' },
-  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17, marginTop: 6 },
-  lesson: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 22, borderWidth: 2, borderBottomWidth: 5, gap: 8, padding: 16 },
+  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, marginTop: 6 },
+  lesson: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 2, borderBottomWidth: 5, gap: appSpacing.sm, padding: appSpacing.lg },
   selectedLesson: { borderColor: theme.violetDeep, borderWidth: 2 },
   disabledLesson: { opacity: 0.65 },
-  lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  status: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  note: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: 12, borderWidth: 1, color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, padding: 11 },
-  objective: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 14, borderWidth: 1, gap: 8, padding: 12 },
-  objectiveTitle: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  item: { borderTopColor: theme.line, borderTopWidth: 1, gap: 3, paddingTop: 8 },
-  itemPrimary: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 },
-  inline: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 12, borderWidth: 1, gap: 8, padding: 12 },
-  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 12, justifyContent: 'center', minHeight: 45, paddingHorizontal: 15 },
-  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 13 },
+  lessonTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  status: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  note: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: appRadii.control, borderWidth: 1, color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, padding: 11 },
+  objective: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, gap: appSpacing.sm, padding: appSpacing.md },
+  objectiveTitle: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  item: { borderTopColor: theme.line, borderTopWidth: 1, gap: 3, paddingTop: appSpacing.sm },
+  itemPrimary: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  inline: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.sm },
+  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: appRadii.control, borderWidth: 1, gap: appSpacing.sm, padding: appSpacing.md },
+  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, justifyContent: 'center', minHeight: 45, paddingHorizontal: 15 },
+  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize },
 }));

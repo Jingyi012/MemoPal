@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { ChevronRight, Image as ImageIcon, Sparkles } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useAiCredits } from '../hooks/useAiCredits';
@@ -63,15 +65,15 @@ function formatCompactCredits(value: number) {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  coinButton: { minWidth: 78, height: 44, paddingHorizontal: 8, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: 'transparent' },
-  coinType: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 12 },
-  coinBalance: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 76, padding: 14, borderRadius: 20, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper },
+  coinButton: { minWidth: 78, height: 44, paddingHorizontal: appSpacing.sm, borderRadius: appRadii.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: appSpacing.xs, backgroundColor: 'transparent' },
+  coinType: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.caption.fontSize },
+  coinBalance: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  card: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.md, minHeight: 76, padding: 14, borderRadius: appRadii.card, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper },
   compactCard: { minHeight: 58, paddingVertical: 10 },
   copy: { flex: 1, minWidth: 0 }, titleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  balance: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 22, lineHeight: 26, marginTop: 1 },
-  unit: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 }, metaRow: { flexDirection: 'row', gap: 12, marginTop: 5 },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: 4 }, metaText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
-  expiringPill: { borderRadius: 999, paddingHorizontal: 6, paddingVertical: 3, backgroundColor: theme.sunTint }, expiringText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.4 },
+  title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  balance: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize, lineHeight: appTextStyles.prompt.lineHeight, marginTop: 1 },
+  unit: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize }, metaRow: { flexDirection: 'row', gap: appSpacing.md, marginTop: 5 },
+  meta: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.xs }, metaText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize },
+  expiringPill: { borderRadius: appRadii.pill, paddingHorizontal: 6, paddingVertical: 3, backgroundColor: theme.sunTint }, expiringText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.4 },
 }));

@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import type { MyEducationAssignment } from '../types/educationAssignment.types';
 import { EducationAssignmentCard } from './EducationAssignmentCard';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type EducationCourseAssignmentGroupProps = Readonly<{
   courseTitle: string | null;
@@ -24,7 +26,7 @@ export function EducationCourseAssignmentGroup({ courseTitle, assignments, onOpe
 }
 
 const useStyles = createThemedStyles(theme => StyleSheet.create({
-  course: { gap: 8 },
-  title: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  course: { gap: appSpacing.sm },
+  title: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   assignments: { gap: 9 },
 }));

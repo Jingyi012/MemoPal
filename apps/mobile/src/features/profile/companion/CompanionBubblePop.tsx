@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkTextStyles, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { cancelAnimation, runOnJS, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -160,20 +162,20 @@ function FloatingTarget({ target, active, width, height, screenReaderEnabled, on
 }
 
 const useStyles = createThemedStyles(theme => StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: 12, paddingBottom: 12 },
-  hud: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 8, paddingVertical: 10 },
+  root: { flex: 1, paddingHorizontal: appSpacing.md, paddingBottom: appSpacing.md },
+  hud: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: appSpacing.sm, paddingVertical: 10 },
   hudValue: { minWidth: 86, minHeight: 44, textAlign: 'center', textAlignVertical: 'center', overflow: 'hidden',
-    backgroundColor: theme.paper, color: theme.violetDeep, borderRadius: 18, fontFamily: typography.displayExtraBold, fontSize: 20 },
+    backgroundColor: theme.paper, color: theme.violetDeep, borderRadius: appRadii.card, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize },
   arena: { flex: 1, minHeight: 300, borderRadius: 30, overflow: 'hidden', borderWidth: 2, borderColor: theme.skyLine },
   glow: { ...StyleSheet.absoluteFillObject, borderWidth: 7, borderRadius: 28, borderColor: theme.skyLine, opacity: .4 },
   hintWrap: { position: 'absolute', top: 15, alignSelf: 'center', zIndex: 4, backgroundColor: theme.paper,
-    paddingHorizontal: 16, paddingVertical: 7, borderRadius: 18 },
-  hint: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 15 },
+    paddingHorizontal: appSpacing.lg, paddingVertical: 7, borderRadius: appRadii.card },
+  hint: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize },
   targetWrap: { position: 'absolute', bottom: 0, zIndex: 3 },
   target: { borderRadius: 100, borderWidth: 2, borderColor: theme.paper, overflow: 'hidden' },
   targetGradient: { borderRadius: 100, alignItems: 'center', justifyContent: 'center' },
   pressed: { transform: [{ scale: .88 }] },
   glint: { position: 'absolute', left: '18%', top: '17%', width: '30%', height: '20%', borderRadius: 30, backgroundColor: theme.paper, opacity: .9 },
   smallGlint: { position: 'absolute', right: '18%', bottom: '20%', width: 8, height: 8, borderRadius: 5, backgroundColor: theme.paper },
-  urchin: { color: theme.paper, fontSize: 39, lineHeight: 49 },
+  urchin: { ...appArtworkTextStyles.large, color: theme.paper },
 }));

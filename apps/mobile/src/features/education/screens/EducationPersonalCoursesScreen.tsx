@@ -1,6 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appRadii, appSpacing } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { type ReactNode, useCallback, useState } from 'react';
-import { FlatList, Keyboard, RefreshControl, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { FlatList, Keyboard, RefreshControl, View, useWindowDimensions } from 'react-native';
 import { Href, Redirect, useFocusEffect, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '@/contexts/AuthProvider';
@@ -51,13 +54,13 @@ export default function EducationPersonalCoursesScreen({ initialFilter = 'all', 
     <LearningHeader hideBackButton={tabEntry} additionalContent={workspaceNavigation} showAiCredits={false} title={tabEntry ? (zh ? '学习' : 'Learn') : (zh ? '我的学习资料' : 'My learning library')} actions={[{ component: <LearningWorkspaceActions /> }]} />
     <FlatList key={viewMode} numColumns={grid ? 2 : 1} columnWrapperStyle={grid ? s.gridColumns : undefined} onLayout={event => setListWidth(event.nativeEvent.layout.width)} data={filtered} keyExtractor={item => `${item.source}-${item.course.id}`} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
       refreshControl={<RefreshControl tintColor={theme.violetDeep} colors={[theme.violetDeep]} refreshing={personal.isRefetching || saved.isRefetching} onRefresh={refresh} />}
-      ListHeaderComponent={<View style={{ gap: 16, marginBottom: 2 }}>
-        <AnimatedPressable accessibilityRole="button" accessibilityLabel={zh ? '浏览课程' : 'Browse courses'} onPress={() => { Keyboard.dismiss(); router.push('/discover'); }} style={[s.row, { minHeight: 64, padding: 14, borderRadius: 18, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.line }]}>
+      ListHeaderComponent={<View style={{ gap: appSpacing.lg, marginBottom: 2 }}>
+        <AnimatedPressable accessibilityRole="button" accessibilityLabel={zh ? '浏览课程' : 'Browse courses'} onPress={() => { Keyboard.dismiss(); router.push('/discover'); }} style={[s.row, { minHeight: 64, padding: 14, borderRadius: appRadii.card, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.line }]}>
           <Ionicons name="compass-outline" size={25} color={theme.violetDeep} />
           <View style={{ flex: 1, gap: 3 }}><Text style={s.sectionTitle}>{zh ? '浏览课程' : 'Browse courses'}</Text><Text style={s.small}>{zh ? '找到想学的，收藏到这里' : 'Find something new and save it here'}</Text></View>
           <Ionicons name="arrow-forward" size={20} color={theme.violetDeep} />
         </AnimatedPressable>
-        {tabEntry ? <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/education/assignments')} style={[s.row, { minHeight: 52, paddingHorizontal: 12, borderRadius: 14, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.line }]}><Ionicons name="checkbox-outline" size={22} color={theme.successText} /><Text style={[s.small, { flex: 1, color: theme.successText }]}>{zh ? '我的学习任务' : 'My assignments'}</Text><Ionicons name="chevron-forward" size={18} color={theme.successText} /></AnimatedPressable> : null}
+        {tabEntry ? <AnimatedPressable accessibilityRole="button" onPress={() => router.push('/education/assignments')} style={[s.row, { minHeight: 52, paddingHorizontal: appSpacing.md, borderRadius: appRadii.control, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.line }]}><Ionicons name="checkbox-outline" size={22} color={theme.successText} /><Text style={[s.small, { flex: 1, color: theme.successText }]}>{zh ? '我的学习任务' : 'My assignments'}</Text><Ionicons name="chevron-forward" size={18} color={theme.successText} /></AnimatedPressable> : null}
         {!tabEntry ? <View style={s.hero}>
           <View style={s.heroCopy}>
             <View style={s.heroBadge}><Ionicons name="library-outline" size={12} color={theme.heroInk} /><Text style={s.heroBadgeText}>{zh ? '我的学习书架' : 'YOUR LEARNING SHELF'}</Text></View>

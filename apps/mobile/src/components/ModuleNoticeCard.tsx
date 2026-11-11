@@ -1,10 +1,12 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { AppButton } from '@/components/ui/AppButton';
 import { useColorScheme } from 'nativewind';
 import { memopalThemes, type MemoPalTheme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { RefreshCcw } from '@/core/icons';
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type ModuleNoticeCardProps = {
   title: string;
@@ -52,22 +54,22 @@ const createStyles = (theme: MemoPalTheme) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.paper,
     borderColor: theme.line,
-    borderRadius: 26,
+    borderRadius: appRadii.hero,
     borderWidth: 1,
-    padding: 24,
+    padding: appSpacing.xxl,
   },
   icon: {
     alignItems: 'center',
     backgroundColor: theme.mintTint,
-    borderRadius: 14,
+    borderRadius: appRadii.control,
     height: 56,
     justifyContent: 'center',
     marginBottom: 9,
     width: 56,
   },
-  emoji: { fontSize: 31, marginBottom: 9 },
-  title: { color: theme.ink, fontFamily: typography.display, fontSize: 18, textAlign: 'center' },
-  body: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' },
+  emoji: { fontSize: appArtworkSizes.medium, marginBottom: 9 },
+  title: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.sectionTitle.fontSize, textAlign: 'center' },
+  body: { color: theme.inkSoft, fontFamily: typography.body, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, marginTop: 5, textAlign: 'center' },
   retryButton: {
     marginTop: 14,
   },

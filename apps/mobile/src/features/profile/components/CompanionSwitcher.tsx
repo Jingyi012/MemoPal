@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { MemoryAvatar } from '@/components/MemoryAvatar';
@@ -8,7 +10,7 @@ import { typography } from '@/theme/typography';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
 import React, { useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -103,16 +105,16 @@ export function CompanionSwitcher({ avatar, avatars, level, selectedAvatarId, is
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   triggerPosition: { position: 'absolute', top: 12, left: 0, zIndex: 30, elevation: 16 },
   trigger: { minHeight: 44, maxWidth: 184, flexDirection: 'row', alignItems: 'center', gap: 7, paddingLeft: 6, paddingRight: 10, borderRadius: 23, borderWidth: 1, borderColor: 'rgba(255,255,255,0.94)', backgroundColor: 'rgba(255,255,255,0.96)', boxShadow: '0px 3px 10px rgba(43,42,61,0.12)' },
-  triggerName: { flexShrink: 1, color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  triggerName: { flexShrink: 1, color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   sheet: { backgroundColor: theme.paper, borderRadius: 28 },
-  sheetContent: { flex: 1, paddingHorizontal: 20, paddingTop: 8 },
-  sheetHeading: { gap: 4, paddingBottom: 14 },
-  sheetTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 },
-  sheetSubtitle: { color: theme.inkMuted, fontFamily: typography.body, fontSize: 11 },
-  options: { gap: 8, paddingBottom: 10 },
-  option: { minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, borderWidth: 1, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.canvas },
+  sheetContent: { flex: 1, paddingHorizontal: appSpacing.xl, paddingTop: appSpacing.sm },
+  sheetHeading: { gap: appSpacing.xs, paddingBottom: 14 },
+  sheetTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize },
+  sheetSubtitle: { color: theme.inkMuted, fontFamily: typography.body, fontSize: appTextStyles.caption.fontSize },
+  options: { gap: appSpacing.sm, paddingBottom: 10 },
+  option: { minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: appSpacing.md, paddingHorizontal: appSpacing.md, borderWidth: 1, borderColor: theme.line, borderRadius: appRadii.card, backgroundColor: theme.canvas },
   optionSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint },
   optionDisabled: { opacity: 0.7 },
-  optionName: { flex: 1, color: theme.ink, fontFamily: typography.bodyBold, fontSize: 13 },
-  error: { color: theme.berryDeep, fontFamily: typography.body, fontSize: 11, paddingVertical: 8 },
+  optionName: { flex: 1, color: theme.ink, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize },
+  error: { color: theme.berryDeep, fontFamily: typography.body, fontSize: appTextStyles.caption.fontSize, paddingVertical: appSpacing.sm },
 }));

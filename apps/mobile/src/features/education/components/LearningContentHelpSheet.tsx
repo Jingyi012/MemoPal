@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing } from '@/theme/designSystem';
 import { forwardRef } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
@@ -21,18 +23,18 @@ export const LearningContentHelpSheet = forwardRef<BottomSheetModal, { onClose: 
     ['Preview and save', 'Hold units or use the arrows to reorder them. Save and start learning privately, or keep a draft for later.'],
   ];
   return <CustomBottomSheetModal ref={ref} snapPoints={['85%']} enableDynamicSizing={false}>
-    <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={{ padding: 20, paddingBottom: Math.max(20, insets.bottom), gap: 20 }}>
-      <View style={[s.row, { gap: 8 }]}>
+    <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={{ padding: appSpacing.xl, paddingBottom: Math.max(20, insets.bottom), gap: appSpacing.xl }}>
+      <View style={[s.row, { gap: appSpacing.sm }]}>
         <Text accessibilityRole="header" style={[s.heading, { flex: 1 }]}>{zh ? '如何创建学习内容？' : 'How does this work?'}</Text>
         <LearningIconButton icon="close" label={zh ? '关闭说明' : 'Close help'} onPress={onClose} />
       </View>
-      {steps.map(([title, description], index) => <View key={title} style={{ flexDirection: 'row', gap: 12 }}>
-        <View style={{ width: 32, height: 32, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.violetTint }}>
+      {steps.map(([title, description], index) => <View key={title} style={{ flexDirection: 'row', gap: appSpacing.md }}>
+        <View style={{ width: 32, height: 32, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.violetTint }}>
           <Text style={[s.small, { color: theme.violetDeep }]}>{index + 1}</Text>
         </View>
-        <View style={{ flex: 1, gap: 4 }}><Text style={s.heading}>{title}</Text><Text style={s.small}>{description}</Text></View>
+        <View style={{ flex: 1, gap: appSpacing.xs }}><Text style={s.heading}>{title}</Text><Text style={s.small}>{description}</Text></View>
       </View>)}
-      <View style={[s.card, { backgroundColor: theme.violetTint, gap: 8 }]}>
+      <View style={[s.card, { backgroundColor: theme.violetTint, gap: appSpacing.sm }]}>
         <Text style={s.small}>{zh ? '只有词语 → 学习卡片\n词语 + 释义 → 卡片和文字回忆题' : 'Words → study cards\nWords + meanings → cards and written recall questions'}</Text>
         <Text style={s.small}>{zh ? '可粘贴表格中的两列。暂不自动生成听写或口语评分题。' : 'Paste two columns from a table. Dictation and speech-scoring questions are not generated.'}</Text>
       </View>

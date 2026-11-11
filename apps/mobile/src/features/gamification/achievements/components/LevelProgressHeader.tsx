@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { HighlightCard } from '@/components/HighlightCard';
 import { LevelXpProgressBar, getLevelProgressMetrics } from '@/components/LevelXpProgressBar';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import React from 'react';
-import { Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { MemoryAvatar } from '@/components/MemoryAvatar';
 import type { AvatarDefinition } from '@/features/avatars/types/avatar';
@@ -88,14 +90,14 @@ export const LevelProgressHeader: React.FC<Props> = ({ level, streak, avatar, ap
 
 const useStyles = createThemedStyles((theme) => ({
   card: { marginBottom: 18 },
-  topRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12 },
+  topRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: appSpacing.md },
   avatarRing: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: theme.violetLine, overflow: 'visible' as const },
   levelCopy: { flex: 1, minWidth: 0 },
-  levelTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15 },
-  levelSubtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, marginTop: 2 },
-  streakPill: { backgroundColor: theme.sunTint, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
-  streakText: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 12 },
+  levelTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.body.fontSize },
+  levelSubtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginTop: 2 },
+  streakPill: { backgroundColor: theme.sunTint, borderRadius: appRadii.pill, paddingHorizontal: 10, paddingVertical: 6 },
+  streakText: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.caption.fontSize },
   progressTrack: { marginTop: 13 },
   xpLabels: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, marginTop: 6 },
-  xpLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5 },
+  xpLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
 }));

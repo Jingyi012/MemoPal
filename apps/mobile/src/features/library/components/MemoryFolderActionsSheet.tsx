@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { createThemedStyles } from '@/theme/createThemedStyles';
@@ -7,7 +9,7 @@ import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { Pencil, Trash2 } from '@/core/icons';
 import { forwardRef, type ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = {
@@ -53,13 +55,13 @@ function ActionRow({ label, icon, iconBackground, destructive = false, disabled,
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   sheetBackground: { backgroundColor: theme.paper, borderRadius: 30 },
-  content: { paddingHorizontal: 20, paddingTop: 12 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 20 },
-  description: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, marginTop: 5 },
-  actions: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 20, borderWidth: 1.5, gap: 3, marginTop: 18, overflow: 'hidden', padding: 4 },
-  actionRow: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: 15, flexDirection: 'row', minHeight: 64, paddingHorizontal: 14 },
-  actionIcon: { alignItems: 'center', borderRadius: 13, height: 40, justifyContent: 'center', width: 40 },
-  actionLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, marginLeft: 12 },
+  content: { paddingHorizontal: appSpacing.xl, paddingTop: appSpacing.md },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize },
+  description: { color: theme.inkSoft, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, marginTop: 5 },
+  actions: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 1.5, gap: 3, marginTop: 18, overflow: 'hidden', padding: appSpacing.xs },
+  actionRow: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: appRadii.control, flexDirection: 'row', minHeight: 64, paddingHorizontal: 14 },
+  actionIcon: { alignItems: 'center', borderRadius: appRadii.control, height: 40, justifyContent: 'center', width: 40 },
+  actionLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize, marginLeft: appSpacing.md },
   destructiveLabel: { color: theme.berryDeep },
   disabled: { opacity: 0.55 },
 }));

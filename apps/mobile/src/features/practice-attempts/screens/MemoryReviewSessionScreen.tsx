@@ -1,3 +1,4 @@
+import { appSpacing } from '@/theme/designSystem';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -85,4 +86,4 @@ export default function MemoryReviewSessionScreen({ memorySetId, scope }: {
     ? <PalaceMemorySessionScreen {...props} /> : <NumberPegSessionScreen {...props} />;
 }
 
-const styles = StyleSheet.create({ page: { flex: 1 }, notice: { padding: 20 } });
+const styles = StyleSheet.create({ page: { flex: 1 }, notice: { padding: appSpacing.xl } });

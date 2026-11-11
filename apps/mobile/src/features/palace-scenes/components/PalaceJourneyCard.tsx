@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { AppImage } from '@/components/AppImage';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -9,7 +11,7 @@ import { getPalaceSceneName } from '@/features/palace-scenes/utils/palaceLocaliz
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { ChevronRight } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export function PalaceJourneyCard({ memorySet, scene, featured = false, actionLabel, onPress }: {
   memorySet: MemorySet;
@@ -63,24 +65,24 @@ function getJourneyProgress(memorySet: MemorySet, progress?: MemoryReviewProgres
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  journeyCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 82, padding: 10 },
-  featuredCard: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 22, minHeight: 102, padding: 12 },
-  journeyThumbnail: { borderRadius: 14, height: 54, overflow: 'hidden', width: 54 },
-  featuredThumbnail: { height: 68, width: 68, borderRadius: 17 },
+  journeyCard: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 82, padding: 10 },
+  featuredCard: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.card, minHeight: 102, padding: appSpacing.md },
+  journeyThumbnail: { borderRadius: appRadii.control, height: 54, overflow: 'hidden', width: 54 },
+  featuredThumbnail: { height: 68, width: 68, borderRadius: appRadii.control },
   thumbPlaceholder: { alignItems: 'center', backgroundColor: theme.violetTint, flex: 1, justifyContent: 'center' },
-  thumbEmoji: { fontSize: 25 },
+  thumbEmoji: { fontSize: appArtworkSizes.small },
   journeyCopy: { flex: 1, gap: 3, minWidth: 0 },
-  continueEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  journeyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontWeight: '800', fontSize: 16 },
-  featuredTitle: { color: theme.ink, fontSize: 16 },
-  journeyMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
+  continueEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  journeyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.cardTitle.fontSize },
+  featuredTitle: { color: theme.ink, fontSize: appTextStyles.cardTitle.fontSize },
+  journeyMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
   featuredMeta: { color: theme.inkSoft },
-  progressTrack: { backgroundColor: theme.violetTint, borderRadius: 99, height: 5, marginTop: 3, overflow: 'hidden' },
+  progressTrack: { backgroundColor: theme.violetTint, borderRadius: appRadii.pill, height: 5, marginTop: 3, overflow: 'hidden' },
   featuredTrack: { backgroundColor: theme.paper },
-  progressFill: { backgroundColor: theme.sky, borderRadius: 99, height: '100%' },
+  progressFill: { backgroundColor: theme.sky, borderRadius: appRadii.pill, height: '100%' },
   featuredProgressFill: { backgroundColor: theme.sun },
-  journeyAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 13, flexDirection: 'row', gap: 2, justifyContent: 'center', minHeight: 40, paddingHorizontal: 7 },
-  journeyActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  featuredAction: { backgroundColor: theme.violetDeep, borderRadius: 14, minHeight: 42, paddingHorizontal: 10 },
-  featuredActionText: { color: theme.onAccent, fontSize: 11 },
+  journeyAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.control, flexDirection: 'row', gap: 2, justifyContent: 'center', minHeight: 40, paddingHorizontal: 7 },
+  journeyActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  featuredAction: { backgroundColor: theme.violetDeep, borderRadius: appRadii.control, minHeight: 42, paddingHorizontal: 10 },
+  featuredActionText: { color: theme.onAccent, fontSize: appTextStyles.caption.fontSize },
 }));

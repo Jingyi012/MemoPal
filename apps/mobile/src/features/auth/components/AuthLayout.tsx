@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing, appTextStyles } from '@/theme/designSystem';
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
@@ -20,7 +22,7 @@ export function AuthLayout({ children, terms }: { children: ReactNode; terms: st
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
-  content: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
+  content: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: appSpacing.xxl },
   form: { width: '100%', maxWidth: 400, alignItems: 'stretch' },
-  terms: { maxWidth: 360, color: theme.inkSoft, fontFamily: typography.body, fontSize: 11, lineHeight: 17, textAlign: 'center', marginTop: 24 },
+  terms: { maxWidth: 360, color: theme.inkSoft, fontFamily: typography.body, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, textAlign: 'center', marginTop: appSpacing.xxl },
 }));

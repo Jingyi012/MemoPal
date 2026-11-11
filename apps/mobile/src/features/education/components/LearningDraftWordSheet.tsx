@@ -1,6 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
 import { AppSheetTextInput } from '@/components/AppSheetTextInput';
 import { forwardRef } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';

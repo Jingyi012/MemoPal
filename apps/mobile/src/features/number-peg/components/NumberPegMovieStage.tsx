@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appArtworkTextStyles, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import type { PegSceneRecipe } from '@/features/memory-sets';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import {
@@ -7,7 +9,7 @@ import {
 import { typography } from '@/theme/typography';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 
 type NumberPegMovieStageProps = {
   pegNumber: number;
@@ -219,18 +221,12 @@ export function NumberPegMovieStage({
   // especially on Android.
   const targetFontSize = targetIsImage
     ? undefined
-    : targetValue.length > 10
-      ? 15
-      : targetValue.length > 6
-        ? 18
-        : 20;
+    : targetValue.length > 10 ? appTextStyles.body.fontSize
+      : targetValue.length > 6 ? appTextStyles.sectionTitle.fontSize : appTextStyles.screenTitle.fontSize;
   const targetFontSizeCompact = targetIsImage
     ? undefined
-    : targetValue.length > 10
-      ? 12
-      : targetValue.length > 6
-        ? 14
-        : 16;
+    : targetValue.length > 10 ? appTextStyles.caption.fontSize
+      : targetValue.length > 6 ? appTextStyles.label.fontSize : appTextStyles.cardTitle.fontSize;
 
   return (
     <View
@@ -334,21 +330,21 @@ export function NumberPegMovieStage({
 const styles = StyleSheet.create({
   stage: {
     minHeight: 204,
-    borderRadius: 22,
+    borderRadius: appRadii.card,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: appSpacing.xs,
     overflow: 'hidden',
-    paddingHorizontal: 12,
+    paddingHorizontal: appSpacing.md,
     position: 'relative',
   },
-  stageCompact: { minHeight: 150, borderRadius: 17 },
+  stageCompact: { minHeight: 150, borderRadius: appRadii.control },
   floor: {
     position: 'absolute',
     width: '72%',
     height: 20,
-    borderRadius: 999,
+    borderRadius: appRadii.pill,
     backgroundColor: 'rgba(62,55,88,0.08)',
     bottom: 22,
     transform: [{ scaleX: 1.12 }],
@@ -373,26 +369,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 2,
   },
-  pegCompact: { width: 84, height: 92, borderRadius: 24 },
-  pegEmoji: { fontSize: 42, lineHeight: 49 },
-  pegEmojiCompact: { fontSize: 33, lineHeight: 39 },
+  pegCompact: { width: 84, height: 92, borderRadius: appRadii.hero },
+  pegEmoji: appArtworkTextStyles.large,
+  pegEmojiCompact: appArtworkTextStyles.medium,
   pegBadge: {
     position: 'absolute',
     top: 7,
     left: 7,
     minWidth: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: appRadii.control,
     backgroundColor: theme.berry,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 5,
   },
-  pegNumber: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  pegNumber: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   pegName: {
     color: theme.berryDeep,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 10,
+    fontSize: appTextStyles.caption.fontSize,
     maxWidth: 80,
     textTransform: 'uppercase',
   },
@@ -403,10 +399,10 @@ const styles = StyleSheet.create({
     zIndex: 5,
     pointerEvents: 'none',
   },
-  effectEmoji: { fontSize: 34 },
-  effectEmojiCompact: { fontSize: 27 },
-  boosterEmoji: { fontSize: 20, marginTop: -6 },
-  boosterEmojiCompact: { fontSize: 16 },
+  effectEmoji: { fontSize: appArtworkSizes.medium },
+  effectEmojiCompact: { fontSize: appArtworkSizes.small },
+  boosterEmoji: { fontSize: appArtworkSizes.tiny, marginTop: -6 },
+  boosterEmojiCompact: { fontSize: appTextStyles.cardTitle.fontSize },
   particle: {
     position: 'absolute',
     zIndex: 4,
@@ -414,7 +410,7 @@ const styles = StyleSheet.create({
     top: '45%',
     pointerEvents: 'none',
   },
-  particleText: { color: theme.sunDeep, fontSize: 18 },
+  particleText: { color: theme.sunDeep, fontSize: appTextStyles.sectionTitle.fontSize },
   target: {
     minWidth: 108,
     maxWidth: 138,
@@ -429,14 +425,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 3,
   },
-  targetCompact: { minWidth: 88, maxWidth: 112, minHeight: 72, borderRadius: 20 },
+  targetCompact: { minWidth: 88, maxWidth: 112, minHeight: 72, borderRadius: appRadii.card },
   targetText: {
     color: 'white',
     fontFamily: typography.display,
-    fontSize: 20,
+    fontSize: appTextStyles.screenTitle.fontSize,
     textAlign: 'center',
   },
-  targetTextCompact: { fontSize: 16 },
-  targetEmoji: { fontSize: 42 },
-  targetEmojiCompact: { fontSize: 33 },
+  targetTextCompact: { fontSize: appTextStyles.cardTitle.fontSize },
+  targetEmoji: { fontSize: appArtworkSizes.large },
+  targetEmojiCompact: { fontSize: appArtworkSizes.medium },
 });

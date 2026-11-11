@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { Globe2, Link2, LockKeyhole } from '@/core/icons';
 import { useColorScheme } from 'nativewind';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { MemorySetVisibility } from '@/features/memory-sets';
 import { memopalThemes, type MemoPalTheme } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
@@ -28,7 +30,7 @@ export function MemoryVisibilityBadge({ visibility, label, compact = false }: Me
 }
 
 const createStyles = (theme: MemoPalTheme) => StyleSheet.create({
-  badge: { alignItems: 'center', alignSelf: 'flex-start', borderRadius: 999, flexDirection: 'row', gap: 5, maxWidth: '100%', paddingHorizontal: 9, paddingVertical: 5 },
-  badgeCompact: { gap: 4, paddingHorizontal: 7, paddingVertical: 4 },
-  label: { fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  badge: { alignItems: 'center', alignSelf: 'flex-start', borderRadius: appRadii.pill, flexDirection: 'row', gap: 5, maxWidth: '100%', paddingHorizontal: 9, paddingVertical: 5 },
+  badgeCompact: { gap: appSpacing.xs, paddingHorizontal: 7, paddingVertical: appSpacing.xs },
+  label: { fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
 });

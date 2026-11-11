@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles } from '@/theme/designSystem';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 export interface LevelProgressMetrics {
   isMaxLevel: boolean;
@@ -44,7 +46,7 @@ export const LevelXpProgressBar: React.FC<LevelXpProgressBarProps> = ({
   showPercent = false,
   trackClassName = 'h-2 overflow-hidden rounded-full bg-white/20',
   fillClassName = 'h-full rounded-full',
-  percentClassName = 'mt-1 text-right text-[11px] text-[#E3DFFF]',
+  percentClassName = 'mt-1 text-right text-ink-soft',
 }) => {
   const { progress } = getLevelProgressMetrics(xpInCurrentLevel, xpToNextLevel);
 
@@ -60,7 +62,7 @@ export const LevelXpProgressBar: React.FC<LevelXpProgressBarProps> = ({
         />
       </View>
 
-      {showPercent ? <Text className={percentClassName}>{progress}%</Text> : null}
+      {showPercent ? <Text className={percentClassName} style={appTextStyles.caption}>{progress}%</Text> : null}
     </>
   );
 };

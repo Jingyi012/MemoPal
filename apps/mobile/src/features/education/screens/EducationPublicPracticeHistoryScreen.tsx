@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ConfirmModal } from '@/components/ConfirmModal';
@@ -8,7 +10,7 @@ import { useClearEducationPublicPracticeHistory, useEducationPublicPracticeHisto
 import { EducationPracticeHistoryShareButton } from '@/features/education/components/EducationPracticeHistoryShareButton';
 import { Href, Redirect, useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthProvider';
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -54,7 +56,7 @@ export default function EducationPublicPracticeHistoryScreen() {
 
             </> : null}
           </View>}
-          ListFooterComponent={history.data?.length ? <View style={{ paddingTop: 24 }}><AnimatedPressable accessibilityRole="button" onPress={() => setConfirmClear(true)} style={styles.clearAction}>
+          ListFooterComponent={history.data?.length ? <View style={{ paddingTop: appSpacing.xxl }}><AnimatedPressable accessibilityRole="button" onPress={() => setConfirmClear(true)} style={styles.clearAction}>
                 <Text style={styles.clearText}>{copy.clearPublicPracticeHistory}</Text>
               </AnimatedPressable></View> : null}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -97,25 +99,25 @@ export default function EducationPublicPracticeHistoryScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { backgroundColor: theme.canvas, flex: 1 },
-  content: { padding: 16, paddingBottom: 32 },
+  content: { padding: appSpacing.lg, paddingBottom: appSpacing.section },
   share: { gap: 10, paddingBottom: 14 },
-  historyNote: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: 14, borderWidth: 1, color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21, padding: 12 },
+  historyNote: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: appRadii.control, borderWidth: 1, color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight, padding: appSpacing.md },
   state: { flex: 1, justifyContent: 'center', overflow: 'hidden' },
-  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 16, borderWidth: 1.5, gap: 10, margin: 16, padding: 15 },
-  card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, gap: 12, padding: 18 },
-  course: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 21 },
-  assessment: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
-  prompt: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 18, lineHeight: 25 },
-  result: { fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: appRadii.control, borderWidth: 1.5, gap: 10, margin: appSpacing.lg, padding: 15 },
+  card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.hero, borderWidth: 2, borderBottomWidth: 5, gap: appSpacing.md, padding: 18 },
+  course: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  assessment: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  prompt: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight },
+  result: { fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   correct: { color: theme.successText },
   incorrect: { color: theme.berryDeep },
-  date: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 },
-  empty: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, gap: 16, padding: 20 },
-  emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 22, lineHeight: 29 },
+  date: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  empty: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.hero, borderWidth: 2, borderBottomWidth: 5, gap: appSpacing.lg, padding: appSpacing.xl },
+  emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize, lineHeight: appTextStyles.prompt.lineHeight },
   separator: { height: 10 },
-  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 16, borderBottomWidth: 4, borderColor: theme.primaryShadow, paddingVertical: 10, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
-  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 21 },
-  clearAction: { alignItems: 'center', alignSelf: 'flex-start', borderColor: theme.berryLine, borderRadius: 12, borderWidth: 1.5, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
-  clearText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 21 },
+  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, borderBottomWidth: 4, borderColor: theme.primaryShadow, paddingVertical: 10, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
+  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  clearAction: { alignItems: 'center', alignSelf: 'flex-start', borderColor: theme.berryLine, borderRadius: appRadii.control, borderWidth: 1.5, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
+  clearText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
 }));

@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { memopalTheme as theme, memopalThemes } from '@/theme/memopalTheme';
@@ -5,7 +7,7 @@ import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useColorScheme } from 'nativewind';
 import { forwardRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export type PreferenceSelectionOption = {
   key: string;
@@ -85,18 +87,18 @@ PreferenceSheetContent.displayName = 'PreferenceSheetContent';
 PreferenceSelectionSheet.displayName = 'PreferenceSelectionSheet';
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 28 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 20 },
-  description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 4 },
+  content: { paddingHorizontal: appSpacing.xl, paddingTop: appSpacing.sm, paddingBottom: 28 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize },
+  description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: appSpacing.xs },
   options: { gap: 10, marginTop: 17 },
-  option: { minHeight: 72, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 11 },
+  option: { minHeight: 72, borderRadius: appRadii.card, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: appSpacing.md, flexDirection: 'row', alignItems: 'center', gap: 11 },
   optionSelected: { borderColor: theme.violet, backgroundColor: theme.violetTint },
-  icon: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  emoji: { fontSize: 22 },
+  icon: { width: 44, height: 44, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center' },
+  emoji: { fontSize: appArtworkSizes.small },
   copy: { flex: 1, minWidth: 0 },
-  optionTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13.5 },
-  optionBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10.5, lineHeight: 15, marginTop: 2 },
-  radio: { width: 23, height: 23, borderRadius: 12, borderWidth: 2, borderColor: theme.line, alignItems: 'center', justifyContent: 'center' },
+  optionTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  optionBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 2 },
+  radio: { width: 23, height: 23, borderRadius: appRadii.control, borderWidth: 2, borderColor: theme.line, alignItems: 'center', justifyContent: 'center' },
   radioSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetDeep },
-  check: { color: theme.paper, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 15 },
+  check: { color: theme.paper, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
 });

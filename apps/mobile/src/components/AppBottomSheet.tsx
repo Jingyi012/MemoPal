@@ -1,3 +1,4 @@
+import { appSpacing } from '@/theme/designSystem';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
@@ -17,4 +18,4 @@ export function AppBottomSheet({ visible, onClose, children, height: requestedHe
     <BottomSheetView style={StyleSheet.flatten([styles.content, requestedHeight !== undefined && { flex: 1 }, { paddingBottom: Math.max(16, insets.bottom) }])}>{children}</BottomSheetView>
   </CustomBottomSheetModal>;
 }
-const styles = StyleSheet.create({ content: { paddingHorizontal: 20, paddingTop: 8, gap: 12 } });
+const styles = StyleSheet.create({ content: { paddingHorizontal: appSpacing.xl, paddingTop: appSpacing.sm, gap: appSpacing.md } });

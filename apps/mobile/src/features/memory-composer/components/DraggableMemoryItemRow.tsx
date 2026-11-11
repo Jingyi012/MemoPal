@@ -1,16 +1,13 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import * as Haptics from 'expo-haptics';
 import { GripVertical, Trash2 } from '@/core/icons';
 import { createContext, useContext, useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  type AccessibilityActionEvent,
-} from 'react-native';
+import { StyleSheet, View, type AccessibilityActionEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   interpolateColor,
@@ -248,12 +245,12 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    borderRadius: 14,
+    borderRadius: appRadii.control,
     borderWidth: 1.5,
     borderColor: theme.line,
     backgroundColor: theme.paper,
     paddingLeft: 9,
-    paddingRight: 4,
+    paddingRight: appSpacing.xs,
     zIndex: 0,
   },
   itemRowNeedsReview: { borderColor: theme.sunLine, backgroundColor: theme.sunTint },
@@ -265,26 +262,26 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   itemNumber: {
     width: 27,
     height: 27,
-    borderRadius: 14,
+    borderRadius: appRadii.control,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.violet,
   },
-  itemNumberText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  itemNumberText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   itemInput: {
     flex: 1,
     minHeight: 43,
     color: theme.ink,
     fontFamily: typography.bodySemibold,
-    fontSize: 14,
-    paddingVertical: 8,
+    fontSize: appTextStyles.label.fontSize,
+    paddingVertical: appSpacing.sm,
   },
   dragHandle: {
     width: 44,
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 12,
+    borderRadius: appRadii.control,
   },
   removeButton: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
 }));

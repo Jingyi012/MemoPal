@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appTextStyles, fontFamilies } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { MemorySet } from '@/features/memory-sets/types/memorySet.types';
 import { ArrowRight } from '@/core/icons';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 type ContinueSessionCardProps = {
   memorySet: Pick<MemorySet, 'title' | 'techniqueKey' | 'items' | 'updatedAt' | 'status'>;
@@ -21,19 +23,19 @@ export function ContinueSessionCard({ memorySet, onPress }: ContinueSessionCardP
         style={{ boxShadow: '0px 8px 20px rgba(43,42,61,0.08)' }}>
         <View className="flex-row items-center">
           <View className={`h-12 w-12 items-center justify-center rounded-2xl ${isPalace ? 'bg-tint-violet' : 'bg-tint-berry'}`}>
-            <Text className="text-2xl">{isPalace ? '🏰' : '🕯️'}</Text>
+            <Text style={{ fontSize: appArtworkSizes.medium, lineHeight: appArtworkSizes.medium + 4 }}>{isPalace ? '🏰' : '🕯️'}</Text>
           </View>
           <View className="ml-3 min-w-0 flex-1">
-            <Text className="text-[10.5px] font-bold text-ink-soft">
+            <Text className="text-ink-soft" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodyBold }]}>
               Continue where you left off
             </Text>
-            <Text numberOfLines={1} className="mt-[1px] text-[14px] font-black text-ink">
+            <Text numberOfLines={1} className="mt-[1px] text-ink" style={[appTextStyles.label, { fontFamily: fontFamilies.displayExtraBold }]}>
               {memorySet.title}
             </Text>
             <View className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line">
               <View className="h-full rounded-full bg-accent-violet" style={{ width: `${progress}%` }} />
             </View>
-            <Text className="mt-1 text-[10.5px] font-bold text-ink-soft">
+            <Text className="mt-1 text-ink-soft" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodyBold }]}>
               {memorySet.status === 'draft' ? 'Keep building' : `${memorySet.items.length} items ready to recall`}
             </Text>
           </View>

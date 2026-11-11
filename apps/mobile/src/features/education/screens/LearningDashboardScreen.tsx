@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { LearningConnectionsNotice } from '../components/LearningConnectionsNotice';
 import { LearningDailyGoal } from '../components/LearningDailyGoal';
 import { useCallback } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '@/contexts/AuthProvider';
@@ -75,14 +77,14 @@ function StandardLearningDashboard() {
   }).slice(0, 3);
   const failed = failedSources;
   return <View style={s.page}>
-    <View style={[s.row, { paddingHorizontal: 16, paddingTop: insets.top + 6, paddingBottom: 6, justifyContent: 'space-between' }]}>
+    <View style={[s.row, { paddingHorizontal: appSpacing.lg, paddingTop: insets.top + 6, paddingBottom: 6, justifyContent: 'space-between' }]}>
       <CompanionActor stage={profile.user?.level ?? 1} size={48} cue={{ action: 'hello', sequence: 0 }} />
       <View style={s.row}><NotificationBell /><LearningIconButton icon="add" label={zh ? '添加学习内容' : 'Add study content'} onPress={() => push('/education/create-course')} /></View>
     </View>
     <ScrollView contentContainerStyle={[s.content, { gap: 18 }]} refreshControl={<RefreshControl refreshing={personal.isRefetching || home.isRefetching} onRefresh={refresh} />}>
-      <View style={[s.row, { alignItems: 'center' }]}><View style={{ flex: 1, gap: 6 }}><Text style={[s.title, { fontSize: 24 }]}>{zh ? `你好，${profile.user?.displayName || user?.displayName || 'MemoPal'}！` : `Hi, ${profile.user?.displayName || user?.displayName || 'MemoPal'}!`}</Text><Text style={s.small}>{zh ? '今天也和沫沫一起，学一点点' : 'One little step with Momo today'}</Text></View></View>
+      <View style={[s.row, { alignItems: 'center' }]}><View style={{ flex: 1, gap: 6 }}><Text accessibilityRole="header" style={[s.title, appTextStyles.pageTitle]}>{zh ? `你好，${profile.user?.displayName || user?.displayName || 'MemoPal'}！` : `Hi, ${profile.user?.displayName || user?.displayName || 'MemoPal'}!`}</Text><Text style={s.small}>{zh ? '今天也和沫沫一起，学一点点' : 'One little step with Momo today'}</Text></View></View>
       {profile.user ? <LearningLevelProgress totalXp={profile.user.totalXp} level={profile.user.level} /> : null}
-      {loading ? <LearningSkeleton /> : action ? <View style={[s.card, { backgroundColor: theme.hero[0], borderColor: theme.primaryShadow, padding: 20, gap: 14 }]}>
+      {loading ? <LearningSkeleton /> : action ? <View style={[s.card, { backgroundColor: theme.hero[0], borderColor: theme.primaryShadow, padding: appSpacing.xl, gap: 14 }]}>
         <Text style={[s.small, { color: theme.heroInk }]}>{action.hint}</Text><Text style={[s.title, { color: theme.heroInk }]}>{action.title}</Text>
         <LearningButton tone="white" label={action.label} onPress={action.run} />
       </View> : failed ? null : <View style={s.card}><Text style={s.heading}>{zh ? '今天想学什么？' : 'What would you like to learn?'}</Text><Text style={s.body}>{zh ? '添加自己的词表，或找一门喜欢的课程。' : 'Bring your own words or discover a course.'}</Text><LearningButton label={zh ? '添加学习内容' : 'Add study content'} onPress={() => push('/education/create-course')} /></View>}
@@ -97,7 +99,7 @@ function StandardLearningDashboard() {
       {ownRows.map(item => <DashboardMaterial key={item.id} title={item.title} detail={`${zh ? '我创建的' : 'Created'} · ${item.studyItemCount} ${zh ? '张卡片' : 'cards'}`} action={item.readyToLearn ? (zh ? '学习' : 'Study') : (zh ? '续编' : 'Edit')} onPress={() => push(item.readyToLearn ? learningResumeRoute({ source: 'personal', courseId: item.id }) : `/education/create-course?draftId=${encodeURIComponent(item.id)}`)} />)}
       {(saved.data ?? []).slice(0, Math.max(1, 3 - ownRows.length)).map(item => <DashboardMaterial key={item.id} title={item.title} detail={zh ? '已收藏课程' : 'Saved course'} action={zh ? '学习' : 'Study'} onPress={() => push(learningResumeRoute({ source: 'public', courseId: item.id }))} />)}
       {!ownRows.length && !saved.data?.length && !personal.isLoading && !personal.isError && !saved.isError ? <Text style={s.small}>{zh ? '创建或收藏的课程会出现在这里。记忆练习可以从底部「记忆」进入。' : 'Your created and saved courses appear here. Find memory practice in the Memory tab.'}</Text> : null}
-      <AnimatedPressable accessibilityRole="button" onPress={discover} style={[s.card, s.row]}><Ionicons name="compass-outline" size={27} color={theme.violetDeep} /><View style={{ flex: 1, gap: 4 }}><Text style={s.heading}>{zh ? '发现新课程' : 'Discover courses'}</Text><Text style={s.small}>{zh ? '想学点新的，再来这里逛逛' : 'Find something new when you are ready'}</Text></View><Ionicons name="chevron-forward" size={20} color={theme.violetDeep} /></AnimatedPressable>
+      <AnimatedPressable accessibilityRole="button" onPress={discover} style={[s.card, s.row]}><Ionicons name="compass-outline" size={27} color={theme.violetDeep} /><View style={{ flex: 1, gap: appSpacing.xs }}><Text style={s.heading}>{zh ? '发现新课程' : 'Discover courses'}</Text><Text style={s.small}>{zh ? '想学点新的，再来这里逛逛' : 'Find something new when you are ready'}</Text></View><Ionicons name="chevron-forward" size={20} color={theme.violetDeep} /></AnimatedPressable>
       <TextLink label={zh ? '查看学习记录与报告' : 'Learning history and reports'} onPress={() => push('/progress')} />
     </ScrollView>
   </View>;
@@ -105,7 +107,7 @@ function StandardLearningDashboard() {
 
 function TextLink({ label, onPress }: { label: string; onPress: () => void }) {
   const { styles: s, theme } = useLearningStyles();
-  return <AnimatedPressable accessibilityRole="button" onPress={onPress} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 }}><Text style={[s.small, { color: theme.violetDeep }]}>{label} →</Text></AnimatedPressable>;
+  return <AnimatedPressable accessibilityRole="button" onPress={onPress} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: appSpacing.xs }}><Text style={[s.small, { color: theme.violetDeep }]}>{label} →</Text></AnimatedPressable>;
 }
 function DashboardShortcut({ icon, title, detail, onPress }: { icon: 'checkbox-outline' | 'refresh-outline'; title: string; detail: string; onPress: () => void }) {
   const { styles: s, theme } = useLearningStyles();
@@ -113,5 +115,5 @@ function DashboardShortcut({ icon, title, detail, onPress }: { icon: 'checkbox-o
 }
 function DashboardMaterial({ title, detail, action, onPress }: { title: string; detail: string; action: string; onPress: () => void }) {
   const { styles: s, theme } = useLearningStyles();
-  return <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${title} · ${action}`} onPress={onPress} style={[s.card, s.row]}><View style={{ padding: 10, borderRadius: 12, backgroundColor: theme.violetTint }}><Ionicons name="book-outline" size={22} color={theme.violetDeep} /></View><View style={{ flex: 1, minWidth: 0, gap: 4 }}><Text numberOfLines={2} style={s.heading}>{title}</Text><Text style={s.small}>{detail}</Text></View><Ionicons name="chevron-forward" size={20} color={theme.violetDeep} /></AnimatedPressable>;
+  return <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${title} · ${action}`} onPress={onPress} style={[s.card, s.row]}><View style={{ padding: 10, borderRadius: appRadii.control, backgroundColor: theme.violetTint }}><Ionicons name="book-outline" size={22} color={theme.violetDeep} /></View><View style={{ flex: 1, minWidth: 0, gap: appSpacing.xs }}><Text numberOfLines={2} style={s.heading}>{title}</Text><Text style={s.small}>{detail}</Text></View><Ionicons name="chevron-forward" size={20} color={theme.violetDeep} /></AnimatedPressable>;
 }

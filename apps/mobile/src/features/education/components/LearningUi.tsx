@@ -1,8 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
+import { AppButton } from '@/components/ui/AppButton';
 import { createLearningStyles as createThemedStyles, learningPalettes, type LearningPalette, learningTypography as typography, learningLayout, learningTypeScale } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInUp, interpolate, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -61,11 +64,13 @@ export function LearningArrival({ children, style }: { children: ReactNode; styl
 export function LearningButton({ label, onPress, disabled, secondary = false, loading = false, tone = 'primary', compact = false }: {
   label: string; onPress: () => void; disabled?: boolean; secondary?: boolean; theme?: LearningTheme; loading?: boolean; tone?: 'primary' | 'success' | 'danger' | 'white'; compact?: boolean;
 }) {
-  const { theme: palette, styles } = useLearningStyles();
-  return <AnimatedPressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled: !!disabled || loading, busy: loading }} disabled={disabled || loading} onPress={onPress}
-    style={[styles.button, { minHeight: compact ? learningLayout.compactControlHeight : learningLayout.controlHeight, paddingHorizontal: compact ? 11 : 20, backgroundColor: disabled ? palette.disabled : tone === 'white' ? palette.heroSurface : secondary ? palette.paper : tone === 'success' ? palette.successText : tone === 'danger' ? palette.berryDeep : palette.violetDeep, borderColor: disabled ? palette.disabledShadow : secondary ? palette.line : tone === 'white' ? palette.heroSurfaceBorder : tone === 'success' ? palette.successShadow : tone === 'danger' ? palette.berryDeep : palette.primaryShadow }, secondary && { borderWidth: 1, borderBottomWidth: 1 }]}>
-    <Text style={[styles.buttonText, { fontSize: compact || secondary || tone === 'white' ? 14 : 16, color: disabled ? palette.inkSoft : tone === 'white' ? palette.heroSurfaceInk : secondary ? palette.violetDeep : palette.onAccent }]}>{loading ? '…' : label}</Text>
-  </AnimatedPressable>;
+  const { theme: palette } = useLearningStyles();
+  const solidColor = tone === 'success' ? palette.successText : tone === 'danger' ? palette.berryDeep : palette.violetDeep;
+  return <AppButton label={label} onPress={onPress} disabled={disabled} loading={loading}
+    size={compact ? 'compact' : 'large'} variant={secondary ? 'secondary' : 'primary'} fullWidth
+    style={tone === 'white' ? { backgroundColor: palette.heroSurface, borderColor: palette.heroSurfaceBorder }
+      : secondary ? undefined : { backgroundColor: solidColor, borderColor: solidColor }}
+    labelStyle={tone === 'white' ? { color: palette.heroSurfaceInk } : secondary ? undefined : { color: palette.onAccent }} />;
 }
 export function SubjectArtwork({ theme, size = 72 }: { theme: LearningTheme; size?: number }) {
   return <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size, borderRadius: size * .3, backgroundColor: theme.tint, borderWidth: 2, borderColor: theme.line, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={theme.icon} size={size * .55} color={theme.color} /></View>;
@@ -73,7 +78,7 @@ export function SubjectArtwork({ theme, size = 72 }: { theme: LearningTheme; siz
 export function LearningTextAction({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
   const { theme, styles } = useLearningStyles();
   return <AnimatedPressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
-    style={{ minHeight: 44, paddingVertical: 10, paddingHorizontal: 12, justifyContent: 'center', alignItems: 'center' }}>
+    style={{ minHeight: 44, paddingVertical: 10, paddingHorizontal: appSpacing.md, justifyContent: 'center', alignItems: 'center' }}>
     <Text style={[styles.small, { textAlign: 'center', color: disabled ? theme.inkSoft : theme.violetDeep }]}>{label}</Text>
   </AnimatedPressable>;
 }
@@ -92,7 +97,7 @@ export function LearningRing({ value, total, theme }: { value: number; total: nu
   const ratio = total ? Math.min(1, value / total) : 0;
   return <View accessibilityLabel={`${value}/${total}`} style={{ height: 84, width: 84, justifyContent: 'center', alignItems: 'center' }}>
     <Svg width={84} height={84} style={StyleSheet.absoluteFill}><Circle cx={42} cy={42} r={34} stroke={theme.line} strokeWidth={10} fill="none" /><Circle cx={42} cy={42} r={34} stroke={theme.color} strokeWidth={10} fill="none" strokeDasharray={`${ratio * 213.6} 213.6`} strokeLinecap="round" rotation={-90} origin="42,42" /></Svg>
-    <Text style={{ color: theme.dark, fontFamily: typography.bodyExtraBold, fontSize: 17 }}>{Math.round(ratio * 100)}%</Text>
+    <Text style={{ color: theme.dark, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.sectionTitle.fontSize }}>{Math.round(ratio * 100)}%</Text>
   </View>;
 }
 export function LearningConfetti({ visible, sequence }: { visible: boolean; sequence: number }) {
@@ -124,8 +129,8 @@ function ConfettiParticle({ index, sequence, color }: { index: number; sequence:
 }
 export function LearningSkeleton() {
   const { theme } = useLearningStyles();
-  return <View accessibilityLabel="Loading" accessibilityState={{ busy: true }} style={{ gap: 16 }}>
-    {[150, 110, 110].map((height, index) => <View key={index} style={{ height, borderRadius: 24, backgroundColor: theme.violetTint, padding: 20, gap: 14 }}><View style={{ width: '65%', height: 18, backgroundColor: theme.line, borderRadius: 9 }} /><View style={{ width: '90%', height: 12, backgroundColor: theme.line, borderRadius: 6 }} /></View>)}
+  return <View accessibilityLabel="Loading" accessibilityState={{ busy: true }} style={{ gap: appSpacing.lg }}>
+    {[150, 110, 110].map((height, index) => <View key={index} style={{ height, borderRadius: appRadii.hero, backgroundColor: theme.violetTint, padding: appSpacing.xl, gap: 14 }}><View style={{ width: '65%', height: 18, backgroundColor: theme.line, borderRadius: 9 }} /><View style={{ width: '90%', height: 12, backgroundColor: theme.line, borderRadius: 6 }} /></View>)}
   </View>;
 }
 export function LearningLoadingView({ description }: { description?: string }) {
@@ -133,26 +138,26 @@ export function LearningLoadingView({ description }: { description?: string }) {
   return <View style={[styles.content, { flex: 1 }]}><LearningSkeleton />{description ? <Text style={styles.body}>{description}</Text> : null}</View>;
 }
 export const useLearningStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas }, content: { padding: learningLayout.pagePadding, gap: 14, paddingBottom: 24 },
-  card: { backgroundColor: theme.paper, borderRadius: learningLayout.cardRadius, borderWidth: 1, borderColor: theme.line, padding: 14, gap: 10 },
-  courseHero: { borderRadius: 26, padding: 16, gap: 14, overflow: 'hidden' },
-  memoryCard: { borderRadius: 26, padding: 16, gap: 12, overflow: 'hidden' },
-  resultHero: { alignItems: 'center', borderRadius: 30, gap: 8, minHeight: 245, justifyContent: 'center', overflow: 'hidden', padding: 22 },
-  resultTitle: { color: theme.heroInk, fontFamily: typography.displayExtraBold, fontSize: 26, lineHeight: 34, textAlign: 'center' },
-  resultSubtitle: { color: theme.heroInk, maxWidth: 260, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, textAlign: 'center' },
-  resultStats: { flexDirection: 'row', gap: 8 },
-  resultStat: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 2, flex: 1, justifyContent: 'center', minHeight: 78, paddingHorizontal: 4, paddingVertical: 8 },
-  resultNumber: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 },
-  resultLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19, textAlign: 'center' },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, ...learningTypeScale.title },
-  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, ...learningTypeScale.heading },
-  body: { color: theme.inkSoft, fontFamily: typography.bodyBold, ...learningTypeScale.body },
-  small: { color: theme.inkSoft, fontFamily: typography.bodyBold, ...learningTypeScale.caption },
+  page: { flex: 1, backgroundColor: theme.canvas }, content: { padding: learningLayout.pagePadding, gap: appSpacing.md, paddingBottom: appSpacing.xxl },
+  card: { backgroundColor: theme.paper, borderRadius: learningLayout.cardRadius, borderWidth: 1, borderColor: theme.line, padding: appSpacing.lg, gap: appSpacing.md },
+  courseHero: { borderRadius: appRadii.hero, padding: appSpacing.lg, gap: 14, overflow: 'hidden' },
+  memoryCard: { borderRadius: appRadii.hero, padding: appSpacing.lg, gap: appSpacing.md, overflow: 'hidden' },
+  resultHero: { alignItems: 'center', borderRadius: 30, gap: appSpacing.sm, minHeight: 245, justifyContent: 'center', overflow: 'hidden', padding: 22 },
+  resultTitle: { color: theme.heroInk, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.pageTitle.fontSize, lineHeight: appTextStyles.pageTitle.lineHeight, textAlign: 'center' },
+  resultSubtitle: { color: theme.heroInk, maxWidth: 260, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, textAlign: 'center' },
+  resultStats: { flexDirection: 'row', gap: appSpacing.sm },
+  resultStat: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 2, flex: 1, justifyContent: 'center', minHeight: 78, paddingHorizontal: appSpacing.xs, paddingVertical: appSpacing.sm },
+  resultNumber: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize },
+  resultLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, textAlign: 'center' },
+  title: { color: theme.ink, ...appTextStyles.screenTitle },
+  heading: { color: theme.ink, ...appTextStyles.sectionTitle },
+  body: { color: theme.inkSoft, ...appTextStyles.bodyStrong },
+  small: { color: theme.inkSoft, ...appTextStyles.small },
   row: { flexDirection: 'row', alignItems: 'center', gap: learningLayout.gap },
-  button: { minHeight: learningLayout.controlHeight, borderRadius: learningLayout.buttonRadius, borderBottomWidth: learningLayout.buttonDepth, paddingHorizontal: 20, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { fontFamily: typography.displayExtraBold, ...learningTypeScale.button, textAlign: 'center' },
+  button: { minHeight: learningLayout.controlHeight, borderRadius: learningLayout.buttonRadius, borderBottomWidth: learningLayout.buttonDepth, paddingHorizontal: appSpacing.xl, paddingVertical: appSpacing.md, alignItems: 'center', justifyContent: 'center' },
+  buttonText: { ...appTextStyles.button, textAlign: 'center' },
   track: { height: 10, borderRadius: 10, backgroundColor: theme.violetTint, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 10 },
-  badge: { alignSelf: 'flex-start', borderRadius: learningLayout.pillRadius, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: theme.violetTint },
+  badge: { alignSelf: 'flex-start', borderRadius: learningLayout.pillRadius, paddingHorizontal: appSpacing.md, paddingVertical: 5, backgroundColor: theme.violetTint },
   dock: { backgroundColor: theme.canvas, padding: learningLayout.pagePadding, gap: 10, flexShrink: 0 },
 }));

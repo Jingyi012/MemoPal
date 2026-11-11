@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import { useReducedMotion } from 'react-native-reanimated';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -13,7 +15,7 @@ import { toAttemptAnswerDto } from '@/features/education/utils/educationAttemptA
 import { Stack, Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
 export default function EducationPublicPracticeScreen() {
   const { courseId = '', assessmentId = '' } = useLocalSearchParams<{ courseId: string; assessmentId: string }>();
@@ -69,13 +71,13 @@ export default function EducationPublicPracticeScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { backgroundColor: theme.canvas, flex: 1 },
-  content: { gap: 12, padding: 18, paddingBottom: 36 },
+  content: { gap: appSpacing.md, padding: 18, paddingBottom: 36 },
   state: { minHeight: 140, justifyContent: 'center', overflow: 'hidden' },
-  errorState: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 1.5, gap: 12, padding: 15 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
-  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 13, justifyContent: 'center', minHeight: 46, paddingHorizontal: 16 },
-  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  actions: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  secondaryAction: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetDeep, borderRadius: 13, borderWidth: 1, justifyContent: 'center', minHeight: 46, paddingHorizontal: 16 },
-  secondaryActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  errorState: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1.5, gap: appSpacing.md, padding: 15 },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, justifyContent: 'center', minHeight: 46, paddingHorizontal: appSpacing.lg },
+  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  actions: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm },
+  secondaryAction: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.violetDeep, borderRadius: appRadii.control, borderWidth: 1, justifyContent: 'center', minHeight: 46, paddingHorizontal: appSpacing.lg },
+  secondaryActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
 }));

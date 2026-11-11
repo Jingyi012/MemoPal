@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing } from '@/theme/designSystem';
 import { LearningIconButton } from '../components/LearningIconButton';
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Href, Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthProvider';
 import { LearningCourseHero } from '../components/LearningCourseHero';
@@ -72,7 +74,7 @@ export default function EducationPersonalCourseScreen() {
             else if (selected! < course.data!.units.length - 1) { openStudy(selected! + 1); }
             else setSelected(null);
           }} /> : <>
-          <ScrollView contentContainerStyle={[s.content, { gap: 20, paddingBottom: 24 }]}>
+          <ScrollView contentContainerStyle={[s.content, { gap: appSpacing.xl, paddingBottom: appSpacing.xxl }]}>
             <LearningCourseHero title={course.data.title} theme={subjectTheme} subtitle={zh ? '由你创建 · 仅自己可见' : 'Created by you · Private'}
               caption={questionCount > 0 ? (zh ? `已答对 ${solved}/${questionCount}` : `${solved}/${questionCount} solved`) : (zh ? '从学习卡片开始，一步步记住它' : 'Explore your study cards, one step at a time')}
               progress={questionCount > 0 ? { value: solved, total: questionCount } : undefined} />

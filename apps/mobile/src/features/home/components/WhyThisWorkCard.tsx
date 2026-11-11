@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { getBaseCardClassName } from '@/components/BaseCard';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 interface Point {
   title: string;
@@ -28,8 +30,8 @@ export const WhyThisWorkCard: React.FC = () => {
       })}>
       {/* Header */}
       <View className="mb-3 flex-row items-center gap-2">
-        <Text className="text-xl">🧠</Text>
-        <Text className="text-lg font-semibold text-[#2B2A3D]">Why This Works</Text>
+        <Text style={{ fontSize: appArtworkSizes.small, lineHeight: appArtworkSizes.small + 4 }}>🧠</Text>
+        <Text className="text-[#2B2A3D]" style={[appTextStyles.sectionTitle, { fontFamily: fontFamilies.bodySemibold }]}>Why This Works</Text>
       </View>
 
       {/* Points */}
@@ -39,7 +41,7 @@ export const WhyThisWorkCard: React.FC = () => {
             <Text className="text-[#7A68E0]">✓</Text>
             <View className="flex-1">
               <Text className="flex-wrap">
-                <Text className="font-bold text-[#2B2A3D]">{point.title}</Text>
+                <Text className="text-[#2B2A3D]" style={{ fontFamily: fontFamilies.bodyBold }}>{point.title}</Text>
                 <Text className="text-[#6B6A80]"> - {point.description}</Text>
               </Text>
             </View>

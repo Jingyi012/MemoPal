@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { CheckCircle2, Circle } from '@/core/icons';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { LeaderboardTaskProgress } from '@/features/leaderboard/api/communityLeaderboard.api';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export function LeaderboardTaskChecklist({
   tasks,
@@ -47,20 +49,20 @@ export function LeaderboardTaskChecklist({
 }
 
 const useStyles = createThemedStyles(theme => StyleSheet.create({
-  card: { backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 19, borderWidth: 1.5, gap: 10, padding: 12 },
-  cardCompact: { backgroundColor: 'transparent', borderWidth: 0, gap: 8, padding: 0 },
-  header: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 },
-  summary: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  card: { backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 19, borderWidth: 1.5, gap: 10, padding: appSpacing.md },
+  cardCompact: { backgroundColor: 'transparent', borderWidth: 0, gap: appSpacing.sm, padding: 0 },
+  header: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', gap: appSpacing.sm },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.label.fontSize },
+  summary: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   list: { gap: 7 },
-  row: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 13, borderWidth: 1, flexDirection: 'row', gap: 9, minHeight: 60, paddingHorizontal: 9, paddingVertical: 7 },
+  row: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, flexDirection: 'row', gap: 9, minHeight: 60, paddingHorizontal: 9, paddingVertical: 7 },
   rowDone: { backgroundColor: theme.mintTint, borderColor: theme.mintLine },
   statusIcon: { alignItems: 'center', justifyContent: 'center', minHeight: 44, width: 24 },
   copy: { flex: 1, gap: 2 },
-  taskTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 17 },
-  metric: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
+  taskTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  metric: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
   rewardColumn: { alignItems: 'flex-end', gap: 2, minWidth: 58 },
-  progress: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 13 },
+  progress: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.small.fontSize },
   progressDone: { color: theme.successText },
-  reward: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  reward: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
 }));

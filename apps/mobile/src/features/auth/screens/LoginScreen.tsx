@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { AuthLayout } from '../components/AuthLayout';
 import { AuthField } from '../components/AuthField';
 import { authApi } from '@/features/auth/api/auth';
@@ -14,7 +16,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { getSafeAuthReturnTo } from '@/features/auth/utils/safeAuthReturnTo';
@@ -100,12 +102,12 @@ export const LoginScreen: React.FC = () => {
           />
         </View>
 
-        <Text className="mb-2 text-center text-3xl font-semibold text-ink">{t('welcome')}</Text>
+        <Text className="mb-2 text-center text-ink" style={[appTextStyles.display, { fontFamily: fontFamilies.bodySemibold }]}>{t('welcome')}</Text>
 
         <Text className="mb-8  text-center text-ink-soft">{t('signInDescription')}</Text>
 
         {!hasEnabledMethod && (
-          <Text className="mb-4  text-center text-sm text-accent-berry">
+          <Text className="mb-4 text-center text-accent-berry" style={appTextStyles.label}>
             {t('loginUnavailable')}
           </Text>
         )}
@@ -154,7 +156,7 @@ export const LoginScreen: React.FC = () => {
         {emailPasswordEnabled && (googleEnabledByBackend || facebookEnabledByBackend) && (
           <View className="mb-4 w-full flex-row items-center gap-3">
             <View className="h-px flex-1 bg-line" />
-            <Text className="text-xs font-semibold text-ink-soft">{t('orContinueWith')}</Text>
+            <Text className="text-ink-soft" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodySemibold }]}>{t('orContinueWith')}</Text>
             <View className="h-px flex-1 bg-line" />
           </View>
         )}
@@ -193,7 +195,7 @@ export const LoginScreen: React.FC = () => {
               style={{ width: 18, height: 18 }}
               contentFit="contain"
             />
-            <Text className="font-medium text-ink">{t('continueGoogle')}</Text>
+            <Text className="text-ink" style={{ fontFamily: fontFamilies.bodySemibold }}>{t('continueGoogle')}</Text>
           </AnimatedPressable>
         )}
 
@@ -227,7 +229,7 @@ export const LoginScreen: React.FC = () => {
             disabled={isSubmitting}
             className="mb-3 w-full flex-row items-center justify-center gap-3 rounded-2xl border-2 border-line bg-surface px-6 py-4">
             <Ionicons name="logo-facebook" size={18} color="#1877F2" />
-            <Text className="font-medium text-ink">{t('continueFacebook')}</Text>
+            <Text className="text-ink" style={{ fontFamily: fontFamilies.bodySemibold }}>{t('continueFacebook')}</Text>
           </AnimatedPressable>
         )}
 

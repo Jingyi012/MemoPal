@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { createLearningStyles, learningTypography as typography } from '../theme/learningTheme';
@@ -38,22 +40,22 @@ export function LearningWordCard({ primary, secondary, phonetic, extra, language
 }
 
 const useStyles = createLearningStyles(t => StyleSheet.create({
-  card: { flexGrow: 1, minHeight: 300, borderWidth: 2, borderBottomWidth: 6, borderColor: t.line, backgroundColor: t.paper, borderRadius: 28, padding: 20, gap: 12 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  label: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: t.violetTint, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, flexShrink: 1 },
-  labelText: { color: t.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, flexShrink: 1 },
-  wordArea: { flexGrow: 1, minHeight: 150, justifyContent: 'center', alignItems: 'center', gap: 12, paddingVertical: 20 },
-  word: { color: t.ink, fontFamily: typography.displayExtraBold, fontSize: 42, lineHeight: 54, textAlign: 'center' },
-  phrase: { color: t.ink, fontFamily: typography.displayExtraBold, fontSize: 34, lineHeight: 44, textAlign: 'center' },
-  longPhrase: { color: t.ink, fontFamily: typography.displayExtraBold, fontSize: 26, lineHeight: 36, textAlign: 'center' },
-  phonetic: { color: t.inkSoft, fontFamily: typography.bodySemibold, fontSize: 18, lineHeight: 26, textAlign: 'center' },
-  meaning: { borderTopWidth: 1, borderTopColor: t.line, paddingTop: 16, width: '100%' },
-  meaningText: { color: t.ink, fontFamily: typography.bodyBold, fontSize: 19, lineHeight: 28, textAlign: 'center' },
+  card: { flexGrow: 1, minHeight: 300, borderWidth: 2, borderBottomWidth: 6, borderColor: t.line, backgroundColor: t.paper, borderRadius: 28, padding: appSpacing.xl, gap: appSpacing.md },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: appSpacing.md },
+  label: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: t.violetTint, paddingHorizontal: 10, paddingVertical: appSpacing.sm, borderRadius: appRadii.control, flexShrink: 1 },
+  labelText: { color: t.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, flexShrink: 1 },
+  wordArea: { flexGrow: 1, minHeight: 150, justifyContent: 'center', alignItems: 'center', gap: appSpacing.md, paddingVertical: appSpacing.xl },
+  word: { color: t.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.word.fontSize, lineHeight: appTextStyles.word.lineHeight, textAlign: 'center' },
+  phrase: { color: t.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.display.fontSize, lineHeight: appTextStyles.display.lineHeight, textAlign: 'center' },
+  longPhrase: { color: t.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.pageTitle.fontSize, lineHeight: appTextStyles.pageTitle.lineHeight, textAlign: 'center' },
+  phonetic: { color: t.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight, textAlign: 'center' },
+  meaning: { borderTopWidth: 1, borderTopColor: t.line, paddingTop: appSpacing.lg, width: '100%' },
+  meaningText: { color: t.ink, fontFamily: typography.bodyBold, fontSize: appTextStyles.screenTitle.fontSize, lineHeight: appTextStyles.screenTitle.lineHeight, textAlign: 'center' },
   revealLabel: { flexDirection: 'row', gap: 6, alignItems: 'center', minHeight: 44 },
-  hint: { color: t.violetDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, flexShrink: 1 },
-  bottomRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: t.line },
+  hint: { color: t.violetDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, flexShrink: 1 },
+  bottomRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingTop: appSpacing.md, borderTopWidth: 1, borderTopColor: t.line },
   soundBars: { height: 28, flexDirection: 'row', gap: 3, alignItems: 'center' },
   bar: { width: 4, borderRadius: 4, backgroundColor: t.violetDeep },
-  note: { backgroundColor: t.violetTint, borderRadius: 16, padding: 12 },
-  noteText: { color: t.ink, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 22 },
+  note: { backgroundColor: t.violetTint, borderRadius: appRadii.control, padding: appSpacing.md },
+  noteText: { color: t.ink, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
 }));

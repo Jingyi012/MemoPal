@@ -1,5 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appRadii, appTextStyles } from '@/theme/designSystem';
 import type { FillBlankAnswer, FillBlankQuestion } from '@/features/education/types/question.types';
-import { Keyboard, Platform, Text, TextInput, View } from 'react-native';
+import { Keyboard, Platform, View } from 'react-native';
 import { useQuestionInputStyles, useQuestionFeedback } from './questionInputStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { educationFillPromptParts } from '../../utils/educationFillWordBank';
@@ -30,7 +33,7 @@ export function FillBlankInput({
       <View accessibilityRole="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 18 }}>
         {question.wordBank.map(option => {
           const selected = value.text === option.label;
-          return <AnimatedPressable key={option.id} accessibilityRole="radio" accessibilityLabel={option.label} accessibilityState={{ checked: selected, disabled: disabled || selected }} disabled={disabled || selected} onPress={() => onChange({ type: 'fill-blank', text: option.label })} style={{ maxWidth: '100%', minHeight: 48, paddingHorizontal: 18, paddingVertical: 11, borderWidth: 2, borderBottomWidth: selected ? 2 : 6, borderColor: selected ? color : theme.line, borderRadius: 16, backgroundColor: selected ? feedback === false ? theme.berryTint : feedback === true ? theme.mintTint : theme.violetTint : theme.paper }}><Text style={[styles.optionLabel, { flex: 0, color: selected ? color : theme.ink }]}>{selected ? feedback === false ? '× ' : '✓ ' : ''}{option.label}</Text></AnimatedPressable>;
+          return <AnimatedPressable key={option.id} accessibilityRole="radio" accessibilityLabel={option.label} accessibilityState={{ checked: selected, disabled: disabled || selected }} disabled={disabled || selected} onPress={() => onChange({ type: 'fill-blank', text: option.label })} style={{ maxWidth: '100%', minHeight: 48, paddingHorizontal: 18, paddingVertical: 11, borderWidth: 2, borderBottomWidth: selected ? 2 : 6, borderColor: selected ? color : theme.line, borderRadius: appRadii.control, backgroundColor: selected ? feedback === false ? theme.berryTint : feedback === true ? theme.mintTint : theme.violetTint : theme.paper }}><Text style={[styles.optionLabel, { flex: 0, color: selected ? color : theme.ink }]}>{selected ? feedback === false ? '× ' : '✓ ' : ''}{option.label}</Text></AnimatedPressable>;
         })}
       </View>
     </View>;
@@ -54,7 +57,7 @@ export function FillBlankInput({
         placeholder={placeholder}
         placeholderTextColor={theme.inkSoft}
         selectionColor={theme.violetDeep}
-        style={[styles.input, { alignSelf: 'stretch', borderWidth: 0, borderBottomWidth: 4, borderRadius: 0, borderColor: feedback === true ? theme.successText : feedback === false ? theme.berryDeep : theme.violetDeep, color: feedback === true ? theme.successText : feedback === false ? theme.berryDeep : theme.violetDeep, backgroundColor: 'transparent', fontSize: 23, fontWeight: '800', textAlign: 'center', marginTop: 14 }]}
+        style={[styles.input, { alignSelf: 'stretch', borderWidth: 0, borderBottomWidth: 4, borderRadius: 0, borderColor: feedback === true ? theme.successText : feedback === false ? theme.berryDeep : theme.violetDeep, color: feedback === true ? theme.successText : feedback === false ? theme.berryDeep : theme.violetDeep, backgroundColor: 'transparent', fontFamily: appTextStyles.stat.fontFamily, fontSize: appTextStyles.stat.fontSize, textAlign: 'center', marginTop: 14 }]}
       />
     </View>
   );

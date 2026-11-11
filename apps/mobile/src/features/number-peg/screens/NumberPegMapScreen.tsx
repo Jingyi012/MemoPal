@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { CommonHeader } from '@/components/CommonHeader';
 import { NumberPegItemCard } from '@/features/number-peg/components/NumberPegItemCard';
 import { createThemedStyles } from '@/theme/createThemedStyles';
@@ -6,7 +8,7 @@ import { buildAllNumberPegItems, getUnlockedPegCount, MAX_NUMBER_PEGS } from '@/
 import { useRouter } from 'expo-router';
 import { ArrowRight } from '@/core/icons';
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { AppButton } from '@/components/ui/AppButton';
 import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -78,21 +80,21 @@ export default function NumberPegMapScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 16, paddingBottom: 40 },
-  summaryCard: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: 18, borderWidth: 2, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 13 },
-  summaryIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
-  summaryEmoji: { fontSize: 22 },
+  content: { padding: appSpacing.lg, paddingBottom: appSpacing.spacious },
+  summaryCard: { flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: appRadii.card, borderWidth: 2, borderColor: theme.berryLine, backgroundColor: theme.berryTint, padding: 13 },
+  summaryIcon: { width: 40, height: 40, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
+  summaryEmoji: { fontSize: appArtworkSizes.small },
   summaryCopy: { flex: 1 },
-  summaryTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 14 },
-  summaryBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16, marginTop: 2 },
-  progressTrack: { height: 6, overflow: 'hidden', borderRadius: 999, backgroundColor: 'rgba(255,255,255,.8)', marginTop: 8 },
-  progressFill: { height: '100%', borderRadius: 999, backgroundColor: theme.berry },
-  headingRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 25, marginBottom: 12 },
-  eyebrow: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1 },
-  heading: { color: theme.ink, fontFamily: typography.display, fontSize: 18, marginTop: 3 },
-  lockPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, backgroundColor: theme.violetTint, paddingHorizontal: 9, paddingVertical: 6 },
-  lockEmoji: { fontSize: 12 },
-  lockPillText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  summaryTitle: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.label.fontSize },
+  summaryBody: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 2 },
+  progressTrack: { height: 6, overflow: 'hidden', borderRadius: appRadii.pill, backgroundColor: 'rgba(255,255,255,.8)', marginTop: appSpacing.sm },
+  progressFill: { height: '100%', borderRadius: appRadii.pill, backgroundColor: theme.berry },
+  headingRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 25, marginBottom: appSpacing.md },
+  eyebrow: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 1 },
+  heading: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.sectionTitle.fontSize, marginTop: 3 },
+  lockPill: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.xs, borderRadius: appRadii.pill, backgroundColor: theme.violetTint, paddingHorizontal: 9, paddingVertical: 6 },
+  lockEmoji: { fontSize: appTextStyles.caption.fontSize },
+  lockPillText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 9 },
-  startButton: { marginTop: 20 },
+  startButton: { marginTop: appSpacing.xl },
 }));

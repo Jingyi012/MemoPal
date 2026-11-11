@@ -1,4 +1,6 @@
-import { Text, View } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles } from '@/theme/designSystem';
+import { View } from 'react-native';
 
 interface Props {
   title: string;
@@ -17,15 +19,15 @@ export const MilestoneRow: React.FC<Props> = ({ title, refs, rewardLabel, curren
       <View className="flex-1 flex-row items-center">
         <View
               className={`mr-4 h-9 w-9 items-center justify-center rounded-full ${isCompleted ? 'bg-tint-mint' : 'bg-tint-violet'}`}>
-          <Text className="text-base">{isAwarded ? '✓' : '🔒'}</Text>
+          <Text style={appTextStyles.body}>{isAwarded ? '✓' : '🔒'}</Text>
         </View>
         <View className="flex-1">
           <Text className={`text-sm font-bold ${isCompleted ? 'text-ink' : 'text-ink-soft'}`}>{title}</Text>
-          <Text className="text-xs text-ink-soft">{rewardLabel}</Text>
-          <Text className="text-xs text-ink-soft">{refs} Friends required</Text>
+          <Text className="text-ink-soft" style={appTextStyles.caption}>{rewardLabel}</Text>
+          <Text className="text-ink-soft" style={appTextStyles.caption}>{refs} Friends required</Text>
         </View>
       </View>
-      {isAwarded && <Text className="text-lg">👑</Text>}
+      {isAwarded && <Text style={appTextStyles.sectionTitle}>👑</Text>}
     </View>
   );
 };

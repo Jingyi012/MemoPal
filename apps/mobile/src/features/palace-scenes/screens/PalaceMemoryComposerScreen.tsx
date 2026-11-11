@@ -1,3 +1,6 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput, type AppTextInputRef } from '@/components/ui/AppTextInput';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppImage } from '@/components/AppImage';
@@ -35,7 +38,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { firstParam, parseComposerGoal, parseComposerItems, parseComposerOrigin, suggestMemoryTitle } from '@/features/memory-composer/utils/composerParams';
 import type { ComposerOrigin } from '@/features/memory-composer/utils/techniqueRecommendation';
 import { ComposerProgress } from '@/features/memory-composer/components/ComposerProgress';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { usePredefinedMemoryLesson } from '@/features/predefined-memory-lessons/hooks/usePredefinedMemoryLessons';
 import { findPredefinedMemoryLessonItem } from '@/features/predefined-memory-lessons/utils/predefinedMemoryLessonLocalization';
@@ -96,9 +99,9 @@ export default function PalaceMemoryComposerScreen() {
   const [showAllScenes, setShowAllScenes] = useState(false);
   const [sceneSearch, setSceneSearch] = useState('');
   const scrollRef = useRef<ScrollView>(null);
-  const focusedInputRef = useRef<TextInput | null>(null);
-  const titleInputRef = useRef<TextInput>(null);
-  const newItemInputRef = useRef<TextInput>(null);
+  const focusedInputRef = useRef<AppTextInputRef | null>(null);
+  const titleInputRef = useRef<AppTextInputRef>(null);
+  const newItemInputRef = useRef<AppTextInputRef>(null);
   const scrollOffsetRef = useRef(0);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const generationVersionRef = useRef(0);
@@ -138,7 +141,7 @@ export default function PalaceMemoryComposerScreen() {
     }, 80);
   }, []);
 
-  const handleInputFocus = useCallback((input: TextInput | null) => {
+  const handleInputFocus = useCallback((input: AppTextInputRef | null) => {
     focusedInputRef.current = input;
     keepFocusedInputVisible();
   }, [keepFocusedInputVisible]);
@@ -739,12 +742,12 @@ export default function PalaceMemoryComposerScreen() {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: 16, paddingBottom: 42 }, contentWithDock: { paddingBottom: 126 },
-  sceneImageEmoji: { fontSize: 24 },
+  page: { flex: 1, backgroundColor: 'transparent' }, content: { padding: appSpacing.lg, paddingBottom: 42 }, contentWithDock: { paddingBottom: 126 },
+  sceneImageEmoji: { fontSize: appArtworkSizes.small },
   draftCard: {
-    marginTop: 16,
+    marginTop: appSpacing.lg,
     marginBottom: 2,
-    borderRadius: 16,
+    borderRadius: appRadii.control,
     borderWidth: 1.5,
     borderColor: theme.sunLine,
     backgroundColor: theme.sunTint,
@@ -754,22 +757,22 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   draftEyebrow: {
     color: theme.violetDeep,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 10,
-    lineHeight: 14,
+    fontSize: appTextStyles.caption.fontSize,
+    lineHeight: appTextStyles.caption.lineHeight,
     letterSpacing: 0.8,
   },
   draftTitle: {
     color: theme.ink,
     fontFamily: typography.display,
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: appTextStyles.cardTitle.fontSize,
+    lineHeight: appTextStyles.cardTitle.lineHeight,
     marginTop: 5,
   },
   draftMeta: {
     color: theme.inkSoft,
     fontFamily: typography.bodyBold,
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: appTextStyles.caption.fontSize,
+    lineHeight: appTextStyles.caption.lineHeight,
     marginTop: 5,
   },
   editContentButton: {
@@ -785,17 +788,17 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  editContentText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 18, marginBottom: 8 }, optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 18 },
-  sceneHeadingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between' }, sceneHeadingCopy: { flex: 1 }, sceneLabel: { marginBottom: 2 }, sceneCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 10, marginBottom: 9 }, seeAllScenesButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: theme.violetTint, marginBottom: 8, paddingLeft: 11, paddingRight: 7 }, seeAllScenesText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 }, sceneSearchWrap: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 8, marginBottom: 10, paddingHorizontal: 12 }, sceneSearchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: 13, minHeight: 44 }, sceneGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }, sceneGridItem: { marginBottom: 10, width: '48.5%' }, noMatchingScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, paddingVertical: 16, textAlign: 'center' },
-  input: { minHeight: 50, borderRadius: 14, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 14, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
-  sceneOption: { width: '100%', borderRadius: 17, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 7, minHeight: 145 }, sceneOptionActive: { borderColor: theme.violetDeep, borderWidth: 2, backgroundColor: theme.violetTint }, sceneOptionLimited: { opacity: 0.72 }, sceneThumb: { height: 84, borderRadius: 11 }, sceneName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 7 }, sceneMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 9.5, lineHeight: 13, marginTop: 2 },
-  canvasHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, textAlign: 'center', marginTop: 8 }, capacityCard: { marginTop: 11, borderRadius: 14, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 12 }, capacityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 }, capacityText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 17, marginTop: 3 },
-  emptyScenes: { borderWidth: 2, borderColor: theme.line, borderRadius: 18, backgroundColor: theme.paper, padding: 18, alignItems: 'center' }, helper: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center' }, refreshButton: { alignSelf: 'center', marginTop: 10 },
-  addRow: { flexDirection: 'row', gap: 9 }, addButton: { width: 50, height: 50, borderRadius: 14 },
-  itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line }, itemNumber: { width: 29, height: 29, borderRadius: 15, backgroundColor: theme.violet, alignItems: 'center', justifyContent: 'center' }, itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 11 }, itemText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginLeft: 11 }, locusText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, marginLeft: 11, marginTop: 2 }, deleteButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  errorCard: { marginTop: 14, borderRadius: 14, backgroundColor: theme.berryTint, borderWidth: 1.5, borderColor: theme.berryLine, padding: 12 }, errorText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  editContentText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  label: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize, marginTop: 18, marginBottom: appSpacing.sm }, optionalLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize }, labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, counter: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, marginTop: 18 },
+  sceneHeadingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between' }, sceneHeadingCopy: { flex: 1 }, sceneLabel: { marginBottom: 2 }, sceneCount: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, marginBottom: 9 }, seeAllScenesButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: appRadii.pill, backgroundColor: theme.violetTint, marginBottom: appSpacing.sm, paddingLeft: 11, paddingRight: 7 }, seeAllScenesText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize }, sceneSearchWrap: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1.5, flexDirection: 'row', gap: appSpacing.sm, marginBottom: 10, paddingHorizontal: appSpacing.md }, sceneSearchInput: { color: theme.ink, flex: 1, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, minHeight: 44 }, sceneGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }, sceneGridItem: { marginBottom: 10, width: '48.5%' }, noMatchingScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, paddingVertical: appSpacing.lg, textAlign: 'center' },
+  input: { minHeight: 50, borderRadius: appRadii.control, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 14, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize },
+  sceneOption: { width: '100%', borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 7, minHeight: 145 }, sceneOptionActive: { borderColor: theme.violetDeep, borderWidth: 2, backgroundColor: theme.violetTint }, sceneOptionLimited: { opacity: 0.72 }, sceneThumb: { height: 84, borderRadius: 11 }, sceneName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, marginTop: 7 }, sceneMeta: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 2 },
+  canvasHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, textAlign: 'center', marginTop: appSpacing.sm }, capacityCard: { marginTop: 11, borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: appSpacing.md }, capacityTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize }, capacityText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 3 },
+  emptyScenes: { borderWidth: 2, borderColor: theme.line, borderRadius: appRadii.card, backgroundColor: theme.paper, padding: 18, alignItems: 'center' }, helper: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, textAlign: 'center' }, refreshButton: { alignSelf: 'center', marginTop: 10 },
+  addRow: { flexDirection: 'row', gap: 9 }, addButton: { width: 50, height: 50, borderRadius: appRadii.control },
+  itemRow: { minHeight: 62, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.line }, itemNumber: { width: 29, height: 29, borderRadius: appRadii.control, backgroundColor: theme.violet, alignItems: 'center', justifyContent: 'center' }, itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize }, itemText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize, marginLeft: 11 }, locusText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginLeft: 11, marginTop: 2 }, deleteButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  errorCard: { marginTop: 14, borderRadius: appRadii.control, backgroundColor: theme.berryTint, borderWidth: 1.5, borderColor: theme.berryLine, padding: appSpacing.md }, errorText: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, textAlign: 'center' },
   fullWidthButton: { alignSelf: 'stretch' },
-  bottomDock: { backgroundColor: theme.canvas, borderTopColor: theme.line, borderTopWidth: 1, paddingHorizontal: 16, paddingTop: 10 },
-  editSetupButton: { width: '100%', minHeight: 45, marginTop: 18, borderRadius: 14, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center' }, editSetupText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  bottomDock: { backgroundColor: theme.canvas, borderTopColor: theme.line, borderTopWidth: 1, paddingHorizontal: appSpacing.lg, paddingTop: 10 },
+  editSetupButton: { width: '100%', minHeight: 45, marginTop: 18, borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetTint, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center' }, editSetupText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
 }));

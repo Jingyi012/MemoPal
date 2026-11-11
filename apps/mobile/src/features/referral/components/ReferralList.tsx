@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { BaseCard } from '@/components/BaseCard';
 import { ReferralUser } from '@/features/referral/types/referral';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 
 interface ReferralListProps {
   referrals: ReferralUser[];
@@ -27,10 +29,10 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
   return (
     <BaseCard className="mb-8 rounded-3xl p-2">
       <View className="flex-row p-3">
-        <Text className="text-xl">👥</Text>
-        <Text className="ml-1 text-lg font-medium text-ink">Referral Friends</Text>
+        <Text style={appTextStyles.screenTitle}>👥</Text>
+        <Text className="ml-1 text-ink" style={[appTextStyles.sectionTitle, { fontFamily: fontFamilies.bodySemibold }]}>Referral Friends</Text>
       </View>
-      <Text className="px-3 pb-2 text-xs text-ink-soft">
+      <Text className="px-3 pb-2 text-ink-soft" style={appTextStyles.caption}>
         Showing {visibleReferrals.length} of {referrals.length}
       </Text>
 
@@ -46,13 +48,13 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
             }`}>
             <View className="flex-row items-center">
               <View className="h-10 w-10 items-center justify-center rounded-full bg-tint-sky">
-                <Text className="font-bold text-primary">
+                <Text className="text-primary" style={{ fontFamily: fontFamilies.bodyBold }}>
                   {user.displayName.charAt(0).toUpperCase()}
                 </Text>
               </View>
               <View className="ml-3">
-                <Text className="font-medium text-ink">{user.displayName}</Text>
-                <Text className="text-xs text-ink-soft">{new Date(user.redeemedAt).toLocaleDateString()}</Text>
+                <Text className="text-ink" style={{ fontFamily: fontFamilies.bodySemibold }}>{user.displayName}</Text>
+                <Text className="text-ink-soft" style={appTextStyles.caption}>{new Date(user.redeemedAt).toLocaleDateString()}</Text>
               </View>
             </View>
 
@@ -73,7 +75,7 @@ export const ReferralList: React.FC<ReferralListProps> = ({ referrals, pageSize 
         <TouchableOpacity
           onPress={() => setVisibleCount((prev) => Math.min(prev + pageSize, referrals.length))}
           className="m-3 items-center rounded-xl bg-tint-peach px-4 py-3">
-          <Text className="text-sm font-semibold text-ink-soft">Load More</Text>
+          <Text className="text-ink-soft" style={[appTextStyles.label, { fontFamily: fontFamilies.bodySemibold }]}>Load More</Text>
         </TouchableOpacity>
       ) : null}
     </BaseCard>

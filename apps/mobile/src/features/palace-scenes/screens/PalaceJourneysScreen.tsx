@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -13,7 +15,7 @@ import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight, MapPin } from '@/core/icons';
 import { useMemo } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function PalaceJourneysScreen() {
   const { styles, theme } = useStyles();
@@ -72,14 +74,14 @@ function findJourneyScene(sceneId: string | null | undefined, scenes: PalaceScen
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 32, gap: 14 },
-  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, marginBottom: 2 },
+  content: { paddingHorizontal: appSpacing.lg, paddingTop: appSpacing.sm, paddingBottom: appSpacing.section, gap: 14 },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, marginBottom: 2 },
   list: { gap: 10 },
   loading: { height: 120, overflow: 'hidden' },
-  empty: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 22, borderWidth: 1.5, gap: 10, padding: 22 },
-  emptyIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 18, height: 52, justifyContent: 'center', width: 52 },
-  emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16, textAlign: 'center' },
-  emptyBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
-  createButton: { alignItems: 'center', backgroundColor: theme.violetDeep, borderBottomColor: theme.nightDeep, borderBottomWidth: 3, borderRadius: 15, flexDirection: 'row', gap: 8, justifyContent: 'center', marginTop: 4, minHeight: 48, paddingHorizontal: 18 },
-  createButtonText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 12 },
+  empty: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 1.5, gap: 10, padding: 22 },
+  emptyIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.card, height: 52, justifyContent: 'center', width: 52 },
+  emptyTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.cardTitle.fontSize, textAlign: 'center' },
+  emptyBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, textAlign: 'center' },
+  createButton: { alignItems: 'center', backgroundColor: theme.violetDeep, borderBottomColor: theme.nightDeep, borderBottomWidth: 3, borderRadius: appRadii.control, flexDirection: 'row', gap: appSpacing.sm, justifyContent: 'center', marginTop: appSpacing.xs, minHeight: 48, paddingHorizontal: 18 },
+  createButtonText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.caption.fontSize },
 }));

@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { LearningReadAloud } from '../LearningReadAloud';
 import type {
@@ -5,7 +7,7 @@ import type {
   SingleChoiceAnswer,
   SingleChoiceQuestion,
 } from '@/features/education/types/question.types';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useCorrectAnswer, useQuestionInputStyles, useQuestionFeedback } from './questionInputStyles';
 
 export type SingleChoiceInputProps = Readonly<{
@@ -27,7 +29,7 @@ export function SingleChoiceInput({
 
   return (
     <View style={styles.container}>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: appSpacing.md }}>
         <Text accessibilityRole="header" style={[styles.prompt, { flex: 1 }]}>{question.prompt}</Text>
         <LearningReadAloud key={question.id} text={question.prompt} language={/[\u3400-\u9fff]/u.test(question.prompt) ? 'zh-Hans' : 'en'} />
       </View>

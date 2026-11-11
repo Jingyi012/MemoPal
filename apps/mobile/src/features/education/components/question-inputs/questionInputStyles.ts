@@ -1,3 +1,4 @@
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography, learningLayout, learningTypeScale } from '@/features/education/theme/learningTheme';
 import { createContext, useContext } from 'react';
 import { StyleSheet } from 'react-native';
@@ -14,14 +15,13 @@ export const useQuestionInputStyles = createThemedStyles((theme) =>
   StyleSheet.create({
     container: {
       alignSelf: 'stretch',
-      gap: 12,
+      gap: appSpacing.md,
     },
     prompt: {
       color: theme.ink,
-      fontFamily: typography.bodyExtraBold,
       ...learningTypeScale.prompt,
     },
-    hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18 },
+    hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
     options: {
       gap: 10,
     },
@@ -33,10 +33,10 @@ export const useQuestionInputStyles = createThemedStyles((theme) =>
       borderWidth: learningLayout.borderWidth,
       borderBottomWidth: learningLayout.optionDepth,
       flexDirection: 'row',
-      gap: 12,
+      gap: appSpacing.md,
       minHeight: 58,
       paddingHorizontal: 14,
-      paddingVertical: 12,
+      paddingVertical: appSpacing.md,
     },
     optionSelected: {
       backgroundColor: theme.violetTint,
@@ -47,7 +47,7 @@ export const useQuestionInputStyles = createThemedStyles((theme) =>
     optionIncorrect: { backgroundColor: theme.berryTint, borderColor: theme.berryDeep, borderBottomColor: theme.berryDeep },
     marker: { alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 10, backgroundColor: theme.violetTint, borderWidth: 0, borderColor: theme.line },
     markerSelected: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
-    markerText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+    markerText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
     // Keep the chosen answer readable after submission. The native disabled
     // prop still prevents edits while the feedback panel is open.
     optionDisabled: {
@@ -81,22 +81,22 @@ export const useQuestionInputStyles = createThemedStyles((theme) =>
       width: 22,
     },
     checkboxSelected: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
-    checkboxMark: { color: theme.paper, fontFamily: typography.bodyExtraBold, fontSize: 14 },
+    checkboxMark: { color: theme.paper, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
     optionLabel: {
       color: theme.ink,
       flex: 1,
       fontFamily: typography.bodyExtraBold,
-      fontSize: 16,
-      lineHeight: 23,
+      fontSize: appTextStyles.cardTitle.fontSize,
+      lineHeight: appTextStyles.cardTitle.lineHeight,
     },
     input: {
       backgroundColor: theme.paper,
       borderColor: theme.line,
-      borderRadius: 20,
+      borderRadius: appRadii.card,
       borderWidth: 1.5,
       color: theme.ink,
       fontFamily: typography.bodySemibold,
-      fontSize: 17,
+      fontSize: appTextStyles.sectionTitle.fontSize,
       minHeight: 58,
       paddingHorizontal: 14,
       paddingVertical: 10,

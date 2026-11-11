@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type Props = {
   currentStep: 1 | 2;
@@ -25,10 +27,10 @@ export function ComposerProgress({ currentStep, firstLabel = 'Prepare', secondLa
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  wrapper: { marginBottom: 16 },
-  track: { height: 5, overflow: 'hidden', borderRadius: 999, backgroundColor: theme.line },
-  fill: { height: '100%', borderRadius: 999, backgroundColor: theme.violetDeep },
+  wrapper: { marginBottom: appSpacing.lg },
+  track: { height: 5, overflow: 'hidden', borderRadius: appRadii.pill, backgroundColor: theme.line },
+  fill: { height: '100%', borderRadius: appRadii.pill, backgroundColor: theme.violetDeep },
   labels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 7 },
-  label: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  label: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   activeLabel: { color: theme.ink },
 }));

@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -6,7 +8,7 @@ import { typography } from '@/theme/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, BackHandler, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, BackHandler, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Svg, { Defs, Mask, Rect } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tours, tourStorageKey, spotlightCardPlacement, type TourScope, type SpotlightRect, type SpotlightTargetId } from '../utils/spotlight';
@@ -194,12 +196,12 @@ export function SpotlightTourProvider({ children }: { children: ReactNode }) {
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   root: { flex: 1 },
   card: { position: 'absolute', left: 20, right: 20, justifyContent: 'flex-end' },
-  copy: { backgroundColor: theme.paper, padding: 20, borderRadius: 24, gap: 14 },
-  counter: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 13 },
-  emoji: { fontSize: 32 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 24 },
-  body: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 16, lineHeight: 25 },
-  hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
-  dismiss: { position: 'absolute', right: 12, width: 44, height: 44, borderRadius: 22, backgroundColor: '#262336', alignItems: 'center', justifyContent: 'center', zIndex: 2 },
-  dismissText: { color: 'white', fontSize: 28 },
+  copy: { backgroundColor: theme.paper, padding: appSpacing.xl, borderRadius: appRadii.hero, gap: 14 },
+  counter: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize },
+  emoji: { fontSize: appArtworkSizes.medium },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.stat.fontSize },
+  body: { color: theme.ink, fontFamily: typography.bodySemibold, fontSize: appTextStyles.cardTitle.fontSize, lineHeight: appTextStyles.cardTitle.lineHeight },
+  hint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  dismiss: { position: 'absolute', right: 12, width: 44, height: 44, borderRadius: appRadii.card, backgroundColor: '#262336', alignItems: 'center', justifyContent: 'center', zIndex: 2 },
+  dismissText: { color: 'white', fontSize: appTextStyles.pageTitle.fontSize },
 }));

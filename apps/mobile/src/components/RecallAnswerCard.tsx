@@ -1,3 +1,6 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput, type AppTextInputRef } from '@/components/ui/AppTextInput';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CompanionLearningPresence } from '@/features/profile/companion/CompanionLearningPresence';
 import { AppButton } from '@/components/ui/AppButton';
@@ -6,7 +9,7 @@ import { typography } from '@/theme/typography';
 import { Check, X } from '@/core/icons';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useEffect, useRef, type ReactNode } from 'react';
-import { Animated, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 export type RecallFeedback = 'correct' | 'wrong' | null;
 
@@ -70,7 +73,7 @@ type RecallAnswerCardProps = {
   answerAccessibilityLabel?: string;
   answerPlaceholder?: string;
   onAnswerFocus?: () => void;
-  inputRef?: { current: TextInput | null };
+  inputRef?: { current: AppTextInputRef | null };
   inputAreaRef?: (view: View | null) => void;
   actionAreaRef?: (view: View | null) => void;
   onAnswerChange: (value: string) => void;
@@ -256,34 +259,34 @@ export function RecallAnswerCard({
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { position: 'relative', borderRadius: 24, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, padding: 22, alignItems: 'center' },
-  identityRow: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8 },
-  identityCopy: { flex: 1, minWidth: 0, gap: 4 },
+  card: { position: 'relative', borderRadius: appRadii.hero, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, padding: 22, alignItems: 'center' },
+  identityRow: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: appSpacing.sm },
+  identityCopy: { flex: 1, minWidth: 0, gap: appSpacing.xs },
   companionSlot: { width: 116, height: 110, position: 'relative' },
   palaceCard: {
     borderColor: theme.violetLine,
     borderWidth: 0,
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: appRadii.hero,
+    padding: appSpacing.xl,
   },
   confettiLayer: { position: 'absolute', top: 14, left: 0, right: 0, height: 130, zIndex: 2, elevation: 2 },
   confettiPiece: { position: 'absolute', top: 18, left: '50%', borderRadius: 2 },
-  icon: { width: 50, height: 50, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  icon: { width: 50, height: 50, borderRadius: appRadii.card, alignItems: 'center', justifyContent: 'center', marginBottom: appSpacing.md },
   pegIcon: { backgroundColor: theme.violetTint },
   palaceIcon: { backgroundColor: theme.violetTint },
-  eyebrow: { fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18 },
-  prompt: { color: theme.ink, fontFamily: typography.display, fontSize: 20, lineHeight: 28, textAlign: 'center', marginTop: 12, marginBottom: 18 },
-  palacePrompt: { fontSize: 21, lineHeight: 28, marginTop: 8, marginBottom: 20, width: '100%' },
+  eyebrow: { fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  prompt: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.screenTitle.fontSize, lineHeight: appTextStyles.screenTitle.lineHeight, textAlign: 'center', marginTop: appSpacing.md, marginBottom: 18 },
+  palacePrompt: { fontSize: appTextStyles.prompt.fontSize, lineHeight: appTextStyles.prompt.lineHeight, marginTop: appSpacing.sm, marginBottom: appSpacing.xl, width: '100%' },
   cue: { alignSelf: 'stretch', marginBottom: 18 },
-  palaceCue: { marginBottom: 20 },
-  palaceInput: { borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, fontSize: 15, letterSpacing: 0, textAlign: 'left', minHeight: 56, paddingHorizontal: 16 },
-  palaceAction: { marginTop: 12 },
-  palaceSkipText: { marginTop: 0, fontSize: 12 },
-  palaceProgress: { marginTop: 8, fontSize: 11, color: theme.inkSoft },
-  answerInput: { width: '100%', minHeight: 54, borderRadius: 14, borderWidth: 2.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 13, color: theme.ink, textAlign: 'center', fontFamily: typography.bodyExtraBold, fontSize: 16, letterSpacing: 1 },
+  palaceCue: { marginBottom: appSpacing.xl },
+  palaceInput: { borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, fontSize: appTextStyles.body.fontSize, letterSpacing: 0, textAlign: 'left', minHeight: 56, paddingHorizontal: appSpacing.lg },
+  palaceAction: { marginTop: appSpacing.md },
+  palaceSkipText: { marginTop: 0, fontSize: appTextStyles.caption.fontSize },
+  palaceProgress: { marginTop: appSpacing.sm, fontSize: appTextStyles.caption.fontSize, color: theme.inkSoft },
+  answerInput: { width: '100%', minHeight: 54, borderRadius: appRadii.control, borderWidth: 2.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 13, color: theme.ink, textAlign: 'center', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.cardTitle.fontSize, letterSpacing: 1 },
   correctInput: { borderColor: theme.grass, backgroundColor: theme.mintTint },
   wrongInput: { borderColor: theme.berry, backgroundColor: theme.berryTint },
-  feedback: { alignItems: 'center', alignSelf: 'stretch', flexDirection: 'row', gap: 7, marginTop: 12 },
+  feedback: { alignItems: 'center', alignSelf: 'stretch', flexDirection: 'row', gap: 7, marginTop: appSpacing.md },
   palaceFieldWrap: { position: 'relative' },
   palaceInputWithFeedback: { paddingRight: 52 },
   palaceFieldFeedback: { position: 'absolute', right: 12, top: '50%', width: 30, height: 30, marginTop: -15, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: theme.paper },
@@ -291,9 +294,9 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   palaceFieldFeedbackWrong: { borderWidth: 1, borderColor: theme.berryLine },
   palaceConfettiLayer: { position: 'absolute', top: -72, left: 0, right: 0, height: 150, zIndex: 2, elevation: 2, overflow: 'visible' },
   palaceConfettiPiece: { top: 92 },
-  palaceCorrection: { alignSelf: 'stretch', marginTop: 8, color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18 },
-  feedbackText: { flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  palaceCorrection: { alignSelf: 'stretch', marginTop: appSpacing.sm, color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  feedbackText: { flex: 1, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, textAlign: 'center' },
   actionButtonWrap: { alignSelf: 'stretch', marginTop: 18 },
   skipButton: { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
-  progress: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center', marginTop: 15 },
+  progress: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, textAlign: 'center', marginTop: 15 },
 }));

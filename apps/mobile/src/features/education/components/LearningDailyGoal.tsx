@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing } from '@/theme/designSystem';
 import { useCallback, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -17,7 +19,7 @@ export function LearningDailyGoal() {
   const day = new Date().toISOString().slice(0, 10);
   const count = stats.data?.weeklyActivity.find(item => item.date.slice(0, 10) === day)?.sessions ?? 0;
   const ready = stats.isSuccess; const done = ready && count >= goal;
-  return <View style={{ gap: 8 }}>
+  return <View style={{ gap: appSpacing.sm }}>
     <View style={[s.row, { justifyContent: 'space-between' }]}>
       <View style={[s.row, { flex: 1 }]}><Ionicons name={done ? 'checkmark-circle' : 'flag-outline'} size={21} color={done ? theme.successText : theme.violetDeep} /><Text style={s.heading}>{zh ? '每日记忆目标' : 'Daily memory goal'}</Text></View>
       <LearningChoiceMenu value={String(goal)} label={zh ? `${goal} 次／天` : `${goal} / day`} title={zh ? '选择每天的记忆练习次数' : 'Choose your daily memory practice goal'} options={[1, 3, 5].map(value => ({ value: String(value), label: zh ? `每天 ${value} 次练习` : `${value} sessions a day` }))}

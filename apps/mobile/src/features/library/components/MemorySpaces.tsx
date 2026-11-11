@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
+import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -29,4 +31,4 @@ export function MemorySpaces() {
     </AnimatedPressable>
   </View>;
 }
-const useStyles = createThemedStyles(t => StyleSheet.create({ navigation: { gap: 12, marginBottom: 8 }, templates: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 76, backgroundColor: t.paper, borderColor: t.line, borderWidth: 1, borderRadius: 18, padding: 14 }, templateCopy: { flex: 1, minWidth: 0, gap: 4 }, spaces: { flexDirection: 'row', gap: 12 }, space: { flex: 1, minWidth: 0, backgroundColor: t.paper, borderColor: t.line, borderWidth: 1, borderRadius: 20, padding: 14, gap: 8, minHeight: 116 }, top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, title: { color: t.ink, fontFamily: typography.displayExtraBold, fontWeight: '800', fontSize: 16, lineHeight: 22 }, body: { color: t.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 } }));
+const useStyles = createThemedStyles(t => StyleSheet.create({ navigation: { gap: appSpacing.md, marginBottom: appSpacing.sm }, templates: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.md, minHeight: 76, backgroundColor: t.paper, borderColor: t.line, borderWidth: 1, borderRadius: appRadii.card, padding: 14 }, templateCopy: { flex: 1, minWidth: 0, gap: appSpacing.xs }, spaces: { flexDirection: 'row', gap: appSpacing.md }, space: { flex: 1, minWidth: 0, backgroundColor: t.paper, borderColor: t.line, borderWidth: 1, borderRadius: appRadii.card, padding: 14, gap: appSpacing.sm, minHeight: 116 }, top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, title: { color: t.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.cardTitle.fontSize, lineHeight: appTextStyles.cardTitle.lineHeight }, body: { color: t.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight } }));

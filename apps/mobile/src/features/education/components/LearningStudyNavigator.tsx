@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { useCallback, useEffect, useRef } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { createLearningStyles, learningTypography as typography } from '../theme/learningTheme';
 import { useLearningCopy } from './LearningUi';
@@ -16,7 +18,7 @@ export function LearningStudyNavigator({ items, index, onSelect }: {
     else list.current?.scrollToIndex({ index, animated: false, viewPosition: .5 });
   }, [index, items.length]);
   useEffect(revealCurrent, [revealCurrent]);
-  return <View style={{ gap: 8 }}>
+  return <View style={{ gap: appSpacing.sm }}>
     <View style={s.row}><Text style={s.heading}>{zh ? '本单元卡片' : 'Cards in this unit'}</Text><Text style={s.hint}>{zh ? '点击切换' : 'Tap to switch'}</Text></View>
     <FlatList ref={list} horizontal data={items} keyExtractor={item => item.id} showsHorizontalScrollIndicator={false} onLayout={revealCurrent}
       getItemLayout={(_, position) => ({ length: width, offset: position * (width + gap), index: position })}
@@ -30,11 +32,11 @@ export function LearningStudyNavigator({ items, index, onSelect }: {
 }
 const useStyles = createLearningStyles(t => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  heading: { color: t.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  hint: { color: t.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
-  card: { width, minHeight: 68, borderRadius: 16, borderWidth: 1.5, borderBottomWidth: 3, borderColor: t.line, backgroundColor: t.paper, padding: 10, gap: 4 },
+  heading: { color: t.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  hint: { color: t.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize },
+  card: { width, minHeight: 68, borderRadius: appRadii.control, borderWidth: 1.5, borderBottomWidth: 3, borderColor: t.line, backgroundColor: t.paper, padding: 10, gap: appSpacing.xs },
   selected: { borderColor: t.violetDeep, backgroundColor: t.violetTint },
-  number: { color: t.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
-  word: { color: t.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  number: { color: t.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  word: { color: t.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   activeText: { color: t.violetDeep },
 }));

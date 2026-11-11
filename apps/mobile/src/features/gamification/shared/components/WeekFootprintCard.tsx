@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { typography } from '@/theme/typography';
 import { createThemedStyles } from '@/theme/createThemedStyles';
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 export type WeekFootprintDay = { date: string; sessions: number };
 
@@ -105,7 +107,7 @@ const useStyles = createThemedStyles((theme) =>
   StyleSheet.create({
     card: {
       paddingHorizontal: 15,
-      paddingVertical: 12,
+      paddingVertical: appSpacing.md,
       borderRadius: 21,
       borderWidth: 1,
       borderColor: theme.line,
@@ -117,27 +119,27 @@ const useStyles = createThemedStyles((theme) =>
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15 },
+    title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.body.fontSize },
     countPill: {
       flexDirection: 'row',
       alignItems: 'baseline',
-      gap: 4,
-      borderRadius: 999,
+      gap: appSpacing.xs,
+      borderRadius: appRadii.pill,
       paddingHorizontal: 10,
       paddingVertical: 5,
       backgroundColor: theme.violetTint,
     },
-    count: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 13 },
-    countUnit: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9 },
-    days: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
+    count: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.small.fontSize },
+    countUnit: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+    days: { flexDirection: 'row', justifyContent: 'space-between', marginTop: appSpacing.sm },
     day: {
       flex: 1,
       minWidth: 0,
       minHeight: 62,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 13,
-      gap: 4,
+      borderRadius: appRadii.control,
+      gap: appSpacing.xs,
     },
     daySelected: { backgroundColor: theme.violetTint },
     orb: {
@@ -145,7 +147,7 @@ const useStyles = createThemedStyles((theme) =>
       height: 31,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 99,
+      borderRadius: appRadii.pill,
       borderWidth: 1.5,
       borderColor: theme.line,
       backgroundColor: theme.canvas,
@@ -153,15 +155,15 @@ const useStyles = createThemedStyles((theme) =>
     orbDone: { borderColor: theme.violet, backgroundColor: theme.violet },
     orbToday: { borderColor: theme.violetDeep, borderWidth: 2 },
     orbSelected: { borderColor: theme.sun, borderWidth: 2 },
-    orbText: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+    orbText: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
     orbTextDone: { color: theme.onAccent },
-    dayLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9 },
+    dayLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
     dayLabelActive: { color: theme.violetDeep },
     footer: {
       minHeight: 23,
       color: theme.inkSoft,
       fontFamily: typography.bodyBold,
-      fontSize: 10,
+      fontSize: appTextStyles.caption.fontSize,
       marginTop: 5,
       paddingHorizontal: 2,
     },

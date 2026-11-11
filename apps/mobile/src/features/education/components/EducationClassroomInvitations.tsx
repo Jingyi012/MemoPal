@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useEducationCopy } from '@/features/education/i18n';
 import type { EducationClassroomMembership } from '@/features/education/types/educationRelationship.types';
 import { getPendingEducationInvitations } from '../utils/classroomInvitations';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 type EducationClassroomInvitationsProps = Readonly<{
@@ -78,19 +80,19 @@ export function EducationClassroomInvitations({
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   section: { gap: 9 },
-  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 },
-  card: { backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: 24, borderWidth: 2, borderBottomWidth: 6, gap: 12, padding: 18 },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  icon: { padding: 12, backgroundColor: theme.violetTint, borderRadius: 18 },
-  className: { flex: 1, color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, lineHeight: 26 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18 },
+  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.cardTitle.fontSize },
+  card: { backgroundColor: theme.paper, borderColor: theme.violetLine, borderRadius: appRadii.hero, borderWidth: 2, borderBottomWidth: 6, gap: appSpacing.md, padding: 18 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.md },
+  icon: { padding: appSpacing.md, backgroundColor: theme.violetTint, borderRadius: appRadii.card },
+  className: { flex: 1, color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize, lineHeight: appTextStyles.screenTitle.lineHeight },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
   state: { alignItems: 'center', flexDirection: 'row', gap: 9, minHeight: 45 },
-  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 14, borderWidth: 1, gap: 7, padding: 12 },
-  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 16, borderBottomWidth: 5, borderColor: theme.primaryShadow, justifyContent: 'center', marginTop: 5, minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, maxWidth: '100%' },
-  actions: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
-  decline: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 2, borderBottomWidth: 5, justifyContent: 'center', marginTop: 5, minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, maxWidth: '100%' },
-  declineText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
+  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: appRadii.control, borderWidth: 1, gap: 7, padding: appSpacing.md },
+  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, borderBottomWidth: 5, borderColor: theme.primaryShadow, justifyContent: 'center', marginTop: 5, minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, maxWidth: '100%' },
+  actions: { alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm },
+  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, textAlign: 'center' },
+  decline: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 2, borderBottomWidth: 5, justifyContent: 'center', marginTop: 5, minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, maxWidth: '100%' },
+  declineText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, textAlign: 'center' },
   disabled: { opacity: 0.55 },
-  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 18 },
+  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
 }));

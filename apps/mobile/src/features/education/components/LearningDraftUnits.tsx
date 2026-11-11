@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
 import { useRef, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { Plus, ScanText, ClipboardList, Trash2 } from '@/core/icons';

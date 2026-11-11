@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { RefreshCcw } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { typography } from '@/theme/typography';
 
 export function HomeSyncStatusCard({ onRetry }: { onRetry: () => void }) {
@@ -19,10 +21,10 @@ export function HomeSyncStatusCard({ onRetry }: { onRetry: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  card: { marginTop: 12, borderRadius: 17, borderWidth: 1.5, borderColor: '#F2C79F', backgroundColor: '#FFF1E4', padding: 11, flexDirection: 'row', alignItems: 'center', gap: 9 },
+  card: { marginTop: appSpacing.md, borderRadius: appRadii.control, borderWidth: 1.5, borderColor: '#F2C79F', backgroundColor: '#FFF1E4', padding: 11, flexDirection: 'row', alignItems: 'center', gap: 9 },
   icon: { width: 34, height: 34, borderRadius: 11, backgroundColor: '#FFE4C8', alignItems: 'center', justifyContent: 'center' },
   copy: { flex: 1 },
-  title: { color: '#2C241F', fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  body: { color: '#665A51', fontFamily: typography.bodyBold, fontSize: 10.5, lineHeight: 15, marginTop: 2 },
+  title: { color: '#2C241F', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  body: { color: '#665A51', fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 2 },
   retry: { width: 35, height: 35, borderRadius: 11, backgroundColor: '#FFC93C', alignItems: 'center', justifyContent: 'center' },
 });

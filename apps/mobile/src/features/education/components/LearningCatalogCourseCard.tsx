@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
+import { StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { createLearningStyles, learningTypography as typography } from '../theme/learningTheme';
@@ -53,20 +55,20 @@ export function LearningCatalogCourseCard({ course, onPress }: { course: Educati
 }
 
 const useCatalogCardStyles = createLearningStyles(t => StyleSheet.create({
-  card: { backgroundColor: t.paper, borderColor: t.line, borderWidth: 1, borderRadius: 20 },
-  cover: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderTopLeftRadius: 19, borderTopRightRadius: 19 },
-  coverCopy: { flex: 1, minWidth: 0, gap: 4 },
-  subject: { fontFamily: typography.bodyExtraBold, fontSize: 14, lineHeight: 20 },
-  author: { fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, color: t.inkSoft },
-  body: { padding: 16, gap: 9 },
-  title: { fontFamily: typography.displayExtraBold, fontWeight: '800', fontSize: 18, lineHeight: 25, color: t.ink },
-  meta: { fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, color: t.inkSoft },
+  card: { backgroundColor: t.paper, borderColor: t.line, borderWidth: 1, borderRadius: appRadii.card },
+  cover: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.md, paddingHorizontal: appSpacing.lg, paddingVertical: appSpacing.md, borderTopLeftRadius: 19, borderTopRightRadius: 19 },
+  coverCopy: { flex: 1, minWidth: 0, gap: appSpacing.xs },
+  subject: { fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  author: { fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, color: t.inkSoft },
+  body: { padding: appSpacing.lg, gap: 9 },
+  title: { fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight, color: t.ink },
+  meta: { fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, color: t.inkSoft },
   details: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   detail: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  footer: { borderTopWidth: 1, borderTopColor: t.line, paddingTop: 12, marginTop: 3, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  footer: { borderTopWidth: 1, borderTopColor: t.line, paddingTop: appSpacing.md, marginTop: 3, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: appSpacing.md },
   progress: { flexGrow: 1, flexBasis: 110, gap: 7 },
   progressLabels: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   complete: { color: t.successText },
-  action: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 13, paddingHorizontal: 12, backgroundColor: t.violetTint },
-  actionText: { color: t.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18 },
+  action: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: appRadii.control, paddingHorizontal: appSpacing.md, backgroundColor: t.violetTint },
+  actionText: { color: t.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
 }));

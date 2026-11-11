@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import type { EducationQuestionTypePerformance } from '@/features/education/api/educationFamilyReport.api';
 import { useEducationCopy } from '@/features/education/i18n';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type EducationResponseTypeSummaryProps = Readonly<{
   selectedResponse: EducationQuestionTypePerformance;
@@ -30,6 +32,6 @@ export function EducationResponseTypeSummary({ selectedResponse, openResponse }:
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  container: { gap: 10, paddingVertical: 8, borderTopWidth: 1, borderTopColor: theme.line },
-  row: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 22 },
+  container: { gap: 10, paddingVertical: appSpacing.sm, borderTopWidth: 1, borderTopColor: theme.line },
+  row: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
 }));

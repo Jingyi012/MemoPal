@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles } from '@/theme/designSystem';
 import type { ReactNode } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LearningIconButton } from './LearningIconButton';
 import { LearningProgress, useLearningStyles } from './LearningUi';
@@ -27,6 +29,6 @@ export function LearningFeedbackDock({ feedback, embedded = false, children }: {
 }
 const useStyles = createLearningStyles(theme => ({
   header: { alignItems: 'center' as const, flexDirection: 'row' as const, gap: learningLayout.gap, paddingHorizontal: learningLayout.pagePadding, paddingBottom: learningLayout.gap },
-  count: { color: theme.violetDeep, fontFamily: learningTypography.bodyExtraBold, fontSize: 14, flexShrink: 0, textAlign: 'right' as const },
+  count: { color: theme.violetDeep, fontFamily: learningTypography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, flexShrink: 0, textAlign: 'right' as const },
   feedback: { maxHeight: '65%' as const, borderTopWidth: learningLayout.borderWidth, gap: 10, paddingTop: learningLayout.pagePadding },
 }));

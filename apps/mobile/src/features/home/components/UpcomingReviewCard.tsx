@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { groupMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
 import { typography } from '@/theme/typography';
 import { ArrowRight, CalendarClock } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
 export function UpcomingReviewCard({
@@ -49,17 +51,17 @@ function formatShortDate(value: string, language: 'en' | 'zh') {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { marginTop: 12, borderRadius: 21, borderWidth: 2, borderColor: theme.violetLine, backgroundColor: theme.paper, padding: 14 },
+  card: { marginTop: appSpacing.md, borderRadius: 21, borderWidth: 2, borderColor: theme.violetLine, backgroundColor: theme.paper, padding: 14 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  icon: { width: 40, height: 40, borderRadius: 13, backgroundColor: theme.skyTint, alignItems: 'center', justifyContent: 'center' },
+  icon: { width: 40, height: 40, borderRadius: appRadii.control, backgroundColor: theme.skyTint, alignItems: 'center', justifyContent: 'center' },
   copy: { flex: 1, minWidth: 0 },
-  eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 9.5, letterSpacing: 0.7 },
-  title: { color: theme.ink, fontFamily: typography.display, fontSize: 15, marginTop: 3 },
-  subtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, lineHeight: 17, marginTop: 3 },
-  list: { gap: 7, marginTop: 12 },
-  row: { minHeight: 54, borderRadius: 14, backgroundColor: theme.paper, paddingHorizontal: 9, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 9 },
+  eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.7 },
+  title: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.body.fontSize, marginTop: 3 },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 3 },
+  list: { gap: 7, marginTop: appSpacing.md },
+  row: { minHeight: 54, borderRadius: appRadii.control, backgroundColor: theme.paper, paddingHorizontal: 9, paddingVertical: appSpacing.sm, flexDirection: 'row', alignItems: 'center', gap: 9 },
   dateBadge: { minWidth: 56, borderRadius: 10, backgroundColor: theme.violetTint, paddingHorizontal: 7, paddingVertical: 7, alignItems: 'center' },
-  dateText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  rowTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
-  rowMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 2 },
+  dateText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  rowTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  rowMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginTop: 2 },
 }));

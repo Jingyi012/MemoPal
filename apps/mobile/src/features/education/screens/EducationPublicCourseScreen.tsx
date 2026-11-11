@@ -1,3 +1,6 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { ActionMenuSheet } from '@/components/ActionMenuSheet';
 import { useLearningActivity } from '../hooks/useLearningActivity';
 import { LearningIconButton } from '../components/LearningIconButton';
@@ -19,7 +22,7 @@ import { useEducationGuidedCourseProgress, useEducationPublicCourse, useEducatio
 import * as Linking from 'expo-linking';
 import { Stack, Href, Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Share2, Flag } from '@/core/icons';
-import { Modal, Share, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Share, ScrollView, StyleSheet, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -244,36 +247,36 @@ export default function EducationPublicCourseScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { backgroundColor: theme.canvas, flex: 1 },
-  content: { gap: 12, padding: 18, paddingBottom: 36 },
+  content: { gap: appSpacing.md, padding: 18, paddingBottom: 36 },
   state: { minHeight: 120, justifyContent: 'center', overflow: 'hidden' },
-  author: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  saveButton: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.paper, borderColor: theme.violetDeep, borderRadius: 12, borderWidth: 1.5, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
-  shareButton: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 12, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
-  saveButtonText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  author: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  saveButton: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.paper, borderColor: theme.violetDeep, borderRadius: appRadii.control, borderWidth: 1.5, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
+  shareButton: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.control, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
+  saveButtonText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   reportButton: { alignItems: 'center', alignSelf: 'flex-start', flexDirection: 'row', gap: 7, justifyContent: 'center', minHeight: 44, paddingHorizontal: 5 },
-  reportText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
+  reportText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
   reportReasons: { alignSelf: 'stretch', gap: 7, marginTop: 14 },
-  reportReason: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 12, borderWidth: 1, minHeight: 40, justifyContent: 'center', paddingHorizontal: 10 },
+  reportReason: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, minHeight: 40, justifyContent: 'center', paddingHorizontal: 10 },
   reportReasonSelected: { backgroundColor: theme.berryTint, borderColor: theme.berryLine },
-  reportReasonText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
+  reportReasonText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize },
   reportReasonTextSelected: { color: theme.berryDeep, fontFamily: typography.bodyExtraBold },
-  reportDetailsInput: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 12, borderWidth: 1, color: theme.ink, fontSize: 13, minHeight: 74, padding: 10, textAlignVertical: 'top' },
-  savedNote: { color: theme.successText, fontFamily: typography.bodyBold, fontSize: 12 },
-  saveError: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 12 },
-  notice: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: 15, borderWidth: 1.5, color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19, padding: 14 },
-  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17, marginTop: 6 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
-  objective: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 15, borderWidth: 1, gap: 8, padding: 12 },
-  studyItem: { borderTopColor: theme.line, borderTopWidth: 1, gap: 4, paddingTop: 9 },
-  studyDetail: { color: theme.violetDeep, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18 },
-  objectiveTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
-  errorState: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 16, borderWidth: 1.5, gap: 10, padding: 15 },
-  retry: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 12, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
-  retryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  progressError: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 14, borderWidth: 1, gap: 8, padding: 12 },
-  lessonCard: { backgroundColor: theme.mintTint, borderColor: theme.mintLine, borderRadius: 18, borderWidth: 1.5, gap: 8, padding: 10 },
-  lessonProgress: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, paddingHorizontal: 3 },
-  recommended: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, paddingHorizontal: 3 },
-  lessonAction: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 13, justifyContent: 'center', minHeight: 46, paddingHorizontal: 16 },
-  lessonActionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  reportDetailsInput: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, color: theme.ink, fontSize: appTextStyles.small.fontSize, minHeight: 74, padding: 10, textAlignVertical: 'top' },
+  savedNote: { color: theme.successText, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  saveError: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  notice: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: appRadii.control, borderWidth: 1.5, color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, padding: 14 },
+  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, marginTop: 6 },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  objective: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, gap: appSpacing.sm, padding: appSpacing.md },
+  studyItem: { borderTopColor: theme.line, borderTopWidth: 1, gap: appSpacing.xs, paddingTop: 9 },
+  studyDetail: { color: theme.violetDeep, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  objectiveTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize },
+  errorState: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1.5, gap: 10, padding: 15 },
+  retry: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
+  retryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  progressError: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: appRadii.control, borderWidth: 1, gap: appSpacing.sm, padding: appSpacing.md },
+  lessonCard: { backgroundColor: theme.mintTint, borderColor: theme.mintLine, borderRadius: appRadii.card, borderWidth: 1.5, gap: appSpacing.sm, padding: 10 },
+  lessonProgress: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, paddingHorizontal: 3 },
+  recommended: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, paddingHorizontal: 3 },
+  lessonAction: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, justifyContent: 'center', minHeight: 46, paddingHorizontal: appSpacing.lg },
+  lessonActionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
 }));

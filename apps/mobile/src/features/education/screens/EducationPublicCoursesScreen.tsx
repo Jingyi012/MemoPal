@@ -1,3 +1,6 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { LearningDiscoverySections } from '../components/LearningDiscoverySections';
 import { AppBottomSheet } from '@/components/AppBottomSheet';
 import { LearningLevelProgress } from '../components/LearningLevelProgress';
@@ -22,7 +25,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Href, Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
-import { FlatList, Keyboard, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
+import { FlatList, Keyboard, RefreshControl, ScrollView, View } from 'react-native';
 
 type CourseSubject = 'all' | 'chinese' | 'science' | 'math' | 'english';
 type CourseStatus = 'all' | 'inProgress' | 'new' | 'completed';
@@ -71,12 +74,12 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false, dis
     <FlatList data={data} keyExtractor={item => item.id} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled"
       refreshControl={<RefreshControl refreshing={courses.isRefetching} onRefresh={() => refresh.current()} />}
       ListHeaderComponent={<LearningArrival style={{ gap: 18 }}>
-        {!discoveryEntry ? <><View style={{ gap: 12 }}>
-          <View style={{ gap: 3 }}><Text style={[s.heading, { fontSize: 20 }]}>{ui.hello(profile.user?.displayName || user?.displayName || 'MemoPal')}</Text><Text style={s.small}>{ui.ready}</Text></View>
+        {!discoveryEntry ? <><View style={{ gap: appSpacing.md }}>
+          <View style={{ gap: 3 }}><Text style={[s.heading, { fontSize: appTextStyles.screenTitle.fontSize }]}>{ui.hello(profile.user?.displayName || user?.displayName || 'MemoPal')}</Text><Text style={s.small}>{ui.ready}</Text></View>
           {profile.user ? <LearningLevelProgress totalXp={profile.user.totalXp} level={profile.user.level} /> : null}
         </View>
-        {current ? <LinearGradient colors={palette.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={{ borderRadius: 26, padding: 18, gap: 13, overflow: 'hidden' }}>
-          <View style={[s.row, { alignItems: 'flex-start' }]}><View style={{ flex: 1, gap: 7 }}><View style={{ alignSelf: 'flex-start', borderRadius: 99, paddingHorizontal: 11, paddingVertical: 5, backgroundColor: palette.heroOverlay }}><Text style={{ color: palette.heroInk, fontFamily: typography.bodyExtraBold, fontSize: 12 }}>{ui.continue}</Text></View><Text numberOfLines={3} style={[s.heading, { color: palette.heroInk, fontSize: 21, lineHeight: 27 }]}>{current.courseTitle}</Text><Text style={[s.body, { color: palette.heroInk }]}>{ui.correct(solved, total)}</Text></View><LearningRing value={solved} total={total} theme={{ ...theme, line: palette.heroTrack, color: palette.heroAccent, dark: palette.heroInk }} /></View>
+        {current ? <LinearGradient colors={palette.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={{ borderRadius: appRadii.hero, padding: 18, gap: 13, overflow: 'hidden' }}>
+          <View style={[s.row, { alignItems: 'flex-start' }]}><View style={{ flex: 1, gap: 7 }}><View style={{ alignSelf: 'flex-start', borderRadius: appRadii.pill, paddingHorizontal: 11, paddingVertical: 5, backgroundColor: palette.heroOverlay }}><Text style={{ color: palette.heroInk, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize }}>{ui.continue}</Text></View><Text numberOfLines={3} style={[s.heading, { color: palette.heroInk, fontSize: appTextStyles.prompt.fontSize, lineHeight: appTextStyles.prompt.lineHeight }]}>{current.courseTitle}</Text><Text style={[s.body, { color: palette.heroInk }]}>{ui.correct(solved, total)}</Text></View><LearningRing value={solved} total={total} theme={{ ...theme, line: palette.heroTrack, color: palette.heroAccent, dark: palette.heroInk }} /></View>
           <View style={{ alignSelf: 'flex-start' }}><LearningButton tone="white" compact label={ui.zh ? '继续学习' : 'Continue'} onPress={() => router.push(`/community/education/${current.courseId}` as Href)} /></View>
         </LinearGradient> : null}
         {home.isError ? <AnimatedPressable onPress={() => void home.refetch()} style={s.card}><Text style={s.body}>{copy.guidedLessonLoadError} · {copy.retry}</Text></AnimatedPressable> : null}
@@ -92,10 +95,10 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false, dis
         </View>
         </> : null}
         <View style={[s.row, { gap: 9 }]}>
-          <View style={[s.row, { flex: 1, borderWidth: 2, borderColor: palette.line, backgroundColor: palette.paper, borderRadius: 18, paddingHorizontal: 14, gap: 8 }]}>
+          <View style={[s.row, { flex: 1, borderWidth: 2, borderColor: palette.line, backgroundColor: palette.paper, borderRadius: appRadii.card, paddingHorizontal: 14, gap: appSpacing.sm }]}>
             <Ionicons name="search" size={22} color={palette.inkSoft} /><TextInput accessibilityLabel={copy.publicCoursesSearch} placeholder={ui.zh ? '搜索课程或知识点' : 'Search courses or study points'} value={search} onChangeText={setSearch} placeholderTextColor={palette.inkSoft} style={[s.body, { flex: 1, minHeight: 52 }]} returnKeyType="search" />
           </View>
-          <AnimatedPressable accessibilityRole="button" accessibilityLabel={ui.filter} accessibilityState={{ expanded: filterOpen, selected: hasFilters }} onPress={() => { Keyboard.dismiss(); setDraftSubject(subject); setDraftStatus(status); setDraftAudience(audience); setFilterOpen(true); }} style={{ minHeight: 52, minWidth: 52, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: hasFilters ? palette.violetDeep : palette.line, backgroundColor: palette.paper, borderRadius: 18 }}><Ionicons name="options-outline" size={23} color={palette.violetDeep} /></AnimatedPressable>
+          <AnimatedPressable accessibilityRole="button" accessibilityLabel={ui.filter} accessibilityState={{ expanded: filterOpen, selected: hasFilters }} onPress={() => { Keyboard.dismiss(); setDraftSubject(subject); setDraftStatus(status); setDraftAudience(audience); setFilterOpen(true); }} style={{ minHeight: 52, minWidth: 52, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: hasFilters ? palette.violetDeep : palette.line, backgroundColor: palette.paper, borderRadius: appRadii.card }}><Ionicons name="options-outline" size={23} color={palette.violetDeep} /></AnimatedPressable>
         </View>
         {hasFilters ? <View style={[s.row, { flexWrap: 'wrap' }]}>
           {subject !== 'all' ? <FilterPill label={ui[subject as Exclude<CourseSubject, 'all'>]} onRemove={() => setSubject('all')} /> : null}
@@ -113,7 +116,7 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false, dis
 
     />
     <AppBottomSheet height={720} visible={filterOpen} onClose={() => setFilterOpen(false)}>
-      <ScrollView contentContainerStyle={{ gap: 12 }}>
+      <ScrollView contentContainerStyle={{ gap: appSpacing.md }}>
           <View style={s.row}><Text accessibilityRole="header" style={[s.title, { flex: 1 }]}>{ui.filter}</Text><AnimatedPressable accessibilityLabel={ui.close} onPress={() => setFilterOpen(false)} style={{ minHeight: 44, width: 44, justifyContent: 'center', alignItems: 'center' }}><Ionicons name="close" size={23} color={palette.ink} /></AnimatedPressable></View>
           {discoveryEntry && user?.id ? <LearningPreferencesCard userId={user.id} inline /> : null}
           <Text style={s.small}>{ui.filterSubject}</Text>
@@ -124,7 +127,7 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false, dis
           <View style={[s.row, { flexWrap: 'wrap' }]}>{['all', 'zh-Hans', 'en', 'ms'].map(language => <FilterOption key={language} selected={draftAudience.language === language} label={language === 'all' ? ui.all : courseAudienceLabels({ languageCode: language }, ui.zh)[0]} onPress={() => setDraftAudience({ ...draftAudience, language })} />)}</View>
           <Text style={s.small}>{ui.filterStatus}</Text>
           <View style={[s.row, { flexWrap: 'wrap' }]}>{(['all', 'inProgress', 'new', 'completed'] as const).map(key => <FilterOption key={key} selected={draftStatus === key} label={ui[key]} onPress={() => setDraftStatus(key)} />)}</View>
-          <View style={[s.row, { gap: 10, marginTop: 4 }]}>
+          <View style={[s.row, { gap: 10, marginTop: appSpacing.xs }]}>
             <View style={{ flex: 1 }}><LearningButton secondary label={ui.reset} onPress={() => { setDraftSubject('all'); setDraftStatus('all'); setDraftAudience(emptyCourseAudience); }} /></View>
             <View style={{ flex: 1 }}><LearningButton label={ui.showCourses((courses.data ?? []).filter((course, index) => {
               if (!matchesCourseAudience(course, draftAudience)) return false;
@@ -144,10 +147,10 @@ export default function EducationPublicCoursesScreen({ primaryEntry = false, dis
 
 function FilterOption({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   const { styles: s, theme } = useLearningStyles();
-  return <AnimatedPressable accessibilityRole="button" accessibilityState={{ selected }} onPress={onPress} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 99, borderWidth: 1.5, borderColor: selected ? theme.violetDeep : theme.line, backgroundColor: selected ? theme.violetDeep : theme.paper }}><Text style={[s.small, { color: selected ? theme.onAccent : theme.ink }]}>{label}</Text></AnimatedPressable>;
+  return <AnimatedPressable accessibilityRole="button" accessibilityState={{ selected }} onPress={onPress} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, borderRadius: appRadii.pill, borderWidth: 1.5, borderColor: selected ? theme.violetDeep : theme.line, backgroundColor: selected ? theme.violetDeep : theme.paper }}><Text style={[s.small, { color: selected ? theme.onAccent : theme.ink }]}>{label}</Text></AnimatedPressable>;
 }
 function FilterPill({ label, onRemove }: { label: string; onRemove: () => void }) {
   const { styles: s, theme } = useLearningStyles();
   const ui = useLearningCopy();
-  return <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${label}, ${ui.removeFilter}`} onPress={onRemove} style={{ minHeight: 44, borderRadius: 99, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: theme.violetTint }}><Text style={[s.small, { color: theme.violetDeep }]}>{label}</Text><Ionicons name="close" size={16} color={theme.violetDeep} /></AnimatedPressable>;
+  return <AnimatedPressable accessibilityRole="button" accessibilityLabel={`${label}, ${ui.removeFilter}`} onPress={onRemove} style={{ minHeight: 44, borderRadius: appRadii.pill, paddingHorizontal: appSpacing.md, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: theme.violetTint }}><Text style={[s.small, { color: theme.violetDeep }]}>{label}</Text><Ionicons name="close" size={16} color={theme.violetDeep} /></AnimatedPressable>;
 }

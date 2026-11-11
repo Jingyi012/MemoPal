@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography, learningDocumentColors } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ConfirmModal } from '@/components/ConfirmModal';
@@ -8,7 +10,7 @@ import { File, Paths } from 'expo-file-system';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Image, LayoutChangeEvent, Platform, StyleSheet, Text, View } from 'react-native';
+import { Image, LayoutChangeEvent, Platform, StyleSheet, View } from 'react-native';
 import { useQuestionInputStyles } from './questionInputStyles';
 
 type Props = Readonly<{
@@ -319,16 +321,16 @@ function Action({ label, onPress, disabled, selected = false, primary = false }:
 }
 
 const useStyles = createThemedStyles(theme => StyleSheet.create({
-  canvasFrame: { alignSelf: 'stretch', borderColor: theme.line, borderRadius: 12, borderWidth: 1, overflow: 'hidden' },
+  canvasFrame: { alignSelf: 'stretch', borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, overflow: 'hidden' },
   canvasTouch: { backgroundColor: learningDocumentColors.paper, height: HEIGHT, width: '100%' },
   svg: { backgroundColor: learningDocumentColors.paper },
-  controls: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  action: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 10, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingHorizontal: 12 },
+  controls: { flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm },
+  action: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 10, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingHorizontal: appSpacing.md },
   toggle: { alignSelf: 'flex-start' },
   primary: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep, flexGrow: 1 },
   selected: { backgroundColor: theme.violetTint, borderColor: theme.violetDeep },
   disabled: { opacity: 0.5 },
-  actionText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  actionText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   primaryText: { color: theme.onAccent },
   preview: { alignSelf: 'stretch', height: 180, backgroundColor: learningDocumentColors.paper, borderRadius: 10 },
 }));

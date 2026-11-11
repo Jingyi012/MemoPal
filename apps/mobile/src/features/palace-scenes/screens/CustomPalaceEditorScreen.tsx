@@ -1,3 +1,6 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput, type AppTextInputRef } from '@/components/ui/AppTextInput';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppImage } from '@/components/AppImage';
@@ -23,19 +26,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Check, Plus, Trash2 } from '@/core/icons';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  findNodeHandle,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  type GestureResponderEvent,
-} from 'react-native';
+import { findNodeHandle, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, type GestureResponderEvent } from 'react-native';
 
 type CanvasSize = { width: number; height: number };
 
@@ -68,8 +59,8 @@ export default function CustomPalaceEditorScreen() {
   const canvasBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollGesture = useMemo(() => Gesture.Native(), []);
-  const locusInputRefs = useRef<(TextInput | null)[]>([]);
-  const focusedLocusInputRef = useRef<TextInput | null>(null);
+  const locusInputRefs = useRef<(AppTextInputRef | null)[]>([]);
+  const focusedLocusInputRef = useRef<AppTextInputRef | null>(null);
 
   useEffect(() => {
     const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
@@ -613,45 +604,45 @@ function DraggableLocusMarker({
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 16, paddingBottom: 44 },
+  content: { padding: appSpacing.lg, paddingBottom: 44 },
   contentWithDock: { paddingBottom: 126 },
   flex: { flex: 1 },
   privacyCard: {
     flexDirection: 'row',
     gap: 10,
-    borderRadius: 17,
+    borderRadius: appRadii.control,
     borderWidth: 1.5,
     borderColor: '#BFE7D6',
     backgroundColor: '#EAF9F1',
     padding: 13,
   },
-  privacyEmoji: { fontSize: 22 },
-  privacyTitle: { color: '#247B67', fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  privacyEmoji: { fontSize: appArtworkSizes.small },
+  privacyTitle: { color: '#247B67', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   privacyBody: {
     color: '#3E7769',
     fontFamily: typography.bodyBold,
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: appTextStyles.caption.fontSize,
+    lineHeight: appTextStyles.caption.lineHeight,
     marginTop: 3,
   },
-  workflowCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingVertical: 3 },
+  workflowCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: appSpacing.md, paddingVertical: 3 },
   workflowStep: { alignItems: 'center', flex: 1, gap: 5 },
-  workflowNumber: { width: 25, height: 25, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.canvas, borderWidth: 1.5, borderColor: theme.line },
+  workflowNumber: { width: 25, height: 25, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.canvas, borderWidth: 1.5, borderColor: theme.line },
   workflowNumberActive: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
-  workflowNumberText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  workflowNumberText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   workflowNumberTextActive: { color: theme.onAccent },
-  workflowLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10, textAlign: 'center' },
+  workflowLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, textAlign: 'center' },
   workflowLabelActive: { color: theme.violetDeep },
-  stepPanel: { marginTop: 4 },
+  stepPanel: { marginTop: appSpacing.xs },
   panelTitle: {
     color: theme.ink,
     fontFamily: typography.displayExtraBold,
-    fontSize: 19,
-    marginTop: 12,
+    fontSize: appTextStyles.screenTitle.fontSize,
+    marginTop: appSpacing.md,
     marginBottom: 2,
   },
-  stepActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
-  nextButton: { marginTop: 16 },
+  stepActions: { flexDirection: 'row', gap: 10, marginTop: appSpacing.lg },
+  nextButton: { marginTop: appSpacing.lg },
   rowAction: { flex: 1 },
   backStandalone: { marginTop: 10 },
   upgradeCard: {
@@ -666,23 +657,23 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   upgradeIcon: {
     width: 42,
     height: 42,
-    borderRadius: 14,
+    borderRadius: appRadii.control,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  upgradeEmoji: { fontSize: 20 },
+  upgradeEmoji: { fontSize: appArtworkSizes.tiny },
   upgradeTitle: {
     color: theme.ink,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 14,
+    fontSize: appTextStyles.label.fontSize,
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: appSpacing.sm,
   },
   upgradeBody: {
     color: theme.inkSoft,
     fontFamily: typography.bodyBold,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: appTextStyles.caption.fontSize,
+    lineHeight: appTextStyles.caption.lineHeight,
     textAlign: 'center',
     marginTop: 3,
   },
@@ -695,31 +686,31 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     justifyContent: 'center',
     marginTop: 11,
   },
-  upgradeButtonText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  upgradeButtonText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   label: {
     color: theme.ink,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 13,
+    fontSize: appTextStyles.small.fontSize,
     marginTop: 18,
-    marginBottom: 8,
+    marginBottom: appSpacing.sm,
   },
-  optional: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11 },
+  optional: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
   input: {
     minHeight: 52,
-    borderRadius: 14,
+    borderRadius: appRadii.control,
     borderWidth: 2,
     borderColor: theme.line,
     backgroundColor: theme.paper,
     paddingHorizontal: 14,
     color: theme.ink,
     fontFamily: typography.bodySemibold,
-    fontSize: 14,
+    fontSize: appTextStyles.label.fontSize,
   },
-  descriptionInput: { minHeight: 76, paddingTop: 12, textAlignVertical: 'top' },
+  descriptionInput: { minHeight: 76, paddingTop: appSpacing.md, textAlignVertical: 'top' },
   imageButton: {
     width: '100%',
     height: 185,
-    borderRadius: 20,
+    borderRadius: appRadii.card,
     borderWidth: 2,
     borderColor: theme.violetLine,
     borderStyle: 'dashed',
@@ -732,36 +723,36 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   imagePreviewWrap: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'flex-end' },
   imagePreviewShade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(28, 24, 50, 0.12)' },
   imageReplacePill: {
-    marginBottom: 12,
+    marginBottom: appSpacing.md,
     paddingHorizontal: 13,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingVertical: appSpacing.sm,
+    borderRadius: appRadii.pill,
     backgroundColor: 'rgba(255, 255, 255, 0.94)',
   },
-  imageReplaceText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  imageReplaceText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   imageButtonTitle: {
     color: theme.violetDeep,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 14,
+    fontSize: appTextStyles.label.fontSize,
     marginTop: 9,
   },
-  imageButtonEmoji: { fontSize: 28 },
+  imageButtonEmoji: { fontSize: appArtworkSizes.small },
   imageButtonBody: {
     color: theme.inkSoft,
     fontFamily: typography.bodyBold,
-    fontSize: 11,
+    fontSize: appTextStyles.caption.fontSize,
     marginTop: 3,
   },
   locusHeading: { flexDirection: 'row', alignItems: 'flex-end', marginTop: 5 },
-  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, lineHeight: 16 },
+  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
   counter: {
     color: theme.violetDeep,
     backgroundColor: '#EEE9FF',
-    borderRadius: 999,
+    borderRadius: appRadii.pill,
     paddingHorizontal: 9,
     paddingVertical: 5,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 11,
+    fontSize: appTextStyles.caption.fontSize,
   },
   canvas: {
     height: 240,
@@ -772,13 +763,13 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: theme.violetTint,
   },
-  canvasEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
-  canvasEmptyText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  canvasEmptyEmoji: { fontSize: 24 },
+  canvasEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: appSpacing.sm },
+  canvasEmptyText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  canvasEmptyEmoji: { fontSize: appArtworkSizes.small },
   canvasMode: {
     color: theme.violetDeep,
     fontFamily: typography.bodyBold,
-    fontSize: 11,
+    fontSize: appTextStyles.caption.fontSize,
     textAlign: 'center',
     marginTop: 7,
   },
@@ -794,7 +785,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   markerDisc: {
     width: 34,
     height: 34,
-    borderRadius: 17,
+    borderRadius: appRadii.control,
     borderWidth: 3,
     borderColor: 'white',
     backgroundColor: '#9B8CFF',
@@ -803,11 +794,11 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     boxShadow: '0px 2px 4px rgba(36, 31, 56, 0.25)',
   },
   markerActive: { backgroundColor: theme.violetDeep, borderWidth: 4, transform: [{ scale: 1.12 }] },
-  markerText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  markerText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   addLocusButton: {
     width: '100%',
     minHeight: 44,
-    borderRadius: 13,
+    borderRadius: appRadii.control,
     borderWidth: 1.5,
     borderColor: '#DCD4FF',
     backgroundColor: '#F7F5FF',
@@ -817,14 +808,14 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     gap: 7,
     marginTop: 9,
   },
-  addLocusText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  locusList: { marginTop: 8, gap: 7 },
+  addLocusText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  locusList: { marginTop: appSpacing.sm, gap: 7 },
   locusRow: {
     minHeight: 54,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    borderRadius: 14,
+    gap: appSpacing.sm,
+    borderRadius: appRadii.control,
     borderWidth: 1.5,
     borderColor: theme.line,
     backgroundColor: theme.paper,
@@ -834,18 +825,18 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   locusNumber: {
     width: 27,
     height: 27,
-    borderRadius: 14,
+    borderRadius: appRadii.control,
     backgroundColor: '#9B8CFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  locusNumberText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  locusNumberText: { color: 'white', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   locusInput: {
     flex: 1,
     minHeight: 42,
     color: theme.ink,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 13,
+    fontSize: appTextStyles.small.fontSize,
   },
   deleteButton: {
     width: 38,
@@ -856,18 +847,18 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   },
   messageCard: {
     marginTop: 13,
-    borderRadius: 14,
+    borderRadius: appRadii.control,
     borderWidth: 1.5,
     borderColor: '#FFD2DC',
     backgroundColor: theme.berryTint,
-    padding: 12,
+    padding: appSpacing.md,
   },
   messageText: {
     color: '#B53A5F',
     fontFamily: typography.bodyExtraBold,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: appTextStyles.caption.fontSize,
+    lineHeight: appTextStyles.caption.lineHeight,
     textAlign: 'center',
   },
-  bottomDock: { backgroundColor: theme.canvas, borderTopColor: theme.line, borderTopWidth: 1, paddingHorizontal: 16, paddingTop: 10 },
+  bottomDock: { backgroundColor: theme.canvas, borderTopColor: theme.line, borderTopWidth: 1, paddingHorizontal: appSpacing.lg, paddingTop: 10 },
 }));

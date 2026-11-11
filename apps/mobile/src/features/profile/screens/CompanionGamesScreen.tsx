@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkTextStyles, appRadii, appTextStyles } from '@/theme/designSystem';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { HeaderIconButton } from '@/components/ui/HeaderIconButton';
 import { ChevronLeft } from '@/core/icons';
@@ -135,11 +137,11 @@ const useStyles = createThemedStyles(theme => StyleSheet.create({
   playTint: { opacity: .14 },
   header: { height: 62, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headerSpacer: { width: 44 },
-  headerTitle: { flex: 1, textAlign: 'center', color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18 },
+  headerTitle: { flex: 1, textAlign: 'center', color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
   playground: { flex: 1, minHeight: 420, position: 'relative' },
   funNote: { position: 'absolute', top: 8, alignSelf: 'center', color: theme.violetDeep,
-    backgroundColor: theme.paper, borderRadius: 20, overflow: 'hidden', paddingHorizontal: 14, paddingVertical: 6,
-    fontFamily: typography.bodyExtraBold, fontSize: 13 },
+    backgroundColor: theme.paper, borderRadius: appRadii.card, overflow: 'hidden', paddingHorizontal: 14, paddingVertical: 6,
+    fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   momo: { position: 'absolute', top: '8%', alignSelf: 'center', width: 180, height: 180 },
   bubbleToy: { position: 'absolute', left: '5%', top: '37%' },
   coralToy: { position: 'absolute', right: '5%', top: '47%' },
@@ -150,11 +152,11 @@ const useStyles = createThemedStyles(theme => StyleSheet.create({
   toyPressed: { transform: [{ translateY: 4 }] },
   toyFace: { width: 118, height: 100, borderRadius: 30, borderWidth: 3, borderColor: theme.paper,
     alignItems: 'center', justifyContent: 'center' },
-  toyEmoji: { fontSize: 55, lineHeight: 75 },
-  toyLabel: { color: theme.ink, backgroundColor: theme.paper, borderRadius: 17, overflow: 'hidden',
-    paddingHorizontal: 5, paddingVertical: 3, fontFamily: typography.displayExtraBold, fontSize: 14,
+  toyEmoji: appArtworkTextStyles.hero,
+  toyLabel: { color: theme.ink, backgroundColor: theme.paper, borderRadius: appRadii.control, overflow: 'hidden',
+    paddingHorizontal: 5, paddingVertical: 3, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.label.fontSize,
     width: 132, textAlign: 'center', marginTop: -8 },
-  bestBadge: { color: theme.violetDeep, backgroundColor: theme.sunTint, borderRadius: 12,
+  bestBadge: { color: theme.violetDeep, backgroundColor: theme.sunTint, borderRadius: appRadii.control,
     overflow: 'hidden', paddingHorizontal: 9, paddingVertical: 2,
-    fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 3 },
+    fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, marginTop: 3 },
 }));

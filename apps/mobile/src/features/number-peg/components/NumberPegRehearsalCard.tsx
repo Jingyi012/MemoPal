@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { SpotlightTarget } from '@/features/onboarding/components/SpotlightTourProvider';
 import { AppButton } from '@/components/ui/AppButton';
 import type { MemoryItem, PegBinding } from '@/features/memory-sets';
@@ -5,7 +7,7 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
 import { typography } from '@/theme/typography';
 import { ArrowLeft, ArrowRight } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useMemo } from 'react';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
@@ -97,42 +99,42 @@ const useStyles = createThemedStyles((theme) =>
     card: {
       backgroundColor: theme.paper,
       borderColor: theme.line,
-      borderRadius: 20,
+      borderRadius: appRadii.card,
       borderWidth: 2,
-      padding: 16,
+      padding: appSpacing.lg,
       boxShadow: '0px 7px 0px rgba(43,42,61,0.08)',
     },
     headerRow: { alignItems: 'center', flexDirection: 'row', gap: 11 },
     icon: {
       alignItems: 'center',
       backgroundColor: theme.violetTint,
-      borderRadius: 13,
+      borderRadius: appRadii.control,
       height: 38,
       justifyContent: 'center',
       width: 38,
     },
-    iconEmoji: { fontSize: 20 },
+    iconEmoji: { fontSize: appArtworkSizes.tiny },
     headerCopy: { flex: 1 },
     eyebrow: {
       color: theme.violetDeep,
       fontFamily: typography.bodyExtraBold,
-      fontSize: 10,
+      fontSize: appTextStyles.caption.fontSize,
       letterSpacing: 0.8,
     },
-    progress: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11, marginTop: 3 },
+    progress: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginTop: 3 },
     prompt: {
       color: theme.inkSoft,
       fontFamily: typography.bodyBold,
-      fontSize: 12,
-      marginTop: 16,
+      fontSize: appTextStyles.caption.fontSize,
+      marginTop: appSpacing.lg,
       textAlign: 'center',
     },
     sceneText: {
       color: theme.ink,
       fontFamily: typography.bodySemibold,
-      fontSize: 16,
-      lineHeight: 25,
-      marginTop: 8,
+      fontSize: appTextStyles.cardTitle.fontSize,
+      lineHeight: appTextStyles.cardTitle.lineHeight,
+      marginTop: appSpacing.sm,
       textAlign: 'center',
     },
     wordTag: {
@@ -145,7 +147,7 @@ const useStyles = createThemedStyles((theme) =>
       paddingHorizontal: 9,
       paddingVertical: 3,
     },
-    wordTagText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+    wordTagText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
     actions: { alignItems: 'center', flexDirection: 'row', gap: 9, marginTop: 18, width: '100%' },
     roundButton: {
       alignItems: 'center',

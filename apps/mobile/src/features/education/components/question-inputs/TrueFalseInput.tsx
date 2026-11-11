@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { TrueFalseAnswer, TrueFalseQuestion } from '@/features/education/types/question.types';
-import { Text, View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { useCorrectAnswer, useQuestionInputStyles, useQuestionFeedback } from './questionInputStyles';
 
 export type TrueFalseInputProps = Readonly<{
@@ -46,8 +48,8 @@ export function TrueFalseInput({
               disabled={disabled}
               onPress={() => onChange({ type: 'true-false', value: choice.value })}
               style={[styles.option, { flex: stacked ? undefined : 1, minHeight: stacked ? 88 : 120, flexDirection: 'column', justifyContent: 'center' }, selected && styles.optionSelected, correct && styles.optionCorrect, incorrect && styles.optionIncorrect]}>
-              <View accessibilityElementsHidden style={[styles.marker, (selected || correct || incorrect) && { backgroundColor: markerColor, borderColor: markerColor }]}><Text style={{ fontSize: 20, color: selected || correct || incorrect ? theme.onAccent : theme.violetDeep }}>{choice.value ? '✓' : '×'}</Text></View>
-              <Text style={[styles.optionLabel, { flex: 0, fontSize: 20, lineHeight: 26, textAlign: 'center' }]}>{choice.label}</Text>
+              <View accessibilityElementsHidden style={[styles.marker, (selected || correct || incorrect) && { backgroundColor: markerColor, borderColor: markerColor }]}><Text style={{ fontSize: appTextStyles.screenTitle.fontSize, color: selected || correct || incorrect ? theme.onAccent : theme.violetDeep }}>{choice.value ? '✓' : '×'}</Text></View>
+              <Text style={[styles.optionLabel, { flex: 0, fontSize: appTextStyles.screenTitle.fontSize, lineHeight: appTextStyles.screenTitle.lineHeight, textAlign: 'center' }]}>{choice.label}</Text>
             </AnimatedPressable>
           );
         })}

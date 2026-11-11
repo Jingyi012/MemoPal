@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing, appTextStyles } from '@/theme/designSystem';
 import { Wifi, WifiOff } from '@/core/icons';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -82,7 +84,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     borderBottomWidth: 1,
     flexDirection: 'row',
     gap: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: appSpacing.xl,
     paddingVertical: 10,
   },
   offline: {
@@ -100,12 +102,12 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   title: {
     color: theme.ink,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 13,
+    fontSize: appTextStyles.small.fontSize,
   },
   description: {
     color: theme.inkSoft,
     fontFamily: typography.bodySemibold,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: appTextStyles.caption.fontSize,
+    lineHeight: appTextStyles.caption.lineHeight,
   },
 }));

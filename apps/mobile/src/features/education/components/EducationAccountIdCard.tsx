@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useEducationCopy } from '@/features/education/i18n';
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type CopyState = 'copied' | 'error' | null;
 
@@ -35,12 +37,12 @@ export function EducationAccountIdCard({ accountId }: Readonly<{ accountId: stri
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { backgroundColor: theme.violetTint, borderColor: theme.line, borderRadius: 22, borderWidth: 2, gap: 10, padding: 14 },
+  card: { backgroundColor: theme.violetTint, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 2, gap: 10, padding: 14 },
   content: { gap: 5 },
-  title: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  accountId: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
-  description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21 },
-  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 16, borderBottomWidth: 4, borderColor: theme.primaryShadow, paddingVertical: 10, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
-  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
+  title: { color: theme.link, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  accountId: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, borderBottomWidth: 4, borderColor: theme.primaryShadow, paddingVertical: 10, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
+  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
 }));

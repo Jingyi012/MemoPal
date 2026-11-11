@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appTextStyles, fontFamilies } from '@/theme/designSystem';
 import type { MemoryModuleDefinition } from '@/core/memory';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 type Props = {
   module: MemoryModuleDefinition;
@@ -19,13 +21,13 @@ export function MemoryModuleCard({ module, onPress }: Props) {
       style={{ boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.08)' }}>
       <View className="flex-row items-center">
         <View className={`h-12 w-12 items-center justify-center rounded-2xl ${module.key === 'number-peg' ? 'bg-tint-berry' : 'bg-tint-violet'}`}>
-          <Text className="text-2xl">{icon}</Text>
+          <Text style={{ fontSize: appArtworkSizes.medium, lineHeight: appArtworkSizes.medium + 4 }}>{icon}</Text>
         </View>
         <View className="ml-3 flex-1">
-          <Text className="text-base font-bold text-ink">{module.title}</Text>
-          <Text className="mt-1 text-sm leading-5 text-ink-soft">{module.description}</Text>
+          <Text className="text-ink" style={[appTextStyles.body, { fontFamily: fontFamilies.bodyBold }]}>{module.title}</Text>
+          <Text className="mt-1 leading-5 text-ink-soft" style={appTextStyles.label}>{module.description}</Text>
         </View>
-        <Text className="ml-2 text-lg text-[#7A68E0]">›</Text>
+        <Text className="ml-2 text-[#7A68E0]" style={appTextStyles.sectionTitle}>›</Text>
       </View>
     </Pressable>
   );

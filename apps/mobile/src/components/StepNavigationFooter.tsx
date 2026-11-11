@@ -1,3 +1,4 @@
+import { appSpacing } from '@/theme/designSystem';
 import { AppButton } from '@/components/ui/AppButton';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { StyleSheet, View } from 'react-native';
@@ -32,7 +33,7 @@ export function StepNavigationFooter({
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  container: { alignItems: 'stretch', backgroundColor: theme.paper, borderTopColor: theme.violetLine, borderTopWidth: 1.5, flexDirection: 'row', gap: 12, padding: 20 },
+  container: { alignItems: 'stretch', backgroundColor: theme.paper, borderTopColor: theme.violetLine, borderTopWidth: 1.5, flexDirection: 'row', gap: appSpacing.md, padding: appSpacing.xl },
   previous: { flex: 1 },
   next: { flex: 2 },
 }));

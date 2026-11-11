@@ -71,6 +71,26 @@ reports so a report can be matched to an exact APK.
 The regular `npm run android` command remains a local Expo native build and
 does not invoke EAS or a cloud build.
 
+### Local development server
+
+From the repository root, `pnpm dev:mobile` starts the existing Expo development
+client server. To rebuild Metro's cache after an interrupted launch or a cache
+read error, stop that server and run `pnpm dev:mobile --clear`. Extra flags are
+forwarded to Expo; `pnpm dev:mobile --android` also opens the connected emulator.
+This starts JavaScript development, while `npm run android` rebuilds the native
+client when native dependencies change. Windows development uses Watchman to avoid exhausting file handles while watching
+the workspace. Install the [official Windows Watchman binary](https://github.com/meta/watchman/blob/main/website/docs/install.md#windows)
+on PATH and verify `watchman --version` before starting Metro. Other platforms
+retain the Expo default watcher configuration. The development process allows up
+to 8 GiB of JavaScript heap and Windows uses two transform workers to accommodate
+simultaneous web and native bundles without the default 4 GiB heap failure.
+
+For an Android emulator using `--localhost`, run `adb reverse tcp:5080 tcp:5080`
+for the example local API port, then `pnpm dev:mobile --localhost --android`.
+Expo reverses its own Metro port automatically; reverse any separate localhost
+API/media ports as well. Use the ports in your local environment configuration.
+
+
 ### Scan words from a photo
 
 Memory Composer now includes `Scan a photo`. It opens the camera or photo

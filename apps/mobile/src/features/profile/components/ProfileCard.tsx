@@ -1,10 +1,12 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { AppImage } from '@/components/AppImage';
 import { User } from '@/features/profile/types/users';
 import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pencil } from '@/core/icons';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 
 interface Props {
@@ -19,7 +21,7 @@ const ProfileCard: React.FC<Props> = ({ user, onEdit }) => {
         {user?.avatarUrl ? (
           <AppImage
             source={{ uri: user.avatarUrl }}
-            style={{ width: '100%', height: '100%', borderRadius: 999 }}
+            style={{ width: '100%', height: '100%', borderRadius: appRadii.pill }}
           />
         ) : (
           <LinearGradient
@@ -29,11 +31,11 @@ const ProfileCard: React.FC<Props> = ({ user, onEdit }) => {
             style={{
               width: '100%',
               height: '100%',
-              borderRadius: 999,
+              borderRadius: appRadii.pill,
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-            <Text className="text-2xl">🙂</Text>
+            <Text style={{ fontSize: appArtworkSizes.medium, lineHeight: appArtworkSizes.medium + 4 }}>🙂</Text>
           </LinearGradient>
         )}
       </View>
@@ -41,11 +43,11 @@ const ProfileCard: React.FC<Props> = ({ user, onEdit }) => {
       <View className="flex-1">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center">
-            <Text className="text-base font-semibold text-[#2B2A3D]">{user?.displayName}</Text>
+            <Text className="text-[#2B2A3D]" style={[appTextStyles.body, { fontFamily: fontFamilies.bodySemibold }]}>{user?.displayName}</Text>
             {user?.isPremium ? (
               <View className="ml-2 flex-row items-center rounded-full bg-tint-sun px-2 py-0.5">
-                <Text className="text-xs">👑</Text>
-                <Text className="ml-1 text-[10px] font-bold uppercase text-[#F2A900]">Premium</Text>
+                <Text style={appTextStyles.caption}>👑</Text>
+                <Text className="ml-1 uppercase text-[#F2A900]" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodyBold }]}>Premium</Text>
               </View>
             ) : null}
           </View>
@@ -56,7 +58,7 @@ const ProfileCard: React.FC<Props> = ({ user, onEdit }) => {
             </AnimatedPressable>
           ) : null}
         </View>
-        <Text className="text-sm text-ink-soft">{user?.email ?? 'Guest Account'}</Text>
+        <Text className="text-ink-soft" style={appTextStyles.label}>{user?.email ?? 'Guest Account'}</Text>
       </View>
     </View>
   );

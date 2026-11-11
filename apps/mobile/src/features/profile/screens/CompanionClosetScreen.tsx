@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppearanceItemPreview, MemoryAvatar } from '@/components/MemoryAvatar';
 import LoadingView from '@/components/LoadingView';
@@ -20,7 +22,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
@@ -332,8 +334,8 @@ function isLocalMediaUri(value: string) {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
-  content: { padding: 16, paddingBottom: 28 },
-  studioHero: { minHeight: 312, alignItems: 'center', overflow: 'hidden', borderRadius: 28, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetDeep, paddingTop: 16, paddingBottom: 18, position: 'relative' },
+  content: { padding: appSpacing.lg, paddingBottom: 28 },
+  studioHero: { minHeight: 312, alignItems: 'center', overflow: 'hidden', borderRadius: 28, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.violetDeep, paddingTop: appSpacing.lg, paddingBottom: 18, position: 'relative' },
   heroOrbLarge: { position: 'absolute', width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(255,255,255,0.12)', top: 31 },
   heroOrbSmall: { position: 'absolute', width: 110, height: 110, borderRadius: 55, backgroundColor: 'rgba(255,255,255,0.12)', top: 126, right: -24 },
   heroOrbitOuter: { position: 'absolute', width: 244, height: 244, borderRadius: 122, borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)', borderStyle: 'dashed', top: 48 },
@@ -341,44 +343,44 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   heroStar: { position: 'absolute', zIndex: 4 },
   heroStarOne: { left: '18%', top: 82 },
   heroStarTwo: { right: '19%', top: 118 },
-  liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 9, paddingVertical: 5, marginLeft: 14, zIndex: 5 },
+  liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', borderRadius: appRadii.pill, backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 9, paddingVertical: 5, marginLeft: 14, zIndex: 5 },
   liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: theme.grass },
-  liveBadgeText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  liveBadgeText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   heroAvatar: { marginTop: 3, zIndex: 3 },
-  heroName: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 18, marginTop: 2, zIndex: 5 },
-  tabs: { gap: 8, paddingVertical: 17, paddingRight: 4 },
-  tab: { minWidth: 88, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 14, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 11 },
+  heroName: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, marginTop: 2, zIndex: 5 },
+  tabs: { gap: appSpacing.sm, paddingVertical: 17, paddingRight: appSpacing.xs },
+  tab: { minWidth: 88, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 11 },
   tabActive: { borderColor: theme.violetDeep, backgroundColor: theme.violetDeep },
-  tabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  tabText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.tabLabel.fontSize },
   tabTextActive: { color: theme.onAccent },
-  catalogHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginBottom: 10 },
-  catalogTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15 },
-  catalogCount: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  catalogHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: appSpacing.md, marginBottom: 10 },
+  catalogTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.body.fontSize },
+  catalogCount: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 0 },
   cardContainer: { width: '48.4%', marginBottom: 11 },
-  wardrobeCard: { minHeight: 168, width: '100%', alignItems: 'center', justifyContent: 'center', position: 'relative', borderRadius: 21, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingVertical: 12, paddingHorizontal: 8, boxShadow: '0px 4px 0px rgba(105,80,204,0.05)' },
+  wardrobeCard: { minHeight: 168, width: '100%', alignItems: 'center', justifyContent: 'center', position: 'relative', borderRadius: 21, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, paddingVertical: appSpacing.md, paddingHorizontal: appSpacing.sm, boxShadow: '0px 4px 0px rgba(105,80,204,0.05)' },
   wardrobeCardSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint, boxShadow: '0px 4px 0px rgba(105,80,204,0.12)' },
   wardrobeCardLocked: { opacity: 0.55 },
-  cardVisual: { width: 102, height: 102, alignItems: 'center', justifyContent: 'center', borderRadius: 24 },
+  cardVisual: { width: 102, height: 102, alignItems: 'center', justifyContent: 'center', borderRadius: appRadii.hero },
   companionVisual: { backgroundColor: theme.skyTint },
   cosmeticVisual: { overflow: 'hidden', borderWidth: 1 },
   cosmeticGlow: { position: 'absolute', width: 76, height: 76, borderRadius: 38, opacity: 0.13, top: -23, right: -18 },
-  cardTitle: { maxWidth: '100%', color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 12, marginTop: 3 },
-  cardMeta: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 12, marginTop: 3 },
+  cardTitle: { maxWidth: '100%', color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.caption.fontSize, marginTop: 3 },
+  cardMeta: { color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, marginTop: 3 },
   cardMetaUnlocked: { color: theme.violetDeep },
-  selectedMark: { position: 'absolute', top: 9, right: 9, width: 25, height: 25, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.violetDeep },
-  lockMark: { position: 'absolute', top: 9, right: 9, width: 25, height: 25, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.line },
+  selectedMark: { position: 'absolute', top: 9, right: 9, width: 25, height: 25, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.violetDeep },
+  lockMark: { position: 'absolute', top: 9, right: 9, width: 25, height: 25, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.line },
   noneCard: { borderStyle: 'dashed' },
   noneVisual: { width: 82, height: 82, alignItems: 'center', justifyContent: 'center', borderRadius: 41, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.canvas },
-  photoPanel: { flexDirection: 'row', alignItems: 'center', gap: 16, minHeight: 190, borderRadius: 22, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 16 },
+  photoPanel: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.lg, minHeight: 190, borderRadius: appRadii.card, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: appSpacing.lg },
   photoPreview: { width: 136, height: 136, alignItems: 'center', justifyContent: 'center' },
   photoPlaceholder: { width: 66, height: 66, alignItems: 'center', justifyContent: 'center', borderRadius: 23, backgroundColor: theme.violetTint },
   photoCopy: { flex: 1, minWidth: 0 },
-  photoTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15 },
-  primaryAction: { minHeight: 44, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 13, backgroundColor: theme.violetDeep, paddingHorizontal: 13, marginTop: 12 },
-  primaryActionText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 12 },
-  footer: { borderTopWidth: 1.5, borderTopColor: theme.line, backgroundColor: theme.canvas, paddingHorizontal: 16, paddingTop: 10 },
-  saveButton: { minHeight: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 15, backgroundColor: theme.violetDeep },
-  saveButtonText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 13 },
+  photoTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.body.fontSize },
+  primaryAction: { minHeight: 44, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: appRadii.control, backgroundColor: theme.violetDeep, paddingHorizontal: 13, marginTop: appSpacing.md },
+  primaryActionText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.caption.fontSize },
+  footer: { borderTopWidth: 1.5, borderTopColor: theme.line, backgroundColor: theme.canvas, paddingHorizontal: appSpacing.lg, paddingTop: 10 },
+  saveButton: { minHeight: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: appRadii.control, backgroundColor: theme.violetDeep },
+  saveButtonText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.small.fontSize },
   disabledButton: { opacity: 0.45 },
 }));

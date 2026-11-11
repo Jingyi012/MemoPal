@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { memopalThemes } from '@/theme/memopalTheme';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import {
@@ -5,7 +7,7 @@ import {
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnimatedPressable from './AnimatedPressable';
 import { useColorScheme } from 'nativewind';
@@ -70,7 +72,7 @@ export const ActionSheet = forwardRef<BottomSheetModal, ActionSheetProps>(({
               <Icon size={28} color={variant === 'destructive' ? theme.berryDeep : theme.violetDeep} />
             </View>
           )}
-          <Text className="text-center text-xl font-bold text-ink">{title}</Text>
+          <Text className="text-center text-ink" style={[appTextStyles.screenTitle, { fontFamily: fontFamilies.bodyBold }]}>{title}</Text>
           {description && (
             <Text className="mt-2 px-4 text-center leading-5 text-ink-soft">{description}</Text>
           )}
@@ -83,14 +85,14 @@ export const ActionSheet = forwardRef<BottomSheetModal, ActionSheetProps>(({
             className={`${
               variant === 'destructive' ? 'bg-berry-deep' : 'bg-secondary'
             } h-14 items-center justify-center rounded-2xl ${isActing ? 'opacity-70' : ''}`}>
-            {isActing ? <ActivityIndicator color="white" /> : <Text className="text-lg font-bold text-white">{actionLabel}</Text>}
+            {isActing ? <ActivityIndicator color="white" /> : <Text className="text-white" style={[appTextStyles.sectionTitle, { fontFamily: fontFamilies.bodyBold }]}>{actionLabel}</Text>}
           </AnimatedPressable>
 
           <AnimatedPressable
             onPress={() => bottomSheetModalRef.current?.dismiss()}
             disabled={isActing}
             className="h-14 items-center justify-center rounded-2xl">
-            <Text className="text-lg font-semibold text-ink-soft">{cancelLabel}</Text>
+            <Text className="text-ink-soft" style={[appTextStyles.sectionTitle, { fontFamily: fontFamilies.bodySemibold }]}>{cancelLabel}</Text>
           </AnimatedPressable>
         </View>
       </BottomSheetView>

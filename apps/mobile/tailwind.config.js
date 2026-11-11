@@ -4,6 +4,35 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      // Resolve through nativewindTheme.ts; do not maintain a second type scale.
+      fontSize: {
+        xs: ['var(--type-caption-size)', { lineHeight: 'var(--type-caption-line)' }],
+        sm: ['var(--type-label-size)', { lineHeight: 'var(--type-label-line)' }],
+        base: ['var(--type-body-size)', { lineHeight: 'var(--type-body-line)' }],
+        lg: ['var(--type-cardTitle-size)', { lineHeight: 'var(--type-cardTitle-line)' }],
+        xl: ['var(--type-screenTitle-size)', { lineHeight: 'var(--type-screenTitle-line)' }],
+        '2xl': ['var(--type-pageTitle-size)', { lineHeight: 'var(--type-pageTitle-line)' }],
+        '3xl': ['var(--type-display-size)', { lineHeight: 'var(--type-display-line)' }],
+        '4xl': ['var(--type-phrase-size)', { lineHeight: 'var(--type-phrase-line)' }],
+        '5xl': ['var(--type-word-size)', { lineHeight: 'var(--type-word-line)' }],
+      },
+      fontWeight: {
+        normal: 'var(--weight-regular)',
+        medium: 'var(--weight-medium)',
+        semibold: 'var(--weight-semibold)',
+        bold: 'var(--weight-bold)',
+      },
+      borderRadius: {
+        lg: 'var(--radius-small)',
+        xl: 'var(--radius-control)',
+        '2xl': 'var(--radius-card)',
+        '3xl': 'var(--radius-hero)',
+      },
+      spacing: {
+        1: 'var(--space-xs)', 2: 'var(--space-sm)', 3: 'var(--space-md)',
+        4: 'var(--space-lg)', 5: 'var(--space-xl)', 6: 'var(--space-xxl)',
+        8: 'var(--space-section)', 10: 'var(--space-spacious)',
+      },
       colors: {
         primary: {
           DEFAULT: 'var(--color-primary)',

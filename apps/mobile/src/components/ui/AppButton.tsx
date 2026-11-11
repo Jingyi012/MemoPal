@@ -1,11 +1,12 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appLayout, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import type { LucideIcon } from '@/core/icons';
 import { createMemopalColorRoles } from '@/theme/memopalTheme';
 import { createThemedStyles } from '@/theme/createThemedStyles';
-import { typography } from '@/theme/typography';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { ReactNode } from 'react';
 import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
-import { ActivityIndicator, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 
 type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive' | 'icon';
 type ButtonSize = 'compact' | 'regular' | 'large';
@@ -84,8 +85,8 @@ export function AppButton({
       onPress={onPress}
       style={[
         styles.button,
-        styles[buttonVariant],
         styles[size],
+        styles[buttonVariant],
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
         style,
@@ -111,42 +112,43 @@ const useStyles = createThemedStyles((theme) => {
   const roles = createMemopalColorRoles(theme);
   return StyleSheet.create({
       button: {
-        minHeight: 48,
+        minHeight: appLayout.controlHeight,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
-        borderRadius: 15,
-        paddingHorizontal: 16,
+        gap: appSpacing.sm,
+        borderRadius: appRadii.control,
+        paddingHorizontal: appSpacing.lg,
+        paddingVertical: appSpacing.sm,
       },
-      primary: { backgroundColor: roles.action },
-      secondary: { backgroundColor: roles.actionSurface, borderColor: roles.actionOutline, borderWidth: 1.5 },
+      primary: { backgroundColor: roles.action, borderBottomWidth: appLayout.buttonDepth, borderColor: roles.actionOutline },
+      secondary: { backgroundColor: theme.paper, borderColor: roles.actionOutline, borderWidth: appLayout.borderWidth },
       tertiary: { backgroundColor: 'transparent' },
       destructive: { backgroundColor: roles.destructive },
       icon: {
-        width: 44,
-        height: 44,
-        minHeight: 44,
+        width: appLayout.touchTarget,
+        height: appLayout.touchTarget,
+        minHeight: appLayout.touchTarget,
         paddingHorizontal: 0,
-        borderRadius: 15,
+        borderRadius: appRadii.control,
         backgroundColor: roles.actionSurface,
         borderColor: roles.actionOutline,
         borderWidth: 1.5,
       },
-      compact: { minHeight: 44, paddingHorizontal: 13, borderRadius: 13 },
-      regular: { minHeight: 48, paddingHorizontal: 16, borderRadius: 15 },
-      large: { minHeight: 52, paddingHorizontal: 18, borderRadius: 16 },
+      compact: { minHeight: appLayout.compactControlHeight, paddingHorizontal: appSpacing.md },
+      regular: { minHeight: appLayout.controlHeight, paddingHorizontal: appSpacing.lg },
+      large: { minHeight: appLayout.controlHeight, paddingHorizontal: appSpacing.xl },
       fullWidth: { alignSelf: 'stretch' },
       disabled: { backgroundColor: roles.actionDisabled, borderColor: roles.border },
-      label: { fontFamily: typography.bodyExtraBold, textAlign: 'center' },
+      label: { ...appTextStyles.button, flexShrink: 1, textAlign: 'center' },
       primaryLabel: { color: roles.actionOn },
       secondaryLabel: { color: roles.actionOnSurface },
       tertiaryLabel: { color: roles.actionOnSurface },
       destructiveLabel: { color: roles.destructiveOn },
       iconLabel: { color: roles.actionOnSurface },
-      compactLabel: { fontSize: 12 },
-      regularLabel: { fontSize: 13 },
-      largeLabel: { fontSize: 14 },
+      compactLabel: appTextStyles.buttonCompact,
+      regularLabel: appTextStyles.button,
+      largeLabel: appTextStyles.button,
       disabledLabel: { color: roles.actionOnDisabled },
   });
 });

@@ -1,6 +1,7 @@
 import { cn } from '@/utils/cn';
 import React from 'react';
 import { View, ViewProps, ViewStyle } from 'react-native';
+import { appShadows } from '@/theme/designSystem';
 
 type CardPadding = 'none' | 'sm' | 'md' | 'lg';
 type CardRadius = 'lg' | 'xl' | '2xl' | '3xl';
@@ -37,8 +38,8 @@ const CARD_SHADOW_CLASS: Record<CardShadow, string> = {
 
 const CARD_SHADOW_STYLE: Record<CardShadow, ViewStyle | undefined> = {
   none: undefined,
-  sm: { boxShadow: '0px 4px 0px rgba(105, 80, 204, 0.07)' },
-  md: { boxShadow: '0px 6px 0px rgba(105, 80, 204, 0.10)' },
+  sm: appShadows.card,
+  md: appShadows.raised,
 };
 
 export const CARD_SURFACE_CLASS = 'bg-surface';

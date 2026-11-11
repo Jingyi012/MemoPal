@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import { useReducedMotion } from 'react-native-reanimated';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -11,7 +13,7 @@ import { useAuth } from '@/contexts/AuthProvider';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
 export default function EducationGuidedLearningSessionScreen() {
   const { sessionId = '', classroomId } = useLocalSearchParams<{ sessionId: string; classroomId?: string }>();
@@ -59,12 +61,12 @@ export default function EducationGuidedLearningSessionScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { backgroundColor: theme.canvas, flex: 1 },
-  content: { gap: 12, padding: 18, paddingBottom: 36 },
+  content: { gap: appSpacing.md, padding: 18, paddingBottom: 36 },
   state: { minHeight: 140, justifyContent: 'center', overflow: 'hidden' },
-  errorState: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 16, borderWidth: 1.5, gap: 10, padding: 15 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
-  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 13, justifyContent: 'center', minHeight: 46, paddingHorizontal: 16 },
-  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  secondaryAction: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.paper, borderColor: theme.violetDeep, borderRadius: 13, borderWidth: 1, justifyContent: 'center', minHeight: 46, paddingHorizontal: 16 },
-  secondaryActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  errorState: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: appRadii.control, borderWidth: 1.5, gap: 10, padding: 15 },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, justifyContent: 'center', minHeight: 46, paddingHorizontal: appSpacing.lg },
+  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  secondaryAction: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.paper, borderColor: theme.violetDeep, borderRadius: appRadii.control, borderWidth: 1, justifyContent: 'center', minHeight: 46, paddingHorizontal: appSpacing.lg },
+  secondaryActionText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
 }));

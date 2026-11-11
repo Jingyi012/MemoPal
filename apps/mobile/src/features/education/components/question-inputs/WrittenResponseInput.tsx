@@ -1,4 +1,7 @@
-import { Text, TextInput, View } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appTextStyles } from '@/theme/designSystem';
+import { View } from 'react-native';
 import { useQuestionInputStyles } from './questionInputStyles';
 import type { WrittenResponseAnswer, WrittenResponseQuestion } from '../../types/question.types';
 
@@ -22,10 +25,10 @@ export function WrittenResponseInput({ question, value, onChange, hint, placehol
       onChangeText={text => onChange({ type: 'written-response', text })}
       placeholder={placeholder}
       placeholderTextColor={theme.inkSoft}
-      style={[styles.input, { minHeight: 150, lineHeight: 23, textAlignVertical: 'top' }, disabled && styles.optionDisabled]}
+      style={[styles.input, { minHeight: 150, lineHeight: appTextStyles.body.lineHeight, textAlignVertical: 'top' }, disabled && styles.optionDisabled]}
       textAlignVertical="top"
       value={value.text}
     />
-    <Text accessibilityLiveRegion="polite" style={{ alignSelf: 'flex-end', color: theme.inkSoft, fontSize: 13 }}>{value.text.length} / 12000</Text>
+    <Text accessibilityLiveRegion="polite" style={{ alignSelf: 'flex-end', color: theme.inkSoft, fontSize: appTextStyles.small.fontSize }}>{value.text.length} / 12000</Text>
   </View>;
 }

@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles } from '@/theme/designSystem';
 import { LevelXpProgressBar, getLevelProgressMetrics } from '@/components/LevelXpProgressBar';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 interface LevelProgressProps {
   level: {
@@ -19,8 +21,8 @@ export function LevelProgress({ level }: LevelProgressProps) {
   return (
     <View className="space-y-2">
       <View className="mb-2 flex-row items-center justify-between">
-        <Text className="text-xs text-[#E3DFFF]">Level {level.currentLevel}</Text>
-        <Text className="text-xs text-white">
+        <Text className="text-[#E3DFFF]" style={appTextStyles.caption}>Level {level.currentLevel}</Text>
+        <Text className="text-white" style={appTextStyles.caption}>
           {isMaxLevel ? 'MAX LEVEL' : `${level.xpInCurrentLevel}/${levelWindowXp} XP`}
         </Text>
       </View>

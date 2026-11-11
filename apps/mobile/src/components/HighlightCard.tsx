@@ -1,3 +1,4 @@
+import { appRadii } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
@@ -24,7 +25,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: {
     position: 'relative',
     overflow: 'hidden',
-    borderRadius: 22,
+    borderRadius: appRadii.card,
     borderWidth: 1,
     borderColor: theme.violetLine,
     backgroundColor: theme.paper,

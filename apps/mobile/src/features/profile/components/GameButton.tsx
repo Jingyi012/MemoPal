@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
@@ -27,12 +29,12 @@ export function GameButton({ label, onPress, variant = 'primary', icon, disabled
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  shell: { minHeight: 56, borderRadius: 20, paddingBottom: 5 },
+  shell: { minHeight: 56, borderRadius: appRadii.card, paddingBottom: 5 },
   primaryShell: { backgroundColor: theme.night }, secondaryShell: { backgroundColor: theme.violetLine }, quietShell: { backgroundColor: theme.line },
-  face: { minHeight: 52, borderRadius: 18 },
+  face: { minHeight: 52, borderRadius: appRadii.card },
   disabledFace: { opacity: .5 },
   primaryFace: { backgroundColor: theme.violetDeep }, secondaryFace: { backgroundColor: theme.violetTint }, quietFace: { backgroundColor: theme.paper },
-  pressable: { minHeight: 52, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 9 },
-  label: { fontFamily: typography.displayExtraBold, fontSize: 18 },
+  pressable: { minHeight: 52, paddingHorizontal: appSpacing.xl, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 9 },
+  label: { fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
   primaryLabel: { color: theme.onAccent }, otherLabel: { color: theme.violetDeep },
 }));

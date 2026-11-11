@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import type { MatchingAnswer, MatchingQuestion } from '@/features/education/types/question.types';
 import { useState } from 'react';
 import AnimatedPressable from '@/components/AnimatedPressable';
-import { StyleSheet, Text, View, useWindowDimensions, type LayoutRectangle } from 'react-native';
+import { StyleSheet, View, useWindowDimensions, type LayoutRectangle } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { learningLayout } from '../../theme/learningTheme';
 import { useLearningCopy } from '../LearningUi';
@@ -63,9 +65,9 @@ export function MatchingInput({ question, value, onChange, labels, disabled = fa
     <Text accessibilityRole="header" style={inputStyles.prompt}>{question.prompt}</Text>
     <View style={styles.statusRow}>
       <Text accessibilityLiveRegion="polite" style={[inputStyles.hint, { flex: 1 }]}>{instruction}</Text>
-      <View style={{ borderRadius: 99, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: feedback === true ? theme.mintTint : theme.violetTint }}><Text style={[inputStyles.hint, { color: feedback === true ? theme.successText : theme.violetDeep }]}>{zh ? '已配对' : 'Paired'} {paired}/{question.options.length}</Text></View>
+      <View style={{ borderRadius: appRadii.pill, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: feedback === true ? theme.mintTint : theme.violetTint }}><Text style={[inputStyles.hint, { color: feedback === true ? theme.successText : theme.violetDeep }]}>{zh ? '已配对' : 'Paired'} {paired}/{question.options.length}</Text></View>
     </View>
-    <View style={[styles.columns, stacked && { flexDirection: 'column', gap: 16 }]} onLayout={event => measure('board', event.nativeEvent.layout)}>
+    <View style={[styles.columns, stacked && { flexDirection: 'column', gap: appSpacing.lg }]} onLayout={event => measure('board', event.nativeEvent.layout)}>
       {!stacked && layouts.board ? <Svg pointerEvents="none" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill} width={layouts.board.width} height={layouts.board.height}>
         {question.options.map((option, index) => {
           const left = layouts[`left:${option.id}`];
@@ -119,10 +121,10 @@ function MatchConnection({ x1, y1, x2, y2, mid, color }: { x1: number; y1: numbe
 }
 
 const styles = StyleSheet.create({
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.sm },
   columns: { flexDirection: 'row', gap: 38, position: 'relative' },
-  column: { flex: 1, minWidth: 0, gap: 12 },
+  column: { flex: 1, minWidth: 0, gap: appSpacing.md },
   card: { borderRadius: learningLayout.buttonRadius, borderWidth: learningLayout.borderWidth, borderBottomWidth: learningLayout.optionDepth, justifyContent: 'center', minHeight: 82, paddingHorizontal: 10, paddingVertical: 14 },
-  word: { flex: 0, flexShrink: 1, fontSize: 16, lineHeight: 22, textAlign: 'center' },
-  meaning: { flex: 0, flexShrink: 1, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  word: { flex: 0, flexShrink: 1, fontSize: appTextStyles.cardTitle.fontSize, lineHeight: appTextStyles.cardTitle.lineHeight, textAlign: 'center' },
+  meaning: { flex: 0, flexShrink: 1, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight, textAlign: 'center' },
 });

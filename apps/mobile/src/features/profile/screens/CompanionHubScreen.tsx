@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { HeaderIconButton } from '@/components/ui/HeaderIconButton';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -5,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { cancelAnimation, runOnJS, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
@@ -472,11 +474,11 @@ function EnvironmentObject({ kind, index, popped, onPress, active }: { kind: 'bu
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   safe: { flex: 1 }, background: { flex: 1 },
   state: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 14, paddingHorizontal: 35 },
-  stateText: { color: theme.ink, fontFamily: typography.display, fontSize: 19, textAlign: 'center' },
+  stateText: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.screenTitle.fontSize, textAlign: 'center' },
   topBar: { position: 'absolute', left: 0, right: 0, height: 66, paddingHorizontal: 17, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 6 },
   titleSlot: { position: 'absolute', left: 72, right: 72, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
-  title: { color: theme.paper, fontFamily: typography.displayExtraBold, fontSize: 22, textAlign: 'center' },
-  roundButton: { width: 48, height: 48, borderRadius: 24, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.violetLine, alignItems: 'center', justifyContent: 'center' },
+  title: { color: theme.paper, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize, textAlign: 'center' },
+  roundButton: { width: 48, height: 48, borderRadius: appRadii.hero, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.violetLine, alignItems: 'center', justifyContent: 'center' },
   stage: { width: '100%', position: 'relative', overflow: 'hidden' }, atmosphereOverlay: { opacity: .42 },
   headerShade: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5 },
   stageFade: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 74, zIndex: 2 },
@@ -485,22 +487,22 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   exitPhoto: { position: 'absolute', top: 18, right: 18, width: 50, height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 25, backgroundColor: theme.paper, zIndex: 9 },
   photoEdge: { position: 'absolute', top: '30%', bottom: '30%', width: 44, zIndex: 8 },
   photoEdgeLeft: { left: 0 }, photoEdgeRight: { right: 0 },
-  feedbackBubble: { position: 'absolute', top: '10%', alignSelf: 'center', maxWidth: '70%', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 17, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.violetLine, zIndex: 7 },
-  feedbackText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 14, textAlign: 'center' },
-  burst: { position: 'absolute', left: '49%', top: '37%', flexDirection: 'row', gap: 4, zIndex: 8 },
+  feedbackBubble: { position: 'absolute', top: '10%', alignSelf: 'center', maxWidth: '70%', paddingHorizontal: 14, paddingVertical: appSpacing.sm, borderRadius: appRadii.control, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.violetLine, zIndex: 7 },
+  feedbackText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize, textAlign: 'center' },
+  burst: { position: 'absolute', left: '49%', top: '37%', flexDirection: 'row', gap: appSpacing.xs, zIndex: 8 },
   environmentObject: { position: 'absolute', zIndex: 4 }, objectOne: { left: '13%', top: '33%' }, objectTwo: { right: '19%', bottom: '16%' }, objectThree: { left: '14%', bottom: '15%' },
   objectPress: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   splash: { ...StyleSheet.absoluteFillObject }, splashDot: { position: 'absolute', width: 5, height: 5, borderRadius: 3, backgroundColor: theme.sky },
-  controls: { flex: 1, minHeight: 180, justifyContent: 'flex-end', paddingTop: 8, paddingHorizontal: 17, paddingBottom: 80 },
+  controls: { flex: 1, minHeight: 180, justifyContent: 'flex-end', paddingTop: appSpacing.sm, paddingHorizontal: 17, paddingBottom: 80 },
   drawerScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: theme.nightDeep, zIndex: 8 },
-  drawer: { position: 'absolute', left: 17, right: 17, bottom: 80, height: 138, overflow: 'hidden', justifyContent: 'flex-start', borderRadius: 22, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.violetLine, zIndex: 9 },
+  drawer: { position: 'absolute', left: 17, right: 17, bottom: 80, height: 138, overflow: 'hidden', justifyContent: 'flex-start', borderRadius: appRadii.card, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.violetLine, zIndex: 9 },
   drawerRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
   handleArea: { height: 44, alignItems: 'center', justifyContent: 'center' }, handleTouch: { width: 64, height: 44, alignItems: 'center', justifyContent: 'center' }, handle: { width: 46, height: 6, borderRadius: 3 },
-  roundAction: { minWidth: 70, minHeight: 70, alignItems: 'center', justifyContent: 'center', gap: 4 }, actionLabel: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 11 },
-  stat: { minWidth: 76, alignItems: 'center', gap: 3 }, statValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 20 }, statLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
-  errorText: { color: theme.berryDeep, textAlign: 'center', fontFamily: typography.bodyBold, fontSize: 11 },
-  dock: { position: 'absolute', bottom: 8, left: 17, right: 17, height: 65, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', borderRadius: 24, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.violetLine, zIndex: 10 },
-  dockButton: { minWidth: 56, minHeight: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 20 }, dockSelected: { backgroundColor: theme.violetTint },
-  flyingNumber: { position: 'absolute', top: 90, right: 25, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, backgroundColor: theme.paper },
-  flyingText: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 18 },
+  roundAction: { minWidth: 70, minHeight: 70, alignItems: 'center', justifyContent: 'center', gap: appSpacing.xs }, actionLabel: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  stat: { minWidth: 76, alignItems: 'center', gap: 3 }, statValue: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize }, statLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  errorText: { color: theme.berryDeep, textAlign: 'center', fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  dock: { position: 'absolute', bottom: 8, left: 17, right: 17, height: 65, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', borderRadius: appRadii.hero, backgroundColor: theme.paper, borderWidth: 1, borderColor: theme.violetLine, zIndex: 10 },
+  dockButton: { minWidth: 56, minHeight: 52, alignItems: 'center', justifyContent: 'center', borderRadius: appRadii.card }, dockSelected: { backgroundColor: theme.violetTint },
+  flyingNumber: { position: 'absolute', top: 90, right: 25, paddingHorizontal: appSpacing.sm, paddingVertical: 3, borderRadius: 10, backgroundColor: theme.paper },
+  flyingText: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
 }));

@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { educationRelationshipApi } from '@/features/education/api/educationRelationship.api';
@@ -8,7 +10,7 @@ import { createEducationClassroomCoursesQueryKey, getActiveStudentClassroomsForU
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { EducationClassroomCourseCard } from './EducationClassroomCourseCard';
 
@@ -57,15 +59,15 @@ export function EducationClassroomLearningList({ memberships, isLoading, isError
 }
 
 const useStyles = createThemedStyles(theme => StyleSheet.create({
-  section: { gap: 16, paddingVertical: 8 },
-  empty: { backgroundColor: theme.violetTint, borderColor: theme.line, borderRadius: 22, borderWidth: 2, padding: 18, gap: 12, flexDirection: 'row', alignItems: 'center' },
-  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17 },
+  section: { gap: appSpacing.lg, paddingVertical: appSpacing.sm },
+  empty: { backgroundColor: theme.violetTint, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 2, padding: 18, gap: appSpacing.md, flexDirection: 'row', alignItems: 'center' },
+  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
   classroom: { gap: 14 },
-  classroomTitle: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18 },
-  inline: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 12, borderWidth: 1, gap: 6, padding: 10 },
+  classroomTitle: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  inline: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.sm },
+  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: appRadii.control, borderWidth: 1, gap: 6, padding: 10 },
   action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 10, justifyContent: 'center', minHeight: 44, paddingHorizontal: 13 },
-  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   divider: { backgroundColor: theme.line, height: 1, marginVertical: 2 },
 }));

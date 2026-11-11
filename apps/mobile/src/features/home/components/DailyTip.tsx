@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { getBaseCardClassName } from '@/components/BaseCard';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 const DAILY_TIPS = [
@@ -62,11 +64,11 @@ export const DailyTip: React.FC<DailyTipProps> = ({ dayOfMonth }) => {
       })}>
       <View className="flex-row gap-3">
         <View className="items-center justify-start pt-1">
-          <Text className="text-3xl">{tip.emoji}</Text>
+          <Text style={appTextStyles.display}>{tip.emoji}</Text>
         </View>
         <View className="flex-1">
-          <Text className="mb-1 font-bold text-ink">{tip.title}</Text>
-          <Text className="text-sm leading-5 text-ink-soft">{tip.tip}</Text>
+          <Text className="mb-1 text-ink" style={{ fontFamily: fontFamilies.bodyBold }}>{tip.title}</Text>
+          <Text className="leading-5 text-ink-soft" style={appTextStyles.label}>{tip.tip}</Text>
         </View>
       </View>
     </Animated.View>

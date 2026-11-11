@@ -1,3 +1,6 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appSpacing, appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { referralApi } from '@/features/referral/api/referral';
 import { BaseCard } from '@/components/BaseCard';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -16,17 +19,7 @@ import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { Check, Copy, MessageCircle, Share2 } from '@/core/icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Linking,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  Share,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Linking, Modal, RefreshControl, ScrollView, Share, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { MilestoneRow } from '../components/MilestoneRow';
 import { ReferralList } from '../components/ReferralList';
@@ -217,16 +210,16 @@ const ReferralScreen: React.FC = () => {
           backAction={() => router.back()}
         />
         <View className="flex-1 items-center justify-center px-6">
-          <Text className="mb-2 text-center text-base font-semibold text-ink">
+          <Text className="mb-2 text-center text-ink" style={[appTextStyles.body, { fontFamily: fontFamilies.bodySemibold }]}>
             Referral data is unavailable right now.
           </Text>
-          <Text className="mb-4 text-center text-sm text-ink-soft">
+          <Text className="mb-4 text-center text-ink-soft" style={appTextStyles.label}>
             {loadError ?? 'Please try again in a moment.'}
           </Text>
           <TouchableOpacity
             className="rounded-xl bg-primary px-4 py-3"
             onPress={() => void loadSummary()}>
-            <Text className="font-semibold text-white">{t('retry')}</Text>
+            <Text className="text-white" style={{ fontFamily: fontFamilies.bodySemibold }}>{t('retry')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -244,27 +237,27 @@ const ReferralScreen: React.FC = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+        contentContainerStyle={{ padding: appSpacing.lg, paddingBottom: appSpacing.section }}>
         {loadError ? (
           <View className="mb-5 rounded-2xl border-2 border-line-berry bg-tint-berry px-4 py-3">
-            <Text className="text-sm font-semibold text-accent-berry">
+            <Text className="text-accent-berry" style={[appTextStyles.label, { fontFamily: fontFamilies.bodySemibold }]}>
               Unable to refresh referral data
             </Text>
-            <Text className="mt-1 text-sm text-accent-berry">{loadError}</Text>
+            <Text className="mt-1 text-accent-berry" style={appTextStyles.label}>{loadError}</Text>
           </View>
         ) : null}
 
         <BaseCard className="mb-8 rounded-[32px] p-6">
-          <Text className="text-center text-xs font-bold uppercase tracking-widest text-ink-soft">
+          <Text className="text-center uppercase tracking-widest text-ink-soft" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodyBold }]}>
             {language === 'zh' ? '你的邀请代码' : 'Your invite code'}
           </Text>
-          <Text className="mt-3 text-center text-sm text-ink-soft">
+          <Text className="mt-3 text-center text-ink-soft" style={appTextStyles.label}>
             {t('baseCredits', { credits: summary.config.inviterRewardAiCredits, friendCredits: summary.config.inviteeRewardAiCredits })}
           </Text>
           <TouchableOpacity
             onPress={handleCopy} accessibilityRole="button" accessibilityLabel={language === 'zh' ? '复制邀请代码' : 'Copy invitation code'}
             className="my-4 flex-row items-center justify-center rounded-2xl border-2 border-dashed border-line-sky bg-tint-sky py-4">
-            <Text className="mr-3 text-3xl font-black tracking-[4px] text-primary">
+            <Text className="mr-3 tracking-[4px] text-primary" style={[appTextStyles.display, { fontFamily: fontFamilies.displayExtraBold }]}>
               {summary.referralCode}
             </Text>
             {copied ? (
@@ -290,17 +283,17 @@ const ReferralScreen: React.FC = () => {
 
         <View className="mb-8 flex-row gap-3">
           <StatBox
-            icon={<Text className="text-xl">👥</Text>}
+            icon={<Text style={appTextStyles.screenTitle}>👥</Text>}
             value={summary.successfulReferrals}
             label={language === 'zh' ? '已加入好友' : 'Friends joined'}
           />
           <StatBox
-            icon={<Text className="text-xl">✨</Text>}
+            icon={<Text style={appTextStyles.screenTitle}>✨</Text>}
             value={summary.totalAiCreditsEarned}
             label={t('creditsEarned')}
           />
           <StatBox
-            icon={<Text className="text-xl">👑</Text>}
+            icon={<Text style={appTextStyles.screenTitle}>👑</Text>}
             value={summary.totalPremiumDaysEarned}
             label={language === 'zh' ? '会员天数' : 'Premium days'}
           />
@@ -308,8 +301,8 @@ const ReferralScreen: React.FC = () => {
 
         <BaseCard className="mb-8 overflow-hidden rounded-3xl p-2">
           <View className="flex-row p-4">
-            <Text className="text-xl">👑</Text>
-            <Text className="ml-1 text-lg font-medium text-ink">{t('milestones')}</Text>
+            <Text style={appTextStyles.screenTitle}>👑</Text>
+            <Text className="ml-1 text-ink" style={[appTextStyles.sectionTitle, { fontFamily: fontFamilies.bodySemibold }]}>{t('milestones')}</Text>
           </View>
           {milestones.map((milestone, index) => {
             const fallbackReward = t('rewardSummary', { credits: milestone.rewardAiCredits, days: milestone.rewardPremiumDays });
@@ -332,20 +325,20 @@ const ReferralScreen: React.FC = () => {
         <BaseCard className="mb-8 p-5">
           {summary.hasRedeemedCode ? (
             <View>
-              <Text className="text-sm font-semibold text-ink">
+              <Text className="text-ink" style={[appTextStyles.label, { fontFamily: fontFamilies.bodySemibold }]}>
                 Referral code already used
               </Text>
-              <Text className="mt-1 text-sm text-ink-soft">
+              <Text className="mt-1 text-ink-soft" style={appTextStyles.label}>
                 You joined using {summary.referredByDisplayName || 'another user'}&apos;s referral
                 code.
               </Text>
             </View>
           ) : (
             <View>
-              <Text className="text-sm font-semibold text-ink">
+              <Text className="text-ink" style={[appTextStyles.label, { fontFamily: fontFamilies.bodySemibold }]}>
                 {language === 'zh' ? '有朋友的邀请代码？' : 'Have a friend’s code?'}
               </Text>
-              <Text className="mt-1 text-sm text-ink-soft">
+              <Text className="mt-1 text-ink-soft" style={appTextStyles.label}>
                 {t('redeemHint')}
               </Text>
               <TextInput accessibilityLabel={t('referralCode')} placeholderTextColor={theme.inkSoft}
@@ -379,19 +372,19 @@ const ReferralScreen: React.FC = () => {
         onRequestClose={() => void closeRewardPopup()}>
         <View className="flex-1 items-center justify-center bg-[#2B2A3D]/60 px-6">
           <BaseCard className="w-full max-w-md p-6" radius="3xl" shadow="md" bordered={false}>
-            <Text className="text-xs font-bold uppercase tracking-widest text-primary">
+            <Text className="uppercase tracking-widest text-primary" style={[appTextStyles.caption, { fontFamily: fontFamilies.bodyBold }]}>
               Referral Reward
             </Text>
-            <Text className="mt-2 text-xl font-bold text-ink">
+            <Text className="mt-2 text-ink" style={[appTextStyles.screenTitle, { fontFamily: fontFamilies.bodyBold }]}>
               {rewardNotice?.title ?? 'New referral activity'}
             </Text>
-            <Text className="mt-3 text-base leading-6 text-ink-soft">
+            <Text className="mt-3 leading-6 text-ink-soft" style={appTextStyles.body}>
               {rewardNotice?.body}
             </Text>
             <TouchableOpacity
               className="mt-6 rounded-xl bg-primary px-4 py-3"
               onPress={() => void closeRewardPopup()}>
-              <Text className="text-center font-semibold text-white">{t('gotIt')}</Text>
+              <Text className="text-center text-white" style={{ fontFamily: fontFamilies.bodySemibold }}>{t('gotIt')}</Text>
             </TouchableOpacity>
           </BaseCard>
         </View>

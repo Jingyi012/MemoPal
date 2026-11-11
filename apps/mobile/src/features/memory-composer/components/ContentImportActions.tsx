@@ -1,3 +1,4 @@
+import { appSpacing } from '@/theme/designSystem';
 import { View } from 'react-native';
 import { AppButton } from '@/components/ui/AppButton';
 import { ClipboardList, ScanText } from '@/core/icons';
@@ -15,7 +16,7 @@ export function ContentImportActions({ paste, scan, disabled = false }: {
   disabled?: boolean;
 }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: 8 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: appSpacing.sm }}>
       <AppButton {...paste} icon={ClipboardList} variant="secondary" size="compact"
         disabled={disabled} labelStyle={{ flexShrink: 1 }} style={{ flex: 1, minWidth: 0, paddingVertical: 10 }} />
       <AppButton {...scan} icon={ScanText} variant="secondary" size="compact"

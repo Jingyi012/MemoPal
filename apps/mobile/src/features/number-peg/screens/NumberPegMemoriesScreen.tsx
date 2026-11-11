@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { LearningChoiceMenu } from '@/features/education/components/LearningChoiceMenu';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
@@ -11,7 +13,7 @@ import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegE
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, useRouter } from 'expo-router';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useMemo, useState } from 'react';
 
 type MemoryFilter = 'all' | 'recall' | 'building';
@@ -71,12 +73,12 @@ export default function NumberPegMemoriesScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { gap: 13, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 36 },
-  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12 },
-  filterRail: { flexDirection: 'row', gap: 8 },
-  filterChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 999, borderWidth: 1.5, justifyContent: 'center', minHeight: 40, paddingHorizontal: 14 },
+  content: { gap: 13, paddingHorizontal: appSpacing.lg, paddingTop: appSpacing.sm, paddingBottom: 36 },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize },
+  filterRail: { flexDirection: 'row', gap: appSpacing.sm },
+  filterChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.pill, borderWidth: 1.5, justifyContent: 'center', minHeight: 40, paddingHorizontal: 14 },
   filterChipSelected: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
-  filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   filterTextSelected: { color: theme.onAccent },
   list: { gap: 9 },
   loading: { height: 120, overflow: 'hidden' },

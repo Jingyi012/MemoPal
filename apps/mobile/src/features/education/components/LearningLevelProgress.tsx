@@ -1,4 +1,6 @@
-import { Text, View } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii } from '@/theme/designSystem';
+import { View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { getLevelProgressMetrics } from '@/components/LevelXpProgressBar';
 import { useLevelByXp } from '@/features/gamification/shared/hooks/useLevelConfigs';
@@ -16,6 +18,6 @@ export function LearningLevelProgress({ totalXp, level }: { totalXp: number; lev
       <Text style={[s.small, { color: theme.violetDeep, fontFamily: typography.bodyExtraBold }]}>{zh ? '等级' : 'Level'} {progress?.currentLevel ?? level}</Text>
       {progress ? <Text style={s.small}>{metrics?.isMaxLevel ? (zh ? '已达最高等级' : 'Max level') : `${zh ? '下一级' : 'Next'}: ${progress.currentLevel + 1}`}</Text> : null}
     </View>
-    {metrics ? <LearningProgress value={metrics.progress} total={100} color={theme.violetDeep} height={8} /> : query.isError ? <AnimatedPressable accessibilityRole="button" onPress={() => void query.refetch()} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={s.small}>{zh ? '等级进度暂不可用，点击重试' : 'Level progress unavailable. Tap to retry.'}</Text></AnimatedPressable> : <View accessibilityLabel={zh ? '正在读取等级进度' : 'Loading level progress'} style={{ height: 8, borderRadius: 99, backgroundColor: theme.violetTint }} />}
+    {metrics ? <LearningProgress value={metrics.progress} total={100} color={theme.violetDeep} height={8} /> : query.isError ? <AnimatedPressable accessibilityRole="button" onPress={() => void query.refetch()} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={s.small}>{zh ? '等级进度暂不可用，点击重试' : 'Level progress unavailable. Tap to retry.'}</Text></AnimatedPressable> : <View accessibilityLabel={zh ? '正在读取等级进度' : 'Loading level progress'} style={{ height: 8, borderRadius: appRadii.pill, backgroundColor: theme.violetTint }} />}
   </View>;
 }

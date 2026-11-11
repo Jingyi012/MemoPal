@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { BaseCard } from '@/components/BaseCard';
 import { StepNavigationFooter } from '@/components/StepNavigationFooter';
 import { GradientColors } from '@/core/types/colors';
@@ -5,7 +7,7 @@ import { memopalTheme as theme } from '@/theme/memopalTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft } from '@/core/icons';
 import React, { useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -149,7 +151,7 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
             className="h-10 w-10 items-center justify-center rounded-full bg-surface/20">
             <ChevronLeft size={24} color="white" />
           </TouchableOpacity>
-          <Text className="ml-4 text-lg font-bold text-white">{t('title')}</Text>
+          <Text className="ml-4 text-white" style={[appTextStyles.sectionTitle, { fontFamily: fontFamilies.bodyBold }]}>{t('title')}</Text>
         </View>
 
         <View className="mb-6 flex-row items-center justify-center gap-2">
@@ -169,11 +171,11 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
 
         <View className="mb-4 items-center">
           <View className="h-24 w-24 items-center justify-center rounded-full bg-surface" style={{ boxShadow: '0px 4px 14px rgba(43, 42, 61, 0.18)' }}>
-            <Text className="text-5xl">{step.icon}</Text>
+            <Text style={appTextStyles.word}>{step.icon}</Text>
           </View>
         </View>
 
-        <Text className="text-center text-xl font-bold text-white">
+        <Text className="text-center text-white" style={[appTextStyles.screenTitle, { fontFamily: fontFamilies.bodyBold }]}>
           {t('step')} {currentStep + 1}: {localizedStep.title}
         </Text>
       </LinearGradient>
@@ -184,7 +186,7 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
         style={animatedContentStyle}>
         <View className="space-y-6 pb-10">
           <BaseCard className="border-2 border-line bg-surface" radius="3xl" padding="lg" shadow="sm">
-            <Text className="text-base leading-6 text-ink-soft">{localizedStep.content}</Text>
+            <Text className="leading-6 text-ink-soft" style={appTextStyles.body}>{localizedStep.content}</Text>
           </BaseCard>
 
           <BaseCard
@@ -193,11 +195,11 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
             padding="lg"
             shadow="none">
             <View className="mr-4 h-10 w-10 items-center justify-center rounded-full bg-surface" style={{ boxShadow: '0px 2px 8px rgba(43, 42, 61, 0.08)' }}>
-              <Text className="text-lg">i</Text>
+              <Text style={appTextStyles.sectionTitle}>i</Text>
             </View>
             <View className="flex-1">
-              <Text className="mb-1 font-bold text-primary">{t('example')}</Text>
-              <Text className="text-sm leading-5 text-ink-soft">{localizedStep.example}</Text>
+              <Text className="mb-1 text-primary" style={{ fontFamily: fontFamilies.bodyBold }}>{t('example')}</Text>
+              <Text className="leading-5 text-ink-soft" style={appTextStyles.label}>{localizedStep.example}</Text>
             </View>
           </BaseCard>
 
@@ -207,14 +209,14 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
               radius="3xl"
               padding="lg"
               shadow="none">
-              <Text className="mb-3 font-bold text-[#247B67]">{t('tips')}</Text>
+              <Text className="mb-3 text-[#247B67]" style={{ fontFamily: fontFamilies.bodyBold }}>{t('tips')}</Text>
               {[
                 'Make it exaggerated',
                 'Add unusual colors',
                 'Include movement',
                 'Engage emotions',
               ].map((tip, i) => (
-                <Text key={i} className="text-sm text-[#3B6F60]">
+                <Text key={i} className="text-[#3B6F60]" style={appTextStyles.label}>
                   - {tip}
                 </Text>
               ))}
@@ -227,9 +229,9 @@ export function TutorialScreen({ onBack, onFinish }: TutorialScreenProps) {
               radius="3xl"
               padding="lg"
               shadow="none">
-              <Text className="mb-2 font-bold text-[#F2A900]">Forgetting Curve</Text>
-              <Text className="text-sm text-ink-soft">- After 24h: 70% forgotten</Text>
-              <Text className="text-sm text-ink-soft">- After 7 days: 90% forgotten</Text>
+              <Text className="mb-2 text-[#F2A900]" style={{ fontFamily: fontFamilies.bodyBold }}>Forgetting Curve</Text>
+              <Text className="text-ink-soft" style={appTextStyles.label}>- After 24h: 70% forgotten</Text>
+              <Text className="text-ink-soft" style={appTextStyles.label}>- After 7 days: 90% forgotten</Text>
             </BaseCard>
           )}
         </View>

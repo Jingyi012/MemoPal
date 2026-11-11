@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { typography } from '@/theme/typography';
 import { ChevronRight } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type MemorySetRowProps = {
   tone: 'peg' | 'palace';
@@ -33,14 +35,14 @@ export function MemorySetRow({ tone, title, badgeText, subtitle, onPress }: Memo
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { minHeight: 76, borderRadius: 18, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 13, marginBottom: 10, flexDirection: 'row', alignItems: 'center' },
-  badge: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  card: { minHeight: 76, borderRadius: appRadii.card, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 13, marginBottom: 10, flexDirection: 'row', alignItems: 'center' },
+  badge: { width: 44, height: 44, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center' },
   pegBadge: { backgroundColor: theme.berryTint },
   palaceBadge: { backgroundColor: theme.violetTint },
-  badgeText: { fontFamily: typography.display, fontSize: 18 },
+  badgeText: { fontFamily: typography.display, fontSize: appTextStyles.sectionTitle.fontSize },
   pegText: { color: theme.berryDeep },
   palaceText: { color: theme.violetDeep },
-  meta: { flex: 1, marginHorizontal: 12 },
-  title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
-  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, marginTop: 3 },
+  meta: { flex: 1, marginHorizontal: appSpacing.md },
+  title: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, marginTop: 3 },
 }));

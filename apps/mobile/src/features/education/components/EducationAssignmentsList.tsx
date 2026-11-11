@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import type { MyEducationAssignment } from '@/features/education/types/educationAssignment.types';
 import { useEducationCopy } from '@/features/education/i18n';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -47,7 +49,7 @@ export function EducationAssignmentsList({
   return (
     <View style={styles.section}>
       {workspace && (isLoading || isError || assignments.length > 0) ? <LinearGradient colors={theme.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={styles.hero}>
-        <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', gap: appSpacing.md, alignItems: 'center' }}>
           <View style={styles.heroIcon}><Ionicons name="rocket-outline" size={30} color={theme.heroInk} /></View>
           <View style={{ flex: 1, gap: 6 }}>
             <Text accessibilityRole="header" style={styles.heroTitle}>{zh ? '每次一小步' : 'One little step at a time'}</Text>
@@ -68,7 +70,7 @@ export function EducationAssignmentsList({
         </View>
       ) : (
         <View style={styles.courses}>
-          {workspace && assignments.length > 0 ? <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {workspace && assignments.length > 0 ? <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm }}>
             {(['all', 'open', 'upcoming', 'pastDue'] as const).map(key => <AnimatedPressable key={key} accessibilityRole="button" accessibilityState={{ selected: filter === key }} onPress={() => setFilter(key)}
               style={[styles.chip, { backgroundColor: filter === key ? theme.violetDeep : theme.paper, borderColor: filter === key ? theme.primaryShadow : theme.line }]}>
               <Text style={[styles.chipText, { color: filter === key ? theme.onAccent : theme.inkSoft }]}>{key === 'all' ? (zh ? '全部' : 'All') : copy[key]} · {key === 'all' ? assignments.length : assignments.filter(item => getEducationAssignmentStatus(item) === key).length}</Text>
@@ -92,21 +94,21 @@ export function EducationAssignmentsList({
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   section: { gap: 9 },
-  hero: { borderRadius: 26, padding: 20, marginBottom: 10, borderBottomWidth: 6, borderColor: theme.primaryShadow },
-  heroIcon: { width: 52, height: 52, borderRadius: 18, backgroundColor: theme.heroOverlay, alignItems: 'center', justifyContent: 'center' },
-  heroTitle: { color: theme.heroInk, fontFamily: typography.displayExtraBold, fontSize: 22, lineHeight: 29 },
-  heroBody: { color: theme.heroInk, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 20 },
-  chip: { borderRadius: 16, borderWidth: 2, borderBottomWidth: 4, borderColor: theme.line, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44, justifyContent: 'center' },
-  chipText: { fontFamily: typography.bodyExtraBold, fontSize: 12, lineHeight: 18 },
-  empty: { alignItems: 'center', gap: 12, padding: 24, borderRadius: 24, borderWidth: 2, borderBottomWidth: 6, borderColor: theme.line, backgroundColor: theme.paper },
-  emptyIcon: { padding: 18, borderRadius: 24, backgroundColor: theme.violetTint },
-  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 },
-  courses: { gap: 16 },
-  state: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: 16, flexDirection: 'row', gap: 10, minHeight: 62, paddingHorizontal: 15 },
-  stateText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13 },
-  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 16, borderWidth: 1.5, padding: 14 },
-  noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  noticeBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 18, marginTop: 3 },
-  retry: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 12, flexDirection: 'row', gap: 7, justifyContent: 'center', marginTop: 10, minHeight: 44, paddingHorizontal: 13 },
-  retryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  hero: { borderRadius: appRadii.hero, padding: appSpacing.xl, marginBottom: 10, borderBottomWidth: 6, borderColor: theme.primaryShadow },
+  heroIcon: { width: 52, height: 52, borderRadius: appRadii.card, backgroundColor: theme.heroOverlay, alignItems: 'center', justifyContent: 'center' },
+  heroTitle: { color: theme.heroInk, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize, lineHeight: appTextStyles.prompt.lineHeight },
+  heroBody: { color: theme.heroInk, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  chip: { borderRadius: appRadii.control, borderWidth: 2, borderBottomWidth: 4, borderColor: theme.line, paddingHorizontal: appSpacing.md, paddingVertical: 10, minHeight: 44, justifyContent: 'center' },
+  chipText: { fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  empty: { alignItems: 'center', gap: appSpacing.md, padding: appSpacing.xxl, borderRadius: appRadii.hero, borderWidth: 2, borderBottomWidth: 6, borderColor: theme.line, backgroundColor: theme.paper },
+  emptyIcon: { padding: 18, borderRadius: appRadii.hero, backgroundColor: theme.violetTint },
+  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.cardTitle.fontSize },
+  courses: { gap: appSpacing.lg },
+  state: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: appRadii.control, flexDirection: 'row', gap: 10, minHeight: 62, paddingHorizontal: 15 },
+  stateText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize },
+  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: appRadii.control, borderWidth: 1.5, padding: 14 },
+  noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  noticeBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, marginTop: 3 },
+  retry: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, flexDirection: 'row', gap: 7, justifyContent: 'center', marginTop: 10, minHeight: 44, paddingHorizontal: 13 },
+  retryText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
 }));

@@ -1,10 +1,12 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { CompanionLearningPresence } from '@/features/profile/companion/CompanionLearningPresence';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useState } from 'react';
 import { useIsFocused } from '@react-navigation/native';
-import { Modal, Text, View } from 'react-native';
+import { Modal, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EducationGuidedCourseProgress, EducationPublicCourseDetail } from '../types/educationPractice.types';
 import { LearningStudySession, type LearningReadingPosition } from './LearningStudySession';
@@ -28,7 +30,7 @@ export function LearningCoursePath({ objectives, progress, onMemory, onPractice,
   const selected = objectives.find(item => item.id === selectedId);
   const selectedLesson = selected ? chooseObjectiveLesson(selected.id, progress) : undefined;
   return <View style={{ gap: 14 }}>
-    {showHeading ? <Text accessibilityRole="header" style={[s.heading, { fontSize: 20, lineHeight: 27 }]}>{ui.path}</Text> : null}
+    {showHeading ? <Text accessibilityRole="header" style={[s.heading, { fontSize: appTextStyles.screenTitle.fontSize, lineHeight: appTextStyles.screenTitle.lineHeight }]}>{ui.path}</Text> : null}
     {objectives.length === 0 ? <View style={s.card}><CompanionLearningPresence state="thinking" /><Text style={s.body}>{ui.zh ? '知识点还在准备中，可以先看看下方的测评练习。' : 'Study points are being prepared. Explore the practice lessons below.'}</Text></View> : null}
     {objectives.map((objective, index) => {
       const lessons = progress?.lessons.filter(lesson => lesson.objectives.some(item => item.objectiveId === objective.id));
@@ -38,9 +40,9 @@ export function LearningCoursePath({ objectives, progress, onMemory, onPractice,
       const current = !done && (currentObjectiveId ? objective.id === currentObjectiveId : lessons?.some(lesson => lesson.assessmentId === progress?.nextRecommendedAssessmentId) || (!progress?.nextRecommendedAssessmentId && index === 0));
       const summary = objective.studyItems.find(item => item.primary.trim() !== objective.title.trim());
 
-      return <LearningArrival key={objective.id} style={{ flexDirection: 'row', gap: 12 }}>
+      return <LearningArrival key={objective.id} style={{ flexDirection: 'row', gap: appSpacing.md }}>
         <View style={{ width: 42, alignItems: 'center' }}>
-          <View style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 3, backgroundColor: done ? palette.successText : current ? palette.violetDeep : palette.disabled, borderColor: done ? palette.mintLine : palette.line, alignItems: 'center', justifyContent: 'center' }}><Text style={[s.heading, { color: done || current ? palette.onAccent : palette.inkSoft }]}>{done ? '✓' : index + 1}</Text></View>
+          <View style={{ width: 44, height: 44, borderRadius: appRadii.card, borderWidth: 3, backgroundColor: done ? palette.successText : current ? palette.violetDeep : palette.disabled, borderColor: done ? palette.mintLine : palette.line, alignItems: 'center', justifyContent: 'center' }}><Text style={[s.heading, { color: done || current ? palette.onAccent : palette.inkSoft }]}>{done ? '✓' : index + 1}</Text></View>
           {index < objectives.length - 1 ? <View style={{ width: 6, backgroundColor: palette.line, flex: 1, minHeight: 30, marginTop: 6 }} /> : null}
         </View>
         <View style={[s.card, { flex: 1, minWidth: 0, marginBottom: 10 }]}>
@@ -52,16 +54,16 @@ export function LearningCoursePath({ objectives, progress, onMemory, onPractice,
             {objective.studyItems.length > 4 ? <Text style={s.small}>+{objective.studyItems.length - 4}</Text> : null}
           </View> : summary ? <Text numberOfLines={2} style={s.body}>{summary.primary}</Text> : null}
           {current || done || pending ? <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
-            {current ? <View style={{ backgroundColor: palette.violetTint, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4 }}><Text style={[s.small, { color: palette.violetDeep }]}>{started ? ui.underway : (ui.zh ? '从这里开始' : 'Start here')}</Text></View> : null}
-            {done ? <View style={{ backgroundColor: palette.mintTint, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4 }}><Text style={[s.small, { color: palette.successText }]}>✓ {ui.done}</Text></View> : null}
-            {pending ? <View style={{ backgroundColor: palette.peachTint, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4 }}><Text style={[s.small, { color: palette.ink }]}>{ui.reinforce}</Text></View> : null}
+            {current ? <View style={{ backgroundColor: palette.violetTint, borderRadius: appRadii.pill, paddingHorizontal: 10, paddingVertical: appSpacing.xs }}><Text style={[s.small, { color: palette.violetDeep }]}>{started ? ui.underway : (ui.zh ? '从这里开始' : 'Start here')}</Text></View> : null}
+            {done ? <View style={{ backgroundColor: palette.mintTint, borderRadius: appRadii.pill, paddingHorizontal: 10, paddingVertical: appSpacing.xs }}><Text style={[s.small, { color: palette.successText }]}>✓ {ui.done}</Text></View> : null}
+            {pending ? <View style={{ backgroundColor: palette.peachTint, borderRadius: appRadii.pill, paddingHorizontal: 10, paddingVertical: appSpacing.xs }}><Text style={[s.small, { color: palette.ink }]}>{ui.reinforce}</Text></View> : null}
 
           </View> : null}
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flexDirection: 'row', gap: appSpacing.sm }}>
             <View style={{ flex: 1 }}><LearningButton compact secondary label={ui.content} onPress={() => { if (onStudy) onStudy(objective.id); else { setReading({ position: 0, finished: false }); setSelectedId(objective.id); } }} /></View>
 
           </View>
-          {onPractice ? lessons?.filter(lesson => !sharedAssessmentIds.includes(lesson.assessmentId)).map((lesson, lessonIndex) => <AnimatedPressable key={lesson.assessmentId} accessibilityRole="button" onPress={() => onPractice(lesson.assessmentId)} style={{ minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, borderTopWidth: 1, borderColor: palette.line }}>
+          {onPractice ? lessons?.filter(lesson => !sharedAssessmentIds.includes(lesson.assessmentId)).map((lesson, lessonIndex) => <AnimatedPressable key={lesson.assessmentId} accessibilityRole="button" onPress={() => onPractice(lesson.assessmentId)} style={{ minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: appSpacing.md, borderTopWidth: 1, borderColor: palette.line }}>
             <Ionicons name={lesson.isComplete ? 'checkmark-circle' : 'play-circle-outline'} size={24} color={lesson.isComplete ? palette.successText : palette.violetDeep} />
             <View style={{ flex: 1, gap: 3 }}><Text style={s.body}>{lessonIndex + 1}. {lesson.assessmentTitle}</Text><Text style={s.small}>{ui.correct(lesson.questionsSolved, lesson.questionCount)}</Text></View>
             <Ionicons name="chevron-forward" size={18} color={palette.violetDeep} />

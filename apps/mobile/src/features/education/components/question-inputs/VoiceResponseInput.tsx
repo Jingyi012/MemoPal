@@ -1,6 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus, useAudioRecorder, useAudioRecorderState } from 'expo-audio';
-import { Platform, Text, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import type { EducationResponseAttachmentFile, VoiceResponseAnswer, VoiceResponseQuestion } from '../../types/question.types';
 import { loadEducationVoicePreview, type CachedEducationVoicePreview } from '../../services/educationVoicePreview.service';

@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { memopalThemes } from '@/theme/memopalTheme';
@@ -5,7 +7,7 @@ import { typography } from '@/theme/typography';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import Constants from 'expo-constants';
 import { forwardRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -47,22 +49,22 @@ function Feature({ icon, title, styles }: { icon: string; title: string; styles:
 
 const createStyles = (theme: typeof memopalThemes.light) => StyleSheet.create({
   sheetBackground: { backgroundColor: theme.paper, borderRadius: 30 },
-  content: { paddingHorizontal: 20, paddingTop: 10 },
-  brandCard: { alignItems: 'center', backgroundColor: theme.night, borderRadius: 24, padding: 22 },
-  logo: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 22, height: 68, justifyContent: 'center', width: 68 },
-  logoText: { fontSize: 36 },
-  brandName: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 27, marginTop: 10 },
-  tagline: { color: 'rgba(255,255,255,0.72)', fontFamily: typography.bodySemibold, fontSize: 12, marginTop: 3, textAlign: 'center' },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 20, marginTop: 22 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20, marginTop: 7 },
-  featureList: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 20, borderWidth: 1.5, marginTop: 18, padding: 5 },
+  content: { paddingHorizontal: appSpacing.xl, paddingTop: 10 },
+  brandCard: { alignItems: 'center', backgroundColor: theme.night, borderRadius: appRadii.hero, padding: 22 },
+  logo: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: appRadii.card, height: 68, justifyContent: 'center', width: 68 },
+  logoText: { fontSize: appArtworkSizes.medium },
+  brandName: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: appTextStyles.pageTitle.fontSize, marginTop: 10 },
+  tagline: { color: 'rgba(255,255,255,0.72)', fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, marginTop: 3, textAlign: 'center' },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize, marginTop: 22 },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, marginTop: 7 },
+  featureList: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 1.5, marginTop: 18, padding: 5 },
   feature: { alignItems: 'center', flexDirection: 'row', minHeight: 56, paddingHorizontal: 10 },
-  featureIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 13, height: 38, justifyContent: 'center', width: 38 },
-  featureEmoji: { fontSize: 20 },
-  featureText: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 13, marginLeft: 11 },
-  versionCard: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 16, borderWidth: 1.5, marginTop: 14, padding: 13 },
-  versionLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  versionText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, marginTop: 4 },
+  featureIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.control, height: 38, justifyContent: 'center', width: 38 },
+  featureEmoji: { fontSize: appArtworkSizes.tiny },
+  featureText: { color: theme.ink, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize, marginLeft: 11 },
+  versionCard: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.control, borderWidth: 1.5, marginTop: 14, padding: 13 },
+  versionLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  versionText: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, marginTop: appSpacing.xs },
 });
 
 AboutSheet.displayName = 'AboutSheet';

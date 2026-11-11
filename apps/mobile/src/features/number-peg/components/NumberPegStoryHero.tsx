@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -5,7 +7,7 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { ArrowRight, RefreshCw } from '@/core/icons';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 const EXAMPLES = [
   { number: '1', image: '🕯️', word: 'exampleWordPassport', story: 'exampleStoryPassport' },
@@ -67,24 +69,24 @@ export function NumberPegStoryHero({ onStart }: { onStart: () => void }) {
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 23, borderWidth: 1.5, gap: 11, overflow: 'hidden', padding: 14 },
   glow: { backgroundColor: theme.paper, borderRadius: 70, height: 140, opacity: 0.42, position: 'absolute', right: -45, top: -75, width: 140 },
-  headingRow: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  headingRow: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.sm },
   headingCopy: { flex: 1, gap: 2 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20 },
-  sparkle: { color: theme.violetDeep, fontSize: 23, marginRight: 3 },
-  example: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 17, borderWidth: 1, gap: 5, paddingHorizontal: 11, paddingVertical: 9 },
-  exampleTop: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  pair: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 12, flexDirection: 'row', gap: 4, minHeight: 38, paddingHorizontal: 8 },
-  number: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 16 },
-  pegImage: { fontSize: 22 },
-  plus: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 15 },
-  word: { color: theme.ink, flex: 1, fontFamily: typography.displayExtraBold, fontSize: 14 },
-  swapButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 11, flexDirection: 'row', gap: 4, minHeight: 44, paddingHorizontal: 8 },
-  swapText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  story: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  sparkle: { color: theme.violetDeep, fontSize: appTextStyles.stat.fontSize, marginRight: 3 },
+  example: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, gap: 5, paddingHorizontal: 11, paddingVertical: 9 },
+  exampleTop: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.sm },
+  pair: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.control, flexDirection: 'row', gap: appSpacing.xs, minHeight: 38, paddingHorizontal: appSpacing.sm },
+  number: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.cardTitle.fontSize },
+  pegImage: { fontSize: appTextStyles.prompt.fontSize },
+  plus: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize },
+  word: { color: theme.ink, flex: 1, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.label.fontSize },
+  swapButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 11, flexDirection: 'row', gap: appSpacing.xs, minHeight: 44, paddingHorizontal: appSpacing.sm },
+  swapText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  story: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
   steps: { alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
   stepItem: { alignItems: 'center', flexDirection: 'row', gap: 5 },
   stepLine: { backgroundColor: theme.violetLine, height: 1.5, marginRight: 5, width: 16 },
   stepDot: { backgroundColor: theme.violetDeep, borderRadius: 4, height: 7, width: 7 },
-  stepText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12 },
+  stepText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
 }));

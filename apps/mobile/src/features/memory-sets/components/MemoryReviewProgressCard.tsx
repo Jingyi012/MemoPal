@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { useTranslation } from '@/core/i18n/useTranslation';
@@ -7,7 +9,7 @@ import { typography } from '@/theme/typography';
 import { ChevronDown, ChevronUp } from '@/core/icons';
 import { useState } from 'react';
 import { getReviewTiming } from '@/features/practice-attempts/utils/reviewSession';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type Props = {
   progress: MemoryReviewProgress | null | undefined;
@@ -106,24 +108,24 @@ export function MemoryItemProgress({ progress, stages, title, prompt }: {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { borderTopWidth: 1, borderTopColor: theme.line, paddingTop: 4, gap: 4 },
+  card: { borderTopWidth: 1, borderTopColor: theme.line, paddingTop: appSpacing.xs, gap: appSpacing.xs },
   compactStats: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, justifyContent: 'space-between' },
-  rulesToggle: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  rules: { borderTopWidth: 1, borderTopColor: theme.line, paddingTop: 10, gap: 8 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
-  heading: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13, marginTop: 4 },
+  rulesToggle: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: appSpacing.sm },
+  rules: { borderTopWidth: 1, borderTopColor: theme.line, paddingTop: 10, gap: appSpacing.sm },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  heading: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize, marginTop: appSpacing.xs },
   track: { height: 8, borderRadius: 4, backgroundColor: theme.violetTint, overflow: 'hidden' },
   fill: { height: '100%', backgroundColor: theme.violet },
-  note: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 12, lineHeight: 18 },
-  retry: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center', paddingHorizontal: 12 },
-  retryText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  itemProgress: { marginTop: 2, gap: 4 },
+  note: { color: theme.inkSoft, fontFamily: typography.body, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  retry: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center', paddingHorizontal: appSpacing.md },
+  retryText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  itemProgress: { marginTop: 2, gap: appSpacing.xs },
   itemHeading: { flex: 1, minWidth: 0, gap: 3 },
-  itemTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, lineHeight: 22 },
+  itemTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize, lineHeight: appTextStyles.body.lineHeight },
   dueStatus: { color: theme.berryDeep },
   stages: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
-  stage: { paddingHorizontal: 7, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: theme.line },
+  stage: { paddingHorizontal: 7, paddingVertical: appSpacing.xs, borderRadius: 8, borderWidth: 1, borderColor: theme.line },
   earnedStage: { backgroundColor: theme.violetTint, borderColor: theme.violetLine },
-  stageText: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: 11 },
-  itemStatus: { flexShrink: 1, color: theme.violetDeep, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18 },
+  stageText: { color: theme.ink, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
+  itemStatus: { flexShrink: 1, color: theme.violetDeep, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
 }));

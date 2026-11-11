@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { AppSheetTextInput } from '@/components/AppSheetTextInput';
 import { AppButton } from '@/components/ui/AppButton';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { AppBottomSheet } from '@/components/AppBottomSheet';
 import { useEffect, useState } from 'react';
@@ -50,15 +52,15 @@ export function FolderNameModal({ visible, initialName, initialEmoji, initialDes
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  sheetContent: { paddingBottom: 20, paddingTop: 8 },
+  sheetContent: { paddingBottom: appSpacing.xl, paddingTop: appSpacing.sm },
   dialog: { backgroundColor: theme.paper, width: '100%' },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 21, textAlign: 'center' },
-  body: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, marginTop: 9, textAlign: 'center' },
-  input: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, color: theme.ink, fontSize: 16, marginTop: 18, minHeight: 50, paddingHorizontal: 14 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize, textAlign: 'center' },
+  body: { color: theme.inkSoft, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, marginTop: 9, textAlign: 'center' },
+  input: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1.5, color: theme.ink, fontSize: appTextStyles.cardTitle.fontSize, marginTop: 18, minHeight: 50, paddingHorizontal: 14 },
   fieldGroup: { alignItems: 'flex-start', marginTop: 14 },
-  fieldLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, marginBottom: 7 },
-  emojiInput: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: 14, borderWidth: 1.5, color: theme.ink, fontSize: 25, height: 52, textAlign: 'center', width: 72 },
-  descriptionInput: { fontSize: 14, lineHeight: 20, marginTop: 0, minHeight: 84, paddingBottom: 10, paddingTop: 11, width: '100%' },
+  fieldLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, marginBottom: 7 },
+  emojiInput: { backgroundColor: theme.canvas, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1.5, color: theme.ink, fontSize: appArtworkSizes.small, height: 52, textAlign: 'center', width: 72 },
+  descriptionInput: { fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight, marginTop: 0, minHeight: 84, paddingBottom: 10, paddingTop: 11, width: '100%' },
   actions: { flexDirection: 'row', gap: 10, marginTop: 18 },
   actionContainer: { flex: 1 },
 }));

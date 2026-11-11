@@ -1,3 +1,4 @@
+import { appRadii, appSpacing } from '@/theme/designSystem';
 import { ActivityIndicator, Image, View } from 'react-native';
 import { CreditText as Text } from './CreditText';
 import { useQuery } from '@tanstack/react-query';
@@ -17,12 +18,12 @@ export function AiGeneratedImage({ path, description }: { path: string; descript
   });
   if (isOffline && !query.data) return null;
   if (query.isPending) return <ActivityIndicator accessibilityLabel="Loading illustration" />;
-  if (canShowRequestErrors && query.isError) return <AnimatedPressable onPress={() => void query.refetch()} style={{ minHeight: 44, padding: 12 }}>
+  if (canShowRequestErrors && query.isError) return <AnimatedPressable onPress={() => void query.refetch()} style={{ minHeight: 44, padding: appSpacing.md }}>
     <Text>{language === 'zh' ? '图片加载失败，点击重试' : 'Image unavailable. Tap to retry.'}</Text>
   </AnimatedPressable>;
   if (!query.data) return null;
-  return <View style={{ width: '100%', marginVertical: 12 }}>
+  return <View style={{ width: '100%', marginVertical: appSpacing.md }}>
     <Image source={{ uri: query.data }} accessibilityLabel={description} accessible resizeMode="contain"
-      style={{ width: '100%', aspectRatio: 1, borderRadius: 16 }} />
+      style={{ width: '100%', aspectRatio: 1, borderRadius: appRadii.control }} />
   </View>;
 }

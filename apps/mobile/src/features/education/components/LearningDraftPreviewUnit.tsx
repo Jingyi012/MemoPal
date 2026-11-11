@@ -1,4 +1,6 @@
-import { Text, View } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing } from '@/theme/designSystem';
+import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -23,7 +25,7 @@ export function LearningDraftPreviewUnit({ unit, index, count, onEdit, onMove, o
   return <GestureDetector gesture={drag}>
     <Animated.View onLayout={event => { height.value = event.nativeEvent.layout.height; }} style={[s.card, style]}>
       <View style={s.row}>
-        <AnimatedPressable accessibilityRole="button" accessibilityLabel={zh ? '编辑这个单元' : 'Edit this unit'} onPress={onEdit} style={{ flex: 1, minWidth: 0, gap: 4, minHeight: 48 }}>
+        <AnimatedPressable accessibilityRole="button" accessibilityLabel={zh ? '编辑这个单元' : 'Edit this unit'} onPress={onEdit} style={{ flex: 1, minWidth: 0, gap: appSpacing.xs, minHeight: 48 }}>
           <Text style={[s.small, { color: theme.violetDeep }]}>{zh ? `单元 ${index + 1} · ${unit.words.length} 张卡片` : `Unit ${index + 1} · ${unit.words.length} cards`}</Text>
           <Text numberOfLines={1} style={s.heading}>{unit.title || (zh ? `单元 ${index + 1}` : `Unit ${index + 1}`)}</Text>
           <Text numberOfLines={2} style={s.small}>{unit.words.map(word => word.text).join(' · ')}</Text>

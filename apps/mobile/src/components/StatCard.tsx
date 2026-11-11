@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { getBaseCardClassName } from '@/components/BaseCard';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import AnimatedPressable from './AnimatedPressable';
 
 interface StatCardProps {
@@ -27,8 +29,8 @@ export const StatCard: React.FC<StatCardProps> = ({ label, value, icon, bgClass,
         {icon}
       </View>
 
-      <Text className="mb-1 text-xs text-[#6B6A80]">{label}</Text>
-      <Text className="font-bold text-[#2B2A3D]">{value ?? '-'}</Text>
+      <Text className="mb-1 text-[#6B6A80]" style={appTextStyles.caption}>{label}</Text>
+      <Text className="text-[#2B2A3D]" style={{ fontFamily: fontFamilies.bodyBold }}>{value ?? '-'}</Text>
     </AnimatedPressable>
   );
 };

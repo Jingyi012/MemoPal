@@ -1,8 +1,10 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { LucideIcon } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type EducationPublicResourceCardProps = Readonly<{
   title: string;
@@ -40,19 +42,19 @@ export function EducationPublicResourceCard({ title, detail, metadata, icon: Ico
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 22, borderWidth: 2, borderBottomWidth: 6, flexDirection: 'row', gap: 12, minHeight: 88, padding: 14 },
+  card: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 2, borderBottomWidth: 6, flexDirection: 'row', gap: appSpacing.md, minHeight: 88, padding: 14 },
   goldCard: { borderColor: theme.sunLine },
-  compactCard: { alignItems: 'stretch', flex: 1, flexDirection: 'column', gap: 8, justifyContent: 'flex-start', minHeight: 104, padding: 11 },
+  compactCard: { alignItems: 'stretch', flex: 1, flexDirection: 'column', gap: appSpacing.sm, justifyContent: 'flex-start', minHeight: 104, padding: 11 },
   compactTop: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  iconBox: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 12, height: 40, justifyContent: 'center', width: 40 },
+  iconBox: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.control, height: 40, justifyContent: 'center', width: 40 },
   compactIconBox: { height: 34, width: 34 },
   goldIconBox: { backgroundColor: theme.sunTint },
-  arrowCircle: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 15, height: 30, justifyContent: 'center', width: 30 },
+  arrowCircle: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.control, height: 30, justifyContent: 'center', width: 30 },
   copy: { flex: 1, minWidth: 0, gap: 6 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, lineHeight: 25 },
-  detail: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19 },
-  compactTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 15, lineHeight: 21 },
-  compactDetail: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 19 },
-  metadataBadge: { alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderRadius: 999, marginTop: 2, maxWidth: '100%', paddingHorizontal: 8, paddingVertical: 4 },
-  metadata: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 13, lineHeight: 19 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight },
+  detail: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  compactTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.body.fontSize, lineHeight: appTextStyles.body.lineHeight },
+  compactDetail: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  metadataBadge: { alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderRadius: appRadii.pill, marginTop: 2, maxWidth: '100%', paddingHorizontal: appSpacing.sm, paddingVertical: appSpacing.xs },
+  metadata: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
 }));

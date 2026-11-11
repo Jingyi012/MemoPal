@@ -1,10 +1,12 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { SceneEditorCard } from '@/features/memory-composer/components/SceneEditorCard';
 import type { PalaceLocus } from '@/features/palace-scenes/types/palaceScene.types';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { ArrowLeft, ArrowLeftRight, ArrowRight, MapPin, RefreshCw, Sparkles } from '@/core/icons';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
@@ -268,42 +270,42 @@ export function PalaceAssociationEditor({
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  section: { marginTop: 12 },
-  headingRow: { alignItems: 'center', flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
+  section: { marginTop: appSpacing.md },
+  headingRow: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.sm, justifyContent: 'space-between' },
   headingCopy: { flex: 1 },
-  title: { color: theme.ink, fontFamily: typography.display, fontSize: 17 },
-  compactGenerateButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 11, borderWidth: 1.5, flexDirection: 'row', gap: 5, justifyContent: 'center', maxWidth: 142, minHeight: 44, paddingHorizontal: 8 },
+  title: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.sectionTitle.fontSize },
+  compactGenerateButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 11, borderWidth: 1.5, flexDirection: 'row', gap: 5, justifyContent: 'center', maxWidth: 142, minHeight: 44, paddingHorizontal: appSpacing.sm },
   generateButtonDisabled: { opacity: 0.62 },
-  compactGenerateText: { color: theme.violetDeep, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, marginTop: 4, marginBottom: 5 },
-  progressPill: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 999, justifyContent: 'center', minHeight: 30, paddingHorizontal: 9 },
-  progressText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10.5 },
-  progressTrack: { backgroundColor: theme.line, borderRadius: 999, height: 5, marginBottom: 8, overflow: 'hidden' },
-  progressFill: { backgroundColor: theme.violet, borderRadius: 999, height: '100%' },
-  generationMessage: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 13, marginBottom: 4, textAlign: 'center' },
+  compactGenerateText: { color: theme.violetDeep, flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  helper: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: appSpacing.xs, marginBottom: 5 },
+  progressPill: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.pill, justifyContent: 'center', minHeight: 30, paddingHorizontal: 9 },
+  progressText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  progressTrack: { backgroundColor: theme.line, borderRadius: appRadii.pill, height: 5, marginBottom: appSpacing.sm, overflow: 'hidden' },
+  progressFill: { backgroundColor: theme.violet, borderRadius: appRadii.pill, height: '100%' },
+  generationMessage: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginBottom: appSpacing.xs, textAlign: 'center' },
   regenerateButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 10, borderWidth: 1, height: 44, justifyContent: 'center', width: 44 },
   regenerateButtonDisabled: { opacity: 0.62 },
   cardStack: { position: 'relative' },
-  deckLayer: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 20, borderWidth: 1.5, left: 0, position: 'absolute', right: 0 },
+  deckLayer: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.card, borderWidth: 1.5, left: 0, position: 'absolute', right: 0 },
   deckLayerBack: { bottom: 11, left: 10, right: 10, top: 13, opacity: 0.65 },
   deckPreview: { left: 0, position: 'absolute', right: 0, top: 4, zIndex: 1 },
   deckPreviewNext: { zIndex: 1 },
   deckPreviewPrevious: { zIndex: 1 },
   swipeCard: { zIndex: 2 },
-  locationVisual: { alignItems: 'center', flexDirection: 'row', gap: 8, width: '100%' },
+  locationVisual: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.sm, width: '100%' },
   locationIcon: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 11, height: 32, justifyContent: 'center', width: 32 },
   locationCopy: { flex: 1, minWidth: 0 },
-  locationLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5 },
+  locationLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
   locationName: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold },
-  locationDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 2 },
-  swipeHint: { alignItems: 'center', flexDirection: 'row', gap: 5, justifyContent: 'center', marginBottom: 8, marginTop: 4 },
-  swipeHintText: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: 12 },
+  locationDescription: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 2 },
+  swipeHint: { alignItems: 'center', flexDirection: 'row', gap: 5, justifyContent: 'center', marginBottom: appSpacing.sm, marginTop: appSpacing.xs },
+  swipeHintText: { color: theme.violetDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
   navigationRow: { flexDirection: 'row', gap: 9, marginTop: 2 },
   navigationSlot: { flex: 1, minWidth: 0 },
-  navigationButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 6, justifyContent: 'center', minHeight: 46, paddingHorizontal: 10, width: '100%' },
+  navigationButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.control, borderWidth: 1.5, flexDirection: 'row', gap: 6, justifyContent: 'center', minHeight: 46, paddingHorizontal: 10, width: '100%' },
   nextNavigationButton: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
   navigationButtonDisabled: { backgroundColor: theme.canvas, borderColor: theme.line, opacity: 0.9 },
-  navigationText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  navigationText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   nextNavigationText: { color: theme.onAccent },
   navigationTextDisabled: { color: theme.inkMuted },
 }));

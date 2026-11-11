@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppImage } from '@/components/AppImage';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -15,7 +17,7 @@ import { useRouter } from 'expo-router';
 import { ArrowRight, Check, LockKeyhole } from '@/core/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -196,36 +198,36 @@ function getSceneCategory(scene: PalaceScene): Exclude<SceneCategory, 'all'> | n
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { gap: 16, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 30 },
+  content: { gap: appSpacing.lg, paddingHorizontal: appSpacing.lg, paddingTop: 10, paddingBottom: 30 },
   contentWithDock: { paddingBottom: 116 },
-  libraryIntro: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 18, borderWidth: 1.5, flexDirection: 'row', gap: 11, padding: 12 },
-  introIcon: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: 13, height: 42, justifyContent: 'center', width: 42 },
-  introEmoji: { fontSize: 22 },
+  libraryIntro: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 1.5, flexDirection: 'row', gap: 11, padding: appSpacing.md },
+  introIcon: { alignItems: 'center', backgroundColor: theme.paper, borderRadius: appRadii.control, height: 42, justifyContent: 'center', width: 42 },
+  introEmoji: { fontSize: appArtworkSizes.small },
   introCopy: { flex: 1 },
-  introTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 13 },
+  introTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.small.fontSize },
   headingRow: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 },
   headingCopy: { flex: 1 },
-  eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 1 },
-  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, marginTop: 3 },
-  countPill: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 6, fontFamily: typography.bodyExtraBold, fontSize: 10 },
-  categoryRail: { gap: 8, paddingVertical: 2, paddingRight: 3 },
-  categoryChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 999, borderWidth: 1.5, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
+  eyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 1 },
+  heading: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, marginTop: 3 },
+  countPill: { color: theme.violetDeep, backgroundColor: theme.violetTint, borderRadius: appRadii.pill, paddingHorizontal: 9, paddingVertical: 6, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  categoryRail: { gap: appSpacing.sm, paddingVertical: 2, paddingRight: 3 },
+  categoryChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.pill, borderWidth: 1.5, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
   categoryChipActive: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
-  categoryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  categoryText: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   categoryTextActive: { color: theme.onAccent },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: appSpacing.md },
   sceneCard: { backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 19, borderWidth: 2, height: 164, overflow: 'hidden', width: '48.5%' },
   sceneCardSelected: { borderColor: theme.sunDeep, borderWidth: 3 },
   sceneCardLocked: { opacity: 0.78 },
-  lockBadge: { alignItems: 'center', backgroundColor: 'rgba(35,29,54,0.78)', borderRadius: 999, flexDirection: 'row', gap: 4, left: 7, maxWidth: '86%', paddingHorizontal: 7, paddingVertical: 5, position: 'absolute', top: 7 },
-  lockText: { color: '#FFFFFF', flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  selectedBadge: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: 14, height: 28, justifyContent: 'center', position: 'absolute', right: 8, top: 8, width: 28 },
-  sceneCopy: { bottom: 0, left: 0, paddingBottom: 10, paddingHorizontal: 10, paddingTop: 32, position: 'absolute', right: 0 },
-  sceneName: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 13, lineHeight: 18 },
-  sceneMeta: { color: 'rgba(255,255,255,0.92)', fontFamily: typography.bodyBold, fontSize: 12, marginTop: 3 },
-  noScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, paddingVertical: 20, textAlign: 'center' },
+  lockBadge: { alignItems: 'center', backgroundColor: 'rgba(35,29,54,0.78)', borderRadius: appRadii.pill, flexDirection: 'row', gap: appSpacing.xs, left: 7, maxWidth: '86%', paddingHorizontal: 7, paddingVertical: 5, position: 'absolute', top: 7 },
+  lockText: { color: '#FFFFFF', flexShrink: 1, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  selectedBadge: { alignItems: 'center', backgroundColor: theme.sun, borderRadius: appRadii.control, height: 28, justifyContent: 'center', position: 'absolute', right: 8, top: 8, width: 28 },
+  sceneCopy: { bottom: 0, left: 0, paddingBottom: 10, paddingHorizontal: 10, paddingTop: appSpacing.section, position: 'absolute', right: 0 },
+  sceneName: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
+  sceneMeta: { color: 'rgba(255,255,255,0.92)', fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginTop: 3 },
+  noScenes: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, paddingVertical: appSpacing.xl, textAlign: 'center' },
   loadingFrame: { height: 150, justifyContent: 'center' },
-  bottomDock: { backgroundColor: theme.canvas, borderTopColor: theme.line, borderTopWidth: 1, bottom: 0, left: 0, paddingHorizontal: 20, paddingTop: 10, position: 'absolute', right: 0 },
-  createSelectedButton: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: 16, flexDirection: 'row', gap: 9, justifyContent: 'center', minHeight: 50, paddingHorizontal: 14 },
-  createSelectedText: { color: theme.onAccent, flexShrink: 1, fontFamily: typography.displayExtraBold, fontSize: 13.5 },
+  bottomDock: { backgroundColor: theme.canvas, borderTopColor: theme.line, borderTopWidth: 1, bottom: 0, left: 0, paddingHorizontal: appSpacing.xl, paddingTop: 10, position: 'absolute', right: 0 },
+  createSelectedButton: { alignItems: 'center', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, flexDirection: 'row', gap: 9, justifyContent: 'center', minHeight: 50, paddingHorizontal: 14 },
+  createSelectedText: { color: theme.onAccent, flexShrink: 1, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.small.fontSize },
 }));

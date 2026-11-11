@@ -1,10 +1,12 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appTextStyles } from '@/theme/designSystem';
 import { useColorScheme } from 'nativewind';
 import type { NumberPegItem } from '@/features/number-peg/types/numberPeg.types';
 import { memopalThemes } from '@/theme/memopalTheme';
 import { typography } from '@/theme/typography';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPeg';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 type Props = {
   item: NumberPegItem;
@@ -52,14 +54,14 @@ export function NumberPegItemCard({ item, locked = false, compact = false }: Pro
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-        <Text style={{ fontFamily: typography.bodyExtraBold, fontSize: compact ? 9 : 11, color: locked ? theme.inkMuted : theme.berryDeep }}>{item.number}</Text>
+        <Text style={{ fontFamily: typography.bodyExtraBold, fontSize: compact ? appTextStyles.caption.fontSize : appTextStyles.caption.fontSize, color: locked ? theme.inkMuted : theme.berryDeep }}>{item.number}</Text>
       </View>
       <View style={{ width: compact ? 46 : 58, height: compact ? 42 : 53, borderRadius: compact ? 13 : 16, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper, opacity: locked ? 0.55 : 1 }}>
-        <Text style={{ fontSize: compact ? 26 : 34 }}>{locked ? '🔒' : item.image}</Text>
+        <Text style={{ fontSize: compact ? appArtworkSizes.medium : appArtworkSizes.large, lineHeight: compact ? appArtworkSizes.medium + 4 : appArtworkSizes.large + 4 }}>{locked ? '🔒' : item.image}</Text>
       </View>
       <Text
         numberOfLines={1}
-        style={{ marginTop: compact ? 4 : 7, fontFamily: typography.bodyExtraBold, fontSize: compact ? 10 : 12, color: locked ? theme.inkSoft : theme.ink }}>
+        style={{ marginTop: compact ? 4 : 7, fontFamily: typography.bodyExtraBold, fontSize: compact ? appTextStyles.caption.fontSize : appTextStyles.caption.fontSize, color: locked ? theme.inkSoft : theme.ink }}>
         {locked ? t('locked') : localizedItem.keyword}
       </Text>
     </View>

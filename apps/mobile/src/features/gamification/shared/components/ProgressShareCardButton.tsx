@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
@@ -5,7 +7,7 @@ import { buildProgressShareMessage } from '@/features/gamification/shared/utils/
 import { LinearGradient } from 'expo-linear-gradient';
 import { Share2, X } from 'lucide-react-native';
 import { useState } from 'react';
-import { Modal, Platform, Share, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, Share, StyleSheet, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 type ProgressShareCardButtonProps = Readonly<{
@@ -89,23 +91,23 @@ function Metric({ value, label, styles }: { value: number; label: string; styles
 }
 
 const useStyles = createThemedStyles(theme => StyleSheet.create({
-  button: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 13, borderWidth: 1, flexDirection: 'row', gap: 8, minHeight: 44, paddingHorizontal: 14 },
-  buttonText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  scrim: { alignItems: 'center', backgroundColor: 'rgba(21,16,38,0.62)', flex: 1, justifyContent: 'center', padding: 20 },
-  modal: { backgroundColor: theme.paper, borderRadius: 22, gap: 14, maxWidth: 460, padding: 16, width: '100%' },
+  button: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.control, borderWidth: 1, flexDirection: 'row', gap: appSpacing.sm, minHeight: 44, paddingHorizontal: 14 },
+  buttonText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  scrim: { alignItems: 'center', backgroundColor: 'rgba(21,16,38,0.62)', flex: 1, justifyContent: 'center', padding: appSpacing.xl },
+  modal: { backgroundColor: theme.paper, borderRadius: appRadii.card, gap: 14, maxWidth: 460, padding: appSpacing.lg, width: '100%' },
   modalHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  modalTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 17 },
-  close: { alignItems: 'center', borderRadius: 12, height: 44, justifyContent: 'center', width: 44 },
-  card: { borderRadius: 22, gap: 14, minHeight: 270, overflow: 'hidden', padding: 22 },
-  brand: { color: 'rgba(255,255,255,0.78)', fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1.1 },
-  cardTitle: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 23, lineHeight: 29, marginTop: 5 },
-  metrics: { flexDirection: 'row', gap: 8, marginTop: 2 },
-  metric: { backgroundColor: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: 15, borderWidth: 1, flex: 1, gap: 5, minHeight: 74, justifyContent: 'center', paddingHorizontal: 10, paddingVertical: 10 },
-  metricValue: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: 22 },
-  metricLabel: { color: 'rgba(255,255,255,0.92)', fontFamily: typography.bodyBold, fontSize: 9, lineHeight: 13 },
-  privacy: { color: 'rgba(255,255,255,0.82)', fontFamily: typography.bodySemibold, fontSize: 9, lineHeight: 13, marginTop: 'auto' },
-  shareButton: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: theme.violetDeep, borderRadius: 14, flexDirection: 'row', gap: 8, justifyContent: 'center', minHeight: 48 },
-  shareButtonText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  modalTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
+  close: { alignItems: 'center', borderRadius: appRadii.control, height: 44, justifyContent: 'center', width: 44 },
+  card: { borderRadius: appRadii.card, gap: 14, minHeight: 270, overflow: 'hidden', padding: 22 },
+  brand: { color: 'rgba(255,255,255,0.78)', fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 1.1 },
+  cardTitle: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: appTextStyles.stat.fontSize, lineHeight: appTextStyles.stat.lineHeight, marginTop: 5 },
+  metrics: { flexDirection: 'row', gap: appSpacing.sm, marginTop: 2 },
+  metric: { backgroundColor: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: appRadii.control, borderWidth: 1, flex: 1, gap: 5, minHeight: 74, justifyContent: 'center', paddingHorizontal: 10, paddingVertical: 10 },
+  metricValue: { color: '#FFFFFF', fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize },
+  metricLabel: { color: 'rgba(255,255,255,0.92)', fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  privacy: { color: 'rgba(255,255,255,0.82)', fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 'auto' },
+  shareButton: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, flexDirection: 'row', gap: appSpacing.sm, justifyContent: 'center', minHeight: 48 },
+  shareButtonText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
   disabled: { opacity: 0.55 },
-  webNote: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 11, lineHeight: 16 },
+  webNote: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
 }));

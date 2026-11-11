@@ -1,6 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
 import { useState } from 'react';
 import { AppBottomSheet } from '@/components/AppBottomSheet';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import type { ReactNode } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AnimatedPressable from '@/components/AnimatedPressable';

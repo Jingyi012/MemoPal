@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { CommonHeader } from '@/components/CommonHeader';
 import LoadingView from '@/components/LoadingView';
 import { MemoryLibraryItemCard } from '../components/MemoryLibraryItemCard';
@@ -13,7 +15,7 @@ import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pencil, Plus, RefreshCcw } from '@/core/icons';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRef, useState } from 'react';
@@ -218,5 +220,5 @@ export default function MemoryFolderDetailScreen() {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.canvas }, toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }, content: { padding: 16, paddingTop: 0, paddingBottom: 32 }, loading: { height: 180, borderRadius: 20, overflow: 'hidden' }, list: { gap: 8 }, cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 }, cardGridCell: { width: '48.5%' }, notice: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 20, borderWidth: 2, padding: 22 }, empty: { fontSize: 32, marginBottom: 8 }, noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center' }, noticeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, marginTop: 5, textAlign: 'center' }, retry: { alignSelf: 'center', marginTop: 14 }, create: { alignSelf: 'center', marginTop: 15 }, loadMore: { alignSelf: 'center', marginTop: 16 },
+  page: { flex: 1, backgroundColor: theme.canvas }, toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: appSpacing.md }, content: { padding: appSpacing.lg, paddingTop: 0, paddingBottom: appSpacing.section }, loading: { height: 180, borderRadius: appRadii.card, overflow: 'hidden' }, list: { gap: appSpacing.sm }, cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 }, cardGridCell: { width: '48.5%' }, notice: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 2, padding: 22 }, empty: { fontSize: appTextStyles.display.fontSize, marginBottom: appSpacing.sm }, noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize, textAlign: 'center' }, noticeBody: { color: theme.inkSoft, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, marginTop: 5, textAlign: 'center' }, retry: { alignSelf: 'center', marginTop: 14 }, create: { alignSelf: 'center', marginTop: 15 }, loadMore: { alignSelf: 'center', marginTop: appSpacing.lg },
 }));

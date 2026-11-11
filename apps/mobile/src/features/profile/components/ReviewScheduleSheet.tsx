@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { AppButton } from '@/components/ui/AppButton';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -8,14 +10,7 @@ import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Clock3 } from '@/core/icons';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeViewGestureHandler } from 'react-native-gesture-handler';
 
@@ -231,23 +226,23 @@ function clampIndex(value: number, length: number) {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  sheet: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 12 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 11, marginBottom: 12 },
+  sheet: { flexGrow: 1, paddingHorizontal: appSpacing.xl, paddingTop: appSpacing.md },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 11, marginBottom: appSpacing.md },
   headerIcon: {
     width: 42,
     height: 42,
-    borderRadius: 14,
+    borderRadius: appRadii.control,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.violetTint,
   },
   headerCopy: { flex: 1 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19 },
-  subtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 11.5, marginTop: 2 },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize },
+  subtitle: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginTop: 2 },
   preview: {
     alignItems: 'center',
     borderColor: theme.sunLine,
-    borderRadius: 18,
+    borderRadius: appRadii.card,
     borderWidth: 2,
     paddingVertical: 10,
     marginBottom: 10,
@@ -255,22 +250,22 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   previewLabel: {
     color: theme.inkSoft,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 9.5,
+    fontSize: appTextStyles.caption.fontSize,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   previewTime: {
     color: theme.ink,
     fontFamily: typography.displayExtraBold,
-    fontSize: 31,
-    lineHeight: 36,
+    fontSize: appTextStyles.display.fontSize,
+    lineHeight: appTextStyles.display.lineHeight,
     marginTop: 1,
   },
-  previewHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10 },
+  previewHint: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize },
   instruction: {
     color: theme.inkSoft,
     fontFamily: typography.bodyBold,
-    fontSize: 11,
+    fontSize: appTextStyles.caption.fontSize,
     textAlign: 'center',
     marginBottom: 6,
   },
@@ -278,7 +273,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.paper,
     borderColor: theme.violetLine,
-    borderRadius: 18,
+    borderRadius: appRadii.card,
     borderWidth: 2,
     flexDirection: 'row',
     height: ITEM_HEIGHT * VISIBLE_ITEMS,
@@ -290,7 +285,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   selectionHighlight: {
     backgroundColor: theme.violetTint,
     borderColor: theme.violetLine,
-    borderRadius: 12,
+    borderRadius: appRadii.control,
     borderWidth: 2,
     height: ITEM_HEIGHT,
     left: '22%',
@@ -299,20 +294,20 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     top: WHEEL_PADDING,
   },
   wheelItem: { alignItems: 'center', height: ITEM_HEIGHT, justifyContent: 'center', width: 70 },
-  wheelText: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: 21 },
-  wheelTextSelected: { color: theme.violetDeep, fontSize: 25 },
+  wheelText: { color: theme.inkSoft, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize },
+  wheelTextSelected: { color: theme.violetDeep, fontSize: appTextStyles.pageTitle.fontSize },
   colon: {
     color: theme.violetDeep,
     fontFamily: typography.displayExtraBold,
-    fontSize: 25,
+    fontSize: appTextStyles.pageTitle.fontSize,
     marginHorizontal: 3,
   },
-  quickRow: { alignItems: 'center', flexDirection: 'row', gap: 7, marginTop: 12, marginBottom: 13 },
+  quickRow: { alignItems: 'center', flexDirection: 'row', gap: 7, marginTop: appSpacing.md, marginBottom: 13 },
   quickLabel: {
     color: theme.inkSoft,
     flex: 1,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 10,
+    fontSize: appTextStyles.caption.fontSize,
     textTransform: 'uppercase',
   },
   quickPill: {
@@ -326,7 +321,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     paddingVertical: 6,
   },
   quickPillSelected: { backgroundColor: theme.violetTint, borderColor: theme.violetLine },
-  quickText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 11 },
+  quickText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   quickTextSelected: { color: theme.violetDeep },
   footer: {
     alignItems: 'stretch',

@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { EducationGuardianRequests } from '../components/EducationGuardianRequests';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
@@ -28,7 +30,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useNavigation, usePreventRemove, type NavigationAction } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 export default function EducationAssignmentsScreen() {
   const { assignmentId, attemptId, practiceType, connections } = useLocalSearchParams<{ assignmentId?: string; attemptId?: string; practiceType?: string; connections?: string }>();
@@ -265,7 +267,7 @@ export default function EducationAssignmentsScreen() {
     const availability = getEducationAssignmentStatus(selectedAssignment);
     return (
       <View style={styles.detailCard}>
-        <LinearGradient colors={theme.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={{ padding: 20, borderRadius: 22, gap: 12, marginBottom: 8 }}>
+        <LinearGradient colors={theme.hero as [string, string]} start={[0, 0]} end={[1, 1]} style={{ padding: appSpacing.xl, borderRadius: appRadii.card, gap: appSpacing.md, marginBottom: appSpacing.sm }}>
           <Text style={[styles.body, { color: theme.heroInk }]}>{selectedAssignment.courseTitle ?? copy.title}</Text>
           <Text accessibilityRole="header" style={[styles.title, { color: theme.heroInk }]}>{selectedAssignment.title}</Text>
           <Text style={[styles.status, styles[availability]]}>{statusLabel}</Text>
@@ -306,24 +308,24 @@ export default function EducationAssignmentsScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { backgroundColor: theme.canvas, flex: 1 },
-  content: { gap: 18, padding: 16, paddingBottom: 40 },
-  connectionToggle: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 14, borderRadius: 18, backgroundColor: theme.violetTint, borderWidth: 1, borderColor: theme.line },
-  detailCard: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 26, borderWidth: 2, borderBottomWidth: 6, gap: 14, padding: 16 },
-  secondaryAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 18, borderWidth: 2, borderBottomWidth: 5, borderColor: theme.line, justifyContent: 'center', minHeight: 48, padding: 12 },
-  preference: { alignItems: 'center', borderColor: theme.line, borderRadius: 12, borderWidth: 1, flexDirection: 'row', gap: 10, justifyContent: 'space-between', padding: 12 },
+  content: { gap: 18, padding: appSpacing.lg, paddingBottom: appSpacing.spacious },
+  connectionToggle: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: appSpacing.md, padding: 14, borderRadius: appRadii.card, backgroundColor: theme.violetTint, borderWidth: 1, borderColor: theme.line },
+  detailCard: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.hero, borderWidth: 2, borderBottomWidth: 6, gap: 14, padding: appSpacing.lg },
+  secondaryAction: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.card, borderWidth: 2, borderBottomWidth: 5, borderColor: theme.line, justifyContent: 'center', minHeight: 48, padding: appSpacing.md },
+  preference: { alignItems: 'center', borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, flexDirection: 'row', gap: 10, justifyContent: 'space-between', padding: appSpacing.md },
   preferenceCopy: { flex: 1, gap: 3 },
-  preferenceTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 13 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, lineHeight: 26 },
-  status: { alignSelf: 'flex-start', borderRadius: 999, fontFamily: typography.bodyExtraBold, fontSize: 12, overflow: 'hidden', paddingHorizontal: 9, paddingVertical: 4 },
+  preferenceTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize, lineHeight: appTextStyles.screenTitle.lineHeight },
+  status: { alignSelf: 'flex-start', borderRadius: appRadii.pill, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, overflow: 'hidden', paddingHorizontal: 9, paddingVertical: appSpacing.xs },
   upcoming: { backgroundColor: theme.skyTint, color: theme.link },
   open: { backgroundColor: theme.mintTint, color: theme.successText },
   pastDue: { backgroundColor: theme.peachTint, color: theme.berryDeep },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
   state: { alignItems: 'center', flexDirection: 'row', gap: 10, minHeight: 60 },
-  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 16, borderWidth: 1.5, gap: 5, padding: 15 },
-  noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
-  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 12, justifyContent: 'center', marginTop: 8, minHeight: 48, paddingHorizontal: 16 },
-  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: 13, lineHeight: 19 },
+  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: appRadii.control, borderWidth: 1.5, gap: 5, padding: 15 },
+  noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize },
+  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, justifyContent: 'center', marginTop: appSpacing.sm, minHeight: 48, paddingHorizontal: appSpacing.lg },
+  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  error: { color: theme.berryDeep, fontFamily: typography.bodyBold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
   disabledAction: { opacity: 0.55 },
 }));

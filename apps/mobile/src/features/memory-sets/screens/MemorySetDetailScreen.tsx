@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -16,7 +18,7 @@ import { MemoryReviewTaskCard } from '../components/MemoryReviewTaskCard';
 import { useCallback } from 'react';
 import { Href, useRouter, useFocusEffect } from 'expo-router';
 import { AlertCircle, ArrowRight, Check, Circle, X } from '@/core/icons';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import type { TranslationKey } from '@/core/i18n/i18n';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
@@ -219,49 +221,49 @@ function localizeItemPrompt(
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 16, paddingBottom: 32, gap: 16 },
-  summaryCard: { backgroundColor: theme.paper, borderRadius: 22, borderWidth: 1, borderColor: theme.line, padding: 18, gap: 16, overflow: 'hidden' },
-  listHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 8 },
-  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 4 },
+  content: { padding: appSpacing.lg, paddingBottom: appSpacing.section, gap: appSpacing.lg },
+  summaryCard: { backgroundColor: theme.paper, borderRadius: appRadii.card, borderWidth: 1, borderColor: theme.line, padding: 18, gap: appSpacing.lg, overflow: 'hidden' },
+  listHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: appSpacing.md, marginTop: appSpacing.sm },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.lg, paddingVertical: appSpacing.xs },
   summaryIcon: { width: 60, height: 60, borderRadius: 19, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: theme.paper, overflow: 'hidden' },
-  summaryImage: { width: '100%', height: '100%', borderRadius: 17 },
-  techniqueEmoji: { fontSize: 30 },
+  summaryImage: { width: '100%', height: '100%', borderRadius: appRadii.control },
+  techniqueEmoji: { fontSize: appArtworkSizes.medium },
   summaryIconPalace: { backgroundColor: theme.violetTint },
   summaryIconPeg: { backgroundColor: theme.berryTint },
   summaryCopy: { flex: 1, minWidth: 0 },
-  description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 21 },
-  summaryMetadata: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 5 },
-  techniqueLabel: { fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.8 },
+  description: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  summaryMetadata: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: appSpacing.sm, marginTop: 5 },
+  techniqueLabel: { fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.8 },
   palaceLabel: { color: theme.violetDeep },
   pegLabel: { color: theme.berryDeep },
-  summaryTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 22, marginTop: 4 },
-  summaryMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, marginTop: 3 },
-  modeSection: { gap: 8 },
-  modeCard: { alignItems: 'center', borderRadius: 18, borderWidth: 1, flexDirection: 'row', marginBottom: 10, minHeight: 92, padding: 13 },
+  summaryTitle: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.prompt.fontSize, marginTop: appSpacing.xs },
+  summaryMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginTop: 3 },
+  modeSection: { gap: appSpacing.sm },
+  modeCard: { alignItems: 'center', borderRadius: appRadii.card, borderWidth: 1, flexDirection: 'row', marginBottom: 10, minHeight: 92, padding: 13 },
   rehearseCard: { backgroundColor: theme.paper, borderColor: theme.line },
   setupCard: { backgroundColor: theme.paper, borderColor: theme.line },
-  modeIcon: { alignItems: 'center', borderRadius: 15, height: 52, justifyContent: 'center', width: 52 },
+  modeIcon: { alignItems: 'center', borderRadius: appRadii.control, height: 52, justifyContent: 'center', width: 52 },
   rehearseIcon: { backgroundColor: theme.violetLine },
   setupIcon: { backgroundColor: theme.violetLine },
-  modeEmoji: { fontSize: 25 },
-  modeCopy: { flex: 1, marginLeft: 12 },
-  modeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15 },
-  modeBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 2 },
-  sectionLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 16 },
+  modeEmoji: { fontSize: appArtworkSizes.small },
+  modeCopy: { flex: 1, marginLeft: appSpacing.md },
+  modeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize },
+  modeBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 2 },
+  sectionLabel: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.cardTitle.fontSize },
   itemList: { borderRadius: 19, borderWidth: 1, borderColor: theme.line, backgroundColor: theme.paper, paddingHorizontal: 13 },
-  itemRow: { minHeight: 80, paddingVertical: 12, flexDirection: 'row', alignItems: 'flex-start', borderBottomWidth: 1, borderBottomColor: theme.line },
+  itemRow: { minHeight: 80, paddingVertical: appSpacing.md, flexDirection: 'row', alignItems: 'flex-start', borderBottomWidth: 1, borderBottomColor: theme.line },
   itemRowLast: { borderBottomWidth: 0 },
-  itemNumber: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  itemNumber: { width: 30, height: 30, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center' },
   itemNumberPalace: { backgroundColor: theme.violet },
   itemNumberPeg: { backgroundColor: theme.sun },
-  itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  itemNumberText: { color: theme.onSun, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   itemCopy: { flex: 1, minWidth: 0, marginLeft: 11 },
-  itemPrompt: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, lineHeight: 22, marginTop: 3 },
-  readyBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  readyText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  itemPrompt: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  itemAnswer: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize, lineHeight: appTextStyles.body.lineHeight, marginTop: 3 },
+  readyBadge: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.xs, marginTop: 6 },
+  readyText: { color: theme.successText, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   draftText: { color: theme.violetDeep },
   needsReviewText: { color: theme.berryDeep },
   notTriedText: { color: theme.inkSoft },
-  centerState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  centerState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: appSpacing.xxl },
 }));

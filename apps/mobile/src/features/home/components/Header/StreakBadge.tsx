@@ -1,4 +1,6 @@
-import { Text, View } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles } from '@/theme/designSystem';
+import { View } from 'react-native';
 
 interface StreakBadgeProps {
   streak: number;
@@ -9,8 +11,8 @@ export function StreakBadge({ streak }: StreakBadgeProps) {
     <View
       className="mt-3 flex-row items-center gap-2 rounded-xl bg-white/10 px-3 py-1.5"
       style={{ alignSelf: 'flex-start' }}>
-      <Text className="text-base">🔥</Text>
-      <Text className="text-sm text-white">{streak} day streak!</Text>
+      <Text style={appTextStyles.body}>🔥</Text>
+      <Text className="text-white" style={appTextStyles.label}>{streak} day streak!</Text>
     </View>
   );
 }

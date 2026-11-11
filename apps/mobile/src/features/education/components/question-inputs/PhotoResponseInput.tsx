@@ -1,7 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii } from '@/theme/designSystem';
 import { learningDocumentColors } from '../../theme/learningTheme';
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Image, View } from 'react-native';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import type { PhotoResponseAnswer, PhotoResponseQuestion } from '../../types/question.types';
@@ -139,7 +141,7 @@ export function PhotoResponseInput({ question, value, identity, onUpload, onChan
     <Text style={styles.hint}>{labels.promptHint}</Text>
     <Text style={styles.hint}>{labels.hint}</Text>
     {canvasHasWork ? <Text style={styles.hint}>{labels.discardBeforeReplace}</Text> : null}
-    {value.localUri ? <Image accessibilityLabel={question.prompt} source={{ uri: value.localUri }} style={{ width: '100%', height: 220, borderRadius: 12, backgroundColor: learningDocumentColors.paper }} resizeMode="contain" /> : null}
+    {value.localUri ? <Image accessibilityLabel={question.prompt} source={{ uri: value.localUri }} style={{ width: '100%', height: 220, borderRadius: appRadii.control, backgroundColor: learningDocumentColors.paper }} resizeMode="contain" /> : null}
     {value.photoAttachmentId && !value.localUri ? <Text style={styles.hint}>{labels.attached}</Text> : null}
     {failed ? <Text accessibilityRole="alert" style={styles.hint}>{labels.uploadError}</Text> : null}
     <AnimatedPressable accessibilityRole="button" accessibilityLabel={labels.choose}

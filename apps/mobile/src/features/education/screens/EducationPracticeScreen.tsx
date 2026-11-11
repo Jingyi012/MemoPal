@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { LearningHeader as CommonHeader } from '@/features/education/components/LearningHeader';
@@ -9,7 +11,7 @@ import { educationPracticePreferences } from '@/features/education/services/educ
 import type { EducationPracticeFormatPreference, EducationPracticeQuestionType } from '@/features/education/types/educationPractice.types';
 import { Href, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 
 const FORMAT_TYPES: readonly EducationPracticeQuestionType[] = [
   'single-choice', 'true-false', 'fill-blank', 'multiple-select', 'ordering', 'matching',
@@ -105,17 +107,17 @@ export default function EducationPracticeScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { backgroundColor: theme.canvas, flex: 1 },
-  content: { gap: 16, padding: 16, paddingBottom: 40 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20 },
-  sectionTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  formats: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  formatChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 999, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingVertical: 10, paddingHorizontal: 13 },
+  content: { gap: appSpacing.lg, padding: appSpacing.lg, paddingBottom: appSpacing.spacious },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
+  sectionTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
+  formats: { flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm },
+  formatChip: { alignItems: 'center', backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.pill, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingVertical: 10, paddingHorizontal: 13 },
   selectedFormat: { backgroundColor: theme.violetDeep, borderColor: theme.violetDeep },
-  formatText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 14, lineHeight: 21 },
+  formatText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },
   selectedFormatText: { color: theme.onAccent },
   state: { alignItems: 'center', flexDirection: 'row', gap: 10, minHeight: 60 },
-  empty: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 14, borderWidth: 1, color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 14, lineHeight: 20, padding: 14 },
-  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: 15, borderWidth: 1, gap: 8, padding: 14 },
-  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: 12, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
-  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: 13 },
+  empty: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.control, borderWidth: 1, color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight, padding: 14 },
+  notice: { backgroundColor: theme.peachTint, borderColor: theme.peachLine, borderRadius: appRadii.control, borderWidth: 1, gap: appSpacing.sm, padding: 14 },
+  action: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: theme.violetDeep, borderRadius: appRadii.control, justifyContent: 'center', minHeight: 44, paddingHorizontal: 15 },
+  actionText: { color: theme.onAccent, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.small.fontSize },
 }));

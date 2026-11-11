@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { groupMemoryReviews, type DueMemoryReview } from '@/features/practice-attempts';
 import { typography } from '@/theme/typography';
 import { ArrowRight } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { isReviewOverdue } from '@/features/practice-attempts/utils/reviewDate';
 
@@ -46,13 +48,13 @@ export function TodayReviewCard({ reviews, visibleCount = 2, onOpen }: TodayRevi
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: { borderRadius: 19, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 13 },
   reviewList: { gap: 7 },
-  reviewRow: { minHeight: 54, borderRadius: 14, backgroundColor: theme.paper, paddingHorizontal: 9, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 9 },
+  reviewRow: { minHeight: 54, borderRadius: appRadii.control, backgroundColor: theme.paper, paddingHorizontal: 9, paddingVertical: appSpacing.sm, flexDirection: 'row', alignItems: 'center', gap: 9 },
   reviewIcon: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  reviewEmoji: { fontSize: 15 },
+  reviewEmoji: { fontSize: appTextStyles.body.fontSize },
   pegIcon: { backgroundColor: theme.berryTint },
   palaceIcon: { backgroundColor: theme.violetTint },
   reviewCopy: { flex: 1, minWidth: 0 },
-  reviewTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 12.5 },
-  reviewMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 10.5, marginTop: 2 },
+  reviewTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  reviewMeta: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginTop: 2 },
   overdueText: { color: theme.berryDeep },
 }));

@@ -1,4 +1,6 @@
-import { Text, View, useWindowDimensions } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
+import { View, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import type { EducationClassroomCourse } from '../types/educationRelationship.types';
@@ -13,14 +15,14 @@ export function EducationClassroomCourseCard({ course, onOpen }: { course: Educa
   const { width, fontScale } = useWindowDimensions();
   const stacked = width / fontScale < 380;
   const contents = <>
-    <View style={{ backgroundColor: theme.violetTint, borderRadius: 18, padding: 16, gap: 12 }}>
-      <View style={{ flexDirection: stacked ? 'column' : 'row', alignItems: stacked ? 'flex-start' : 'center', gap: 12 }}>
-        <View style={{ borderRadius: 14, padding: stacked ? 8 : 12, backgroundColor: theme.paper }}><Ionicons name={subject.icon} size={stacked ? 24 : 28} color={subject.color} /></View>
-        <Text accessibilityRole="header" style={[s.title, { flex: stacked ? undefined : 1, alignSelf: 'stretch', color: subject.dark, fontSize: 20 }]}>{course.title}</Text>
+    <View style={{ backgroundColor: theme.violetTint, borderRadius: appRadii.card, padding: appSpacing.lg, gap: appSpacing.md }}>
+      <View style={{ flexDirection: stacked ? 'column' : 'row', alignItems: stacked ? 'flex-start' : 'center', gap: appSpacing.md }}>
+        <View style={{ borderRadius: appRadii.control, padding: stacked ? 8 : 12, backgroundColor: theme.paper }}><Ionicons name={subject.icon} size={stacked ? 24 : 28} color={subject.color} /></View>
+        <Text accessibilityRole="header" style={[s.title, { flex: stacked ? undefined : 1, alignSelf: 'stretch', color: subject.dark, fontSize: appTextStyles.screenTitle.fontSize }]}>{course.title}</Text>
       </View>
       <Text style={[s.small, { color: subject.dark }]}>{zh ? `${course.objectives.length} 个知识点` : `${course.objectives.length} learning objectives`}</Text>
     </View>
-    <View style={{ gap: 12, paddingHorizontal: 4, paddingBottom: 4 }}>
+    <View style={{ gap: appSpacing.md, paddingHorizontal: appSpacing.xs, paddingBottom: appSpacing.xs }}>
       <Text style={s.body}>{course.guidedPracticeEnabled ? copy.classroomLearningCourseHint : copy.classroomLearningNotOpen}</Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Ionicons name={course.guidedPracticeEnabled ? 'play-circle-outline' : 'time-outline'} size={23} color={subject.color} />

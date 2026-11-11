@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes } from '@/theme/designSystem';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { LearningLibraryCardSurface } from '@/features/education/components/LearningLibraryCard';
 import { createThemedStyles } from '@/theme/createThemedStyles';
@@ -19,5 +21,5 @@ export function MemoryFolderCard({ folder, onOpen, onLongPress, variant = 'list'
 }
 const useStyles = createThemedStyles(theme => StyleSheet.create({
   cover: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.paper },
-  emoji: { fontSize: 28 },
+  emoji: { fontSize: appArtworkSizes.small },
 }));

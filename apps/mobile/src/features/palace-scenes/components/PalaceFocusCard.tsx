@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { AppButton } from '@/components/ui/AppButton';
 import type { PalaceLocus } from '@/features/palace-scenes/types/palaceScene.types';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import { ChevronLeft, ChevronRight, RotateCcw } from '@/core/icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { getPalaceLocusName } from '@/features/palace-scenes/utils/palaceLocalization';
 
@@ -70,30 +72,30 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   card: {
     backgroundColor: theme.paper,
     borderColor: theme.violetLine,
-    borderRadius: 22,
+    borderRadius: appRadii.card,
     borderWidth: 1.5,
-    marginBottom: 12,
+    marginBottom: appSpacing.md,
     overflow: 'hidden',
   },
-  copy: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12 },
+  copy: { paddingHorizontal: appSpacing.lg, paddingTop: 14, paddingBottom: appSpacing.md },
   eyebrowRow: { alignItems: 'center', flexDirection: 'row', gap: 7 },
   eyebrow: {
     color: theme.violetDeep,
     flexShrink: 1,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 12,
+    fontSize: appTextStyles.caption.fontSize,
   },
-  focusSparkleEmoji: { fontSize: 14 },
-  answer: { color: theme.ink, fontFamily: typography.display, fontSize: 23, marginTop: 5 },
+  focusSparkleEmoji: { fontSize: appTextStyles.label.fontSize },
+  answer: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.stat.fontSize, marginTop: 5 },
   association: {
     color: theme.inkSoft,
     fontFamily: typography.bodySemibold,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: appTextStyles.caption.fontSize,
+    lineHeight: appTextStyles.caption.lineHeight,
     marginTop: 5,
   },
   navigationRow: { alignItems: 'center', flexDirection: 'row', gap: 10, paddingHorizontal: 14, paddingBottom: 14 },
-  previousButton: { borderRadius: 15, height: 46, width: 46 },
+  previousButton: { borderRadius: appRadii.control, height: 46, width: 46 },
   nextButton: { flex: 1, minHeight: 46 },
   disabledButton: { opacity: 0.35 },
 }));

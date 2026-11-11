@@ -1,6 +1,8 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing } from '@/theme/designSystem';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useLearningCopy, useLearningStyles } from './LearningUi';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -28,7 +30,7 @@ export function LearningPracticeTip({ userId }: { userId: string }) {
     return () => { active = false; };
   }, [key]);
   if (!visible) return null;
-  return <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+  return <View style={{ flexDirection: 'row', gap: appSpacing.sm, alignItems: 'center' }}>
     <Ionicons name="information-circle-outline" size={20} color={theme.violetDeep} />
     <Text style={[styles.small, { flex: 1 }]}>{copy.zh ? '按自己的节奏练习' : 'Learn at your own pace'}</Text>
     <AnimatedPressable accessibilityRole="button" accessibilityLabel={copy.close} onPress={() => { setVisible(false); void AsyncStorage.setItem(key, 'seen').catch(() => undefined); }} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>

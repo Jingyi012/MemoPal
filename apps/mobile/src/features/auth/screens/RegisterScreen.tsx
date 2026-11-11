@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appTextStyles, fontFamilies } from '@/theme/designSystem';
 import { AuthLayout } from '../components/AuthLayout';
 import { AuthField } from '../components/AuthField';
 import { authApi } from '@/features/auth/api/auth';
@@ -19,7 +21,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { getSafeAuthReturnTo } from '@/features/auth/utils/safeAuthReturnTo';
@@ -136,17 +138,17 @@ export default function Register() {
           style={{ borderRadius: 10, boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.16)' }}
           className="self-center mb-6 h-20 w-20 items-center justify-center"
           >
-          <Text className="text-4xl">🧠</Text>
+          <Text style={appTextStyles.phrase}>🧠</Text>
         </LinearGradient>
 
-        <Text className="mb-2 text-center text-3xl font-semibold text-ink">{t('signUp')}</Text>
+        <Text className="mb-2 text-center text-ink" style={[appTextStyles.display, { fontFamily: fontFamilies.bodySemibold }]}>{t('signUp')}</Text>
 
         <Text className="mb-8  text-center text-ink-soft">
           {t('createDescription')}
         </Text>
 
         {!hasEnabledMethod && (
-          <Text className="mb-4  text-center text-sm text-accent-berry">
+          <Text className="mb-4 text-center text-accent-berry" style={appTextStyles.label}>
             {t('registrationUnavailable')}
           </Text>
         )}
@@ -235,7 +237,7 @@ export default function Register() {
               style={{ width: 18, height: 18 }}
               contentFit="contain"
             />
-            <Text className="font-medium text-ink">{t('continueGoogle')}</Text>
+            <Text className="text-ink" style={{ fontFamily: fontFamilies.bodySemibold }}>{t('continueGoogle')}</Text>
           </AnimatedPressable>
         )}
 
@@ -269,7 +271,7 @@ export default function Register() {
             disabled={isSubmitting}
             className="mb-3 w-full flex-row items-center justify-center gap-3 rounded-2xl border-2 border-line bg-surface px-6 py-4">
             <Ionicons name="logo-facebook" size={18} color="#1877F2" />
-            <Text className="font-medium text-ink">{t('continueFacebook')}</Text>
+            <Text className="text-ink" style={{ fontFamily: fontFamilies.bodySemibold }}>{t('continueFacebook')}</Text>
           </AnimatedPressable>
         )}
 

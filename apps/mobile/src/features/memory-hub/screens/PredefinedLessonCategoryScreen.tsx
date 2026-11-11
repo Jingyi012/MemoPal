@@ -1,3 +1,6 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { AppTextInput as TextInput } from '@/components/ui/AppTextInput';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { CommonHeader } from '@/components/CommonHeader';
 import { MemoryLearningCard } from '@/components/MemoryLearningCard';
 import { ModuleNoticeCard } from '@/components/ModuleNoticeCard';
@@ -10,7 +13,7 @@ import { typography } from '@/theme/typography';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { RefreshCcw, Search, Sparkles } from '@/core/icons';
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useMemoryCollections, useDownloadMemoryCollection } from '@/features/predefined-memory-lessons/hooks/useMemoryCollections';
 import Toast from 'react-native-toast-message';
 import { predefinedLessonRoute } from '@/features/predefined-memory-lessons/utils/predefinedLessonRoute';
@@ -172,19 +175,19 @@ function openLesson(router: ReturnType<typeof useRouter>, lesson: PredefinedMemo
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
   downloadButton: { alignSelf: 'stretch' },
-  content: { padding: 16, paddingBottom: 36, gap: 16 },
-  collectionHero: { minHeight: 112, borderRadius: 26, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  content: { padding: appSpacing.lg, paddingBottom: 36, gap: appSpacing.lg },
+  collectionHero: { minHeight: 112, borderRadius: appRadii.hero, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, padding: appSpacing.lg, flexDirection: 'row', alignItems: 'center', gap: 14 },
   heroArtwork: { width: 76, height: 76, borderRadius: 27, backgroundColor: theme.paper, borderWidth: 1.5, borderColor: theme.line, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-3deg' }] },
-  heroSparkle: { position: 'absolute', right: -7, top: -7, width: 28, height: 28, borderRadius: 14, backgroundColor: theme.berryTint, alignItems: 'center', justifyContent: 'center' },
-  heroEmoji: { fontSize: 39 },
+  heroSparkle: { position: 'absolute', right: -7, top: -7, width: 28, height: 28, borderRadius: appRadii.control, backgroundColor: theme.berryTint, alignItems: 'center', justifyContent: 'center' },
+  heroEmoji: { fontSize: appArtworkSizes.large },
   heroCopy: { flex: 1 },
-  heroLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
-  heroCount: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, lineHeight: 24, marginTop: 5 },
-  search: { height: 48, borderRadius: 16, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 8 },
-  searchInput: { flex: 1, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: 14 },
-  grid: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  gridColumn: { flex: 1, gap: 12 },
-  lessonEmoji: { fontSize: 29 },
-  stateCard: { minHeight: 120, borderRadius: 22, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center', padding: 20 },
-  stateText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  heroLabel: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, textTransform: 'uppercase', letterSpacing: 0.5 },
+  heroCount: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight, marginTop: 5 },
+  search: { height: 48, borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: appSpacing.sm },
+  searchInput: { flex: 1, color: theme.ink, fontFamily: typography.bodySemibold, fontSize: appTextStyles.label.fontSize },
+  grid: { flexDirection: 'row', gap: appSpacing.md, alignItems: 'flex-start' },
+  gridColumn: { flex: 1, gap: appSpacing.md },
+  lessonEmoji: { fontSize: appArtworkSizes.medium },
+  stateCard: { minHeight: 120, borderRadius: appRadii.card, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center', padding: appSpacing.xl },
+  stateText: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, textAlign: 'center' },
 }));

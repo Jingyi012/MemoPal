@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { AppButton } from '@/components/ui/AppButton';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -9,7 +11,7 @@ import { localizeNumberPeg } from '@/features/number-peg/utils/localizedNumberPe
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight, Check, RefreshCcw, X } from '@/core/icons';
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 
 type Feedback = 'correct' | 'wrong' | null;
@@ -187,52 +189,52 @@ function nextChoiceSeed(seed: number): number {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 16, paddingBottom: 42 },
+  content: { padding: appSpacing.lg, paddingBottom: 42 },
   rangeCard: { borderRadius: 23, borderWidth: 1.5, borderColor: theme.violetLine, backgroundColor: theme.paper, padding: 18 },
-  rangeEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase' },
-  rangeTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 20, lineHeight: 27, marginTop: 7 },
+  rangeEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 1, textTransform: 'uppercase' },
+  rangeTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.screenTitle.fontSize, lineHeight: appTextStyles.screenTitle.lineHeight, marginTop: 7 },
   rangeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 17 },
-  rangeOption: { minHeight: 65, alignItems: 'center', justifyContent: 'center', borderRadius: 15, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.canvas, padding: 7 },
+  rangeOption: { minHeight: 65, alignItems: 'center', justifyContent: 'center', borderRadius: appRadii.control, borderWidth: 1.5, borderColor: theme.line, backgroundColor: theme.canvas, padding: 7 },
   rangeOptionSelected: { borderColor: theme.violetDeep, backgroundColor: theme.violetTint },
-  rangeNumber: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 },
+  rangeNumber: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.cardTitle.fontSize },
   rangeNumberSelected: { color: theme.violetDeep },
-  rangeLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: 9, marginTop: 2 },
+  rangeLabel: { color: theme.inkSoft, fontFamily: typography.bodyBold, fontSize: appTextStyles.caption.fontSize, marginTop: 2 },
   rangeLabelSelected: { color: theme.violetDeep },
   rangeStartButton: { marginTop: 17 },
-  tipCard: { flexDirection: 'row', gap: 11, borderRadius: 18, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 14 },
-  tipIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.violetTint },
-  tipEmoji: { fontSize: 21 },
-  tipTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 14 },
-  tipBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 18, marginTop: 3 },
+  tipCard: { flexDirection: 'row', gap: 11, borderRadius: appRadii.card, borderWidth: 1.5, borderColor: theme.sunLine, backgroundColor: theme.sunTint, padding: 14 },
+  tipIcon: { width: 38, height: 38, borderRadius: appRadii.control, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.violetTint },
+  tipEmoji: { fontSize: appArtworkSizes.tiny },
+  tipTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.label.fontSize },
+  tipBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, marginTop: 3 },
   progressRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 7, marginVertical: 19 },
-  progressCount: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center', marginVertical: 18 },
+  progressCount: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, textAlign: 'center', marginVertical: 18 },
   progressDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: theme.line },
   progressDone: { backgroundColor: theme.grass },
   progressCurrent: { backgroundColor: theme.violetDeep, transform: [{ scale: 1.25 }] },
-  questionCard: { borderRadius: 22, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 20, alignItems: 'center', boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.08)' },
+  questionCard: { borderRadius: appRadii.card, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: appSpacing.xl, alignItems: 'center', boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.08)' },
   numberBadge: { width: 58, height: 58, borderRadius: 29, backgroundColor: theme.violetDeep, alignItems: 'center', justifyContent: 'center', boxShadow: `0px 3px 8px ${theme.violetDeep}59` },
-  numberBadgeText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: 22 },
-  questionEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 0.9, marginTop: 13 },
-  questionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 18, lineHeight: 23, textAlign: 'center', marginTop: 6 },
-  questionHint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 5 },
-  choiceGrid: { width: '100%', flexDirection: 'row', gap: 8, marginTop: 18 },
+  numberBadgeText: { color: theme.onAccent, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.prompt.fontSize },
+  questionEyebrow: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 0.9, marginTop: 13 },
+  questionTitle: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight, textAlign: 'center', marginTop: 6 },
+  questionHint: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight, textAlign: 'center', marginTop: 5 },
+  choiceGrid: { width: '100%', flexDirection: 'row', gap: appSpacing.sm, marginTop: 18 },
   choiceWrap: { flex: 1, minWidth: 0 },
-  choiceCard: { width: '100%', minHeight: 110, borderRadius: 15, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center', padding: 8, position: 'relative' },
+  choiceCard: { width: '100%', minHeight: 110, borderRadius: appRadii.control, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center', padding: appSpacing.sm, position: 'relative' },
   choiceCorrect: { borderColor: theme.grass, backgroundColor: theme.mintTint },
   choiceWrong: { borderColor: theme.berry, backgroundColor: theme.berryTint },
-  choiceEmoji: { fontSize: 37 },
-  choiceName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 6 },
+  choiceEmoji: { fontSize: appArtworkSizes.large },
+  choiceName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, marginTop: 6 },
   choiceResult: { position: 'absolute', right: 6, top: 6, width: 20, height: 20, borderRadius: 10, backgroundColor: theme.paper, alignItems: 'center', justifyContent: 'center' },
   feedbackRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 15 },
-  feedbackText: { fontFamily: typography.bodyExtraBold, fontSize: 12, textAlign: 'center' },
+  feedbackText: { fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, textAlign: 'center' },
   feedbackCorrect: { color: theme.grass },
   feedbackWrong: { color: theme.berryDeep },
   primaryButtonWrap: { alignSelf: 'stretch', marginTop: 17 },
   primaryButton: { alignSelf: 'stretch' },
-  completeCard: { borderRadius: 23, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: 24, alignItems: 'center', boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.08)' },
-  completeEmoji: { fontSize: 54 },
-  completeTitle: { color: theme.ink, fontFamily: typography.display, fontSize: 20, textAlign: 'center', marginTop: 10 },
-  completeScore: { color: theme.grass, fontFamily: typography.displayExtraBold, fontSize: 35, marginTop: 8 },
-  completeBody: { color: theme.inkSoft, fontFamily: typography.body, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 8 },
+  completeCard: { borderRadius: 23, borderWidth: 2, borderColor: theme.line, backgroundColor: theme.paper, padding: appSpacing.xxl, alignItems: 'center', boxShadow: '0px 4px 12px rgba(43, 42, 61, 0.08)' },
+  completeEmoji: { fontSize: appArtworkSizes.hero },
+  completeTitle: { color: theme.ink, fontFamily: typography.display, fontSize: appTextStyles.screenTitle.fontSize, textAlign: 'center', marginTop: 10 },
+  completeScore: { color: theme.grass, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.phrase.fontSize, marginTop: appSpacing.sm },
+  completeBody: { color: theme.inkSoft, fontFamily: typography.body, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, textAlign: 'center', marginTop: appSpacing.sm },
   secondaryButton: { alignSelf: 'center', marginTop: 9 },
 }));

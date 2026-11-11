@@ -1,14 +1,9 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
 import type { ReactNode } from 'react';
-import {
-  Modal,
-  StyleSheet,
-  ScrollView,
-  Text,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
+import { Modal, StyleSheet, ScrollView, TouchableWithoutFeedback, View } from 'react-native';
 import { AppButton } from './ui/AppButton';
 
 interface ConfirmModalProps {
@@ -116,14 +111,14 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     backgroundColor: 'rgba(30, 26, 48, 0.58)',
     flex: 1,
     justifyContent: 'center',
-    padding: 24,
+    padding: appSpacing.xxl,
   },
   dialog: {
     maxHeight: '90%',
     flexGrow: 0,
     backgroundColor: theme.paper,
     borderColor: theme.line,
-    borderRadius: 26,
+    borderRadius: appRadii.hero,
     borderWidth: 1,
     boxShadow: '0px 18px 40px rgba(30, 26, 48, 0.30)',
     maxWidth: 360,
@@ -134,7 +129,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   icon: {
     alignItems: 'center',
     backgroundColor: theme.berryTint,
-    borderRadius: 22,
+    borderRadius: appRadii.card,
     height: 64,
     justifyContent: 'center',
     width: 64,
@@ -142,7 +137,7 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
   title: {
     color: theme.ink,
     fontFamily: typography.displayExtraBold,
-    fontSize: 21,
+    fontSize: appTextStyles.prompt.fontSize,
     marginTop: 14,
     textAlign: 'center',
   },
@@ -151,29 +146,29 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     alignSelf: 'stretch',
     backgroundColor: theme.canvas,
     borderColor: theme.line,
-    borderRadius: 16,
+    borderRadius: appRadii.control,
     borderWidth: 1.5,
     justifyContent: 'center',
     marginTop: 14,
     minHeight: 54,
-    paddingHorizontal: 16,
+    paddingHorizontal: appSpacing.lg,
     paddingVertical: 10,
   },
   subject: {
     color: theme.ink,
     fontFamily: typography.bodyExtraBold,
-    fontSize: 15,
+    fontSize: appTextStyles.body.fontSize,
     textAlign: 'center',
   },
   description: {
     color: theme.inkSoft,
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 12,
-    paddingHorizontal: 4,
+    fontSize: appTextStyles.small.fontSize,
+    lineHeight: appTextStyles.small.lineHeight,
+    marginTop: appSpacing.md,
+    paddingHorizontal: appSpacing.xs,
     textAlign: 'center',
   },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 20, width: '100%' },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: appSpacing.xl, width: '100%' },
   alternativeButton: {
     marginTop: 18,
   },

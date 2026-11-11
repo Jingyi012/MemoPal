@@ -1,3 +1,5 @@
+import { appTextStyles } from '@/theme/designSystem';
+import { AppText as Text } from '@/components/ui/AppText';
 import { AppImage } from '@/components/AppImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { LockKeyhole } from '@/core/icons';
@@ -7,7 +9,7 @@ import type { AppearanceDefinition, EquippedAppearance } from '@/features/appear
 import { typography } from '@/theme/typography';
 import { useColorScheme } from 'nativewind';
 import React from 'react';
-import { Image, ImageStyle, StyleProp, StyleSheet, Text, View } from 'react-native';
+import { Image, ImageStyle, StyleProp, StyleSheet, View } from 'react-native';
 import { memopalThemes } from '@/theme/memopalTheme';
 
 interface Props {
@@ -33,7 +35,7 @@ export function MemoryAvatar({ avatar, size = 72, level, showLevelBadge = false,
   const portraitLevel = avatar?.key.match(/^momo-(0[1-9]|10)$/)?.[1];
   const stageLevel = Math.max(1, Math.min(10, Number(portraitLevel ?? level ?? 1)));
   const borderColor = stageLevel >= 10 ? theme.sun : stageLevel >= 5 ? theme.violet : theme.sky;
-  const badgeSize = Math.max(20, Math.round(size * 0.28));
+  const badgeSize = Math.max(24, Math.round(size * 0.28));
   const hasCustomFrame = Boolean(appearance?.frame);
   const auraPadding = Math.max(2, Math.round(size * 0.045));
   // Keep the avatar at the same usable size as the original avatar rendering.
@@ -69,7 +71,7 @@ export function MemoryAvatar({ avatar, size = 72, level, showLevelBadge = false,
       </View>
       {showLevelBadge && level ? (
         <View style={[styles.levelBadge, { backgroundColor: borderColor, borderColor: theme.paper, height: badgeSize, minWidth: badgeSize, borderRadius: badgeSize / 2 }]}>
-          <Text style={[styles.levelBadgeText, { fontSize: Math.max(9, Math.round(size * 0.13)) }]}>{level}</Text>
+          <Text style={[styles.levelBadgeText, { fontSize: Math.max(appTextStyles.caption.fontSize, Math.round(size * 0.13)) }]}>{level}</Text>
         </View>
       ) : null}
     </View>

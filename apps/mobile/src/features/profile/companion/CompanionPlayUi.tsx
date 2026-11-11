@@ -1,5 +1,7 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkTextStyles, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withRepeat, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import { typography } from '@/theme/typography';
@@ -111,20 +113,20 @@ const styles = StyleSheet.create({
   momo: { position: 'absolute', left: '50%', top: '50%', zIndex: 1 },
   emote: { position: 'absolute', right: -12, top: -15, width: 42, height: 42, borderRadius: 21,
     alignItems: 'center', justifyContent: 'center' },
-  emoteText: { fontSize: 25 },
+  emoteText: { fontSize: appTextStyles.pageTitle.fontSize },
   burst: { position: 'absolute', width: 12, height: 12, zIndex: 5 },
   burstDot: { position: 'absolute', width: 10, height: 10, borderRadius: 5 },
   comboGlow: { ...StyleSheet.absoluteFillObject, borderWidth: 8, borderRadius: 28, zIndex: 2 },
 });
 const useStyles = createThemedStyles(theme => StyleSheet.create({
-    overlay: { ...StyleSheet.absoluteFillObject, zIndex: 10, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
+    overlay: { ...StyleSheet.absoluteFillObject, zIndex: 10, justifyContent: 'center', alignItems: 'center', paddingHorizontal: appSpacing.xxl },
     // Keep the reef legible behind the short ready/result overlay instead of
     // washing the whole play area into a pale sheet.
     veil: { ...StyleSheet.absoluteFillObject, backgroundColor: theme.skyTint, opacity: .2 },
-    center: { width: '100%', maxWidth: 300, alignItems: 'center', gap: 12 },
+    center: { width: '100%', maxWidth: 300, alignItems: 'center', gap: appSpacing.md },
     menuCenter: { marginTop: 48 },
-    count: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 92, lineHeight: 112 },
-    title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 30, textAlign: 'center' },
-    detail: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 19, textAlign: 'center' },
-    button: { width: '100%', marginTop: 4 },
+    count: { ...appArtworkTextStyles.countdown, color: theme.violetDeep, fontFamily: typography.displayExtraBold },
+    title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.display.fontSize, textAlign: 'center' },
+    detail: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.screenTitle.fontSize, textAlign: 'center' },
+    button: { width: '100%', marginTop: appSpacing.xs },
 }));

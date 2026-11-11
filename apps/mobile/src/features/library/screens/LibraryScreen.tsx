@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { MemorySpaces } from '../components/MemorySpaces';
 import { useAuth } from '@/contexts/AuthProvider';
 import { SpotlightTarget, usePageTour } from '@/features/onboarding/components/SpotlightTourProvider';
@@ -27,7 +29,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Href, useRouter } from 'expo-router';
 import { Globe2, LockKeyhole, Plus, RefreshCcw, Trash2 } from '@/core/icons';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useNetworkStatus } from '@/core/hooks/useNetworkStatus';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -365,7 +367,7 @@ export default function LibraryScreen({ workspaceNavigation, memoryEntry = false
                     <Text style={styles.sectionTitle}>{t('folders')}</Text>
                     <View style={styles.sectionCount}><Text style={styles.sectionCountText}>{folders.length}</Text></View>
                   </View>
-                  <AnimatedPressable accessibilityRole="button" onPress={() => setFolderNameModal({})} style={{ minHeight: 44, paddingHorizontal: 8, justifyContent: 'center' }}><Text style={styles.filterText}>＋ {t('newFolder')}</Text></AnimatedPressable>
+                  <AnimatedPressable accessibilityRole="button" onPress={() => setFolderNameModal({})} style={{ minHeight: 44, paddingHorizontal: appSpacing.sm, justifyContent: 'center' }}><Text style={styles.filterText}>＋ {t('newFolder')}</Text></AnimatedPressable>
                 </View>
                 <View style={viewMode === 'card' ? styles.cardGrid : [styles.cardList, styles.listCardList]}>
                   {folders.map(folder => <View key={folder.id} style={viewMode === 'card' ? styles.cardGridCell : undefined}>{renderFolderCard(folder, viewMode)}</View>)}
@@ -562,58 +564,58 @@ function hasPrivateAssets(
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.canvas },
-  content: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 32 },
+  content: { paddingHorizontal: appSpacing.lg, paddingTop: appSpacing.xs, paddingBottom: appSpacing.section },
   createFabAnchor: { alignItems: 'center', height: 60, justifyContent: 'center', position: 'absolute', right: 18, width: 60, zIndex: 5 },
   createFab: { alignItems: 'center', borderRadius: 30, elevation: 6, height: 60, justifyContent: 'center', shadowColor: theme.ink, shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, width: 60 },
-  filterRow: { alignItems: 'center', flexDirection: 'row', gap: 7, paddingVertical: 12 },
+  filterRow: { alignItems: 'center', flexDirection: 'row', gap: 7, paddingVertical: appSpacing.md },
   filterChip: {
     minHeight: 44,
-    borderRadius: 999,
+    borderRadius: appRadii.pill,
     borderWidth: 1,
     borderColor: theme.line,
     backgroundColor: theme.paper,
-    paddingHorizontal: 12,
+    paddingHorizontal: appSpacing.md,
     alignItems: 'center',
     flexDirection: 'row',
     gap: 5,
     justifyContent: 'center',
   },
   filterChipSelected: { borderColor: theme.violetLine, backgroundColor: theme.violetTint },
-  filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12 },
+  filterText: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   filterTextSelected: { color: theme.violetDeep },
   viewToolbar: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 18, marginTop: 1 },
   toolbarSpacer: { flex: 1 },
-  viewToggle: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 13, borderWidth: 1, flexDirection: 'row', padding: 3 },
+  viewToggle: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.control, borderWidth: 1, flexDirection: 'row', padding: 3 },
   viewOption: { alignItems: 'center', borderRadius: 9, height: 44, justifyContent: 'center', width: 44 },
   viewOptionSelected: { backgroundColor: theme.paper, boxShadow: '0px 2px 5px rgba(73,55,154,0.12)' },
   librarySections: { gap: 22 },
   librarySection: { gap: 11 },
   sectionHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 28 },
-  sectionTitleGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 16 },
-  sectionCount: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 999, minWidth: 24, paddingHorizontal: 7, paddingVertical: 3 },
-  sectionCountText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 10 },
+  sectionTitleGroup: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.sm },
+  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
+  sectionCount: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.pill, minWidth: 24, paddingHorizontal: 7, paddingVertical: 3 },
+  sectionCountText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
   cardList: { gap: 10 },
   listCardList: { gap: 9 },
-  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
+  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: appSpacing.md },
   cardGridCell: { width: '48.5%' },
   noticeCard: {
     borderWidth: 2,
     borderColor: theme.line,
     backgroundColor: theme.paper,
-    borderRadius: 20,
+    borderRadius: appRadii.card,
     padding: 22,
     alignItems: 'center',
   },
-  noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 15, textAlign: 'center' },
-  noticeBody: { color: theme.inkSoft, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 5 },
+  noticeTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.body.fontSize, textAlign: 'center' },
+  noticeBody: { color: theme.inkSoft, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight, textAlign: 'center', marginTop: 5 },
   retryButton: { alignSelf: 'center', marginTop: 14 },
-  emptyIconEmoji: { fontSize: 24 },
-  emptyEmoji: { fontSize: 32, marginBottom: 9 },
+  emptyIconEmoji: { fontSize: appArtworkSizes.small },
+  emptyEmoji: { fontSize: appArtworkSizes.medium, marginBottom: 9 },
   emptyButton: { alignSelf: 'center', marginTop: 15 },
-  loadMoreButton: { alignSelf: 'center', marginTop: 16 },
-  lessonEntry: { alignItems: 'center', backgroundColor: theme.sunTint, borderColor: theme.sunLine, borderRadius: 999, borderWidth: 1.5, flexDirection: 'row', gap: 5, paddingHorizontal: 9, paddingVertical: 6 },
-  lessonEntryTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 10 }, lessonEntryArrow: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 },
-  loadMoreText: { alignSelf: 'center', color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: 11, marginTop: 16 },
-  loadingFrame: { height: 180, overflow: 'hidden', borderRadius: 20 },
+  loadMoreButton: { alignSelf: 'center', marginTop: appSpacing.lg },
+  lessonEntry: { alignItems: 'center', backgroundColor: theme.sunTint, borderColor: theme.sunLine, borderRadius: appRadii.pill, borderWidth: 1.5, flexDirection: 'row', gap: 5, paddingHorizontal: 9, paddingVertical: 6 },
+  lessonEntryTitle: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize }, lessonEntryArrow: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.label.fontSize },
+  loadMoreText: { alignSelf: 'center', color: theme.inkMuted, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, marginTop: appSpacing.lg },
+  loadingFrame: { height: 180, overflow: 'hidden', borderRadius: appRadii.card },
 }));

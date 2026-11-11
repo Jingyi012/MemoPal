@@ -1,3 +1,5 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appArtworkSizes, appArtworkTextStyles, appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createThemedStyles } from '@/theme/createThemedStyles';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { CommonHeader } from '@/components/CommonHeader';
@@ -17,7 +19,7 @@ import { getPegUnlockLevel, getUnlockedPegCount } from '@/features/number-peg/ut
 import { getNumberPegErrorMessage } from '@/features/number-peg/utils/numberPegErrors';
 import { Href, useRouter } from 'expo-router';
 import { ArrowRight, ChevronRight, Sparkles } from '@/core/icons';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useMemo } from 'react';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { useColorScheme } from 'nativewind';
@@ -168,8 +170,8 @@ export default function NumberPegHomeScreen() {
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
   page: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 16, paddingBottom: 44 },
-  heroEmoji: { fontSize: 27 },
+  content: { padding: appSpacing.lg, paddingBottom: 44 },
+  heroEmoji: { fontSize: appArtworkSizes.small },
   sectionHeadingRow: {
     marginTop: 17,
     marginBottom: 9,
@@ -177,30 +179,30 @@ const useStyles = createThemedStyles((theme) => StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  sectionEyebrow: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 12, letterSpacing: 1.1 },
-  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 19, marginTop: 3 },
+  sectionEyebrow: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, letterSpacing: 1.1 },
+  sectionTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, marginTop: 3 },
   sectionHeadingCopy: { flex: 1, paddingRight: 10 },
-  seeAllButton: { minHeight: 38, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: 999, backgroundColor: theme.violetTint, borderWidth: 1, borderColor: theme.violetLine, paddingLeft: 11, paddingRight: 7 },
-  seeAllText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 11 },
-  viewAllButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 999, borderWidth: 1, flexDirection: 'row', gap: 1, minHeight: 40, paddingLeft: 11, paddingRight: 7 },
-  viewAllButtonText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12 },
-  memoryPreviewList: { gap: 8 },
-  anchorCard: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: 22, borderWidth: 1.5, gap: 14, padding: 15, shadowColor: theme.ink, shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
-  anchorSummary: { alignItems: 'center', flexDirection: 'row', gap: 12 },
+  seeAllButton: { minHeight: 38, flexDirection: 'row', alignItems: 'center', gap: 1, borderRadius: appRadii.pill, backgroundColor: theme.violetTint, borderWidth: 1, borderColor: theme.violetLine, paddingLeft: 11, paddingRight: 7 },
+  seeAllText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  viewAllButton: { alignItems: 'center', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.pill, borderWidth: 1, flexDirection: 'row', gap: 1, minHeight: 40, paddingLeft: 11, paddingRight: 7 },
+  viewAllButtonText: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  memoryPreviewList: { gap: appSpacing.sm },
+  anchorCard: { backgroundColor: theme.paper, borderColor: theme.line, borderRadius: appRadii.card, borderWidth: 1.5, gap: 14, padding: 15, shadowColor: theme.ink, shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
+  anchorSummary: { alignItems: 'center', flexDirection: 'row', gap: appSpacing.md },
   ringWrap: { alignItems: 'center', height: 68, justifyContent: 'center', width: 68 },
-  ringLabel: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 13, position: 'absolute' },
+  ringLabel: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.small.fontSize, position: 'absolute' },
   anchorSummaryCopy: { flex: 1, gap: 3 },
-  anchorSummaryTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 14 },
-  anchorSummaryBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 12, lineHeight: 15 },
-  anchorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  anchorTile: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: 14, flexBasis: '31%', flexGrow: 1, gap: 2, minHeight: 77, paddingHorizontal: 5, paddingVertical: 7, position: 'relative' },
-  anchorNumber: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: 12, left: 7, position: 'absolute', top: 5 },
-  anchorEmoji: { fontSize: 25, lineHeight: 30, marginTop: 3 },
-  anchorName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: 9.5, maxWidth: '100%' },
-  moreAnchorsTile: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.violetLine, borderRadius: 14, borderStyle: 'dashed', borderWidth: 1.5, flexBasis: '31%', flexGrow: 1, justifyContent: 'center', minHeight: 77, paddingHorizontal: 5 },
-  moreAnchorsCount: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: 17 },
-  moreAnchorsLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: 9 },
-  practiceAnchorsButton: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: 14, borderWidth: 1.5, flexDirection: 'row', gap: 8, justifyContent: 'center', minHeight: 46, paddingHorizontal: 12 },
-  practiceAnchorsText: { color: theme.violetDeep, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: 11.5, textAlign: 'center' },
-  loadingFrame: { height: 150, overflow: 'hidden', borderRadius: 20 },
+  anchorSummaryTitle: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.label.fontSize },
+  anchorSummaryBody: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.caption.fontSize, lineHeight: appTextStyles.caption.lineHeight },
+  anchorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: appSpacing.sm },
+  anchorTile: { alignItems: 'center', backgroundColor: theme.violetTint, borderRadius: appRadii.control, flexBasis: '31%', flexGrow: 1, gap: 2, minHeight: 77, paddingHorizontal: 5, paddingVertical: 7, position: 'relative' },
+  anchorNumber: { color: theme.violetDeep, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, left: 7, position: 'absolute', top: 5 },
+  anchorEmoji: { ...appArtworkTextStyles.small, marginTop: 3 },
+  anchorName: { color: theme.ink, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, maxWidth: '100%' },
+  moreAnchorsTile: { alignItems: 'center', backgroundColor: theme.canvas, borderColor: theme.violetLine, borderRadius: appRadii.control, borderStyle: 'dashed', borderWidth: 1.5, flexBasis: '31%', flexGrow: 1, justifyContent: 'center', minHeight: 77, paddingHorizontal: 5 },
+  moreAnchorsCount: { color: theme.violetDeep, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize },
+  moreAnchorsLabel: { color: theme.inkSoft, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize },
+  practiceAnchorsButton: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: theme.violetTint, borderColor: theme.violetLine, borderRadius: appRadii.control, borderWidth: 1.5, flexDirection: 'row', gap: appSpacing.sm, justifyContent: 'center', minHeight: 46, paddingHorizontal: appSpacing.md },
+  practiceAnchorsText: { color: theme.violetDeep, flex: 1, fontFamily: typography.bodyExtraBold, fontSize: appTextStyles.caption.fontSize, textAlign: 'center' },
+  loadingFrame: { height: 150, overflow: 'hidden', borderRadius: appRadii.card },
 }));

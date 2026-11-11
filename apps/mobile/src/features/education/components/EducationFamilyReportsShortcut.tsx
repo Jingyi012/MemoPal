@@ -1,9 +1,11 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appRadii, appSpacing, appTextStyles } from '@/theme/designSystem';
 import { createLearningStyles as createThemedStyles, learningTypography as typography } from '@/features/education/theme/learningTheme';
 import AnimatedPressable from '@/components/AnimatedPressable';
 import { useEducationCopy } from '@/features/education/i18n';
 import { useEducationFamilyChildren } from '@/features/education/hooks/useEducationFamilyReports';
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export function EducationFamilyReportsShortcut() {
@@ -21,8 +23,8 @@ export function EducationFamilyReportsShortcut() {
 }
 
 const useStyles = createThemedStyles((theme) => StyleSheet.create({
-  card: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: 24, borderWidth: 2, borderBottomWidth: 6, flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 80, padding: 16 },
-  icon: { backgroundColor: theme.paper, padding: 12, borderRadius: 18 },
-  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: 18, lineHeight: 25 },
-  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: 13, lineHeight: 20 },
+  card: { backgroundColor: theme.skyTint, borderColor: theme.skyLine, borderRadius: appRadii.hero, borderWidth: 2, borderBottomWidth: 6, flexDirection: 'row', alignItems: 'center', gap: appSpacing.md, minHeight: 80, padding: appSpacing.lg },
+  icon: { backgroundColor: theme.paper, padding: appSpacing.md, borderRadius: appRadii.card },
+  title: { color: theme.ink, fontFamily: typography.displayExtraBold, fontSize: appTextStyles.sectionTitle.fontSize, lineHeight: appTextStyles.sectionTitle.lineHeight },
+  body: { color: theme.inkSoft, fontFamily: typography.bodySemibold, fontSize: appTextStyles.small.fontSize, lineHeight: appTextStyles.small.lineHeight },
 }));

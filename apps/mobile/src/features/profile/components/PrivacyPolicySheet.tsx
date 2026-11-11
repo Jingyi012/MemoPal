@@ -1,10 +1,12 @@
+import { AppText as Text } from '@/components/ui/AppText';
+import { appSpacing, appTextStyles, fontFamilies } from '@/theme/designSystem';
 import CustomBottomSheetModal from '@/components/CustomBottomSheetModal';
 import { useTranslation } from '@/core/i18n/useTranslation';
 import { usePrivacyPolicyConfig } from '@/features/profile/hooks/usePrivacyPolicyConfig';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import Constants from 'expo-constants';
 import { forwardRef } from 'react';
-import { Platform, Text, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Ref = BottomSheetModal;
@@ -33,28 +35,28 @@ const PrivacyPolicySheet = forwardRef<Ref>((_, ref) => {
     <CustomBottomSheetModal ref={ref} snapPoints={['95%']} enableDynamicSizing={false}>
       <View style={{ flex: 1, paddingBottom: insets.bottom }}>
         {/* Header */}
-        <Text className="mb-3 px-6 pt-4 text-xl font-bold">{config.title}</Text>
+        <Text className="mb-3 px-6 pt-4" style={[appTextStyles.screenTitle, { fontFamily: fontFamilies.bodyBold }]}>{config.title}</Text>
 
         {/* Scrollable Content */}
-        <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 16 }}>
+        <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: appSpacing.xxl, paddingBottom: appSpacing.lg }}>
           {config.sections.map((section, index) => (
             <View key={`${index}-${section.heading}`} className="mb-3">
-              <Text className="mb-2 text-lg font-semibold text-[#2B2A3D]">{section.heading}</Text>
-              <Text className="text-sm text-[#6B6A80]">{section.body}</Text>
+              <Text className="mb-2 text-[#2B2A3D]" style={[appTextStyles.sectionTitle, { fontFamily: fontFamilies.bodySemibold }]}>{section.heading}</Text>
+              <Text className="text-[#6B6A80]" style={appTextStyles.label}>{section.body}</Text>
             </View>
           ))}
 
           <View className="mt-2 rounded-3xl border border-[#E5DFFF] bg-white p-4">
-            <Text className="mb-3 text-base font-bold text-[#2B2A3D]">
+            <Text className="mb-3 text-[#2B2A3D]" style={[appTextStyles.body, { fontFamily: fontFamilies.bodyBold }]}>
               {t('buildInformation')}
             </Text>
-            <Text className="text-sm text-[#6B6A80]">
+            <Text className="text-[#6B6A80]" style={appTextStyles.label}>
               {t('appVersion')} {appVersion}
             </Text>
-            <Text className="mt-1 text-sm text-[#6B6A80]">
+            <Text className="mt-1 text-[#6B6A80]" style={appTextStyles.label}>
               {t('buildNumber')} {buildNumber}
             </Text>
-            <Text className="mt-1 text-sm text-[#6B6A80]">
+            <Text className="mt-1 text-[#6B6A80]" style={appTextStyles.label}>
               {t('buildEnvironment')} {buildEnvironmentLabel}
             </Text>
           </View>
