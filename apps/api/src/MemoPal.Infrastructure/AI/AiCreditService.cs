@@ -93,12 +93,19 @@ public sealed class AiCreditService(AppDbContext db, IOptions<AiCreditOptions> o
             .Select(x => new AiGenerationView(x.Id, x.Kind, x.Status, x.Reserved, x.Charged, x.ResultJson, x.CreatedAt)).ToListAsync(ct);
     }
 
+    public async Task<AiGenerationView?> GenerationForRequestAsync(string userId, string requestId, CancellationToken ct)
+    {
+        return await db.AiGenerations.AsNoTracking().Where(x => x.UserId == userId && x.RequestId == requestId)
+            .Select(x => new AiGenerationView(x.Id, x.Kind, x.Status, x.Reserved, x.Charged, x.ResultJson, x.CreatedAt))
+            .SingleOrDefaultAsync(ct);
+    }
+
     public Task<AiCreditReservation> ReserveAsync(string userId, string requestId, string kind, object input,
         int count, CancellationToken ct, int? maxCredits = null)
     {
         if (string.IsNullOrWhiteSpace(requestId) || requestId.Length > 64)
             throw new ValidationAppException("A requestId of 1-64 characters is required for AI generation.");
-        if (count is < 1 or > 100 || kind is not ("number-peg-text" or "palace-text" or "number-peg-image"))
+        if (count is < 1 or > 100 || kind is not ("number-peg-text" or "palace-text" or "number-peg-image" or "education-course-text"))
             throw new ValidationAppException("Invalid AI generation request.");
         var inputJson = JsonSerializer.Serialize(input, Json);
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(kind + inputJson)));
@@ -142,7 +149,7 @@ public sealed class AiCreditService(AppDbContext db, IOptions<AiCreditOptions> o
                 Id = Guid.NewGuid().ToString("N"), UserId = userId, RequestId = requestId,
                 RequestHash = hash, Kind = kind, UnitCost = unitCost, Reserved = amount,
                 LeaseExpiresAt = now.AddMinutes(15), AllocationsJson = JsonSerializer.Serialize(allocations),
-                InputJson = kind == "number-peg-image" ? inputJson : null
+                InputJson = kind is "number-peg-image" or "education-course-text" ? inputJson : null
             };
             db.AiGenerations.Add(job);
             Entry(userId, job.Id, "reserve", -amount);
@@ -163,7 +170,7 @@ public sealed class AiCreditService(AppDbContext db, IOptions<AiCreditOptions> o
         job.ResultJson = JsonSerializer.Serialize(result, Json);
         job.ImageBytes = image?.Bytes;
         job.ImageContentType = image?.ContentType;
-        job.InputJson = null;
+        if (job.Kind != "education-course-text") job.InputJson = null;
         // Release the accounting hold and replace it with the final debit in the ledger.
         Entry(userId, job.Id, "charge", -charge);
         return true;

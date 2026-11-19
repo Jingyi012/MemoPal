@@ -6,6 +6,8 @@ export const useDraftStyles = createLearningStyles(t => StyleSheet.create({
   content: { paddingHorizontal: appSpacing.lg, paddingTop: appSpacing.sm, paddingBottom: appSpacing.xxl, gap: 14 },
   card: { backgroundColor: t.paper, borderRadius: appRadii.card, borderColor: t.line, borderWidth: 1, padding: 14, gap: appSpacing.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: appSpacing.sm },
+  wordRow: { gap: appSpacing.sm, borderTopWidth: 1, borderTopColor: t.line, paddingTop: appSpacing.md },
+  wordHeading: { flexDirection: 'row', alignItems: 'center', minHeight: 44, gap: appSpacing.sm },
   title: { color: t.ink, fontFamily: type.displayExtraBold, fontSize: appTextStyles.prompt.fontSize, lineHeight: appTextStyles.prompt.lineHeight },
   heading: { color: t.ink, fontFamily: type.bodyExtraBold, fontSize: appTextStyles.cardTitle.fontSize, lineHeight: appTextStyles.cardTitle.lineHeight },
   body: { color: t.ink, fontFamily: type.bodyBold, fontSize: appTextStyles.label.fontSize, lineHeight: appTextStyles.label.lineHeight },

@@ -10,23 +10,26 @@ import { AppButton } from '@/components/ui/AppButton';
 import { useLearningCopy } from './LearningUi';
 import { useDraftStyles } from './learningDraftStyles';
 import type { DraftUnit } from '../utils/educationDraftEditor';
+import type { EducationCourseContentType } from '../api/educationCourseDraft.api';
 
 export type EditingDraftWord = { id: string; text: string; meaning: string; unitId: string };
 export const LearningDraftWordSheet = forwardRef<BottomSheetModal, {
-  word: EditingDraftWord | null; units: DraftUnit[]; error: string; onChange: (word: EditingDraftWord) => void;
+  word: EditingDraftWord | null; units: DraftUnit[]; error: string; contentType?: EducationCourseContentType; onChange: (word: EditingDraftWord) => void;
   onNewUnit: () => void; onSave: () => void; onDelete: () => void;
-}>(function LearningDraftWordSheet({ word, units, error, onChange, onNewUnit, onSave, onDelete }, ref) {
+}>(function LearningDraftWordSheet({ word, units, error, contentType = 'LanguageItem', onChange, onNewUnit, onSave, onDelete }, ref) {
   const { styles: s, theme } = useDraftStyles();
   const { zh } = useLearningCopy();
   const insets = useSafeAreaInsets();
+  const entryLabel = contentType === 'ConceptUnderstanding' ? (zh ? '知识点' : 'Concept') : contentType === 'VerbatimText' ? (zh ? '短句' : 'Sentence') : (zh ? '词语' : 'Word');
+  const noteLabel = contentType === 'ConceptUnderstanding' ? (zh ? '说明（选填）' : 'Notes (optional)') : contentType === 'VerbatimText' ? (zh ? '提示 / 来源说明（选填）' : 'Clue / source note (optional)') : (zh ? '释义（选填）' : 'Meaning (optional)');
   return <CustomBottomSheetModal ref={ref} snapPoints={['75%', '95%']} enableDynamicSizing={false} keyboardBehavior="interactive" keyboardBlurBehavior="restore">
     <BottomSheetScrollView keyboardShouldPersistTaps="handled" accessibilityViewIsModal contentContainerStyle={[s.content, { paddingBottom: Math.max(20, insets.bottom) }]}>
       {word ? <>
-        <Text accessibilityRole="header" style={s.title}>{zh ? '编辑词语' : 'Edit word'}</Text>
-        <Text style={s.small}>{zh ? '修改词语' : 'Word'}</Text>
-        <AppSheetTextInput accessibilityLabel={zh ? '修改词语' : 'Edit word text'} value={word.text} onChangeText={text => onChange({ ...word, text })} maxLength={500} style={s.input} selectionColor={theme.violetDeep} />
-        <Text style={s.small}>{zh ? '释义（选填）' : 'Meaning (optional)'}</Text>
-        <AppSheetTextInput accessibilityLabel={zh ? '词语释义' : 'Word meaning'} value={word.meaning} onChangeText={meaning => onChange({ ...word, meaning })} maxLength={500} style={s.input} selectionColor={theme.violetDeep} />
+        <Text accessibilityRole="header" style={s.title}>{zh ? `编辑${entryLabel}` : `Edit ${entryLabel.toLowerCase()}`}</Text>
+        <Text style={s.small}>{zh ? `修改${entryLabel}` : `Edit ${entryLabel.toLowerCase()}`}</Text>
+        <AppSheetTextInput accessibilityLabel={zh ? `修改${entryLabel}` : `Edit ${entryLabel.toLowerCase()}`} value={word.text} onChangeText={text => onChange({ ...word, text })} maxLength={500} style={s.input} selectionColor={theme.violetDeep} />
+        <Text style={s.small}>{noteLabel}</Text>
+        <AppSheetTextInput accessibilityLabel={noteLabel} value={word.meaning} onChangeText={meaning => onChange({ ...word, meaning })} maxLength={500} style={s.input} selectionColor={theme.violetDeep} />
         <Text style={s.small}>{zh ? '移动到' : 'Move to'}</Text>
         <View style={[s.row, { flexWrap: 'wrap' }]}>{units.map((unit, index) => <AnimatedPressable key={unit.id} accessibilityRole="radio" accessibilityState={{ checked: word.unitId === unit.id }}
           onPress={() => onChange({ ...word, unitId: unit.id })} style={[s.chip, word.unitId === unit.id && s.selectedChip]}>

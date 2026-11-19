@@ -15,6 +15,18 @@ test('invalid or oversized lists remain available for correction but cannot be s
   assert.equal(isValidEducationStudyList(Array.from({ length: 51 }, (_, i) => ({ text: String(i), meaning: null }))), false);
 });
 
+test('explicit word and meaning separators preserve phrases and the rest of the clue', () => {
+  assert.deepEqual(parseEducationStudyList('school = 学校\nsun：太阳\nrun | move quickly\nbook: something to read\nice-cream\nNew York\nratio = 1: 2'), [
+    { text: 'school', meaning: '学校' },
+    { text: 'sun', meaning: '太阳' },
+    { text: 'run', meaning: 'move quickly' },
+    { text: 'book', meaning: 'something to read' },
+    { text: 'ice-cream', meaning: null },
+    { text: 'New York', meaning: null },
+    { text: 'ratio', meaning: '1: 2' },
+  ]);
+});
+
 test('word lists stay together by default and split only at the chosen size', () => {
   const entries = parseEducationStudyList('学校\n铅笔\n书包\n太阳\n小鸟\nschool\nbook');
   assert.deepEqual(groupEducationStudyList(entries, null), [entries]);

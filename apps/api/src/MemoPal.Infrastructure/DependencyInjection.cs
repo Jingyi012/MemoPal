@@ -86,6 +86,10 @@ public static class DependencyInjection
         {
             client.Timeout = TimeSpan.FromSeconds(120);
         }).RemoveAllLoggers();
+        services.AddHttpClient<IEducationCourseAiGenerator, EducationCourseAiGenerator>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(120);
+        }).RemoveAllLoggers();
 
         return services;
     }

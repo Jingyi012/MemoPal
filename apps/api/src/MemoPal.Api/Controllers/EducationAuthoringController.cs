@@ -4,6 +4,7 @@ using MemoPal.Api.Controllers;
 using MemoPal.Application.Features.Education.Authoring;
 using MemoPal.Application.Features.Education.Authoring.DTOs;
 using MemoPal.Application.Features.Education.StudyItems;
+using MemoPal.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,6 +34,22 @@ public sealed class EducationAuthoringController(ISender sender) : ApiController
     [RestrictedLearner(RestrictedLearnerAccess.Deny)]
     public async Task<IActionResult> CreateStudyCourseDraft([FromBody] CreateStudyCourseDraftRequest request, CancellationToken ct) =>
         Ok(await Sender.Send(new CreateStudyCourseDraftCommand(GetUserIdOrThrow(), request), ct));
+
+    [HttpPost("course-drafts/generation-estimate")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> GetStudyCourseGenerationEstimate([FromBody] EducationCourseAiInput request, CancellationToken ct) =>
+        Ok(await Sender.Send(new EstimateStudyCourseGenerationQuery(GetUserIdOrThrow(), request), ct));
+
+    [HttpPost("course-drafts/generate")]
+    [RequestSizeLimit(131072)]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> GenerateStudyCourseDraft([FromBody] GenerateStudyCourseDraftRequest request, CancellationToken ct) =>
+        Ok(await Sender.Send(new GenerateStudyCourseDraftCommand(GetUserIdOrThrow(), request), ct));
+
+    [HttpGet("course-drafts/generations/{requestId}")]
+    [RestrictedLearner(RestrictedLearnerAccess.Deny)]
+    public async Task<IActionResult> RecoverStudyCourseGeneration(string requestId, CancellationToken ct) =>
+        Ok(await Sender.Send(new RecoverStudyCourseGenerationQuery(GetUserIdOrThrow(), requestId), ct));
 
     [HttpGet("courses")]
     [RestrictedLearner(RestrictedLearnerAccess.Deny)]

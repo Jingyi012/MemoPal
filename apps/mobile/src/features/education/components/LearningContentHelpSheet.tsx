@@ -15,11 +15,11 @@ export const LearningContentHelpSheet = forwardRef<BottomSheetModal, { onClose: 
   const insets = useSafeAreaInsets();
   const steps = zh ? [
     ['取个名称', '例如「星期五听写」，方便以后找到。'],
-    ['按单元加入词语', '输入、粘贴或扫描照片。点词语可修改或移动，新增单元可自由分组。总共最多 50 个词。'],
+    ['确认词语和意思', '输入、粘贴或扫描照片后，检查每条内容。意思可以直接填写，点编辑可改词或移动单元。总共最多 50 个词。'],
     ['预览并保存', '长按单元或用上下箭头调整顺序。保存后直接开始学习，只有自己能看到；也可以暂存草稿，稍后继续。'],
   ] : [
     ['Name your content', 'For example, “Friday spelling”, so it is easy to find.'],
-    ['Add words by unit', 'Type, paste or scan. Tap a word to edit or move it; add units to group your content. Up to 50 words in total.'],
+    ['Check words and meanings', 'Type, paste or scan, then check each entry. Add meanings directly; tap Edit to correct words or move them. Up to 50 words in total.'],
     ['Preview and save', 'Hold units or use the arrows to reorder them. Save and start learning privately, or keep a draft for later.'],
   ];
   return <CustomBottomSheetModal ref={ref} snapPoints={['85%']} enableDynamicSizing={false}>
@@ -36,7 +36,7 @@ export const LearningContentHelpSheet = forwardRef<BottomSheetModal, { onClose: 
       </View>)}
       <View style={[s.card, { backgroundColor: theme.violetTint, gap: appSpacing.sm }]}>
         <Text style={s.small}>{zh ? '只有词语 → 学习卡片\n词语 + 释义 → 卡片和文字回忆题' : 'Words → study cards\nWords + meanings → cards and written recall questions'}</Text>
-        <Text style={s.small}>{zh ? '可粘贴表格中的两列。暂不自动生成听写或口语评分题。' : 'Paste two columns from a table. Dictation and speech-scoring questions are not generated.'}</Text>
+        <Text style={s.small}>{zh ? '可粘贴表格的两列，或每行填写「school = 学校」。扫描内容没有明确分隔时会保留原文，请在确认页检查。意思选填，不会自动猜测。' : 'Paste two spreadsheet columns, or use “school = a place to learn” on each line. Scans without clear separators retain the original text for review. Meanings are optional and are not guessed.'}</Text>
       </View>
       <AppButton label={zh ? '明白了' : 'Got it'} onPress={onClose} />
     </BottomSheetScrollView>

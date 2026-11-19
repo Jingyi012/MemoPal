@@ -9,7 +9,8 @@ import { useDraftStyles } from './learningDraftStyles';
 import { useLearningCopy } from './LearningUi';
 import type { DraftUnit } from '../utils/educationDraftEditor';
 
-export function LearningDraftPreviewUnit({ unit, index, count, onEdit, onMove, onDrag }: {
+export function LearningDraftPreviewUnit({ unit, index, count, onEdit, onMove, onDrag, compact = false }: {
+  compact?: boolean;
   unit: DraftUnit; index: number; count: number; onEdit: () => void; onMove: (from: number, to: number) => void; onDrag: (active: boolean) => void;
 }) {
   const { styles: s, theme } = useDraftStyles();
@@ -26,12 +27,14 @@ export function LearningDraftPreviewUnit({ unit, index, count, onEdit, onMove, o
     <Animated.View onLayout={event => { height.value = event.nativeEvent.layout.height; }} style={[s.card, style]}>
       <View style={s.row}>
         <AnimatedPressable accessibilityRole="button" accessibilityLabel={zh ? '编辑这个单元' : 'Edit this unit'} onPress={onEdit} style={{ flex: 1, minWidth: 0, gap: appSpacing.xs, minHeight: 48 }}>
-          <Text style={[s.small, { color: theme.violetDeep }]}>{zh ? `单元 ${index + 1} · ${unit.words.length} 张卡片` : `Unit ${index + 1} · ${unit.words.length} cards`}</Text>
-          <Text numberOfLines={1} style={s.heading}>{unit.title || (zh ? `单元 ${index + 1}` : `Unit ${index + 1}`)}</Text>
-          <Text numberOfLines={2} style={s.small}>{unit.words.map(word => word.text).join(' · ')}</Text>
+          <Text style={[s.body, { color: theme.violetDeep }]}>{compact ? (zh ? `${unit.words.length} 张学习卡片` : `${unit.words.length} study cards`) : zh ? `单元 ${index + 1} · ${unit.words.length} 张卡片` : `Unit ${index + 1} · ${unit.words.length} cards`}</Text>
+          {!compact ? <Text numberOfLines={1} style={s.heading}>{unit.title || (zh ? `单元 ${index + 1}` : `Unit ${index + 1}`)}</Text> : null}
+          <Text numberOfLines={3} style={s.small}>{unit.words.map(word => word.meaning ? `${word.text} → ${word.meaning}` : word.text).join('\n')}</Text>
+          {!compact ? <Text style={s.small}>{zh ? `${unit.words.filter(word => word.meaning?.trim()).length}/${unit.words.length} 条已填写意思或提示` : `${unit.words.filter(word => word.meaning?.trim()).length}/${unit.words.length} entries have meanings or clues`}</Text> : null}
         </AnimatedPressable>
-        <LearningIconButton icon="chevron-up" variant="plain" label={zh ? '单元上移' : 'Move unit up'} disabled={index === 0} onPress={() => onMove(index, index - 1)} />
-        <LearningIconButton icon="chevron-down" variant="plain" label={zh ? '单元下移' : 'Move unit down'} disabled={index === count - 1} onPress={() => onMove(index, index + 1)} />
+        {compact ? <LearningIconButton icon="create-outline" label={zh ? '编辑学习内容' : 'Edit study content'} onPress={onEdit} /> : null}
+        {count > 1 ? <><LearningIconButton icon="chevron-up" variant="plain" label={zh ? '单元上移' : 'Move unit up'} disabled={index === 0} onPress={() => onMove(index, index - 1)} />
+        <LearningIconButton icon="chevron-down" variant="plain" label={zh ? '单元下移' : 'Move unit down'} disabled={index === count - 1} onPress={() => onMove(index, index + 1)} /></> : null}
       </View>
     </Animated.View>
   </GestureDetector>;

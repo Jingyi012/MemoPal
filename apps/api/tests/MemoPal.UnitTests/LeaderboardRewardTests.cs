@@ -236,6 +236,7 @@ public sealed class LeaderboardRewardTests
         public Task<AiCreditBalance> BalanceAsync(string userId, CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<AiCreditHistoryItem>> HistoryAsync(string userId, int skip, CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<AiGenerationView>> GenerationsAsync(string userId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<AiGenerationView?> GenerationForRequestAsync(string userId, string requestId, CancellationToken ct) => throw new NotSupportedException();
         public Task<AiCreditReservation> ReserveAsync(string userId, string requestId, string kind, object input, int count, CancellationToken ct, int? maxCredits = null) => throw new NotSupportedException();
         public Task CompleteAsync(string userId, string id, int successCount, object result, AiImageContent? image, CancellationToken ct) => throw new NotSupportedException();
         public Task FailAsync(string userId, string id, CancellationToken ct) => throw new NotSupportedException();

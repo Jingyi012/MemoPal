@@ -44,14 +44,15 @@ public sealed class EducationAttemptsController(ISender sender) : ApiControllerB
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(11_000_000)]
     [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
-    public async Task<IActionResult> UploadAttachment(string attemptId, string questionId, [FromForm] int expectedVersion,
-        [FromForm] IFormFile? file, CancellationToken ct)
+    public async Task<IActionResult> UploadAttachment(string attemptId, string questionId,
+        [FromForm] UploadEducationResponseAttachmentFormRequest request, CancellationToken ct)
     {
+        var file = request.File;
         if (file is null || file.Length == 0)
             return BadRequest(MemoPal.Application.Common.ApiResponse<string>.Fail("A response attachment is required."));
         await using var content = file.OpenReadStream();
         var result = await Sender.Send(new UploadEducationResponseAttachmentCommand(GetUserIdOrThrow(), attemptId,
-            questionId, expectedVersion, file.Length, file.ContentType, content), ct);
+            questionId, request.ExpectedVersion, file.Length, file.ContentType, content), ct);
         return Ok(result);
     }
 
@@ -69,4 +70,10 @@ public sealed class EducationAttemptsController(ISender sender) : ApiControllerB
     [RestrictedLearner(RestrictedLearnerAccess.Conditional)]
     public async Task<IActionResult> Submit(string attemptId, CancellationToken ct) =>
         Ok(await Sender.Send(new SubmitEducationAssessmentAttemptCommand(GetUserIdOrThrow(), attemptId), ct));
+}
+
+public sealed class UploadEducationResponseAttachmentFormRequest
+{
+    public int ExpectedVersion { get; set; }
+    public IFormFile? File { get; set; }
 }

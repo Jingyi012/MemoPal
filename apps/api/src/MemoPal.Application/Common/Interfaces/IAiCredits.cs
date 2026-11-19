@@ -19,6 +19,7 @@ public interface IAiCredits
     Task<AiCreditBalance> BalanceAsync(string userId, CancellationToken ct);
     Task<IReadOnlyList<AiCreditHistoryItem>> HistoryAsync(string userId, int skip, CancellationToken ct);
     Task<IReadOnlyList<AiGenerationView>> GenerationsAsync(string userId, CancellationToken ct);
+    Task<AiGenerationView?> GenerationForRequestAsync(string userId, string requestId, CancellationToken ct);
     Task<AiCreditReservation> ReserveAsync(string userId, string requestId, string kind, object input, int count, CancellationToken ct, int? maxCredits = null);
     Task CompleteAsync(string userId, string id, int successCount, object result, AiImageContent? image, CancellationToken ct);
     Task FailAsync(string userId, string id, CancellationToken ct);

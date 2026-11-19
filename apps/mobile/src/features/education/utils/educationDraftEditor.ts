@@ -3,7 +3,7 @@ import { parseEducationStudyList, isValidEducationStudyList } from './educationS
 export type DraftWord = { id: string; text: string; meaning: string | null };
 export type DraftUnit = { id: string; title: string; words: DraftWord[] };
 export type DraftImportMode = 'manual' | 'paste' | 'scan';
-export type StudyEditorSnapshot = { units: DraftUnit[]; targetUnitId: string; inputs: Record<string, string>; mode: DraftImportMode };
+export type StudyEditorSnapshot = { units: DraftUnit[]; targetUnitId: string; inputs: Record<string, string>; mode: DraftImportMode; contentType?: 'LanguageItem' | 'VocabularyPair' | 'ConceptUnderstanding' | 'VerbatimText' };
 let sequence = 0;
 export const draftId = () => `draft-${Date.now()}-${++sequence}`;
 export const newDraftUnit = (title = ''): DraftUnit => ({ id: draftId(), title, words: [] });

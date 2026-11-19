@@ -1,7 +1,10 @@
 export function parseEducationStudyList(text: string): { text: string; meaning: string | null }[] {
   return text.split(/\r?\n/).filter(line => line.trim()).map(line => {
-    const [word, ...meaning] = line.split('\t');
-    return { text: word.normalize('NFC').trim(), meaning: meaning.join(' ').normalize('NFC').trim() || null };
+    // Explicit separators only: spaces and hyphens can belong to a word or sentence.
+    const separator = /\t|\s*[|｜=＝：]\s*|:\s+/.exec(line);
+    const word = separator ? line.slice(0, separator.index) : line;
+    const meaning = separator ? line.slice(separator.index + separator[0].length).replace(/\t/g, ' ') : '';
+    return { text: word.normalize('NFC').trim(), meaning: meaning.normalize('NFC').trim() || null };
   });
 }
 export function isValidEducationStudyList(entries: ReturnType<typeof parseEducationStudyList>): boolean {

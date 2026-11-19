@@ -4,6 +4,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using MemoPal.Domain.Common;
 using MemoPal.Domain.Education;
+using MemoPal.Domain.Entities;
+using MemoPal.Application.Common.Interfaces;
+using MemoPal.Application.Features.Education.Authoring;
 using MemoPal.IntegrationTests.Fixtures;
 using MemoPal.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +17,40 @@ namespace MemoPal.IntegrationTests;
 public sealed class EducationStudyCourseDraftTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
 {
     private const string Route = "/v1/education/course-drafts/from-study-list";
+
+    [Fact]
+    public async Task Adopts_owned_preview_and_invalidates_questions_when_an_entry_meaning_changes()
+    {
+        using var owner = factory.CreateClient(); using var stranger = factory.CreateClient();
+        var ownerId = await Register(owner); await Register(stranger);
+        var input = new EducationCourseAiInput("Animals", "en", "zh-Hans", "basic",
+            [new("unit-a", "Animals", [new("entry-a", "cat", null), new("entry-b", "dog", "狗")])]);
+        const string hash = "input-hash";
+        var output = new EducationCourseAiOutput([new("entry-a", "猫", false)],
+            [new("unit-a", "entry-a", "What does cat mean?", "single-choice", ["猫", "狗"], 0, null, "Cat means 猫.")]);
+        var generationId = Guid.NewGuid().ToString("N");
+        var json = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.AiGenerations.Add(new AiGeneration { Id = generationId, UserId = ownerId, RequestId = Guid.NewGuid().ToString("N"),
+                RequestHash = "fingerprint", Kind = "education-course-text", Status = "completed", InputJson = JsonSerializer.Serialize(new { Input = input, InputHash = hash }, json),
+                ResultJson = JsonSerializer.Serialize(new StudyCourseGenerationResult("", "completed", output, 1, hash), json), Charged = 1 });
+            await db.SaveChangesAsync();
+        }
+        var wrongOwner = await stranger.PostAsJsonAsync(Route, new { title = "Animals", languageCode = "en", meaningLanguageCode = "zh-Hans", difficulty = "basic",
+            generationId, startLearning = true, units = new[] { new { stableId = "unit-a", title = "Animals", entries = new[] { new { stableId = "entry-a", text = "cat", meaning = "猫" }, new { stableId = "entry-b", text = "dog", meaning = "狗" } } } } });
+        Assert.Equal(HttpStatusCode.NotFound, wrongOwner.StatusCode);
+        var saved = await Data(await owner.PostAsJsonAsync(Route, new { title = "Animals", languageCode = "en", meaningLanguageCode = "zh-Hans", difficulty = "basic",
+            generationId, startLearning = true, includedQuestionIndexes = new[] { 0 }, units = new[] { new { stableId = "unit-a", title = "Animals", entries = new[] { new { stableId = "entry-a", text = "cat", meaning = "猫" }, new { stableId = "entry-b", text = "dog", meaning = "puppy" } } } } }));
+        Assert.Equal(2, saved.GetProperty("studyItemCount").GetInt32());
+        Assert.Equal(0, saved.GetProperty("practiceQuestionCount").GetInt32());
+        var detail = await Data(await owner.GetAsync($"/v1/education/my-courses/{saved.GetProperty("courseId").GetString()}"));
+        Assert.Equal(2, detail.GetProperty("units")[0].GetProperty("studyItems").GetArrayLength());
+        await using var verify = factory.Services.CreateAsyncScope();
+        Assert.Equal(JsonValueKind.Null, detail.GetProperty("units")[0].GetProperty("assessmentId").ValueKind);
+        Assert.False(await verify.ServiceProvider.GetRequiredService<AppDbContext>().EducationAssessments.AnyAsync(x => x.CourseId == saved.GetProperty("courseId").GetString()));
+    }
 
     [Fact]
     public async Task Creates_private_reviewable_lessons_and_retries_without_overwriting_edits()
